@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoService } from '@jsverse/transloco';
+import { auth } from '../firebase';
+import { UserProfileService } from '../auth/user-profile.service';
 
 export type Lang = 'ja' | 'en';
 const STORAGE_KEY = 'shaho.lang';
@@ -8,6 +10,7 @@ const STORAGE_KEY = 'shaho.lang';
 @Injectable({ providedIn: 'root' })
 export class LanguageService {
   private readonly transloco = inject(TranslocoService);
+  private readonly profiles = inject(UserProfileService);
 
   /** 現在の言語（画面で使う） */
   readonly lang = toSignal(this.transloco.langChanges$, {
@@ -21,7 +24,21 @@ export class LanguageService {
     document.documentElement.lang = this.transloco.getActiveLang();
   }
 
+  /** ボタンで切り替えたとき：ログイン中なら users にも保存 */
   set(lang: Lang): void {
+    this.apply(lang);
+    const uid = auth.currentUser?.uid;
+    if (uid && this.profiles.profile()?.uid === uid) {
+      this.profiles.updateLang(uid, lang).catch((err) => console.error(err));
+    }
+  }
+
+  /** ログイン時：users に保存された言語を反映（書き戻さない） */
+  applyFromProfile(lang: Lang): void {
+    this.apply(lang);
+  }
+
+  private apply(lang: Lang): void {
     this.transloco.setActiveLang(lang);
     document.documentElement.lang = lang;
     try {

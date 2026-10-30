@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function validDisplayName(name) {
+      return name is string && name.size() > 0 && name.size() <= 50;
+    }
+
+    match /users/{uid} {
+      // 読む：本人だけ
+      allow read: if isSelf(uid);
+
+      // 作る：本人だけ。管理者・事業所未登録・決めた項目のみ
+      allow create: if isSelf(uid)
+        && request.resource.data.keys().hasOnly(
+             ['email', 'displayName', 'role', 'officeId', 'lang', 'createdAt', 'updatedAt'])
+        && request.resource.data.keys().hasAll(
+             ['email', 'displayName', 'role', 'officeId', 'lang', 'createdAt', 'updatedAt'])
+        && request.resource.data.email == request.auth.token.email
+        && validDisplayName(request.resource.data.displayName)
+        && request.resource.data.role == 'admin'
+        && request.resource.data.officeId == null
+        && request.resource.data.lang in ['ja', 'en']
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      // 更新：本人だけ。表示名・言語・更新日時しか変えられない
+      allow update: if isSelf(uid)
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['displayName', 'lang', 'updatedAt'])
+        && validDisplayName(request.resource.data.displayName)
+        && request.resource.data.lang in ['ja', 'en']
+        && request.resource.data.updatedAt == request.time;
+
+      // 削除：できない
+      allow delete: if false;
+    }
+
+    // ここに書いていない場所は、すべて拒否される
+  }
+}

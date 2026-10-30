@@ -2,7 +2,7 @@
     <span class="app-name">{{ 'common.appName' | transloco }}</span>
     <div class="header-right">
       <app-lang-switch />
-      <span class="user-name">{{ user()?.displayName }}</span>
+      <span class="user-name">{{ profile()?.displayName }}</span>
       <button class="btn" type="button" (click)="logout()" [disabled]="loggingOut()">
         {{ 'common.logout' | transloco }}
       </button>
@@ -10,6 +10,15 @@
   </header>
   
   <main class="home-main">
-    <h1>{{ 'home.greeting' | transloco: { name: user()?.displayName ?? '' } }}</h1>
-    <p class="placeholder">{{ 'home.placeholder' | transloco }}</p>
+    <h1>{{ 'home.greeting' | transloco: { name: profile()?.displayName ?? '' } }}</h1>
+
+    @if (profile()?.officeId === null) {
+      <section class="card notice">
+        <h2>{{ 'home.officeNotice.title' | transloco }}</h2>
+        <p>{{ 'home.officeNotice.body' | transloco }}</p>
+        <a class="btn btn-primary" routerLink="/office/new">{{ 'home.officeNotice.action' | transloco }}</a>
+      </section>
+    } @else {
+      <p class="placeholder">{{ 'home.placeholder' | transloco }}</p>
+    }
   </main>

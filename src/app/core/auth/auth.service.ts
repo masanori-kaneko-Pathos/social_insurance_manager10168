@@ -1,4 +1,4 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, signal, inject } from '@angular/core';
 import {
   User,
   createUserWithEmailAndPassword,
@@ -6,12 +6,19 @@ import {
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
-  sendPasswordResetEmail,
+  sendPasswordResetEmail, deleteUser
 } from 'firebase/auth';
 import { auth } from '../firebase';
+import { LanguageService, Lang } from '../i18n/language.service';
+import { UserProfileService } from './user-profile.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private readonly profiles = inject(UserProfileService);
+  private readonly language = inject(LanguageService);
+
+  /** 読み込み済みのユーザー情報（画面で使う） */
+  readonly profile = this.profiles.profile;
   private readonly _user = signal<User | null>(null);
   private readonly _ready = signal(false);
 
@@ -34,19 +41,49 @@ export class AuthService {
     });
   }
 
-  async signUp(email: string, password: string, displayName: string): Promise<User> {
+  async signUp(email: string, password: string, displayName: string): Promise<void> {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await updateProfile(cred.user, { displayName });
-    return cred.user;
+    try {
+      await updateProfile(cred.user, { displayName });
+      await this.profiles.create(cred.user, displayName, this.language.lang() as Lang);
+      await this.profiles.load(cred.user.uid);
+    } catch (err) {
+      // users の保存に失敗したら、Auth のアカウントも消して「中途半端」を残さない
+      await deleteUser(cred.user).catch(() => { });
+      throw err;
+    }
   }
 
-  async login(email: string, password: string): Promise<User> {
+  async login(email: string, password: string): Promise<void> {
     const cred = await signInWithEmailAndPassword(auth, email, password);
-    return cred.user;
+    const ok = await this.loadProfileOrSignOut(cred.user);
+    if (!ok) {
+      throw Object.assign(new Error('No app account'), { code: 'app/no-account' });
+    }
   }
 
-  logout(): Promise<void> {
-    return signOut(auth);
+  /** ガード用：ログイン中のユーザーに users があるか確認する */
+  async ensureProfile(): Promise<boolean> {
+    const user = this._user();
+    if (!user) return false;
+    if (this.profiles.profile()?.uid === user.uid) return true; // 読み込み済み
+    return this.loadProfileOrSignOut(user);
+  }
+
+  /** users を読み込む。なければログアウトして false */
+  private async loadProfileOrSignOut(user: User): Promise<boolean> {
+    const profile = await this.profiles.load(user.uid);
+    if (!profile) {
+      await this.logout();
+      return false;
+    }
+    this.language.applyFromProfile(profile.lang);
+    return true;
+  }
+
+  async logout(): Promise<void> {
+    this.profiles.clear();
+    await signOut(auth);
   }
 
   /** パスワード再設定メールを送る（メールの言語と、再設定後の戻り先を指定） */
@@ -78,6 +115,8 @@ export function toAuthErrorKey(err: unknown): string {
       return 'auth.error.tooManyRequests';
     case 'auth/network-request-failed':
       return 'auth.error.network';
+    case 'app/no-account':
+      return 'auth.error.noAppAccount';
     default:
       console.error(err); // 想定外のエラーは開発者が調べられるように残す
       return 'auth.error.unknown';

@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService, toAuthErrorKey } from '../../../../core/auth/auth.service';
 import { LangSwitch } from '../../../../shared/components/lang-switch/lang-switch';
@@ -9,7 +9,8 @@ import { PasswordInputDirective } from '../../../../shared/components/password-f
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, LangSwitch, PasswordField, PasswordInputDirective],
+  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, LangSwitch, PasswordField, 
+    PasswordInputDirective ],
   templateUrl: './login.html',
   styleUrl: '../../auth-layout.css',
 })
@@ -25,6 +26,13 @@ export class Login {
 
   readonly submitting = signal(false);
   readonly errorKey = signal<string | null>(null);
+  private readonly route = inject(ActivatedRoute);
+
+  constructor() {
+    if (this.route.snapshot.queryParamMap.get('reason') === 'noAccount') {
+      this.errorKey.set('auth.error.noAppAccount');
+    }
+  }
 
   /** 触った後に不正なら赤くする（開いた直後から赤くしない） */
   showError(name: 'email' | 'password'): boolean {

@@ -13,5 +13,11 @@
         "destination": "/index.html"
       }
     ]
-  }
+  },
+  "firestore": [
+    {
+      "database": "socialinsurance-db",
+      "rules": "firestore.rules"
+    }
+  ]
 }

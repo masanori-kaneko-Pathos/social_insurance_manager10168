@@ -8,5 +8,10 @@ export const authGuard: CanActivateFn = async () => {
   const router = inject(Router);
 
   await auth.whenReady;
-  return auth.isLoggedIn() ? true : router.createUrlTree(['/login']);
+  if (!auth.isLoggedIn()) return router.createUrlTree(['/login']);
+
+  // ログイン済みでも、このアプリの users がなければ弾く
+  return (await auth.ensureProfile())
+    ? true
+    : router.createUrlTree(['/login'], { queryParams: { reason: 'noAccount' } });
 };

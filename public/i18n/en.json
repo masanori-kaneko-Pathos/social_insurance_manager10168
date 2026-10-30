@@ -51,11 +51,17 @@
         "invalidCredential": "Incorrect email or password.",
         "tooManyRequests": "Too many attempts. Try again later.",
         "network": "Can't connect to the network.",
+        "noAppAccount": "No account found for this app. Please sign up.",
         "unknown": "Something went wrong. Try again later."
       }
     },
     "home": {
       "greeting": "Welcome, {{name}}",
-      "placeholder": "Office and employee features will appear here."
+      "placeholder": "Office and employee features will appear here.",
+      "officeNotice": {
+        "title": "Register your office",
+        "body": "To start calculating premiums and managing employees, first register your office details.",
+        "action": "Register office"
+      }
     }
   }

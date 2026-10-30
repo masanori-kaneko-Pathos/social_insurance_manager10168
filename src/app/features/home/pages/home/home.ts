@@ -1,12 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { LangSwitch } from '../../../../shared/components/lang-switch/lang-switch';
 
 @Component({
   selector: 'app-home',
-  imports: [TranslocoPipe, LangSwitch],
+  imports: [TranslocoPipe, LangSwitch, RouterLink ],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
@@ -14,7 +14,7 @@ export class Home {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  readonly user = this.auth.user;
+  readonly profile = this.auth.profile;
   readonly loggingOut = signal(false);
 
   async logout(): Promise<void> {
