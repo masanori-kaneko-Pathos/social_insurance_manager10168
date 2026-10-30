@@ -1,1 +1,43 @@
-{}
+{
+    "common": {
+      "appName": "Social Insurance Manager"
+    },
+    "auth": {
+      "field": {
+        "displayName": "Display name",
+        "email": "Email",
+        "password": "Password",
+        "passwordConfirm": "Confirm password"
+      },
+      "login": {
+        "title": "Log in",
+        "submit": "Log in",
+        "submitting": "Logging in…",
+        "toSignup": "Don't have an account?",
+        "toSignupLink": "Sign up"
+      },
+      "signup": {
+        "title": "Sign up",
+        "lead": "Create an administrator account for your office.",
+        "submit": "Create account",
+        "submitting": "Creating…",
+        "toLogin": "Already have an account?",
+        "toLoginLink": "Log in"
+      },
+      "validation": {
+        "required": "This field is required.",
+        "email": "Enter a valid email address.",
+        "passwordRule": "Use at least 8 characters, including letters and numbers.",
+        "passwordMismatch": "Passwords don't match."
+      },
+      "error": {
+        "invalidEmail": "Enter a valid email address.",
+        "emailInUse": "This email is already registered.",
+        "passwordRule": "Use at least 8 characters, including letters and numbers.",
+        "invalidCredential": "Incorrect email or password.",
+        "tooManyRequests": "Too many attempts. Try again later.",
+        "network": "Can't connect to the network.",
+        "unknown": "Something went wrong. Try again later."
+      }
+    }
+  }

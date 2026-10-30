@@ -1,1 +1,43 @@
-{}
+{
+    "common": {
+      "appName": "社会保険管理"
+    },
+    "auth": {
+      "field": {
+        "displayName": "表示名",
+        "email": "メールアドレス",
+        "password": "パスワード",
+        "passwordConfirm": "パスワード（確認）"
+      },
+      "login": {
+        "title": "ログイン",
+        "submit": "ログイン",
+        "submitting": "ログイン中…",
+        "toSignup": "アカウントをお持ちでない方は",
+        "toSignupLink": "新規登録"
+      },
+      "signup": {
+        "title": "新規登録",
+        "lead": "事業所の管理者アカウントを作成します。",
+        "submit": "登録する",
+        "submitting": "登録中…",
+        "toLogin": "アカウントをお持ちの方は",
+        "toLoginLink": "ログイン"
+      },
+      "validation": {
+        "required": "入力してください。",
+        "email": "メールアドレスの形式が正しくありません。",
+        "passwordRule": "8文字以上で、英字と数字を両方含めてください。",
+        "passwordMismatch": "パスワードが一致しません。"
+      },
+      "error": {
+        "invalidEmail": "メールアドレスの形式が正しくありません。",
+        "emailInUse": "このメールアドレスはすでに登録されています。",
+        "passwordRule": "パスワードは8文字以上で、英字と数字を両方含めてください。",
+        "invalidCredential": "メールアドレスまたはパスワードが違います。",
+        "tooManyRequests": "試行回数が多すぎます。しばらくしてからお試しください。",
+        "network": "ネットワークに接続できません。",
+        "unknown": "エラーが発生しました。時間をおいてお試しください。"
+      }
+    }
+  }

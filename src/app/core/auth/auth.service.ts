@@ -47,25 +47,27 @@ export class AuthService {
   }
 }
 
-/** Firebaseのエラーコードを画面表示用の日本語に変換 */
-export function toAuthErrorMessage(err: unknown): string {
+/** Firebaseのエラーコードを翻訳キーに変換（表示は画面側で | transloco） */
+export function toAuthErrorKey(err: unknown): string {
   const code = (err as { code?: string })?.code ?? '';
   switch (code) {
     case 'auth/invalid-email':
-      return 'メールアドレスの形式が正しくありません。';
+      return 'auth.error.invalidEmail';
     case 'auth/email-already-in-use':
-      return 'このメールアドレスはすでに登録されています。';
+      return 'auth.error.emailInUse';
+    case 'auth/password-does-not-meet-requirements':
     case 'auth/weak-password':
-      return 'パスワードは6文字以上にしてください。';
+      return 'auth.error.passwordRule';
     case 'auth/invalid-credential':
     case 'auth/wrong-password':
     case 'auth/user-not-found':
-      return 'メールアドレスまたはパスワードが違います。';
+      return 'auth.error.invalidCredential';
     case 'auth/too-many-requests':
-      return '試行回数が多すぎます。しばらくしてからお試しください。';
+      return 'auth.error.tooManyRequests';
     case 'auth/network-request-failed':
-      return 'ネットワークに接続できません。';
+      return 'auth.error.network';
     default:
-      return 'エラーが発生しました。（' + code + '）';
+      console.error(err); // 想定外のエラーは開発者が調べられるように残す
+      return 'auth.error.unknown';
   }
 }

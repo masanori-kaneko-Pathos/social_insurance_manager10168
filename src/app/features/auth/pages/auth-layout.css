@@ -1,0 +1,71 @@
+.auth-page {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: var(--space-xl) var(--space-md);
+  }
+  
+  .auth-top {
+    position: absolute;
+    top: var(--space-md);
+    right: var(--space-md);
+  }
+  
+  .auth-card {
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  .app-name {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin: 0 0 var(--space-xs);
+    font-size: var(--font-sm);
+    color: var(--color-text-sub);
+  }
+  
+  .app-name::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--color-primary);
+  }
+  
+  h1 {
+    margin: 0 0 var(--space-lg);
+    font-size: var(--font-xl);
+  }
+  
+  .lead {
+    margin: calc(var(--space-md) * -1) 0 var(--space-lg);
+    font-size: var(--font-sm);
+    color: var(--color-text-sub);
+  }
+  
+  .alert {
+    margin-bottom: var(--space-md);
+  }
+  
+  .btn-block {
+    width: 100%;
+    margin-top: var(--space-sm);
+  }
+  
+  .auth-switch {
+    margin: var(--space-lg) 0 0;
+    font-size: var(--font-sm);
+    color: var(--color-text-sub);
+    text-align: center;
+  }
+  
+  .auth-switch a {
+    color: var(--color-text);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: var(--color-primary);
+    text-underline-offset: 3px;
+  }
