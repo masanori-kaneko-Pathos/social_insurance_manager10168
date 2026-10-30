@@ -69,3 +69,13 @@
     text-decoration-color: var(--color-primary);
     text-underline-offset: 3px;
   }
+
+  .forgot {
+    margin: calc(var(--space-sm) * -1) 0 var(--space-md);
+    font-size: var(--font-xs);
+    text-align: right;
+  }
+  
+  .forgot a {
+    color: var(--color-text-sub);
+  }

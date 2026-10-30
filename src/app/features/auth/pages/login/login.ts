@@ -4,12 +4,14 @@ import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService, toAuthErrorKey } from '../../../../core/auth/auth.service';
 import { LangSwitch } from '../../../../shared/components/lang-switch/lang-switch';
+import { PasswordField } from '../../../../shared/components/password-field/password-field';
+import { PasswordInputDirective } from '../../../../shared/components/password-field/password-input.directive';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, LangSwitch],
+  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, LangSwitch, PasswordField, PasswordInputDirective],
   templateUrl: './login.html',
-  styleUrl: '../auth-layout.css',
+  styleUrl: '../../auth-layout.css',
 })
 export class Login {
   private readonly fb = inject(FormBuilder);

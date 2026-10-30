@@ -16,6 +16,12 @@ export const routes: Routes = [
         import('./features/auth/pages/signup/signup').then((m) => m.Signup),
     },
     {
+      path: 'forgot-password',
+      canActivate: [guestGuard],
+      loadComponent: () =>
+        import('./features/auth/pages/forgot-password/forgot-password').then((m) => m.ForgotPassword),
+    },
+    {
       path: 'home',
       canActivate: [authGuard],
       loadComponent: () =>

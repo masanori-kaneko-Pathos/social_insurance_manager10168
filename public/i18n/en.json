@@ -4,6 +4,18 @@
       "logout": "Log out"
     },
     "auth": {
+      "password": {
+        "show": "Show password",
+        "hide": "Hide password"
+      },
+      "forgot": {
+        "title": "Reset your password",
+        "lead": "Enter the email you registered with. We'll send you a reset link.",
+        "submit": "Send reset email",
+        "submitting": "Sending…",
+        "sent": "If that email is registered, we've sent a reset link. Check your spam folder if it doesn't arrive.",
+        "backToLogin": "Back to log in"
+      },
       "field": {
         "displayName": "Display name",
         "email": "Email",
@@ -15,7 +27,8 @@
         "submit": "Log in",
         "submitting": "Logging in…",
         "toSignup": "Don't have an account?",
-        "toSignupLink": "Sign up"
+        "toSignupLink": "Sign up",
+        "forgot": "Forgot your password?"
       },
       "signup": {
         "title": "Sign up",

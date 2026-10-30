@@ -6,6 +6,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { auth } from '../firebase';
 
@@ -47,6 +48,15 @@ export class AuthService {
   logout(): Promise<void> {
     return signOut(auth);
   }
+
+  /** パスワード再設定メールを送る（メールの言語と、再設定後の戻り先を指定） */
+  async sendPasswordReset(email: string, lang: string): Promise<void> {
+    auth.languageCode = lang;
+    await sendPasswordResetEmail(auth, email, {
+      url: `${location.origin}/login`,
+    });
+  }
+
 }
 
 /** Firebaseのエラーコードを翻訳キーに変換（表示は画面側で | transloco） */

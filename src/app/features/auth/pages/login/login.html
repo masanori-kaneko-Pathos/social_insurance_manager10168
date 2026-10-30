@@ -29,19 +29,25 @@
   
         <div class="field">
           <label for="password">{{ 'auth.field.password' | transloco }}</label>
-          <input
-            id="password"
-            class="input"
-            type="password"
-            formControlName="password"
-            autocomplete="current-password"
-            [class.is-invalid]="showError('password')"
-          />
+          <app-password-field>
+            <input
+              id="password"
+              class="input"
+              appPasswordInput
+              formControlName="password"
+              autocomplete="current-password"
+              [class.is-invalid]="showError('password')"
+            />
+          </app-password-field>
           @if (showError('password')) {
             <span class="field-error">{{ 'auth.validation.required' | transloco }}</span>
           }
         </div>
   
+        <p class="forgot">
+          <a routerLink="/forgot-password">{{ 'auth.login.forgot' | transloco }}</a>
+        </p>
+
         <button class="btn btn-primary btn-block" type="submit" [disabled]="submitting()">
           {{ (submitting() ? 'auth.login.submitting' : 'auth.login.submit') | transloco }}
         </button>

@@ -45,14 +45,16 @@
   
         <div class="field">
           <label for="password">{{ 'auth.field.password' | transloco }}</label>
-          <input
-            id="password"
-            class="input"
-            type="password"
-            formControlName="password"
-            autocomplete="new-password"
-            [class.is-invalid]="showError('password')"
-          />
+          <app-password-field>
+            <input
+              id="password"
+              class="input"
+              appPasswordInput
+              formControlName="password"
+              autocomplete="new-password"
+              [class.is-invalid]="showError('password')"
+            />
+          </app-password-field>
           @if (showError('password')) {
             <span class="field-error">
               {{ (form.controls.password.hasError('required') ? 'auth.validation.required' : 'auth.validation.passwordRule') | transloco }}
@@ -62,14 +64,16 @@
   
         <div class="field">
           <label for="passwordConfirm">{{ 'auth.field.passwordConfirm' | transloco }}</label>
-          <input
-            id="passwordConfirm"
-            class="input"
-            type="password"
-            formControlName="passwordConfirm"
-            autocomplete="new-password"
-            [class.is-invalid]="showConfirmError()"
-          />
+          <app-password-field>
+            <input
+              id="passwordConfirm"
+              class="input"
+              appPasswordInput
+              formControlName="passwordConfirm"
+              autocomplete="new-password"
+              [class.is-invalid]="showConfirmError()"
+            />
+          </app-password-field>
           @if (showConfirmError()) {
             <span class="field-error">
               {{ (form.controls.passwordConfirm.hasError('required') ? 'auth.validation.required' : 'auth.validation.passwordMismatch') | transloco }}
