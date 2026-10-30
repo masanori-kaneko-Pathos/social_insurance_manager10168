@@ -1,1 +1,15 @@
-<p>home works!</p>
+<header class="app-header">
+    <span class="app-name">{{ 'common.appName' | transloco }}</span>
+    <div class="header-right">
+      <app-lang-switch />
+      <span class="user-name">{{ user()?.displayName }}</span>
+      <button class="btn" type="button" (click)="logout()" [disabled]="loggingOut()">
+        {{ 'common.logout' | transloco }}
+      </button>
+    </div>
+  </header>
+  
+  <main class="home-main">
+    <h1>{{ 'home.greeting' | transloco: { name: user()?.displayName ?? '' } }}</h1>
+    <p class="placeholder">{{ 'home.placeholder' | transloco }}</p>
+  </main>

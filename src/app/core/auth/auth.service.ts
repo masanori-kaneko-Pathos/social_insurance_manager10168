@@ -5,6 +5,7 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
+  updateProfile,
 } from 'firebase/auth';
 import { auth } from '../firebase';
 
@@ -32,8 +33,9 @@ export class AuthService {
     });
   }
 
-  async signUp(email: string, password: string): Promise<User> {
+  async signUp(email: string, password: string, displayName: string): Promise<User> {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await updateProfile(cred.user, { displayName });
     return cred.user;
   }
 

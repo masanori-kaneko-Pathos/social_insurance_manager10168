@@ -1,6 +1,7 @@
 {
     "common": {
-      "appName": "Social Insurance Manager"
+      "appName": "Social Insurance Manager",
+      "logout": "Log out"
     },
     "auth": {
       "field": {
@@ -32,12 +33,16 @@
       },
       "error": {
         "invalidEmail": "Enter a valid email address.",
-        "emailInUse": "This email is already registered.",
+        "emailInUse": "This email is already registered. Try a different one.",
         "passwordRule": "Use at least 8 characters, including letters and numbers.",
         "invalidCredential": "Incorrect email or password.",
         "tooManyRequests": "Too many attempts. Try again later.",
         "network": "Can't connect to the network.",
         "unknown": "Something went wrong. Try again later."
       }
+    },
+    "home": {
+      "greeting": "Welcome, {{name}}",
+      "placeholder": "Office and employee features will appear here."
     }
   }
