@@ -1,0 +1,17 @@
+{
+  "hosting": {
+    "site": "socialinsurance10168",
+    "public": "dist/socialinsurance10168/browser",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
