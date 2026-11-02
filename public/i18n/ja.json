@@ -4,7 +4,11 @@
       "logout": "ログアウト",
       "back": "戻る",
       "optional": "任意",
-      "select": "選択してください"
+      "select": "選択してください",
+      "loading": "読み込み中…",
+      "edit": "編集",
+      "save": "保存する",
+      "saving": "保存中…"
     },
     "auth": {
       "password": {
@@ -62,6 +66,76 @@
       "greeting": "{{name}} さん、ようこそ",
       "placeholder": "ここに従業員や保険料の機能が入ります。",
       "notSet": "未登録"
+    },
+    "nav": {
+      "label": "メニュー",
+      "dashboard": "ダッシュボード",
+      "employees": "従業員"
+    },
+    "employee": {
+      "list": {
+        "title": "従業員",
+        "add": "従業員を登録",
+        "search": "氏名・フリガナ・社員番号で絞り込み",
+        "age": "年齢",
+        "insurance": "社会保険",
+        "emptyTitle": "従業員を登録しましょう",
+        "emptyBody": "従業員を登録すると、社会保険の加入状況や保険料を確認できます。",
+        "noMatch": "条件に合う従業員がいません。"
+      },
+      "status": {
+        "active": "在籍中",
+        "retired": "退職者",
+        "all": "すべて"
+      },
+      "badge": {
+        "health": "健保",
+        "pension": "厚年"
+      },
+      "form": {
+        "titleNew": "従業員の登録",
+        "titleEdit": "従業員の編集"
+      },
+      "section": {
+        "basic": "基本情報",
+        "employment": "在籍期間",
+        "insurance": "社会保険の資格"
+      },
+      "field": {
+        "employeeNumber": "社員番号",
+        "name": "氏名",
+        "lastName": "姓",
+        "firstName": "名",
+        "lastNameKana": "セイ（カタカナ）",
+        "firstNameKana": "メイ（カタカナ）",
+        "birthDate": "生年月日",
+        "hireDate": "入社日",
+        "retireDate": "退職日",
+        "acquiredDate": "資格取得日",
+        "lostDate": "資格喪失日"
+      },
+      "insurance": {
+        "health": "健康保険に加入する",
+        "pension": "厚生年金保険に加入する"
+      },
+      "hint": {
+        "autoDates": "資格取得日は入社日、資格喪失日は退職日の翌日が自動で入ります。必要に応じて変更できます。",
+        "care": "介護保険は、健康保険の加入者が40歳以上65歳未満の期間、自動で対象になります。"
+      },
+      "validation": {
+        "required": "入力してください。",
+        "tooLong": "文字数が多すぎます。",
+        "kana": "カタカナで入力してください。",
+        "birthFuture": "未来の日付は入力できません。",
+        "retireBeforeHire": "退職日は入社日より後にしてください。",
+        "lostBeforeAcquired": "資格喪失日は資格取得日より後にしてください。"
+      },
+      "error": {
+        "save": "保存できませんでした。時間をおいてお試しください。",
+        "load": "読み込めませんでした。",
+        "notFound": "従業員が見つかりません。",
+        "notAdmin": "従業員の登録・編集は、この事業所の管理者のみ行えます。"
+      }
     },
     "office": {
       "form": {

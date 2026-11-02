@@ -4,7 +4,11 @@
       "logout": "Log out",
       "back": "Back",
       "optional": "Optional",
-      "select": "Select"
+      "select": "Select",
+      "loading": "Loading…",
+      "edit": "Edit",
+      "save": "Save",
+      "saving": "Saving…"
     },
     "auth": {
       "password": {
@@ -63,6 +67,77 @@
       "placeholder": "Employee and premium features will appear here.",
       "notSet": "Not set"
     },
+    "nav": {
+      "label": "Menu",
+      "dashboard": "Dashboard",
+      "employees": "Employees"
+    },
+    "employee": {
+      "list": {
+        "title": "Employees",
+        "add": "Add employee",
+        "search": "Filter by name, kana or employee number",
+        "age": "Age",
+        "insurance": "Social insurance",
+        "emptyTitle": "Add your first employee",
+        "emptyBody": "Once you add employees, you can check their insurance coverage and premiums.",
+        "noMatch": "No employees match your filters."
+      },
+      "status": {
+        "active": "Active",
+        "retired": "Retired",
+        "all": "All"
+      },
+      "badge": {
+        "health": "Health",
+        "pension": "Pension"
+      },
+      "form": {
+        "titleNew": "Add employee",
+        "titleEdit": "Edit employee"
+      },
+      "section": {
+        "basic": "Basic information",
+        "employment": "Employment period",
+        "insurance": "Insurance eligibility"
+      },
+      "field": {
+        "employeeNumber": "Employee number",
+        "name": "Name",
+        "lastName": "Last name",
+        "firstName": "First name",
+        "lastNameKana": "Last name (katakana)",
+        "firstNameKana": "First name (katakana)",
+        "birthDate": "Date of birth",
+        "hireDate": "Hire date",
+        "retireDate": "Retirement date",
+        "acquiredDate": "Coverage start date",
+        "lostDate": "Coverage end date"
+      },
+      "insurance": {
+        "health": "Enrolled in health insurance",
+        "pension": "Enrolled in employees' pension insurance"
+      },
+      "hint": {
+        "autoDates": "The start date is set to the hire date, and the end date to the day after retirement. You can change them if needed.",
+        "care": "Long-term care insurance applies automatically to health insurance members aged 40 to 64."
+      },
+      "validation": {
+        "required": "This field is required.",
+        "tooLong": "Too many characters.",
+        "kana": "Enter in katakana.",
+        "birthFuture": "Date can't be in the future.",
+        "retireBeforeHire": "Retirement date must be after the hire date.",
+        "lostBeforeAcquired": "End date must be after the start date."
+      },
+      "error": {
+        "save": "Couldn't save. Try again later.",
+        "load": "Couldn't load.",
+        "notFound": "Employee not found.",
+        "notAdmin": "Only administrators of this office can add or edit employees."
+      }
+    },
+    
     "office": {
       "form": {
         "titleNew": "Register office",

@@ -1,0 +1,50 @@
+import { Injectable } from '@angular/core';
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  serverTimestamp,
+  updateDoc,
+} from 'firebase/firestore';
+import { db } from '../../core/firebase';
+import { Employee, EmployeeDoc, EmployeeInput } from '../../core/models/employee';
+
+const kana = (e: Employee) => e.lastNameKana + e.firstNameKana;
+
+@Injectable({ providedIn: 'root' })
+export class EmployeeService {
+  private col(officeId: string) {
+    return collection(db, 'offices', officeId, 'employees');
+  }
+
+  /** 事業所の従業員（フリガナ順） */
+  async list(officeId: string): Promise<Employee[]> {
+    const snap = await getDocs(this.col(officeId));
+    return snap.docs
+      .map((d) => ({ id: d.id, ...(d.data() as EmployeeDoc) }))
+      .sort((a, b) => kana(a).localeCompare(kana(b), 'ja'));
+  }
+
+  async get(officeId: string, employeeId: string): Promise<Employee | null> {
+    const snap = await getDoc(doc(this.col(officeId), employeeId));
+    return snap.exists() ? { id: snap.id, ...(snap.data() as EmployeeDoc) } : null;
+  }
+
+  async create(officeId: string, input: EmployeeInput): Promise<string> {
+    const ref = await addDoc(this.col(officeId), {
+      ...input,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    return ref.id;
+  }
+
+  async update(officeId: string, employeeId: string, input: EmployeeInput): Promise<void> {
+    await updateDoc(doc(this.col(officeId), employeeId), {
+      ...input,
+      updatedAt: serverTimestamp(),
+    });
+  }
+}

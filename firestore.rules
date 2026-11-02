@@ -56,6 +56,37 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ===== employees 用 =====
+    function isDate(v) {
+      return v is string && v.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function optionalDate(v) {
+      return v == null || isDate(v);
+    }
+
+    function validName(v) {
+      return v is string && v.size() > 0 && v.size() <= 50;
+    }
+
+    function validEnrollment(e) {
+      return e.enrolled is bool
+        && optionalDate(e.acquiredDate)
+        && optionalDate(e.lostDate)
+        && (!e.enrolled || e.acquiredDate != null);
+    }
+
+    function validEmployee(d) {
+      return optionalString(d.employeeNumber, 20)
+        && validName(d.lastName) && validName(d.firstName)
+        && validName(d.lastNameKana) && validName(d.firstNameKana)
+        && isDate(d.birthDate)
+        && isDate(d.hireDate)
+        && optionalDate(d.retireDate)
+        && validEnrollment(d.health)
+        && validEnrollment(d.pension);
+    }
+
     // ===== offices =====
     function validOffice(d) {
       return d.name is string && d.name.size() > 0 && d.name.size() <= 100
@@ -101,6 +132,34 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time;
 
       allow delete: if false;
+      // ----- 従業員（事業所の下） -----
+      match /employees/{employeeId} {
+        function office() {
+          return get(/databases/$(database)/documents/offices/$(officeId)).data;
+        }
+
+        // 読む：その事業所のメンバー（管理者・一般）
+        allow read: if signedIn() && request.auth.uid in office().memberUids;
+
+        // 作る・更新する：その事業所の管理者だけ
+        allow create: if signedIn()
+          && office().memberRoles[request.auth.uid] == 'admin'
+          && request.resource.data.keys().hasOnly([
+               'employeeNumber', 'lastName', 'firstName', 'lastNameKana', 'firstNameKana',
+               'birthDate', 'hireDate', 'retireDate', 'health', 'pension', 'createdAt', 'updatedAt'])
+          && validEmployee(request.resource.data)
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time;
+
+        allow update: if signedIn()
+          && office().memberRoles[request.auth.uid] == 'admin'
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdAt'])
+          && validEmployee(request.resource.data)
+          && request.resource.data.updatedAt == request.time;
+
+        // 削除：しない（退職は退職日で表す）
+        allow delete: if false;
+      }
     }
   }
 }

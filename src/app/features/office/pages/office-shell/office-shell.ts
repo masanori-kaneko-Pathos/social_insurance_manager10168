@@ -1,5 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
-import { Router, RouterOutlet } from '@angular/router';
+import { Component, inject, signal, computed } from '@angular/core';
+import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { LangSwitch } from '../../../../shared/components/lang-switch/lang-switch';
@@ -8,7 +8,7 @@ import { OfficeContext } from '../../office-context.service';
 
 @Component({
   selector: 'app-office-shell',
-  imports: [RouterOutlet, TranslocoPipe, LangSwitch, OfficeSwitcher],
+  imports: [RouterOutlet, TranslocoPipe, LangSwitch, OfficeSwitcher, RouterLink, RouterLinkActive],
   templateUrl: './office-shell.html',
   styleUrl: './office-shell.css',
 })
@@ -18,6 +18,7 @@ export class OfficeShell {
   private readonly router = inject(Router);
 
   readonly profile = this.auth.profile;
+  readonly officeId = computed(() => this.context.current()?.id ?? '');
   readonly loggingOut = signal(false);
 
   async logout(): Promise<void> {

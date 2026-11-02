@@ -1,90 +1,154 @@
-import { Enrollment } from '../../../core/models/employee';
-import { addDays, formatYmd, monthOf, parseYmd } from '../../../shared/utils/date';
+/**
+ * 社会保険の適用期間の判定（月単位）
+ * Angular・Firebase に依存しない純粋な関数だけで書く。
+ * 日付は 'YYYY-MM-DD'、年月は 'YYYY-MM' の文字列で扱う（文字列のまま大小比較できる）。
+ */
+
+export type DateStr = string; // 'YYYY-MM-DD'
+export type YearMonth = string; // 'YYYY-MM'
+
+export interface Enrollment {
+  enrolled: boolean;
+  acquiredDate: DateStr | null; // 資格取得日
+  lostDate: DateStr | null; // 資格喪失日（退職日の翌日など）
+}
 
 export interface CoverageInput {
-  birthDate: string;
+  birthDate: DateStr;
   health: Enrollment;
   pension: Enrollment;
 }
 
 export interface MonthlyCoverage {
-  month: string; // 'YYYY-MM'
+  month: YearMonth;
   health: boolean;
   care: boolean;
   pension: boolean;
 }
 
-/** その年齢の誕生日（2/29生まれは平年だと Date が自動で 3/1 にする） */
-export function birthdayAt(birthDate: string, age: number): string {
-  const b = parseYmd(birthDate);
-  return formatYmd(new Date(Date.UTC(b.getUTCFullYear() + age, b.getUTCMonth(), b.getUTCDate())));
+// ===== 1. 日付の小道具（タイムゾーンの影響を受けないよう UTC で計算） =====
+
+function toUtc(date: DateStr): Date {
+  const [y, m, d] = date.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d));
 }
 
-/** 年齢到達日：法律上、年齢は誕生日の前日に1つ増える */
-export function ageReachDate(birthDate: string, age: number): string {
+function fromUtc(dt: Date): DateStr {
+  return dt.toISOString().slice(0, 10);
+}
+
+export function addDays(date: DateStr, days: number): DateStr {
+  const dt = toUtc(date);
+  dt.setUTCDate(dt.getUTCDate() + days);
+  return fromUtc(dt);
+}
+
+export function toYearMonth(date: DateStr): YearMonth {
+  return date.slice(0, 7);
+}
+
+// ===== 2. 年齢 =====
+
+/** その年齢の誕生日（2/29生まれで平年の場合は 3/1 になる） */
+export function birthdayAt(birthDate: DateStr, age: number): DateStr {
+  const [y, m, d] = birthDate.split('-').map(Number);
+  return fromUtc(new Date(Date.UTC(y + age, m - 1, d)));
+}
+
+/** 法律上の年齢到達日 ＝ 誕生日の前日（年齢計算ニ関スル法律） */
+export function ageReachDate(birthDate: DateStr, age: number): DateStr {
   return addDays(birthdayAt(birthDate, age), -1);
 }
 
-/** 退職日 → 資格喪失日（翌日） */
-export function lostDateFromRetire(retireDate: string): string {
-  return addDays(retireDate, 1);
+// ===== 3. 1つの保険の判定 =====
+
+/** 早いほうの日付（null は「なし」として扱う） */
+function earlier(a: DateStr | null, b: DateStr | null): DateStr | null {
+  if (!a) return b;
+  if (!b) return a;
+  return a < b ? a : b;
 }
 
-/** 保険料がかかる月か：取得月 ≦ 月 ＜ 喪失月（同じ月に取得・喪失なら、その月だけ） */
-function chargedIn(month: string, acquired: string, lost: string | null): boolean {
-  const a = monthOf(acquired);
-  if (month < a) return false;
-  if (lost === null) return true;
-  const l = monthOf(lost);
-  if (a === l) return month === a;
-  return month < l;
+/**
+ * その月に保険料がかかるか
+ * - 取得した月から、喪失した月の前月まで
+ * - 同じ月に取得して喪失した場合は、その月はかかる（同月得喪）
+ */
+export function isChargedMonth(
+  acquiredDate: DateStr | null,
+  lostDate: DateStr | null,
+  month: YearMonth,
+): boolean {
+  if (!acquiredDate) return false;
+  const acquired = toYearMonth(acquiredDate);
+  if (month < acquired) return false;
+  if (!lostDate) return true;
+
+  const lost = toYearMonth(lostDate);
+  if (lost === acquired) return month === acquired; // 同月得喪
+  return month < lost;
 }
 
-/** 早いほうの日付（null は「まだ喪失していない」） */
-function earlier(a: string | null, b: string): string {
-  return a === null || b < a ? b : a;
+// ===== 4・5. 年齢による喪失と介護保険 =====
+
+/** 厚生年金：70歳到達日で喪失 */
+export function pensionLostDate(input: CoverageInput): DateStr | null {
+  return earlier(input.pension.lostDate, ageReachDate(input.birthDate, 70));
 }
 
-/** ある月に、どの保険の保険料がかかるか */
-export function coverageForMonth(input: CoverageInput, month: string): MonthlyCoverage {
-  const { birthDate, health, pension } = input;
-
-  // 健康保険：75歳の誕生日当日に後期高齢者医療へ（その日を喪失日とみなす）
-  const healthOn =
-    health.enrolled &&
-    health.acquiredDate !== null &&
-    chargedIn(month, health.acquiredDate, earlier(health.lostDate, birthdayAt(birthDate, 75)));
-
-  // 厚生年金：70歳到達日（誕生日の前日）に喪失
-  const pensionOn =
-    pension.enrolled &&
-    pension.acquiredDate !== null &&
-    chargedIn(month, pension.acquiredDate, earlier(pension.lostDate, ageReachDate(birthDate, 70)));
-
-  // 介護保険：健康保険の加入中で、40歳到達月 〜 65歳到達月の前月
-  const careOn =
-    healthOn &&
-    month >= monthOf(ageReachDate(birthDate, 40)) &&
-    month < monthOf(ageReachDate(birthDate, 65));
-
-  return { month, health: healthOn, care: careOn, pension: pensionOn };
+/** 健康保険：75歳の誕生日に後期高齢者医療へ移るため喪失 */
+export function healthLostDate(input: CoverageInput): DateStr | null {
+  return earlier(input.health.lostDate, birthdayAt(input.birthDate, 75));
 }
 
-/** 複数の月をまとめて判定 */
-export function coverageForMonths(input: CoverageInput, months: string[]): MonthlyCoverage[] {
+export function coverageForMonth(input: CoverageInput, month: YearMonth): MonthlyCoverage {
+  const health =
+    input.health.enrolled && isChargedMonth(input.health.acquiredDate, healthLostDate(input), month);
+
+  const pension =
+    input.pension.enrolled && isChargedMonth(input.pension.acquiredDate, pensionLostDate(input), month);
+
+  // 介護保険：健康保険の保険料がかかっていて、40歳到達の月 〜 65歳到達の月の前月
+  const careStart = toYearMonth(ageReachDate(input.birthDate, 40));
+  const careEnd = toYearMonth(ageReachDate(input.birthDate, 65));
+  const care = health && month >= careStart && month < careEnd;
+
+  return { month, health, care, pension };
+}
+
+// ===== 6. 期間の一覧 =====
+
+function shiftMonth(month: YearMonth, diff: number): YearMonth {
+  const [y, m] = month.split('-').map(Number);
+  const total = y * 12 + (m - 1) + diff;
+  const ny = Math.floor(total / 12);
+  const nm = (total % 12) + 1;
+  return `${ny}-${String(nm).padStart(2, '0')}`;
+}
+
+/** 年度（4月〜翌3月） */
+export function monthsOfFiscalYear(fiscalYear: number): YearMonth[] {
+  return Array.from({ length: 12 }, (_, i) => shiftMonth(`${fiscalYear}-04`, i));
+}
+
+/** 暦年（1月〜12月） */
+export function monthsOfCalendarYear(year: number): YearMonth[] {
+  return Array.from({ length: 12 }, (_, i) => shiftMonth(`${year}-01`, i));
+}
+
+/** 指定した月までの直近12か月 */
+export function monthsLast12(endMonth: YearMonth): YearMonth[] {
+  return Array.from({ length: 12 }, (_, i) => shiftMonth(endMonth, i - 11));
+}
+
+export function coverageForMonths(input: CoverageInput, months: YearMonth[]): MonthlyCoverage[] {
   return months.map((m) => coverageForMonth(input, m));
 }
 
-/** 年度の12か月（例：2026年度 → 2026-04 〜 2027-03） */
-export function fiscalYearMonths(fiscalYear: number): string[] {
-  return Array.from({ length: 12 }, (_, i) => {
-    const m = ((i + 3) % 12) + 1; // 4,5,…,12,1,2,3
-    const y = m >= 4 ? fiscalYear : fiscalYear + 1;
-    return `${y}-${String(m).padStart(2, '0')}`;
-  });
-}
-
-/** 暦年の12か月（例：2026年 → 2026-01 〜 2026-12） */
-export function calendarYearMonths(year: number): string[] {
-  return Array.from({ length: 12 }, (_, i) => `${year}-${String(i + 1).padStart(2, '0')}`);
+/** 入社日・退職日から、取得日・喪失日の初期値を出す（E2） */
+export function defaultEnrollmentDates(hireDate: DateStr, retireDate: DateStr | null) {
+  return {
+    acquiredDate: hireDate,
+    lostDate: retireDate ? addDays(retireDate, 1) : null,
+  };
 }

@@ -1,0 +1,131 @@
+<a class="back" routerLink="..">← {{ 'employee.list.title' | transloco }}</a>
+<h1>{{ (isEdit ? 'employee.form.titleEdit' : 'employee.form.titleNew') | transloco }}</h1>
+
+@if (errorKey(); as key) {
+  <div class="alert alert-danger" role="alert">{{ key | transloco }}</div>
+}
+
+@if (!context.isAdmin()) {
+  <div class="alert alert-danger" role="alert">{{ 'employee.error.notAdmin' | transloco }}</div>
+} @else if (loading()) {
+  <p class="muted">{{ 'common.loading' | transloco }}</p>
+} @else {
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <!-- 基本情報 -->
+    <section class="card">
+      <h2>{{ 'employee.section.basic' | transloco }}</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="employeeNumber">
+            {{ 'employee.field.employeeNumber' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+          </label>
+          <input id="employeeNumber" class="input" formControlName="employeeNumber" />
+        </div>
+        <div class="field"></div>
+
+        <div class="field">
+          <label for="lastName">{{ 'employee.field.lastName' | transloco }}</label>
+          <input id="lastName" class="input" formControlName="lastName" autocomplete="off"
+                 [class.is-invalid]="errorOf('lastName')" />
+          @if (errorOf('lastName'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+        </div>
+        <div class="field">
+          <label for="firstName">{{ 'employee.field.firstName' | transloco }}</label>
+          <input id="firstName" class="input" formControlName="firstName" autocomplete="off"
+                 [class.is-invalid]="errorOf('firstName')" />
+          @if (errorOf('firstName'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+        </div>
+
+        <div class="field">
+          <label for="lastNameKana">{{ 'employee.field.lastNameKana' | transloco }}</label>
+          <input id="lastNameKana" class="input" formControlName="lastNameKana" autocomplete="off"
+                 [class.is-invalid]="errorOf('lastNameKana')" />
+          @if (errorOf('lastNameKana'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+        </div>
+        <div class="field">
+          <label for="firstNameKana">{{ 'employee.field.firstNameKana' | transloco }}</label>
+          <input id="firstNameKana" class="input" formControlName="firstNameKana" autocomplete="off"
+                 [class.is-invalid]="errorOf('firstNameKana')" />
+          @if (errorOf('firstNameKana'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+        </div>
+
+        <div class="field">
+          <label for="birthDate">{{ 'employee.field.birthDate' | transloco }}</label>
+          <input id="birthDate" class="input" type="date" formControlName="birthDate"
+                 [class.is-invalid]="errorOf('birthDate') || groupError('birthFuture', 'birthDate')" />
+          @if (errorOf('birthDate'); as e) {
+            <span class="field-error">{{ e | transloco }}</span>
+          } @else if (groupError('birthFuture', 'birthDate')) {
+            <span class="field-error">{{ 'employee.validation.birthFuture' | transloco }}</span>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- 在籍期間 -->
+    <section class="card">
+      <h2>{{ 'employee.section.employment' | transloco }}</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="hireDate">{{ 'employee.field.hireDate' | transloco }}</label>
+          <input id="hireDate" class="input" type="date" formControlName="hireDate"
+                 [class.is-invalid]="errorOf('hireDate')" />
+          @if (errorOf('hireDate'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+        </div>
+        <div class="field">
+          <label for="retireDate">
+            {{ 'employee.field.retireDate' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+          </label>
+          <input id="retireDate" class="input" type="date" formControlName="retireDate"
+                 [class.is-invalid]="groupError('retireBeforeHire', 'retireDate')" />
+          @if (groupError('retireBeforeHire', 'retireDate')) {
+            <span class="field-error">{{ 'employee.validation.retireBeforeHire' | transloco }}</span>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- 社会保険 -->
+    <section class="card">
+      <h2>{{ 'employee.section.insurance' | transloco }}</h2>
+      <p class="hint section-hint">{{ 'employee.hint.autoDates' | transloco }}</p>
+
+      @for (k of ['health', 'pension']; track k) {
+        <fieldset class="insurance" [formGroupName]="k">
+          <label class="check">
+            <input type="checkbox" formControlName="enrolled" />
+            {{ 'employee.insurance.' + k | transloco }}
+          </label>
+          <div class="grid">
+            <div class="field">
+              <label [for]="k + 'Acquired'">{{ 'employee.field.acquiredDate' | transloco }}</label>
+              <input [id]="k + 'Acquired'" class="input" type="date" formControlName="acquiredDate"
+                     [class.is-invalid]="groupError(k + 'AcquiredRequired', k + '.acquiredDate')" />
+              @if (groupError(k + 'AcquiredRequired', k + '.acquiredDate')) {
+                <span class="field-error">{{ 'employee.validation.required' | transloco }}</span>
+              }
+            </div>
+            <div class="field">
+              <label [for]="k + 'Lost'">
+                {{ 'employee.field.lostDate' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+              </label>
+              <input [id]="k + 'Lost'" class="input" type="date" formControlName="lostDate"
+                     [class.is-invalid]="groupError(k + 'LostBeforeAcquired', k + '.lostDate')" />
+              @if (groupError(k + 'LostBeforeAcquired', k + '.lostDate')) {
+                <span class="field-error">{{ 'employee.validation.lostBeforeAcquired' | transloco }}</span>
+              }
+            </div>
+          </div>
+        </fieldset>
+      }
+      <p class="hint">{{ 'employee.hint.care' | transloco }}</p>
+    </section>
+
+    <div class="actions">
+      <a class="btn" routerLink="..">{{ 'common.back' | transloco }}</a>
+      <button class="btn btn-primary" type="submit" [disabled]="submitting()">
+        {{ (submitting() ? 'common.saving' : 'common.save') | transloco }}
+      </button>
+    </div>
+  </form>
+}

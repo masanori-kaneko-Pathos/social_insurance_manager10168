@@ -1,0 +1,77 @@
+<div class="page-head">
+    <h1>{{ 'employee.list.title' | transloco }}</h1>
+    @if (context.isAdmin()) {
+      <a class="btn btn-primary" routerLink="new">{{ 'employee.list.add' | transloco }}</a>
+    }
+  </div>
+  
+  <div class="toolbar">
+    <input
+      class="input search"
+      type="search"
+      [placeholder]="'employee.list.search' | transloco"
+      [value]="query()"
+      (input)="onQuery($event)"
+    />
+    <div class="segmented" role="group">
+      @for (s of ['active', 'retired', 'all']; track s) {
+        <button type="button" [class.active]="status() === s" (click)="status.set($any(s))">
+          {{ 'employee.status.' + s | transloco }}
+        </button>
+      }
+    </div>
+  </div>
+  
+  @if (loading()) {
+    <p class="muted">{{ 'common.loading' | transloco }}</p>
+  } @else if (employees().length === 0) {
+    <section class="card empty">
+      <h2>{{ 'employee.list.emptyTitle' | transloco }}</h2>
+      <p>{{ 'employee.list.emptyBody' | transloco }}</p>
+      @if (context.isAdmin()) {
+        <a class="btn btn-primary" routerLink="new">{{ 'employee.list.add' | transloco }}</a>
+      }
+    </section>
+  } @else if (filtered().length === 0) {
+    <p class="muted">{{ 'employee.list.noMatch' | transloco }}</p>
+  } @else {
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'employee.field.employeeNumber' | transloco }}</th>
+            <th>{{ 'employee.field.name' | transloco }}</th>
+            <th class="num">{{ 'employee.list.age' | transloco }}</th>
+            <th>{{ 'employee.field.hireDate' | transloco }}</th>
+            <th>{{ 'employee.list.insurance' | transloco }}</th>
+            @if (context.isAdmin()) {
+              <th><span class="sr-only">{{ 'common.edit' | transloco }}</span></th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (e of filtered(); track e.id) {
+            <tr [class.retired]="isRetired(e)">
+              <td class="mono">{{ e.employeeNumber ?? '—' }}</td>
+              <td>
+                <div class="name">{{ e.lastName }} {{ e.firstName }}</div>
+                <div class="kana">{{ e.lastNameKana }} {{ e.firstNameKana }}</div>
+              </td>
+              <td class="num">{{ age(e) }}</td>
+              <td class="mono">{{ e.hireDate }}</td>
+              <td>
+                @if (e.health.enrolled) { <span class="badge">{{ 'employee.badge.health' | transloco }}</span> }
+                @if (e.pension.enrolled) { <span class="badge">{{ 'employee.badge.pension' | transloco }}</span> }
+                @if (isRetired(e)) { <span class="badge badge-muted">{{ 'employee.status.retired' | transloco }}</span> }
+              </td>
+              @if (context.isAdmin()) {
+                <td class="actions">
+                  <a [routerLink]="[e.id, 'edit']">{{ 'common.edit' | transloco }}</a>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }

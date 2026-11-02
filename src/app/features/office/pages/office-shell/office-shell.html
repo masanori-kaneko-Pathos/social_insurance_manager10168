@@ -12,6 +12,17 @@
     </div>
   </header>
   
-  <main class="shell-main">
-    <router-outlet />
-  </main>
+  <div class="shell-body">
+    <nav class="side-nav" [attr.aria-label]="'nav.label' | transloco">
+      <a [routerLink]="['/o', officeId()]" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        {{ 'nav.dashboard' | transloco }}
+      </a>
+      <a [routerLink]="['/o', officeId(), 'employees']" routerLinkActive="active">
+        {{ 'nav.employees' | transloco }}
+      </a>
+    </nav>
+  
+    <main class="shell-main">
+      <router-outlet />
+    </main>
+  </div>
