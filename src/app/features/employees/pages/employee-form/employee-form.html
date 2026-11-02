@@ -122,7 +122,7 @@
     </section>
 
     <div class="actions">
-      <a class="btn" routerLink="..">{{ 'common.back' | transloco }}</a>
+      <a class="btn" [routerLink]="backLink()">{{ 'common.back' | transloco }}</a>
       <button class="btn btn-primary" type="submit" [disabled]="submitting()">
         {{ (submitting() ? 'common.saving' : 'common.save') | transloco }}
       </button>

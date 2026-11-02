@@ -153,6 +153,9 @@ service cloud.firestore {
 
         allow update: if signedIn()
           && office().memberRoles[request.auth.uid] == 'admin'
+          && request.resource.data.keys().hasOnly([
+               'employeeNumber', 'lastName', 'firstName', 'lastNameKana', 'firstNameKana',
+               'birthDate', 'hireDate', 'retireDate', 'health', 'pension', 'createdAt', 'updatedAt'])
           && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdAt'])
           && validEmployee(request.resource.data)
           && request.resource.data.updatedAt == request.time;

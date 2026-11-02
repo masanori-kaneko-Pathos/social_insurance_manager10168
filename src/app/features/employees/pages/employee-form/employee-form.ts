@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -76,6 +76,13 @@ export class EmployeeForm {
   readonly loading = signal(this.isEdit);
   readonly submitting = signal(false);
   readonly errorKey = signal<string | null>(null);
+  /** 「戻る」の行き先：編集なら詳細、新規なら一覧 */
+  readonly backLink = computed(() => {
+    const officeId = this.context.current()?.id;
+    return this.isEdit
+      ? ['/o', officeId, 'employees', this.employeeId]
+      : ['/o', officeId, 'employees'];
+  });
 
   /** 直前の自動入力の値（手で直したかの判定に使う） */
   private lastAutoAcquired = '';
@@ -196,12 +203,14 @@ export class EmployeeForm {
     };
 
     try {
+      let id: string;
       if (this.isEdit && this.employeeId) {
         await this.employees.update(officeId, this.employeeId, input);
+        id = this.employeeId;
       } else {
-        await this.employees.create(officeId, input);
+        id = await this.employees.create(officeId, input);
       }
-      await this.router.navigate(['/o', officeId, 'employees']);
+      await this.router.navigate(['/o', officeId, 'employees', id]);
     } catch (err) {
       console.error(err);
       this.errorKey.set('employee.error.save');

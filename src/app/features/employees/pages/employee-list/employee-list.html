@@ -54,7 +54,7 @@
             <tr [class.retired]="isRetired(e)">
               <td class="mono">{{ e.employeeNumber ?? '—' }}</td>
               <td>
-                <div class="name">{{ e.lastName }} {{ e.firstName }}</div>
+                <div class="name"><a [routerLink]="[e.id]">{{ e.lastName }} {{ e.firstName }}</a></div>
                 <div class="kana">{{ e.lastNameKana }} {{ e.firstNameKana }}</div>
               </td>
               <td class="num">{{ age(e) }}</td>
