@@ -141,6 +141,12 @@ export function monthsLast12(endMonth: YearMonth): YearMonth[] {
   return Array.from({ length: 12 }, (_, i) => shiftMonth(endMonth, i - 11));
 }
 
+/** その月が属する年度（1〜3月は前の年） */
+export function fiscalYearOf(month: YearMonth): number {
+  const [y, m] = month.split('-').map(Number);
+  return m >= 4 ? y : y - 1;
+}
+
 export function coverageForMonths(input: CoverageInput, months: YearMonth[]): MonthlyCoverage[] {
   return months.map((m) => coverageForMonth(input, m));
 }

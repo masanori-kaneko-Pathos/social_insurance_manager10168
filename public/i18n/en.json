@@ -1,208 +1,226 @@
 {
-    "common": {
-      "appName": "Social Insurance Manager",
-      "logout": "Log out",
-      "back": "Back",
-      "optional": "Optional",
-      "select": "Select",
-      "loading": "Loading…",
-      "edit": "Edit",
-      "save": "Save",
-      "saving": "Saving…"
+  "common": {
+    "appName": "Social Insurance Manager",
+    "logout": "Log out",
+    "back": "Back",
+    "optional": "Optional",
+    "select": "Select",
+    "loading": "Loading…",
+    "edit": "Edit",
+    "save": "Save",
+    "saving": "Saving…"
+  },
+  "auth": {
+    "password": {
+      "show": "Show password",
+      "hide": "Hide password"
     },
-    "auth": {
-      "password": {
-        "show": "Show password",
-        "hide": "Hide password"
-      },
-      "forgot": {
-        "title": "Reset your password",
-        "lead": "Enter the email you registered with. We'll send you a reset link.",
-        "submit": "Send reset email",
-        "submitting": "Sending…",
-        "sent": "If that email is registered, we've sent a reset link. Check your spam folder if it doesn't arrive.",
-        "backToLogin": "Back to log in"
-      },
-      "field": {
-        "displayName": "Display name",
-        "email": "Email",
-        "password": "Password",
-        "passwordConfirm": "Confirm password"
-      },
-      "login": {
-        "title": "Log in",
-        "submit": "Log in",
-        "submitting": "Logging in…",
-        "toSignup": "Don't have an account?",
-        "toSignupLink": "Sign up",
-        "forgot": "Forgot your password?"
-      },
-      "signup": {
-        "title": "Sign up",
-        "lead": "Create an administrator account for your office.",
-        "submit": "Create account",
-        "submitting": "Creating…",
-        "toLogin": "Already have an account?",
-        "toLoginLink": "Log in"
-      },
-      "validation": {
-        "required": "This field is required.",
-        "email": "Enter a valid email address.",
-        "passwordRule": "Use at least 8 characters, including letters and numbers.",
-        "passwordMismatch": "Passwords don't match."
-      },
-      "error": {
-        "invalidEmail": "Enter a valid email address.",
-        "emailInUse": "This email is already registered. Try a different one.",
-        "passwordRule": "Use at least 8 characters, including letters and numbers.",
-        "invalidCredential": "Incorrect email or password.",
-        "tooManyRequests": "Too many attempts. Try again later.",
-        "network": "Can't connect to the network.",
-        "noAppAccount": "No account found for this app. Please sign up.",
-        "unknown": "Something went wrong. Try again later."
-      }
+    "forgot": {
+      "title": "Reset your password",
+      "lead": "Enter the email you registered with. We'll send you a reset link.",
+      "submit": "Send reset email",
+      "submitting": "Sending…",
+      "sent": "If that email is registered, we've sent a reset link. Check your spam folder if it doesn't arrive.",
+      "backToLogin": "Back to log in"
     },
-    "dashboard": {
-      "greeting": "Welcome, {{name}}",
-      "placeholder": "Employee and premium features will appear here.",
-      "notSet": "Not set"
+    "field": {
+      "displayName": "Display name",
+      "email": "Email",
+      "password": "Password",
+      "passwordConfirm": "Confirm password"
     },
-    "nav": {
-      "label": "Menu",
-      "dashboard": "Dashboard",
-      "employees": "Employees"
+    "login": {
+      "title": "Log in",
+      "submit": "Log in",
+      "submitting": "Logging in…",
+      "toSignup": "Don't have an account?",
+      "toSignupLink": "Sign up",
+      "forgot": "Forgot your password?"
     },
-    "employee": {
-      "list": {
-        "title": "Employees",
-        "add": "Add employee",
-        "search": "Filter by name, kana or employee number",
-        "age": "Age",
-        "insurance": "Social insurance",
-        "emptyTitle": "Add your first employee",
-        "emptyBody": "Once you add employees, you can check their insurance coverage and premiums.",
-        "noMatch": "No employees match your filters."
-      },
-      "status": {
-        "active": "Active",
-        "retired": "Retired",
-        "all": "All"
-      },
-      "badge": {
-        "health": "Health",
-        "pension": "Pension"
-      },
-      "form": {
-        "titleNew": "Add employee",
-        "titleEdit": "Edit employee"
-      },
-      "section": {
-        "basic": "Basic information",
-        "employment": "Employment period",
-        "insurance": "Insurance eligibility"
-      },
-      "field": {
-        "employeeNumber": "Employee number",
-        "name": "Name",
-        "lastName": "Last name",
-        "firstName": "First name",
-        "lastNameKana": "Last name (katakana)",
-        "firstNameKana": "First name (katakana)",
-        "birthDate": "Date of birth",
-        "hireDate": "Hire date",
-        "retireDate": "Retirement date",
-        "acquiredDate": "Coverage start date",
-        "lostDate": "Coverage end date"
-      },
-      "insurance": {
-        "health": "Enrolled in health insurance",
-        "pension": "Enrolled in employees' pension insurance"
-      },
-      "hint": {
-        "autoDates": "The start date is set to the hire date, and the end date to the day after retirement. You can change them if needed.",
-        "care": "Long-term care insurance applies automatically to health insurance members aged 40 to 64."
-      },
-      "validation": {
-        "required": "This field is required.",
-        "tooLong": "Too many characters.",
-        "kana": "Enter in katakana.",
-        "birthFuture": "Date can't be in the future.",
-        "retireBeforeHire": "Retirement date must be after the hire date.",
-        "lostBeforeAcquired": "End date must be after the start date."
-      },
-      "error": {
-        "save": "Couldn't save. Try again later.",
-        "load": "Couldn't load.",
-        "notFound": "Employee not found.",
-        "notAdmin": "Only administrators of this office can add or edit employees."
-      }
+    "signup": {
+      "title": "Sign up",
+      "lead": "Create an administrator account for your office.",
+      "submit": "Create account",
+      "submitting": "Creating…",
+      "toLogin": "Already have an account?",
+      "toLoginLink": "Log in"
     },
-    
-    "office": {
-      "form": {
-        "titleNew": "Register office",
-        "lead": "Register the office details used for premium calculations. You can fill in unknown items later.",
-        "submit": "Register",
-        "submitting": "Registering…"
+    "validation": {
+      "required": "This field is required.",
+      "email": "Enter a valid email address.",
+      "passwordRule": "Use at least 8 characters, including letters and numbers.",
+      "passwordMismatch": "Passwords don't match."
+    },
+    "error": {
+      "invalidEmail": "Enter a valid email address.",
+      "emailInUse": "This email is already registered. Try a different one.",
+      "passwordRule": "Use at least 8 characters, including letters and numbers.",
+      "invalidCredential": "Incorrect email or password.",
+      "tooManyRequests": "Too many attempts. Try again later.",
+      "network": "Can't connect to the network.",
+      "noAppAccount": "No account found for this app. Please sign up.",
+      "unknown": "Something went wrong. Try again later."
+    }
+  },
+  "dashboard": {
+    "greeting": "Welcome, {{name}}",
+    "placeholder": "Employee and premium features will appear here.",
+    "notSet": "Not set"
+  },
+  "nav": {
+    "label": "Menu",
+    "dashboard": "Dashboard",
+    "employees": "Employees"
+  },
+  "employee": {
+    "list": {
+      "title": "Employees",
+      "add": "Add employee",
+      "search": "Filter by name, kana or employee number",
+      "age": "Age",
+      "insurance": "Social insurance",
+      "emptyTitle": "Add your first employee",
+      "emptyBody": "Once you add employees, you can check their insurance coverage and premiums.",
+      "noMatch": "No employees match your filters."
+    },
+    "status": {
+      "active": "Active",
+      "retired": "Retired",
+      "all": "All"
+    },
+    "badge": {
+      "health": "Health",
+      "pension": "Pension",
+      "care": "Care"
+    },
+    "form": {
+      "titleNew": "Add employee",
+      "titleEdit": "Edit employee"
+    },
+    "section": {
+      "basic": "Basic information",
+      "employment": "Employment period",
+      "insurance": "Insurance eligibility"
+    },
+    "field": {
+      "employeeNumber": "Employee number",
+      "name": "Name",
+      "lastName": "Last name",
+      "firstName": "First name",
+      "lastNameKana": "Last name (katakana)",
+      "firstNameKana": "First name (katakana)",
+      "birthDate": "Date of birth",
+      "hireDate": "Hire date",
+      "retireDate": "Retirement date",
+      "acquiredDate": "Coverage start date",
+      "lostDate": "Coverage end date"
+    },
+    "insurance": {
+      "health": "Enrolled in health insurance",
+      "pension": "Enrolled in employees' pension insurance"
+    },
+    "hint": {
+      "autoDates": "The start date is set to the hire date, and the end date to the day after retirement. You can change them if needed.",
+      "care": "Long-term care insurance applies automatically to health insurance members aged 40 to 64."
+    },
+    "validation": {
+      "required": "This field is required.",
+      "tooLong": "Too many characters.",
+      "kana": "Enter in katakana.",
+      "birthFuture": "Date can't be in the future.",
+      "retireBeforeHire": "Retirement date must be after the hire date.",
+      "lostBeforeAcquired": "End date must be after the start date."
+    },
+    "error": {
+      "save": "Couldn't save. Try again later.",
+      "load": "Couldn't load.",
+      "notFound": "Employee not found.",
+      "notAdmin": "Only administrators of this office can add or edit employees."
+    },
+    "detail": {
+      "back": "Employees",
+      "age": "age {{age}}",
+      "coverageTitle": "Monthly coverage",
+      "mode": {
+        "fiscal": "Fiscal year",
+        "calendar": "Calendar year",
+        "last12": "Last 12 months"
       },
-      "section": {
-        "basic": "Basic information",
-        "location": "Location",
-        "insurer": "Health insurance",
-        "filing": "Filing information"
-      },
-      "field": {
-        "name": "Office name",
-        "corporateName": "Corporate name",
-        "corporateNumber": "Corporate number",
-        "ownerName": "Employer name",
-        "industry": "Industry",
-        "postalCode": "Postal code",
-        "prefecture": "Prefecture",
-        "address": "City, street and building",
-        "insurerType": "Health insurance provider",
-        "kumiaiName": "Health insurance society name",
-        "officeSymbol": "Office reference symbol",
-        "officeNumber": "Office number",
-        "employeeCount": "Number of employees"
-      },
-      "insurer": {
-        "kyokai": "Japan Health Insurance Association (Kyokai Kenpo)",
-        "kumiai": "Health insurance society (Kumiai Kenpo)"
-      },
-      "hint": {
-        "corporateNumber": "13 digits. Leave blank for sole proprietors.",
-        "prefecture": "For Kyokai Kenpo, premium rates differ by prefecture.",
-        "filing": "Assigned after filing with the pension office."
-      },
-      "postal": {
-        "search": "Find address",
-        "searching": "Searching…",
-        "notFound": "No address found for this postal code.",
-        "failed": "Couldn't look up the address. Enter it manually."
-      },
-      "copy": {
-        "label": "Copy details from an existing office",
-        "action": "Copy",
-        "hint": "Copies corporate number, corporate name, employer name, health insurance and industry.",
-        "done": "Copied. Review the details."
-      },
-      "validation": {
-        "required": "This field is required.",
-        "tooLong": "Too many characters.",
-        "corporateNumber": "Invalid corporate number. Check the 13 digits.",
-        "corporateNameRequired": "Enter the corporate name when you enter a corporate number.",
-        "postalCode": "Enter 7 digits (hyphen optional).",
-        "digits": "Enter numbers only.",
-        "count": "Enter 0 or more."
-      },
-      "error": {
-        "save": "Couldn't save. Try again later."
-      },
-      "switcher": {
-        "label": "Switch office",
-        "others": "Others",
-        "add": "Add office"
-      }
+      "fiscalLabel": "FY{{year}}",
+      "calendarLabel": "{{year}}",
+      "last12Label": "12 months to this month",
+      "prev": "Previous",
+      "next": "Next",
+      "insurance": "Insurance",
+      "monthSuffix": "",
+      "futureHint": "Faded marks are future months (planned)."
+    }
+  },
+  "office": {
+    "form": {
+      "titleNew": "Register office",
+      "lead": "Register the office details used for premium calculations. You can fill in unknown items later.",
+      "submit": "Register",
+      "submitting": "Registering…"
+    },
+    "section": {
+      "basic": "Basic information",
+      "location": "Location",
+      "insurer": "Health insurance",
+      "filing": "Filing information"
+    },
+    "field": {
+      "name": "Office name",
+      "corporateName": "Corporate name",
+      "corporateNumber": "Corporate number",
+      "ownerName": "Employer name",
+      "industry": "Industry",
+      "postalCode": "Postal code",
+      "prefecture": "Prefecture",
+      "address": "City, street and building",
+      "insurerType": "Health insurance provider",
+      "kumiaiName": "Health insurance society name",
+      "officeSymbol": "Office reference symbol",
+      "officeNumber": "Office number",
+      "employeeCount": "Number of employees"
+    },
+    "insurer": {
+      "kyokai": "Japan Health Insurance Association (Kyokai Kenpo)",
+      "kumiai": "Health insurance society (Kumiai Kenpo)"
+    },
+    "hint": {
+      "corporateNumber": "13 digits. Leave blank for sole proprietors.",
+      "prefecture": "For Kyokai Kenpo, premium rates differ by prefecture.",
+      "filing": "Assigned after filing with the pension office."
+    },
+    "postal": {
+      "search": "Find address",
+      "searching": "Searching…",
+      "notFound": "No address found for this postal code.",
+      "failed": "Couldn't look up the address. Enter it manually."
+    },
+    "copy": {
+      "label": "Copy details from an existing office",
+      "action": "Copy",
+      "hint": "Copies corporate number, corporate name, employer name, health insurance and industry.",
+      "done": "Copied. Review the details."
+    },
+    "validation": {
+      "required": "This field is required.",
+      "tooLong": "Too many characters.",
+      "corporateNumber": "Invalid corporate number. Check the 13 digits.",
+      "corporateNameRequired": "Enter the corporate name when you enter a corporate number.",
+      "postalCode": "Enter 7 digits (hyphen optional).",
+      "digits": "Enter numbers only.",
+      "count": "Enter 0 or more."
+    },
+    "error": {
+      "save": "Couldn't save. Try again later."
+    },
+    "switcher": {
+      "label": "Switch office",
+      "others": "Others",
+      "add": "Add office"
     }
   }
+}

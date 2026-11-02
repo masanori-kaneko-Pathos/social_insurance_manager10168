@@ -1,0 +1,99 @@
+import { Component, inject, signal, computed } from "@angular/core";
+import { RouterLink, ActivatedRoute } from "@angular/router";
+import { TranslocoPipe } from "@jsverse/transloco";
+import { EmployeeService } from "../../employee.service";
+import { OfficeContext } from "../../../office/office-context.service";
+import { todayLocal, ageAt } from "../../../../shared/utils/date";
+import { toYearMonth, fiscalYearOf, monthsLast12, YearMonth,
+    monthsOfCalendarYear, monthsOfFiscalYear, coverageForMonths, 
+ } from "../../logic/coverage";
+import { Employee } from "../../../../core/models/employee";
+
+type Mode = 'fiscal' | 'calendar' | 'last12';
+
+@Component({
+  selector: 'app-employee-detail',
+  imports: [RouterLink, TranslocoPipe],
+  templateUrl: './employee-detail.html',
+  styleUrl: './employee-detail.css',
+})
+export class EmployeeDetail {
+  private readonly route = inject(ActivatedRoute);
+  private readonly employeesApi = inject(EmployeeService);
+  readonly context = inject(OfficeContext);
+
+  readonly today = todayLocal();
+  readonly thisMonth = toYearMonth(this.today);
+  readonly employeeId = this.route.snapshot.paramMap.get('employeeId');
+
+  // ===== 箱（signal） =====
+  readonly employee = signal<Employee | null>(null);
+  readonly loading = signal(true);
+  readonly errorKey = signal<string | null>(null);
+
+  readonly modes: Mode[] = ['fiscal', 'calendar', 'last12'];
+  readonly kinds = ['health', 'care', 'pension'] as const;
+  readonly mode = signal<Mode>('fiscal');
+  readonly year = signal(fiscalYearOf(this.thisMonth));
+
+  // ===== 自動で計算される箱（computed） =====
+
+  /** 表に並べる12か月 */
+  readonly months = computed<YearMonth[]>(() => {
+    const mode = this.mode();
+    if (mode === 'last12') return monthsLast12(this.thisMonth);
+    return mode === 'fiscal' ? monthsOfFiscalYear(this.year()) : monthsOfCalendarYear(this.year());
+  });
+
+  /** 月ごとの加入状況 */
+  readonly rows = computed(() => {
+    const e = this.employee();
+    return e ? coverageForMonths(e, this.months()) : [];
+  });
+
+  constructor() {
+    this.load();
+  }
+
+  private async load(): Promise<void> {
+    try {
+      const officeId = this.context.current()?.id;
+      if (!officeId || !this.employeeId) return;
+      const e = await this.employeesApi.get(officeId, this.employeeId);
+      if (e) this.employee.set(e);
+      else this.errorKey.set('employee.error.notFound');
+    } catch (err) {
+      console.error(err);
+      this.errorKey.set('employee.error.load');
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  // ===== ボタンの処理 =====
+
+  /** 区切りを変えたら、年はその区切りでの「今」に戻す */
+  setMode(m: Mode): void {
+    this.mode.set(m);
+    this.year.set(m === 'calendar' ? Number(this.thisMonth.slice(0, 4)) : fiscalYearOf(this.thisMonth));
+  }
+
+  shift(diff: number): void {
+    this.year.update((y) => y + diff);
+  }
+
+  // ===== 表示の小道具 =====
+
+  isFuture(month: YearMonth): boolean {
+    return month > this.thisMonth;
+  }
+
+  age(e: Employee): number {
+    return ageAt(e.birthDate, this.today);
+  }
+
+  /** '2026-04' → '4' */
+  monthLabel(month: YearMonth): string {
+    return String(Number(month.slice(5)));
+  }
+}

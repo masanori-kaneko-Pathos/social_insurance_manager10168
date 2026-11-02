@@ -1,207 +1,226 @@
 {
-    "common": {
-      "appName": "社会保険管理",
-      "logout": "ログアウト",
-      "back": "戻る",
-      "optional": "任意",
-      "select": "選択してください",
-      "loading": "読み込み中…",
-      "edit": "編集",
-      "save": "保存する",
-      "saving": "保存中…"
+  "common": {
+    "appName": "社会保険管理",
+    "logout": "ログアウト",
+    "back": "戻る",
+    "optional": "任意",
+    "select": "選択してください",
+    "loading": "読み込み中…",
+    "edit": "編集",
+    "save": "保存する",
+    "saving": "保存中…"
+  },
+  "auth": {
+    "password": {
+      "show": "パスワードを表示",
+      "hide": "パスワードを隠す"
     },
-    "auth": {
-      "password": {
-        "show": "パスワードを表示",
-        "hide": "パスワードを隠す"
-      },
-      "forgot": {
-        "title": "パスワードの再設定",
-        "lead": "登録したメールアドレスを入力してください。再設定用のリンクをお送りします。",
-        "submit": "再設定メールを送る",
-        "submitting": "送信中…",
-        "sent": "ご登録があれば、再設定用のメールをお送りしました。メールが届かない場合は、迷惑メールフォルダもご確認ください。",
-        "backToLogin": "ログイン画面に戻る"
-      },
-      "field": {
-        "displayName": "表示名",
-        "email": "メールアドレス",
-        "password": "パスワード",
-        "passwordConfirm": "パスワード（確認）"
-      },
-      "login": {
-        "title": "ログイン",
-        "submit": "ログイン",
-        "submitting": "ログイン中…",
-        "toSignup": "アカウントをお持ちでない方は",
-        "toSignupLink": "新規登録",
-        "forgot": "パスワードをお忘れの方"
-      },
-      "signup": {
-        "title": "新規登録",
-        "lead": "事業所の管理者アカウントを作成します。",
-        "submit": "登録する",
-        "submitting": "登録中…",
-        "toLogin": "アカウントをお持ちの方は",
-        "toLoginLink": "ログイン"
-      },
-      "validation": {
-        "required": "入力してください。",
-        "email": "メールアドレスの形式が正しくありません。",
-        "passwordRule": "8文字以上で、英字と数字を両方含めてください。",
-        "passwordMismatch": "パスワードが一致しません。"
-      },
-      "error": {
-        "invalidEmail": "メールアドレスの形式が正しくありません。",
-        "emailInUse": "このメールアドレスはすでに登録されています。別のメールアドレスでお試しください。",
-        "passwordRule": "パスワードは8文字以上で、英字と数字を両方含めてください。",
-        "invalidCredential": "メールアドレスまたはパスワードが違います。",
-        "tooManyRequests": "試行回数が多すぎます。しばらくしてからお試しください。",
-        "network": "ネットワークに接続できません。",
-        "noAppAccount": "このアプリのアカウントが見つかりません。新規登録してください。",
-        "unknown": "エラーが発生しました。時間をおいてお試しください。"
-      }
+    "forgot": {
+      "title": "パスワードの再設定",
+      "lead": "登録したメールアドレスを入力してください。再設定用のリンクをお送りします。",
+      "submit": "再設定メールを送る",
+      "submitting": "送信中…",
+      "sent": "ご登録があれば、再設定用のメールをお送りしました。メールが届かない場合は、迷惑メールフォルダもご確認ください。",
+      "backToLogin": "ログイン画面に戻る"
     },
-    "dashboard": {
-      "greeting": "{{name}} さん、ようこそ",
-      "placeholder": "ここに従業員や保険料の機能が入ります。",
-      "notSet": "未登録"
+    "field": {
+      "displayName": "表示名",
+      "email": "メールアドレス",
+      "password": "パスワード",
+      "passwordConfirm": "パスワード（確認）"
     },
-    "nav": {
-      "label": "メニュー",
-      "dashboard": "ダッシュボード",
-      "employees": "従業員"
+    "login": {
+      "title": "ログイン",
+      "submit": "ログイン",
+      "submitting": "ログイン中…",
+      "toSignup": "アカウントをお持ちでない方は",
+      "toSignupLink": "新規登録",
+      "forgot": "パスワードをお忘れの方"
     },
-    "employee": {
-      "list": {
-        "title": "従業員",
-        "add": "従業員を登録",
-        "search": "氏名・フリガナ・社員番号で絞り込み",
-        "age": "年齢",
-        "insurance": "社会保険",
-        "emptyTitle": "従業員を登録しましょう",
-        "emptyBody": "従業員を登録すると、社会保険の加入状況や保険料を確認できます。",
-        "noMatch": "条件に合う従業員がいません。"
-      },
-      "status": {
-        "active": "在籍中",
-        "retired": "退職者",
-        "all": "すべて"
-      },
-      "badge": {
-        "health": "健保",
-        "pension": "厚年"
-      },
-      "form": {
-        "titleNew": "従業員の登録",
-        "titleEdit": "従業員の編集"
-      },
-      "section": {
-        "basic": "基本情報",
-        "employment": "在籍期間",
-        "insurance": "社会保険の資格"
-      },
-      "field": {
-        "employeeNumber": "社員番号",
-        "name": "氏名",
-        "lastName": "姓",
-        "firstName": "名",
-        "lastNameKana": "セイ（カタカナ）",
-        "firstNameKana": "メイ（カタカナ）",
-        "birthDate": "生年月日",
-        "hireDate": "入社日",
-        "retireDate": "退職日",
-        "acquiredDate": "資格取得日",
-        "lostDate": "資格喪失日"
-      },
-      "insurance": {
-        "health": "健康保険に加入する",
-        "pension": "厚生年金保険に加入する"
-      },
-      "hint": {
-        "autoDates": "資格取得日は入社日、資格喪失日は退職日の翌日が自動で入ります。必要に応じて変更できます。",
-        "care": "介護保険は、健康保険の加入者が40歳以上65歳未満の期間、自動で対象になります。"
-      },
-      "validation": {
-        "required": "入力してください。",
-        "tooLong": "文字数が多すぎます。",
-        "kana": "カタカナで入力してください。",
-        "birthFuture": "未来の日付は入力できません。",
-        "retireBeforeHire": "退職日は入社日より後にしてください。",
-        "lostBeforeAcquired": "資格喪失日は資格取得日より後にしてください。"
-      },
-      "error": {
-        "save": "保存できませんでした。時間をおいてお試しください。",
-        "load": "読み込めませんでした。",
-        "notFound": "従業員が見つかりません。",
-        "notAdmin": "従業員の登録・編集は、この事業所の管理者のみ行えます。"
-      }
+    "signup": {
+      "title": "新規登録",
+      "lead": "事業所の管理者アカウントを作成します。",
+      "submit": "登録する",
+      "submitting": "登録中…",
+      "toLogin": "アカウントをお持ちの方は",
+      "toLoginLink": "ログイン"
     },
-    "office": {
-      "form": {
-        "titleNew": "事業所の登録",
-        "lead": "保険料の計算に使う事業所の情報を登録します。届出前で分からない項目は、後から入力できます。",
-        "submit": "登録する",
-        "submitting": "登録中…"
+    "validation": {
+      "required": "入力してください。",
+      "email": "メールアドレスの形式が正しくありません。",
+      "passwordRule": "8文字以上で、英字と数字を両方含めてください。",
+      "passwordMismatch": "パスワードが一致しません。"
+    },
+    "error": {
+      "invalidEmail": "メールアドレスの形式が正しくありません。",
+      "emailInUse": "このメールアドレスはすでに登録されています。別のメールアドレスでお試しください。",
+      "passwordRule": "パスワードは8文字以上で、英字と数字を両方含めてください。",
+      "invalidCredential": "メールアドレスまたはパスワードが違います。",
+      "tooManyRequests": "試行回数が多すぎます。しばらくしてからお試しください。",
+      "network": "ネットワークに接続できません。",
+      "noAppAccount": "このアプリのアカウントが見つかりません。新規登録してください。",
+      "unknown": "エラーが発生しました。時間をおいてお試しください。"
+    }
+  },
+  "dashboard": {
+    "greeting": "{{name}} さん、ようこそ",
+    "placeholder": "ここに従業員や保険料の機能が入ります。",
+    "notSet": "未登録"
+  },
+  "nav": {
+    "label": "メニュー",
+    "dashboard": "ダッシュボード",
+    "employees": "従業員"
+  },
+  "employee": {
+    "list": {
+      "title": "従業員",
+      "add": "従業員を登録",
+      "search": "氏名・フリガナ・社員番号で絞り込み",
+      "age": "年齢",
+      "insurance": "社会保険",
+      "emptyTitle": "従業員を登録しましょう",
+      "emptyBody": "従業員を登録すると、社会保険の加入状況や保険料を確認できます。",
+      "noMatch": "条件に合う従業員がいません。"
+    },
+    "status": {
+      "active": "在籍中",
+      "retired": "退職者",
+      "all": "すべて"
+    },
+    "badge": {
+      "health": "健保",
+      "pension": "厚年",
+      "care": "介護"
+    },
+    "form": {
+      "titleNew": "従業員の登録",
+      "titleEdit": "従業員の編集"
+    },
+    "section": {
+      "basic": "基本情報",
+      "employment": "在籍期間",
+      "insurance": "社会保険の資格"
+    },
+    "field": {
+      "employeeNumber": "社員番号",
+      "name": "氏名",
+      "lastName": "姓",
+      "firstName": "名",
+      "lastNameKana": "セイ（カタカナ）",
+      "firstNameKana": "メイ（カタカナ）",
+      "birthDate": "生年月日",
+      "hireDate": "入社日",
+      "retireDate": "退職日",
+      "acquiredDate": "資格取得日",
+      "lostDate": "資格喪失日"
+    },
+    "insurance": {
+      "health": "健康保険に加入する",
+      "pension": "厚生年金保険に加入する"
+    },
+    "hint": {
+      "autoDates": "資格取得日は入社日、資格喪失日は退職日の翌日が自動で入ります。必要に応じて変更できます。",
+      "care": "介護保険は、健康保険の加入者が40歳以上65歳未満の期間、自動で対象になります。"
+    },
+    "validation": {
+      "required": "入力してください。",
+      "tooLong": "文字数が多すぎます。",
+      "kana": "カタカナで入力してください。",
+      "birthFuture": "未来の日付は入力できません。",
+      "retireBeforeHire": "退職日は入社日より後にしてください。",
+      "lostBeforeAcquired": "資格喪失日は資格取得日より後にしてください。"
+    },
+    "error": {
+      "save": "保存できませんでした。時間をおいてお試しください。",
+      "load": "読み込めませんでした。",
+      "notFound": "従業員が見つかりません。",
+      "notAdmin": "従業員の登録・編集は、この事業所の管理者のみ行えます。"
+    },
+    "detail": {
+      "back": "従業員一覧",
+      "age": "{{age}}歳",
+      "coverageTitle": "月ごとの加入状況",
+      "mode": {
+        "fiscal": "年度",
+        "calendar": "暦年",
+        "last12": "直近12か月"
       },
-      "section": {
-        "basic": "基本情報",
-        "location": "所在地",
-        "insurer": "健康保険",
-        "filing": "届出情報"
-      },
-      "field": {
-        "name": "事業所名称（屋号）",
-        "corporateName": "法人名",
-        "corporateNumber": "法人番号",
-        "ownerName": "事業主氏名",
-        "industry": "業種",
-        "postalCode": "郵便番号",
-        "prefecture": "都道府県",
-        "address": "市区町村・番地・建物名",
-        "insurerType": "加入している健康保険",
-        "kumiaiName": "健康保険組合名",
-        "officeSymbol": "事業所整理記号",
-        "officeNumber": "事業所番号",
-        "employeeCount": "従業員数"
-      },
-      "insurer": {
-        "kyokai": "協会けんぽ",
-        "kumiai": "健康保険組合（組合健保）"
-      },
-      "hint": {
-        "corporateNumber": "13桁の数字。個人事業の場合は空欄で構いません。",
-        "prefecture": "協会けんぽの場合、都道府県ごとに保険料率が異なります。",
-        "filing": "年金事務所への新規適用届の後に割り当てられます。"
-      },
-      "postal": {
-        "search": "住所を検索",
-        "searching": "検索中…",
-        "notFound": "該当する住所が見つかりませんでした。",
-        "failed": "住所を検索できませんでした。手入力してください。"
-      },
-      "copy": {
-        "label": "既存の事業所から入力内容をコピー",
-        "action": "コピー",
-        "hint": "法人番号・法人名・事業主氏名・健康保険・業種をコピーします。",
-        "done": "コピーしました。内容を確認してください。"
-      },
-      "validation": {
-        "required": "入力してください。",
-        "tooLong": "文字数が多すぎます。",
-        "corporateNumber": "法人番号が正しくありません。13桁の数字を確認してください。",
-        "corporateNameRequired": "法人番号を入力した場合は、法人名も入力してください。",
-        "postalCode": "7桁の数字で入力してください（ハイフンは任意）。",
-        "digits": "数字で入力してください。",
-        "count": "0以上の数を入力してください。"
-      },
-      "error": {
-        "save": "保存できませんでした。時間をおいてお試しください。"
-      },
-      "switcher": {
-        "label": "事業所を切り替える",
-        "others": "その他",
-        "add": "事業所を追加"
-      }
+      "fiscalLabel": "{{year}}年度",
+      "calendarLabel": "{{year}}年",
+      "last12Label": "今月までの12か月",
+      "prev": "前へ",
+      "next": "次へ",
+      "insurance": "保険の種類",
+      "monthSuffix": "月",
+      "futureHint": "薄い表示は、今日より先の月（予定）です。"
+    }
+  },
+  "office": {
+    "form": {
+      "titleNew": "事業所の登録",
+      "lead": "保険料の計算に使う事業所の情報を登録します。届出前で分からない項目は、後から入力できます。",
+      "submit": "登録する",
+      "submitting": "登録中…"
+    },
+    "section": {
+      "basic": "基本情報",
+      "location": "所在地",
+      "insurer": "健康保険",
+      "filing": "届出情報"
+    },
+    "field": {
+      "name": "事業所名称（屋号）",
+      "corporateName": "法人名",
+      "corporateNumber": "法人番号",
+      "ownerName": "事業主氏名",
+      "industry": "業種",
+      "postalCode": "郵便番号",
+      "prefecture": "都道府県",
+      "address": "市区町村・番地・建物名",
+      "insurerType": "加入している健康保険",
+      "kumiaiName": "健康保険組合名",
+      "officeSymbol": "事業所整理記号",
+      "officeNumber": "事業所番号",
+      "employeeCount": "従業員数"
+    },
+    "insurer": {
+      "kyokai": "協会けんぽ",
+      "kumiai": "健康保険組合（組合健保）"
+    },
+    "hint": {
+      "corporateNumber": "13桁の数字。個人事業の場合は空欄で構いません。",
+      "prefecture": "協会けんぽの場合、都道府県ごとに保険料率が異なります。",
+      "filing": "年金事務所への新規適用届の後に割り当てられます。"
+    },
+    "postal": {
+      "search": "住所を検索",
+      "searching": "検索中…",
+      "notFound": "該当する住所が見つかりませんでした。",
+      "failed": "住所を検索できませんでした。手入力してください。"
+    },
+    "copy": {
+      "label": "既存の事業所から入力内容をコピー",
+      "action": "コピー",
+      "hint": "法人番号・法人名・事業主氏名・健康保険・業種をコピーします。",
+      "done": "コピーしました。内容を確認してください。"
+    },
+    "validation": {
+      "required": "入力してください。",
+      "tooLong": "文字数が多すぎます。",
+      "corporateNumber": "法人番号が正しくありません。13桁の数字を確認してください。",
+      "corporateNameRequired": "法人番号を入力した場合は、法人名も入力してください。",
+      "postalCode": "7桁の数字で入力してください（ハイフンは任意）。",
+      "digits": "数字で入力してください。",
+      "count": "0以上の数を入力してください。"
+    },
+    "error": {
+      "save": "保存できませんでした。時間をおいてお試しください。"
+    },
+    "switcher": {
+      "label": "事業所を切り替える",
+      "others": "その他",
+      "add": "事業所を追加"
     }
   }
+}

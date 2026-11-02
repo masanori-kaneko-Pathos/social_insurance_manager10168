@@ -5,6 +5,7 @@ import {
   defaultEnrollmentDates,
   isChargedMonth,
   monthsOfFiscalYear,
+  fiscalYearOf,
 } from './coverage';
 
 /** テスト用の従業員を作る（健保・厚年とも加入、指定がなければ退職なし） */
@@ -118,4 +119,9 @@ describe('期間の一覧と初期値', () => {
     expect(defaultEnrollmentDates('2025-04-01', '2025-09-30').lostDate).toBe('2025-10-01');
     expect(defaultEnrollmentDates('2025-04-01', null).lostDate).toBeNull();
   });
+});
+
+it('fiscalYearOf：1〜3月は前の年度、4月からその年の年度', () => {
+  expect(fiscalYearOf('2027-03')).toBe(2026);
+  expect(fiscalYearOf('2026-04')).toBe(2026);
 });

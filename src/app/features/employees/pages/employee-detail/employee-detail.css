@@ -1,0 +1,179 @@
+.back {
+    font-size: var(--font-sm);
+    color: var(--color-text-sub);
+    text-decoration: none;
+  }
+  
+  .page-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-md);
+    margin: var(--space-sm) 0 var(--space-lg);
+  }
+  
+  .page-head a.btn {
+    text-decoration: none;
+  }
+  
+  h1 {
+    margin: 0;
+    font-size: var(--font-xl);
+  }
+  
+  .kana {
+    margin: 0;
+    font-size: var(--font-sm);
+    color: var(--color-text-sub);
+  }
+  
+  .card {
+    margin-bottom: var(--space-lg);
+  }
+  
+  /* 基本情報 */
+  .info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--space-md);
+    margin: 0;
+  }
+  
+  .info dt {
+    font-size: var(--font-xs);
+    color: var(--color-text-sub);
+  }
+  
+  .info dd {
+    margin: 0;
+  }
+  
+  .mono {
+    font-variant-numeric: tabular-nums;
+  }
+  
+  /* 区切りの切り替え */
+  .coverage-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+  }
+  
+  h2 {
+    margin: 0;
+    font-size: var(--font-md);
+  }
+  
+  .segmented {
+    display: inline-flex;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  
+  .segmented button {
+    padding: var(--space-xs) var(--space-md);
+    font: inherit;
+    font-size: var(--font-sm);
+    color: var(--color-text);
+    background: var(--color-surface);
+    border: 0;
+    cursor: pointer;
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  
+  .segmented button + button {
+    border-left: 1px solid var(--color-border-strong);
+  }
+  
+  .segmented button.active {
+    background: var(--color-highlight);
+    font-weight: 600;
+  }
+  
+  /* 前後送り */
+  .period {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+  }
+  
+  .period .btn {
+    width: 40px;
+    padding: 0;
+  }
+  
+  .period-label {
+    min-width: 7em;
+    text-align: center;
+    font-weight: 600;
+  }
+  
+  /* 表 */
+  .table-wrap {
+    overflow-x: auto;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--font-sm);
+  }
+  
+  th,
+  td {
+    padding: var(--space-xs) var(--space-sm);
+    border-bottom: 1px solid var(--color-border);
+    text-align: center;
+    white-space: nowrap;
+  }
+  
+  tbody th {
+    text-align: left;
+    font-weight: 600;
+  }
+  
+  .month {
+    font-weight: 400;
+    color: var(--color-text-sub);
+    vertical-align: bottom;
+  }
+  
+  .month .year {
+    display: block;
+    font-size: var(--font-xs);
+  }
+  
+  .mark {
+    font-weight: 600;
+  }
+  
+  .future {
+    opacity: 0.4;
+  }
+  
+  .hint {
+    margin: var(--space-sm) 0 0;
+    font-size: var(--font-xs);
+    color: var(--color-text-sub);
+  }
+  
+  .muted {
+    color: var(--color-text-sub);
+  }
+  
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
