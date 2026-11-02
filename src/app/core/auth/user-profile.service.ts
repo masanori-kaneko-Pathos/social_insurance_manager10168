@@ -21,7 +21,7 @@ export class UserProfileService {
       email: user.email,
       displayName,
       role: 'admin',
-      officeId: null,
+      currentOfficeId: null,
       lang,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -39,6 +39,11 @@ export class UserProfileService {
   async updateLang(uid: string, lang: Lang): Promise<void> {
     await updateDoc(this.ref(uid), { lang, updatedAt: serverTimestamp() });
     this._profile.update((p) => (p ? { ...p, lang } : p));
+  }
+
+  async setCurrentOffice(uid: string, officeId: string): Promise<void> {
+    await updateDoc(this.ref(uid), { currentOfficeId: officeId, updatedAt: serverTimestamp() });
+    this._profile.update((p) => (p ? { ...p, currentOfficeId: officeId } : p));
   }
 
   clear(): void {

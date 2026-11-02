@@ -1,0 +1,29 @@
+<h1>{{ 'dashboard.greeting' | transloco: { name: profile()?.displayName ?? '' } }}</h1>
+
+@if (office(); as o) {
+  <section class="card summary">
+    <h2>{{ o.name }}</h2>
+    <dl>
+      <div class="row">
+        <dt>{{ 'office.field.prefecture' | transloco }}</dt>
+        <dd>{{ prefectureName() }}</dd>
+      </div>
+      <div class="row">
+        <dt>{{ 'office.field.insurerType' | transloco }}</dt>
+        <dd>{{ 'office.insurer.' + o.healthInsurer.type | transloco }}</dd>
+      </div>
+      @if (o.healthInsurer.kumiaiName) {
+        <div class="row">
+          <dt>{{ 'office.field.kumiaiName' | transloco }}</dt>
+          <dd>{{ o.healthInsurer.kumiaiName }}</dd>
+        </div>
+      }
+      <div class="row">
+        <dt>{{ 'office.field.officeSymbol' | transloco }}</dt>
+        <dd [class.not-set]="!o.officeSymbol">{{ o.officeSymbol ?? ('dashboard.notSet' | transloco) }}</dd>
+      </div>
+    </dl>
+  </section>
+}
+
+<p class="placeholder">{{ 'dashboard.placeholder' | transloco }}</p>

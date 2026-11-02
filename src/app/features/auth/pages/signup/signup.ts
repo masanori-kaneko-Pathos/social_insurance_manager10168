@@ -71,7 +71,7 @@ export class Signup {
     const { displayName, email, password } = this.form.getRawValue();
     try {
       await this.auth.signUp(email, password, displayName.trim());
-      await this.router.navigateByUrl('/home');
+      await this.router.navigateByUrl('/');
     } catch (err) {
       this.errorKey.set(toAuthErrorKey(err));
     } finally {

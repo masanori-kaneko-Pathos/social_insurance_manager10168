@@ -1,0 +1,17 @@
+<header class="app-header">
+    <div class="header-left">
+      <span class="app-name">{{ 'common.appName' | transloco }}</span>
+      <app-office-switcher />
+    </div>
+    <div class="header-right">
+      <app-lang-switch />
+      <span class="user-name">{{ profile()?.displayName }}</span>
+      <button class="btn" type="button" (click)="logout()" [disabled]="loggingOut()">
+        {{ 'common.logout' | transloco }}
+      </button>
+    </div>
+  </header>
+  
+  <main class="shell-main">
+    <router-outlet />
+  </main>

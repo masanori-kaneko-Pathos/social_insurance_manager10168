@@ -1,0 +1,187 @@
+<div class="page">
+    <a class="back" routerLink="/">← {{ 'common.back' | transloco }}</a>
+    <h1>{{ 'office.form.titleNew' | transloco }}</h1>
+    <p class="lead">{{ 'office.form.lead' | transloco }}</p>
+  
+    @if (myOffices().length > 0) {
+      <section class="card copy">
+        <label for="copyFrom">{{ 'office.copy.label' | transloco }}</label>
+        <div class="row">
+          <select id="copyFrom" class="input" #copySel>
+            @for (o of myOffices(); track o.id) {
+              <option [value]="o.id">{{ o.name }}</option>
+            }
+          </select>
+          <button type="button" class="btn" (click)="copyFrom(copySel.value)">
+            {{ 'office.copy.action' | transloco }}
+          </button>
+        </div>
+        <p class="hint">{{ (copied() ? 'office.copy.done' : 'office.copy.hint') | transloco }}</p>
+      </section>
+    }
+  
+    @if (errorKey(); as key) {
+      <div class="alert alert-danger" role="alert">{{ key | transloco }}</div>
+    }
+  
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <!-- 基本情報 -->
+      <section class="card">
+        <h2>{{ 'office.section.basic' | transloco }}</h2>
+        <div class="grid">
+          <div class="field full">
+            <label for="name">{{ 'office.field.name' | transloco }}</label>
+            <input id="name" class="input" formControlName="name" [class.is-invalid]="errorOf('name')" />
+            @if (errorOf('name'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+  
+          <div class="field">
+            <label for="corporateNumber">
+              {{ 'office.field.corporateNumber' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+            </label>
+            <input id="corporateNumber" class="input" inputmode="numeric" maxlength="13"
+                   formControlName="corporateNumber" [class.is-invalid]="errorOf('corporateNumber')" />
+            @if (errorOf('corporateNumber'); as e) {
+              <span class="field-error">{{ e | transloco }}</span>
+            } @else {
+              <span class="hint">{{ 'office.hint.corporateNumber' | transloco }}</span>
+            }
+          </div>
+  
+          <div class="field">
+            <label for="corporateName">
+              {{ 'office.field.corporateName' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+            </label>
+            <input id="corporateName" class="input" formControlName="corporateName"
+                   [class.is-invalid]="errorOf('corporateName')" />
+            @if (errorOf('corporateName'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+  
+          <div class="field">
+            <label for="ownerName">{{ 'office.field.ownerName' | transloco }}</label>
+            <input id="ownerName" class="input" formControlName="ownerName" [class.is-invalid]="errorOf('ownerName')" />
+            @if (errorOf('ownerName'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+  
+          <div class="field">
+            <label for="industry">
+              {{ 'office.field.industry' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+            </label>
+            <select id="industry" class="input" formControlName="industry">
+              <option value="">{{ 'common.select' | transloco }}</option>
+              @for (i of industries; track i.code) {
+                <option [value]="i.code">{{ i[lang()] }}</option>
+              }
+            </select>
+          </div>
+        </div>
+      </section>
+  
+      <!-- 所在地 -->
+      <section class="card">
+        <h2>{{ 'office.section.location' | transloco }}</h2>
+        <div class="grid">
+          <div class="field">
+            <label for="postalCode">
+              {{ 'office.field.postalCode' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+            </label>
+            <div class="row">
+              <input id="postalCode" class="input" inputmode="numeric" maxlength="8" placeholder="100-0001"
+                     formControlName="postalCode" [class.is-invalid]="errorOf('postalCode')" />
+              <button type="button" class="btn" (click)="lookupPostal()" [disabled]="postalStatus() === 'loading'">
+                {{ (postalStatus() === 'loading' ? 'office.postal.searching' : 'office.postal.search') | transloco }}
+              </button>
+            </div>
+            @if (errorOf('postalCode'); as e) {
+              <span class="field-error">{{ e | transloco }}</span>
+            } @else if (postalStatus() === 'notFound') {
+              <span class="field-error">{{ 'office.postal.notFound' | transloco }}</span>
+            } @else if (postalStatus() === 'failed') {
+              <span class="field-error">{{ 'office.postal.failed' | transloco }}</span>
+            }
+          </div>
+  
+          <div class="field">
+            <label for="prefecture">{{ 'office.field.prefecture' | transloco }}</label>
+            <select id="prefecture" class="input" formControlName="prefecture" [class.is-invalid]="errorOf('prefecture')">
+              <option value="">{{ 'common.select' | transloco }}</option>
+              @for (p of prefectures; track p.code) {
+                <option [value]="p.code">{{ p[lang()] }}</option>
+              }
+            </select>
+            @if (errorOf('prefecture'); as e) {
+              <span class="field-error">{{ e | transloco }}</span>
+            } @else {
+              <span class="hint">{{ 'office.hint.prefecture' | transloco }}</span>
+            }
+          </div>
+  
+          <div class="field full">
+            <label for="address">{{ 'office.field.address' | transloco }}</label>
+            <input id="address" class="input" formControlName="address" [class.is-invalid]="errorOf('address')" />
+            @if (errorOf('address'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+        </div>
+      </section>
+  
+      <!-- 健康保険 -->
+      <section class="card">
+        <h2>{{ 'office.section.insurer' | transloco }}</h2>
+        <div class="field">
+          <span class="label">{{ 'office.field.insurerType' | transloco }}</span>
+          <div class="radio-group">
+            <label class="radio">
+              <input type="radio" value="kyokai" formControlName="insurerType" />
+              {{ 'office.insurer.kyokai' | transloco }}
+            </label>
+            <label class="radio">
+              <input type="radio" value="kumiai" formControlName="insurerType" />
+              {{ 'office.insurer.kumiai' | transloco }}
+            </label>
+          </div>
+        </div>
+  
+        @if (insurerType() === 'kumiai') {
+          <div class="field">
+            <label for="kumiaiName">{{ 'office.field.kumiaiName' | transloco }}</label>
+            <input id="kumiaiName" class="input" formControlName="kumiaiName" [class.is-invalid]="errorOf('kumiaiName')" />
+            @if (errorOf('kumiaiName'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+        }
+      </section>
+  
+      <!-- 届出情報 -->
+      <section class="card">
+        <h2>{{ 'office.section.filing' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></h2>
+        <p class="hint section-hint">{{ 'office.hint.filing' | transloco }}</p>
+        <div class="grid">
+          <div class="field">
+            <label for="officeSymbol">{{ 'office.field.officeSymbol' | transloco }}</label>
+            <input id="officeSymbol" class="input" formControlName="officeSymbol" [class.is-invalid]="errorOf('officeSymbol')" />
+            @if (errorOf('officeSymbol'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+  
+          <div class="field">
+            <label for="officeNumber">{{ 'office.field.officeNumber' | transloco }}</label>
+            <input id="officeNumber" class="input" inputmode="numeric" formControlName="officeNumber"
+                   [class.is-invalid]="errorOf('officeNumber')" />
+            @if (errorOf('officeNumber'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+  
+          <div class="field">
+            <label for="employeeCount">{{ 'office.field.employeeCount' | transloco }}</label>
+            <input id="employeeCount" class="input num" type="number" min="0" formControlName="employeeCount"
+                   [class.is-invalid]="errorOf('employeeCount')" />
+            @if (errorOf('employeeCount'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+        </div>
+      </section>
+  
+      <div class="actions">
+        <a class="btn" routerLink="/">{{ 'common.back' | transloco }}</a>
+        <button class="btn btn-primary" type="submit" [disabled]="submitting()">
+          {{ (submitting() ? 'office.form.submitting' : 'office.form.submit') | transloco }}
+        </button>
+      </div>
+    </form>
+  </div>

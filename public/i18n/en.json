@@ -1,7 +1,10 @@
 {
     "common": {
       "appName": "Social Insurance Manager",
-      "logout": "Log out"
+      "logout": "Log out",
+      "back": "Back",
+      "optional": "Optional",
+      "select": "Select"
     },
     "auth": {
       "password": {
@@ -55,13 +58,76 @@
         "unknown": "Something went wrong. Try again later."
       }
     },
-    "home": {
+    "dashboard": {
       "greeting": "Welcome, {{name}}",
-      "placeholder": "Office and employee features will appear here.",
-      "officeNotice": {
-        "title": "Register your office",
-        "body": "To start calculating premiums and managing employees, first register your office details.",
-        "action": "Register office"
+      "placeholder": "Employee and premium features will appear here.",
+      "notSet": "Not set"
+    },
+    "office": {
+      "form": {
+        "titleNew": "Register office",
+        "lead": "Register the office details used for premium calculations. You can fill in unknown items later.",
+        "submit": "Register",
+        "submitting": "Registering…"
+      },
+      "section": {
+        "basic": "Basic information",
+        "location": "Location",
+        "insurer": "Health insurance",
+        "filing": "Filing information"
+      },
+      "field": {
+        "name": "Office name",
+        "corporateName": "Corporate name",
+        "corporateNumber": "Corporate number",
+        "ownerName": "Employer name",
+        "industry": "Industry",
+        "postalCode": "Postal code",
+        "prefecture": "Prefecture",
+        "address": "City, street and building",
+        "insurerType": "Health insurance provider",
+        "kumiaiName": "Health insurance society name",
+        "officeSymbol": "Office reference symbol",
+        "officeNumber": "Office number",
+        "employeeCount": "Number of employees"
+      },
+      "insurer": {
+        "kyokai": "Japan Health Insurance Association (Kyokai Kenpo)",
+        "kumiai": "Health insurance society (Kumiai Kenpo)"
+      },
+      "hint": {
+        "corporateNumber": "13 digits. Leave blank for sole proprietors.",
+        "prefecture": "For Kyokai Kenpo, premium rates differ by prefecture.",
+        "filing": "Assigned after filing with the pension office."
+      },
+      "postal": {
+        "search": "Find address",
+        "searching": "Searching…",
+        "notFound": "No address found for this postal code.",
+        "failed": "Couldn't look up the address. Enter it manually."
+      },
+      "copy": {
+        "label": "Copy details from an existing office",
+        "action": "Copy",
+        "hint": "Copies corporate number, corporate name, employer name, health insurance and industry.",
+        "done": "Copied. Review the details."
+      },
+      "validation": {
+        "required": "This field is required.",
+        "tooLong": "Too many characters.",
+        "corporateNumber": "Invalid corporate number. Check the 13 digits.",
+        "corporateNameRequired": "Enter the corporate name when you enter a corporate number.",
+        "postalCode": "Enter 7 digits (hyphen optional).",
+        "digits": "Enter numbers only.",
+        "count": "Enter 0 or more."
+      },
+      "error": {
+        "save": "Couldn't save. Try again later."
+      },
+      "switcher": {
+        "label": "Switch office",
+        "others": "Others",
+        "add": "Add office"
       }
     }
   }

@@ -2,6 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ===== 共通 =====
     function signedIn() {
       return request.auth != null;
     }
@@ -14,36 +15,92 @@ service cloud.firestore {
       return name is string && name.size() > 0 && name.size() <= 50;
     }
 
+    function optionalString(v, max) {
+      return v == null || (v is string && v.size() <= max);
+    }
+
+    function myUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // ===== users =====
     match /users/{uid} {
-      // 読む：本人だけ
       allow read: if isSelf(uid);
 
-      // 作る：本人だけ。管理者・事業所未登録・決めた項目のみ
       allow create: if isSelf(uid)
         && request.resource.data.keys().hasOnly(
-             ['email', 'displayName', 'role', 'officeId', 'lang', 'createdAt', 'updatedAt'])
+             ['email', 'displayName', 'role', 'currentOfficeId', 'lang', 'createdAt', 'updatedAt'])
         && request.resource.data.keys().hasAll(
-             ['email', 'displayName', 'role', 'officeId', 'lang', 'createdAt', 'updatedAt'])
+             ['email', 'displayName', 'role', 'currentOfficeId', 'lang', 'createdAt', 'updatedAt'])
         && request.resource.data.email == request.auth.token.email
         && validDisplayName(request.resource.data.displayName)
         && request.resource.data.role == 'admin'
-        && request.resource.data.officeId == null
+        && request.resource.data.currentOfficeId == null
         && request.resource.data.lang in ['ja', 'en']
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time;
 
-      // 更新：本人だけ。表示名・言語・更新日時しか変えられない
+      // 開いている事業所は「自分がメンバーの事業所」にしか切り替えられない
+      // getAfter：同じ束の書き込みが終わった後の状態で確認する
       allow update: if isSelf(uid)
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['displayName', 'lang', 'updatedAt'])
+             .hasOnly(['displayName', 'lang', 'currentOfficeId', 'updatedAt'])
         && validDisplayName(request.resource.data.displayName)
         && request.resource.data.lang in ['ja', 'en']
+        && (request.resource.data.currentOfficeId == null
+            || request.auth.uid in getAfter(
+                 /databases/$(database)/documents/offices/$(request.resource.data.currentOfficeId)
+               ).data.memberUids)
         && request.resource.data.updatedAt == request.time;
 
-      // 削除：できない
       allow delete: if false;
     }
 
-    // ここに書いていない場所は、すべて拒否される
+    // ===== offices =====
+    function validOffice(d) {
+      return d.name is string && d.name.size() > 0 && d.name.size() <= 100
+        && optionalString(d.corporateName, 100)
+        && (d.corporateNumber == null || (d.corporateNumber is string && d.corporateNumber.matches('^[0-9]{13}$')))
+        && d.ownerName is string && d.ownerName.size() > 0 && d.ownerName.size() <= 50
+        && (d.postalCode == null || (d.postalCode is string && d.postalCode.matches('^[0-9]{7}$')))
+        && d.prefecture is string && d.prefecture.matches('^(0[1-9]|[1-3][0-9]|4[0-7])$')
+        && d.address is string && d.address.size() > 0 && d.address.size() <= 200
+        && ((d.healthInsurer.type == 'kyokai' && d.healthInsurer.kumiaiName == null)
+            || (d.healthInsurer.type == 'kumiai' && d.healthInsurer.kumiaiName is string
+                && d.healthInsurer.kumiaiName.size() > 0 && d.healthInsurer.kumiaiName.size() <= 100))
+        && optionalString(d.officeSymbol, 20)
+        && optionalString(d.officeNumber, 10)
+        && (d.industry == null || (d.industry is string && d.industry.matches('^[A-T]$')))
+        && (d.employeeCount == null || (d.employeeCount is int && d.employeeCount >= 0));
+    }
+
+    match /offices/{officeId} {
+      // 読む：メンバーだけ（一覧の検索も、array-contains で自分に絞ったものだけ通る）
+      allow read: if signedIn() && request.auth.uid in resource.data.memberUids;
+
+      // 作る：事業所を作れるアカウントだけ。メンバーは自分1人・権限は admin で始める
+      allow create: if signedIn()
+        && myUser().role == 'admin'
+        && request.resource.data.keys().hasOnly([
+             'name', 'corporateName', 'corporateNumber', 'ownerName', 'postalCode', 'prefecture',
+             'address', 'healthInsurer', 'officeSymbol', 'officeNumber', 'industry', 'employeeCount',
+             'memberUids', 'memberRoles', 'createdAt', 'updatedAt'])
+        && request.resource.data.memberUids == [request.auth.uid]
+        && request.resource.data.memberRoles.keys().hasOnly([request.auth.uid])
+        && request.resource.data.memberRoles[request.auth.uid] == 'admin'
+        && validOffice(request.resource.data)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      // 更新：その事業所の admin だけ。メンバーと作成日時は変えられない
+      allow update: if signedIn()
+        && resource.data.memberRoles[request.auth.uid] == 'admin'
+        && !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['memberUids', 'memberRoles', 'createdAt'])
+        && validOffice(request.resource.data)
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
   }
 }

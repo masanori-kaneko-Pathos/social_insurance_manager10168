@@ -1,7 +1,10 @@
 {
     "common": {
       "appName": "社会保険管理",
-      "logout": "ログアウト"
+      "logout": "ログアウト",
+      "back": "戻る",
+      "optional": "任意",
+      "select": "選択してください"
     },
     "auth": {
       "password": {
@@ -55,13 +58,76 @@
         "unknown": "エラーが発生しました。時間をおいてお試しください。"
       }
     },
-    "home": {
+    "dashboard": {
       "greeting": "{{name}} さん、ようこそ",
-      "placeholder": "ここに事業所や従業員の機能が入ります。",
-      "officeNotice": {
-        "title": "事業所を登録しましょう",
-        "body": "保険料の計算や従業員の管理を始めるには、まず事業所の情報を登録してください。",
-        "action": "事業所を登録する"
+      "placeholder": "ここに従業員や保険料の機能が入ります。",
+      "notSet": "未登録"
+    },
+    "office": {
+      "form": {
+        "titleNew": "事業所の登録",
+        "lead": "保険料の計算に使う事業所の情報を登録します。届出前で分からない項目は、後から入力できます。",
+        "submit": "登録する",
+        "submitting": "登録中…"
+      },
+      "section": {
+        "basic": "基本情報",
+        "location": "所在地",
+        "insurer": "健康保険",
+        "filing": "届出情報"
+      },
+      "field": {
+        "name": "事業所名称（屋号）",
+        "corporateName": "法人名",
+        "corporateNumber": "法人番号",
+        "ownerName": "事業主氏名",
+        "industry": "業種",
+        "postalCode": "郵便番号",
+        "prefecture": "都道府県",
+        "address": "市区町村・番地・建物名",
+        "insurerType": "加入している健康保険",
+        "kumiaiName": "健康保険組合名",
+        "officeSymbol": "事業所整理記号",
+        "officeNumber": "事業所番号",
+        "employeeCount": "従業員数"
+      },
+      "insurer": {
+        "kyokai": "協会けんぽ",
+        "kumiai": "健康保険組合（組合健保）"
+      },
+      "hint": {
+        "corporateNumber": "13桁の数字。個人事業の場合は空欄で構いません。",
+        "prefecture": "協会けんぽの場合、都道府県ごとに保険料率が異なります。",
+        "filing": "年金事務所への新規適用届の後に割り当てられます。"
+      },
+      "postal": {
+        "search": "住所を検索",
+        "searching": "検索中…",
+        "notFound": "該当する住所が見つかりませんでした。",
+        "failed": "住所を検索できませんでした。手入力してください。"
+      },
+      "copy": {
+        "label": "既存の事業所から入力内容をコピー",
+        "action": "コピー",
+        "hint": "法人番号・法人名・事業主氏名・健康保険・業種をコピーします。",
+        "done": "コピーしました。内容を確認してください。"
+      },
+      "validation": {
+        "required": "入力してください。",
+        "tooLong": "文字数が多すぎます。",
+        "corporateNumber": "法人番号が正しくありません。13桁の数字を確認してください。",
+        "corporateNameRequired": "法人番号を入力した場合は、法人名も入力してください。",
+        "postalCode": "7桁の数字で入力してください（ハイフンは任意）。",
+        "digits": "数字で入力してください。",
+        "count": "0以上の数を入力してください。"
+      },
+      "error": {
+        "save": "保存できませんでした。時間をおいてお試しください。"
+      },
+      "switcher": {
+        "label": "事業所を切り替える",
+        "others": "その他",
+        "add": "事業所を追加"
       }
     }
   }

@@ -1,0 +1,39 @@
+<button
+  type="button"
+  class="trigger"
+  (click)="toggle()"
+  [attr.aria-expanded]="open()"
+  aria-haspopup="menu"
+  [attr.aria-label]="'office.switcher.label' | transloco"
+>
+  <span class="current">{{ context.current()?.name }}</span>
+  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+    <path d="M6 9l6 6 6-6" />
+  </svg>
+</button>
+
+@if (open()) {
+  <div class="panel" role="menu">
+    @for (g of context.groups(); track g.key) {
+      <div class="group">
+        @if (g.label || context.groups().length > 1) {
+          <p class="group-label">{{ g.label ?? ('office.switcher.others' | transloco) }}</p>
+        }
+        @for (o of g.offices; track o.id) {
+          <a
+            class="item"
+            role="menuitem"
+            [routerLink]="['/o', o.id]"
+            [class.active]="o.id === context.current()?.id"
+            (click)="close()"
+          >
+            {{ o.name }}
+          </a>
+        }
+      </div>
+    }
+    <a class="item add" role="menuitem" routerLink="/offices/new" (click)="close()">
+      ＋ {{ 'office.switcher.add' | transloco }}
+    </a>
+  </div>
+}

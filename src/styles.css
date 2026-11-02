@@ -44,6 +44,9 @@
   --radius-md: 8px;
   --radius-lg: 12px;
 
+  /* 影（浮かぶパネル用） */
+  --shadow-popover: 0 8px 24px rgb(62 30 2 / 12%);
+
   /* 動き */
   --dur-fast: 120ms;
   --dur-base: 200ms;

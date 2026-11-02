@@ -8,7 +8,7 @@ export interface AppUserDoc {
   email: string;
   displayName: string;
   role: UserRole;
-  officeId: string | null;
+  currentOfficeId: string | null; // 最後に開いた事業所
   lang: Lang;
   createdAt: Timestamp;
   updatedAt: Timestamp;
