@@ -4,14 +4,24 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { map } from 'rxjs';
 import { Employee } from '../../../../core/models/employee';
-import { DEFAULT_PREMIUM_OPTIONS, OfficeTotal } from '../../../../core/models/premium';
+import { Office } from '../../../../core/models/office';
+import { OfficeTotal } from '../../../../core/models/premium';
 import { RemunerationDoc } from '../../../../core/models/remuneration';
 import { todayLocal } from '../../../../shared/utils/date';
 import { EmployeeService } from '../../../employees/employee.service';
 import { shiftMonth, toYearMonth, YearMonth } from '../../../employees/logic/coverage';
 import { RemunerationService } from '../../../employees/remuneration.service';
 import { OfficeContext } from '../../../office/office-context.service';
-import { pickRates, RateTables } from '../../../rates/logic/pick-rates';
+import {
+  DEFAULT_PAYROLL,
+  DEFAULT_PREMIUM,
+  deductionPayMonth,
+  everKumiai,
+  insurerFor,
+  payrollOf,
+  premiumOf,
+} from '../../../office/office-settings';
+import { noRates, pickRates, RateTables } from '../../../rates/logic/pick-rates';
 import { RateService } from '../../../rates/rate.service';
 import { officeTotals } from '../../logic/premium-core';
 import { buildPremiumRow, PremiumRow } from '../../logic/premium-rows';
@@ -38,7 +48,15 @@ export class PremiumList {
   readonly context = inject(OfficeContext);
 
   readonly thisMonth = toYearMonth(todayLocal());
-  readonly options = DEFAULT_PREMIUM_OPTIONS; // 事業所の設定ができるまで固定
+  /** 保険料の計算方法・給与の設定（事業所の設定） */
+  readonly options = computed(() => {
+    const office = this.context.current();
+    return office ? premiumOf(office) : DEFAULT_PREMIUM;
+  });
+  readonly payroll = computed(() => {
+    const office = this.context.current();
+    return office ? payrollOf(office) : DEFAULT_PAYROLL;
+  });
 
   /** 見ている月（URL の ?month= から。なければ・読めなければ今月） */
   readonly month = toSignal(
@@ -49,6 +67,12 @@ export class PremiumList {
       }),
     ),
     { initialValue: this.thisMonth },
+  );
+
+  /** 1人ごとの行に拠出金の列を出すか（URL の ?contribution=1。初期値は出さない） */
+  readonly showContribution = toSignal(
+    this.route.queryParamMap.pipe(map((p) => p.get('contribution') === '1')),
+    { initialValue: false },
   );
 
   // ===== 箱 =====
@@ -64,7 +88,12 @@ export class PremiumList {
     const office = this.context.current();
     if (!tables || !office) return [];
     const month = this.month();
-    const ratesFor = (m: YearMonth) => pickRates(office, tables, m);
+    const options = this.options();
+    // その月の保険者・都道府県で料率を選ぶ（移転や組合健保への切り替えの前の月は、前の料率）
+    const ratesFor = (m: YearMonth) => {
+      const insurer = insurerFor(office, m);
+      return insurer ? pickRates(insurer, tables, m) : noRates(m);
+    };
     return this.employees().map((employee) => ({
       employee,
       ...buildPremiumRow({
@@ -72,7 +101,7 @@ export class PremiumList {
         employee,
         remunerations: this.remunerations().get(employee.id) ?? [],
         ratesFor,
-        options: this.options,
+        options,
       }),
     }));
   });
@@ -91,6 +120,9 @@ export class PremiumList {
     officeTotals(this.rows().flatMap((r) => (r.state === 'ok' && r.result ? [r.result] : []))),
   );
 
+  /** 納付額の合計（納入告知書と照らし合わせる用） */
+  readonly grandTotalYen = computed(() => this.totals().reduce((s, t) => s + t.totalYen, 0));
+
   readonly changedCount = computed(() => this.rows().filter((r) => r.changes.length > 0).length);
 
   constructor() {
@@ -101,16 +133,13 @@ export class PremiumList {
     });
   }
 
-  private async load(
-    officeId: string,
-    office: NonNullable<ReturnType<OfficeContext['current']>>,
-  ): Promise<void> {
+  private async load(officeId: string, office: Office): Promise<void> {
     this.loading.set(true);
     this.errorKey.set(null);
     try {
       const [employees, tables] = await Promise.all([
         this.employeesApi.list(officeId),
-        this.rates.tablesFor(officeId, office),
+        this.rates.tablesFor(officeId, everKumiai(office)),
       ]);
       // 報酬の履歴は従業員ごとに分かれているので、人数分を並行で読む
       const lists = await Promise.all(employees.map((e) => this.remApi.list(officeId, e.id)));
@@ -131,6 +160,15 @@ export class PremiumList {
     this.goTo(shiftMonth(this.month(), diff));
   }
 
+  /** 拠出金の列を出す・しまう（URL に残すので、再読み込みしても同じ見え方） */
+  toggleContribution(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { contribution: this.showContribution() ? null : 1 }, // null で URL から消える
+      queryParamsHandling: 'merge',
+    });
+  }
+
   goTo(month: YearMonth): void {
     this.router.navigate([], {
       relativeTo: this.route,
@@ -140,6 +178,9 @@ export class PremiumList {
   }
 
   // ===== 表示の小道具 =====
+
+  /** 何月に支払う給与から控除するか */
+  readonly payMonth = computed(() => deductionPayMonth(this.month(), this.payroll()));
 
   monthParts(month: YearMonth): { y: string; m: string } {
     return { y: month.slice(0, 4), m: String(Number(month.slice(5))) };

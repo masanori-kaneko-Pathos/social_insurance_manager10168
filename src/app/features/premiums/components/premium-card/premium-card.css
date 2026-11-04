@@ -108,6 +108,19 @@ tbody th {
   padding-left: calc(1em + var(--space-xs));
 }
 
+/* 根拠：拠出金は保険料ではないので、線で区切って薄く出す */
+.contribution-head {
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+  border-top: 1px solid var(--color-border-strong);
+}
+
+.group.contribution {
+  color: var(--color-text-sub);
+}
+
 /* 根拠 */
 .detail-row td {
   padding: var(--space-md);

@@ -73,7 +73,8 @@
     "label": "メニュー",
     "dashboard": "ダッシュボード",
     "employees": "従業員",
-    "premiums": "保険料"
+    "premiums": "保険料",
+    "settings": "事業所の設定"
   },
   "employee": {
     "list": {
@@ -164,13 +165,22 @@
       "titleNew": "事業所の登録",
       "lead": "保険料の計算に使う事業所の情報を登録します。届出前で分からない項目は、後から入力できます。",
       "submit": "登録する",
-      "submitting": "登録中…"
+      "submitting": "登録中…",
+      "titleEdit": "事業所の設定",
+      "leadEdit": "事業所の情報と、給与・保険料の計算方法を変更できます。",
+      "readOnly": "閲覧のみです（変更できるのは管理者だけです）。",
+      "save": "保存する",
+      "saving": "保存中…",
+      "saved": "保存しました。保険料の画面にも反映されます。"
     },
     "section": {
       "basic": "基本情報",
       "location": "所在地",
       "insurer": "健康保険",
-      "filing": "届出情報"
+      "filing": "届出情報",
+      "history": "保険者・所在地の履歴",
+      "payroll": "給与と保険料の控除",
+      "premium": "保険料の計算方法"
     },
     "field": {
       "name": "事業所名称（屋号）",
@@ -185,7 +195,14 @@
       "kumiaiName": "健康保険組合名",
       "officeSymbol": "事業所整理記号",
       "officeNumber": "事業所番号",
-      "employeeCount": "従業員数"
+      "employeeCount": "従業員数",
+      "changeFrom": "変更を適用する月（何月分から）",
+      "closingDay": "締日",
+      "payDay": "支払日",
+      "payMonth": "支払月",
+      "deduction": "保険料の控除",
+      "method": "本人負担の集め方",
+      "healthRounding": "健康保険・介護保険・支援金の端数処理"
     },
     "insurer": {
       "kyokai": "協会けんぽ",
@@ -194,7 +211,12 @@
     "hint": {
       "corporateNumber": "13桁の数字。個人事業の場合は空欄で構いません。",
       "prefecture": "協会けんぽの場合、都道府県ごとに保険料率が異なります。",
-      "filing": "年金事務所への新規適用届の後に割り当てられます。"
+      "filing": "年金事務所への新規適用届の後に割り当てられます。",
+      "history": "健康保険の種類か都道府県を変えると、「何月分から」を記録します。それより前の月は、前の保険者・都道府県の料率で計算します。",
+      "changeFrom": "この月分の保険料から、新しい保険者・都道府県の料率を使います。",
+      "switchToKumiai": "組合健保の料率を登録するまで、切り替えた月からの健康保険料は「料率が未登録」になります。",
+      "method": "従業員ごとの指定（休職中の人だけ現金払い など）は、今後対応します。",
+      "healthRounding": "公式の見解がないため、どちらも選べます。厚労省がいったん示した方式は「合算」です。"
     },
     "postal": {
       "search": "住所を検索",
@@ -215,7 +237,23 @@
       "corporateNameRequired": "法人番号を入力した場合は、法人名も入力してください。",
       "postalCode": "7桁の数字で入力してください（ハイフンは任意）。",
       "digits": "数字で入力してください。",
-      "count": "0以上の数を入力してください。"
+      "count": "0以上の数を入力してください。",
+      "changeFrom": "何月分から変えるかを選んでください"
+    },
+    "history": { "from": "適用開始", "start": "登録時から" },
+    "day": { "end": "月末", "n": "{{d}}日" },
+    "payMonth": { "current": "当月", "next": "翌月" },
+    "deduction": {
+      "next": "翌月控除（前月分の保険料を、当月に支払う給与から控除）",
+      "current": "当月控除（当月分の保険料を、当月に支払う給与から控除）"
+    },
+    "method": {
+      "payroll": "給与から控除（50銭以下は切り捨て）",
+      "cash": "本人が現金で払う（50銭未満は切り捨て）"
+    },
+    "healthRounding": {
+      "combined": "合算してから端数処理",
+      "separate": "それぞれ端数処理"
     },
     "error": {
       "save": "保存できませんでした。時間をおいてお試しください。"
@@ -271,7 +309,8 @@
   },
   "premium": {
     "title": "保険料（月額）",
-    "methodNote": "本人負担は給与から控除（50銭以下切り捨て）、健保・介護・支援金は合算して端数処理",
+    "method": { "payroll": "給与から控除", "cash": "現金払い" },
+    "rounding": { "combined": "健保等は合算して端数処理", "separate": "健保等はそれぞれ端数処理" },
     "col": {
       "month": "月",
       "employee": "本人負担",
@@ -279,6 +318,7 @@
       "total": "全額"
     },
     "monthLabel": "{{y}}年{{m}}月分",
+    "contributionNote": "子ども・子育て拠出金（保険料ではなく、会社だけが納めるもの）",
     "part": {
       "health": "健康保険",
       "care": "介護保険",
@@ -304,6 +344,7 @@
     "prev": "前の月",
     "next": "次の月",
     "thisMonth": "今月",
+    "payMonth": "{{y}}年{{m}}月に支払う給与から控除",
     "summary": "加入している人：{{count}}人",
     "hidden": "（この月に加入していない {{count}}人は表示していません）",
     "changedCount": "前月から変わった人：{{count}}人",
@@ -318,7 +359,8 @@
       "sum": "合計",
       "payment": "納付額",
       "employeeSum": "本人負担の合計",
-      "employerSum": "会社負担"
+      "employerSum": "会社負担",
+      "contribution": "拠出金（会社）"
     },
     "change": {
       "new": "新規",
@@ -332,6 +374,9 @@
       "pension": "厚生年金保険料",
       "childContribution": "子ども・子育て拠出金"
     },
+    "showContribution": "拠出金を表示",
+    "hideContribution": "拠出金を非表示",
+    "grandTotal": "納付額の合計（納入告知書と照合）",
     "totalsTitle": "事業所の合計",
     "totalsExcluded": "計算できていない {{count}}人の分は含まれていません。",
     "totalsHint": "納付額は全員の全額を合計して1円未満を切り捨てた額、会社負担は「納付額 − 本人負担の合計」です（日本年金機構の考え方）。",

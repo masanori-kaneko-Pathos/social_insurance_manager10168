@@ -12,13 +12,14 @@ import { RatesForMonth } from '../../../core/models/rates';
 import { StandardRemuneration } from '../../../core/models/remuneration';
 import { CoverageInput, shiftMonth, YearMonth } from '../../employees/logic/coverage';
 import { calcMonthly, RemunerationLike } from './calc-monthly';
+import { PremiumSplit, splitContribution } from './premium-core';
 
 export type RowState = 'ok' | 'none' | 'missing' | 'error';
 
 /** 前の月から変わった理由 */
 export type ChangeReason = 'new' | 'grade' | 'care' | 'rate' | 'other';
 
-export interface PremiumRow {
+export interface PremiumRow extends PremiumSplit {
   state: RowState;
   result: PremiumResult | null;
   health: StandardRemuneration | null; // その月の健保の等級・標準報酬月額
@@ -102,8 +103,12 @@ export function buildPremiumRow(input: RowInput): PremiumRow {
   const health = lines.get('health');
   const pension = lines.get('pension');
   const groups = cur.result?.groups ?? [];
+  const split = cur.result
+    ? splitContribution(cur.result)
+    : { premiumTotalMilli: 0, premiumEmployerMilli: 0, contributionMilli: 0 };
 
   return {
+    ...split,
     state: cur.state,
     result: cur.result,
     health: health?.grade != null ? { grade: health.grade, standard: health.base } : null,

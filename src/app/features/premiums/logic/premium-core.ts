@@ -2,6 +2,7 @@
  * 月額・賞与で共通の部品：計算過程（PremiumLine）を作り、端数処理の単位（PremiumGroup）にまとめる
  */
 import {
+  Milli,
   OfficeTotal,
   PremiumGroup,
   PremiumLine,
@@ -59,6 +60,28 @@ export function makeGroups(lines: PremiumLine[], options: PremiumOptions): Premi
   }
   for (const l of others) groups.push(makeGroup([l], options));
   return groups;
+}
+
+/** 1人分の結果を「保険料」と「拠出金（会社だけが納める、保険料ではないもの）」に分けた金額 */
+export interface PremiumSplit {
+  premiumTotalMilli: Milli; // 保険料の全額（健保・介護・支援金・厚年。額表の数字と一致する）
+  premiumEmployerMilli: Milli; // 保険料の会社負担の目安（保険料の全額 − 本人負担）
+  contributionMilli: Milli; // 子ども・子育て拠出金
+}
+
+export function splitContribution(result: PremiumResult): PremiumSplit {
+  const isContribution = (g: PremiumGroup) => g.parts.includes('childContribution');
+  const premiumTotalMilli = result.groups
+    .filter((g) => !isContribution(g))
+    .reduce((s, g) => s + g.totalMilli, 0);
+  const contributionMilli = result.groups
+    .filter(isContribution)
+    .reduce((s, g) => s + g.totalMilli, 0);
+  return {
+    premiumTotalMilli,
+    premiumEmployerMilli: premiumTotalMilli - yenToMilli(result.employeeYen),
+    contributionMilli,
+  };
 }
 
 /** 結果全体の合計を足す */

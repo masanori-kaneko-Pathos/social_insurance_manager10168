@@ -7,18 +7,37 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { map } from 'rxjs';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { UserProfileService } from '../../../../core/auth/user-profile.service';
 import { LanguageService } from '../../../../core/i18n/language.service';
 import { INDUSTRIES } from '../../../../core/master/industries';
 import { PREFECTURES } from '../../../../core/master/prefectures';
-import { HealthInsurerType, Office, OfficeInput } from '../../../../core/models/office';
+import {
+  HealthInsurer,
+  HealthInsurerType,
+  InsurerPeriod,
+  Office,
+  OfficeInput,
+  PayrollSettings,
+} from '../../../../core/models/office';
+import { CollectionMethod, HealthRounding } from '../../../../core/models/premium';
 import { PostalCodeService } from '../../../../shared/services/postal-code.service';
 import { corporateNumberValidator } from '../../../../shared/validators/corporate-number';
 import { OfficeService } from '../../office.service';
 import { OfficeContext } from '../../office-context.service';
+import {
+  DEFAULT_PAYROLL,
+  DEFAULT_PREMIUM,
+  FROM_THE_START,
+  insurerHistoryOf,
+  payrollOf,
+  premiumOf,
+  samePeriod,
+  withInsurerChange,
+} from '../../office-settings';
 
 /** 法人番号を入れたら法人名も必須 */
 function corporateNameRequired(g: AbstractControl): ValidationErrors | null {
@@ -35,11 +54,22 @@ function kumiaiNameRequired(g: AbstractControl): ValidationErrors | null {
 }
 
 const NOT_BLANK = Validators.pattern(/\S/);
+const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 
 type Field =
-  | 'name' | 'corporateName' | 'corporateNumber' | 'ownerName' | 'industry'
-  | 'postalCode' | 'prefecture' | 'address' | 'kumiaiName'
-  | 'officeSymbol' | 'officeNumber' | 'employeeCount';
+  | 'name'
+  | 'corporateName'
+  | 'corporateNumber'
+  | 'ownerName'
+  | 'industry'
+  | 'postalCode'
+  | 'prefecture'
+  | 'address'
+  | 'kumiaiName'
+  | 'officeSymbol'
+  | 'officeNumber'
+  | 'employeeCount'
+  | 'changeFrom';
 
 const PATTERN_ERROR: Partial<Record<Field, string>> = {
   postalCode: 'office.validation.postalCode',
@@ -61,12 +91,19 @@ export class OfficeForm {
   private readonly offices = inject(OfficeService);
   private readonly postal = inject(PostalCodeService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly language = inject(LanguageService);
-  private readonly context = inject(OfficeContext);
+  readonly context = inject(OfficeContext);
 
   readonly prefectures = PREFECTURES;
   readonly industries = INDUSTRIES;
+  readonly days = Array.from({ length: 31 }, (_, i) => i + 1); // 31 は「月末」と表示する
   readonly lang = computed(() => (this.language.lang() === 'en' ? 'en' : 'ja'));
+
+  /** 編集（/o/:officeId/settings）か、新規登録（/offices/new）か */
+  readonly isEdit = this.route.snapshot.data['mode'] === 'edit';
+  /** 編集で、admin でなければ読み取り専用 */
+  readonly readOnly = this.isEdit && !this.context.isAdmin();
 
   readonly form = this.fb.nonNullable.group(
     {
@@ -82,29 +119,116 @@ export class OfficeForm {
       kumiaiName: ['', [Validators.maxLength(100)]],
       officeSymbol: ['', [Validators.maxLength(20)]],
       officeNumber: ['', [Validators.pattern(/^\d{1,10}$/)]],
-      employeeCount: this.fb.control<number | null>(null, [Validators.min(0), Validators.max(1000000)]),
+      employeeCount: this.fb.control<number | null>(null, [
+        Validators.min(0),
+        Validators.max(1000000),
+      ]),
+      // 給与と保険料の計算
+      closingDay: [DEFAULT_PAYROLL.closingDay],
+      payMonth: [DEFAULT_PAYROLL.payMonth as PayrollSettings['payMonth']],
+      payDay: [DEFAULT_PAYROLL.payDay],
+      deduction: [DEFAULT_PAYROLL.deduction as PayrollSettings['deduction']],
+      method: [DEFAULT_PREMIUM.method as CollectionMethod],
+      healthRounding: [DEFAULT_PREMIUM.healthRounding as HealthRounding],
+      // 編集で保険者・都道府県を変えたときの「何月分から」
+      changeFrom: [''],
     },
     { validators: [corporateNameRequired, kumiaiNameRequired] },
   );
 
-  readonly insurerType = toSignal(this.form.controls.insurerType.valueChanges, {
-    initialValue: this.form.controls.insurerType.value,
+  /** フォームの値（変更の検知に使う。読み取り専用で無効にしても値が消えないよう getRawValue を使う） */
+  private readonly value = toSignal(
+    this.form.valueChanges.pipe(map(() => this.form.getRawValue())),
+    {
+      initialValue: this.form.getRawValue(),
+    },
+  );
+  readonly insurerType = computed(() => this.value().insurerType);
+
+  /** 編集中の事業所（新規登録なら null） */
+  readonly office = computed<Office | null>(() => (this.isEdit ? this.context.current() : null));
+  readonly history = computed<InsurerPeriod[]>(() => {
+    const o = this.office();
+    return o ? insurerHistoryOf(o) : [];
   });
+
+  /** 編集で、保険者か都道府県が変わったか */
+  readonly insurerChanged = computed(() => {
+    const o = this.office();
+    if (!o) return false;
+    return !samePeriod(this.periodFromForm(), {
+      prefecture: o.prefecture,
+      healthInsurer: o.healthInsurer,
+    });
+  });
+
+  /** 協会けんぽ → 組合健保 に切り替えようとしているか */
+  readonly switchingToKumiai = computed(
+    () =>
+      this.insurerChanged() &&
+      this.insurerType() === 'kumiai' &&
+      this.office()?.healthInsurer.type !== 'kumiai',
+  );
 
   readonly myOffices = signal<Office[]>([]);
   readonly copied = signal(false);
   readonly postalStatus = signal<'idle' | 'loading' | 'notFound' | 'failed'>('idle');
   readonly submitting = signal(false);
+  readonly saved = signal(false);
   readonly errorKey = signal<string | null>(null);
 
   constructor() {
-    const uid = this.auth.user()?.uid;
-    if (uid) {
-      this.offices
-        .listMine(uid)
-        .then((list) => this.myOffices.set(list))
-        .catch((err) => console.error(err));
+    if (this.isEdit) {
+      const o = this.context.current();
+      if (o) this.fillFrom(o);
+      if (this.readOnly) this.form.disable();
+    } else {
+      const uid = this.auth.user()?.uid;
+      if (uid) {
+        this.offices
+          .listMine(uid)
+          .then((list) => this.myOffices.set(list))
+          .catch((err) => console.error(err));
+      }
     }
+  }
+
+  /** 編集：保存済みの事業所の値をフォームに入れる（設定がない古いデータは初期値） */
+  private fillFrom(o: Office): void {
+    const payroll = payrollOf(o);
+    const premium = premiumOf(o);
+    this.form.setValue({
+      name: o.name,
+      corporateName: o.corporateName ?? '',
+      corporateNumber: o.corporateNumber ?? '',
+      ownerName: o.ownerName,
+      industry: o.industry ?? '',
+      postalCode: o.postalCode ?? '',
+      prefecture: o.prefecture,
+      address: o.address,
+      insurerType: o.healthInsurer.type,
+      kumiaiName: o.healthInsurer.kumiaiName ?? '',
+      officeSymbol: o.officeSymbol ?? '',
+      officeNumber: o.officeNumber ?? '',
+      employeeCount: o.employeeCount,
+      closingDay: payroll.closingDay,
+      payMonth: payroll.payMonth,
+      payDay: payroll.payDay,
+      deduction: payroll.deduction,
+      method: premium.method,
+      healthRounding: premium.healthRounding,
+      changeFrom: '',
+    });
+  }
+
+  /** フォームの保険者・都道府県 */
+  private periodFromForm(): { prefecture: string; healthInsurer: HealthInsurer } {
+    const v = this.value();
+    const type = v.insurerType ?? 'kyokai';
+    return {
+      prefecture: v.prefecture ?? '',
+      healthInsurer: { type, kumiaiName: type === 'kumiai' ? (v.kumiaiName ?? '').trim() : null },
+    };
   }
 
   /** 項目ごとのエラーの翻訳キー（触る前・正しいときは null） */
@@ -116,6 +240,10 @@ export class OfficeForm {
     }
     if (name === 'kumiaiName' && this.form.hasError('kumiaiNameRequired')) {
       return 'office.validation.required';
+    }
+    if (name === 'changeFrom') {
+      const month = this.form.controls.changeFrom.value;
+      return this.insurerChanged() && !MONTH.test(month) ? 'office.validation.changeFrom' : null;
     }
     if (!c.errors) return null;
     if (c.hasError('required')) return 'office.validation.required';
@@ -151,6 +279,8 @@ export class OfficeForm {
   copyFrom(officeId: string): void {
     const o = this.myOffices().find((x) => x.id === officeId);
     if (!o) return;
+    const payroll = payrollOf(o);
+    const premium = premiumOf(o);
     this.form.patchValue({
       corporateName: o.corporateName ?? '',
       corporateNumber: o.corporateNumber ?? '',
@@ -158,12 +288,29 @@ export class OfficeForm {
       insurerType: o.healthInsurer.type,
       kumiaiName: o.healthInsurer.kumiaiName ?? '',
       industry: o.industry ?? '',
+      closingDay: payroll.closingDay,
+      payMonth: payroll.payMonth,
+      payDay: payroll.payDay,
+      deduction: payroll.deduction,
+      method: premium.method,
+      healthRounding: premium.healthRounding,
     });
     this.copied.set(true);
   }
 
+  /** 履歴の月の表示（「最初から」は文字で） */
+  isStart(from: string): boolean {
+    return from === FROM_THE_START;
+  }
+
+  prefectureName(code: string): string {
+    return this.prefectures.find((p) => p.code === code)?.[this.lang()] ?? code;
+  }
+
   async submit(): Promise<void> {
-    if (this.form.invalid) {
+    if (this.readOnly) return;
+    const changeFrom = this.form.controls.changeFrom;
+    if (this.form.invalid || (this.insurerChanged() && !MONTH.test(changeFrom.value))) {
       this.form.markAllAsTouched();
       return;
     }
@@ -171,32 +318,61 @@ export class OfficeForm {
     if (!uid) return;
 
     this.submitting.set(true);
+    this.saved.set(false);
     this.errorKey.set(null);
 
     const v = this.form.getRawValue();
-    const input: OfficeInput = {
+    const period = this.periodFromForm();
+    const base = {
       name: v.name.trim(),
       corporateName: emptyToNull(v.corporateName),
       corporateNumber: emptyToNull(v.corporateNumber),
       ownerName: v.ownerName.trim(),
       postalCode: v.postalCode ? v.postalCode.replace('-', '') : null,
-      prefecture: v.prefecture,
+      prefecture: period.prefecture,
       address: v.address.trim(),
-      healthInsurer: {
-        type: v.insurerType,
-        kumiaiName: v.insurerType === 'kumiai' ? v.kumiaiName.trim() : null,
-      },
+      healthInsurer: period.healthInsurer,
       officeSymbol: emptyToNull(v.officeSymbol),
       officeNumber: emptyToNull(v.officeNumber),
       industry: v.industry || null,
       employeeCount: v.employeeCount ?? null,
+      payroll: {
+        closingDay: Number(v.closingDay),
+        payMonth: v.payMonth,
+        payDay: Number(v.payDay),
+        deduction: v.deduction,
+      },
+      premium: { method: v.method, healthRounding: v.healthRounding },
     };
 
     try {
-      const officeId = await this.offices.create(uid, input);
-      await this.profiles.load(uid); // currentOfficeId を最新にする
-      await this.context.refresh(uid); // 切り替えの一覧にすぐ反映
-      await this.router.navigateByUrl(`/o/${officeId}`);
+      const office = this.office();
+      if (office) {
+        // 編集：保険者・都道府県が変わったら「何月分から」を履歴に足す（最新の行は今の値と同じになる）
+        const history = this.insurerChanged()
+          ? withInsurerChange(insurerHistoryOf(office), { from: changeFrom.value, ...period })
+          : insurerHistoryOf(office);
+        const input: OfficeInput = { ...base, insurerHistory: history };
+        await this.offices.update(office.id, input);
+        const fresh = await this.offices.get(office.id);
+        if (fresh) {
+          this.context.setCurrent(fresh); // 保険料の画面などに、新しい設定をすぐ反映
+          this.fillFrom(fresh);
+        }
+        await this.context.refresh(uid); // 切り替えの一覧の名前なども最新に
+        this.form.markAsUntouched();
+        this.saved.set(true);
+      } else {
+        // 新規登録：履歴は「最初から今の値」の1行
+        const input: OfficeInput = {
+          ...base,
+          insurerHistory: [{ from: FROM_THE_START, ...period }],
+        };
+        const officeId = await this.offices.create(uid, input);
+        await this.profiles.load(uid); // currentOfficeId を最新にする
+        await this.context.refresh(uid); // 切り替えの一覧にすぐ反映
+        await this.router.navigateByUrl(`/o/${officeId}`);
+      }
     } catch (err) {
       console.error(err);
       this.errorKey.set('office.error.save');

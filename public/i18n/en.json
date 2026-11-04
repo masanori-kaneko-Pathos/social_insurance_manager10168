@@ -73,7 +73,8 @@
     "label": "Menu",
     "dashboard": "Dashboard",
     "employees": "Employees",
-    "premiums": "Premiums"
+    "premiums": "Premiums",
+    "settings": "Office settings"
   },
   "employee": {
     "list": {
@@ -164,13 +165,22 @@
       "titleNew": "Register office",
       "lead": "Register the office details used for premium calculations. You can fill in unknown items later.",
       "submit": "Register",
-      "submitting": "Registering…"
+      "submitting": "Registering…",
+      "titleEdit": "Office settings",
+      "leadEdit": "Change office details and how payroll and premiums are handled.",
+      "readOnly": "View only (only administrators can make changes).",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved. Premium screens now use the new settings."
     },
     "section": {
       "basic": "Basic information",
       "location": "Location",
       "insurer": "Health insurance",
-      "filing": "Filing information"
+      "filing": "Filing information",
+      "history": "Insurer and location history",
+      "payroll": "Payroll and deduction",
+      "premium": "Premium calculation"
     },
     "field": {
       "name": "Office name",
@@ -185,7 +195,14 @@
       "kumiaiName": "Health insurance society name",
       "officeSymbol": "Office reference symbol",
       "officeNumber": "Office number",
-      "employeeCount": "Number of employees"
+      "employeeCount": "Number of employees",
+      "changeFrom": "Apply from (month)",
+      "closingDay": "Closing day",
+      "payDay": "Pay day",
+      "payMonth": "Pay month",
+      "deduction": "Premium deduction",
+      "method": "Employee share collected by",
+      "healthRounding": "Rounding of health, care and child support"
     },
     "insurer": {
       "kyokai": "Japan Health Insurance Association (Kyokai Kenpo)",
@@ -194,7 +211,12 @@
     "hint": {
       "corporateNumber": "13 digits. Leave blank for sole proprietors.",
       "prefecture": "For Kyokai Kenpo, premium rates differ by prefecture.",
-      "filing": "Assigned after filing with the pension office."
+      "filing": "Assigned after filing with the pension office.",
+      "history": "Changing the insurer or prefecture records the month it applies from. Earlier months keep the previous rates.",
+      "changeFrom": "Premiums from this month use the new insurer and prefecture.",
+      "switchToKumiai": "Until kumiai rates are registered, health premiums from the switch month show as 'No rate registered'.",
+      "method": "Per-employee settings (e.g. cash for employees on leave) are coming later.",
+      "healthRounding": "There is no official guidance, so both are available. The method once published by the ministry is 'together'."
     },
     "postal": {
       "search": "Find address",
@@ -215,7 +237,23 @@
       "corporateNameRequired": "Enter the corporate name when you enter a corporate number.",
       "postalCode": "Enter 7 digits (hyphen optional).",
       "digits": "Enter numbers only.",
-      "count": "Enter 0 or more."
+      "count": "Enter 0 or more.",
+      "changeFrom": "Select the month the change applies from"
+    },
+    "history": { "from": "From", "start": "Since registration" },
+    "day": { "end": "End of month", "n": "Day {{d}}" },
+    "payMonth": { "current": "Same month", "next": "Next month" },
+    "deduction": {
+      "next": "Next-month deduction (last month's premium from this month's pay)",
+      "current": "Same-month deduction (this month's premium from this month's pay)"
+    },
+    "method": {
+      "payroll": "Deducted from pay (50 sen or less rounded down)",
+      "cash": "Paid in cash (under 50 sen rounded down)"
+    },
+    "healthRounding": {
+      "combined": "Round together",
+      "separate": "Round separately"
     },
     "error": {
       "save": "Couldn't save. Try again later."
@@ -271,7 +309,14 @@
   },
   "premium": {
     "title": "Premiums (monthly)",
-    "methodNote": "Employee share deducted from pay (50 sen or less rounded down); health, care and child support rounded together",
+    "premium.method": {
+      "payroll": "Deducted from pay",
+      "cash": "Paid in cash"
+    },
+    "premium.rounding": {
+      "combined": "health items rounded together",
+      "separate": "health items rounded separately"
+    },
     "col": {
       "month": "Month",
       "employee": "Employee",
@@ -279,6 +324,7 @@
       "total": "Total"
     },
     "monthLabel": "{{y}}-{{m}}",
+    "contributionNote": "Child contribution (not a premium; paid by the employer only)",
     "part": {
       "health": "Health insurance",
       "care": "Long-term care",
@@ -304,6 +350,7 @@
     "prev": "Previous month",
     "next": "Next month",
     "thisMonth": "This month",
+    "premiumList.payMonth": "Deducted from pay in {{y}}-{{m}}",
     "summary": "Insured: {{count}}",
     "hidden": "({{count}} not insured this month are hidden)",
     "changedCount": "Changed from last month: {{count}}",
@@ -318,7 +365,8 @@
       "sum": "Total",
       "payment": "Payment",
       "employeeSum": "Employee total",
-      "employerSum": "Employer"
+      "employerSum": "Employer",
+      "contribution": "Contribution (employer)"
     },
     "change": {
       "new": "New",
@@ -332,6 +380,9 @@
       "pension": "Pension",
       "childContribution": "Child contribution"
     },
+    "showContribution": "Show contribution",
+    "hideContribution": "Hide contribution",
+    "grandTotal": "Total payment (check against the notice)",
     "totalsTitle": "Office totals",
     "totalsExcluded": "{{count}} employee(s) that could not be calculated are not included.",
     "totalsHint": "Payment is the sum of all totals rounded down to the yen; the employer share is payment minus the employees' total (Japan Pension Service method).",

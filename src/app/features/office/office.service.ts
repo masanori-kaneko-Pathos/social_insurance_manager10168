@@ -6,6 +6,7 @@ import {
   getDocs,
   query,
   serverTimestamp,
+  updateDoc,
   where,
   writeBatch,
 } from 'firebase/firestore';
@@ -35,6 +36,14 @@ export class OfficeService {
     return officeRef.id;
   }
 
+  /** 事業所を更新する（メンバーと作成日時は変えない。ルールでも禁止している） */
+  async update(officeId: string, input: OfficeInput): Promise<void> {
+    await updateDoc(doc(db, 'offices', officeId), {
+      ...input,
+      updatedAt: serverTimestamp(),
+    });
+  }
+
   /** 自分が所属している事業所の一覧 */
   async listMine(uid: string): Promise<Office[]> {
     const q = query(collection(db, 'offices'), where('memberUids', 'array-contains', uid));
@@ -57,5 +66,4 @@ export class OfficeService {
       throw err;
     }
   }
-
 }

@@ -114,6 +114,34 @@ service cloud.firestore {
         && validRate(s.employer);
     }
 
+    // ===== offices の設定と履歴 =====
+    function validPayroll(p) {
+      return p is map
+        && p.keys().hasOnly(['closingDay', 'payDay', 'payMonth', 'deduction'])
+        && p.keys().hasAll(['closingDay', 'payDay', 'payMonth', 'deduction'])
+        && p.closingDay is int && p.closingDay >= 1 && p.closingDay <= 31
+        && p.payDay is int && p.payDay >= 1 && p.payDay <= 31
+        && p.payMonth in ['current', 'next']
+        && p.deduction in ['current', 'next'];
+    }
+
+    function validPremiumSettings(p) {
+      return p is map
+        && p.keys().hasOnly(['method', 'healthRounding'])
+        && p.keys().hasAll(['method', 'healthRounding'])
+        && p.method in ['payroll', 'cash']
+        && p.healthRounding in ['combined', 'separate'];
+    }
+
+    // ルールには繰り返しがないので、履歴の1行ずつは確かめられない。
+    // 件数と「最新の行 ＝ 今の都道府県・保険者」を確かめる
+    function validInsurerHistory(d) {
+      return d.insurerHistory is list
+        && d.insurerHistory.size() >= 1 && d.insurerHistory.size() <= 100
+        && d.insurerHistory[d.insurerHistory.size() - 1].prefecture == d.prefecture
+        && d.insurerHistory[d.insurerHistory.size() - 1].healthInsurer == d.healthInsurer;
+    }
+
     // ===== offices =====
     function validOffice(d) {
       return d.name is string && d.name.size() > 0 && d.name.size() <= 100
@@ -129,7 +157,10 @@ service cloud.firestore {
         && optionalString(d.officeSymbol, 20)
         && optionalString(d.officeNumber, 10)
         && (d.industry == null || (d.industry is string && d.industry.matches('^[A-T]$')))
-        && (d.employeeCount == null || (d.employeeCount is int && d.employeeCount >= 0));
+        && (d.employeeCount == null || (d.employeeCount is int && d.employeeCount >= 0))
+        && validPayroll(d.payroll)
+        && validPremiumSettings(d.premium)
+        && validInsurerHistory(d);
     }
 
     match /offices/{officeId} {
@@ -142,6 +173,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly([
              'name', 'corporateName', 'corporateNumber', 'ownerName', 'postalCode', 'prefecture',
              'address', 'healthInsurer', 'officeSymbol', 'officeNumber', 'industry', 'employeeCount',
+             'insurerHistory', 'payroll', 'premium',
              'memberUids', 'memberRoles', 'createdAt', 'updatedAt'])
         && request.resource.data.memberUids == [request.auth.uid]
         && request.resource.data.memberRoles.keys().hasOnly([request.auth.uid])

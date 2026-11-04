@@ -9,8 +9,13 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { db } from '../../core/firebase';
-import { GradeTableDoc, KumiaiRateDoc, KumiaiRateInput, MasterRateDoc } from '../../core/models/rates';
-import { OfficeForRates, RateTables } from './logic/pick-rates';
+import {
+  GradeTableDoc,
+  KumiaiRateDoc,
+  KumiaiRateInput,
+  MasterRateDoc,
+} from '../../core/models/rates';
+import { RateTables } from './logic/pick-rates';
 
 @Injectable({ providedIn: 'root' })
 export class RateService {
@@ -57,11 +62,11 @@ export class RateService {
       .sort((a, b) => b.from.localeCompare(a.from));
   }
 
-  /** 保険料の計算に使う料率の一式（協会けんぽの事業所なら、組合の料率は読まない） */
-  async tablesFor(officeId: string, office: OfficeForRates): Promise<RateTables> {
+  /** 保険料の計算に使う料率の一式（組合健保だった時期がなければ、組合の料率は読まない） */
+  async tablesFor(officeId: string, needKumiai: boolean): Promise<RateTables> {
     const [master, kumiai] = await Promise.all([
       this.master(),
-      office.healthInsurer.type === 'kumiai' ? this.kumiaiList(officeId) : Promise.resolve([]),
+      needKumiai ? this.kumiaiList(officeId) : Promise.resolve([]),
     ]);
     return { master, kumiai };
   }

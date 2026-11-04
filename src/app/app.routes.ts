@@ -80,6 +80,12 @@ export const routes: Routes = [
                 (m) => m.PremiumList,
               ),
           },
+          {
+            path: 'settings',
+            data: { mode: 'edit' },
+            loadComponent: () =>
+              import('./features/office/pages/office-form/office-form').then((m) => m.OfficeForm),
+          },
         ],
       },
     ],

@@ -56,6 +56,14 @@ describe('buildPremiumRow：一覧の1行', () => {
     expect(r.changes).toEqual([]); // 10月分と同じ
   });
 
+  it('全額・会社負担は保険料だけ、拠出金は別（A の2026年11月分）', () => {
+    const r = row('2026-11', A, remA);
+    expect(r.premiumTotalMilli).toBe(90816000); // 健保等 32,256 ＋ 厚年 58,560（額表の数字）
+    expect(r.premiumEmployerMilli).toBe(45408000); // 90,816 − 本人 45,408
+    expect(r.contributionMilli).toBe(1152000); // 320,000 × 0.36%
+    expect(r.result!.totalMilli).toBe(91968000); // 結果全体には拠出金も入っている
+  });
+
   it('等級が変わった月は grade（A の2025年9月分）', () => {
     expect(row('2025-09', A, remA).changes).toEqual(['grade']);
   });

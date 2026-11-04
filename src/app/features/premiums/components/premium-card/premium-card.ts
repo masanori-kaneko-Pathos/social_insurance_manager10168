@@ -2,9 +2,9 @@ import { Component, OnInit, computed, inject, input, signal } from '@angular/cor
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
 import {
-  DEFAULT_PREMIUM_OPTIONS,
   PremiumGroup,
   PremiumLine,
+  PremiumOptions,
   PremiumResult,
 } from '../../../../core/models/premium';
 import { RemunerationDoc } from '../../../../core/models/remuneration';
@@ -12,10 +12,17 @@ import { todayLocal } from '../../../../shared/utils/date';
 import { toYearMonth, YearMonth } from '../../../employees/logic/coverage';
 import { RemunerationService } from '../../../employees/remuneration.service';
 import { OfficeContext } from '../../../office/office-context.service';
-import { pickRates, RateTables } from '../../../rates/logic/pick-rates';
+import {
+  DEFAULT_PREMIUM,
+  everKumiai,
+  insurerFor,
+  premiumOf,
+} from '../../../office/office-settings';
+import { noRates, pickRates, RateTables } from '../../../rates/logic/pick-rates';
 import { formatPercent } from '../../../rates/logic/rate-format';
 import { RateService } from '../../../rates/rate.service';
 import { calcMonthly } from '../../logic/calc-monthly';
+import { splitContribution } from '../../logic/premium-core';
 import { formatMilli } from '../../logic/rounding';
 
 /** 1か月分の行（計算でエラーが出た月は result を null にする） */
@@ -43,7 +50,11 @@ export class PremiumCard implements OnInit {
   readonly months = input.required<YearMonth[]>();
 
   readonly thisMonth = toYearMonth(todayLocal());
-  readonly options = DEFAULT_PREMIUM_OPTIONS; // 事業所の設定ができるまで固定
+  /** 保険料の計算方法（事業所の設定） */
+  readonly options = computed<PremiumOptions>(() => {
+    const office = this.context.current();
+    return office ? premiumOf(office) : DEFAULT_PREMIUM;
+  });
 
   // ===== 箱 =====
   private readonly tables = signal<RateTables | null>(null);
@@ -59,16 +70,13 @@ export class PremiumCard implements OnInit {
     if (!tables || !office) return [];
     const employee = this.employee();
     const remunerations = this.remunerations();
+    const options = this.options();
     return this.months().map((month) => {
       try {
-        const rates = pickRates(office, tables, month);
-        const result = calcMonthly({
-          month,
-          employee,
-          remunerations,
-          rates,
-          options: this.options,
-        });
+        // その月の保険者・都道府県で料率を選ぶ（移転や組合健保への切り替えの前の月は、前の料率）
+        const insurer = insurerFor(office, month);
+        const rates = insurer ? pickRates(insurer, tables, month) : noRates(month);
+        const result = calcMonthly({ month, employee, remunerations, rates, options });
         return { month, result, error: false };
       } catch (err) {
         console.error(err); // データの間違い（折半できない料率など）。画面は止めずにその月だけ「エラー」にする
@@ -89,7 +97,7 @@ export class PremiumCard implements OnInit {
     this.errorKey.set(null);
     try {
       const [tables, rems] = await Promise.all([
-        this.rates.tablesFor(office.id, office),
+        this.rates.tablesFor(office.id, everKumiai(office)),
         this.remApi.list(office.id, this.employee().id),
       ]);
       this.tables.set(tables);
@@ -133,6 +141,15 @@ export class PremiumCard implements OnInit {
 
   monthParts(month: YearMonth): { y: string; m: string } {
     return { y: month.slice(0, 4), m: String(Number(month.slice(5))) };
+  }
+
+  /** 保険料と拠出金を分けた金額（表の列は保険料だけ） */
+  split(row: MonthRow) {
+    return splitContribution(row.result!);
+  }
+
+  isContribution(g: PremiumGroup): boolean {
+    return g.parts.includes('childContribution');
   }
 
   /** グループの本人分（端数処理の前） */

@@ -9,7 +9,12 @@
     >
       ‹
     </button>
-    <span class="period-label">{{ 'premium.monthLabel' | transloco: monthParts(month()) }}</span>
+    <span class="period-label">
+      {{ 'premium.monthLabel' | transloco: monthParts(month()) }}
+      <small class="pay-month">{{
+        'premiumList.payMonth' | transloco: monthParts(payMonth())
+      }}</small>
+    </span>
     <button
       type="button"
       class="btn"
@@ -32,6 +37,11 @@
   <div class="alert alert-danger">{{ errorKey()! | transloco }}</div>
 } @else {
   <p class="summary">
+    <span class="muted">
+      {{ 'premium.method.' + options().method | transloco }}・{{
+        'premium.rounding.' + options().healthRounding | transloco
+      }}
+    </span>
     {{ 'premiumList.summary' | transloco: { count: rows().length } }}
     @if (hiddenCount() > 0) {
       <span class="muted">{{ 'premiumList.hidden' | transloco: { count: hiddenCount() } }}</span>
@@ -41,8 +51,18 @@
         'premiumList.changedCount' | transloco: { count: changedCount() }
       }}</span>
     }
+    <button
+      type="button"
+      class="btn btn-small"
+      (click)="toggleContribution()"
+      [attr.aria-pressed]="showContribution()"
+    >
+      {{
+        (showContribution() ? 'premiumList.hideContribution' : 'premiumList.showContribution')
+          | transloco
+      }}
+    </button>
   </p>
-
   <!-- 計算できなかった人（合計から抜けているので、見落とさないよう一番上に出す） -->
   @if (problems().length > 0) {
     <div class="alert alert-warning" role="alert">
@@ -76,6 +96,11 @@
             <th colspan="3" class="group-head">{{ 'premium.col.employee' | transloco }}</th>
             <th rowspan="2" class="num">{{ 'premium.col.employer' | transloco }}</th>
             <th rowspan="2" class="num">{{ 'premium.col.total' | transloco }}</th>
+            @if (showContribution()) {
+              <th rowspan="2" class="num contribution">
+                {{ 'premiumList.col.contribution' | transloco }}
+              </th>
+            }
           </tr>
           <tr>
             <th class="num">{{ 'premiumList.col.health' | transloco }}</th>
@@ -127,10 +152,17 @@
                 <td class="num">{{ yen(r.healthEmployeeYen) }}</td>
                 <td class="num">{{ r.pension ? yen(r.pensionEmployeeYen) : '—' }}</td>
                 <td class="num strong">{{ yen(r.result!.employeeYen) }}</td>
-                <td class="num">{{ milli(r.result!.employerMilli) }}</td>
-                <td class="num">{{ milli(r.result!.totalMilli) }}</td>
+                <td class="num">{{ milli(r.premiumEmployerMilli) }}</td>
+                <td class="num">{{ milli(r.premiumTotalMilli) }}</td>
+                @if (showContribution()) {
+                  <td class="num contribution">
+                    {{ r.contributionMilli ? milli(r.contributionMilli) : '—' }}
+                  </td>
+                }
               } @else {
-                <td colspan="7" class="warn">{{ missingKey(r) | transloco }}</td>
+                <td [attr.colspan]="showContribution() ? 8 : 7" class="warn">
+                  {{ missingKey(r) | transloco }}
+                </td>
               }
             </tr>
           }
@@ -164,6 +196,12 @@
               <td class="num">{{ yen(t.employerYen) }}</td>
             </tr>
           }
+          <tr class="grand-total">
+            <th scope="row">{{ 'premiumList.grandTotal' | transloco }}</th>
+            <td class="num strong">{{ yen(grandTotalYen()) }}</td>
+            <td></td>
+            <td></td>
+          </tr>
         </tbody>
       </table>
       <p class="hint">{{ 'premiumList.totalsHint' | transloco }}</p>
