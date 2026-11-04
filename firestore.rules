@@ -56,6 +56,19 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ===== masterRates（料率マスタ：全事業所共通） =====
+    match /masterRates/{rateId} {
+      allow read: if signedIn();
+      // アプリからは誰も書けない。書くのは投入スクリプト（Admin SDK）だけ
+      allow write: if false;
+    }
+
+    // ===== masterGrades（標準報酬月額の等級表：全事業所共通） =====
+    match /masterGrades/{gradeId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
     // ===== employees 用 =====
     function isDate(v) {
       return v is string && v.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
@@ -85,6 +98,20 @@ service cloud.firestore {
         && optionalDate(d.retireDate)
         && validEnrollment(d.health)
         && validEnrollment(d.pension);
+    }
+
+    // ===== 料率 用 =====
+    // 料率は 0.0001% を 1 とする整数。30% を上限にする
+    function validRate(v) {
+      return v is int && v >= 0 && v <= 300000;
+    }
+
+    function validSplit(s) {
+      return s is map
+        && s.keys().hasOnly(['employee', 'employer'])
+        && s.keys().hasAll(['employee', 'employer'])
+        && validRate(s.employee)
+        && validRate(s.employer);
     }
 
     // ===== offices =====
@@ -162,7 +189,83 @@ service cloud.firestore {
 
         // 削除：しない（退職は退職日で表す）
         allow delete: if false;
+
+                // ----- 標準報酬月額の履歴（従業員の下。ドキュメントIDは適用開始月） -----
+        match /remunerations/{remMonth} {
+          function validStandard(s) {
+            return s is map
+              && s.keys().hasOnly(['grade', 'standard'])
+              && s.keys().hasAll(['grade', 'standard'])
+              && s.grade is int && s.grade >= 1 && s.grade <= 60
+              && s.standard is int && s.standard > 0;
+          }
+
+          function validRemuneration(d) {
+            return d.keys().hasOnly(['from', 'reason', 'monthlyAmount', 'health', 'pension', 'createdAt', 'updatedAt'])
+              && d.keys().hasAll(['from', 'reason', 'monthlyAmount', 'health', 'pension', 'createdAt', 'updatedAt'])
+              && d.from == remMonth
+              && remMonth.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
+              && d.reason in ['acquisition', 'regular', 'irregular', 'other']
+              && d.monthlyAmount is int && d.monthlyAmount >= 0 && d.monthlyAmount <= 99999999
+              && validStandard(d.health)
+              && validStandard(d.pension);
+          }
+
+          allow read: if signedIn() && request.auth.uid in office().memberUids;
+
+          allow create: if signedIn()
+            && office().memberRoles[request.auth.uid] == 'admin'
+            && validRemuneration(request.resource.data)
+            && request.resource.data.createdAt == request.time
+            && request.resource.data.updatedAt == request.time;
+
+          allow update: if signedIn()
+            && office().memberRoles[request.auth.uid] == 'admin'
+            && validRemuneration(request.resource.data)
+            && request.resource.data.createdAt == resource.data.createdAt
+            && request.resource.data.updatedAt == request.time;
+
+          allow delete: if signedIn() && office().memberRoles[request.auth.uid] == 'admin';
+        }
       }
+
+      // ----- 組合健保の料率（事業所の下。ドキュメントIDは適用開始月） -----
+      match /kumiaiRates/{rateMonth} {
+        function office() {
+          return get(/databases/$(database)/documents/offices/$(officeId)).data;
+        }
+
+        function isAdmin() {
+          return office().memberRoles[request.auth.uid] == 'admin';
+        }
+
+        function validKumiaiRate(d) {
+          return d.keys().hasOnly(['from', 'health', 'care', 'childSupport', 'createdAt', 'updatedAt'])
+            && d.keys().hasAll(['from', 'health', 'care', 'childSupport', 'createdAt', 'updatedAt'])
+            && d.from == rateMonth
+            && rateMonth.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
+            && validSplit(d.health)
+            && validSplit(d.care)
+            && validSplit(d.childSupport);
+        }
+
+        allow read: if signedIn() && request.auth.uid in office().memberUids;
+
+        allow create: if signedIn() && isAdmin()
+          && office().healthInsurer.type == 'kumiai'
+          && validKumiaiRate(request.resource.data)
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time;
+
+        allow update: if signedIn() && isAdmin()
+          && office().healthInsurer.type == 'kumiai'
+          && validKumiaiRate(request.resource.data)
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.updatedAt == request.time;
+
+        allow delete: if signedIn() && isAdmin();
+      }
+
     }
   }
 }
