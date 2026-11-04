@@ -8,12 +8,13 @@ import { toYearMonth, fiscalYearOf, monthsLast12, YearMonth,
     monthsOfCalendarYear, monthsOfFiscalYear, coverageForMonths, 
  } from "../../logic/coverage";
 import { Employee } from "../../../../core/models/employee";
+import { RemunerationCard } from "../../components/remuneration-card/remuneration-card";
 
 type Mode = 'fiscal' | 'calendar' | 'last12';
 
 @Component({
   selector: 'app-employee-detail',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [RouterLink, TranslocoPipe, RemunerationCard],
   templateUrl: './employee-detail.html',
   styleUrl: './employee-detail.css',
 })

@@ -1,0 +1,426 @@
+[
+    {
+        "kind": "health",
+        "from": "2024-03",
+        "grades": [
+            {
+                "grade": 1,
+                "standard": 58000,
+                "min": 0
+            },
+            {
+                "grade": 2,
+                "standard": 68000,
+                "min": 63000
+            },
+            {
+                "grade": 3,
+                "standard": 78000,
+                "min": 73000
+            },
+            {
+                "grade": 4,
+                "standard": 88000,
+                "min": 83000
+            },
+            {
+                "grade": 5,
+                "standard": 98000,
+                "min": 93000
+            },
+            {
+                "grade": 6,
+                "standard": 104000,
+                "min": 101000
+            },
+            {
+                "grade": 7,
+                "standard": 110000,
+                "min": 107000
+            },
+            {
+                "grade": 8,
+                "standard": 118000,
+                "min": 114000
+            },
+            {
+                "grade": 9,
+                "standard": 126000,
+                "min": 122000
+            },
+            {
+                "grade": 10,
+                "standard": 134000,
+                "min": 130000
+            },
+            {
+                "grade": 11,
+                "standard": 142000,
+                "min": 138000
+            },
+            {
+                "grade": 12,
+                "standard": 150000,
+                "min": 146000
+            },
+            {
+                "grade": 13,
+                "standard": 160000,
+                "min": 155000
+            },
+            {
+                "grade": 14,
+                "standard": 170000,
+                "min": 165000
+            },
+            {
+                "grade": 15,
+                "standard": 180000,
+                "min": 175000
+            },
+            {
+                "grade": 16,
+                "standard": 190000,
+                "min": 185000
+            },
+            {
+                "grade": 17,
+                "standard": 200000,
+                "min": 195000
+            },
+            {
+                "grade": 18,
+                "standard": 220000,
+                "min": 210000
+            },
+            {
+                "grade": 19,
+                "standard": 240000,
+                "min": 230000
+            },
+            {
+                "grade": 20,
+                "standard": 260000,
+                "min": 250000
+            },
+            {
+                "grade": 21,
+                "standard": 280000,
+                "min": 270000
+            },
+            {
+                "grade": 22,
+                "standard": 300000,
+                "min": 290000
+            },
+            {
+                "grade": 23,
+                "standard": 320000,
+                "min": 310000
+            },
+            {
+                "grade": 24,
+                "standard": 340000,
+                "min": 330000
+            },
+            {
+                "grade": 25,
+                "standard": 360000,
+                "min": 350000
+            },
+            {
+                "grade": 26,
+                "standard": 380000,
+                "min": 370000
+            },
+            {
+                "grade": 27,
+                "standard": 410000,
+                "min": 395000
+            },
+            {
+                "grade": 28,
+                "standard": 440000,
+                "min": 425000
+            },
+            {
+                "grade": 29,
+                "standard": 470000,
+                "min": 455000
+            },
+            {
+                "grade": 30,
+                "standard": 500000,
+                "min": 485000
+            },
+            {
+                "grade": 31,
+                "standard": 530000,
+                "min": 515000
+            },
+            {
+                "grade": 32,
+                "standard": 560000,
+                "min": 545000
+            },
+            {
+                "grade": 33,
+                "standard": 590000,
+                "min": 575000
+            },
+            {
+                "grade": 34,
+                "standard": 620000,
+                "min": 605000
+            },
+            {
+                "grade": 35,
+                "standard": 650000,
+                "min": 635000
+            },
+            {
+                "grade": 36,
+                "standard": 680000,
+                "min": 665000
+            },
+            {
+                "grade": 37,
+                "standard": 710000,
+                "min": 695000
+            },
+            {
+                "grade": 38,
+                "standard": 750000,
+                "min": 730000
+            },
+            {
+                "grade": 39,
+                "standard": 790000,
+                "min": 770000
+            },
+            {
+                "grade": 40,
+                "standard": 830000,
+                "min": 810000
+            },
+            {
+                "grade": 41,
+                "standard": 880000,
+                "min": 855000
+            },
+            {
+                "grade": 42,
+                "standard": 930000,
+                "min": 905000
+            },
+            {
+                "grade": 43,
+                "standard": 980000,
+                "min": 955000
+            },
+            {
+                "grade": 44,
+                "standard": 1030000,
+                "min": 1005000
+            },
+            {
+                "grade": 45,
+                "standard": 1090000,
+                "min": 1055000
+            },
+            {
+                "grade": 46,
+                "standard": 1150000,
+                "min": 1115000
+            },
+            {
+                "grade": 47,
+                "standard": 1210000,
+                "min": 1175000
+            },
+            {
+                "grade": 48,
+                "standard": 1270000,
+                "min": 1235000
+            },
+            {
+                "grade": 49,
+                "standard": 1330000,
+                "min": 1295000
+            },
+            {
+                "grade": 50,
+                "standard": 1390000,
+                "min": 1355000
+            }
+        ],
+        "source": "全国健康保険協会「令和8年3月分（4月納付分）からの健康保険・厚生年金保険の保険料額表」（健康保険法第40条・厚生年金保険法第20条の等級区分）"
+    },
+    {
+        "kind": "pension",
+        "from": "2024-03",
+        "grades": [
+            {
+                "grade": 1,
+                "standard": 88000,
+                "min": 0
+            },
+            {
+                "grade": 2,
+                "standard": 98000,
+                "min": 93000
+            },
+            {
+                "grade": 3,
+                "standard": 104000,
+                "min": 101000
+            },
+            {
+                "grade": 4,
+                "standard": 110000,
+                "min": 107000
+            },
+            {
+                "grade": 5,
+                "standard": 118000,
+                "min": 114000
+            },
+            {
+                "grade": 6,
+                "standard": 126000,
+                "min": 122000
+            },
+            {
+                "grade": 7,
+                "standard": 134000,
+                "min": 130000
+            },
+            {
+                "grade": 8,
+                "standard": 142000,
+                "min": 138000
+            },
+            {
+                "grade": 9,
+                "standard": 150000,
+                "min": 146000
+            },
+            {
+                "grade": 10,
+                "standard": 160000,
+                "min": 155000
+            },
+            {
+                "grade": 11,
+                "standard": 170000,
+                "min": 165000
+            },
+            {
+                "grade": 12,
+                "standard": 180000,
+                "min": 175000
+            },
+            {
+                "grade": 13,
+                "standard": 190000,
+                "min": 185000
+            },
+            {
+                "grade": 14,
+                "standard": 200000,
+                "min": 195000
+            },
+            {
+                "grade": 15,
+                "standard": 220000,
+                "min": 210000
+            },
+            {
+                "grade": 16,
+                "standard": 240000,
+                "min": 230000
+            },
+            {
+                "grade": 17,
+                "standard": 260000,
+                "min": 250000
+            },
+            {
+                "grade": 18,
+                "standard": 280000,
+                "min": 270000
+            },
+            {
+                "grade": 19,
+                "standard": 300000,
+                "min": 290000
+            },
+            {
+                "grade": 20,
+                "standard": 320000,
+                "min": 310000
+            },
+            {
+                "grade": 21,
+                "standard": 340000,
+                "min": 330000
+            },
+            {
+                "grade": 22,
+                "standard": 360000,
+                "min": 350000
+            },
+            {
+                "grade": 23,
+                "standard": 380000,
+                "min": 370000
+            },
+            {
+                "grade": 24,
+                "standard": 410000,
+                "min": 395000
+            },
+            {
+                "grade": 25,
+                "standard": 440000,
+                "min": 425000
+            },
+            {
+                "grade": 26,
+                "standard": 470000,
+                "min": 455000
+            },
+            {
+                "grade": 27,
+                "standard": 500000,
+                "min": 485000
+            },
+            {
+                "grade": 28,
+                "standard": 530000,
+                "min": 515000
+            },
+            {
+                "grade": 29,
+                "standard": 560000,
+                "min": 545000
+            },
+            {
+                "grade": 30,
+                "standard": 590000,
+                "min": 575000
+            },
+            {
+                "grade": 31,
+                "standard": 620000,
+                "min": 605000
+            },
+            {
+                "grade": 32,
+                "standard": 650000,
+                "min": 635000
+            }
+        ],
+        "source": "全国健康保険協会「令和8年3月分（4月納付分）からの健康保険・厚生年金保険の保険料額表」（健康保険法第40条・厚生年金保険法第20条の等級区分）"
+    }
+]

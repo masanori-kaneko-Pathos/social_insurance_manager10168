@@ -40,6 +40,8 @@
             <dd class="mono">{{ e.retireDate ?? '—' }}</dd>
           </div>
         </dl>
+       <!-- 標準報酬月額 -->
+       <app-remuneration-card [employee]="e" />
       </section>
   
       <!-- 月ごとの加入状況 -->
