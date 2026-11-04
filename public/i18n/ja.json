@@ -72,7 +72,8 @@
   "nav": {
     "label": "メニュー",
     "dashboard": "ダッシュボード",
-    "employees": "従業員"
+    "employees": "従業員",
+    "premiums": "保険料"
   },
   "employee": {
     "list": {
@@ -297,5 +298,45 @@
       "calc": "計算できませんでした（料率のデータを確認してください）"
     },
     "employerHint": "会社負担は1人ごとの目安（全額 − 本人負担）です。事業所として納める額は、全員の全額を合計して1円未満を切り捨てた額になります。"
+  },
+  "premiumList": {
+    "title": "保険料一覧",
+    "prev": "前の月",
+    "next": "次の月",
+    "thisMonth": "今月",
+    "summary": "加入している人：{{count}}人",
+    "hidden": "（この月に加入していない {{count}}人は表示していません）",
+    "changedCount": "前月から変わった人：{{count}}人",
+    "problemTitle": "計算できていない人が {{count}}人います。この人たちの分は合計に入っていません。",
+    "empty": "この月に加入している人はいません。",
+    "care": "介護",
+    "col": {
+      "healthStd": "健保 標準報酬",
+      "pensionStd": "厚年 標準報酬",
+      "health": "健保等",
+      "pension": "厚年",
+      "sum": "合計",
+      "payment": "納付額",
+      "employeeSum": "本人負担の合計",
+      "employerSum": "会社負担"
+    },
+    "change": {
+      "new": "新規",
+      "grade": "等級変更",
+      "care": "介護",
+      "rate": "料率変更",
+      "other": "変更"
+    },
+    "category": {
+      "health": "健康保険料（介護・支援金を含む）",
+      "pension": "厚生年金保険料",
+      "childContribution": "子ども・子育て拠出金"
+    },
+    "totalsTitle": "事業所の合計",
+    "totalsExcluded": "計算できていない {{count}}人の分は含まれていません。",
+    "totalsHint": "納付額は全員の全額を合計して1円未満を切り捨てた額、会社負担は「納付額 − 本人負担の合計」です（日本年金機構の考え方）。",
+    "error": {
+      "load": "保険料一覧を読み込めませんでした。"
+    }
   }
 }

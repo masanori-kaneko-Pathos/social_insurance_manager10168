@@ -103,10 +103,12 @@ export function healthLostDate(input: CoverageInput): DateStr | null {
 
 export function coverageForMonth(input: CoverageInput, month: YearMonth): MonthlyCoverage {
   const health =
-    input.health.enrolled && isChargedMonth(input.health.acquiredDate, healthLostDate(input), month);
+    input.health.enrolled &&
+    isChargedMonth(input.health.acquiredDate, healthLostDate(input), month);
 
   const pension =
-    input.pension.enrolled && isChargedMonth(input.pension.acquiredDate, pensionLostDate(input), month);
+    input.pension.enrolled &&
+    isChargedMonth(input.pension.acquiredDate, pensionLostDate(input), month);
 
   // 介護保険：健康保険の保険料がかかっていて、40歳到達の月 〜 65歳到達の月の前月
   const careStart = toYearMonth(ageReachDate(input.birthDate, 40));
@@ -118,7 +120,7 @@ export function coverageForMonth(input: CoverageInput, month: YearMonth): Monthl
 
 // ===== 6. 期間の一覧 =====
 
-function shiftMonth(month: YearMonth, diff: number): YearMonth {
+export function shiftMonth(month: YearMonth, diff: number): YearMonth {
   const [y, m] = month.split('-').map(Number);
   const total = y * 12 + (m - 1) + diff;
   const ny = Math.floor(total / 12);

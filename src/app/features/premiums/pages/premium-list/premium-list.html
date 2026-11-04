@@ -1,0 +1,172 @@
+<div class="page-head">
+  <h1>{{ 'premiumList.title' | transloco }}</h1>
+  <div class="period">
+    <button
+      type="button"
+      class="btn"
+      (click)="shift(-1)"
+      [attr.aria-label]="'premiumList.prev' | transloco"
+    >
+      ‹
+    </button>
+    <span class="period-label">{{ 'premium.monthLabel' | transloco: monthParts(month()) }}</span>
+    <button
+      type="button"
+      class="btn"
+      (click)="shift(1)"
+      [attr.aria-label]="'premiumList.next' | transloco"
+    >
+      ›
+    </button>
+    @if (month() !== thisMonth) {
+      <button type="button" class="btn" (click)="goTo(thisMonth)">
+        {{ 'premiumList.thisMonth' | transloco }}
+      </button>
+    }
+  </div>
+</div>
+
+@if (loading()) {
+  <p class="muted">{{ 'common.loading' | transloco }}</p>
+} @else if (errorKey()) {
+  <div class="alert alert-danger">{{ errorKey()! | transloco }}</div>
+} @else {
+  <p class="summary">
+    {{ 'premiumList.summary' | transloco: { count: rows().length } }}
+    @if (hiddenCount() > 0) {
+      <span class="muted">{{ 'premiumList.hidden' | transloco: { count: hiddenCount() } }}</span>
+    }
+    @if (changedCount() > 0) {
+      <span class="changed-note">{{
+        'premiumList.changedCount' | transloco: { count: changedCount() }
+      }}</span>
+    }
+  </p>
+
+  <!-- 計算できなかった人（合計から抜けているので、見落とさないよう一番上に出す） -->
+  @if (problems().length > 0) {
+    <div class="alert alert-warning" role="alert">
+      <strong>{{ 'premiumList.problemTitle' | transloco: { count: problems().length } }}</strong>
+      <ul>
+        @for (p of problems(); track p.employee.id) {
+          <li>
+            <a [routerLink]="['/o', context.current()?.id, 'employees', p.employee.id]">
+              {{ p.employee.lastName }} {{ p.employee.firstName }}
+            </a>
+            ：{{ missingKey(p) | transloco }}
+          </li>
+        }
+      </ul>
+    </div>
+  }
+
+  @if (rows().length === 0) {
+    <section class="card empty">
+      <p>{{ 'premiumList.empty' | transloco }}</p>
+    </section>
+  } @else {
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th rowspan="2">{{ 'employee.field.employeeNumber' | transloco }}</th>
+            <th rowspan="2">{{ 'employee.field.name' | transloco }}</th>
+            <th rowspan="2" class="num">{{ 'premiumList.col.healthStd' | transloco }}</th>
+            <th rowspan="2" class="num">{{ 'premiumList.col.pensionStd' | transloco }}</th>
+            <th colspan="3" class="group-head">{{ 'premium.col.employee' | transloco }}</th>
+            <th rowspan="2" class="num">{{ 'premium.col.employer' | transloco }}</th>
+            <th rowspan="2" class="num">{{ 'premium.col.total' | transloco }}</th>
+          </tr>
+          <tr>
+            <th class="num">{{ 'premiumList.col.health' | transloco }}</th>
+            <th class="num">{{ 'premiumList.col.pension' | transloco }}</th>
+            <th class="num">{{ 'premiumList.col.sum' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.employee.id) {
+            <tr [class.problem]="r.state !== 'ok'" [class.changed]="r.changes.length > 0">
+              <td class="mono">{{ r.employee.employeeNumber ?? '—' }}</td>
+              <td>
+                <a
+                  class="name"
+                  [routerLink]="['/o', context.current()?.id, 'employees', r.employee.id]"
+                >
+                  {{ r.employee.lastName }} {{ r.employee.firstName }}
+                </a>
+                @for (c of r.changes; track c) {
+                  <span class="badge badge-change">{{
+                    'premiumList.change.' + c | transloco
+                  }}</span>
+                }
+              </td>
+              @if (r.state === 'ok') {
+                <td class="num">
+                  @if (r.health) {
+                    <span class="grade">{{
+                      'remuneration.gradeShort' | transloco: { grade: r.health.grade }
+                    }}</span>
+                    {{ yen(r.health.standard) }}
+                  } @else {
+                    —
+                  }
+                  @if (r.care) {
+                    <span class="badge badge-care">{{ 'premiumList.care' | transloco }}</span>
+                  }
+                </td>
+                <td class="num">
+                  @if (r.pension) {
+                    <span class="grade">{{
+                      'remuneration.gradeShort' | transloco: { grade: r.pension.grade }
+                    }}</span>
+                    {{ yen(r.pension.standard) }}
+                  } @else {
+                    —
+                  }
+                </td>
+                <td class="num">{{ yen(r.healthEmployeeYen) }}</td>
+                <td class="num">{{ r.pension ? yen(r.pensionEmployeeYen) : '—' }}</td>
+                <td class="num strong">{{ yen(r.result!.employeeYen) }}</td>
+                <td class="num">{{ milli(r.result!.employerMilli) }}</td>
+                <td class="num">{{ milli(r.result!.totalMilli) }}</td>
+              } @else {
+                <td colspan="7" class="warn">{{ missingKey(r) | transloco }}</td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 事業所の合計 -->
+    <section class="card totals">
+      <h2>{{ 'premiumList.totalsTitle' | transloco }}</h2>
+      @if (problems().length > 0) {
+        <p class="warn">
+          {{ 'premiumList.totalsExcluded' | transloco: { count: problems().length } }}
+        </p>
+      }
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th class="num">{{ 'premiumList.col.payment' | transloco }}</th>
+            <th class="num">{{ 'premiumList.col.employeeSum' | transloco }}</th>
+            <th class="num">{{ 'premiumList.col.employerSum' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of totals(); track t.category) {
+            <tr>
+              <th scope="row">{{ 'premiumList.category.' + t.category | transloco }}</th>
+              <td class="num strong">{{ yen(t.totalYen) }}</td>
+              <td class="num">{{ yen(t.employeeYen) }}</td>
+              <td class="num">{{ yen(t.employerYen) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <p class="hint">{{ 'premiumList.totalsHint' | transloco }}</p>
+    </section>
+  }
+}

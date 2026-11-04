@@ -1,0 +1,183 @@
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+h1 {
+  margin: 0;
+  font-size: var(--font-xl);
+}
+
+h2 {
+  margin: 0 0 var(--space-md);
+  font-size: var(--font-md);
+}
+
+.period {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.period .btn:first-child,
+.period .btn:nth-child(3) {
+  width: 40px;
+  padding: 0;
+}
+
+.period-label {
+  min-width: 9em;
+  text-align: center;
+  font-weight: 600;
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin: 0 0 var(--space-md);
+  font-size: var(--font-sm);
+}
+
+.muted {
+  color: var(--color-text-sub);
+}
+
+.warn {
+  color: var(--color-warning-text);
+}
+
+.changed-note {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* 警告 */
+.alert-warning {
+  margin-bottom: var(--space-md);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
+}
+
+.alert-warning ul {
+  margin: var(--space-xs) 0 0;
+  padding-left: 1.5em;
+}
+
+.alert-warning a {
+  color: inherit;
+  font-weight: 600;
+}
+
+/* 表 */
+.card {
+  margin-bottom: var(--space-lg);
+}
+
+.table-wrap {
+  padding: 0;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+th,
+td {
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+thead th {
+  font-weight: 400;
+  color: var(--color-text-sub);
+  vertical-align: bottom;
+}
+
+.group-head {
+  text-align: center;
+  border-bottom: 1px solid var(--color-border-strong);
+}
+
+th.num,
+td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.strong {
+  font-weight: 600;
+}
+
+.name {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+tr.problem td {
+  background: var(--color-warning-bg);
+}
+
+tr.changed td {
+  background: color-mix(in srgb, var(--color-highlight) 45%, transparent);
+}
+
+.grade {
+  margin-right: var(--space-xs);
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.badge {
+  display: inline-block;
+  margin-left: var(--space-xs);
+  padding: 0 6px;
+  font-size: var(--font-xs);
+  font-weight: 400;
+  border-radius: var(--radius-sm);
+}
+
+.badge-change {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.badge-care {
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+  border: 1px solid var(--color-border-strong);
+}
+
+/* 合計 */
+.totals table {
+  max-width: 640px;
+}
+
+.totals tbody th {
+  font-weight: 400;
+}
+
+.hint {
+  margin: var(--space-sm) 0 0;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.empty p {
+  margin: 0;
+  color: var(--color-text-sub);
+}

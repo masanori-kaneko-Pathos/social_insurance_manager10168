@@ -72,7 +72,8 @@
   "nav": {
     "label": "Menu",
     "dashboard": "Dashboard",
-    "employees": "Employees"
+    "employees": "Employees",
+    "premiums": "Premiums"
   },
   "employee": {
     "list": {
@@ -297,5 +298,45 @@
       "calc": "Could not calculate (check the rate data)."
     },
     "employerHint": "The employer share per person is an estimate (total minus employee share). The office pays the sum of all totals, rounded down to the yen."
+  },
+  "premiumList": {
+    "title": "Premiums",
+    "prev": "Previous month",
+    "next": "Next month",
+    "thisMonth": "This month",
+    "summary": "Insured: {{count}}",
+    "hidden": "({{count}} not insured this month are hidden)",
+    "changedCount": "Changed from last month: {{count}}",
+    "problemTitle": "{{count}} employee(s) could not be calculated and are not included in the totals.",
+    "empty": "No one is insured this month.",
+    "care": "Care",
+    "col": {
+      "healthStd": "Health std.",
+      "pensionStd": "Pension std.",
+      "health": "Health etc.",
+      "pension": "Pension",
+      "sum": "Total",
+      "payment": "Payment",
+      "employeeSum": "Employee total",
+      "employerSum": "Employer"
+    },
+    "change": {
+      "new": "New",
+      "grade": "Grade",
+      "care": "Care",
+      "rate": "Rate",
+      "other": "Changed"
+    },
+    "category": {
+      "health": "Health insurance (incl. care and child support)",
+      "pension": "Pension",
+      "childContribution": "Child contribution"
+    },
+    "totalsTitle": "Office totals",
+    "totalsExcluded": "{{count}} employee(s) that could not be calculated are not included.",
+    "totalsHint": "Payment is the sum of all totals rounded down to the yen; the employer share is payment minus the employees' total (Japan Pension Service method).",
+    "error": {
+      "load": "Could not load premiums."
+    }
   }
 }
