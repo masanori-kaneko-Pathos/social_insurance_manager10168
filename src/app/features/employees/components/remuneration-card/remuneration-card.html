@@ -1,134 +1,190 @@
 <section class="card">
-    <div class="head">
-      <h2>{{ 'remuneration.title' | transloco }}</h2>
-      @if (context.isAdmin() && editing() === null) {
-        <button type="button" class="btn" (click)="startAdd()">{{ 'remuneration.add' | transloco }}</button>
-      }
-    </div>
-  
-    @if (errorKey()) {
-      <div class="alert alert-danger">{{ errorKey()! | transloco }}</div>
+  <div class="head">
+    <h2>{{ 'remuneration.title' | transloco }}</h2>
+    @if (context.isAdmin() && editing() === null) {
+      <button type="button" class="btn" (click)="startAdd()">
+        {{ 'remuneration.add' | transloco }}
+      </button>
     }
-  
-    <!-- 追加・編集のフォーム -->
-    @if (editing() !== null) {
-      <form class="editor" [formGroup]="form" (ngSubmit)="save()">
-        <div class="grid">
-          <div class="field">
-            <label for="rem-from">{{ 'remuneration.field.from' | transloco }}</label>
-            <input id="rem-from" class="input" type="month" formControlName="from"
-                   [class.is-invalid]="errorOf('from')" />
-            @if (errorOf('from'); as key) { <span class="field-error">{{ key | transloco }}</span> }
-          </div>
-  
-          <div class="field">
-            <label for="rem-reason">{{ 'remuneration.field.reason' | transloco }}</label>
-            <select id="rem-reason" class="input" formControlName="reason">
-              @for (r of reasons; track r) {
-                <option [value]="r">{{ 'remuneration.reason.' + r | transloco }}</option>
-              }
-            </select>
-          </div>
-  
-          <div class="field">
-            <label for="rem-amount">{{ 'remuneration.field.monthlyAmount' | transloco }}</label>
-            <input id="rem-amount" class="input num" type="text" inputmode="numeric" formControlName="monthlyAmount"
-                   [class.is-invalid]="errorOf('monthlyAmount')" placeholder="300,000" />
-            @if (errorOf('monthlyAmount'); as key) { <span class="field-error">{{ key | transloco }}</span> }
-          </div>
-        </div>
-  
-        <div class="grid">
-          @for (k of kinds; track k) {
-            <div class="field">
-              <label [for]="'rem-' + k">{{ 'remuneration.field.' + k | transloco }}</label>
-              <select [id]="'rem-' + k" class="input" [formControlName]="k + 'Grade'"
-                      [class.is-invalid]="errorOf($any(k + 'Grade'))">
-                <option value="">{{ 'remuneration.selectGrade' | transloco }}</option>
-                @for (g of tableFor()[k]?.grades ?? []; track g.grade) {
-                  <option [value]="'' + g.grade">
-                    {{ 'remuneration.gradeLabel' | transloco: { grade: g.grade, standard: yen(g.standard) } }}
-                  </option>
-                }
-              </select>
-              @if (isManual(k)) {
-                <span class="hint warn">{{ 'remuneration.manualHint' | transloco }}</span>
-              }
-              @if (errorOf($any(k + 'Grade')); as key) { <span class="field-error">{{ key | transloco }}</span> }
-            </div>
+  </div>
+
+  @if (errorKey()) {
+    <div class="alert alert-danger">{{ errorKey()! | transloco }}</div>
+  }
+
+  <!-- 追加・編集のフォーム -->
+  @if (editing() !== null) {
+    <form class="editor" [formGroup]="form" (ngSubmit)="save()">
+      <div class="grid">
+        <div class="field">
+          <label for="rem-from">{{ 'remuneration.field.from' | transloco }}</label>
+          <input
+            id="rem-from"
+            class="input"
+            type="month"
+            formControlName="from"
+            [class.is-invalid]="errorOf('from')"
+          />
+          @if (errorOf('from'); as key) {
+            <span class="field-error">{{ key | transloco }}</span>
           }
         </div>
-        <p class="hint">{{ 'remuneration.autoHint' | transloco }}</p>
-  
-        <div class="actions">
-          <button type="button" class="btn" (click)="cancel()">{{ 'common.cancel' | transloco }}</button>
-          <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ 'common.save' | transloco }}</button>
+
+        <div class="field">
+          <label for="rem-reason">{{ 'remuneration.field.reason' | transloco }}</label>
+          <select id="rem-reason" class="input" formControlName="reason">
+            @for (r of reasons; track r) {
+              <option [value]="r">{{ 'remuneration.reason.' + r | transloco }}</option>
+            }
+          </select>
         </div>
-      </form>
-    }
-  
-    <!-- 履歴 -->
-    @if (loading()) {
-      <p class="muted">{{ 'common.loading' | transloco }}</p>
-    } @else if (rows().length === 0) {
-      <p class="muted">{{ 'remuneration.empty' | transloco }}</p>
-    } @else {
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>{{ 'remuneration.field.from' | transloco }}</th>
-              <th>{{ 'remuneration.field.reason' | transloco }}</th>
-              <th class="num">{{ 'remuneration.field.monthlyAmount' | transloco }}</th>
-              <th class="num">{{ 'remuneration.field.health' | transloco }}</th>
-              <th class="num">{{ 'remuneration.field.pension' | transloco }}</th>
-              @if (context.isAdmin()) {
-                <th><span class="sr-only">{{ 'common.edit' | transloco }}</span></th>
+
+        <div class="field">
+          <label for="rem-amount">{{ 'remuneration.field.monthlyAmount' | transloco }}</label>
+          <input
+            id="rem-amount"
+            class="input num"
+            type="text"
+            inputmode="numeric"
+            formControlName="monthlyAmount"
+            [class.is-invalid]="errorOf('monthlyAmount')"
+            placeholder="300,000"
+          />
+          @if (errorOf('monthlyAmount'); as key) {
+            <span class="field-error">{{ key | transloco }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="grid">
+        @for (k of kinds; track k) {
+          <div class="field">
+            <label [for]="'rem-' + k">{{ 'remuneration.field.' + k | transloco }}</label>
+            <select
+              [id]="'rem-' + k"
+              class="input"
+              [formControlName]="k + 'Grade'"
+              [class.is-invalid]="errorOf($any(k + 'Grade'))"
+            >
+              <option value="">{{ 'remuneration.selectGrade' | transloco }}</option>
+              @for (g of tableFor()[k]?.grades ?? []; track g.grade) {
+                <option [value]="'' + g.grade">
+                  {{
+                    'remuneration.gradeLabel'
+                      | transloco: { grade: g.grade, standard: yen(g.standard) }
+                  }}
+                </option>
               }
-            </tr>
-          </thead>
-          <tbody>
-            @for (r of rows(); track r.from) {
-              <tr [class.current]="r.from === currentFrom()">
-                <td class="mono">
-                  {{ r.from }}〜
-                  @if (r.from === currentFrom()) {
-                    <span class="badge">{{ 'remuneration.current' | transloco }}</span>
+            </select>
+            @if (isManual(k)) {
+              <span class="hint warn">{{ 'remuneration.manualHint' | transloco }}</span>
+            }
+            @if (errorOf($any(k + 'Grade')); as key) {
+              <span class="field-error">{{ key | transloco }}</span>
+            }
+          </div>
+        }
+      </div>
+      @if (autoStatus(); as key) {
+        <p class="hint warn">{{ key | transloco }}</p>
+      } @else {
+        <p class="hint">{{ 'remuneration.autoHint' | transloco }}</p>
+      }
+
+      <div class="actions">
+        <button type="button" class="btn" (click)="cancel()">
+          {{ 'common.cancel' | transloco }}
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          {{ 'common.save' | transloco }}
+        </button>
+      </div>
+    </form>
+  }
+
+  <!-- 履歴 -->
+  @if (loading()) {
+    <p class="muted">{{ 'common.loading' | transloco }}</p>
+  } @else if (rows().length === 0) {
+    <p class="muted">{{ 'remuneration.empty' | transloco }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'remuneration.field.from' | transloco }}</th>
+            <th>{{ 'remuneration.field.reason' | transloco }}</th>
+            <th class="num">{{ 'remuneration.field.monthlyAmount' | transloco }}</th>
+            <th class="num">{{ 'remuneration.field.health' | transloco }}</th>
+            <th class="num">{{ 'remuneration.field.pension' | transloco }}</th>
+            @if (context.isAdmin()) {
+              <th>
+                <span class="sr-only">{{ 'common.edit' | transloco }}</span>
+              </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.from) {
+            <tr [class.current]="r.from === currentFrom()">
+              <td class="mono">
+                {{ r.from }}〜
+                @if (r.from === currentFrom()) {
+                  <span class="badge">{{ 'remuneration.current' | transloco }}</span>
+                }
+              </td>
+              <td>{{ 'remuneration.reason.' + r.reason | transloco }}</td>
+              <td class="num">{{ yen(r.monthlyAmount) }}</td>
+              <td class="num">
+                <span class="grade">{{
+                  'remuneration.gradeShort' | transloco: { grade: r.health.grade }
+                }}</span>
+                {{ yen(r.health.standard) }}
+              </td>
+              <td class="num">
+                <span class="grade">{{
+                  'remuneration.gradeShort' | transloco: { grade: r.pension.grade }
+                }}</span>
+                {{ yen(r.pension.standard) }}
+              </td>
+              @if (context.isAdmin()) {
+                <td class="row-actions">
+                  @if (confirmingDelete() === r.from) {
+                    <button
+                      type="button"
+                      class="link danger"
+                      [disabled]="saving()"
+                      (click)="remove(r.from)"
+                    >
+                      {{ 'remuneration.confirmDelete' | transloco }}
+                    </button>
+                    <button type="button" class="link" (click)="confirmingDelete.set(null)">
+                      {{ 'common.cancel' | transloco }}
+                    </button>
+                  } @else {
+                    <button
+                      type="button"
+                      class="link"
+                      [disabled]="editing() !== null"
+                      (click)="startEdit(r)"
+                    >
+                      {{ 'common.edit' | transloco }}
+                    </button>
+                    <button
+                      type="button"
+                      class="link"
+                      [disabled]="editing() !== null"
+                      (click)="confirmingDelete.set(r.from)"
+                    >
+                      {{ 'common.delete' | transloco }}
+                    </button>
                   }
                 </td>
-                <td>{{ 'remuneration.reason.' + r.reason | transloco }}</td>
-                <td class="num">{{ yen(r.monthlyAmount) }}</td>
-                <td class="num">
-                  <span class="grade">{{ 'remuneration.gradeShort' | transloco: { grade: r.health.grade } }}</span>
-                  {{ yen(r.health.standard) }}
-                </td>
-                <td class="num">
-                  <span class="grade">{{ 'remuneration.gradeShort' | transloco: { grade: r.pension.grade } }}</span>
-                  {{ yen(r.pension.standard) }}
-                </td>
-                @if (context.isAdmin()) {
-                  <td class="row-actions">
-                    @if (confirmingDelete() === r.from) {
-                      <button type="button" class="link danger" [disabled]="saving()" (click)="remove(r.from)">
-                        {{ 'remuneration.confirmDelete' | transloco }}
-                      </button>
-                      <button type="button" class="link" (click)="confirmingDelete.set(null)">
-                        {{ 'common.cancel' | transloco }}
-                      </button>
-                    } @else {
-                      <button type="button" class="link" [disabled]="editing() !== null" (click)="startEdit(r)">
-                        {{ 'common.edit' | transloco }}
-                      </button>
-                      <button type="button" class="link" [disabled]="editing() !== null" (click)="confirmingDelete.set(r.from)">
-                        {{ 'common.delete' | transloco }}
-                      </button>
-                    }
-                  </td>
-                }
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    }
-  </section>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

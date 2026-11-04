@@ -226,40 +226,46 @@
     }
   },
   "remuneration": {
-  "title": "Standard monthly remuneration",
-  "add": "Add",
-  "empty": "Nothing registered yet.",
-  "current": "Current",
-  "field": {
-    "from": "Effective from",
-    "reason": "Reason",
-    "monthlyAmount": "Monthly pay (JPY)",
-    "health": "Health insurance",
-    "pension": "Pension"
-  },
-  "reason": {
-    "acquisition": "On enrollment",
-    "regular": "Annual review",
-    "irregular": "Interim revision",
-    "other": "Other (e.g. after childcare leave)"
-  },
-  "selectGrade": "Select a grade",
-  "gradeLabel": "Grade {{grade}}  JPY {{standard}}",
-  "gradeShort": "G{{grade}}",
-  "autoHint": "The grade is chosen from the monthly pay. If it differs from the official notice, select it again.",
-  "manualHint": "Differs from the grade for this pay (the selected grade will be saved)",
-  "confirmDelete": "Delete",
-  "validation": {
-    "required": "Required",
-    "month": "Select a month",
-    "amount": "Enter a number"
-  },
-  "error": {
-    "load": "Could not load.",
-    "save": "Could not save.",
-    "amount": "Enter the monthly pay as a number.",
-    "noTable": "No grade table for this month (available from March 2024).",
-    "duplicate": "This month is already registered. Edit it from the list."
+    "title": "Standard monthly remuneration",
+    "add": "Add",
+    "empty": "Nothing registered yet.",
+    "current": "Current",
+    "field": {
+      "from": "Effective from",
+      "reason": "Reason",
+      "monthlyAmount": "Monthly pay (JPY)",
+      "health": "Health insurance",
+      "pension": "Pension"
+    },
+    "reason": {
+      "acquisition": "On enrollment",
+      "regular": "Annual review",
+      "irregular": "Interim revision",
+      "other": "Other (e.g. after childcare leave)"
+    },
+    "selectGrade": "Select a grade",
+    "gradeLabel": "Grade {{grade}}  JPY {{standard}}",
+    "gradeShort": "G{{grade}}",
+    "autoHint": "The grade is chosen from the monthly pay. If it differs from the official notice, select it again.",
+    "manualHint": "Differs from the grade for this pay (the selected grade will be saved)",
+    "confirmDelete": "Delete",
+    "validation": {
+      "required": "Required",
+      "month": "Select a month",
+      "amount": "Enter a number"
+    },
+    "error": {
+      "load": "Could not load.",
+      "save": "Could not save.",
+      "amount": "Enter the monthly pay as a number.",
+      "noTable": "No grade table for this month (available from March 2024).",
+      "duplicate": "This month is already registered. Edit it from the list."
+    },
+    "status": {
+      "noMaster": "Grade tables could not be loaded. Contact your administrator.",
+      "needMonth": "Select the effective month to choose grades automatically.",
+      "noTable": "No grade table for this month (available from March 2024).",
+      "needAmount": "Enter the monthly pay as a number to choose grades automatically."
+    }
   }
-}
 }

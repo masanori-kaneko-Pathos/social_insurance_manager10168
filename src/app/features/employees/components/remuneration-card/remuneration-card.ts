@@ -53,6 +53,18 @@ export class RemunerationCard implements OnInit {
   readonly saving = signal(false);
   /** フォームの適用開始月（等級表の選択に使う） */
   private readonly formMonth = signal('');
+  /** フォームの報酬月額（読めないときは null） */
+  private readonly formAmount = signal<number | null>(null);
+
+  /** 等級を自動で決められないときの理由（決められるときは null） */
+  readonly autoStatus = computed<string | null>(() => {
+    if (this.gradeTables().length === 0) return 'remuneration.status.noMaster';
+    if (!this.formMonth()) return 'remuneration.status.needMonth';
+    const t = this.tableFor();
+    if (!t.health || !t.pension) return 'remuneration.status.noTable';
+    if (this.formAmount() === null) return 'remuneration.status.needAmount';
+    return null;
+  });
 
   /** 今月に使われている行（一覧で目立たせる） */
   readonly currentFrom = computed(() => latest(this.rows(), this.thisMonth)?.from ?? null);
@@ -79,7 +91,10 @@ export class RemunerationCard implements OnInit {
       this.formMonth.set(MONTH.test(v) ? v : '');
       this.autoGrades();
     });
-    this.form.controls.monthlyAmount.valueChanges.subscribe(() => this.autoGrades());
+    this.form.controls.monthlyAmount.valueChanges.subscribe((v) => {
+      this.formAmount.set(parseYen(v));
+      this.autoGrades();
+    });
   }
 
   ngOnInit(): void {
