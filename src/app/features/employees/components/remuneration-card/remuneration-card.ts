@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
@@ -36,6 +36,9 @@ export class RemunerationCard implements OnInit {
   readonly context = inject(OfficeContext);
 
   readonly employee = input.required<Employee>();
+
+  /** 保存・削除したことを知らせる（保険料カードが計算し直すため） */
+  readonly changed = output<void>();
 
   readonly reasons = REMUNERATION_REASONS;
   readonly kinds: Kind[] = ['health', 'pension'];
@@ -229,6 +232,7 @@ export class RemunerationCard implements OnInit {
       else await this.api.update(officeId, this.employee().id, input);
       this.editing.set(null);
       await this.load();
+      this.changed.emit();
     } catch (err) {
       console.error(err);
       this.errorKey.set('remuneration.error.save');
@@ -245,6 +249,7 @@ export class RemunerationCard implements OnInit {
       await this.api.delete(officeId, this.employee().id, from);
       this.confirmingDelete.set(null);
       await this.load();
+      this.changed.emit();
     } catch (err) {
       console.error(err);
       this.errorKey.set('remuneration.error.save');

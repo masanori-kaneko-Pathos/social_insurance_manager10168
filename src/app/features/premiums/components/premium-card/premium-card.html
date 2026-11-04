@@ -1,0 +1,128 @@
+<section class="card">
+  <div class="head">
+    <h2>{{ 'premium.title' | transloco }}</h2>
+    <span class="note">{{ 'premium.methodNote' | transloco }}</span>
+  </div>
+
+  @if (loading()) {
+    <p class="muted">{{ 'common.loading' | transloco }}</p>
+  } @else if (errorKey()) {
+    <div class="alert alert-danger">{{ errorKey()! | transloco }}</div>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'premium.col.month' | transloco }}</th>
+            <th scope="col" class="num">{{ 'premium.col.employee' | transloco }}</th>
+            <th scope="col" class="num">{{ 'premium.col.employer' | transloco }}</th>
+            <th scope="col" class="num">{{ 'premium.col.total' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.month) {
+            <tr
+              class="month-row"
+              [class.future]="isFuture(row.month)"
+              [class.open]="openMonth() === row.month"
+            >
+              <th scope="row">
+                @if (hasDetail(row)) {
+                  <button
+                    type="button"
+                    class="toggle"
+                    (click)="toggle(row.month)"
+                    [attr.aria-expanded]="openMonth() === row.month"
+                  >
+                    <span class="chevron" aria-hidden="true">{{
+                      openMonth() === row.month ? '▾' : '▸'
+                    }}</span>
+                    {{ 'premium.monthLabel' | transloco: monthParts(row.month) }}
+                  </button>
+                } @else {
+                  <span class="month-plain">{{
+                    'premium.monthLabel' | transloco: monthParts(row.month)
+                  }}</span>
+                }
+              </th>
+              @switch (state(row)) {
+                @case ('none') {
+                  <td class="num muted" colspan="3">—</td>
+                }
+                @case ('error') {
+                  <td class="warn" colspan="3">{{ 'premium.error.calc' | transloco }}</td>
+                }
+                @case ('missing') {
+                  <td class="warn" colspan="3">{{ missingKey(row) | transloco }}</td>
+                }
+                @default {
+                  <td class="num strong">{{ yen(row.result!.employeeYen) }}</td>
+                  <td class="num">{{ milli(row.result!.employerMilli) }}</td>
+                  <td class="num">{{ milli(row.result!.totalMilli) }}</td>
+                }
+              }
+            </tr>
+
+            <!-- 根拠（行を押すと開く） -->
+            @if (openMonth() === row.month && row.result) {
+              <tr class="detail-row">
+                <td colspan="4">
+                  @for (g of row.result.groups; track $index) {
+                    <div class="group">
+                      @for (l of g.lines; track l.part) {
+                        <div class="line">
+                          <span class="part">{{ 'premium.part.' + l.part | transloco }}</span>
+                          <span class="formula">
+                            {{
+                              'premium.formula'
+                                | transloco
+                                  : {
+                                      base: yen(l.base),
+                                      grade: l.grade,
+                                      rate: lineRate(l),
+                                      total: milli(l.totalMilli),
+                                    }
+                            }}
+                          </span>
+                          <span class="rate-note">
+                            {{
+                              'premium.rateNote'
+                                | transloco
+                                  : {
+                                      employee: pct(l.rate.employee),
+                                      employer: pct(l.rate.employer),
+                                      from: l.rate.from,
+                                    }
+                            }}
+                          </span>
+                        </div>
+                      }
+                      <div class="group-sum">
+                        {{
+                          'premium.groupSum'
+                            | transloco
+                              : {
+                                  before: employeeBefore(g),
+                                  after: yen(g.employeeYen),
+                                  employer: milli(g.employerMilli),
+                                }
+                        }}
+                      </div>
+                    </div>
+                  }
+                  @for (m of row.result.missing; track m.part) {
+                    <div class="line warn">
+                      <span class="part">{{ 'premium.part.' + m.part | transloco }}</span>
+                      <span>{{ 'premium.missing.' + m.reason | transloco }}</span>
+                    </div>
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">{{ 'premium.employerHint' | transloco }}</p>
+  }
+</section>

@@ -267,5 +267,35 @@
       "noTable": "No grade table for this month (available from March 2024).",
       "needAmount": "Enter the monthly pay as a number to choose grades automatically."
     }
+  },
+  "premium": {
+    "title": "Premiums (monthly)",
+    "methodNote": "Employee share deducted from pay (50 sen or less rounded down); health, care and child support rounded together",
+    "col": {
+      "month": "Month",
+      "employee": "Employee",
+      "employer": "Employer (est.)",
+      "total": "Total"
+    },
+    "monthLabel": "{{y}}-{{m}}",
+    "part": {
+      "health": "Health insurance",
+      "care": "Long-term care",
+      "childSupport": "Child support levy",
+      "pension": "Pension",
+      "childContribution": "Child contribution"
+    },
+    "formula": "JPY {{base}} (grade {{grade}}) × {{rate}} = JPY {{total}}",
+    "rateNote": "Employee {{employee}} / Employer {{employer}} (rate from {{from}})",
+    "groupSum": "Employee JPY {{before}} → rounded JPY {{after}} / Employer (est.) JPY {{employer}}",
+    "missing": {
+      "noRemuneration": "No standard remuneration",
+      "noRate": "No rate registered"
+    },
+    "error": {
+      "load": "Could not load the data needed for premiums.",
+      "calc": "Could not calculate (check the rate data)."
+    },
+    "employerHint": "The employer share per person is an estimate (total minus employee share). The office pays the sum of all totals, rounded down to the yen."
   }
 }

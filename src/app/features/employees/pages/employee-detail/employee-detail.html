@@ -1,106 +1,125 @@
 <a class="back" [routerLink]="['/o', context.current()?.id, 'employees']">
-    ‹ {{ 'employee.detail.back' | transloco }}
-  </a>
-  
-  @if (loading()) {
-    <p class="muted">{{ 'common.loading' | transloco }}</p>
-  } @else if (errorKey()) {
-    <div class="alert alert-danger">{{ errorKey()! | transloco }}</div>
-  } @else {
-    @if (employee(); as e) {
-      <div class="page-head">
-        <div>
-          <h1>{{ e.lastName }} {{ e.firstName }}</h1>
-          <p class="kana">{{ e.lastNameKana }} {{ e.firstNameKana }}</p>
-        </div>
-        @if (context.isAdmin()) {
-          <a class="btn" [routerLink]="['edit']">{{ 'common.edit' | transloco }}</a>
-        }
+  ‹ {{ 'employee.detail.back' | transloco }}
+</a>
+
+@if (loading()) {
+  <p class="muted">{{ 'common.loading' | transloco }}</p>
+} @else if (errorKey()) {
+  <div class="alert alert-danger">{{ errorKey()! | transloco }}</div>
+} @else {
+  @if (employee(); as e) {
+    <div class="page-head">
+      <div>
+        <h1>{{ e.lastName }} {{ e.firstName }}</h1>
+        <p class="kana">{{ e.lastNameKana }} {{ e.firstNameKana }}</p>
       </div>
-  
-      <!-- 基本情報 -->
-      <section class="card">
-        <dl class="info">
-          <div>
-            <dt>{{ 'employee.field.employeeNumber' | transloco }}</dt>
-            <dd class="mono">{{ e.employeeNumber ?? '—' }}</dd>
-          </div>
-          <div>
-            <dt>{{ 'employee.field.birthDate' | transloco }}</dt>
-            <dd class="mono">
-              {{ e.birthDate }}（{{ 'employee.detail.age' | transloco: { age: age(e) } }}）
-            </dd>
-          </div>
-          <div>
-            <dt>{{ 'employee.field.hireDate' | transloco }}</dt>
-            <dd class="mono">{{ e.hireDate }}</dd>
-          </div>
-          <div>
-            <dt>{{ 'employee.field.retireDate' | transloco }}</dt>
-            <dd class="mono">{{ e.retireDate ?? '—' }}</dd>
-          </div>
-        </dl>
-       <!-- 標準報酬月額 -->
-       <app-remuneration-card [employee]="e" />
-      </section>
-  
-      <!-- 月ごとの加入状況 -->
-      <section class="card">
-        <div class="coverage-head">
-          <h2>{{ 'employee.detail.coverageTitle' | transloco }}</h2>
-          <div class="segmented" role="group">
-            @for (m of modes; track m) {
-              <button type="button" [class.active]="mode() === m" (click)="setMode(m)">
-                {{ 'employee.detail.mode.' + m | transloco }}
-              </button>
-            }
-          </div>
+      @if (context.isAdmin()) {
+        <a class="btn" [routerLink]="['edit']">{{ 'common.edit' | transloco }}</a>
+      }
+    </div>
+
+    <!-- 基本情報 -->
+    <section class="card">
+      <dl class="info">
+        <div>
+          <dt>{{ 'employee.field.employeeNumber' | transloco }}</dt>
+          <dd class="mono">{{ e.employeeNumber ?? '—' }}</dd>
         </div>
-  
-        <div class="period">
-          @if (mode() === 'last12') {
-            <span class="period-label">{{ 'employee.detail.last12Label' | transloco }}</span>
-          } @else {
-            <button type="button" class="btn" (click)="shift(-1)"
-                    [attr.aria-label]="'employee.detail.prev' | transloco">‹</button>
-            <span class="period-label">
-              {{ 'employee.detail.' + mode() + 'Label' | transloco: { year: year() } }}
-            </span>
-            <button type="button" class="btn" (click)="shift(1)"
-                    [attr.aria-label]="'employee.detail.next' | transloco">›</button>
+        <div>
+          <dt>{{ 'employee.field.birthDate' | transloco }}</dt>
+          <dd class="mono">
+            {{ e.birthDate }}（{{ 'employee.detail.age' | transloco: { age: age(e) } }}）
+          </dd>
+        </div>
+        <div>
+          <dt>{{ 'employee.field.hireDate' | transloco }}</dt>
+          <dd class="mono">{{ e.hireDate }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'employee.field.retireDate' | transloco }}</dt>
+          <dd class="mono">{{ e.retireDate ?? '—' }}</dd>
+        </div>
+      </dl>
+      <!-- 標準報酬月額 -->
+      <app-remuneration-card [employee]="e" (changed)="premiumCard.reload()" />
+    </section>
+
+    <!-- 月ごとの加入状況 -->
+    <section class="card">
+      <div class="coverage-head">
+        <h2>{{ 'employee.detail.coverageTitle' | transloco }}</h2>
+        <div class="segmented" role="group">
+          @for (m of modes; track m) {
+            <button type="button" [class.active]="mode() === m" (click)="setMode(m)">
+              {{ 'employee.detail.mode.' + m | transloco }}
+            </button>
           }
         </div>
-  
-        <div class="table-wrap">
-          <table>
-            <thead>
+      </div>
+
+      <div class="period">
+        @if (mode() === 'last12') {
+          <span class="period-label">{{ 'employee.detail.last12Label' | transloco }}</span>
+        } @else {
+          <button
+            type="button"
+            class="btn"
+            (click)="shift(-1)"
+            [attr.aria-label]="'employee.detail.prev' | transloco"
+          >
+            ‹
+          </button>
+          <span class="period-label">
+            {{ 'employee.detail.' + mode() + 'Label' | transloco: { year: year() } }}
+          </span>
+          <button
+            type="button"
+            class="btn"
+            (click)="shift(1)"
+            [attr.aria-label]="'employee.detail.next' | transloco"
+          >
+            ›
+          </button>
+        }
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">
+                <span class="sr-only">{{ 'employee.detail.insurance' | transloco }}</span>
+              </th>
+              @for (r of rows(); track r.month; let i = $index) {
+                <th scope="col" class="month" [class.future]="isFuture(r.month)">
+                  @if (i === 0 || r.month.endsWith('-01')) {
+                    <span class="year">{{ r.month.slice(0, 4) }}</span>
+                  }
+                  {{ monthLabel(r.month) }}{{ 'employee.detail.monthSuffix' | transloco }}
+                </th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (k of kinds; track k) {
               <tr>
-                <th scope="col"><span class="sr-only">{{ 'employee.detail.insurance' | transloco }}</span></th>
-                @for (r of rows(); track r.month; let i = $index) {
-                  <th scope="col" class="month" [class.future]="isFuture(r.month)">
-                    @if (i === 0 || r.month.endsWith('-01')) {
-                      <span class="year">{{ r.month.slice(0, 4) }}</span>
+                <th scope="row">{{ 'employee.badge.' + k | transloco }}</th>
+                @for (r of rows(); track r.month) {
+                  <td class="mark" [class.future]="isFuture(r.month)">
+                    @if (r[k]) {
+                      ○
                     }
-                    {{ monthLabel(r.month) }}{{ 'employee.detail.monthSuffix' | transloco }}
-                  </th>
+                  </td>
                 }
               </tr>
-            </thead>
-            <tbody>
-              @for (k of kinds; track k) {
-                <tr>
-                  <th scope="row">{{ 'employee.badge.' + k | transloco }}</th>
-                  @for (r of rows(); track r.month) {
-                    <td class="mark" [class.future]="isFuture(r.month)">
-                      @if (r[k]) { ○ }
-                    </td>
-                  }
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-        <p class="hint">{{ 'employee.detail.futureHint' | transloco }}</p>
-      </section>
-    }
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="hint">{{ 'employee.detail.futureHint' | transloco }}</p>
+    </section>
+
+    <!-- 保険料（期間の切り替えは加入状況の表と共通） -->
+    <app-premium-card #premiumCard [employee]="e" [months]="months()" />
   }
+}

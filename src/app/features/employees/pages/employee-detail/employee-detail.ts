@@ -1,20 +1,27 @@
-import { Component, inject, signal, computed } from "@angular/core";
-import { RouterLink, ActivatedRoute } from "@angular/router";
-import { TranslocoPipe } from "@jsverse/transloco";
-import { EmployeeService } from "../../employee.service";
-import { OfficeContext } from "../../../office/office-context.service";
-import { todayLocal, ageAt } from "../../../../shared/utils/date";
-import { toYearMonth, fiscalYearOf, monthsLast12, YearMonth,
-    monthsOfCalendarYear, monthsOfFiscalYear, coverageForMonths, 
- } from "../../logic/coverage";
-import { Employee } from "../../../../core/models/employee";
-import { RemunerationCard } from "../../components/remuneration-card/remuneration-card";
+import { Component, inject, signal, computed } from '@angular/core';
+import { RouterLink, ActivatedRoute } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { EmployeeService } from '../../employee.service';
+import { OfficeContext } from '../../../office/office-context.service';
+import { todayLocal, ageAt } from '../../../../shared/utils/date';
+import {
+  toYearMonth,
+  fiscalYearOf,
+  monthsLast12,
+  YearMonth,
+  monthsOfCalendarYear,
+  monthsOfFiscalYear,
+  coverageForMonths,
+} from '../../logic/coverage';
+import { Employee } from '../../../../core/models/employee';
+import { RemunerationCard } from '../../components/remuneration-card/remuneration-card';
+import { PremiumCard } from '../../../premiums/components/premium-card/premium-card';
 
 type Mode = 'fiscal' | 'calendar' | 'last12';
 
 @Component({
   selector: 'app-employee-detail',
-  imports: [RouterLink, TranslocoPipe, RemunerationCard],
+  imports: [RouterLink, TranslocoPipe, RemunerationCard, PremiumCard],
   templateUrl: './employee-detail.html',
   styleUrl: './employee-detail.css',
 })
@@ -76,7 +83,9 @@ export class EmployeeDetail {
   /** 区切りを変えたら、年はその区切りでの「今」に戻す */
   setMode(m: Mode): void {
     this.mode.set(m);
-    this.year.set(m === 'calendar' ? Number(this.thisMonth.slice(0, 4)) : fiscalYearOf(this.thisMonth));
+    this.year.set(
+      m === 'calendar' ? Number(this.thisMonth.slice(0, 4)) : fiscalYearOf(this.thisMonth),
+    );
   }
 
   shift(diff: number): void {

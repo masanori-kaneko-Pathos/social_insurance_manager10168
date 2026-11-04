@@ -267,5 +267,35 @@
       "noTable": "この月の等級表がありません（2024年3月分から登録できます）。",
       "needAmount": "報酬月額を数字で入力すると、等級を自動で選びます。"
     }
+  },
+  "premium": {
+    "title": "保険料（月額）",
+    "methodNote": "本人負担は給与から控除（50銭以下切り捨て）、健保・介護・支援金は合算して端数処理",
+    "col": {
+      "month": "月",
+      "employee": "本人負担",
+      "employer": "会社負担（目安）",
+      "total": "全額"
+    },
+    "monthLabel": "{{y}}年{{m}}月分",
+    "part": {
+      "health": "健康保険",
+      "care": "介護保険",
+      "childSupport": "子ども・子育て支援金",
+      "pension": "厚生年金",
+      "childContribution": "子ども・子育て拠出金"
+    },
+    "formula": "{{base}}円（{{grade}}級）× {{rate}} ＝ {{total}}円",
+    "rateNote": "本人 {{employee}}・会社 {{employer}}（{{from}}分からの率）",
+    "groupSum": "本人分 {{before}}円 → 端数処理して {{after}}円 ／ 会社分（目安）{{employer}}円",
+    "missing": {
+      "noRemuneration": "標準報酬月額が未登録",
+      "noRate": "料率が未登録"
+    },
+    "error": {
+      "load": "保険料の計算に必要なデータを読み込めませんでした。",
+      "calc": "計算できませんでした（料率のデータを確認してください）"
+    },
+    "employerHint": "会社負担は1人ごとの目安（全額 − 本人負担）です。事業所として納める額は、全員の全額を合計して1円未満を切り捨てた額になります。"
   }
 }

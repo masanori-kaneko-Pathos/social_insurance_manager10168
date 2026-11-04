@@ -1,0 +1,167 @@
+:host {
+  display: block;
+}
+
+.card {
+  margin-bottom: var(--space-lg);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+h2 {
+  margin: 0;
+  font-size: var(--font-md);
+}
+
+.note,
+.hint {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.hint {
+  margin: var(--space-sm) 0 0;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+th,
+td {
+  padding: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+thead th {
+  font-weight: 400;
+  color: var(--color-text-sub);
+}
+
+th.num,
+td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+tbody th {
+  font-weight: 400;
+}
+
+.strong {
+  font-weight: 600;
+}
+
+.muted {
+  color: var(--color-text-sub);
+}
+
+.warn {
+  color: var(--color-warning-text);
+}
+
+.future {
+  opacity: 0.4;
+}
+
+.month-row.open {
+  background: var(--color-highlight);
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0;
+  font: inherit;
+  color: var(--color-text);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.toggle:hover {
+  text-decoration: underline;
+}
+
+.chevron {
+  width: 1em;
+  color: var(--color-text-sub);
+}
+
+.month-plain {
+  padding-left: calc(1em + var(--space-xs));
+}
+
+/* 根拠 */
+.detail-row td {
+  padding: var(--space-md);
+  background: var(--color-bg);
+  white-space: normal;
+}
+
+.group {
+  padding: var(--space-sm) 0;
+  border-bottom: 1px dashed var(--color-border-strong);
+}
+
+.group:last-child {
+  border-bottom: 0;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: 10em 1fr;
+  gap: 0 var(--space-md);
+  padding: 2px 0;
+}
+
+.line .rate-note {
+  grid-column: 2;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.part {
+  color: var(--color-text-sub);
+}
+
+.formula {
+  font-variant-numeric: tabular-nums;
+}
+
+.group-sum {
+  margin-top: var(--space-xs);
+  padding-left: calc(10em + var(--space-md));
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 600px) {
+  .line {
+    grid-template-columns: 1fr;
+  }
+
+  .line .rate-note {
+    grid-column: 1;
+  }
+
+  .group-sum {
+    padding-left: 0;
+  }
+}
