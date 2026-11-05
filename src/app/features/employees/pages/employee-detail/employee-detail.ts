@@ -16,12 +16,13 @@ import {
 import { Employee } from '../../../../core/models/employee';
 import { RemunerationCard } from '../../components/remuneration-card/remuneration-card';
 import { PremiumCard } from '../../../premiums/components/premium-card/premium-card';
+import { BonusCard } from '../../../premiums/components/bonus-card/bonus-card';
 
 type Mode = 'fiscal' | 'calendar' | 'last12';
 
 @Component({
   selector: 'app-employee-detail',
-  imports: [RouterLink, TranslocoPipe, RemunerationCard, PremiumCard],
+  imports: [RouterLink, TranslocoPipe, RemunerationCard, PremiumCard, BonusCard],
   templateUrl: './employee-detail.html',
   styleUrl: './employee-detail.css',
 })

@@ -74,6 +74,7 @@
     "dashboard": "Dashboard",
     "employees": "Employees",
     "premiums": "Premiums",
+    "bonuses": "Bonuses",
     "settings": "Office settings"
   },
   "employee": {
@@ -392,6 +393,11 @@
     "totalsTitle": "Office totals",
     "totalsExcluded": "{{count}} employee(s) that could not be calculated are not included.",
     "totalsHint": "Payment is the sum of all totals rounded down to the yen; the employer share is payment minus the employees' total (Japan Pension Service method).",
+    "bonusTitle": "Monthly and bonus",
+    "bonusRows": { "monthly": "Monthly", "bonus": "Bonus", "sum": "Total (monthly + bonus)" },
+    "bonusProblems": "{{count}} employee(s) could not be calculated for bonuses (not included in totals).",
+    "bonusHint": "Bonus premiums are paid together with the monthly premiums for the month the bonus was paid. Each is rounded down to the yen and then added, so the total may differ from the notice by 1 yen.",
+    "toBonuses": "Go to bonuses",
     "error": {
       "load": "Could not load premiums."
     }
@@ -426,6 +432,60 @@
       "mismatch": "Total doesn't equal employee + employer.",
       "tooHigh": "Rates above 30% can't be entered.",
       "load": "Couldn't load rates.",
+      "save": "Couldn't save. Try again later."
+    }
+  },
+  "bonus": {
+    "listTitle": "Bonuses",
+    "add": "Add bonus",
+    "empty": "No bonuses registered yet.",
+    "back": "Bonuses",
+    "titleNew": "Add bonus",
+    "titleEdit": "Edit bonus",
+    "titleView": "Bonus",
+    "readOnly": "View only (only administrators can make changes).",
+    "field": {
+      "paidDate": "Payment date",
+      "title": "Name (e.g. summer bonus)"
+    },
+    "col": {
+      "paidDate": "Payment date",
+      "title": "Name",
+      "people": "People",
+      "payment": "Payment",
+      "amount": "Bonus amount",
+      "standard": "Standard bonus"
+    },
+    "peopleCount": "{{count}}",
+    "hasProblems": "Some can't be calculated",
+    "capped": "Capped",
+    "cappedNote": "Calculated on health JPY {{health}} / pension JPY {{pension}}",
+    "totalsTitle": "Totals for this bonus",
+    "grandTotal": "Total payment",
+    "deleteThis": "Delete this bonus",
+    "confirmDelete": "Confirm delete",
+    "cardTitle": "Bonuses",
+    "cardEmpty": "No bonuses paid.",
+    "state": {
+      "none": "Not insured on the payment date",
+      "counted": "No premium in the month coverage ends (still counts toward the annual health total)"
+    },
+    "hint": {
+      "paidDate": "Premiums depend on the payment date (none before coverage starts or on/after it ends).",
+      "needDate": "Enter the payment date to show eligible employees.",
+      "standard": "Standard bonus = bonus amount rounded down to the nearest 1,000 yen. Caps: health etc. JPY 5.73M per fiscal year (Apr–Mar); pension etc. JPY 1.5M per month.",
+      "hidden": "({{count}} not insured on the payment date are hidden)",
+      "deduct": "The employee share is deducted from this bonus and paid together with that month's monthly premiums.",
+      "unsaved": "Nothing is saved until you press Save.",
+      "list": "Payment is the total of health insurance, pension and child contribution."
+    },
+    "error": {
+      "load": "Couldn't load bonus data.",
+      "notFound": "Bonus not found.",
+      "date": "Enter the payment date.",
+      "duplicate": "A bonus with this payment date already exists. Edit it from the list.",
+      "amount": "Enter a number.",
+      "noAmount": "Enter a bonus amount for at least one employee.",
       "save": "Couldn't save. Try again later."
     }
   }

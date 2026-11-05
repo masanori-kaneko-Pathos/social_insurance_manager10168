@@ -1,0 +1,54 @@
+<div class="page-head">
+  <h1>{{ 'bonus.listTitle' | transloco }}</h1>
+  @if (context.isAdmin()) {
+    <a class="btn btn-primary" [routerLink]="['/o', context.current()?.id, 'bonuses', 'new']">
+      {{ 'bonus.add' | transloco }}
+    </a>
+  }
+</div>
+
+@if (loading()) {
+  <p class="muted">{{ 'common.loading' | transloco }}</p>
+} @else if (errorKey(); as key) {
+  <div class="alert alert-danger">{{ key | transloco }}</div>
+} @else if (rows().length === 0) {
+  <section class="card empty">
+    <p>{{ 'bonus.empty' | transloco }}</p>
+  </section>
+} @else {
+  <div class="card table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ 'bonus.col.paidDate' | transloco }}</th>
+          <th>{{ 'bonus.col.title' | transloco }}</th>
+          <th class="num">{{ 'bonus.col.people' | transloco }}</th>
+          <th class="num">{{ 'bonus.col.payment' | transloco }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of rows(); track r.payment.id) {
+          <tr>
+            <td class="mono">
+              <a
+                class="name"
+                [routerLink]="['/o', context.current()?.id, 'bonuses', r.payment.id]"
+              >
+                {{ r.payment.paidDate }}
+              </a>
+            </td>
+            <td>{{ r.payment.title ?? '—' }}</td>
+            <td class="num">{{ 'bonus.peopleCount' | transloco: { count: r.people } }}</td>
+            <td class="num">
+              {{ yen(r.totalYen) }}
+              @if (r.problems > 0) {
+                <span class="badge badge-warn">{{ 'bonus.hasProblems' | transloco }}</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <p class="hint">{{ 'bonus.hint.list' | transloco }}</p>
+}

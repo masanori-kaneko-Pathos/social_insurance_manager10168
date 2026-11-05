@@ -205,6 +205,43 @@
         </tbody>
       </table>
       <p class="hint">{{ 'premiumList.totalsHint' | transloco }}</p>
+      <!-- 賞与を払った月だけ：月額・賞与・合計 -->
+      @if (bonusSummary(); as b) {
+        <h3>{{ 'premiumList.bonusTitle' | transloco }}</h3>
+        @if (b.problemCount > 0) {
+          <p class="warn">
+            {{ 'premiumList.bonusProblems' | transloco: { count: b.problemCount } }}
+          </p>
+        }
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              @for (c of bonusCols; track c.category) {
+                <th class="num">{{ c.label | transloco }}</th>
+              }
+              <th class="num">{{ 'premiumList.col.payment' | transloco }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of b.rows; track row.key) {
+              <tr [class.grand-total]="row.key === 'sum'">
+                <th scope="row">{{ 'premiumList.bonusRows.' + row.key | transloco }}</th>
+                @for (c of bonusCols; track c.category) {
+                  <td class="num">{{ yen(totalOf(row.totals, c.category)) }}</td>
+                }
+                <td class="num strong">{{ yen(sumOf(row.totals)) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <p class="hint">
+          {{ 'premiumList.bonusHint' | transloco }}
+          <a [routerLink]="['/o', context.current()?.id, 'bonuses']">{{
+            'premiumList.toBonuses' | transloco
+          }}</a>
+        </p>
+      }
     </section>
   }
 }

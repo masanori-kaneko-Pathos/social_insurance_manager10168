@@ -204,3 +204,8 @@ tr.changed td {
   border-top: 2px solid var(--color-border-strong);
   font-weight: 600;
 }
+
+.totals h3 {
+  margin: var(--space-lg) 0 var(--space-sm);
+  font-size: var(--font-sm);
+}

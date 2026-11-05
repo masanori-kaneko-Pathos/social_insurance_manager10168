@@ -20,12 +20,16 @@ import {
   insurerFor,
   payrollOf,
   premiumOf,
+  ratesForOffice,
 } from '../../../office/office-settings';
 import { noRates, pickRates, RateTables } from '../../../rates/logic/pick-rates';
 import { RateService } from '../../../rates/rate.service';
 import { officeTotals } from '../../logic/premium-core';
 import { buildPremiumRow, PremiumRow } from '../../logic/premium-rows';
 import { formatMilli } from '../../logic/rounding';
+import { BonusPaymentDoc } from '../../../../core/models/bonus';
+import { BonusService } from '../../bonus.service';
+import { addTotals, collectBonusResults } from '../../logic/bonus-rows';
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -45,6 +49,7 @@ export class PremiumList {
   private readonly employeesApi = inject(EmployeeService);
   private readonly remApi = inject(RemunerationService);
   private readonly rates = inject(RateService);
+  private readonly bonusApi = inject(BonusService);
   readonly context = inject(OfficeContext);
 
   readonly thisMonth = toYearMonth(todayLocal());
@@ -79,6 +84,7 @@ export class PremiumList {
   private readonly employees = signal<Employee[]>([]);
   private readonly remunerations = signal<Map<string, RemunerationDoc[]>>(new Map());
   private readonly tables = signal<RateTables | null>(null);
+  private readonly bonusPayments = signal<BonusPaymentDoc[]>([]);
   readonly loading = signal(true);
   readonly errorKey = signal<string | null>(null);
 
@@ -125,6 +131,49 @@ export class PremiumList {
 
   readonly changedCount = computed(() => this.rows().filter((r) => r.changes.length > 0).length);
 
+  /**
+   * その月に払った賞与があるときだけ「月額・賞与・合計」を出す（ない月は null）
+   * 1人の本人負担は月額と賞与を別々に端数処理して足す（日本年金機構の説明）。
+   * 納付額も月額・賞与それぞれで切り捨てて足すので、告知書と1円違うことがある
+   */
+  readonly bonusSummary = computed(() => {
+    const tables = this.tables();
+    const office = this.context.current();
+    const month = this.month();
+    const payments = this.bonusPayments();
+    if (!tables || !office || !payments.some((p) => p.paidDate.startsWith(month))) return null;
+    const c = collectBonusResults(
+      this.employees(),
+      payments,
+      { ratesFor: ratesForOffice(office, tables), options: this.options() },
+      (d) => d.startsWith(month),
+    );
+    const bonus = officeTotals(c.results);
+    return {
+      rows: [
+        { key: 'monthly', totals: this.totals() },
+        { key: 'bonus', totals: bonus },
+        { key: 'sum', totals: addTotals(this.totals(), bonus) },
+      ],
+      problemCount: c.problemCount,
+    };
+  });
+
+  /** 月額・賞与の表の列（見出しは1人ごとの表と同じ短い名前） */
+  readonly bonusCols = [
+    { category: 'health', label: 'premiumList.col.health' },
+    { category: 'pension', label: 'premiumList.col.pension' },
+    { category: 'childContribution', label: 'premiumList.col.contribution' },
+  ] as const;
+
+  totalOf(list: OfficeTotal[], category: OfficeTotal['category']): number {
+    return list.find((t) => t.category === category)?.totalYen ?? 0;
+  }
+
+  sumOf(list: OfficeTotal[]): number {
+    return list.reduce((s, t) => s + t.totalYen, 0);
+  }
+
   constructor() {
     // 事業所が切り替わったら読み直す
     effect(() => {
@@ -137,15 +186,17 @@ export class PremiumList {
     this.loading.set(true);
     this.errorKey.set(null);
     try {
-      const [employees, tables] = await Promise.all([
+      const [employees, tables, bonusPayments] = await Promise.all([
         this.employeesApi.list(officeId),
         this.rates.tablesFor(officeId, everKumiai(office)),
+        this.bonusApi.list(officeId),
       ]);
       // 報酬の履歴は従業員ごとに分かれているので、人数分を並行で読む
       const lists = await Promise.all(employees.map((e) => this.remApi.list(officeId, e.id)));
       this.remunerations.set(new Map(employees.map((e, i) => [e.id, lists[i]])));
       this.employees.set(employees);
       this.tables.set(tables);
+      this.bonusPayments.set(bonusPayments);
     } catch (err) {
       console.error(err);
       this.errorKey.set('premiumList.error.load');

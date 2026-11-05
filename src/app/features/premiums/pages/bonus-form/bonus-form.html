@@ -1,0 +1,244 @@
+<a class="back" [routerLink]="['/o', context.current()?.id, 'bonuses']">
+  ‹ {{ 'bonus.back' | transloco }}
+</a>
+
+<h1>
+  @if (readOnly) {
+    {{ 'bonus.titleView' | transloco }}
+  } @else {
+    {{ (isNew ? 'bonus.titleNew' : 'bonus.titleEdit') | transloco }}
+  }
+</h1>
+
+@if (loading()) {
+  <p class="muted">{{ 'common.loading' | transloco }}</p>
+} @else if (loadErrorKey(); as key) {
+  <div class="alert alert-danger">{{ key | transloco }}</div>
+} @else {
+  @if (readOnly) {
+    <p class="muted">{{ 'bonus.readOnly' | transloco }}</p>
+  }
+
+  <!-- 支払日・名称 -->
+  <section class="card head-card">
+    <div class="grid">
+      <div class="field">
+        <label for="paidDate">{{ 'bonus.field.paidDate' | transloco }}</label>
+        <input
+          id="paidDate"
+          class="input"
+          type="date"
+          [value]="paidDate()"
+          (input)="paidDate.set($any($event.target).value)"
+          [disabled]="readOnly"
+          [class.is-invalid]="(submitted() && !dateOk()) || duplicateDate()"
+        />
+        @if (submitted() && !dateOk()) {
+          <span class="field-error">{{ 'bonus.error.date' | transloco }}</span>
+        } @else if (duplicateDate()) {
+          <span class="field-error">{{ 'bonus.error.duplicate' | transloco }}</span>
+        } @else {
+          <span class="hint">{{ 'bonus.hint.paidDate' | transloco }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="title">
+          {{ 'bonus.field.title' | transloco
+          }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+        </label>
+        <input
+          id="title"
+          class="input"
+          maxlength="50"
+          [value]="title()"
+          (input)="title.set($any($event.target).value)"
+          [disabled]="readOnly"
+        />
+      </div>
+    </div>
+    <p class="hint">{{ 'bonus.hint.standard' | transloco }}</p>
+  </section>
+
+  @if (!dateOk()) {
+    <section class="card empty">
+      <p>{{ 'bonus.hint.needDate' | transloco }}</p>
+    </section>
+  } @else {
+    <p class="summary">
+      <span class="muted">
+        {{ 'premium.method.' + options().method | transloco }}・{{
+          'premium.rounding.' + options().healthRounding | transloco
+        }}
+      </span>
+      {{ 'bonus.peopleCount' | transloco: { count: peopleCount() } }}
+      @if (hiddenCount() > 0) {
+        <span class="muted">{{ 'bonus.hint.hidden' | transloco: { count: hiddenCount() } }}</span>
+      }
+    </p>
+
+    @if (problemCount() > 0) {
+      <div class="alert alert-warning" role="alert">
+        {{ 'premiumList.problemTitle' | transloco: { count: problemCount() } }}
+      </div>
+    }
+
+    <!-- 1行1人 -->
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th rowspan="2">{{ 'employee.field.employeeNumber' | transloco }}</th>
+            <th rowspan="2">{{ 'employee.field.name' | transloco }}</th>
+            <th rowspan="2" class="num">{{ 'bonus.col.amount' | transloco }}</th>
+            <th rowspan="2" class="num">{{ 'bonus.col.standard' | transloco }}</th>
+            <th colspan="3" class="group-head">{{ 'premium.col.employee' | transloco }}</th>
+            <th rowspan="2" class="num">{{ 'premium.col.employer' | transloco }}</th>
+            <th rowspan="2" class="num">{{ 'premium.col.total' | transloco }}</th>
+          </tr>
+          <tr>
+            <th class="num">{{ 'premiumList.col.health' | transloco }}</th>
+            <th class="num">{{ 'premiumList.col.pension' | transloco }}</th>
+            <th class="num">{{ 'premiumList.col.sum' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.employee.id) {
+            <tr [class.problem]="r.state === 'missing' || r.state === 'error'">
+              <td class="mono">{{ r.employee.employeeNumber ?? '—' }}</td>
+              <td>
+                <a
+                  class="name"
+                  [routerLink]="['/o', context.current()?.id, 'employees', r.employee.id]"
+                >
+                  {{ r.employee.lastName }} {{ r.employee.firstName }}
+                </a>
+              </td>
+              <td class="num">
+                <input
+                  class="input num amount"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  [value]="amountText(r.employee.id)"
+                  (input)="setAmount(r.employee.id, $any($event.target).value)"
+                  [disabled]="readOnly"
+                  [class.is-invalid]="badAmounts().has(r.employee.id)"
+                  [attr.aria-label]="
+                    r.employee.lastName + ' ' + r.employee.firstName + ' ' + ('bonus.col.amount' | transloco)
+                  "
+                />
+                @if (badAmounts().has(r.employee.id)) {
+                  <span class="field-error">{{ 'bonus.error.amount' | transloco }}</span>
+                }
+              </td>
+
+              @switch (r.state) {
+                @case ('ok') {
+                  <td class="num">
+                    {{ yen(r.result!.standardBonus) }}
+                    @if (r.capped) {
+                      <span class="badge badge-cap">{{ 'bonus.capped' | transloco }}</span>
+                      <span class="sub">{{
+                        'bonus.cappedNote'
+                          | transloco
+                            : { health: yen(r.result!.healthBase), pension: yen(r.result!.pensionBase) }
+                      }}</span>
+                    }
+                  </td>
+                  <td class="num">{{ yen(r.healthEmployeeYen) }}</td>
+                  <td class="num">
+                    {{ r.result!.pensionStatus === 'charged' ? yen(r.pensionEmployeeYen) : '—' }}
+                  </td>
+                  <td class="num strong">{{ yen(r.result!.employeeYen) }}</td>
+                  <td class="num">{{ milli(r.premiumEmployerMilli) }}</td>
+                  <td class="num">{{ milli(r.premiumTotalMilli) }}</td>
+                }
+                @case ('empty') {
+                  <td class="num muted" colspan="6">—</td>
+                }
+                @case ('none') {
+                  <td class="muted" colspan="6">{{ 'bonus.state.none' | transloco }}</td>
+                }
+                @case ('counted') {
+                  <td class="num">{{ yen(r.result!.standardBonus) }}</td>
+                  <td class="muted" colspan="5">{{ 'bonus.state.counted' | transloco }}</td>
+                }
+                @default {
+                  <td class="warn" colspan="6">{{ missingKey(r) | transloco }}</td>
+                }
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- この支給の合計 -->
+    <section class="card totals">
+      <h2>{{ 'bonus.totalsTitle' | transloco }}</h2>
+      @if (problemCount() > 0) {
+        <p class="warn">
+          {{ 'premiumList.totalsExcluded' | transloco: { count: problemCount() } }}
+        </p>
+      }
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th class="num">{{ 'premiumList.col.payment' | transloco }}</th>
+            <th class="num">{{ 'premiumList.col.employeeSum' | transloco }}</th>
+            <th class="num">{{ 'premiumList.col.employerSum' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of totals(); track t.category) {
+            <tr>
+              <th scope="row">{{ 'premiumList.category.' + t.category | transloco }}</th>
+              <td class="num strong">{{ yen(t.totalYen) }}</td>
+              <td class="num">{{ yen(t.employeeYen) }}</td>
+              <td class="num">{{ yen(t.employerYen) }}</td>
+            </tr>
+          }
+          <tr class="grand-total">
+            <th scope="row">{{ 'bonus.grandTotal' | transloco }}</th>
+            <td class="num strong">{{ yen(grandTotalYen()) }}</td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="hint">{{ 'bonus.hint.deduct' | transloco }}</p>
+    </section>
+  }
+
+  @if (saveErrorKey(); as key) {
+    <div class="alert alert-danger" role="alert">{{ key | transloco }}</div>
+  }
+  @if (submitted() && dateOk() && peopleCount() === 0) {
+    <div class="alert alert-danger" role="alert">{{ 'bonus.error.noAmount' | transloco }}</div>
+  }
+
+  @if (!readOnly) {
+    <div class="actions">
+      @if (!isNew) {
+        <button
+          type="button"
+          class="btn danger"
+          [class.confirm]="confirmDelete()"
+          [disabled]="saving()"
+          (click)="remove()"
+        >
+          {{ (confirmDelete() ? 'bonus.confirmDelete' : 'bonus.deleteThis') | transloco }}
+        </button>
+      }
+      <span class="spacer"></span>
+      <span class="hint">{{ 'bonus.hint.unsaved' | transloco }}</span>
+      <a class="btn" [routerLink]="['/o', context.current()?.id, 'bonuses']">
+        {{ 'common.cancel' | transloco }}
+      </a>
+      <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">
+        {{ (saving() ? 'common.saving' : 'common.save') | transloco }}
+      </button>
+    </div>
+  }
+}

@@ -298,7 +298,41 @@ service cloud.firestore {
 
         allow delete: if signedIn() && isAdmin();
       }
+      // ----- 賞与の支給（事業所の下。1回の支給＝1件。ドキュメントIDは自動） -----
+      match /bonusPayments/{paymentId} {
+        function office() {
+          return get(/databases/$(database)/documents/offices/$(officeId)).data;
+        }
 
+        function isAdmin() {
+          return office().memberRoles[request.auth.uid] == 'admin';
+        }
+
+        // ルールには繰り返しがないので、amounts の1件ずつ（金額が正の整数か等）はアプリで確かめる。
+        // ここでは形と件数だけ
+        function validBonusPayment(d) {
+          return d.keys().hasOnly(['paidDate', 'title', 'amounts', 'createdAt', 'updatedAt'])
+            && d.keys().hasAll(['paidDate', 'title', 'amounts', 'createdAt', 'updatedAt'])
+            && isDate(d.paidDate)
+            && optionalString(d.title, 50)
+            && d.amounts is map
+            && d.amounts.size() <= 2000;
+        }
+
+        allow read: if signedIn() && request.auth.uid in office().memberUids;
+
+        allow create: if signedIn() && isAdmin()
+          && validBonusPayment(request.resource.data)
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time;
+
+        allow update: if signedIn() && isAdmin()
+          && validBonusPayment(request.resource.data)
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.updatedAt == request.time;
+
+        allow delete: if signedIn() && isAdmin();
+      }
     }
   }
 }

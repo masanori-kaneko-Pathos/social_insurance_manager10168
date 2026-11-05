@@ -81,6 +81,21 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'bonuses',
+            loadComponent: () =>
+              import('./features/premiums/pages/bonus-list/bonus-list').then((m) => m.BonusList),
+          },
+          {
+            path: 'bonuses/new',
+            loadComponent: () =>
+              import('./features/premiums/pages/bonus-form/bonus-form').then((m) => m.BonusForm),
+          },
+          {
+            path: 'bonuses/:bonusId',
+            loadComponent: () =>
+              import('./features/premiums/pages/bonus-form/bonus-form').then((m) => m.BonusForm),
+          },
+          {
             path: 'settings',
             data: { mode: 'edit' },
             loadComponent: () =>

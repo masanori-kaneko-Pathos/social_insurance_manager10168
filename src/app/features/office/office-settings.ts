@@ -12,8 +12,8 @@ import {
 } from '../../core/models/office';
 import { DEFAULT_PREMIUM_OPTIONS } from '../../core/models/premium';
 import { shiftMonth, YearMonth } from '../employees/logic/coverage';
-import { latest, OfficeForRates } from '../rates/logic/pick-rates';
-import { MonthRange } from '../../core/models/rates';
+import { latest, noRates, OfficeForRates, pickRates, RateTables } from '../rates/logic/pick-rates';
+import { MonthRange, RatesForMonth } from '../../core/models/rates';
 
 /** 履歴の「最初から」を表す月 */
 export const FROM_THE_START = '0000-01';
@@ -61,6 +61,17 @@ export function insurerFor(office: OfficeLike, month: YearMonth): OfficeForRates
     prefecture: p.prefecture,
     healthInsurer: p.healthInsurer,
     ...(run ? { kumiaiSince: run.from } : {}),
+  };
+}
+
+/** 月 → その月の料率（その月の保険者・都道府県で選ぶ。履歴より前の月は全部「未登録」） */
+export function ratesForOffice(
+  office: OfficeLike,
+  tables: RateTables,
+): (month: YearMonth) => RatesForMonth {
+  return (month) => {
+    const insurer = insurerFor(office, month);
+    return insurer ? pickRates(insurer, tables, month) : noRates(month);
   };
 }
 

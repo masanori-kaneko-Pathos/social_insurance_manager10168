@@ -1,0 +1,59 @@
+<section class="card">
+  <h2>{{ 'bonus.cardTitle' | transloco }}</h2>
+
+  @if (loading()) {
+    <p class="muted">{{ 'common.loading' | transloco }}</p>
+  } @else if (errorKey(); as key) {
+    <div class="alert alert-danger">{{ key | transloco }}</div>
+  } @else if (rows().length === 0) {
+    <p class="muted">{{ 'bonus.cardEmpty' | transloco }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'bonus.col.paidDate' | transloco }}</th>
+            <th>{{ 'bonus.col.title' | transloco }}</th>
+            <th class="num">{{ 'bonus.col.amount' | transloco }}</th>
+            <th class="num">{{ 'bonus.col.standard' | transloco }}</th>
+            <th class="num">{{ 'premium.col.employee' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.payment.id) {
+            <tr>
+              <td class="mono">
+                <a [routerLink]="['/o', context.current()?.id, 'bonuses', r.payment.id]">
+                  {{ r.payment.paidDate }}
+                </a>
+              </td>
+              <td>{{ r.payment.title ?? '—' }}</td>
+              <td class="num">{{ yen(r.amount) }}</td>
+              @switch (r.state) {
+                @case ('ok') {
+                  <td class="num">
+                    {{ yen(r.result!.standardBonus) }}
+                    @if (r.capped) {
+                      <span class="badge">{{ 'bonus.capped' | transloco }}</span>
+                    }
+                  </td>
+                  <td class="num strong">{{ yen(r.result!.employeeYen) }}</td>
+                }
+                @case ('counted') {
+                  <td class="num">{{ yen(r.result!.standardBonus) }}</td>
+                  <td class="muted">{{ 'bonus.state.counted' | transloco }}</td>
+                }
+                @case ('none') {
+                  <td class="muted" colspan="2">{{ 'bonus.state.none' | transloco }}</td>
+                }
+                @default {
+                  <td class="warn" colspan="2">{{ 'premium.error.calc' | transloco }}</td>
+                }
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
