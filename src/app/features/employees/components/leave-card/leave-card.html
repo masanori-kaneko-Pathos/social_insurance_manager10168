@@ -1,0 +1,137 @@
+<section class="card">
+  <div class="head">
+    <h2>{{ 'leave.title' | transloco }}</h2>
+    @if (context.isAdmin() && editing() === null) {
+      <button type="button" class="btn" (click)="startAdd()">
+        {{ 'leave.add' | transloco }}
+      </button>
+    }
+  </div>
+
+  @if (errorKey(); as key) {
+    <div class="alert alert-danger">{{ key | transloco }}</div>
+  }
+
+  <!-- 追加・編集のフォーム -->
+  @if (editing() !== null) {
+    <form class="editor" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="grid">
+        <div class="field">
+          <label for="leave-kind">{{ 'leave.field.kind' | transloco }}</label>
+          <select id="leave-kind" class="input" formControlName="kind">
+            @for (k of kinds; track k) {
+              <option [value]="k">{{ 'leave.kind.' + k | transloco }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="leave-start">{{ 'leave.field.start' | transloco }}</label>
+          <input id="leave-start" class="input" type="date" formControlName="start" />
+        </div>
+
+        <div class="field">
+          <label for="leave-end">{{ 'leave.field.end' | transloco }}</label>
+          <input id="leave-end" class="input" type="date" formControlName="end" />
+          <label class="check">
+            <input type="checkbox" formControlName="undecided" />
+            {{ 'leave.undecided' | transloco }}
+          </label>
+        </div>
+      </div>
+
+      @if (formErrorKey(); as key) {
+        <p class="field-error">{{ key | transloco }}</p>
+      }
+      <p class="hint">{{ 'leave.hint.rule' | transloco }}</p>
+
+      <div class="actions">
+        <button type="button" class="btn" (click)="cancel()">
+          {{ 'common.cancel' | transloco }}
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          {{ (saving() ? 'common.saving' : 'common.save') | transloco }}
+        </button>
+      </div>
+    </form>
+  }
+
+  <!-- 一覧 -->
+  @if (rows().length === 0) {
+    <p class="muted">{{ 'leave.empty' | transloco }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'leave.field.kind' | transloco }}</th>
+            <th>{{ 'leave.field.period' | transloco }}</th>
+            <th>{{ 'leave.field.exempt' | transloco }}</th>
+            @if (context.isAdmin()) {
+              <th>
+                <span class="sr-only">{{ 'common.edit' | transloco }}</span>
+              </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.index) {
+            <tr>
+              <td>{{ 'leave.kind.' + r.leave.kind | transloco }}</td>
+              <td class="mono">
+                {{ r.leave.start }} 〜
+                @if (r.leave.end) {
+                  {{ r.leave.end }}
+                } @else {
+                  <span class="badge">{{ 'leave.undecided' | transloco }}</span>
+                }
+              </td>
+              <td class="mono">
+                @if (r.range; as range) {
+                  {{ range.from }} 〜 {{ range.to ?? ('leave.ongoing' | transloco) }}
+                } @else {
+                  <span class="muted">{{ 'leave.noExempt' | transloco }}</span>
+                }
+              </td>
+              @if (context.isAdmin()) {
+                <td class="row-actions">
+                  @if (confirmingDelete() === r.index) {
+                    <button
+                      type="button"
+                      class="link danger"
+                      [disabled]="saving()"
+                      (click)="remove(r.index)"
+                    >
+                      {{ 'leave.confirmDelete' | transloco }}
+                    </button>
+                    <button type="button" class="link" (click)="confirmingDelete.set(null)">
+                      {{ 'common.cancel' | transloco }}
+                    </button>
+                  } @else {
+                    <button
+                      type="button"
+                      class="link"
+                      [disabled]="editing() !== null"
+                      (click)="startEdit(r)"
+                    >
+                      {{ 'common.edit' | transloco }}
+                    </button>
+                    <button
+                      type="button"
+                      class="link"
+                      [disabled]="editing() !== null"
+                      (click)="confirmingDelete.set(r.index)"
+                    >
+                      {{ 'common.delete' | transloco }}
+                    </button>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">{{ 'leave.hint.list' | transloco }}</p>
+  }
+</section>

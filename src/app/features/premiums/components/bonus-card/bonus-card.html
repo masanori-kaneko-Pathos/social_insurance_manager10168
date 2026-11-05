@@ -43,6 +43,10 @@
                   <td class="num">{{ yen(r.result!.standardBonus) }}</td>
                   <td class="muted">{{ 'bonus.state.counted' | transloco }}</td>
                 }
+                @case ('exempt') {
+                  <td class="num">{{ yen(r.result!.standardBonus) }}</td>
+                  <td class="muted">{{ 'bonus.state.exempt' | transloco }}</td>
+                }
                 @case ('none') {
                   <td class="muted" colspan="2">{{ 'bonus.state.none' | transloco }}</td>
                 }

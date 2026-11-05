@@ -19,6 +19,7 @@ import {
 } from '../../employees/logic/coverage';
 import { BonusPayment, bonusStatus, calcBonuses } from './calc-bonus';
 import { PremiumSplit, splitContribution } from './premium-core';
+import { LeaveHolder } from '../../employees/logic/leave';
 
 /** 計算に使う支給の形（BonusPaymentDoc をそのまま渡せる） */
 export interface BonusPaymentLike {
@@ -27,7 +28,7 @@ export interface BonusPaymentLike {
   amounts: Record<string, number>;
 }
 
-export type BonusEmployee = CoverageInput & { id: string };
+export type BonusEmployee = CoverageInput & LeaveHolder & { id: string };
 
 export interface BonusContext {
   ratesFor: (month: YearMonth) => RatesForMonth;
@@ -95,7 +96,7 @@ function calcFor(
  * ok：保険料がかかる／empty：この支給で賞与なし／none：支払日に資格がない
  * counted：喪失月（保険料はかからないが健保の累計には入る）／missing：料率がない／error：計算できない
  */
-export type BonusRowState = 'ok' | 'empty' | 'none' | 'counted' | 'missing' | 'error';
+export type BonusRowState = 'ok' | 'empty' | 'none' | 'counted' | 'exempt' | 'missing' | 'error';
 
 export interface BonusRow extends PremiumSplit {
   state: BonusRowState;
@@ -113,6 +114,7 @@ const EMPTY_SPLIT: PremiumSplit = {
 
 function stateOf(r: BonusPremiumResult | null): BonusRowState {
   if (!r) return 'empty';
+  if (r.exempt) return 'exempt';
   if (r.missing.length > 0) return 'missing';
   if (r.groups.length > 0) return 'ok';
   return r.healthStatus === 'counted' ? 'counted' : 'none';

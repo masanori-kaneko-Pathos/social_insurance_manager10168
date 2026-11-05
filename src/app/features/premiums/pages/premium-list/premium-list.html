@@ -159,6 +159,31 @@
                     {{ r.contributionMilli ? milli(r.contributionMilli) : '—' }}
                   </td>
                 }
+              } @else if (r.state === 'exempt') {
+                <td class="num">
+                  @if (r.health) {
+                    <span class="grade">{{
+                      'remuneration.gradeShort' | transloco: { grade: r.health.grade }
+                    }}</span>
+                    {{ yen(r.health.standard) }}
+                  } @else {
+                    —
+                  }
+                </td>
+                <td class="num">
+                  @if (r.pension) {
+                    <span class="grade">{{
+                      'remuneration.gradeShort' | transloco: { grade: r.pension.grade }
+                    }}</span>
+                    {{ yen(r.pension.standard) }}
+                  } @else {
+                    —
+                  }
+                </td>
+                <td [attr.colspan]="showContribution() ? 6 : 5" class="muted">
+                  <span class="badge badge-care">{{ 'premiumList.exempt' | transloco }}</span>
+                  {{ 'premium.exempt' | transloco }}
+                </td>
               } @else {
                 <td [attr.colspan]="showContribution() ? 8 : 7" class="warn">
                   {{ missingKey(r) | transloco }}

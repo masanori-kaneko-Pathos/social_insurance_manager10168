@@ -291,3 +291,32 @@ describe('officeTotals：事業所の合計（日本年金機構の考え方）'
     expect(health.employerYen).toBe(7175);
   });
 });
+
+describe('calcMonthly：産休・育休の免除', () => {
+  const tokyo22 = [rem('2024-04', [22, 300000], [19, 300000])];
+  const leaves = [{ kind: 'childcare' as const, start: '2026-11-10', end: '2027-03-31' }];
+
+  it('免除の月は保険料なし（missing もなし）', () => {
+    const r = calcMonthly({
+      month: '2026-11',
+      employee: { ...AGE30, leaves },
+      remunerations: tokyo22,
+      rates: rates('13', '2026-11'),
+    });
+    expect(r.exempt).toBeTrue();
+    expect(r.groups).toEqual([]);
+    expect(r.missing).toEqual([]);
+    expect(r.employeeYen).toBe(0);
+  });
+
+  it('終了日の翌日の月からはかかる', () => {
+    const r = calcMonthly({
+      month: '2027-04',
+      employee: { ...AGE30, leaves },
+      remunerations: tokyo22,
+      rates: rates('13', '2027-04'),
+    });
+    expect(r.exempt).toBeFalsy();
+    expect(r.employeeYen).toBe(42570);
+  });
+});

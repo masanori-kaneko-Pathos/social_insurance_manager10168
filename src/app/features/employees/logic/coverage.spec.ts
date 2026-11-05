@@ -97,6 +97,30 @@ describe('年齢による喪失', () => {
   });
 });
 
+describe('年齢到達の月に入社した人', () => {
+  it('75歳の誕生日より後に入社：健保の資格を取らない', () => {
+    const e = employee('1951-10-05', '2026-10-10'); // 75歳の誕生日 2026-10-05
+    expect(coverageForMonth(e, '2026-10').health).toBeFalse();
+  });
+
+  it('75歳の誕生日より前に、同じ月に入社：同月得喪でその月はかかる', () => {
+    const e = employee('1951-10-20', '2026-10-01');
+    expect(coverageForMonth(e, '2026-10').health).toBeTrue();
+    expect(coverageForMonth(e, '2026-11').health).toBeFalse();
+  });
+
+  it('70歳到達日より後に入社：厚年の資格は取らないが、健保はかかる', () => {
+    const e = employee('1956-10-20', '2026-10-25'); // 70歳到達日 2026-10-19
+    expect(coverageForMonth(e, '2026-10').pension).toBeFalse();
+    expect(coverageForMonth(e, '2026-10').health).toBeTrue();
+  });
+
+  it('isChargedMonth：喪失日が取得日以前なら、どの月もかからない', () => {
+    expect(isChargedMonth('2026-10-10', '2026-10-05', '2026-10')).toBeFalse();
+    expect(isChargedMonth('2026-10-05', '2026-10-05', '2026-10')).toBeFalse();
+  });
+});
+
 describe('加入しない人', () => {
   it('健保・厚年とも加入しない場合は、すべてかからない', () => {
     const e = employee('1990-01-10', '2025-04-01');

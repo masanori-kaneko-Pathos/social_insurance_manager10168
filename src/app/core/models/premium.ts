@@ -57,6 +57,8 @@ export interface PremiumResult {
   totalMilli: Milli;
   employeeYen: number;
   employerMilli: Milli;
+  /** 産休・育休で免除（保険料は0円。標準報酬月額・標準賞与額は決まっている） */
+  exempt?: boolean;
 }
 
 /** 賞与1回分の結果（月額の結果に、標準賞与額と上限の情報を足したもの） */

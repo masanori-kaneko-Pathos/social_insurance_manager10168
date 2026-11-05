@@ -32,7 +32,7 @@ interface MonthRow {
   error: boolean;
 }
 
-type RowState = 'ok' | 'none' | 'missing' | 'error';
+type RowState = 'ok' | 'none' | 'missing' | 'error' | 'exempt';
 
 @Component({
   selector: 'app-premium-card',
@@ -118,6 +118,7 @@ export class PremiumCard implements OnInit {
 
   state(row: MonthRow): RowState {
     if (row.error || !row.result) return 'error';
+    if (row.result.exempt) return 'exempt';
     if (row.result.missing.length > 0) return 'missing';
     if (row.result.groups.length === 0) return 'none';
     return 'ok';

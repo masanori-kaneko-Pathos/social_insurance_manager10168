@@ -80,6 +80,8 @@ export function isChargedMonth(
   month: YearMonth,
 ): boolean {
   if (!acquiredDate) return false;
+  // 取得する日までに喪失している（70歳到達日・75歳の誕生日より後に入社した など）なら、資格を取っていない
+  if (lostDate && lostDate <= acquiredDate) return false;
   const acquired = toYearMonth(acquiredDate);
   if (month < acquired) return false;
   if (!lostDate) return true;

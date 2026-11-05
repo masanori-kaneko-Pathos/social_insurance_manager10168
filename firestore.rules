@@ -97,7 +97,9 @@ service cloud.firestore {
         && isDate(d.hireDate)
         && optionalDate(d.retireDate)
         && validEnrollment(d.health)
-        && validEnrollment(d.pension);
+        && validEnrollment(d.pension)
+        // 産休・育休：配列で20件まで。1件ずつの中身はアプリで確かめる（ルールに繰り返しがないため）
+        && (!('leaves' in d) || (d.leaves is list && d.leaves.size() <= 20));
     }
 
     // ===== 料率 用 =====
@@ -205,7 +207,8 @@ service cloud.firestore {
           && office().memberRoles[request.auth.uid] == 'admin'
           && request.resource.data.keys().hasOnly([
                'employeeNumber', 'lastName', 'firstName', 'lastNameKana', 'firstNameKana',
-               'birthDate', 'hireDate', 'retireDate', 'health', 'pension', 'createdAt', 'updatedAt'])
+               'birthDate', 'hireDate', 'retireDate', 'health', 'pension',
+               'leaves', 'createdAt', 'updatedAt'])
           && validEmployee(request.resource.data)
           && request.resource.data.createdAt == request.time
           && request.resource.data.updatedAt == request.time;
@@ -214,7 +217,8 @@ service cloud.firestore {
           && office().memberRoles[request.auth.uid] == 'admin'
           && request.resource.data.keys().hasOnly([
                'employeeNumber', 'lastName', 'firstName', 'lastNameKana', 'firstNameKana',
-               'birthDate', 'hireDate', 'retireDate', 'health', 'pension', 'createdAt', 'updatedAt'])
+               'birthDate', 'hireDate', 'retireDate', 'health', 'pension',
+               'leaves', 'createdAt', 'updatedAt'])
           && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdAt'])
           && validEmployee(request.resource.data)
           && request.resource.data.updatedAt == request.time;

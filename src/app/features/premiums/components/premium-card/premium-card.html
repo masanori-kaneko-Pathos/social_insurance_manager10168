@@ -59,6 +59,9 @@
                 @case ('missing') {
                   <td class="warn" colspan="3">{{ missingKey(row) | transloco }}</td>
                 }
+                @case ('exempt') {
+                  <td class="muted" colspan="3">{{ 'premium.exempt' | transloco }}</td>
+                }
                 @default {
                   <td class="num strong">{{ yen(row.result!.employeeYen) }}</td>
                   <td class="num">{{ milli(split(row).premiumEmployerMilli) }}</td>

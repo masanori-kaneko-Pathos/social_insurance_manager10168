@@ -9,7 +9,7 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { db } from '../../core/firebase';
-import { Employee, EmployeeDoc, EmployeeInput } from '../../core/models/employee';
+import { Employee, EmployeeDoc, EmployeeInput, Leave } from '../../core/models/employee';
 
 const kana = (e: Employee) => e.lastNameKana + e.firstNameKana;
 
@@ -44,6 +44,14 @@ export class EmployeeService {
   async update(officeId: string, employeeId: string, input: EmployeeInput): Promise<void> {
     await updateDoc(doc(this.col(officeId), employeeId), {
       ...input,
+      updatedAt: serverTimestamp(),
+    });
+  }
+
+  /** 産休・育休だけを書き換える（ほかの項目には触らない） */
+  async updateLeaves(officeId: string, employeeId: string, leaves: Leave[]): Promise<void> {
+    await updateDoc(doc(this.col(officeId), employeeId), {
+      leaves,
       updatedAt: serverTimestamp(),
     });
   }

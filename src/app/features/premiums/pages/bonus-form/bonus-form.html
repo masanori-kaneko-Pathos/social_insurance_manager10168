@@ -124,7 +124,11 @@
                   [disabled]="readOnly"
                   [class.is-invalid]="badAmounts().has(r.employee.id)"
                   [attr.aria-label]="
-                    r.employee.lastName + ' ' + r.employee.firstName + ' ' + ('bonus.col.amount' | transloco)
+                    r.employee.lastName +
+                    ' ' +
+                    r.employee.firstName +
+                    ' ' +
+                    ('bonus.col.amount' | transloco)
                   "
                 />
                 @if (badAmounts().has(r.employee.id)) {
@@ -141,7 +145,10 @@
                       <span class="sub">{{
                         'bonus.cappedNote'
                           | transloco
-                            : { health: yen(r.result!.healthBase), pension: yen(r.result!.pensionBase) }
+                            : {
+                                health: yen(r.result!.healthBase),
+                                pension: yen(r.result!.pensionBase),
+                              }
                       }}</span>
                     }
                   </td>
@@ -162,6 +169,10 @@
                 @case ('counted') {
                   <td class="num">{{ yen(r.result!.standardBonus) }}</td>
                   <td class="muted" colspan="5">{{ 'bonus.state.counted' | transloco }}</td>
+                }
+                @case ('exempt') {
+                  <td class="num">{{ yen(r.result!.standardBonus) }}</td>
+                  <td class="muted" colspan="5">{{ 'bonus.state.exempt' | transloco }}</td>
                 }
                 @default {
                   <td class="warn" colspan="6">{{ missingKey(r) | transloco }}</td>

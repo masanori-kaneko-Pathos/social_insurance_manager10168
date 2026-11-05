@@ -29,6 +29,7 @@ import {
   toYearMonth,
 } from '../../employees/logic/coverage';
 import { makeGroups, makeLine, withTotals } from './premium-core';
+import { exemptBonus, LeaveHolder } from '../../employees/logic/leave';
 
 export const HEALTH_BONUS_CAP_PER_YEAR = 5_730_000; // 健保：年度の累計
 export const PENSION_BONUS_CAP_PER_MONTH = 1_500_000; // 厚年：同じ月の合計
@@ -39,7 +40,7 @@ export interface BonusPayment {
 }
 
 export interface BonusInput {
-  employee: CoverageInput;
+  employee: CoverageInput & LeaveHolder;
   /** その従業員の賞与（年度の累計を出すため、同じ年度の分は全部渡す） */
   bonuses: BonusPayment[];
   /** 月 → その月の料率（pickRates を包んだ関数） */
@@ -90,21 +91,24 @@ export function calcBonuses(input: BonusInput): BonusPremiumResult[] {
   return sorted.map((b) => {
     const month = toYearMonth(b.paidDate);
     const standardBonus = standardBonusOf(b.amount);
-    const healthStatus = bonusStatus(
+    const rawHealth = bonusStatus(
       employee.health.enrolled,
       employee.health.acquiredDate,
       healthLost,
       b.paidDate,
     );
-    const pensionStatus =
+    const rawPensionCharged =
       bonusStatus(
         employee.pension.enrolled,
         employee.pension.acquiredDate,
         pensionLost,
         b.paidDate,
-      ) === 'charged'
-        ? 'charged'
-        : 'none';
+      ) === 'charged';
+    // 産休・育休で免除：保険料はかからないが、健保は標準賞与額が決まり年度累計に入る（日本年金機構）
+    const exempt =
+      (rawHealth === 'charged' || rawPensionCharged) && exemptBonus(employee.leaves, b.paidDate);
+    const healthStatus = exempt && rawHealth === 'charged' ? 'counted' : rawHealth;
+    const pensionStatus: 'charged' | 'none' = rawPensionCharged && !exempt ? 'charged' : 'none';
 
     // 健保：年度の累計573万円（喪失月の賞与も累計には入る）
     let healthBase = 0;
@@ -156,6 +160,7 @@ export function calcBonuses(input: BonusInput): BonusPremiumResult[] {
       pensionBase,
       healthStatus,
       pensionStatus,
+      exempt,
     };
   });
 }

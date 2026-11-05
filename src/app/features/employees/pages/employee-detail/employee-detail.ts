@@ -17,12 +17,14 @@ import { Employee } from '../../../../core/models/employee';
 import { RemunerationCard } from '../../components/remuneration-card/remuneration-card';
 import { PremiumCard } from '../../../premiums/components/premium-card/premium-card';
 import { BonusCard } from '../../../premiums/components/bonus-card/bonus-card';
+import { LeaveCard } from '../../components/leave-card/leave-card';
+import { exemptMonth } from '../../logic/leave';
 
 type Mode = 'fiscal' | 'calendar' | 'last12';
 
 @Component({
   selector: 'app-employee-detail',
-  imports: [RouterLink, TranslocoPipe, RemunerationCard, PremiumCard, BonusCard],
+  imports: [RouterLink, TranslocoPipe, RemunerationCard, PremiumCard, BonusCard, LeaveCard],
   templateUrl: './employee-detail.html',
   styleUrl: './employee-detail.css',
 })
@@ -77,6 +79,23 @@ export class EmployeeDetail {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** 休業カードで保存・削除したら、従業員を読み直す（保険料のカードも自動で計算し直される） */
+  async reloadEmployee(): Promise<void> {
+    const officeId = this.context.current()?.id;
+    if (!officeId || !this.employeeId) return;
+    try {
+      const e = await this.employeesApi.get(officeId, this.employeeId);
+      if (e) this.employee.set(e);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  /** 産休・育休で保険料が免除される月か */
+  isExempt(month: YearMonth): boolean {
+    return exemptMonth(this.employee()?.leaves, month);
   }
 
   // ===== ボタンの処理 =====

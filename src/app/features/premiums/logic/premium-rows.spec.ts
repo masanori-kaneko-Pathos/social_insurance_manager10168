@@ -97,4 +97,15 @@ describe('buildPremiumRow：一覧の1行', () => {
   it('加入していない月は none', () => {
     expect(row('2024-03', A, remA).state).toBe('none');
   });
+
+  it('産休・育休で免除の月は exempt。標準報酬月額は出し、保険料は0', () => {
+    const onLeave = {
+      ...A,
+      leaves: [{ kind: 'maternity', start: '2026-10-20', end: '2027-01-14' }],
+    };
+    const r = row('2026-11', onLeave, remA);
+    expect(r.state).toBe('exempt');
+    expect(r.health).toEqual({ grade: 23, standard: 320000 });
+    expect(r.premiumTotalMilli).toBe(0);
+  });
 });

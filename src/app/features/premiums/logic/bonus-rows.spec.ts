@@ -37,12 +37,7 @@ const ctx: BonusContext = {
 };
 
 // ===== 従業員 =====
-function emp(
-  id: string,
-  birthDate: string,
-  acquiredDate: string,
-  lostDate: string | null = null,
-) {
+function emp(id: string, birthDate: string, acquiredDate: string, lostDate: string | null = null) {
   return {
     id,
     birthDate,
@@ -79,7 +74,12 @@ describe('buildBonusRow：基本の計算', () => {
   });
 
   it('1,000円未満は切り捨てて標準賞与額にする', () => {
-    const row = buildBonusRow(ichiro, [pay('p1', '2026-12-10', { ichiro: 500_999 })], '2026-12-10', ctx);
+    const row = buildBonusRow(
+      ichiro,
+      [pay('p1', '2026-12-10', { ichiro: 500_999 })],
+      '2026-12-10',
+      ctx,
+    );
     expect(row.result?.standardBonus).toBe(500_000);
   });
 
@@ -156,10 +156,28 @@ describe('withDraft / collectBonusResults / addTotals', () => {
   });
 
   it('addTotals：種類ごとに足す', () => {
-    const a: OfficeTotal[] = [{ category: 'health', totalYen: 100, employeeYen: 50, employerYen: 50 }];
+    const a: OfficeTotal[] = [
+      { category: 'health', totalYen: 100, employeeYen: 50, employerYen: 50 },
+    ];
     const b: OfficeTotal[] = [{ category: 'health', totalYen: 11, employeeYen: 5, employerYen: 6 }];
     expect(addTotals(a, b)).toEqual([
       { category: 'health', totalYen: 111, employeeYen: 55, employerYen: 56 },
     ]);
+  });
+});
+
+describe('産休・育休中の賞与', () => {
+  it('免除：保険料はかからないが、健保の年度累計には入る（日本年金機構）', () => {
+    const mom = {
+      ...emp('mom', '1990-01-10', '2020-04-01'),
+      leaves: [{ kind: 'childcare' as const, start: '2026-06-01', end: '2026-09-30' }],
+    };
+    const payments = [
+      pay('p1', '2026-07-10', { mom: 4_000_000 }),
+      pay('p2', '2026-12-10', { mom: 2_000_000 }),
+    ];
+    expect(buildBonusRow(mom, payments, '2026-07-10', ctx).state).toBe('exempt');
+    // 7月の400万円が累計に入っているので、12月は 573万 − 400万 ＝ 173万円まで
+    expect(buildBonusRow(mom, payments, '2026-12-10', ctx).result?.healthBase).toBe(1_730_000);
   });
 });

@@ -10,11 +10,18 @@ import {
 } from '../../../core/models/premium';
 import { RatesForMonth } from '../../../core/models/rates';
 import { StandardRemuneration } from '../../../core/models/remuneration';
-import { CoverageInput, shiftMonth, YearMonth } from '../../employees/logic/coverage';
+import {
+  CoverageInput,
+  coverageForMonth,
+  shiftMonth,
+  YearMonth,
+} from '../../employees/logic/coverage';
+import { LeaveHolder } from '../../employees/logic/leave';
+import { latest } from '../../rates/logic/pick-rates';
 import { calcMonthly, RemunerationLike } from './calc-monthly';
 import { PremiumSplit, splitContribution } from './premium-core';
 
-export type RowState = 'ok' | 'none' | 'missing' | 'error';
+export type RowState = 'ok' | 'none' | 'missing' | 'error' | 'exempt';
 
 /** 前の月から変わった理由 */
 export type ChangeReason = 'new' | 'grade' | 'care' | 'rate' | 'other';
@@ -32,7 +39,7 @@ export interface PremiumRow extends PremiumSplit {
 
 export interface RowInput {
   month: YearMonth;
-  employee: CoverageInput;
+  employee: CoverageInput & LeaveHolder;
   remunerations: RemunerationLike[];
   ratesFor: (month: YearMonth) => RatesForMonth;
   options: PremiumOptions;
@@ -52,6 +59,7 @@ function calcSafe(
       rates: input.ratesFor(month),
       options: input.options,
     });
+    if (result.exempt) return { state: 'exempt', result };
     if (result.missing.length > 0) return { state: 'missing', result };
     if (result.groups.length === 0) return { state: 'none', result };
     return { state: 'ok', result };
@@ -96,6 +104,16 @@ export function changesBetween(
   return [...reasons];
 }
 
+/** 免除の月は保険料の行がないので、標準報酬月額は履歴から出す（その月に加入している保険だけ） */
+function exemptStandards(input: RowInput) {
+  const rem = latest(input.remunerations, input.month);
+  const cov = coverageForMonth(input.employee, input.month);
+  return {
+    health: cov.health ? (rem?.health ?? null) : null,
+    pension: cov.pension ? (rem?.pension ?? null) : null,
+  };
+}
+
 export function buildPremiumRow(input: RowInput): PremiumRow {
   const cur = calcSafe(input, input.month);
   const prev = calcSafe(input, shiftMonth(input.month, -1));
@@ -107,12 +125,18 @@ export function buildPremiumRow(input: RowInput): PremiumRow {
     ? splitContribution(cur.result)
     : { premiumTotalMilli: 0, premiumEmployerMilli: 0, contributionMilli: 0 };
 
+  const exemptStd = cur.state === 'exempt' ? exemptStandards(input) : null;
+
   return {
     ...split,
     state: cur.state,
     result: cur.result,
-    health: health?.grade != null ? { grade: health.grade, standard: health.base } : null,
-    pension: pension?.grade != null ? { grade: pension.grade, standard: pension.base } : null,
+    health:
+      exemptStd?.health ??
+      (health?.grade != null ? { grade: health.grade, standard: health.base } : null),
+    pension:
+      exemptStd?.pension ??
+      (pension?.grade != null ? { grade: pension.grade, standard: pension.base } : null),
     care: lines.has('care'),
     healthEmployeeYen: groups
       .filter((g) => g.parts.some((p) => HEALTH_PARTS.includes(p)))

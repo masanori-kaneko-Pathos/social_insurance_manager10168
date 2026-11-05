@@ -67,7 +67,34 @@
   "dashboard": {
     "greeting": "Welcome, {{name}}",
     "placeholder": "Employee and premium features will appear here.",
-    "notSet": "Not set"
+    "notSet": "Not set",
+    "ages": {
+      "title": "Upcoming age milestones",
+      "within": "Period",
+      "withinOption": {
+        "0": "This month",
+        "1": "Through next month",
+        "6": "Within 6 months",
+        "12": "Within 1 year"
+      },
+      "agesLabel": "Ages",
+      "age": "Age {{age}}",
+      "sortLabel": "Sort",
+      "sort": { "birthday": "By birthday", "effect": "By effective month" },
+      "monthLabel": "{{y}}-{{m}}",
+      "col": { "age": "Reaching", "birthday": "Birthday", "what": "What changes / filings" },
+      "what": {
+        "40": "Long-term care premiums start (no filing needed).",
+        "60": "If pay drops on re-employment after retirement, consider same-day loss and re-acquisition to lower the standard remuneration immediately.",
+        "65": "Long-term care premiums stop (moves to the municipal care insurance; no filing needed).",
+        "70": "Pension coverage ends. No filing if pay is unchanged (handled by the Japan Pension Service); otherwise file the age-70 notification within 5 days.",
+        "75": "Health coverage ends (moves to the late-stage elderly medical system). File the loss of coverage within 5 days. Dependents need to join another plan such as National Health Insurance."
+      },
+      "effectNote": "Born on the 1st, so the age is treated as reached in the previous month ({{y}}-{{m}}).",
+      "empty": "No one reaches a milestone in this period.",
+      "hint": "Only current employees are shown. Ages 40, 65 and 75 apply to health insurance members; age 70 to pension members. Filings are a guide.",
+      "error": "Couldn't load employees."
+    }
   },
   "nav": {
     "label": "Menu",
@@ -158,7 +185,9 @@
       "next": "Next",
       "insurance": "Insurance",
       "monthSuffix": "",
-      "futureHint": "Faded marks are future months (planned)."
+      "futureHint": "Faded marks are future months (planned).",
+      "exemptMark": "Ex",
+      "exemptHint": "\"Ex\" marks months exempt from premiums due to maternity/childcare leave (coverage continues)."
     }
   },
   "office": {
@@ -350,6 +379,7 @@
       "load": "Could not load the data needed for premiums.",
       "calc": "Could not calculate (check the rate data)."
     },
+    "exempt": "Exempt (maternity/childcare leave)",
     "employerHint": "The employer share per person is an estimate (total minus employee share). The office pays the sum of all totals, rounded down to the yen."
   },
   "premiumList": {
@@ -393,6 +423,7 @@
     "totalsTitle": "Office totals",
     "totalsExcluded": "{{count}} employee(s) that could not be calculated are not included.",
     "totalsHint": "Payment is the sum of all totals rounded down to the yen; the employer share is payment minus the employees' total (Japan Pension Service method).",
+    "exempt": "Exempt",
     "bonusTitle": "Monthly and bonus",
     "bonusRows": { "monthly": "Monthly", "bonus": "Bonus", "sum": "Total (monthly + bonus)" },
     "bonusProblems": "{{count}} employee(s) could not be calculated for bonuses (not included in totals).",
@@ -468,7 +499,8 @@
     "cardEmpty": "No bonuses paid.",
     "state": {
       "none": "Not insured on the payment date",
-      "counted": "No premium in the month coverage ends (still counts toward the annual health total)"
+      "counted": "No premium in the month coverage ends (still counts toward the annual health total)",
+      "exempt": "Exempt due to leave (still counts toward the annual health total)"
     },
     "hint": {
       "paidDate": "Premiums depend on the payment date (none before coverage starts or on/after it ends).",
@@ -486,6 +518,38 @@
       "duplicate": "A bonus with this payment date already exists. Edit it from the list.",
       "amount": "Enter a number.",
       "noAmount": "Enter a bonus amount for at least one employee.",
+      "save": "Couldn't save. Try again later."
+    }
+  },
+  "leave": {
+    "title": "Maternity / childcare leave",
+    "add": "Add leave",
+    "empty": "No leave registered.",
+    "kind": {
+      "maternity": "Maternity leave",
+      "childcare": "Childcare leave"
+    },
+    "field": {
+      "kind": "Type",
+      "start": "Start date",
+      "end": "End date",
+      "period": "Period",
+      "exempt": "Exempt months"
+    },
+    "undecided": "Undecided",
+    "ongoing": "(end undecided)",
+    "noExempt": "No exemption (under 14 days in the month)",
+    "confirmDelete": "Confirm delete",
+    "hint": {
+      "rule": "Exempt from the start month to the month before the day after the leave ends. Childcare leave ending within the same month is exempt if 14 days or more. Bonuses are exempt only for childcare leave longer than one month.",
+      "list": "To receive the exemption, the employer must file a request with the pension office (and the health insurance society, if applicable)."
+    },
+    "error": {
+      "start": "Enter the start date.",
+      "end": "Enter the end date or check \"Undecided\".",
+      "order": "The end date must be after the start date.",
+      "overlap": "This overlaps another leave.",
+      "tooMany": "Up to 20 leaves can be registered.",
       "save": "Couldn't save. Try again later."
     }
   }

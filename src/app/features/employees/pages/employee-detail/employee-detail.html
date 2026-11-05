@@ -107,7 +107,7 @@
                 @for (r of rows(); track r.month) {
                   <td class="mark" [class.future]="isFuture(r.month)">
                     @if (r[k]) {
-                      ○
+                      {{ isExempt(r.month) ? ('employee.detail.exemptMark' | transloco) : '○' }}
                     }
                   </td>
                 }
@@ -117,11 +117,16 @@
         </table>
       </div>
       <p class="hint">{{ 'employee.detail.futureHint' | transloco }}</p>
+      @if ((e.leaves ?? []).length > 0) {
+        <p class="hint">{{ 'employee.detail.exemptHint' | transloco }}</p>
+      }
     </section>
 
     <!-- 保険料（期間の切り替えは加入状況の表と共通） -->
     <app-premium-card #premiumCard [employee]="e" [months]="months()" />
     <!-- 賞与（見るだけ。入力は賞与の画面で） -->
     <app-bonus-card [employee]="e" />
+    <!-- 産休・育休 -->
+    <app-leave-card [employee]="e" (changed)="reloadEmployee()" />
   }
 }

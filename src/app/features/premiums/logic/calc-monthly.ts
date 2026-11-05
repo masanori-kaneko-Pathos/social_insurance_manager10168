@@ -19,6 +19,7 @@ import { StandardRemuneration } from '../../../core/models/remuneration';
 import { CoverageInput, coverageForMonth } from '../../employees/logic/coverage';
 import { latest } from '../../rates/logic/pick-rates';
 import { makeGroups, makeLine, withTotals } from './premium-core';
+import { exemptMonth, LeaveHolder } from '../../employees/logic/leave';
 
 /** 報酬の履歴のうち、計算に使う部分（RemunerationDoc をそのまま渡せる） */
 export interface RemunerationLike {
@@ -29,7 +30,7 @@ export interface RemunerationLike {
 
 export interface MonthlyInput {
   month: string; // 'YYYY-MM'（何月分の保険料か）
-  employee: CoverageInput; // 生年月日と資格（EmployeeDoc をそのまま渡せる）
+  employee: CoverageInput & LeaveHolder; // 生年月日・資格・休業（EmployeeDoc をそのまま渡せる）
   remunerations: RemunerationLike[];
   rates: RatesForMonth; // その月の料率（pickRates の結果）
   options?: PremiumOptions;
@@ -40,6 +41,11 @@ export function calcMonthly(input: MonthlyInput): PremiumResult {
   const options = input.options ?? DEFAULT_PREMIUM_OPTIONS;
   const coverage = coverageForMonth(input.employee, month);
   const rem = latest(input.remunerations, month);
+
+  // 産休・育休で免除の月：保険料の行を作らない（本人分・会社分とも免除。合計にも入らない）
+  if ((coverage.health || coverage.pension) && exemptMonth(input.employee.leaves, month)) {
+    return withTotals({ kind: 'monthly', month, groups: [], missing: [], exempt: true });
+  }
 
   const lines: PremiumLine[] = [];
   const missing: { part: PremiumPart; reason: MissingReason }[] = [];
