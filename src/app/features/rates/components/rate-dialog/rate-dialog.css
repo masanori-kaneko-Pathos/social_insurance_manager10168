@@ -1,0 +1,237 @@
+/* ===== 窓 ===== */
+.rate-dialog {
+  width: min(760px, calc(100vw - 32px));
+  padding: 0; /* 余白は中の .dialog-body に持たせる（背景のクリックと見分けるため） */
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-popover);
+  overflow: hidden;
+}
+
+.rate-dialog[open] {
+  animation: dialog-in var(--dur-base) var(--ease-out);
+}
+
+/* 背景を暗く。::backdrop は古いブラウザで CSS 変数を引き継がないので、色は直接書く（焦げ茶 #3e1e02） */
+.rate-dialog::backdrop {
+  background: rgb(62 30 2 / 45%);
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* スクロールバーも中に持たせる（dialog に付けると、バーの操作が「背景を押した」扱いになる） */
+.dialog-body {
+  max-height: calc(100vh - 64px);
+  overflow: auto;
+  padding: var(--space-lg);
+}
+
+.dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.dialog-head h2 {
+  margin: 0;
+  font-size: var(--font-lg);
+}
+
+.sub {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.period {
+  margin-left: var(--space-sm);
+}
+
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.close-btn {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  font-size: var(--font-lg);
+  line-height: 1;
+  color: var(--color-text-sub);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.close-btn:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* ===== 単位の切り替え ===== */
+.unit-toggle {
+  display: inline-flex;
+  margin-bottom: var(--space-sm);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.unit-toggle button {
+  height: 32px;
+  padding: 0 var(--space-md);
+  font: inherit;
+  font-size: var(--font-sm);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.unit-toggle button + button {
+  border-left: 1px solid var(--color-border-strong);
+}
+
+.unit-toggle button.on {
+  background: var(--color-highlight);
+  font-weight: 600;
+}
+
+.hint {
+  margin: var(--space-xs) 0;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.warn-box {
+  margin: var(--space-sm) 0;
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-sm);
+  color: var(--color-warning-text);
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-sm);
+}
+
+/* ===== 一覧 ===== */
+.rates {
+  width: 100%;
+  margin: var(--space-sm) 0;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+.rates th,
+.rates td {
+  padding: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.rates th {
+  font-weight: 600;
+  color: var(--color-text-sub);
+}
+
+.rates .num {
+  text-align: right;
+}
+
+.rates tr.is-editing td {
+  background: var(--color-highlight);
+}
+
+.split {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+  white-space: nowrap;
+}
+
+.row-actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.row-actions .btn {
+  height: 32px;
+  margin-left: var(--space-xs);
+}
+
+.btn.danger {
+  color: var(--color-danger-text);
+  border-color: var(--color-danger-text);
+}
+
+/* ===== 入力欄 ===== */
+.edit {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border);
+}
+
+.edit h3 {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-md);
+}
+
+.input.month {
+  width: 200px;
+}
+
+.split-input {
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+.split-input th {
+  padding: var(--space-xs) var(--space-sm);
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text-sub);
+}
+
+.split-input td {
+  padding: var(--space-xs) var(--space-sm);
+}
+
+.with-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.with-unit .input {
+  width: 100px;
+}
+
+.unit {
+  color: var(--color-text-sub);
+}
+
+.error-row td {
+  padding-top: 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}

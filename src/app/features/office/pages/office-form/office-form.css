@@ -174,3 +174,12 @@ h3 {
 .mono {
   font-variant-numeric: tabular-nums;
 }
+
+.history-action {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.history-action .btn {
+  height: 32px;
+}

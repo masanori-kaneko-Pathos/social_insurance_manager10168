@@ -33,11 +33,14 @@ import {
   DEFAULT_PREMIUM,
   FROM_THE_START,
   insurerHistoryOf,
+  kumiaiRun,
   payrollOf,
   premiumOf,
   samePeriod,
+  spanOf,
   withInsurerChange,
 } from '../../office-settings';
+import { RateDialog, RateDialogTarget } from '../../../rates/components/rate-dialog/rate-dialog';
 
 /** 法人番号を入れたら法人名も必須 */
 function corporateNameRequired(g: AbstractControl): ValidationErrors | null {
@@ -80,7 +83,7 @@ const emptyToNull = (v: string) => (v.trim() ? v.trim() : null);
 
 @Component({
   selector: 'app-office-form',
-  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe],
+  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, RateDialog],
   templateUrl: './office-form.html',
   styleUrl: './office-form.css',
 })
@@ -151,6 +154,14 @@ export class OfficeForm {
     const o = this.office();
     return o ? insurerHistoryOf(o) : [];
   });
+
+  /** 料率の窓（開いていなければ null） */
+  readonly rateTarget = signal<RateDialogTarget | null>(null);
+
+  /** 健康保険の欄の近道：保存済みの今の保険者が組合健保で、フォームで保険者を変えていないとき */
+  readonly showKumiaiShortcut = computed(
+    () => this.office()?.healthInsurer.type === 'kumiai' && !this.insurerChanged(),
+  );
 
   /** 編集で、保険者か都道府県が変わったか */
   readonly insurerChanged = computed(() => {
@@ -305,6 +316,29 @@ export class OfficeForm {
 
   prefectureName(code: string): string {
     return this.prefectures.find((p) => p.code === code)?.[this.lang()] ?? code;
+  }
+
+  /** 履歴の行（index）の料率を窓で開く。組合健保は同じ組合が続く期間をまとめて扱う */
+  openRates(index: number): void {
+    const o = this.office();
+    if (!o) return;
+    const history = insurerHistoryOf(o);
+    const row = history[index];
+    if (!row) return;
+    const range = kumiaiRun(history, index) ?? spanOf(history, index);
+    this.rateTarget.set({
+      officeId: o.id,
+      prefecture: row.prefecture,
+      prefectureName: this.prefectureName(row.prefecture),
+      insurer: row.healthInsurer,
+      range,
+      startKnown: range.from !== FROM_THE_START,
+    });
+  }
+
+  /** 近道：今の期間（履歴の最後の行）を開く */
+  openCurrentRates(): void {
+    this.openRates(this.history().length - 1);
   }
 
   async submit(): Promise<void> {

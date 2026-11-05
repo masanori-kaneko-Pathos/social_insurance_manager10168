@@ -283,14 +283,15 @@ service cloud.firestore {
 
         allow read: if signedIn() && request.auth.uid in office().memberUids;
 
+        // 過去に組合だった期間も直せるよう、「今が組合か」は見ない。
+        // 「その月が組合の期間か」はルールでは確かめられない（履歴を1行ずつ見られない）のでアプリで確かめる。
+        // 協会けんぽの月に入っても、計算では使われない
         allow create: if signedIn() && isAdmin()
-          && office().healthInsurer.type == 'kumiai'
           && validKumiaiRate(request.resource.data)
           && request.resource.data.createdAt == request.time
           && request.resource.data.updatedAt == request.time;
 
         allow update: if signedIn() && isAdmin()
-          && office().healthInsurer.type == 'kumiai'
           && validKumiaiRate(request.resource.data)
           && request.resource.data.createdAt == resource.data.createdAt
           && request.resource.data.updatedAt == request.time;

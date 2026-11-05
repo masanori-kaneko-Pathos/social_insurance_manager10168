@@ -67,20 +67,25 @@ export interface RatesForMonth {
   childContribution: PickedRate | null; // 子ども・子育て拠出金（会社だけが負担）
 }
 
+/** 月の範囲（to の月は含まない。null は今も続いている） */
+export interface MonthRange {
+  from: string; // 'YYYY-MM'
+  to: string | null;
+}
 
 // ===== 標準報酬月額の等級表 =====
 
 /** 等級表の1行（報酬月額が min 以上、次の行の min 未満ならこの等級） */
 export interface GradeRow {
-    grade: number;
-    standard: number; // 標準報酬月額（円）
-    min: number; // 報酬月額の下限（円・以上）
-  }
-  
-  /** Firestore の masterGrades/{kind}_{from}（全事業所共通。アプリからは書かない） */
-  export interface GradeTableDoc {
-    kind: 'health' | 'pension';
-    from: string; // 'YYYY-MM'
-    grades: GradeRow[];
-    source: string;
-  }
+  grade: number;
+  standard: number; // 標準報酬月額（円）
+  min: number; // 報酬月額の下限（円・以上）
+}
+
+/** Firestore の masterGrades/{kind}_{from}（全事業所共通。アプリからは書かない） */
+export interface GradeTableDoc {
+  kind: 'health' | 'pension';
+  from: string; // 'YYYY-MM'
+  grades: GradeRow[];
+  source: string;
+}

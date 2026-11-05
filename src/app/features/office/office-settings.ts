@@ -13,6 +13,7 @@ import {
 import { DEFAULT_PREMIUM_OPTIONS } from '../../core/models/premium';
 import { shiftMonth, YearMonth } from '../employees/logic/coverage';
 import { latest, OfficeForRates } from '../rates/logic/pick-rates';
+import { MonthRange } from '../../core/models/rates';
 
 /** 履歴の「最初から」を表す月 */
 export const FROM_THE_START = '0000-01';
@@ -52,8 +53,15 @@ export function insurerHistoryOf(office: OfficeLike): InsurerPeriod[] {
 
 /** その月の保険者・都道府県（料率を選ぶのに使う形。履歴より前の月は null） */
 export function insurerFor(office: OfficeLike, month: YearMonth): OfficeForRates | null {
-  const p = latest(insurerHistoryOf(office), month);
-  return p ? { prefecture: p.prefecture, healthInsurer: p.healthInsurer } : null;
+  const history = insurerHistoryOf(office);
+  const p = latest(history, month);
+  if (!p) return null;
+  const run = kumiaiRun(history, history.indexOf(p));
+  return {
+    prefecture: p.prefecture,
+    healthInsurer: p.healthInsurer,
+    ...(run ? { kumiaiSince: run.from } : {}),
+  };
 }
 
 /** 過去も含めて、組合健保だった時期があるか（組合の料率を読む必要があるか） */
@@ -70,6 +78,27 @@ export function samePeriod(
   b: Omit<InsurerPeriod, 'from'>,
 ): boolean {
   return a.prefecture === b.prefecture && sameInsurer(a.healthInsurer, b.healthInsurer);
+}
+
+/** 履歴の1行の期間（次の行の from まで） */
+export function spanOf(history: InsurerPeriod[], index: number): MonthRange {
+  return { from: history[index].from, to: history[index + 1]?.from ?? null };
+}
+
+/**
+ * 同じ組合が続いている期間（都道府県だけ変わった行はつなげる。組合の料率は都道府県に関係ないため）
+ * 協会けんぽの行なら null。history は古い順（insurerHistoryOf の結果）
+ */
+export function kumiaiRun(history: InsurerPeriod[], index: number): MonthRange | null {
+  const row = history[index];
+  if (!row || row.healthInsurer.type !== 'kumiai') return null;
+  const same = (p: InsurerPeriod | undefined) =>
+    !!p && sameInsurer(p.healthInsurer, row.healthInsurer);
+  let start = index;
+  while (same(history[start - 1])) start--;
+  let end = index;
+  while (same(history[end + 1])) end++;
+  return { from: history[start].from, to: history[end + 1]?.from ?? null };
 }
 
 /**

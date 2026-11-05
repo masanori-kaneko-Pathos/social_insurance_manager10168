@@ -1,0 +1,270 @@
+<dialog
+  #dialog
+  class="rate-dialog"
+  aria-labelledby="rate-dialog-title"
+  (pointerdown)="onPointerDown($event)"
+  (click)="onClick($event)"
+  (close)="onClosed()"
+>
+  <div class="dialog-body">
+    <!-- 見出しと × -->
+    <header class="dialog-head">
+      <div>
+        <h2 id="rate-dialog-title">{{ 'rateDialog.title' | transloco }}</h2>
+        <p class="sub">
+          @if (isKumiai()) {
+            {{ 'office.insurer.kumiai' | transloco }}（{{ target().insurer.kumiaiName }}）
+          } @else {
+            {{ 'office.insurer.kyokai' | transloco }}・{{ target().prefectureName }}
+          }
+          <span class="period mono">
+            @if (target().startKnown) {
+              {{ range().from }}
+            } @else {
+              {{ 'office.history.start' | transloco }}
+            }
+            〜
+            @if (lastMonth(); as m) {
+              {{ m }}
+            } @else {
+              {{ 'rateDialog.now' | transloco }}
+            }
+          </span>
+        </p>
+      </div>
+      <button
+        type="button"
+        class="close-btn"
+        (click)="close()"
+        [attr.aria-label]="'rateDialog.close' | transloco"
+      >
+        ×
+      </button>
+    </header>
+
+    <!-- 単位の切り替え -->
+    <div class="unit-toggle" role="group" [attr.aria-label]="'rateDialog.unit' | transloco">
+      <button
+        type="button"
+        [class.on]="unit() === 'percent'"
+        [attr.aria-pressed]="unit() === 'percent'"
+        (click)="setUnit('percent')"
+      >
+        {{ 'rateDialog.percent' | transloco }}
+      </button>
+      <button
+        type="button"
+        [class.on]="unit() === 'permille'"
+        [attr.aria-pressed]="unit() === 'permille'"
+        (click)="setUnit('permille')"
+      >
+        {{ 'rateDialog.permille' | transloco }}
+      </button>
+    </div>
+
+    <p class="hint">
+      {{ (isKumiai() ? 'rateDialog.kumiaiHint' : 'rateDialog.kyokaiHint') | transloco }}
+    </p>
+    @if (isKumiai() && !canEdit()) {
+      <p class="hint">{{ 'rateDialog.readOnly' | transloco }}</p>
+    }
+
+    @if (loading()) {
+      <p class="hint">{{ 'common.loading' | transloco }}</p>
+    } @else if (loadError()) {
+      <div class="alert alert-danger" role="alert">{{ 'rateDialog.error.load' | transloco }}</div>
+    } @else if (!isKumiai()) {
+      <!-- 協会けんぽ：見るだけ -->
+      @if (kyokaiRows().length === 0) {
+        <p class="hint">{{ 'rateDialog.empty' | transloco }}</p>
+      } @else {
+        <table class="rates">
+          <thead>
+            <tr>
+              <th>{{ 'rateDialog.from' | transloco }}</th>
+              @for (kind of kinds; track kind) {
+                <th class="num">{{ 'premium.part.' + kind | transloco }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of kyokaiRows(); track r.month) {
+              <tr>
+                <td class="mono">{{ r.month }}</td>
+                @for (kind of kinds; track kind) {
+                  <td class="num">
+                    @if (r[kind]; as p) {
+                      {{ show(totalOf(p)) }}
+                    } @else {
+                      —
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    } @else {
+      <!-- 組合健保：見る＋（管理者なら）追加・編集・削除 -->
+      @if (missingStart()) {
+        <p class="warn-box">{{ 'rateDialog.missingStart' | transloco: { month: range().from } }}</p>
+      }
+
+      @if (kumiaiRows().length === 0) {
+        <p class="hint">{{ 'rateDialog.empty' | transloco }}</p>
+      } @else {
+        <table class="rates">
+          <thead>
+            <tr>
+              <th>{{ 'rateDialog.from' | transloco }}</th>
+              @for (kind of kinds; track kind) {
+                <th class="num">{{ 'premium.part.' + kind | transloco }}</th>
+              }
+              @if (editable()) {
+                <th></th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (k of kumiaiRows(); track k.from) {
+              <tr [class.is-editing]="editing() === k.from">
+                <td class="mono">{{ k.from }}</td>
+                @for (kind of kinds; track kind) {
+                  <td class="num">
+                    <div>{{ show(totalOf(k[kind])) }}</div>
+                    <div class="split">
+                      {{
+                        'rateDialog.splitNote'
+                          | transloco
+                            : { employee: show(k[kind].employee), employer: show(k[kind].employer) }
+                      }}
+                    </div>
+                  </td>
+                }
+                @if (editable()) {
+                  <td class="row-actions">
+                    @if (!editing()) {
+                      <button type="button" class="btn" (click)="startEdit(k)">
+                        {{ 'common.edit' | transloco }}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn"
+                        [class.danger]="confirmDelete() === k.from"
+                        [disabled]="saving()"
+                        (click)="remove(k.from)"
+                      >
+                        {{
+                          (confirmDelete() === k.from
+                            ? 'rateDialog.confirmDelete'
+                            : 'common.delete'
+                          ) | transloco
+                        }}
+                      </button>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+
+      @if (saveError()) {
+        <div class="alert alert-danger" role="alert">{{ 'rateDialog.error.save' | transloco }}</div>
+      }
+
+      @if (editable() && !editing()) {
+        <div class="actions">
+          <button type="button" class="btn btn-primary" (click)="startNew()">
+            {{ 'rateDialog.add' | transloco }}
+          </button>
+        </div>
+      }
+
+      <!-- 入力欄（追加・編集） -->
+      @if (editing(); as mode) {
+        <form class="edit" [formGroup]="form" (ngSubmit)="save()" novalidate>
+          <h3>
+            @if (mode === 'new') {
+              {{ 'rateDialog.addTitle' | transloco }}
+            } @else {
+              {{ 'rateDialog.editTitle' | transloco: { month: mode } }}
+            }
+          </h3>
+
+          <div class="field">
+            <label for="rate-from">{{ 'rateDialog.from' | transloco }}</label>
+            <input
+              id="rate-from"
+              class="input month"
+              type="month"
+              formControlName="from"
+              [attr.min]="minMonth()"
+              [attr.max]="lastMonth()"
+              [class.is-invalid]="errors().from"
+            />
+            @if (errors().from; as e) {
+              <span class="field-error">{{ e | transloco }}</span>
+            }
+          </div>
+
+          <table class="split-input">
+            <thead>
+              <tr>
+                <th></th>
+                @for (f of fields; track f) {
+                  <th>{{ 'rateDialog.' + f | transloco }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (kind of kinds; track kind) {
+                <tr [formGroupName]="kind">
+                  <th scope="row">{{ 'premium.part.' + kind | transloco }}</th>
+                  @for (f of fields; track f) {
+                    <td>
+                      <span class="with-unit">
+                        <input
+                          class="input num"
+                          inputmode="decimal"
+                          autocomplete="off"
+                          [formControlName]="f"
+                          [class.is-invalid]="errors()[kind]"
+                          [attr.aria-label]="
+                            ('premium.part.' + kind | transloco) +
+                            ' ' +
+                            ('rateDialog.' + f | transloco)
+                          "
+                        />
+                        <span class="unit">{{ symbol() }}</span>
+                      </span>
+                    </td>
+                  }
+                </tr>
+                @if (errors()[kind]; as e) {
+                  <tr class="error-row">
+                    <td></td>
+                    <td colspan="3" class="field-error">{{ e | transloco }}</td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+          <p class="hint">{{ 'rateDialog.childSupportHint' | transloco }}</p>
+          <p class="hint">{{ 'rateDialog.saveHint' | transloco }}</p>
+
+          <div class="actions">
+            <button type="button" class="btn" (click)="cancelEdit()">
+              {{ 'common.cancel' | transloco }}
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving()">
+              {{ (saving() ? 'common.saving' : 'common.save') | transloco }}
+            </button>
+          </div>
+        </form>
+      }
+    }
+  </div>
+</dialog>

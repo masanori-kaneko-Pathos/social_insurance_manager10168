@@ -9,6 +9,9 @@ import {
   payrollOf,
   premiumOf,
   withInsurerChange,
+  kumiaiRun,
+  spanOf,
+  DEFAULT_PREMIUM,
 } from './office-settings';
 
 const kyokai = { type: 'kyokai' as const, kumiaiName: null };
@@ -123,5 +126,48 @@ describe('deductionPayMonth：何月に支払う給与から控除するか', ()
     expect(deductionPayMonth('2026-11', { ...DEFAULT_PAYROLL, deduction: 'current' })).toBe(
       '2026-11',
     );
+  });
+});
+
+describe('kumiaiRun / spanOf / insurerFor の kumiaiSince', () => {
+  const kyokai = { type: 'kyokai' as const, kumiaiName: null };
+  const kumiaiA = { type: 'kumiai' as const, kumiaiName: 'A健保' };
+  const kumiaiB = { type: 'kumiai' as const, kumiaiName: 'B健保' };
+  const history: InsurerPeriod[] = [
+    { from: '0000-01', prefecture: '13', healthInsurer: kyokai },
+    { from: '2025-04', prefecture: '13', healthInsurer: kumiaiA },
+    { from: '2025-10', prefecture: '27', healthInsurer: kumiaiA }, // 引っ越しただけ
+    { from: '2026-04', prefecture: '27', healthInsurer: kyokai },
+    { from: '2026-10', prefecture: '27', healthInsurer: kumiaiB },
+  ];
+  const office = {
+    prefecture: '27',
+    healthInsurer: kumiaiB,
+    insurerHistory: history,
+    payroll: DEFAULT_PAYROLL,
+    premium: DEFAULT_PREMIUM,
+  };
+
+  it('協会けんぽの行は null', () => {
+    expect(kumiaiRun(history, 0)).toBeNull();
+  });
+
+  it('同じ組合は、都道府県が変わってもつなげる', () => {
+    expect(kumiaiRun(history, 1)).toEqual({ from: '2025-04', to: '2026-04' });
+    expect(kumiaiRun(history, 2)).toEqual({ from: '2025-04', to: '2026-04' });
+  });
+
+  it('今も続く組合は to が null', () => {
+    expect(kumiaiRun(history, 4)).toEqual({ from: '2026-10', to: null });
+  });
+
+  it('spanOf は1行だけの期間', () => {
+    expect(spanOf(history, 3)).toEqual({ from: '2026-04', to: '2026-10' });
+  });
+
+  it('insurerFor：組合の月だけ kumiaiSince が付く', () => {
+    expect(insurerFor(office, '2025-12')?.kumiaiSince).toBe('2025-04');
+    expect(insurerFor(office, '2026-05')?.kumiaiSince).toBeUndefined();
+    expect(insurerFor(office, '2026-11')?.kumiaiSince).toBe('2026-10');
   });
 });

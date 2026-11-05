@@ -223,6 +223,11 @@
           }
         </div>
       }
+      @if (showKumiaiShortcut()) {
+        <button type="button" class="btn" (click)="openCurrentRates()">
+          {{ 'office.insurerRates' | transloco }}
+        </button>
+      }
     </section>
 
     <!-- 保険者・所在地の履歴（編集のときだけ） -->
@@ -260,10 +265,11 @@
               <th>{{ 'office.history.from' | transloco }}</th>
               <th>{{ 'office.field.prefecture' | transloco }}</th>
               <th>{{ 'office.field.insurerType' | transloco }}</th>
+              <th>{{ 'office.history.rates' | transloco }}</th>
             </tr>
           </thead>
           <tbody>
-            @for (p of history(); track p.from) {
+            @for (p of history(); track p.from; let i = $index) {
               <tr>
                 <td class="mono">
                   {{ isStart(p.from) ? ('office.history.start' | transloco) : p.from + '〜' }}
@@ -274,6 +280,11 @@
                   @if (p.healthInsurer.kumiaiName) {
                     （{{ p.healthInsurer.kumiaiName }}）
                   }
+                </td>
+                <td class="history-action">
+                  <button type="button" class="btn" (click)="openRates(i)">
+                    {{ 'office.history.showRates' | transloco }}
+                  </button>
                 </td>
               </tr>
             }
@@ -440,4 +451,7 @@
       </div>
     }
   </form>
+  @if (rateTarget(); as t) {
+    <app-rate-dialog [target]="t" [canEdit]="!readOnly" (closed)="rateTarget.set(null)" />
+  }
 </div>

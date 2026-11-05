@@ -240,7 +240,13 @@
       "count": "Enter 0 or more.",
       "changeFrom": "Select the month the change applies from"
     },
-    "history": { "from": "From", "start": "Since registration" },
+    "history": {
+      "from": "From",
+      "start": "Since registration",
+      "rates": "Rates",
+      "showRates": "View rates"
+    },
+    "insurerRates": "View or set this society's rates",
     "day": { "end": "End of month", "n": "Day {{d}}" },
     "payMonth": { "current": "Same month", "next": "Next month" },
     "deduction": {
@@ -388,6 +394,39 @@
     "totalsHint": "Payment is the sum of all totals rounded down to the yen; the employer share is payment minus the employees' total (Japan Pension Service method).",
     "error": {
       "load": "Could not load premiums."
+    }
+  },
+  "rateDialog": {
+    "title": "Health insurance rates",
+    "close": "Close",
+    "unit": "Rate unit",
+    "percent": "% (percent)",
+    "permille": "‰ (per mille)",
+    "now": "Present",
+    "from": "Effective from (month)",
+    "total": "Total",
+    "employee": "Employee",
+    "employer": "Employer",
+    "splitNote": "Employee {{employee}} / Employer {{employer}}",
+    "kyokaiHint": "Kyokai Kenpo rates (shared by all offices, so they can't be changed here). Split equally between employee and employer.",
+    "kumiaiHint": "Enter the rates notified by your health insurance society. While you stay with the same society, rates are shown together even if the prefecture changes.",
+    "readOnly": "View only (only administrators can make changes).",
+    "empty": "No rates registered for this period yet.",
+    "missingStart": "No rate for {{month}}. Health premiums show 'No rate registered' until the next month with a rate.",
+    "add": "Add rate",
+    "addTitle": "Add rate",
+    "editTitle": "Edit rate from {{month}}",
+    "confirmDelete": "Confirm delete",
+    "childSupportHint": "The child support levy starts from April 2026 (default 0.23%). Enter 0 for earlier months.",
+    "saveHint": "Nothing is saved until you press Save. Closing with ×, the background or Esc discards your input.",
+    "error": {
+      "fromRange": "Select a month within this period.",
+      "duplicate": "A rate for this month already exists. Edit it from the list.",
+      "format": "Enter a number (up to 4 decimals for %, 3 for ‰).",
+      "mismatch": "Total doesn't equal employee + employer.",
+      "tooHigh": "Rates above 30% can't be entered.",
+      "load": "Couldn't load rates.",
+      "save": "Couldn't save. Try again later."
     }
   }
 }

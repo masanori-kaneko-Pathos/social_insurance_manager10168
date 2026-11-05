@@ -1,12 +1,34 @@
 import { KumiaiRateInput, MasterRateDoc } from '../../../core/models/rates';
 import { latest, OfficeForRates, pickRates, RateTables } from './pick-rates';
-import { formatPercent, parsePercent } from './rate-format';
+import {
+  formatPercent,
+  parsePercent,
+  parseRate,
+  formatRateInput,
+  formatRate,
+  parseSplit,
+} from './rate-format';
 
 // テスト用の料率マスタ（本物のデータの一部：東京 13・佐賀 41）
 const MASTER: MasterRateDoc[] = [
-  { kind: 'kyokaiHealth', from: '2024-03', byPrefecture: { '13': 99800, '41': 104200 }, source: 'test' },
-  { kind: 'kyokaiHealth', from: '2025-03', byPrefecture: { '13': 99100, '41': 107800 }, source: 'test' },
-  { kind: 'kyokaiHealth', from: '2026-03', byPrefecture: { '13': 98500, '41': 105500 }, source: 'test' },
+  {
+    kind: 'kyokaiHealth',
+    from: '2024-03',
+    byPrefecture: { '13': 99800, '41': 104200 },
+    source: 'test',
+  },
+  {
+    kind: 'kyokaiHealth',
+    from: '2025-03',
+    byPrefecture: { '13': 99100, '41': 107800 },
+    source: 'test',
+  },
+  {
+    kind: 'kyokaiHealth',
+    from: '2026-03',
+    byPrefecture: { '13': 98500, '41': 105500 },
+    source: 'test',
+  },
   { kind: 'care', from: '2024-03', rate: 16000, source: 'test' },
   { kind: 'care', from: '2025-03', rate: 15900, source: 'test' },
   { kind: 'care', from: '2026-03', rate: 16200, source: 'test' },
@@ -16,7 +38,10 @@ const MASTER: MasterRateDoc[] = [
   { kind: 'childContribution', from: '2024-03', rate: 3600, source: 'test' },
 ];
 
-const kyokai = (prefecture: string): OfficeForRates => ({ prefecture, healthInsurer: { type: 'kyokai' } });
+const kyokai = (prefecture: string): OfficeForRates => ({
+  prefecture,
+  healthInsurer: { type: 'kyokai' },
+});
 const kumiaiOffice: OfficeForRates = { prefecture: '13', healthInsurer: { type: 'kumiai' } };
 const tables = (kumiai: KumiaiRateInput[] = []): RateTables => ({ master: MASTER, kumiai });
 
@@ -39,9 +64,19 @@ describe('latest：その月以前で一番新しいもの', () => {
 describe('pickRates：協会けんぽ', () => {
   it('2026年2月分：令和7年度の健保・介護、支援金は0%', () => {
     const r = pickRates(kyokai('13'), tables(), '2026-02');
-    expect(r.health).toEqual({ employee: 49550, employer: 49550, from: '2025-03', source: 'kyokai' });
+    expect(r.health).toEqual({
+      employee: 49550,
+      employer: 49550,
+      from: '2025-03',
+      source: 'kyokai',
+    });
     expect(r.care?.employee).toBe(7950);
-    expect(r.childSupport).toEqual({ employee: 0, employer: 0, from: '2024-03', source: 'national' });
+    expect(r.childSupport).toEqual({
+      employee: 0,
+      employer: 0,
+      from: '2024-03',
+      source: 'national',
+    });
   });
 
   it('2026年3月分：健保・介護は令和8年度に変わるが、支援金はまだ0%', () => {
@@ -53,7 +88,12 @@ describe('pickRates：協会けんぽ', () => {
 
   it('2026年4月分から支援金 0.23%（本人・会社で折半）', () => {
     const r = pickRates(kyokai('13'), tables(), '2026-04');
-    expect(r.childSupport).toEqual({ employee: 1150, employer: 1150, from: '2026-04', source: 'national' });
+    expect(r.childSupport).toEqual({
+      employee: 1150,
+      employer: 1150,
+      from: '2026-04',
+      source: 'national',
+    });
   });
 
   it('都道府県で健保の料率が変わる（佐賀 令和8年度 10.55%）', () => {
@@ -64,8 +104,18 @@ describe('pickRates：協会けんぽ', () => {
 
   it('厚生年金は折半、拠出金は会社だけ', () => {
     const r = pickRates(kyokai('13'), tables(), '2026-11');
-    expect(r.pension).toEqual({ employee: 91500, employer: 91500, from: '2024-03', source: 'national' });
-    expect(r.childContribution).toEqual({ employee: 0, employer: 3600, from: '2024-03', source: 'national' });
+    expect(r.pension).toEqual({
+      employee: 91500,
+      employer: 91500,
+      from: '2024-03',
+      source: 'national',
+    });
+    expect(r.childContribution).toEqual({
+      employee: 0,
+      employer: 3600,
+      from: '2024-03',
+      source: 'national',
+    });
   });
 
   it('データの始まり（2024年3月分）より前は全部「未登録」', () => {
@@ -108,7 +158,12 @@ describe('pickRates：組合健保', () => {
 
   it('一番新しい適用開始月の料率を、本人分・会社分のまま返す', () => {
     const r = pickRates(kumiaiOffice, tables([k2026, k2025]), '2026-03');
-    expect(r.health).toEqual({ employee: 38429, employer: 42371, from: '2025-04', source: 'kumiai' });
+    expect(r.health).toEqual({
+      employee: 38429,
+      employer: 42371,
+      from: '2025-04',
+      source: 'kumiai',
+    });
     expect(r.childSupport?.employee).toBe(0);
   });
 
@@ -170,5 +225,93 @@ describe('formatPercent：整数 → 表示', () => {
     for (const s of ['10.06', '4.2371', '0.23', '9.5']) {
       expect(parsePercent(formatPercent(parsePercent(s)!))).toBe(parsePercent(s));
     }
+  });
+});
+
+describe('parseRate / formatRateInput（単位つき）', () => {
+  it('% と ‰ で同じ値になる', () => {
+    expect(parseRate('9.5', 'percent')).toBe(95000);
+    expect(parseRate('95', 'permille')).toBe(95000);
+    expect(parseRate('4.2371', 'percent')).toBe(42371);
+    expect(parseRate('42.371', 'permille')).toBe(42371);
+  });
+
+  it('全角・記号つきも読める', () => {
+    expect(parseRate('９．５％', 'percent')).toBe(95000);
+    expect(parseRate('45‰', 'permille')).toBe(45000);
+  });
+
+  it('桁が多すぎる・違う記号・空は null', () => {
+    expect(parseRate('42.3711', 'permille')).toBeNull();
+    expect(parseRate('4.23711', 'percent')).toBeNull();
+    expect(parseRate('9.5%', 'permille')).toBeNull();
+    expect(parseRate('', 'percent')).toBeNull();
+    expect(parseRate('-1', 'percent')).toBeNull();
+  });
+
+  it('入力欄の形は余計な 0 を付けない', () => {
+    expect(formatRateInput(95000, 'percent')).toBe('9.5');
+    expect(formatRateInput(95000, 'permille')).toBe('95');
+    expect(formatRateInput(42371, 'permille')).toBe('42.371');
+    expect(formatRateInput(0, 'percent')).toBe('0');
+    expect(formatRate(1150, 'percent')).toBe('0.115%');
+  });
+});
+
+describe('parseSplit', () => {
+  it('全体 ＝ 本人 ＋ 会社 なら読める', () => {
+    const r = parseSplit({ total: '9.5', employee: '4.5', employer: '5' }, 'percent');
+    expect(r).toEqual({ ok: true, split: { employee: 45000, employer: 50000 } });
+  });
+
+  it('合わなければ mismatch', () => {
+    const r = parseSplit({ total: '95', employee: '45', employer: '49' }, 'permille');
+    expect(r).toEqual({ ok: false, error: 'mismatch' });
+  });
+
+  it('読めなければ format、30% 超は tooHigh', () => {
+    expect(parseSplit({ total: '', employee: '1', employer: '1' }, 'percent')).toEqual({
+      ok: false,
+      error: 'format',
+    });
+    expect(parseSplit({ total: '31', employee: '15.5', employer: '15.5' }, 'percent')).toEqual({
+      ok: false,
+      error: 'tooHigh',
+    });
+  });
+});
+
+describe('pickRates：組合の料率は今の組合の期間から', () => {
+  const split = (employee: number, employer: number) => ({ employee, employer });
+  const rateA: KumiaiRateInput = {
+    from: '2025-04',
+    health: split(45000, 50000),
+    care: split(8000, 8000),
+    childSupport: split(0, 0),
+  };
+  const rateB: KumiaiRateInput = {
+    from: '2026-12',
+    health: split(40000, 50000),
+    care: split(9000, 9000),
+    childSupport: split(1150, 1150),
+  };
+  const tables: RateTables = { master: [], kumiai: [rateA, rateB] };
+  const kumiaiB = {
+    prefecture: '27',
+    healthInsurer: { type: 'kumiai' as const },
+    kumiaiSince: '2026-10',
+  };
+
+  it('今の組合の料率がまだない月は、前の組合の料率を使わず未登録', () => {
+    expect(pickRates(kumiaiB, tables, '2026-11').health).toBeNull();
+  });
+
+  it('今の組合の料率があれば使う', () => {
+    expect(pickRates(kumiaiB, tables, '2026-12').health?.employee).toBe(40000);
+  });
+
+  it('kumiaiSince がなければ、今までどおり一番新しいものを使う', () => {
+    const office = { prefecture: '27', healthInsurer: { type: 'kumiai' as const } };
+    expect(pickRates(office, tables, '2026-11').health?.employee).toBe(45000);
   });
 });

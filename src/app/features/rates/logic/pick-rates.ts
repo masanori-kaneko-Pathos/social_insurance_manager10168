@@ -16,6 +16,8 @@ import {
 export interface OfficeForRates {
   prefecture: string; // '01'〜'47'
   healthInsurer: { type: 'kyokai' | 'kumiai' };
+  /** 今の組合に加入した月（この月より前の組合の料率は、別の組合のものなので使わない） */
+  kumiaiSince?: string;
 }
 
 export interface RateTables {
@@ -97,7 +99,9 @@ export function pickRates(
 
   if (office.healthInsurer.type === 'kumiai') {
     // 組合健保：健保・介護・支援金は組合の料率（本人分・会社分をそのまま使う）
-    const k = latest(tables.kumiai, month);
+    const since = office.kumiaiSince;
+    const candidates = since ? tables.kumiai.filter((r) => r.from >= since) : tables.kumiai;
+    const k = latest(candidates, month);
     const pick = (s: RateSplit | undefined): PickedRate | null =>
       k && s
         ? { employee: s.employee, employer: s.employer, from: k.from, source: 'kumiai' }
