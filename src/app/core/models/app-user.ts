@@ -1,7 +1,8 @@
 import { Timestamp } from 'firebase/firestore';
 import { Lang } from '../i18n/language.service';
 
-export type UserRole = 'admin' | 'general';
+/** admin ＝ 事業所を作れるアカウント／general ＝ 招待された一般ユーザー／employee ＝ 従業員（マイページだけ） */
+export type UserRole = 'admin' | 'general' | 'employee';
 
 /** Firestore の users/{uid} に保存する中身 */
 export interface AppUserDoc {
@@ -10,6 +11,8 @@ export interface AppUserDoc {
   role: UserRole;
   currentOfficeId: string | null; // 最後に開いた事業所
   lang: Lang;
+  /** 従業員のアカウントのとき、どの従業員か（それ以外は null） */
+  employeeRef: { officeId: string; employeeId: string } | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

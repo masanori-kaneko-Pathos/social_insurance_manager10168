@@ -9,7 +9,7 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { db } from '../../core/firebase';
-import { BonusPaymentData, BonusPaymentDoc, BonusPaymentInput } from '../../core/models/bonus';
+import { BonusPaymentDoc, BonusPayment, BonusPaymentInput } from '../../core/models/bonus';
 
 /** 賞与の支給（事業所の下。1回の支給＝1件。ドキュメントIDは自動） */
 @Injectable({ providedIn: 'root' })
@@ -19,17 +19,22 @@ export class BonusService {
   }
 
   /** 新しい順（年度の累計を出すため、いつも全件を読む。1事業所で年に数件なので軽い） */
-  async list(officeId: string): Promise<BonusPaymentDoc[]> {
+  async list(officeId: string): Promise<BonusPayment[]> {
     const snap = await getDocs(this.col(officeId));
     return snap.docs
-      .map((d) => ({ id: d.id, ...(d.data() as BonusPaymentData) }))
+      .map((d) => ({ id: d.id, ...(d.data() as BonusPaymentDoc) }))
       .sort((a, b) => b.paidDate.localeCompare(a.paidDate));
   }
 
   /** 作ったドキュメントの ID を返す */
   async create(officeId: string, input: BonusPaymentInput): Promise<string> {
     const ref = doc(this.col(officeId)); // 先に ID だけ作る
-    await setDoc(ref, { ...input, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+    await setDoc(ref, {
+      inKindAmounts: {},
+      ...input,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
     return ref.id;
   }
 

@@ -1,10 +1,10 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { Employee } from '../../../../core/models/employee';
+import { emptyLeave, Employee, Leave, LeaveKind } from '../../../../core/models/employee';
 import { OfficeContext } from '../../../office/office-context.service';
 import { EmployeeService } from '../../employee.service';
-import { exemptRangeOf, LeaveKind, LeaveLike } from '../../logic/leave';
+import { exemptRangeOf, LeaveLike } from '../../logic/leave';
 
 const DATE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 const NEW = 'new';
@@ -104,12 +104,15 @@ export class LeaveCard {
     const mode = this.editing();
     if (mode === null || this.saving()) return;
     const v = this.form.getRawValue();
-    const leave: LeaveLike = {
+    const current = this.employee().leaves ?? [];
+    // 画面にまだ出していない項目（出産予定日・子の情報など）は、編集なら元の値を残す
+    const base: Leave = mode === NEW ? emptyLeave(v.kind, v.start) : current[mode];
+    const leave: Leave = {
+      ...base,
       kind: v.kind,
       start: v.start,
       end: v.undecided ? null : v.end || '',
     };
-    const current = this.employee().leaves ?? [];
     const others = current.filter((_, i) => i !== mode);
     if (mode === NEW && current.length >= MAX_LEAVES) {
       this.formErrorKey.set('leave.error.tooMany');
@@ -129,7 +132,7 @@ export class LeaveCard {
     if (!this.errorKey()) this.confirmingDelete.set(null);
   }
 
-  private async write(leaves: LeaveLike[]): Promise<void> {
+  private async write(leaves: Leave[]): Promise<void> {
     const officeId = this.context.current()?.id;
     if (!officeId) return;
     this.saving.set(true);

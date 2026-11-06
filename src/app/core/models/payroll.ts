@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase/firestore';
+
 // 毎月の給与の実績（1人 × 1か月 ＝ 1件）
 // 置き場所：offices/{officeId}/employees/{employeeId}/payrolls/{YYYY-MM}（ID ＝ 支払った月）
 // 金額はすべて円の整数（実績は円単位でしか出てこないため Milli は使わない）
@@ -26,12 +28,18 @@ export interface PayrollInput {
   state: PayrollState;
 }
 
-/** Firestore に保存する形 */
+/** アプリの中の形 */
 export interface Payroll extends PayrollInput {
   officeId: string;
   employeeId: string;
   /** 支払った月 'YYYY-MM'（＝ ドキュメントID） */
   paidMonth: string;
+}
+
+/** Firestore に保存する形 */
+export interface PayrollDoc extends Payroll {
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 export const PAYROLL_STATES: readonly PayrollState[] = ['normal', 'suspended', 'furlough'];

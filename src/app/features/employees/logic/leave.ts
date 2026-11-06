@@ -6,7 +6,8 @@
  * - 休業を始めた日の月 〜 終了日の翌日の月の前月 が免除
  * - 育休で、開始月と「終了日の翌日の月」が同じ（月の中で終わる）なら、
  *   その月に14日以上（休日を含む）休んでいれば免除（2022年10月1日以降に始まった育休だけ）
- *   ※ 休業中の就業日は除く決まりだが、就業日のデータがないので「就業なし」として数える
+ *   出生時育休（産後パパ育休）も育休の一種として同じ決まり。休業中に働いた日は14日から除く
+ * 介護休業・休職は免除なし（定時決定の備考・随時改定の材料として記録するだけ）
  * 賞与
  * - 産休：支払月が免除の月なら免除
  * - 育休：支払月が免除の月（＝月の末日を含む）で、かつ休業が連続して1か月を超えるときだけ免除
@@ -22,17 +23,29 @@ import {
   YearMonth,
 } from '../../../shared/utils/date';
 
-export type LeaveKind = 'maternity' | 'childcare'; // 産休 ／ 育休
+import { LeaveKind } from '../../../core/models/employee';
 
 export interface LeaveLike {
   kind: LeaveKind;
   start: DateStr;
   end: DateStr | null; // null ＝「未定」を選んだ
+  /** 出生時育休：休業中に働いた日数（14日の数え方から除く） */
+  workDays?: number | null;
 }
 
-/** 休業の記録を持つもの（Employee をそのまま渡せる。古いデータには leaves がない） */
+/** 休業の記録を持つもの（Employee をそのまま渡せる） */
 export interface LeaveHolder {
   leaves?: LeaveLike[];
+}
+
+/** 保険料の免除がある休業か（介護休業・休職は免除なし） */
+export function isExemptKind(kind: LeaveKind): boolean {
+  return kind === 'maternity' || kind === 'childcare' || kind === 'paternity';
+}
+
+/** 育休の決まり（同月14日・賞与の1か月超）を使う休業か（出生時育休も育休の一種） */
+export function isChildcareKind(kind: LeaveKind): boolean {
+  return kind === 'childcare' || kind === 'paternity';
 }
 
 /** 同月14日のルール・賞与の1か月超のルールが始まった日 */
@@ -52,19 +65,20 @@ export function oneMonthEnd(start: DateStr): DateStr {
 
 /** 1つの休業で、その月の月額が免除か */
 export function leaveExemptsMonth(l: LeaveLike, month: YearMonth): boolean {
+  if (!isExemptKind(l.kind)) return false;
   const startMonth = toYearMonth(l.start);
   if (month < startMonth) return false;
   if (l.end === null) return true; // 未定：開始月から先はずっと
   if (l.end < l.start) return false;
   const nextMonth = toYearMonth(addDays(l.end, 1));
   if (month < nextMonth) return true;
-  // 月の中で終わる育休：14日以上なら開始月を免除
+  // 月の中で終わる育休：14日以上（休業中に働いた日は除く）なら開始月を免除
   return (
-    l.kind === 'childcare' &&
+    isChildcareKind(l.kind) &&
     month === startMonth &&
     startMonth === nextMonth &&
     l.start >= RULE_2022_FROM &&
-    daysInclusive(l.start, l.end) >= 14
+    daysInclusive(l.start, l.end) - (l.workDays ?? 0) >= 14
   );
 }
 

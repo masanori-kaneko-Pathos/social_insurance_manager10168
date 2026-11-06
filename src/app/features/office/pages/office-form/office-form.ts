@@ -20,7 +20,7 @@ import {
   HealthInsurerType,
   InsurerPeriod,
   Office,
-  OfficeInput,
+  OfficeBasicInput,
   PayrollSettings,
 } from '../../../../core/models/office';
 import { CollectionMethod, HealthRounding } from '../../../../core/models/premium';
@@ -386,7 +386,7 @@ export class OfficeForm {
         const history = this.insurerChanged()
           ? withInsurerChange(insurerHistoryOf(office), { from: changeFrom.value, ...period })
           : insurerHistoryOf(office);
-        const input: OfficeInput = { ...base, insurerHistory: history };
+        const input: OfficeBasicInput = { ...base, insurerHistory: history };
         await this.offices.update(office.id, input);
         const fresh = await this.offices.get(office.id);
         if (fresh) {
@@ -398,7 +398,7 @@ export class OfficeForm {
         this.saved.set(true);
       } else {
         // 新規登録：履歴は「最初から今の値」の1行
-        const input: OfficeInput = {
+        const input: OfficeBasicInput = {
           ...base,
           insurerHistory: [{ from: FROM_THE_START, ...period }],
         };

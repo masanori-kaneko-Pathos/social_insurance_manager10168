@@ -23,6 +23,7 @@ export class UserProfileService {
       role: 'admin',
       currentOfficeId: null,
       lang,
+      employeeRef: null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });

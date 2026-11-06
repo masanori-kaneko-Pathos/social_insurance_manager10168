@@ -2,7 +2,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ===== 共通 =====
+    // ============================================================
+    // 共通の関数
+    // ============================================================
+
     function signedIn() {
       return request.auth != null;
     }
@@ -11,41 +14,106 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
-    function validDisplayName(name) {
-      return name is string && name.size() > 0 && name.size() <= 50;
-    }
-
-    function optionalString(v, max) {
-      return v == null || (v is string && v.size() <= max);
-    }
-
     function myUser() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
-    // ===== users =====
+    // ----- 事業所のメンバー・管理者（同じリクエストの中で同じ文書の get は1回分として数えられる） -----
+    function officeOf(officeId) {
+      return get(/databases/$(database)/documents/offices/$(officeId)).data;
+    }
+
+    function isMember(officeId) {
+      return signedIn() && request.auth.uid in officeOf(officeId).memberUids;
+    }
+
+    function isAdmin(officeId) {
+      return signedIn() && officeOf(officeId).memberRoles[request.auth.uid] == 'admin';
+    }
+
+    // ----- 形 -----
+    function exactKeys(d, keys) {
+      return d.keys().hasOnly(keys) && d.keys().hasAll(keys);
+    }
+
+    function str(v, max) {
+      return v is string && v.size() > 0 && v.size() <= max;
+    }
+
+    function optStr(v, max) {
+      return v == null || (v is string && v.size() <= max);
+    }
+
+    function isDate(v) {
+      return v is string && v.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$');
+    }
+
+    function optDate(v) {
+      return v == null || isDate(v);
+    }
+
+    function isMonth(v) {
+      return v is string && v.matches('^[0-9]{4}-(0[1-9]|1[0-2])$');
+    }
+
+    function optMonth(v) {
+      return v == null || isMonth(v);
+    }
+
+    function intIn(v, min, max) {
+      return v is int && v >= min && v <= max;
+    }
+
+    function optIntIn(v, min, max) {
+      return v == null || intIn(v, min, max);
+    }
+
+    function yen(v) {
+      return intIn(v, 0, 99999999);
+    }
+
+    function optCode(v) {
+      return v == null || (v is string && v.matches('^[A-Z]{2}$'));
+    }
+
+    // 標準報酬（等級と額）
+    function std(s) {
+      return s is map && exactKeys(s, ['grade', 'standard'])
+        && intIn(s.grade, 1, 60) && s.standard is int && s.standard > 0;
+    }
+
+    // ----- 作成日時・更新日時 -----
+    function created(d) {
+      return d.createdAt == request.time && d.updatedAt == request.time;
+    }
+
+    function updated(d) {
+      return d.createdAt == resource.data.createdAt && d.updatedAt == request.time;
+    }
+
+    // ============================================================
+    // 利用者 users/{uid}
+    // ============================================================
     match /users/{uid} {
       allow read: if isSelf(uid);
 
+      // 新規登録は「事業所を作れるアカウント」だけ（従業員・一般ユーザーは招待で作る。マイページの工事で足す）
       allow create: if isSelf(uid)
-        && request.resource.data.keys().hasOnly(
-             ['email', 'displayName', 'role', 'currentOfficeId', 'lang', 'createdAt', 'updatedAt'])
-        && request.resource.data.keys().hasAll(
-             ['email', 'displayName', 'role', 'currentOfficeId', 'lang', 'createdAt', 'updatedAt'])
+        && exactKeys(request.resource.data,
+             ['email', 'displayName', 'role', 'currentOfficeId', 'lang', 'employeeRef', 'createdAt', 'updatedAt'])
         && request.resource.data.email == request.auth.token.email
-        && validDisplayName(request.resource.data.displayName)
+        && str(request.resource.data.displayName, 50)
         && request.resource.data.role == 'admin'
         && request.resource.data.currentOfficeId == null
         && request.resource.data.lang in ['ja', 'en']
-        && request.resource.data.createdAt == request.time
-        && request.resource.data.updatedAt == request.time;
+        && request.resource.data.employeeRef == null
+        && created(request.resource.data);
 
       // 開いている事業所は「自分がメンバーの事業所」にしか切り替えられない
-      // getAfter：同じ束の書き込みが終わった後の状態で確認する
       allow update: if isSelf(uid)
         && request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(['displayName', 'lang', 'currentOfficeId', 'updatedAt'])
-        && validDisplayName(request.resource.data.displayName)
+        && str(request.resource.data.displayName, 50)
         && request.resource.data.lang in ['ja', 'en']
         && (request.resource.data.currentOfficeId == null
             || request.auth.uid in getAfter(
@@ -56,81 +124,49 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ===== masterRates（料率マスタ：全事業所共通） =====
-    match /masterRates/{rateId} {
-      allow read: if signedIn();
-      // アプリからは誰も書けない。書くのは投入スクリプト（Admin SDK）だけ
-      allow write: if false;
-    }
-
-    // ===== masterGrades（標準報酬月額の等級表：全事業所共通） =====
-    match /masterGrades/{gradeId} {
+    // ============================================================
+    // マスタ（全事業所共通。書くのは投入スクリプト（Admin SDK）だけ）
+    // ============================================================
+    match /masterRates/{id} {
       allow read: if signedIn();
       allow write: if false;
     }
-
-    // ===== employees 用 =====
-    function isDate(v) {
-      return v is string && v.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    match /masterGrades/{id} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+    match /masterCriteria/{id} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+    match /masterAgreements/{id} {
+      allow read: if signedIn();
+      allow write: if false;
     }
 
-    function optionalDate(v) {
-      return v == null || isDate(v);
-    }
+    // ============================================================
+    // 事業所 offices/{officeId}
+    // ============================================================
 
-    function validName(v) {
-      return v is string && v.size() > 0 && v.size() <= 50;
-    }
-
-    function validEnrollment(e) {
-      return e.enrolled is bool
-        && optionalDate(e.acquiredDate)
-        && optionalDate(e.lostDate)
-        && (!e.enrolled || e.acquiredDate != null);
-    }
-
-    function validEmployee(d) {
-      return optionalString(d.employeeNumber, 20)
-        && validName(d.lastName) && validName(d.firstName)
-        && validName(d.lastNameKana) && validName(d.firstNameKana)
-        && isDate(d.birthDate)
-        && isDate(d.hireDate)
-        && optionalDate(d.retireDate)
-        && validEnrollment(d.health)
-        && validEnrollment(d.pension)
-        // 産休・育休：配列で20件まで。1件ずつの中身はアプリで確かめる（ルールに繰り返しがないため）
-        && (!('leaves' in d) || (d.leaves is list && d.leaves.size() <= 20));
-    }
-
-    // ===== 料率 用 =====
-    // 料率は 0.0001% を 1 とする整数。30% を上限にする
+    // 料率：0.0001% を 1 とする整数。30% を上限にする
     function validRate(v) {
-      return v is int && v >= 0 && v <= 300000;
+      return intIn(v, 0, 300000);
     }
 
     function validSplit(s) {
-      return s is map
-        && s.keys().hasOnly(['employee', 'employer'])
-        && s.keys().hasAll(['employee', 'employer'])
-        && validRate(s.employee)
-        && validRate(s.employer);
+      return s is map && exactKeys(s, ['employee', 'employer'])
+        && validRate(s.employee) && validRate(s.employer);
     }
 
-    // ===== offices の設定と履歴 =====
     function validPayroll(p) {
-      return p is map
-        && p.keys().hasOnly(['closingDay', 'payDay', 'payMonth', 'deduction'])
-        && p.keys().hasAll(['closingDay', 'payDay', 'payMonth', 'deduction'])
-        && p.closingDay is int && p.closingDay >= 1 && p.closingDay <= 31
-        && p.payDay is int && p.payDay >= 1 && p.payDay <= 31
+      return p is map && exactKeys(p, ['closingDay', 'payDay', 'payMonth', 'deduction'])
+        && intIn(p.closingDay, 1, 31) && intIn(p.payDay, 1, 31)
         && p.payMonth in ['current', 'next']
         && p.deduction in ['current', 'next'];
     }
 
     function validPremiumSettings(p) {
-      return p is map
-        && p.keys().hasOnly(['method', 'healthRounding'])
-        && p.keys().hasAll(['method', 'healthRounding'])
+      return p is map && exactKeys(p, ['method', 'healthRounding'])
         && p.method in ['payroll', 'cash']
         && p.healthRounding in ['combined', 'separate'];
     }
@@ -144,25 +180,39 @@ service cloud.firestore {
         && d.insurerHistory[d.insurerHistory.size() - 1].healthInsurer == d.healthInsurer;
     }
 
-    // ===== offices =====
+    function validStandardHours(h) {
+      return h == null || (h is map && exactKeys(h, ['weeklyMinutes', 'monthlyDays'])
+        && intIn(h.weeklyMinutes, 1, 10080) && intIn(h.monthlyDays, 1, 31));
+    }
+
+    function validSpecificApplication(s) {
+      return s is map && exactKeys(s, ['since', 'voluntary', 'insuredCount'])
+        && optMonth(s.since) && s.voluntary is bool && optIntIn(s.insuredCount, 0, 1000000);
+    }
+
     function validOffice(d) {
-      return d.name is string && d.name.size() > 0 && d.name.size() <= 100
-        && optionalString(d.corporateName, 100)
+      return str(d.name, 100)
+        && optStr(d.corporateName, 100)
         && (d.corporateNumber == null || (d.corporateNumber is string && d.corporateNumber.matches('^[0-9]{13}$')))
-        && d.ownerName is string && d.ownerName.size() > 0 && d.ownerName.size() <= 50
+        && str(d.ownerName, 50)
         && (d.postalCode == null || (d.postalCode is string && d.postalCode.matches('^[0-9]{7}$')))
         && d.prefecture is string && d.prefecture.matches('^(0[1-9]|[1-3][0-9]|4[0-7])$')
-        && d.address is string && d.address.size() > 0 && d.address.size() <= 200
+        && str(d.address, 200)
         && ((d.healthInsurer.type == 'kyokai' && d.healthInsurer.kumiaiName == null)
-            || (d.healthInsurer.type == 'kumiai' && d.healthInsurer.kumiaiName is string
-                && d.healthInsurer.kumiaiName.size() > 0 && d.healthInsurer.kumiaiName.size() <= 100))
-        && optionalString(d.officeSymbol, 20)
-        && optionalString(d.officeNumber, 10)
+            || (d.healthInsurer.type == 'kumiai' && str(d.healthInsurer.kumiaiName, 100)))
+        && optStr(d.officeSymbol, 20)
+        && optStr(d.officeNumber, 10)
         && (d.industry == null || (d.industry is string && d.industry.matches('^[A-T]$')))
-        && (d.employeeCount == null || (d.employeeCount is int && d.employeeCount >= 0))
+        && optIntIn(d.employeeCount, 0, 1000000)
         && validPayroll(d.payroll)
         && validPremiumSettings(d.premium)
-        && validInsurerHistory(d);
+        && validInsurerHistory(d)
+        && validStandardHours(d.standardHours)
+        && validSpecificApplication(d.specificApplication)
+        && d.pensionFund is bool
+        && d.inKind is map && exactKeys(d.inKind, ['housing', 'meals'])
+        && d.inKind.housing is bool && d.inKind.meals is bool
+        && d.bonusMonths is list && d.bonusMonths.size() <= 12;
     }
 
     match /offices/{officeId} {
@@ -172,17 +222,17 @@ service cloud.firestore {
       // 作る：事業所を作れるアカウントだけ。メンバーは自分1人・権限は admin で始める
       allow create: if signedIn()
         && myUser().role == 'admin'
-        && request.resource.data.keys().hasOnly([
+        && exactKeys(request.resource.data, [
              'name', 'corporateName', 'corporateNumber', 'ownerName', 'postalCode', 'prefecture',
              'address', 'healthInsurer', 'officeSymbol', 'officeNumber', 'industry', 'employeeCount',
              'insurerHistory', 'payroll', 'premium',
+             'standardHours', 'specificApplication', 'pensionFund', 'inKind', 'bonusMonths',
              'memberUids', 'memberRoles', 'createdAt', 'updatedAt'])
         && request.resource.data.memberUids == [request.auth.uid]
         && request.resource.data.memberRoles.keys().hasOnly([request.auth.uid])
         && request.resource.data.memberRoles[request.auth.uid] == 'admin'
         && validOffice(request.resource.data)
-        && request.resource.data.createdAt == request.time
-        && request.resource.data.updatedAt == request.time;
+        && created(request.resource.data);
 
       // 更新：その事業所の admin だけ。メンバーと作成日時は変えられない
       allow update: if signedIn()
@@ -193,241 +243,461 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time;
 
       allow delete: if false;
-      // ----- 従業員（事業所の下） -----
+
+      // ==========================================================
+      // 従業員 offices/{officeId}/employees/{employeeId}
+      // ==========================================================
+
+      function validEnrollment(e) {
+        return e is map && exactKeys(e, ['enrolled', 'acquiredDate', 'lostDate', 'lossReason'])
+          && e.enrolled is bool
+          && optDate(e.acquiredDate) && optDate(e.lostDate)
+          && (!e.enrolled || e.acquiredDate != null)
+          && (e.lossReason == null || e.lossReason in ['retire', 'death', 'age75', 'disability', 'agreement']);
+      }
+
+      function validContact(c) {
+        return c is map && exactKeys(c, ['postalCode', 'address', 'phone', 'email'])
+          && (c.postalCode == null || (c.postalCode is string && c.postalCode.matches('^[0-9]{7}$')))
+          && optStr(c.address, 200) && optStr(c.phone, 20) && optStr(c.email, 254);
+      }
+
+      function validCommute(c) {
+        return c is map && exactKeys(c, ['method', 'route'])
+          && optStr(c.method, 50) && optStr(c.route, 200);
+      }
+
+      function validBank(b) {
+        return b is map && exactKeys(b, ['bankName', 'branchName', 'accountType', 'accountNumber', 'holderKana'])
+          && optStr(b.bankName, 50) && optStr(b.branchName, 50)
+          && (b.accountType == null || b.accountType in ['ordinary', 'current', 'savings'])
+          && (b.accountNumber == null || (b.accountNumber is string && b.accountNumber.matches('^[0-9]{1,8}$')))
+          && optStr(b.holderKana, 100);
+      }
+
+      function validCertificate(c) {
+        return c == null || (c is map && exactKeys(c, ['country', 'from', 'to', 'covers'])
+          && optCode(c.country) && c.country != null
+          && isDate(c.from) && optDate(c.to)
+          && c.covers in ['pension', 'pensionAndHealth']);
+      }
+
+      function validForeign(f) {
+        return f == null || (f is map && exactKeys(f, [
+              'romanName', 'middleName', 'nationality', 'residenceCardNumber', 'residenceStatus',
+              'residenceExpiry', 'workPermit', 'workPermitWeeklyMinutes', 'certificate', 'noAddressReason'])
+          && str(f.romanName, 100) && optStr(f.middleName, 100)
+          && optCode(f.nationality) && f.nationality != null
+          && (f.residenceCardNumber == null
+              || (f.residenceCardNumber is string && f.residenceCardNumber.matches('^[A-Z]{2}[0-9]{8}[A-Z]{2}$')))
+          && optStr(f.residenceStatus, 50) && optDate(f.residenceExpiry)
+          && f.workPermit is bool && optIntIn(f.workPermitWeeklyMinutes, 0, 10080)
+          && validCertificate(f.certificate)
+          && (f.noAddressReason == null || f.noAddressReason in ['overseas', 'shortStay', 'other']));
+      }
+
+      function validEmployee(d) {
+        return exactKeys(d, [
+              'employeeNumber', 'lastName', 'firstName', 'lastNameKana', 'firstNameKana', 'birthDate', 'sex',
+              'hireDate', 'retireDate', 'retireReason',
+              'health', 'pension', 'acquisitionType', 'multipleOffices', 'rehired', 'needsConfirmationCard', 'optInDate',
+              'insuredNumber', 'basicPensionNumber',
+              'contact', 'commute', 'bankAccount', 'collectionMethod', 'foreign', 'leaves', 'userUid',
+              'createdAt', 'updatedAt'])
+          && optStr(d.employeeNumber, 20)
+          && str(d.lastName, 50) && str(d.firstName, 50)
+          && str(d.lastNameKana, 50) && str(d.firstNameKana, 50)
+          && isDate(d.birthDate)
+          && (d.sex == null || d.sex in ['male', 'female'])
+          && isDate(d.hireDate) && optDate(d.retireDate)
+          && (d.retireReason == null || d.retireReason in ['resign', 'death', 'transfer', 'other'])
+          && validEnrollment(d.health) && validEnrollment(d.pension)
+          && d.acquisitionType in ['standard', 'mutualAidLoan', 'seamenContinued']
+          && d.multipleOffices is bool && d.rehired is bool && d.needsConfirmationCard is bool
+          && optDate(d.optInDate)
+          && optStr(d.insuredNumber, 10)
+          && (d.basicPensionNumber == null || (d.basicPensionNumber is string && d.basicPensionNumber.matches('^[0-9]{10}$')))
+          && validContact(d.contact) && validCommute(d.commute) && validBank(d.bankAccount)
+          && (d.collectionMethod == null || d.collectionMethod in ['payroll', 'cash'])
+          && validForeign(d.foreign)
+          // 休業：配列で20件まで。1件ずつの中身はアプリで確かめる（ルールに繰り返しがないため）
+          && d.leaves is list && d.leaves.size() <= 20
+          && (d.userUid == null || d.userUid is string);
+      }
+
       match /employees/{employeeId} {
-        function office() {
-          return get(/databases/$(database)/documents/offices/$(officeId)).data;
-        }
-
-        // 読む：その事業所のメンバー（管理者・一般）
-        allow read: if signedIn() && request.auth.uid in office().memberUids;
-
-        // 作る・更新する：その事業所の管理者だけ
-        allow create: if signedIn()
-          && office().memberRoles[request.auth.uid] == 'admin'
-          && request.resource.data.keys().hasOnly([
-               'employeeNumber', 'lastName', 'firstName', 'lastNameKana', 'firstNameKana',
-               'birthDate', 'hireDate', 'retireDate', 'health', 'pension',
-               'leaves', 'createdAt', 'updatedAt'])
-          && validEmployee(request.resource.data)
-          && request.resource.data.createdAt == request.time
-          && request.resource.data.updatedAt == request.time;
-
-        allow update: if signedIn()
-          && office().memberRoles[request.auth.uid] == 'admin'
-          && request.resource.data.keys().hasOnly([
-               'employeeNumber', 'lastName', 'firstName', 'lastNameKana', 'firstNameKana',
-               'birthDate', 'hireDate', 'retireDate', 'health', 'pension',
-               'leaves', 'createdAt', 'updatedAt'])
-          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdAt'])
-          && validEmployee(request.resource.data)
-          && request.resource.data.updatedAt == request.time;
-
+        allow read: if isMember(officeId);
+        allow create: if isAdmin(officeId) && validEmployee(request.resource.data) && created(request.resource.data);
+        allow update: if isAdmin(officeId) && validEmployee(request.resource.data) && updated(request.resource.data);
         // 削除：しない（退職は退職日で表す）
         allow delete: if false;
 
-                // ----- 標準報酬月額の履歴（従業員の下。ドキュメントIDは適用開始月） -----
+        // ----- 標準報酬月額の履歴（ID ＝ 何月分から） -----
         match /remunerations/{remMonth} {
-          function validStandard(s) {
-            return s is map
-              && s.keys().hasOnly(['grade', 'standard'])
-              && s.keys().hasAll(['grade', 'standard'])
-              && s.grade is int && s.grade >= 1 && s.grade <= 60
-              && s.standard is int && s.standard > 0;
-          }
-
           function validRemuneration(d) {
-            return d.keys().hasOnly(['from', 'reason', 'monthlyAmount', 'health', 'pension', 'createdAt', 'updatedAt'])
-              && d.keys().hasAll(['from', 'reason', 'monthlyAmount', 'health', 'pension', 'createdAt', 'updatedAt'])
-              && d.from == remMonth
-              && remMonth.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
+            return exactKeys(d, ['from', 'reason', 'monthlyAmount', 'health', 'pension', 'createdAt', 'updatedAt'])
+              && d.from == remMonth && isMonth(remMonth)
               && d.reason in ['acquisition', 'regular', 'irregular', 'other']
-              && d.monthlyAmount is int && d.monthlyAmount >= 0 && d.monthlyAmount <= 99999999
-              && validStandard(d.health)
-              && validStandard(d.pension);
+              && yen(d.monthlyAmount)
+              && std(d.health) && std(d.pension);
           }
 
-          allow read: if signedIn() && request.auth.uid in office().memberUids;
-
-          allow create: if signedIn()
-            && office().memberRoles[request.auth.uid] == 'admin'
-            && validRemuneration(request.resource.data)
-            && request.resource.data.createdAt == request.time
-            && request.resource.data.updatedAt == request.time;
-
-          allow update: if signedIn()
-            && office().memberRoles[request.auth.uid] == 'admin'
-            && validRemuneration(request.resource.data)
-            && request.resource.data.createdAt == resource.data.createdAt
-            && request.resource.data.updatedAt == request.time;
-
-          allow delete: if signedIn() && office().memberRoles[request.auth.uid] == 'admin';
+          allow read: if isMember(officeId);
+          allow create: if isAdmin(officeId) && validRemuneration(request.resource.data) && created(request.resource.data);
+          allow update: if isAdmin(officeId) && validRemuneration(request.resource.data) && updated(request.resource.data);
+          allow delete: if isAdmin(officeId);
         }
-      // ----- 給与の実績（従業員の下。ドキュメントIDは支払った月） -----
-        match /payrolls/{paidMonth} {
-          function yen(v) {
-            return v is int && v >= 0 && v <= 99999999;
+
+        // ----- 雇用契約の履歴（ID ＝ 契約が始まる日） -----
+        match /contracts/{from} {
+          function validContract(d) {
+            return exactKeys(d, ['from', 'employmentType', 'payType', 'weeklyMinutes', 'monthlyDays', 'scheduledWage',
+                                 'expectedCash', 'expectedInKind', 'hourlyWage', 'dailyWage', 'periodEnd', 'renewal',
+                                 'student', 'minimumWageReduction', 'dispatch', 'note', 'createdAt', 'updatedAt'])
+              && d.from == from && isDate(from)
+              && d.employmentType in ['regular', 'contract', 'part', 'arbeit', 'shokutaku', 'other']
+              && d.payType in ['monthly', 'dailyMonthly', 'daily', 'hourly']
+              && intIn(d.weeklyMinutes, 0, 10080) && intIn(d.monthlyDays, 0, 31)
+              && yen(d.scheduledWage) && yen(d.expectedCash) && yen(d.expectedInKind)
+              && (d.hourlyWage == null || yen(d.hourlyWage)) && (d.dailyWage == null || yen(d.dailyWage))
+              && optDate(d.periodEnd)
+              && d.renewal in ['none', 'possible', 'expected']
+              && d.student in ['none', 'daytime', 'other']
+              && d.minimumWageReduction is bool
+              && d.dispatch in ['none', 'dispatch', 'contract']
+              && optStr(d.note, 500);
           }
 
-          function validPayroll(d) {
-            return d.keys().hasOnly(['officeId', 'employeeId', 'paidMonth', 'cash', 'fixed', 'inKind', 'retro',
-                                     'days', 'absentDays', 'workMinutes', 'prorated', 'state', 'createdAt', 'updatedAt'])
-              && d.keys().hasAll(['officeId', 'employeeId', 'paidMonth', 'cash', 'fixed', 'inKind', 'retro',
-                                  'days', 'absentDays', 'workMinutes', 'prorated', 'state', 'createdAt', 'updatedAt'])
+          allow read: if isMember(officeId);
+          allow create: if isAdmin(officeId) && validContract(request.resource.data) && created(request.resource.data);
+          allow update: if isAdmin(officeId) && validContract(request.resource.data) && updated(request.resource.data);
+          allow delete: if isAdmin(officeId);
+        }
+
+        // ----- 扶養家族（ID は自動） -----
+        match /dependents/{dependentId} {
+          function validDependent(d) {
+            return exactKeys(d, ['lastName', 'firstName', 'lastNameKana', 'firstNameKana', 'birthDate', 'sex',
+                                 'relationship', 'relationshipNote', 'livingTogether', 'address', 'occupation',
+                                 'annualIncome', 'basicPensionNumber', 'thirdInsured', 'from', 'to', 'endReason',
+                                 'createdAt', 'updatedAt'])
+              && str(d.lastName, 50) && str(d.firstName, 50)
+              && str(d.lastNameKana, 50) && str(d.firstNameKana, 50)
+              && isDate(d.birthDate)
+              && (d.sex == null || d.sex in ['male', 'female'])
+              && d.relationship in ['spouse', 'child', 'parent', 'grandparent', 'sibling', 'grandchild', 'other']
+              && optStr(d.relationshipNote, 50)
+              && d.livingTogether is bool && optStr(d.address, 200) && optStr(d.occupation, 50)
+              && (d.annualIncome == null || yen(d.annualIncome))
+              && (d.basicPensionNumber == null || (d.basicPensionNumber is string && d.basicPensionNumber.matches('^[0-9]{10}$')))
+              && d.thirdInsured is bool
+              && optDate(d.from) && optDate(d.to)
+              && (d.endReason == null || d.endReason in ['employment', 'income', 'death', 'separation', 'other']);
+          }
+
+          allow read: if isMember(officeId);
+          allow create: if isAdmin(officeId) && validDependent(request.resource.data) && created(request.resource.data);
+          allow update: if isAdmin(officeId) && validDependent(request.resource.data) && updated(request.resource.data);
+          allow delete: if isAdmin(officeId);
+        }
+
+        // ----- 給与の実績（ID ＝ 支払った月） -----
+        match /payrolls/{paidMonth} {
+          function validPayrollRecord(d) {
+            return exactKeys(d, ['officeId', 'employeeId', 'paidMonth', 'cash', 'fixed', 'inKind', 'retro',
+                                 'days', 'absentDays', 'workMinutes', 'prorated', 'state', 'createdAt', 'updatedAt'])
               // collectionGroup で読むときのための項目。パスと一致させる
-              && d.officeId == officeId
-              && d.employeeId == employeeId
-              && d.paidMonth == paidMonth
-              && paidMonth.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
+              && d.officeId == officeId && d.employeeId == employeeId
+              && d.paidMonth == paidMonth && isMonth(paidMonth)
               && yen(d.cash) && yen(d.fixed) && yen(d.inKind) && yen(d.retro)
               && d.fixed <= d.cash
               && d.retro <= d.cash + d.inKind
-              && d.days is int && d.days >= 0 && d.days <= 31
-              && (d.absentDays == null || (d.absentDays is int && d.absentDays >= 0 && d.absentDays <= 31))
-              && (d.workMinutes == null || (d.workMinutes is int && d.workMinutes >= 0 && d.workMinutes <= 44640))
+              && intIn(d.days, 0, 31)
+              && optIntIn(d.absentDays, 0, 31)
+              && optIntIn(d.workMinutes, 0, 44640)
               && d.prorated is bool
               && d.state in ['normal', 'suspended', 'furlough'];
           }
 
-          allow read: if signedIn() && request.auth.uid in office().memberUids;
-
-          allow create: if signedIn()
-            && office().memberRoles[request.auth.uid] == 'admin'
-            && validPayroll(request.resource.data)
-            && request.resource.data.createdAt == request.time
-            && request.resource.data.updatedAt == request.time;
-
-          allow update: if signedIn()
-            && office().memberRoles[request.auth.uid] == 'admin'
-            && validPayroll(request.resource.data)
-            && request.resource.data.createdAt == resource.data.createdAt
-            && request.resource.data.updatedAt == request.time;
-
-          allow delete: if signedIn() && office().memberRoles[request.auth.uid] == 'admin';
+          allow read: if isMember(officeId);
+          allow create: if isAdmin(officeId) && validPayrollRecord(request.resource.data) && created(request.resource.data);
+          allow update: if isAdmin(officeId) && validPayrollRecord(request.resource.data) && updated(request.resource.data);
+          allow delete: if isAdmin(officeId);
         }
-        // ----- 定時決定の記録（従業員の下。ドキュメントIDは年） -----
+
+        // ----- 定時決定の記録（ID ＝ 年） -----
         match /regularDecisions/{year} {
-          function std(s) {
-            return s is map
-              && s.keys().hasOnly(['grade', 'standard']) && s.keys().hasAll(['grade', 'standard'])
-              && s.grade is int && s.grade >= 1 && s.grade <= 60
-              && s.standard is int && s.standard > 0;
-          }
-
-          function optInt(v) {
-            return v == null || (v is int && v >= 0);
-          }
-
-          function validDecision(d) {
-            return d.keys().hasOnly(['officeId', 'employeeId', 'year', 'method', 'usedMonths', 'total', 'average',
-                                     'corrected', 'annualAverage', 'monthlyAmount', 'seasonal', 'consent',
-                                     'health', 'pension', 'createdAt', 'updatedAt'])
-              && d.keys().hasAll(['officeId', 'employeeId', 'year', 'method', 'usedMonths', 'total', 'average',
-                                  'corrected', 'annualAverage', 'monthlyAmount', 'seasonal', 'consent',
-                                  'health', 'pension', 'createdAt', 'updatedAt'])
+          function validRegular(d) {
+            return exactKeys(d, ['officeId', 'employeeId', 'year', 'method', 'usedMonths', 'total', 'average',
+                                 'corrected', 'annualAverage', 'monthlyAmount', 'seasonal', 'consent',
+                                 'health', 'pension', 'createdAt', 'updatedAt'])
               && d.officeId == officeId && d.employeeId == employeeId
               && d.year == year && year.matches('^[0-9]{4}$')
               && d.method in ['normal', 'annual', 'keep']
               && d.usedMonths is list && d.usedMonths.size() <= 12
               && d.total is int && d.total >= 0
               && d.average is int && d.average >= 0
-              && optInt(d.corrected) && optInt(d.annualAverage)
-              && d.monthlyAmount is int && d.monthlyAmount >= 0 && d.monthlyAmount <= 99999999
+              && optIntIn(d.corrected, 0, 99999999) && optIntIn(d.annualAverage, 0, 99999999)
+              && yen(d.monthlyAmount)
               && d.seasonal is bool && d.consent is bool
               // 年間平均は、例年の発生と本人の同意の両方が必要
               && (d.method != 'annual' || (d.seasonal == true && d.consent == true && d.annualAverage != null))
               && std(d.health) && std(d.pension);
           }
 
-          allow read: if signedIn() && request.auth.uid in office().memberUids;
+          allow read: if isMember(officeId);
+          allow create: if isAdmin(officeId) && validRegular(request.resource.data) && created(request.resource.data);
+          allow update: if isAdmin(officeId) && validRegular(request.resource.data) && updated(request.resource.data);
+          allow delete: if isAdmin(officeId);
+        }
 
-          allow create: if signedIn()
-            && office().memberRoles[request.auth.uid] == 'admin'
-            && validDecision(request.resource.data)
-            && request.resource.data.createdAt == request.time
-            && request.resource.data.updatedAt == request.time;
+        // ----- 固定的賃金の変動（ID ＝ 起算月。人が足した・外したものだけ） -----
+        match /wageChanges/{month} {
+          function validWageChange(d) {
+            return exactKeys(d, ['month', 'source', 'kind', 'direction', 'note', 'createdAt', 'updatedAt'])
+              && d.month == month && isMonth(month)
+              && d.source in ['manual', 'dismissed']
+              && d.kind in ['raise', 'cut', 'allowanceNew', 'allowanceEnd', 'unitPrice', 'contractHours', 'inKind', 'other']
+              && d.direction in ['up', 'down', 'unclear']
+              && optStr(d.note, 200);
+          }
 
-          allow update: if signedIn()
-            && office().memberRoles[request.auth.uid] == 'admin'
-            && validDecision(request.resource.data)
-            && request.resource.data.createdAt == resource.data.createdAt
-            && request.resource.data.updatedAt == request.time;
+          allow read: if isMember(officeId);
+          allow create: if isAdmin(officeId) && validWageChange(request.resource.data) && created(request.resource.data);
+          allow update: if isAdmin(officeId) && validWageChange(request.resource.data) && updated(request.resource.data);
+          allow delete: if isAdmin(officeId);
+        }
 
-          allow delete: if signedIn() && office().memberRoles[request.auth.uid] == 'admin';
+        // ----- 随時改定の記録（ID ＝ 起算月） -----
+        match /irregularDecisions/{startMonth} {
+          function validIrregular(d) {
+            return exactKeys(d, ['officeId', 'employeeId', 'startMonth', 'revisedFrom', 'direction', 'usedMonths',
+                                 'total', 'average', 'corrected', 'retro', 'monthlyAmount', 'special', 'reasonNote',
+                                 'health', 'pension', 'createdAt', 'updatedAt'])
+              && d.officeId == officeId && d.employeeId == employeeId
+              && d.startMonth == startMonth && isMonth(startMonth) && isMonth(d.revisedFrom)
+              && d.direction in ['up', 'down']
+              && d.usedMonths is list && d.usedMonths.size() <= 3
+              && d.total is int && d.total >= 0 && yen(d.average)
+              && optIntIn(d.corrected, 0, 99999999) && yen(d.retro) && yen(d.monthlyAmount)
+              && d.special is bool && optStr(d.reasonNote, 200)
+              && std(d.health) && std(d.pension);
+          }
+
+          allow read: if isMember(officeId);
+          allow create: if isAdmin(officeId) && validIrregular(request.resource.data) && created(request.resource.data);
+          allow update: if isAdmin(officeId) && validIrregular(request.resource.data) && updated(request.resource.data);
+          allow delete: if isAdmin(officeId);
+        }
+
+        // ----- 休業終了時改定の記録（ID ＝ 起算月） -----
+        match /leaveEndDecisions/{startMonth} {
+          function validLeaveEnd(d) {
+            return exactKeys(d, ['officeId', 'employeeId', 'startMonth', 'leaveKind', 'leaveEnd', 'revisedFrom',
+                                 'usedMonths', 'total', 'average', 'monthlyAmount', 'health', 'pension',
+                                 'createdAt', 'updatedAt'])
+              && d.officeId == officeId && d.employeeId == employeeId
+              && d.startMonth == startMonth && isMonth(startMonth) && isMonth(d.revisedFrom)
+              && d.leaveKind in ['maternity', 'childcare'] && isDate(d.leaveEnd)
+              && d.usedMonths is list && d.usedMonths.size() <= 3
+              && d.total is int && d.total >= 0 && yen(d.average) && yen(d.monthlyAmount)
+              && std(d.health) && std(d.pension);
+          }
+
+          allow read: if isMember(officeId);
+          allow create: if isAdmin(officeId) && validLeaveEnd(request.resource.data) && created(request.resource.data);
+          allow update: if isAdmin(officeId) && validLeaveEnd(request.resource.data) && updated(request.resource.data);
+          allow delete: if isAdmin(officeId);
+        }
+
+        // ----- 介護保険の適用除外（ID ＝ 該当した日） -----
+        match /careExemptions/{from} {
+          function validCareExemption(d) {
+            return exactKeys(d, ['from', 'to', 'reason', 'note', 'createdAt', 'updatedAt'])
+              && d.from == from && isDate(from) && optDate(d.to)
+              && d.reason in ['facility', 'overseas', 'residenceStatus']
+              && optStr(d.note, 200);
+          }
+
+          allow read: if isMember(officeId);
+          allow create: if isAdmin(officeId) && validCareExemption(request.resource.data) && created(request.resource.data);
+          allow update: if isAdmin(officeId) && validCareExemption(request.resource.data) && updated(request.resource.data);
+          allow delete: if isAdmin(officeId);
+        }
+
+        // ----- 海外赴任（ID ＝ 赴任した日） -----
+        match /overseas/{from} {
+          function validOverseas(d) {
+            return exactKeys(d, ['from', 'to', 'country', 'certificateFrom', 'certificateTo', 'note', 'createdAt', 'updatedAt'])
+              && d.from == from && isDate(from) && optDate(d.to)
+              && optCode(d.country) && d.country != null
+              && optDate(d.certificateFrom) && optDate(d.certificateTo)
+              && optStr(d.note, 200);
+          }
+
+          allow read: if isMember(officeId);
+          allow create: if isAdmin(officeId) && validOverseas(request.resource.data) && created(request.resource.data);
+          allow update: if isAdmin(officeId) && validOverseas(request.resource.data) && updated(request.resource.data);
+          allow delete: if isAdmin(officeId);
+        }
+
+        // ----- 変更履歴（足すだけ。直さない・消さない） -----
+        match /history/{historyId} {
+          allow read: if isMember(officeId);
+          allow create: if isAdmin(officeId)
+            && exactKeys(request.resource.data, ['target', 'field', 'before', 'after', 'changedBy', 'changedAt'])
+            && str(request.resource.data.target, 100) && str(request.resource.data.field, 100)
+            && optStr(request.resource.data.before, 5000) && optStr(request.resource.data.after, 5000)
+            && request.resource.data.changedBy == request.auth.uid
+            && request.resource.data.changedAt == request.time;
+          allow update, delete: if false;
+        }
+
+        // ----- 遡及計算の結果（元のデータは書き換えない。結果は直さず、要らなければ消す） -----
+        match /recalcs/{recalcId} {
+          allow read: if isMember(officeId);
+          allow create: if isAdmin(officeId)
+            && exactKeys(request.resource.data,
+                 ['reason', 'periods', 'months', 'diffEmployeeYen', 'diffEmployerMilli', 'createdBy', 'createdAt'])
+            && str(request.resource.data.reason, 200)
+            && request.resource.data.periods is list && request.resource.data.periods.size() <= 60
+            && request.resource.data.months is list && request.resource.data.months.size() <= 240
+            && request.resource.data.diffEmployeeYen is int
+            && request.resource.data.diffEmployerMilli is int
+            && request.resource.data.createdBy == request.auth.uid
+            && request.resource.data.createdAt == request.time;
+          allow update: if false;
+          allow delete: if isAdmin(officeId);
         }
       }
 
-      // ----- 組合健保の料率（事業所の下。ドキュメントIDは適用開始月） -----
+      // ==========================================================
+      // 事業所の下のほかの入れ物
+      // ==========================================================
+
+      // ----- 組合健保の料率（ID ＝ 適用開始月） -----
+      // 「その月が組合の期間か」はルールでは確かめられない（履歴を1行ずつ見られない）のでアプリで確かめる。
       match /kumiaiRates/{rateMonth} {
-        function office() {
-          return get(/databases/$(database)/documents/offices/$(officeId)).data;
-        }
-
-        function isAdmin() {
-          return office().memberRoles[request.auth.uid] == 'admin';
-        }
-
         function validKumiaiRate(d) {
-          return d.keys().hasOnly(['from', 'health', 'care', 'childSupport', 'createdAt', 'updatedAt'])
-            && d.keys().hasAll(['from', 'health', 'care', 'childSupport', 'createdAt', 'updatedAt'])
-            && d.from == rateMonth
-            && rateMonth.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
-            && validSplit(d.health)
-            && validSplit(d.care)
-            && validSplit(d.childSupport);
+          return exactKeys(d, ['from', 'health', 'care', 'childSupport', 'createdAt', 'updatedAt'])
+            && d.from == rateMonth && isMonth(rateMonth)
+            && validSplit(d.health) && validSplit(d.care) && validSplit(d.childSupport);
         }
 
-        allow read: if signedIn() && request.auth.uid in office().memberUids;
-
-        // 過去に組合だった期間も直せるよう、「今が組合か」は見ない。
-        // 「その月が組合の期間か」はルールでは確かめられない（履歴を1行ずつ見られない）のでアプリで確かめる。
-        // 協会けんぽの月に入っても、計算では使われない
-        allow create: if signedIn() && isAdmin()
-          && validKumiaiRate(request.resource.data)
-          && request.resource.data.createdAt == request.time
-          && request.resource.data.updatedAt == request.time;
-
-        allow update: if signedIn() && isAdmin()
-          && validKumiaiRate(request.resource.data)
-          && request.resource.data.createdAt == resource.data.createdAt
-          && request.resource.data.updatedAt == request.time;
-
-        allow delete: if signedIn() && isAdmin();
+        allow read: if isMember(officeId);
+        allow create: if isAdmin(officeId) && validKumiaiRate(request.resource.data) && created(request.resource.data);
+        allow update: if isAdmin(officeId) && validKumiaiRate(request.resource.data) && updated(request.resource.data);
+        allow delete: if isAdmin(officeId);
       }
-      // ----- 賞与の支給（事業所の下。1回の支給＝1件。ドキュメントIDは自動） -----
+
+      // ----- 賞与の支給（1回の支給 ＝ 1件。ID は自動） -----
+      // amounts の1件ずつ（金額が正の整数か等）はアプリで確かめる。ここでは形と件数だけ
       match /bonusPayments/{paymentId} {
-        function office() {
-          return get(/databases/$(database)/documents/offices/$(officeId)).data;
-        }
-
-        function isAdmin() {
-          return office().memberRoles[request.auth.uid] == 'admin';
-        }
-
-        // ルールには繰り返しがないので、amounts の1件ずつ（金額が正の整数か等）はアプリで確かめる。
-        // ここでは形と件数だけ
         function validBonusPayment(d) {
-          return d.keys().hasOnly(['paidDate', 'title', 'amounts', 'createdAt', 'updatedAt'])
-            && d.keys().hasAll(['paidDate', 'title', 'amounts', 'createdAt', 'updatedAt'])
+          return exactKeys(d, ['paidDate', 'title', 'amounts', 'inKindAmounts', 'createdAt', 'updatedAt'])
             && isDate(d.paidDate)
-            && optionalString(d.title, 50)
-            && d.amounts is map
-            && d.amounts.size() <= 2000;
+            && optStr(d.title, 50)
+            && d.amounts is map && d.amounts.size() <= 2000
+            && d.inKindAmounts is map && d.inKindAmounts.size() <= 2000;
         }
 
-        allow read: if signedIn() && request.auth.uid in office().memberUids;
+        allow read: if isMember(officeId);
+        allow create: if isAdmin(officeId) && validBonusPayment(request.resource.data) && created(request.resource.data);
+        allow update: if isAdmin(officeId) && validBonusPayment(request.resource.data) && updated(request.resource.data);
+        allow delete: if isAdmin(officeId);
+      }
 
-        allow create: if signedIn() && isAdmin()
-          && validBonusPayment(request.resource.data)
-          && request.resource.data.createdAt == request.time
-          && request.resource.data.updatedAt == request.time;
+      // ----- 招待（ID ＝ 招待コード）※ 招待された人が使う部分は、マイページの工事で足す -----
+      match /invites/{code} {
+        function validInvite(d) {
+          return exactKeys(d, ['code', 'kind', 'employeeId', 'role', 'email', 'expiresAt', 'usedBy', 'usedAt',
+                               'createdBy', 'createdAt'])
+            && d.code == code && code.size() >= 20
+            && d.kind in ['employee', 'member']
+            && (d.kind != 'employee' || d.employeeId is string)
+            && (d.kind != 'member' || d.role in ['admin', 'general'])
+            && optStr(d.email, 254)
+            && d.expiresAt is timestamp && d.expiresAt > request.time
+            && d.usedBy == null && d.usedAt == null
+            && d.createdBy == request.auth.uid && d.createdAt == request.time;
+        }
 
-        allow update: if signedIn() && isAdmin()
-          && validBonusPayment(request.resource.data)
-          && request.resource.data.createdAt == resource.data.createdAt
-          && request.resource.data.updatedAt == request.time;
+        allow read: if isAdmin(officeId);
+        allow create: if isAdmin(officeId) && validInvite(request.resource.data);
+        allow update: if false;
+        allow delete: if isAdmin(officeId);
+      }
 
-        allow delete: if signedIn() && isAdmin();
+      // ----- 依頼と申請（ID は自動）※ 従業員が答える・申請する部分は、マイページの工事で足す -----
+      match /requests/{requestId} {
+        function validRequest(d) {
+          return exactKeys(d, ['type', 'direction', 'employeeId', 'title', 'questions', 'answers', 'status', 'comment',
+                               'dueDate', 'createdBy', 'createdAt', 'updatedAt'])
+            && d.type in ['onboarding', 'change', 'custom']
+            && d.direction in ['toEmployee', 'fromEmployee']
+            && d.employeeId is string
+            && str(d.title, 100)
+            && d.questions is list && d.questions.size() <= 50
+            && d.answers is map && d.answers.size() <= 50
+            && d.status in ['open', 'submitted', 'approved', 'rejected']
+            && optStr(d.comment, 500)
+            && optDate(d.dueDate)
+            && d.createdBy is string;
+        }
+
+        allow read: if isAdmin(officeId);
+        allow create: if isAdmin(officeId) && validRequest(request.resource.data)
+          && request.resource.data.createdBy == request.auth.uid
+          && created(request.resource.data);
+        allow update: if isAdmin(officeId) && validRequest(request.resource.data) && updated(request.resource.data);
+        allow delete: if isAdmin(officeId);
+      }
+
+      // ----- 受信箱（ID は自動）※ 従業員が読む部分は、マイページの工事で足す -----
+      match /notifications/{notificationId} {
+        allow read: if isAdmin(officeId);
+        allow create: if isAdmin(officeId)
+          && exactKeys(request.resource.data, ['employeeId', 'kind', 'title', 'body', 'link', 'readAt', 'createdAt'])
+          && request.resource.data.employeeId is string
+          && request.resource.data.kind in ['request', 'notice']
+          && str(request.resource.data.title, 100)
+          && optStr(request.resource.data.body, 2000)
+          && optStr(request.resource.data.link, 200)
+          && request.resource.data.readAt == null
+          && request.resource.data.createdAt == request.time;
+        allow update: if false;
+        allow delete: if isAdmin(officeId);
+      }
+
+      // ----- 届出の記録（ID は自動） -----
+      match /filings/{filingId} {
+        function validFiling(d) {
+          return exactKeys(d, ['type', 'employeeIds', 'subject', 'submittedOn', 'note', 'createdBy', 'createdAt', 'updatedAt'])
+            && d.type in ['acquisition', 'loss', 'regular', 'irregular', 'bonus', 'dependent', 'leave', 'category']
+            && d.employeeIds is list && d.employeeIds.size() <= 2000
+            && optStr(d.subject, 50) && optDate(d.submittedOn) && optStr(d.note, 500)
+            && d.createdBy is string;
+        }
+
+        allow read: if isMember(officeId);
+        allow create: if isAdmin(officeId) && validFiling(request.resource.data)
+          && request.resource.data.createdBy == request.auth.uid
+          && created(request.resource.data);
+        allow update: if isAdmin(officeId) && validFiling(request.resource.data) && updated(request.resource.data);
+        allow delete: if isAdmin(officeId);
+      }
+
+      // ----- 「やること」の確認済み（ID ＝ カードの鍵） -----
+      match /todoDismissals/{key} {
+        allow read: if isMember(officeId);
+        allow create: if isAdmin(officeId)
+          && exactKeys(request.resource.data, ['key', 'until', 'dismissedBy', 'createdAt'])
+          && request.resource.data.key == key
+          && optDate(request.resource.data.until)
+          && request.resource.data.dismissedBy == request.auth.uid
+          && request.resource.data.createdAt == request.time;
+        allow update: if false;
+        allow delete: if isAdmin(officeId);
       }
     }
   }

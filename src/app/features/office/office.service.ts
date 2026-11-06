@@ -11,17 +11,24 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { db } from '../../core/firebase';
-import { Office, OfficeDoc, OfficeInput } from '../../core/models/office';
+import {
+  Office,
+  OfficeBasicInput,
+  OfficeDoc,
+  OfficeInput,
+  officeExtras,
+} from '../../core/models/office';
 
 @Injectable({ providedIn: 'root' })
 export class OfficeService {
   /** 事業所を作成し、自分の currentOfficeId をその事業所にする（同時に） */
-  async create(uid: string, input: OfficeInput): Promise<string> {
+  async create(uid: string, input: OfficeBasicInput): Promise<string> {
     const officeRef = doc(collection(db, 'offices'));
     const batch = writeBatch(db);
+    const full: OfficeInput = { ...officeExtras(), ...input };
 
     batch.set(officeRef, {
-      ...input,
+      ...full,
       memberUids: [uid],
       memberRoles: { [uid]: 'admin' },
       createdAt: serverTimestamp(),
@@ -37,7 +44,7 @@ export class OfficeService {
   }
 
   /** 事業所を更新する（メンバーと作成日時は変えない。ルールでも禁止している） */
-  async update(officeId: string, input: OfficeInput): Promise<void> {
+  async update(officeId: string, input: OfficeBasicInput | Partial<OfficeInput>): Promise<void> {
     await updateDoc(doc(db, 'offices', officeId), {
       ...input,
       updatedAt: serverTimestamp(),

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { collection, doc, getDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { db } from '../../core/firebase';
-import { RegularDecision } from '../../core/models/regular-decision';
+import { RegularDecision } from '../../core/models/revision';
 import { RemunerationInput } from '../../core/models/remuneration';
 
 /** 定時決定の記録と、9月分の標準報酬への反映 */

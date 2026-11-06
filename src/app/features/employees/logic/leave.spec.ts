@@ -1,4 +1,4 @@
-import { exemptBonus, exemptMonth, exemptRangeOf, LeaveLike, oneMonthEnd } from './leave';
+import { exemptBonus, exemptMonth, exemptRangeOf, leaveExemptsMonth, LeaveLike, oneMonthEnd } from './leave';
 import { daysInclusive } from '../../../shared/utils/date';
 
 const maternity = (start: string, end: string | null): LeaveLike => ({
@@ -96,5 +96,23 @@ describe('exemptRangeOf：画面に出す免除の月', () => {
 
   it('未定は to が null', () => {
     expect(exemptRangeOf(childcare('2026-11-10', null))).toEqual({ from: '2026-11', to: null });
+  });
+});
+
+describe('休業の種類（11/6 追加）', () => {
+  it('出生時育休も育休と同じ：月の中で14日以上なら免除', () => {
+    const l = { kind: 'paternity' as const, start: '2026-11-01', end: '2026-11-14' };
+    expect(leaveExemptsMonth(l, '2026-11')).toBeTrue();
+  });
+  it('出生時育休：休業中に働いた日は14日から除く（14日 − 1日 ＝ 13日なので免除なし）', () => {
+    const l = { kind: 'paternity' as const, start: '2026-11-01', end: '2026-11-14', workDays: 1 };
+    expect(leaveExemptsMonth(l, '2026-11')).toBeFalse();
+  });
+  it('介護休業・休職は免除なし', () => {
+    expect(exemptMonth([{ kind: 'care', start: '2026-10-01', end: '2026-12-31' }], '2026-11')).toBeFalse();
+    expect(exemptMonth([{ kind: 'suspension', start: '2026-10-01', end: null }], '2026-11')).toBeFalse();
+  });
+  it('介護休業中の賞与も免除なし', () => {
+    expect(exemptBonus([{ kind: 'care', start: '2026-06-01', end: '2026-08-31' }], '2026-07-10')).toBeFalse();
   });
 });

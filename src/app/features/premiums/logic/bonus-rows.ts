@@ -12,11 +12,11 @@ import {
 import { RatesForMonth } from '../../../core/models/rates';
 import { CoverageInput, healthLostDate, pensionLostDate } from '../../employees/logic/coverage';
 import { DateStr, YearMonth } from '../../../shared/utils/date';
-import { BonusPayment, bonusStatus, calcBonuses } from './calc-bonus';
+import { EmployeeBonus, bonusStatus, calcBonuses } from './calc-bonus';
 import { PremiumSplit, splitContribution } from './premium-core';
 import { LeaveHolder } from '../../employees/logic/leave';
 
-/** 計算に使う支給の形（BonusPaymentDoc をそのまま渡せる） */
+/** 計算に使う支給の形（BonusPayment をそのまま渡せる） */
 export interface BonusPaymentLike {
   id: string;
   paidDate: DateStr;
@@ -33,8 +33,8 @@ export interface BonusContext {
 const HEALTH_PARTS: PremiumPart[] = ['health', 'care', 'childSupport'];
 
 /** その従業員の賞与（全支給から。0円・空は払っていない扱い） */
-export function bonusesOf(employeeId: string, payments: BonusPaymentLike[]): BonusPayment[] {
-  const list: BonusPayment[] = [];
+export function bonusesOf(employeeId: string, payments: BonusPaymentLike[]): EmployeeBonus[] {
+  const list: EmployeeBonus[] = [];
   for (const p of payments) {
     const amount = p.amounts[employeeId];
     if (amount && amount > 0) list.push({ paidDate: p.paidDate, amount });

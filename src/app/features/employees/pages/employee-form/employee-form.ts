@@ -8,7 +8,7 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { EmployeeInput } from '../../../../core/models/employee';
+import { Employee, EmployeeBasicInput } from '../../../../core/models/employee';
 import { todayLocal, addDays } from '../../../../shared/utils/date';
 import { OfficeContext } from '../../../office/office-context.service';
 import { EmployeeService } from '../../employee.service';
@@ -83,6 +83,9 @@ export class EmployeeForm {
       : ['/o', officeId, 'employees'];
   });
 
+  /** 編集で読み込んだ従業員（画面にない項目を残すため） */
+  private loaded: Employee | null = null;
+
   /** 直前の自動入力の値（手で直したかの判定に使う） */
   private lastAutoAcquired = '';
   private lastAutoLost = '';
@@ -120,6 +123,7 @@ export class EmployeeForm {
         this.errorKey.set('employee.error.notFound');
         return;
       }
+      this.loaded = e;
       // 保存済みの値を「自動の値」として扱う（入社日・退職日を変えたら追従する）
       this.lastAutoAcquired = e.hireDate;
       this.lastAutoLost = e.retireDate ? addDays(e.retireDate, 1) : '';
@@ -183,12 +187,15 @@ export class EmployeeForm {
     this.errorKey.set(null);
 
     const v = this.form.getRawValue();
-    const enrollment = (e: typeof v.health) => ({
+    // 喪失の原因は今の画面にないので、編集なら元の値を残す
+    const before = this.loaded;
+    const enrollment = (e: typeof v.health, key: 'health' | 'pension') => ({
       enrolled: e.enrolled,
       acquiredDate: toNull(e.acquiredDate),
       lostDate: toNull(e.lostDate),
+      lossReason: before?.[key].lossReason ?? null,
     });
-    const input: EmployeeInput = {
+    const input: EmployeeBasicInput = {
       employeeNumber: toNull(v.employeeNumber),
       lastName: v.lastName.trim(),
       firstName: v.firstName.trim(),
@@ -197,8 +204,8 @@ export class EmployeeForm {
       birthDate: v.birthDate,
       hireDate: v.hireDate,
       retireDate: toNull(v.retireDate),
-      health: enrollment(v.health),
-      pension: enrollment(v.pension),
+      health: enrollment(v.health, 'health'),
+      pension: enrollment(v.pension, 'pension'),
     };
 
     try {

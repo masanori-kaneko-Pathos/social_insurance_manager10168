@@ -27,7 +27,7 @@ import { exemptBonus, LeaveHolder } from '../../employees/logic/leave';
 export const HEALTH_BONUS_CAP_PER_YEAR = 5_730_000; // 健保：年度の累計
 export const PENSION_BONUS_CAP_PER_MONTH = 1_500_000; // 厚年：同じ月の合計
 
-export interface BonusPayment {
+export interface EmployeeBonus {
   paidDate: DateStr; // 'YYYY-MM-DD'
   amount: number; // 賞与額（円）
 }
@@ -35,7 +35,7 @@ export interface BonusPayment {
 export interface BonusInput {
   employee: CoverageInput & LeaveHolder;
   /** その従業員の賞与（年度の累計を出すため、同じ年度の分は全部渡す） */
-  bonuses: BonusPayment[];
+  bonuses: EmployeeBonus[];
   /** 月 → その月の料率（pickRates を包んだ関数） */
   ratesFor: (month: string) => RatesForMonth;
   options?: PremiumOptions;

@@ -1,7 +1,7 @@
 import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { BonusPaymentDoc } from '../../../../core/models/bonus';
+import { BonusPayment } from '../../../../core/models/bonus';
 import { Employee } from '../../../../core/models/employee';
 import { OfficeContext } from '../../../office/office-context.service';
 import { everKumiai, premiumOf, ratesForOffice } from '../../../office/office-settings';
@@ -11,7 +11,7 @@ import { BonusService } from '../../bonus.service';
 import { BonusRow, buildBonusRow } from '../../logic/bonus-rows';
 
 interface CardRow extends BonusRow {
-  payment: BonusPaymentDoc;
+  payment: BonusPayment;
   amount: number;
 }
 
@@ -29,7 +29,7 @@ export class BonusCard implements OnInit {
 
   readonly employee = input.required<Employee>();
 
-  private readonly payments = signal<BonusPaymentDoc[]>([]);
+  private readonly payments = signal<BonusPayment[]>([]);
   private readonly tables = signal<RateTables | null>(null);
   readonly loading = signal(true);
   readonly errorKey = signal<string | null>(null);

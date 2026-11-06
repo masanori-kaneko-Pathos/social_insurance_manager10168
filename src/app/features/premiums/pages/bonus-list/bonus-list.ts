@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { BonusPaymentDoc } from '../../../../core/models/bonus';
+import { BonusPayment } from '../../../../core/models/bonus';
 import { Employee } from '../../../../core/models/employee';
 import { EmployeeService } from '../../../employees/employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
@@ -13,7 +13,7 @@ import { collectBonusResults } from '../../logic/bonus-rows';
 import { officeTotals } from '../../logic/premium-core';
 
 interface ListRow {
-  payment: BonusPaymentDoc;
+  payment: BonusPayment;
   people: number;
   totalYen: number; // 納付額（健保・厚年・拠出金の合計）
   problems: number;
@@ -32,7 +32,7 @@ export class BonusList {
   readonly context = inject(OfficeContext);
 
   private readonly employees = signal<Employee[]>([]);
-  private readonly payments = signal<BonusPaymentDoc[]>([]);
+  private readonly payments = signal<BonusPayment[]>([]);
   private readonly tables = signal<RateTables | null>(null);
   readonly loading = signal(true);
   readonly errorKey = signal<string | null>(null);

@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { BonusPaymentDoc, BonusPaymentInput } from '../../../../core/models/bonus';
+import { BonusPayment, BonusPaymentInput } from '../../../../core/models/bonus';
 import { Employee } from '../../../../core/models/employee';
 import { OfficeTotal } from '../../../../core/models/premium';
 import { EmployeeService } from '../../../employees/employee.service';
@@ -63,7 +63,7 @@ export class BonusForm {
 
   // ===== 箱 =====
   private readonly employees = signal<Employee[]>([]);
-  private readonly payments = signal<BonusPaymentDoc[]>([]);
+  private readonly payments = signal<BonusPayment[]>([]);
   private readonly tables = signal<RateTables | null>(null);
   readonly loading = signal(true);
   readonly loadErrorKey = signal<string | null>(null);

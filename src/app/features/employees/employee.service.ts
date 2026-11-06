@@ -9,7 +9,14 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { db } from '../../core/firebase';
-import { Employee, EmployeeDoc, EmployeeInput, Leave } from '../../core/models/employee';
+import {
+  Employee,
+  EmployeeBasicInput,
+  EmployeeDoc,
+  EmployeeInput,
+  employeeExtras,
+  Leave,
+} from '../../core/models/employee';
 
 const kana = (e: Employee) => e.lastNameKana + e.firstNameKana;
 
@@ -32,16 +39,23 @@ export class EmployeeService {
     return snap.exists() ? { id: snap.id, ...(snap.data() as EmployeeDoc) } : null;
   }
 
-  async create(officeId: string, input: EmployeeInput): Promise<string> {
+  /** 登録：画面が扱わない項目は初期値で埋める */
+  async create(officeId: string, input: EmployeeBasicInput): Promise<string> {
+    const full: EmployeeInput = { ...employeeExtras(), ...input };
     const ref = await addDoc(this.col(officeId), {
-      ...input,
+      ...full,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
     return ref.id;
   }
 
-  async update(officeId: string, employeeId: string, input: EmployeeInput): Promise<void> {
+  /** 編集：渡した項目だけ書き換える（まとまりごとのカードもこれを使う） */
+  async update(
+    officeId: string,
+    employeeId: string,
+    input: EmployeeBasicInput | Partial<EmployeeInput>,
+  ): Promise<void> {
     await updateDoc(doc(this.col(officeId), employeeId), {
       ...input,
       updatedAt: serverTimestamp(),

@@ -1,7 +1,7 @@
 import { MasterRateDoc } from '../../../core/models/rates';
 import { CoverageInput } from '../../employees/logic/coverage';
 import { pickRates } from '../../rates/logic/pick-rates';
-import { BonusPayment, bonusStatus, calcBonuses, standardBonusOf } from './calc-bonus';
+import { EmployeeBonus, bonusStatus, calcBonuses, standardBonusOf } from './calc-bonus';
 
 const MASTER: MasterRateDoc[] = [
   {
@@ -42,7 +42,7 @@ const person = (
 });
 
 const AGE30 = person('1996-05-15', '2024-04-01');
-const calc = (employee: CoverageInput, bonuses: BonusPayment[], pref = '13') =>
+const calc = (employee: CoverageInput, bonuses: EmployeeBonus[], pref = '13') =>
   calcBonuses({ employee, bonuses, ratesFor: ratesFor(pref) });
 
 describe('standardBonusOf：1,000円未満を切り捨て', () => {

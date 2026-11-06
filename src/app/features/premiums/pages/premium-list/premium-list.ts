@@ -26,7 +26,7 @@ import { RateService } from '../../../rates/rate.service';
 import { officeTotals } from '../../logic/premium-core';
 import { buildPremiumRow, PremiumRow } from '../../logic/premium-rows';
 import { formatMilli } from '../../logic/rounding';
-import { BonusPaymentDoc } from '../../../../core/models/bonus';
+import { BonusPayment } from '../../../../core/models/bonus';
 import { BonusService } from '../../bonus.service';
 import { addTotals, collectBonusResults } from '../../logic/bonus-rows';
 import { downloadCsv, safeFileName } from '../../../../shared/csv/csv';
@@ -86,7 +86,7 @@ export class PremiumList {
   private readonly employees = signal<Employee[]>([]);
   private readonly remunerations = signal<Map<string, RemunerationDoc[]>>(new Map());
   private readonly tables = signal<RateTables | null>(null);
-  private readonly bonusPayments = signal<BonusPaymentDoc[]>([]);
+  private readonly bonusPayments = signal<BonusPayment[]>([]);
   readonly loading = signal(true);
   readonly errorKey = signal<string | null>(null);
 

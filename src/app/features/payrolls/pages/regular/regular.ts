@@ -4,7 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
 import { Payroll } from '../../../../core/models/payroll';
-import { RegularDecision, RegularMethod } from '../../../../core/models/regular-decision';
+import { RegularDecision, RegularMethod } from '../../../../core/models/revision';
 import {
   RemunerationDoc,
   RemunerationInput,

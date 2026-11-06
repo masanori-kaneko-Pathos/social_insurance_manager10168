@@ -29,10 +29,9 @@ export const DEFAULT_PAYROLL: PayrollSettings = {
 /** 保険料の計算方法の初期値：給与控除・合算 */
 export const DEFAULT_PREMIUM: PremiumSettings = { ...DEFAULT_PREMIUM_OPTIONS };
 
-type OfficeLike = Pick<
-  OfficeDoc,
-  'prefecture' | 'healthInsurer' | 'insurerHistory' | 'payroll' | 'premium'
->;
+/** 設定の項目がまだない形も受け取れる（登録の途中・テストなど） */
+type OfficeLike = Pick<OfficeDoc, 'prefecture' | 'healthInsurer'> &
+  Partial<Pick<OfficeDoc, 'insurerHistory' | 'payroll' | 'premium'>>;
 
 export function payrollOf(office: OfficeLike): PayrollSettings {
   return { ...DEFAULT_PAYROLL, ...(office.payroll ?? {}) };
