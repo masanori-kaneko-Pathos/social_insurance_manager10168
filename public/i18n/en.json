@@ -577,6 +577,7 @@
     "cardTitle": "Payroll records",
     "cardEmpty": "No records yet.",
     "toList": "Go to payroll records",
+    "toRegular": "Annual review {{year}}",
     "col": {
       "paidMonth": "Month paid",
       "period": "Pay period",
@@ -629,6 +630,88 @@
       "save": "Could not save. Please try again later.",
       "rows": "Some rows have problems. Fix them and save again (nothing was saved).",
       "badMonth": "The month is not valid."
+    }
+  },
+  "regular": {
+    "title": "Annual review {{year}}",
+    "lead": "Sets the standard monthly remuneration from September {{year}} based on the average pay paid in April, May and June {{year}} (file the report between July 1 and 10).",
+    "sum": {
+      "all": "{{n}} in scope",
+      "up": "Up {{n}}",
+      "down": "Down {{n}}",
+      "same": "Same {{n}}",
+      "keep": "Unchanged {{n}}",
+      "incomplete": "{{n}} missing records",
+      "annual": "{{n}} annual-average candidates",
+      "reflected": "{{n}} applied to September"
+    },
+    "empty": "No one is in scope for the annual review.",
+    "col": {
+      "employee": "Employee",
+      "month": "Paid in month {{m}}",
+      "average": "Average",
+      "current": "Now (health/pension)",
+      "next": "From September",
+      "result": "Result"
+    },
+    "days": "{{d}} days",
+    "retro": "retro {{n}}",
+    "noRecord": "Not entered",
+    "skip": {
+      "shortDays": "Excluded (under 17 days)",
+      "partialAcquisition": "Excluded (joined mid-period)",
+      "suspended": "Excluded (leave of absence)"
+    },
+    "corrected": "Corrected average (excluding retro pay)",
+    "grade": "G{{h}} / G{{p}}",
+    "change": {
+      "up": "Up",
+      "down": "Down",
+      "same": "Same",
+      "new": "Decided"
+    },
+    "status": {
+      "keep": "Unchanged",
+      "incomplete": "Missing records"
+    },
+    "annual": {
+      "badge": "Annual-average candidate",
+      "title": "Deciding by the annual average (July last year to June)",
+      "compare": "Usual JPY {{normal}} → health G{{hn}}, pension G{{pn}} / Annual JPY {{annual}} → health G{{ha}}, pension G{{pa}} (difference: health {{hd}}, pension {{pd}})",
+      "exception": "The difference is one grade, but it falls under the exception near the upper or lower limit.",
+      "incomplete": "Some of the 12 months have no record (calculated from the months available).",
+      "seasonal": "This difference occurs every year due to the nature of the work (e.g. busy season)",
+      "consent": "The employee agreed to the annual average (consent form on file)",
+      "reflect": "Apply the annual average",
+      "hint": "Circle \"8. Annual average\" in the remarks of the report and attach the request (form 1) and the consent document (form 2)."
+    },
+    "method": {
+      "normal": "Applied (usual)",
+      "annual": "Applied (annual average)",
+      "keep": "Applied (unchanged)"
+    },
+    "manual": "September entered manually",
+    "reflect": "Apply to September",
+    "reflectAll": "Apply all ({{n}})",
+    "reflectAllHint": "For annual-average cases, apply them individually first (Apply all uses the usual method).",
+    "saved": "Applied to the September standard remuneration for {{n}} employee(s).",
+    "excludedTitle": "Not in scope",
+    "excluded": {
+      "notInsured": "Not insured on July 1",
+      "acquiredFromJune": "Coverage started on or after June 1 (keeps the amount set on enrollment)",
+      "irregular": "Has an interim revision in July–September"
+    },
+    "hint": {
+      "rule": "Uses the average pay (cash + in kind) paid in April, May and June. Months with fewer than 17 payment basis days, the month of joining mid-period and months of leave of absence are excluded. If all three are excluded, the previous amount stays.",
+      "days": "The thresholds for short-time workers (11 days) and part-timers (15 days) are not supported yet (17 days is used for everyone).",
+      "reflect": "Applying saves the standard remuneration from September (reason: annual review) and a record of how it was decided. Existing September entries are not overwritten.",
+      "notice": "If the official notice differs, correct it in Standard monthly remuneration on the employee page."
+    },
+    "error": {
+      "load": "Could not load the data for the annual review.",
+      "save": "Could not apply. Please try again later.",
+      "badYear": "The year is not valid.",
+      "noGrades": "There is no grade table for September of this year."
     }
   }
 }

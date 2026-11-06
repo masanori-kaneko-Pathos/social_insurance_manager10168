@@ -305,6 +305,56 @@ service cloud.firestore {
 
           allow delete: if signedIn() && office().memberRoles[request.auth.uid] == 'admin';
         }
+        // ----- 定時決定の記録（従業員の下。ドキュメントIDは年） -----
+        match /regularDecisions/{year} {
+          function std(s) {
+            return s is map
+              && s.keys().hasOnly(['grade', 'standard']) && s.keys().hasAll(['grade', 'standard'])
+              && s.grade is int && s.grade >= 1 && s.grade <= 60
+              && s.standard is int && s.standard > 0;
+          }
+
+          function optInt(v) {
+            return v == null || (v is int && v >= 0);
+          }
+
+          function validDecision(d) {
+            return d.keys().hasOnly(['officeId', 'employeeId', 'year', 'method', 'usedMonths', 'total', 'average',
+                                     'corrected', 'annualAverage', 'monthlyAmount', 'seasonal', 'consent',
+                                     'health', 'pension', 'createdAt', 'updatedAt'])
+              && d.keys().hasAll(['officeId', 'employeeId', 'year', 'method', 'usedMonths', 'total', 'average',
+                                  'corrected', 'annualAverage', 'monthlyAmount', 'seasonal', 'consent',
+                                  'health', 'pension', 'createdAt', 'updatedAt'])
+              && d.officeId == officeId && d.employeeId == employeeId
+              && d.year == year && year.matches('^[0-9]{4}$')
+              && d.method in ['normal', 'annual', 'keep']
+              && d.usedMonths is list && d.usedMonths.size() <= 12
+              && d.total is int && d.total >= 0
+              && d.average is int && d.average >= 0
+              && optInt(d.corrected) && optInt(d.annualAverage)
+              && d.monthlyAmount is int && d.monthlyAmount >= 0 && d.monthlyAmount <= 99999999
+              && d.seasonal is bool && d.consent is bool
+              // 年間平均は、例年の発生と本人の同意の両方が必要
+              && (d.method != 'annual' || (d.seasonal == true && d.consent == true && d.annualAverage != null))
+              && std(d.health) && std(d.pension);
+          }
+
+          allow read: if signedIn() && request.auth.uid in office().memberUids;
+
+          allow create: if signedIn()
+            && office().memberRoles[request.auth.uid] == 'admin'
+            && validDecision(request.resource.data)
+            && request.resource.data.createdAt == request.time
+            && request.resource.data.updatedAt == request.time;
+
+          allow update: if signedIn()
+            && office().memberRoles[request.auth.uid] == 'admin'
+            && validDecision(request.resource.data)
+            && request.resource.data.createdAt == resource.data.createdAt
+            && request.resource.data.updatedAt == request.time;
+
+          allow delete: if signedIn() && office().memberRoles[request.auth.uid] == 'admin';
+        }
       }
 
       // ----- 組合健保の料率（事業所の下。ドキュメントIDは適用開始月） -----

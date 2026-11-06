@@ -1,0 +1,235 @@
+<a class="back" [routerLink]="['/o', context.current()?.id, 'payrolls']">
+  ← {{ 'payroll.listTitle' | transloco }}
+</a>
+
+<div class="page-head">
+  <div>
+    <h1>{{ 'regular.title' | transloco: { year: year() } }}</h1>
+    <p class="lead">{{ 'regular.lead' | transloco: { year: year() } }}</p>
+  </div>
+  <div class="year-nav">
+    <a class="btn" [routerLink]="['/o', context.current()?.id, 'regular', year() - 1]">← {{ year() - 1 }}</a>
+    <a class="btn" [routerLink]="['/o', context.current()?.id, 'regular', year() + 1]">{{ year() + 1 }} →</a>
+  </div>
+</div>
+
+@if (loading()) {
+  <p class="muted">{{ 'common.loading' | transloco }}</p>
+} @else if (errorKey() && views().length === 0) {
+  <div class="alert alert-danger">{{ errorKey()! | transloco }}</div>
+} @else {
+  @let s = summary();
+  <section class="card summary">
+    <span>{{ 'regular.sum.all' | transloco: { n: s.all } }}</span>
+    <span>{{ 'regular.sum.up' | transloco: { n: s.up } }}</span>
+    <span>{{ 'regular.sum.down' | transloco: { n: s.down } }}</span>
+    <span>{{ 'regular.sum.same' | transloco: { n: s.same } }}</span>
+    <span>{{ 'regular.sum.keep' | transloco: { n: s.keep } }}</span>
+    @if (s.incomplete > 0) {
+      <span class="badge badge-warn">{{ 'regular.sum.incomplete' | transloco: { n: s.incomplete } }}</span>
+    }
+    @if (s.annual > 0) {
+      <span class="badge badge-info">{{ 'regular.sum.annual' | transloco: { n: s.annual } }}</span>
+    }
+    <span class="sub">{{ 'regular.sum.reflected' | transloco: { n: s.reflected } }}</span>
+  </section>
+
+  @if (targets().length === 0) {
+    <section class="card empty"><p>{{ 'regular.empty' | transloco }}</p></section>
+  } @else {
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'regular.col.employee' | transloco }}</th>
+            <th class="num">{{ 'regular.col.month' | transloco: { m: 4 } }}</th>
+            <th class="num">{{ 'regular.col.month' | transloco: { m: 5 } }}</th>
+            <th class="num">{{ 'regular.col.month' | transloco: { m: 6 } }}</th>
+            <th class="num">{{ 'regular.col.average' | transloco }}</th>
+            <th class="num">{{ 'regular.col.current' | transloco }}</th>
+            <th class="num">{{ 'regular.col.next' | transloco }}</th>
+            <th>{{ 'regular.col.result' | transloco }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (v of targets(); track v.employee.id) {
+            @let r = v.result;
+            <tr>
+              <td>
+                <a class="name" [routerLink]="['/o', context.current()?.id, 'employees', v.employee.id]">
+                  {{ name(v.employee) }}
+                </a>
+              </td>
+              @for (m of r.months; track m.month) {
+                <td class="num" [class.skipped]="!m.used">
+                  @if (m.payroll) {
+                    <div>{{ yen(m.amount) }}</div>
+                    <div class="sub">
+                      {{ 'regular.days' | transloco: { d: m.payroll.days } }}
+                      @if (m.payroll.retro > 0) {
+                        ・{{ 'regular.retro' | transloco: { n: yen(m.payroll.retro) } }}
+                      }
+                    </div>
+                  } @else {
+                    <a [routerLink]="['/o', context.current()?.id, 'payrolls', m.month]">
+                      {{ 'regular.noRecord' | transloco }}
+                    </a>
+                  }
+                  @if (m.skip && m.skip !== 'noRecord') {
+                    <div class="skip">{{ 'regular.skip.' + m.skip | transloco }}</div>
+                  }
+                </td>
+              }
+              <td class="num">
+                @if (r.average !== null) {
+                  <div>{{ yen(r.average) }}</div>
+                  @if (r.hasRetro) {
+                    <div class="sub">{{ 'regular.corrected' | transloco }}</div>
+                  }
+                } @else {
+                  —
+                }
+              </td>
+              <td class="num">
+                @if (r.current; as c) {
+                  <div>{{ 'regular.grade' | transloco: { h: c.health.grade, p: c.pension?.grade ?? '—' } }}</div>
+                  <div class="sub">{{ yen(c.health.standard) }}</div>
+                } @else {
+                  —
+                }
+              </td>
+              <td class="num">
+                @if (r.next; as n) {
+                  <div>{{ 'regular.grade' | transloco: { h: n.health.grade, p: n.pension?.grade ?? '—' } }}</div>
+                  <div class="sub">{{ yen(n.health.standard) }}</div>
+                } @else {
+                  —
+                }
+              </td>
+              <td>
+                @switch (r.status) {
+                  @case ('decided') {
+                    <span class="badge" [class.badge-up]="r.change === 'up'" [class.badge-down]="r.change === 'down'">
+                      {{ 'regular.change.' + (r.change ?? 'new') | transloco }}
+                    </span>
+                  }
+                  @case ('keep') {
+                    <span class="badge badge-sub">{{ 'regular.status.keep' | transloco }}</span>
+                  }
+                  @case ('incomplete') {
+                    <span class="badge badge-warn">{{ 'regular.status.incomplete' | transloco }}</span>
+                  }
+                }
+                @if (r.annual?.candidate) {
+                  <button type="button" class="link" (click)="toggleAnnual(v)">
+                    <span class="badge badge-info">{{ 'regular.annual.badge' | transloco }}</span>
+                  </button>
+                }
+              </td>
+              <td>
+                @if (v.septemberExists) {
+                  <span class="done">
+                    {{ (v.decision ? 'regular.method.' + v.decision.method : 'regular.manual') | transloco }}
+                  </span>
+                } @else if (canReflect(v)) {
+                  <button type="button" class="btn btn-small" (click)="reflect(v)" [disabled]="saving()">
+                    {{ 'regular.reflect' | transloco }}
+                  </button>
+                }
+              </td>
+            </tr>
+
+            @if (openAnnual() === v.employee.id && r.annual; as a) {
+              <tr class="annual-row">
+                <td colspan="9">
+                  <div class="annual">
+                    <h3>{{ 'regular.annual.title' | transloco }}</h3>
+                    <div class="annual-months">
+                      @for (m of a.months; track m.month) {
+                        <div class="am" [class.skipped]="!m.used">
+                          <div class="sub">{{ m.month }}</div>
+                          <div>{{ m.payroll ? yen(m.amount) : ('regular.noRecord' | transloco) }}</div>
+                        </div>
+                      }
+                    </div>
+                    <p>
+                      {{ 'regular.annual.compare' | transloco: {
+                        normal: yen(r.average ?? 0),
+                        annual: yen(a.average),
+                        hn: r.next?.health?.grade, ha: a.next.health.grade, hd: diffLabel(a.healthDiff),
+                        pn: r.next?.pension?.grade ?? '—', pa: a.next.pension?.grade ?? '—', pd: diffLabel(a.pensionDiff)
+                      } }}
+                    </p>
+                    @if (a.exception) {
+                      <p class="sub">{{ 'regular.annual.exception' | transloco }}</p>
+                    }
+                    @if (a.incomplete) {
+                      <p class="warn">{{ 'regular.annual.incomplete' | transloco }}</p>
+                    }
+                    @if (canReflect(v)) {
+                      <label class="check">
+                        <input type="checkbox" [checked]="checksOf(v).seasonal"
+                          (change)="setCheck(v, 'seasonal', $any($event.target).checked)" />
+                        {{ 'regular.annual.seasonal' | transloco }}
+                      </label>
+                      <label class="check">
+                        <input type="checkbox" [checked]="checksOf(v).consent"
+                          (change)="setCheck(v, 'consent', $any($event.target).checked)" />
+                        {{ 'regular.annual.consent' | transloco }}
+                      </label>
+                      <button type="button" class="btn btn-primary" (click)="reflectAnnual(v)"
+                        [disabled]="!canReflectAnnual(v) || saving()">
+                        {{ 'regular.annual.reflect' | transloco }}
+                      </button>
+                    }
+                    <p class="sub">{{ 'regular.annual.hint' | transloco }}</p>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (errorKey(); as key) {
+      <div class="alert alert-danger">{{ key | transloco }}</div>
+    }
+    @if (savedCount() !== null) {
+      <div class="alert alert-success">{{ 'regular.saved' | transloco: { n: savedCount() } }}</div>
+    }
+
+    @if (context.isAdmin() && reflectable().length > 0) {
+      <div class="actions">
+        <span class="sub">{{ 'regular.reflectAllHint' | transloco }}</span>
+        <button type="button" class="btn btn-primary" (click)="reflectAll()" [disabled]="saving()">
+          {{ 'regular.reflectAll' | transloco: { n: reflectable().length } }}
+        </button>
+      </div>
+    }
+  }
+
+  @if (excluded().length > 0) {
+    <h2>{{ 'regular.excludedTitle' | transloco }}</h2>
+    <div class="card table-wrap">
+      <table>
+        <tbody>
+          @for (v of excluded(); track v.employee.id) {
+            <tr>
+              <td>{{ name(v.employee) }}</td>
+              <td class="sub">{{ 'regular.excluded.' + v.result.excluded | transloco }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <ul class="hint">
+    <li>{{ 'regular.hint.rule' | transloco }}</li>
+    <li>{{ 'regular.hint.days' | transloco }}</li>
+    <li>{{ 'regular.hint.reflect' | transloco }}</li>
+    <li>{{ 'regular.hint.notice' | transloco }}</li>
+  </ul>
+}

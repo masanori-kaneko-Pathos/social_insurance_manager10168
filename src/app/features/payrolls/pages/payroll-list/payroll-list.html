@@ -15,6 +15,11 @@
 } @else if (errorKey(); as key) {
   <div class="alert alert-danger">{{ key | transloco }}</div>
 } @else {
+  <p class="to-regular">
+    <a [routerLink]="['/o', context.current()?.id, 'regular', regularYear()]">
+      {{ 'payroll.toRegular' | transloco: { year: regularYear() } }} →
+    </a>
+  </p>
   <div class="pager">
     <a [routerLink]="[]" [queryParams]="{ to: prevTo() }">{{ 'payroll.prevYear' | transloco }}</a>
     <a [routerLink]="[]" [queryParams]="{ to: nextTo() }">{{ 'payroll.nextYear' | transloco }}</a>

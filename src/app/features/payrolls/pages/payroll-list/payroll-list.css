@@ -101,3 +101,8 @@ tr.future td {
   font-size: var(--font-xs);
   color: var(--color-text-sub);
 }
+
+.to-regular {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-sm);
+}

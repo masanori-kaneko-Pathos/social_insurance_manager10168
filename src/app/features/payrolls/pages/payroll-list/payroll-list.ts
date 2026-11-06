@@ -18,6 +18,7 @@ import {
   todayIso,
 } from '../../logic/payroll-rows';
 import { PayrollService } from '../../payroll.service';
+import { regularYearOf } from '../../logic/regular';
 
 interface MonthRow {
   month: string;
@@ -93,6 +94,8 @@ export class PayrollList {
   });
 
   readonly prevTo = computed(() => addMonths(this.top(), -12));
+  /** 定時決定の年（6月払いが済んでいれば今年） */
+  readonly regularYear = computed(() => (this.latest() ? regularYearOf(this.latest()) : 0));
   readonly nextTo = computed(() => addMonths(this.top(), 12));
 
   constructor() {

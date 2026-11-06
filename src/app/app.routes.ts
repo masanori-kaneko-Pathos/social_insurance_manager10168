@@ -110,6 +110,11 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'regular/:year',
+            loadComponent: () =>
+              import('./features/payrolls/pages/regular/regular').then((m) => m.RegularPage),
+          },
+          {
             path: 'settings',
             data: { mode: 'edit' },
             loadComponent: () =>
