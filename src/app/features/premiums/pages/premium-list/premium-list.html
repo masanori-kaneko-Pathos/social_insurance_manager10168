@@ -62,6 +62,11 @@
           | transloco
       }}
     </button>
+    @if (context.isAdmin() && rows().length > 0) {
+      <button type="button" class="btn btn-small" (click)="exportCsv()">
+        {{ 'premiumList.exportCsv' | transloco }}
+      </button>
+    }
   </p>
   <!-- 計算できなかった人（合計から抜けているので、見落とさないよう一番上に出す） -->
   @if (problems().length > 0) {

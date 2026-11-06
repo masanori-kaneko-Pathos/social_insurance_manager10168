@@ -394,6 +394,7 @@
     "problemTitle": "{{count}} employee(s) could not be calculated and are not included in the totals.",
     "empty": "No one is insured this month.",
     "care": "Care",
+    "exportCsv": "Export CSV",
     "col": {
       "healthStd": "Health std.",
       "pensionStd": "Pension std.",

@@ -383,6 +383,7 @@
     "problemTitle": "計算できていない人が {{count}}人います。この人たちの分は合計に入っていません。",
     "empty": "この月に加入している人はいません。",
     "care": "介護",
+    "exportCsv": "CSVを書き出す",
     "col": {
       "healthStd": "健保 標準報酬",
       "pensionStd": "厚年 標準報酬",

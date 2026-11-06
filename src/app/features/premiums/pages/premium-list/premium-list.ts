@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { map } from 'rxjs';
 import { Employee } from '../../../../core/models/employee';
 import { Office } from '../../../../core/models/office';
@@ -30,6 +30,8 @@ import { formatMilli } from '../../logic/rounding';
 import { BonusPaymentDoc } from '../../../../core/models/bonus';
 import { BonusService } from '../../bonus.service';
 import { addTotals, collectBonusResults } from '../../logic/bonus-rows';
+import { downloadCsv, safeFileName } from '../../../../shared/csv/csv';
+import { buildPremiumCsv, PremiumCsvRow, premiumFileName } from '../../logic/premium-csv';
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -50,6 +52,7 @@ export class PremiumList {
   private readonly remApi = inject(RemunerationService);
   private readonly rates = inject(RateService);
   private readonly bonusApi = inject(BonusService);
+  private readonly transloco = inject(TranslocoService);
   readonly context = inject(OfficeContext);
 
   readonly thisMonth = toYearMonth(todayLocal());
@@ -226,6 +229,42 @@ export class PremiumList {
       queryParams: { month },
       queryParamsHandling: 'merge',
     });
+  }
+
+  // ===== 書き出し（CSV） =====
+
+  /** 今見ている月の一覧を CSV にする（画面に出ている人だけ。賞与は含まない） */
+  exportCsv(): void {
+    const office = this.context.current();
+    if (!office || !this.context.isAdmin()) return;
+    const t = (key: string) => this.transloco.translate(key);
+    const lang = this.transloco.getActiveLang() === 'en' ? 'en' : 'ja';
+    const rows: PremiumCsvRow[] = this.rows().map((r) => ({
+      employeeNumber: r.employee.employeeNumber ?? null,
+      name: `${r.employee.lastName} ${r.employee.firstName}`,
+      state: r.state as PremiumCsvRow['state'],
+      health: r.health ?? null,
+      pension: r.pension ?? null,
+      care: !!r.care,
+      healthEmployeeYen: r.healthEmployeeYen,
+      pensionEmployeeYen: r.pensionEmployeeYen,
+      employeeYen: r.result?.employeeYen ?? 0,
+      employerMilli: r.premiumEmployerMilli,
+      totalMilli: r.premiumTotalMilli,
+      contributionMilli: r.contributionMilli,
+      note:
+        r.state === 'ok' ? '' : r.state === 'exempt' ? t('premium.exempt') : t(this.missingKey(r)),
+    }));
+    const totals = this.totals().map((x) => ({
+      label: t(`premiumList.category.${x.category}`),
+      totalYen: x.totalYen,
+      employeeYen: x.employeeYen,
+      employerYen: x.employerYen,
+    }));
+    downloadCsv(
+      safeFileName(premiumFileName(office.name, this.month(), todayLocal(), lang)),
+      buildPremiumCsv(rows, totals, lang),
+    );
   }
 
   // ===== 表示の小道具 =====
