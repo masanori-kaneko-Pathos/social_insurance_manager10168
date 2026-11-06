@@ -578,6 +578,7 @@
     "cardEmpty": "No records yet.",
     "toList": "Go to payroll records",
     "toRegular": "Annual review {{year}}",
+    "csv": "Import / export CSV",
     "col": {
       "paidMonth": "Month paid",
       "period": "Pay period",
@@ -620,8 +621,9 @@
     },
     "hint": {
       "list": "\"Missing\" counts employees insured during the pay period who have no record yet (only months whose pay day has passed).",
-      "cash": "Cash pay: everything counted as remuneration (base pay, allowances, overtime, commuting allowance). Commuter passes for 3 or 6 months are divided by month.",
+      "cash": "Cash pay: everything counted as remuneration for social insurance (base pay, allowances, overtime, commuting allowance; the \"social insurance amount\" in payroll software). Divide 3- or 6-month commuter passes by month, and exclude travel expenses, congratulatory or condolence payments and retirement allowances.",
       "fixed": "Fixed wages: pay whose amount or rate is set in advance, such as base pay, position allowance and commuting allowance. Overtime is not included.",
+      "inKind": "In kind: convert housing, dormitories and meals at the government-set value for the prefecture and enter the amount after the employee's own payment (this differs from the tax value).",
       "days": "Payment basis days: calendar days of the period for monthly salary; \"company-set days − days absent\" for monthly salary with absence deductions; days worked (including paid leave) for daily or hourly pay.",
       "blank": "Empty rows are not saved. Clearing a saved row and saving deletes that month's record."
     },

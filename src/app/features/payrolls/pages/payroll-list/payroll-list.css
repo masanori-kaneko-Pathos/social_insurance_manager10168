@@ -106,3 +106,8 @@ tr.future td {
   margin: 0 0 var(--space-sm);
   font-size: var(--font-sm);
 }
+
+.head-actions {
+  display: flex;
+  gap: var(--space-sm);
+}

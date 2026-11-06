@@ -1,0 +1,189 @@
+<a class="back" [routerLink]="['/o', context.current()?.id, 'payrolls']">
+  ← {{ 'payroll.listTitle' | transloco }}
+</a>
+
+<div class="page-head">
+  <h1>{{ 'payrollCsv.title' | transloco }}</h1>
+  <p class="lead">{{ 'payrollCsv.lead' | transloco }}</p>
+</div>
+
+@if (!context.isAdmin()) {
+  <div class="alert alert-warning">{{ 'payrollCsv.adminOnly' | transloco }}</div>
+} @else if (loading()) {
+  <p class="muted">{{ 'common.loading' | transloco }}</p>
+} @else {
+  <!-- ===== 1. 書き出し ===== -->
+  <section class="card">
+    <h2>{{ 'payrollCsv.export.title' | transloco }}</h2>
+    <p class="sub">{{ 'payrollCsv.export.lead' | transloco }}</p>
+    <div class="range">
+      <label>
+        {{ 'payrollCsv.export.from' | transloco }}
+        <input type="month" class="input" [(ngModel)]="from" />
+      </label>
+      <span>〜</span>
+      <label>
+        {{ 'payrollCsv.export.to' | transloco }}
+        <input type="month" class="input" [(ngModel)]="to" />
+      </label>
+      <span class="quick">
+        <button type="button" class="link" (click)="setRange(1)">{{ 'payrollCsv.export.last1' | transloco }}</button>
+        <button type="button" class="link" (click)="setRange(3)">{{ 'payrollCsv.export.last3' | transloco }}</button>
+        <button type="button" class="link" (click)="setRange(12)">{{ 'payrollCsv.export.last12' | transloco }}</button>
+      </span>
+      <button type="button" class="btn btn-primary" (click)="exportCsv()">
+        {{ 'payrollCsv.export.button' | transloco }}
+      </button>
+    </div>
+    @if (exportErrorKey(); as key) {
+      <div class="alert alert-danger">{{ key | transloco }}</div>
+    }
+    <p class="sub">{{ 'payrollCsv.export.hint' | transloco }}</p>
+  </section>
+
+  <!-- ===== 2. 取り込み ===== -->
+  <section class="card">
+    <h2>{{ 'payrollCsv.import.title' | transloco }}</h2>
+    <p class="sub">{{ 'payrollCsv.import.lead' | transloco }}</p>
+    <label class="btn file">
+      {{ 'payrollCsv.import.choose' | transloco }}
+      <input type="file" accept=".csv,text/csv" (change)="onFile($event)" [disabled]="saving()" />
+    </label>
+
+    @if (errorKey(); as key) {
+      <div class="alert alert-danger">{{ key | transloco }}</div>
+    }
+    @if (doneCount() !== null) {
+      <div class="alert alert-success">
+        {{ 'payrollCsv.import.done' | transloco: { n: doneCount() } }}
+        <a [routerLink]="['/o', context.current()?.id, 'payrolls']">{{ 'payrollCsv.import.toList' | transloco }}</a>
+      </div>
+    }
+    @if (partial(); as p) {
+      <div class="alert alert-danger">{{ 'payrollCsv.import.partial' | transloco: { done: p.done, total: p.total } }}</div>
+    }
+    @if (progress(); as p) {
+      <p class="muted">{{ 'payrollCsv.import.progress' | transloco: { done: p.done, total: p.total } }}</p>
+      <progress [value]="p.done" [max]="p.total"></progress>
+    }
+
+    @if (preview(); as pv) {
+      <div class="preview">
+        <p class="file-name">
+          {{ pv.fileName }}
+          <span class="sub">（{{ 'payrollCsv.encoding.' + pv.encoding | transloco }}）</span>
+        </p>
+
+        @if (pv.read.missingColumns.length > 0) {
+          <div class="alert alert-danger">
+            {{ 'payrollCsv.import.missingColumns' | transloco }}
+            @for (c of pv.read.missingColumns; track c) {
+              <strong class="col-name">{{ 'payrollCsv.col.' + c | transloco }}</strong>
+            }
+          </div>
+          <p class="sub">{{ 'payrollCsv.import.columnsHint' | transloco: { cols: headersJa } }}</p>
+        } @else {
+          <div class="counts">
+            <span>{{ 'payrollCsv.count.created' | transloco: { n: pv.created.length } }}</span>
+            <span>{{ 'payrollCsv.count.updated' | transloco: { n: pv.updated.length } }}</span>
+            <span class="sub">{{ 'payrollCsv.count.unchanged' | transloco: { n: pv.unchanged.length } }}</span>
+            @if (pv.read.unfilledLines > 0) {
+              <span class="sub">{{ 'payrollCsv.count.unfilled' | transloco: { n: pv.read.unfilledLines } }}</span>
+            }
+            @if (pv.read.errors.length > 0) {
+              <span class="badge badge-danger">{{ 'payrollCsv.count.errors' | transloco: { n: pv.read.errors.length } }}</span>
+            }
+          </div>
+
+          @if (pv.read.zeroPadded.length > 0) {
+            <div class="alert alert-warning">
+              {{ 'payrollCsv.import.zeroPadded' | transloco: { n: pv.read.zeroPadded.length } }}
+            </div>
+          }
+
+          @if (pv.read.errors.length > 0) {
+            <div class="alert alert-danger">{{ 'payrollCsv.import.hasErrors' | transloco }}</div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th class="num">{{ 'payrollCsv.line' | transloco }}</th>
+                    <th>{{ 'payrollCsv.problem' | transloco }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (e of pv.read.errors.slice(0, showErrors); track e.line) {
+                    <tr>
+                      <td class="num">{{ e.line }}</td>
+                      <td class="problems">
+                        @for (k of errorKeys(e.codes); track k) {
+                          <span>{{ k | transloco }}</span>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            @if (pv.read.errors.length > showErrors) {
+              <p class="sub">{{ 'payrollCsv.import.moreErrors' | transloco: { n: pv.read.errors.length - showErrors } }}</p>
+            }
+          } @else if (writes().length > 0) {
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th class="num">{{ 'payrollCsv.line' | transloco }}</th>
+                    <th>{{ 'payroll.col.employee' | transloco }}</th>
+                    <th>{{ 'payroll.col.paidMonth' | transloco }}</th>
+                    <th class="num">{{ 'payroll.col.cash' | transloco }}</th>
+                    <th class="num">{{ 'payroll.col.fixed' | transloco }}</th>
+                    <th class="num">{{ 'payroll.col.days' | transloco }}</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (it of writes().slice(0, showItems); track it.line) {
+                    <tr>
+                      <td class="num">{{ it.line }}</td>
+                      <td>{{ it.employeeLabel }}</td>
+                      <td class="mono">{{ it.paidMonth }}</td>
+                      <td class="num">{{ yen(it.input.cash) }}</td>
+                      <td class="num">{{ yen(it.input.fixed) }}</td>
+                      <td class="num">{{ it.input.days }}</td>
+                      <td>
+                        @if (pv.updated.includes(it)) {
+                          <span class="badge badge-warn">{{ 'payrollCsv.overwrite' | transloco }}</span>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            @if (writes().length > showItems) {
+              <p class="sub">{{ 'payrollCsv.import.moreItems' | transloco: { n: writes().length - showItems } }}</p>
+            }
+          } @else {
+            <p class="muted">{{ 'payrollCsv.import.nothing' | transloco }}</p>
+          }
+
+          <div class="actions">
+            <button type="button" class="btn" (click)="clear()" [disabled]="saving()">
+              {{ 'common.cancel' | transloco }}
+            </button>
+            <button type="button" class="btn btn-primary" (click)="importCsv()" [disabled]="!canImport()">
+              {{ 'payrollCsv.import.button' | transloco: { c: pv.created.length, u: pv.updated.length } }}
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    <ul class="hint">
+      <li>{{ 'payrollCsv.hint.columns' | transloco }}</li>
+      <li>{{ 'payrollCsv.hint.excel' | transloco }}</li>
+      <li>{{ 'payrollCsv.hint.allOrNothing' | transloco }}</li>
+    </ul>
+  </section>
+}

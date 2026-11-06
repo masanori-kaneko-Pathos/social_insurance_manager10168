@@ -103,6 +103,13 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'payrolls/import',
+            loadComponent: () =>
+              import('./features/payrolls/pages/payroll-import/payroll-import').then(
+                (m) => m.PayrollImport,
+              ),
+          },
+          {
             path: 'payrolls/:month',
             loadComponent: () =>
               import('./features/payrolls/pages/payroll-month/payroll-month').then(

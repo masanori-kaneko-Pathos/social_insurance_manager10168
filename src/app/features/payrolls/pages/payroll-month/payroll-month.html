@@ -7,15 +7,26 @@
     <h1>{{ 'payroll.monthTitle' | transloco: { month: month() } }}</h1>
     @if (period(); as p) {
       <p class="lead">
-        {{ 'payroll.monthLead' | transloco: { start: md(p.start), end: md(p.end), days: periodDays() } }}
+        {{
+          'payroll.monthLead'
+            | transloco: { start: md(p.start), end: md(p.end), days: periodDays() }
+        }}
       </p>
     }
   </div>
   <div class="month-nav">
-    <a class="btn" [routerLink]="['/o', context.current()?.id, 'payrolls', prevMonth()]" queryParamsHandling="preserve">
+    <a
+      class="btn"
+      [routerLink]="['/o', context.current()?.id, 'payrolls', prevMonth()]"
+      queryParamsHandling="preserve"
+    >
       ← {{ prevMonth() }}
     </a>
-    <a class="btn" [routerLink]="['/o', context.current()?.id, 'payrolls', nextMonth()]" queryParamsHandling="preserve">
+    <a
+      class="btn"
+      [routerLink]="['/o', context.current()?.id, 'payrolls', nextMonth()]"
+      queryParamsHandling="preserve"
+    >
       {{ nextMonth() }} →
     </a>
   </div>
@@ -70,7 +81,10 @@
         @for (v of views(); track v.employee.id) {
           <tr [formGroup]="v.form" [class.has-error]="rowErrors().has(v.employee.id)">
             <td>
-              <a class="name" [routerLink]="['/o', context.current()?.id, 'employees', v.employee.id]">
+              <a
+                class="name"
+                [routerLink]="['/o', context.current()?.id, 'employees', v.employee.id]"
+              >
                 {{ name(v.employee) }}
               </a>
               @if (v.employee.employeeNumber) {
@@ -91,8 +105,12 @@
                 }
               </div>
             </td>
-            <td class="num"><input class="input num w-money" formControlName="cash" inputmode="numeric" /></td>
-            <td class="num"><input class="input num w-money" formControlName="fixed" inputmode="numeric" /></td>
+            <td class="num">
+              <input class="input num w-money" formControlName="cash" inputmode="numeric" />
+            </td>
+            <td class="num">
+              <input class="input num w-money" formControlName="fixed" inputmode="numeric" />
+            </td>
             <td class="num">
               <div class="days">
                 <input class="input num w-days" formControlName="days" inputmode="numeric" />
@@ -109,10 +127,18 @@
               </div>
             </td>
             @if (showAll()) {
-              <td class="num"><input class="input num w-money" formControlName="inKind" inputmode="numeric" /></td>
-              <td class="num"><input class="input num w-money" formControlName="retro" inputmode="numeric" /></td>
-              <td class="num"><input class="input num w-days" formControlName="absentDays" inputmode="numeric" /></td>
-              <td class="num"><input class="input num w-hours" formControlName="hours" placeholder="160:30" /></td>
+              <td class="num">
+                <input class="input num w-money" formControlName="inKind" inputmode="numeric" />
+              </td>
+              <td class="num">
+                <input class="input num w-money" formControlName="retro" inputmode="numeric" />
+              </td>
+              <td class="num">
+                <input class="input num w-days" formControlName="absentDays" inputmode="numeric" />
+              </td>
+              <td class="num">
+                <input class="input num w-hours" formControlName="hours" placeholder="160:30" />
+              </td>
               <td><input type="checkbox" formControlName="prorated" /></td>
               <td>
                 <select class="input" formControlName="state">
@@ -141,7 +167,9 @@
     <div class="alert alert-danger">{{ key | transloco }}</div>
   }
   @if (savedCount() !== null) {
-    <div class="alert alert-success">{{ 'payroll.savedCount' | transloco: { count: savedCount() } }}</div>
+    <div class="alert alert-success">
+      {{ 'payroll.savedCount' | transloco: { count: savedCount() } }}
+    </div>
   }
 
   @if (context.isAdmin()) {
@@ -155,6 +183,7 @@
   <ul class="hint">
     <li>{{ 'payroll.hint.cash' | transloco }}</li>
     <li>{{ 'payroll.hint.fixed' | transloco }}</li>
+    <li>{{ 'payroll.hint.inKind' | transloco }}</li>
     <li>{{ 'payroll.hint.days' | transloco }}</li>
     <li>{{ 'payroll.hint.blank' | transloco }}</li>
   </ul>

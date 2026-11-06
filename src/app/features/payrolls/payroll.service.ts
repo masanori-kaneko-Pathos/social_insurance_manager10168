@@ -18,6 +18,24 @@ export interface PayrollChange {
   exists: boolean;
 }
 
+/** 複数の月にまたがる書き込み（CSV の取り込み） */
+export interface PayrollWrite {
+  employeeId: string;
+  paidMonth: string;
+  input: PayrollInput;
+  exists: boolean;
+}
+
+/** 途中で失敗した（done 件までは保存済み） */
+export class PartialSaveError extends Error {
+  constructor(
+    readonly done: number,
+    readonly reason: unknown,
+  ) {
+    super(`saved ${done} before failing`);
+  }
+}
+
 /**
  * 給与の実績（従業員の下。1人 × 1か月 ＝ 1件。ドキュメントIDは支払った月）
  * 月の全員分は、今は1人ずつ読む（人数分の読み込み）。人数が多くなったら collectionGroup に切り替える
@@ -91,5 +109,43 @@ export class PayrollService {
       }
     }
     await batch.commit();
+  }
+
+  /**
+   * たくさんの書き込みを500件ずつに分けて書く（1回の束は500件まで）
+   * 1つの束の中は「全部か何もなし」。束をまたいで失敗したら PartialSaveError（何件目まで入ったか）
+   */
+  async saveMany(
+    officeId: string,
+    writes: readonly PayrollWrite[],
+    onProgress?: (done: number) => void,
+  ): Promise<void> {
+    const SIZE = 500;
+    let done = 0;
+    for (let i = 0; i < writes.length; i += SIZE) {
+      const batch = writeBatch(db);
+      for (const w of writes.slice(i, i + SIZE)) {
+        const ref = doc(this.col(officeId, w.employeeId), w.paidMonth);
+        if (w.exists) {
+          batch.update(ref, { ...w.input, updatedAt: serverTimestamp() });
+        } else {
+          batch.set(ref, {
+            ...w.input,
+            officeId,
+            employeeId: w.employeeId,
+            paidMonth: w.paidMonth,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+        }
+      }
+      try {
+        await batch.commit();
+      } catch (err) {
+        throw new PartialSaveError(done, err);
+      }
+      done = Math.min(writes.length, i + SIZE);
+      onProgress?.(done);
+    }
   }
 }
