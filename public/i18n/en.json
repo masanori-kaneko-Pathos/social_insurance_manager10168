@@ -979,5 +979,129 @@
       "read": "Could not read the file. Make sure it is a CSV file.",
       "save": "Could not save (nothing was saved). Please try again later."
     }
+  },
+  "contract": {
+    "title": "Employment contract",
+    "add": "Contract changed",
+    "addFirst": "Add contract",
+    "empty": "No contract yet. Used to decide part-time coverage and more.",
+    "current": "Now",
+    "noPeriod": "No fixed term",
+    "confirmDelete": "Delete this contract",
+    "overwrite": "A contract starting {{from}} already exists. Press \"Overwrite\" to replace it.",
+    "overwriteButton": "Overwrite",
+    "group": {
+      "basic": "1. Contract",
+      "hours": "2. Working hours",
+      "wage": "3. Pay",
+      "period": "4. Term and others"
+    },
+    "field": {
+      "from": "Start date",
+      "employmentType": "Employment type",
+      "payType": "Pay basis",
+      "hoursUnit": "How to enter scheduled hours",
+      "cycleWeeks": "Weeks in the cycle",
+      "monthlyDays": "Scheduled days per month",
+      "hourlyWage": "Hourly wage (yen)",
+      "dailyWage": "Daily wage (yen)",
+      "scheduledWage": "Scheduled wage (monthly, yen)",
+      "expectedCash": "Expected monthly pay: cash (yen)",
+      "expectedInKind": "Expected monthly pay: in kind (yen)",
+      "periodEnd": "End of term",
+      "renewal": "Renewal",
+      "student": "Student",
+      "minimumWageReduction": "Has a minimum wage reduction permit",
+      "dispatch": "Dispatch / contracting",
+      "note": "Note"
+    },
+    "col": {
+      "type": "Type / pay",
+      "weekly": "Weekly hours",
+      "days": "Days / month",
+      "unitWage": "Hourly / daily",
+      "period": "Term"
+    },
+    "employmentType": {
+      "regular": "Full-time",
+      "contract": "Fixed-term",
+      "part": "Part-time",
+      "arbeit": "Casual",
+      "shokutaku": "Re-employed",
+      "other": "Other"
+    },
+    "payType": {
+      "monthly": "Monthly",
+      "dailyMonthly": "Monthly (deducted by day)",
+      "daily": "Daily",
+      "hourly": "Hourly"
+    },
+    "hoursUnit": {
+      "week": "Per week",
+      "month": "Per month",
+      "year": "Per year",
+      "cycle": "Per cycle"
+    },
+    "hoursLabel": {
+      "week": "Scheduled hours per week",
+      "month": "Scheduled hours per month",
+      "year": "Scheduled hours per year",
+      "cycle": "Scheduled hours in the cycle (total)"
+    },
+    "renewal": {
+      "none": "Not renewed",
+      "possible": "May be renewed",
+      "expected": "Renewed"
+    },
+    "student": {
+      "none": "Not a student",
+      "daytime": "Daytime student",
+      "other": "Evening / correspondence / on leave"
+    },
+    "dispatch": {
+      "none": "None",
+      "dispatch": "Dispatched",
+      "contract": "Contracted"
+    },
+    "candidate": {
+      "hourly": "Suggestion: hourly × weekly hours × 52 ÷ 12 = {{amount}} yen (click to use)",
+      "daily": "Suggestion: daily × days = {{amount}} yen (click to use)"
+    },
+    "more": {
+      "open": "+ Student, minimum wage permit, dispatch, note (only if applicable)",
+      "close": "− Close"
+    },
+    "hint": {
+      "copied": "Copied from the current contract. Change only what changed.",
+      "weekly": "{{hours}} per week",
+      "hours": {
+        "week": "Enter as \"20\", \"20:30\" or \"20.5\".",
+        "month": "Monthly hours are divided by 52/12 to get weekly hours.",
+        "year": "Yearly hours are divided by 52 to get weekly hours.",
+        "cycle": "For schedules that vary by week. The cycle total is averaged per week."
+      },
+      "scheduledWage": "Scheduled wage: base pay and allowances. Excludes one-off pay, bonuses, overtime/holiday/night premiums, attendance, commuting and family allowances.",
+      "expected": "Expected monthly pay: the amount on the acquisition notification. Scheduled wage plus expected overtime, commuting allowance, etc. (copied from the scheduled wage if empty).",
+      "periodEnd": "Leave blank for no fixed term.",
+      "student": "Daytime students are not covered as short-time workers (evening, correspondence, part-time school and students on leave are)."
+    },
+    "warning": {
+      "beforeHire": "Starts before the hire date (can still be saved)."
+    },
+    "error": {
+      "fromRequired": "Enter the start date.",
+      "hours": "Enter hours as \"20\", \"20:30\" or \"20.5\".",
+      "hoursRange": "More than 168 hours per week.",
+      "cycleWeeks": "Enter 1–52 weeks.",
+      "days": "Enter a number from 0 to 31.",
+      "wage": "Enter the amount in digits.",
+      "scheduledWage": "Enter the amount in digits.",
+      "expectedCash": "Enter the amount in digits.",
+      "expectedInKind": "Enter the amount in digits (0 if none).",
+      "periodBeforeFrom": "The end date is before the start date.",
+      "load": "Could not load contracts.",
+      "save": "Could not save.",
+      "delete": "Could not delete."
+    }
   }
 }

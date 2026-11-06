@@ -16,35 +16,21 @@
       <h2>{{ 'employee.section.basic' | transloco }}</h2>
 
       <!-- 最初に国籍を選ぶ（外国籍なら氏名の欄が変わる） -->
-      <div
-        class="nationality"
-        role="radiogroup"
-        [attr.aria-label]="'employee.field.nationalityType' | transloco"
-      >
-        <label class="radio"
-          ><input type="radio" formControlName="hasForeign" [value]="false" />{{
-            'employee.nationalityType.japanese' | transloco
-          }}</label
-        >
-        <label class="radio"
-          ><input type="radio" formControlName="hasForeign" [value]="true" />{{
-            'employee.nationalityType.foreign' | transloco
-          }}</label
-        >
+      <div class="nationality" role="radiogroup" [attr.aria-label]="'employee.field.nationalityType' | transloco">
+        <label class="radio"><input type="radio" formControlName="hasForeign" [value]="false" />{{ 'employee.nationalityType.japanese' | transloco }}</label>
+        <label class="radio"><input type="radio" formControlName="hasForeign" [value]="true" />{{ 'employee.nationalityType.foreign' | transloco }}</label>
       </div>
 
       <div class="grid">
         <div class="field">
           <label for="employeeNumber">
-            {{ 'employee.field.employeeNumber' | transloco
-            }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+            {{ 'employee.field.employeeNumber' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
           </label>
           <input id="employeeNumber" class="input" formControlName="employeeNumber" />
         </div>
         <div class="field">
           <label for="sex">
-            {{ 'employee.field.sex' | transloco
-            }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+            {{ 'employee.field.sex' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
           </label>
           <select id="sex" class="input" formControlName="sex">
             <option value="">{{ 'common.select' | transloco }}</option>
@@ -57,13 +43,8 @@
         @if (!isForeign()) {
           <div class="field">
             <label for="lastName">{{ 'employee.field.lastName' | transloco }}</label>
-            <input
-              id="lastName"
-              class="input"
-              formControlName="lastName"
-              autocomplete="off"
-              [class.is-invalid]="errorOf('lastName') || groupError('lastNameRequired', 'lastName')"
-            />
+            <input id="lastName" class="input" formControlName="lastName" autocomplete="off"
+                   [class.is-invalid]="errorOf('lastName') || groupError('lastNameRequired', 'lastName')" />
             @if (errorOf('lastName'); as e) {
               <span class="field-error">{{ e | transloco }}</span>
             } @else if (groupError('lastNameRequired', 'lastName')) {
@@ -72,15 +53,8 @@
           </div>
           <div class="field">
             <label for="firstName">{{ 'employee.field.firstName' | transloco }}</label>
-            <input
-              id="firstName"
-              class="input"
-              formControlName="firstName"
-              autocomplete="off"
-              [class.is-invalid]="
-                errorOf('firstName') || groupError('firstNameRequired', 'firstName')
-              "
-            />
+            <input id="firstName" class="input" formControlName="firstName" autocomplete="off"
+                   [class.is-invalid]="errorOf('firstName') || groupError('firstNameRequired', 'firstName')" />
             @if (errorOf('firstName'); as e) {
               <span class="field-error">{{ e | transloco }}</span>
             } @else if (groupError('firstNameRequired', 'firstName')) {
@@ -92,54 +66,30 @@
           <ng-container formGroupName="foreign">
             <div class="field">
               <label for="romanLastName">{{ 'employee.field.romanLastName' | transloco }}</label>
-              <input
-                id="romanLastName"
-                class="input upper"
-                formControlName="romanLastName"
-                autocomplete="off"
-                [class.is-invalid]="
-                  errorOf('foreign.romanLastName') ||
-                  groupError('romanRequired', 'foreign.romanLastName')
-                "
-              />
+              <input id="romanLastName" class="input upper" formControlName="romanLastName" autocomplete="off"
+                     [class.is-invalid]="errorOf('foreign.romanLastName') || groupError('romanRequired', 'foreign.romanLastName')" />
               @if (errorOf('foreign.romanLastName'); as e) {
                 <span class="field-error">{{ e | transloco }}</span>
               } @else if (groupError('romanRequired', 'foreign.romanLastName')) {
-                <span class="field-error">{{
-                  'employee.validation.romanRequired' | transloco
-                }}</span>
+                <span class="field-error">{{ 'employee.validation.romanRequired' | transloco }}</span>
               } @else {
                 <span class="hint">{{ 'employee.hint.roman' | transloco }}</span>
               }
             </div>
             <div class="field">
               <label for="romanFirstName">
-                {{ 'employee.field.romanFirstName' | transloco
-                }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+                {{ 'employee.field.romanFirstName' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
               </label>
-              <input
-                id="romanFirstName"
-                class="input upper"
-                formControlName="romanFirstName"
-                autocomplete="off"
-                [class.is-invalid]="errorOf('foreign.romanFirstName')"
-              />
-              @if (errorOf('foreign.romanFirstName'); as e) {
-                <span class="field-error">{{ e | transloco }}</span>
-              }
+              <input id="romanFirstName" class="input upper" formControlName="romanFirstName" autocomplete="off"
+                     [class.is-invalid]="errorOf('foreign.romanFirstName')" />
+              @if (errorOf('foreign.romanFirstName'); as e) { <span class="field-error">{{ e | transloco }}</span> }
             </div>
             <div class="field">
               <label for="romanMiddleName">
-                {{ 'employee.field.romanMiddleName' | transloco
-                }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+                {{ 'employee.field.romanMiddleName' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
               </label>
-              <input
-                id="romanMiddleName"
-                class="input upper"
-                formControlName="romanMiddleName"
-                autocomplete="off"
-                [class.is-invalid]="errorOf('foreign.romanMiddleName')"
-              />
+              <input id="romanMiddleName" class="input upper" formControlName="romanMiddleName" autocomplete="off"
+                     [class.is-invalid]="errorOf('foreign.romanMiddleName')" />
               @if (errorOf('foreign.romanMiddleName'); as e) {
                 <span class="field-error">{{ e | transloco }}</span>
               } @else {
@@ -148,8 +98,7 @@
             </div>
             <div class="field">
               <label for="noRomanReason">
-                {{ 'employee.field.noRomanReason' | transloco
-                }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+                {{ 'employee.field.noRomanReason' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
               </label>
               <select id="noRomanReason" class="input" formControlName="noRomanReason">
                 <option value="">{{ 'common.select' | transloco }}</option>
@@ -161,17 +110,9 @@
             </div>
             @if (form.controls.foreign.controls.noRomanReason.value === 'other') {
               <div class="field wide">
-                <label for="noRomanReasonText">{{
-                  'employee.field.noRomanReasonText' | transloco
-                }}</label>
-                <input
-                  id="noRomanReasonText"
-                  class="input"
-                  formControlName="noRomanReasonText"
-                  [class.is-invalid]="
-                    groupError('noRomanReasonTextRequired', 'foreign.noRomanReasonText')
-                  "
-                />
+                <label for="noRomanReasonText">{{ 'employee.field.noRomanReasonText' | transloco }}</label>
+                <input id="noRomanReasonText" class="input" formControlName="noRomanReasonText"
+                       [class.is-invalid]="groupError('noRomanReasonTextRequired', 'foreign.noRomanReasonText')" />
                 @if (groupError('noRomanReasonTextRequired', 'foreign.noRomanReasonText')) {
                   <span class="field-error">{{ 'employee.validation.required' | transloco }}</span>
                 }
@@ -182,17 +123,9 @@
 
         <!-- フリガナ：日本国籍も外国籍も、届書に書く読み -->
         <div class="field">
-          <label for="lastNameKana">{{
-            (isForeign() ? 'employee.field.filingLastKana' : 'employee.field.lastNameKana')
-              | transloco
-          }}</label>
-          <input
-            id="lastNameKana"
-            class="input"
-            formControlName="lastNameKana"
-            autocomplete="off"
-            [class.is-invalid]="errorOf('lastNameKana')"
-          />
+          <label for="lastNameKana">{{ (isForeign() ? 'employee.field.filingLastKana' : 'employee.field.lastNameKana') | transloco }}</label>
+          <input id="lastNameKana" class="input" formControlName="lastNameKana" autocomplete="off"
+                 [class.is-invalid]="errorOf('lastNameKana')" />
           @if (errorOf('lastNameKana'); as e) {
             <span class="field-error">{{ e | transloco }}</span>
           } @else if (isForeign()) {
@@ -201,23 +134,11 @@
         </div>
         <div class="field">
           <label for="firstNameKana">
-            {{
-              (isForeign() ? 'employee.field.filingFirstKana' : 'employee.field.firstNameKana')
-                | transloco
-            }}
-            @if (isForeign()) {
-              <span class="optional">{{ 'common.optional' | transloco }}</span>
-            }
+            {{ (isForeign() ? 'employee.field.filingFirstKana' : 'employee.field.firstNameKana') | transloco }}
+            @if (isForeign()) { <span class="optional">{{ 'common.optional' | transloco }}</span> }
           </label>
-          <input
-            id="firstNameKana"
-            class="input"
-            formControlName="firstNameKana"
-            autocomplete="off"
-            [class.is-invalid]="
-              errorOf('firstNameKana') || groupError('firstNameKanaRequired', 'firstNameKana')
-            "
-          />
+          <input id="firstNameKana" class="input" formControlName="firstNameKana" autocomplete="off"
+                 [class.is-invalid]="errorOf('firstNameKana') || groupError('firstNameKanaRequired', 'firstNameKana')" />
           @if (errorOf('firstNameKana'); as e) {
             <span class="field-error">{{ e | transloco }}</span>
           } @else if (groupError('firstNameKanaRequired', 'firstNameKana')) {
@@ -227,13 +148,8 @@
 
         <div class="field">
           <label for="birthDate">{{ 'employee.field.birthDate' | transloco }}</label>
-          <input
-            id="birthDate"
-            class="input"
-            type="date"
-            formControlName="birthDate"
-            [class.is-invalid]="errorOf('birthDate') || groupError('birthFuture', 'birthDate')"
-          />
+          <input id="birthDate" class="input" type="date" formControlName="birthDate"
+                 [class.is-invalid]="errorOf('birthDate') || groupError('birthFuture', 'birthDate')" />
           @if (errorOf('birthDate'); as e) {
             <span class="field-error">{{ e | transloco }}</span>
           } @else if (groupError('birthFuture', 'birthDate')) {
@@ -248,30 +164,20 @@
           @for (k of personNameKinds; track k) {
             <fieldset class="person-name" [formGroupName]="k">
               <legend>
-                {{ 'employee.personName.' + k | transloco
-                }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+                {{ 'employee.personName.' + k | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
               </legend>
               <div class="grid">
                 @for (p of personNameParts; track p) {
                   <div class="field">
                     <label [for]="k + '-' + p">{{ 'employee.personName.' + p | transloco }}</label>
-                    <input
-                      [id]="k + '-' + p"
-                      class="input"
-                      [formControlName]="p"
-                      autocomplete="off"
-                      [class.is-invalid]="errorOf('foreign.' + k + '.' + p)"
-                    />
-                    @if (errorOf('foreign.' + k + '.' + p); as e) {
-                      <span class="field-error">{{ e | transloco }}</span>
-                    }
+                    <input [id]="k + '-' + p" class="input" [formControlName]="p" autocomplete="off"
+                           [class.is-invalid]="errorOf('foreign.' + k + '.' + p)" />
+                    @if (errorOf('foreign.' + k + '.' + p); as e) { <span class="field-error">{{ e | transloco }}</span> }
                   </div>
                 }
               </div>
               @if (groupError(k + 'Incomplete', 'foreign.' + k + '.last')) {
-                <span class="field-error">{{
-                  'employee.validation.personNameIncomplete' | transloco
-                }}</span>
+                <span class="field-error">{{ 'employee.validation.personNameIncomplete' | transloco }}</span>
               }
             </fieldset>
           }
@@ -280,31 +186,21 @@
           <div class="grid">
             <div class="field">
               <label for="filingName">{{ 'employee.field.filingName' | transloco }}</label>
-              <select
-                id="filingName"
-                class="input"
-                formControlName="filingName"
-                [class.is-invalid]="groupError('filingNameMissing', 'foreign.filingName')"
-              >
+              <select id="filingName" class="input" formControlName="filingName"
+                      [class.is-invalid]="groupError('filingNameMissing', 'foreign.filingName')">
                 @for (n of filingNames; track n) {
                   <option [value]="n">{{ 'employee.filingName.' + n | transloco }}</option>
                 }
               </select>
               @if (groupError('filingNameMissing', 'foreign.filingName')) {
-                <span class="field-error">{{
-                  'employee.validation.filingNameMissing' | transloco
-                }}</span>
+                <span class="field-error">{{ 'employee.validation.filingNameMissing' | transloco }}</span>
               } @else {
                 <span class="hint">{{ 'employee.hint.filingName' | transloco }}</span>
               }
             </div>
           </div>
         </div>
-        <label class="check plain"
-          ><input type="checkbox" formControlName="sortByKana" />{{
-            'employee.field.sortByKana' | transloco
-          }}</label
-        >
+        <label class="check plain"><input type="checkbox" formControlName="sortByKana" />{{ 'employee.field.sortByKana' | transloco }}</label>
         <p class="hint">{{ 'employee.hint.sortByKana' | transloco }}</p>
       }
     </section>
@@ -317,16 +213,8 @@
           <div class="grid">
             <div class="field">
               <label for="nationality">{{ 'employee.field.nationality' | transloco }}</label>
-              <input
-                id="nationality"
-                class="input upper"
-                formControlName="nationality"
-                maxlength="2"
-                [class.is-invalid]="
-                  errorOf('foreign.nationality') ||
-                  groupError('nationalityRequired', 'foreign.nationality')
-                "
-              />
+              <input id="nationality" class="input upper" formControlName="nationality" maxlength="2"
+                     [class.is-invalid]="errorOf('foreign.nationality') || groupError('nationalityRequired', 'foreign.nationality')" />
               @if (errorOf('foreign.nationality'); as e) {
                 <span class="field-error">{{ e | transloco }}</span>
               } @else if (groupError('nationalityRequired', 'foreign.nationality')) {
@@ -336,16 +224,9 @@
               }
             </div>
             <div class="field">
-              <label for="residenceCardNumber"
-                >{{ 'employee.field.residenceCardNumber' | transloco
-                }}<span class="optional">{{ 'common.optional' | transloco }}</span></label
-              >
-              <input
-                id="residenceCardNumber"
-                class="input upper"
-                formControlName="residenceCardNumber"
-                [class.is-invalid]="errorOf('foreign.residenceCardNumber')"
-              />
+              <label for="residenceCardNumber">{{ 'employee.field.residenceCardNumber' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+              <input id="residenceCardNumber" class="input upper" formControlName="residenceCardNumber"
+                     [class.is-invalid]="errorOf('foreign.residenceCardNumber')" />
               @if (errorOf('foreign.residenceCardNumber'); as e) {
                 <span class="field-error">{{ e | transloco }}</span>
               } @else {
@@ -353,29 +234,15 @@
               }
             </div>
             <div class="field">
-              <label for="residenceStatus"
-                >{{ 'employee.field.residenceStatus' | transloco
-                }}<span class="optional">{{ 'common.optional' | transloco }}</span></label
-              >
+              <label for="residenceStatus">{{ 'employee.field.residenceStatus' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
               <input id="residenceStatus" class="input" formControlName="residenceStatus" />
             </div>
             <div class="field">
-              <label for="residenceExpiry"
-                >{{ 'employee.field.residenceExpiry' | transloco
-                }}<span class="optional">{{ 'common.optional' | transloco }}</span></label
-              >
-              <input
-                id="residenceExpiry"
-                class="input"
-                type="date"
-                formControlName="residenceExpiry"
-              />
+              <label for="residenceExpiry">{{ 'employee.field.residenceExpiry' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+              <input id="residenceExpiry" class="input" type="date" formControlName="residenceExpiry" />
             </div>
             <div class="field">
-              <label for="noAddressReason"
-                >{{ 'employee.field.noAddressReason' | transloco
-                }}<span class="optional">{{ 'common.optional' | transloco }}</span></label
-              >
+              <label for="noAddressReason">{{ 'employee.field.noAddressReason' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
               <select id="noAddressReason" class="input" formControlName="noAddressReason">
                 <option value="">{{ 'common.select' | transloco }}</option>
                 @for (r of noAddressReasons; track r) {
@@ -385,36 +252,17 @@
             </div>
           </div>
 
-          <label class="check plain"
-            ><input type="checkbox" formControlName="residentRegistered" />{{
-              'employee.field.residentRegistered' | transloco
-            }}</label
-          >
-          <label class="check plain"
-            ><input type="checkbox" formControlName="needsRomanNameFiling" />{{
-              'employee.field.needsRomanNameFiling' | transloco
-            }}</label
-          >
+          <label class="check plain"><input type="checkbox" formControlName="residentRegistered" />{{ 'employee.field.residentRegistered' | transloco }}</label>
+          <label class="check plain"><input type="checkbox" formControlName="needsRomanNameFiling" />{{ 'employee.field.needsRomanNameFiling' | transloco }}</label>
           <p class="hint">{{ 'employee.hint.needsRomanNameFiling' | transloco }}</p>
 
-          <label class="check plain"
-            ><input type="checkbox" formControlName="workPermit" />{{
-              'employee.field.workPermit' | transloco
-            }}</label
-          >
+          <label class="check plain"><input type="checkbox" formControlName="workPermit" />{{ 'employee.field.workPermit' | transloco }}</label>
           @if (form.controls.foreign.controls.workPermit.value) {
             <div class="grid">
               <div class="field">
-                <label for="workPermitHours">{{
-                  'employee.field.workPermitHours' | transloco
-                }}</label>
-                <input
-                  id="workPermitHours"
-                  class="input"
-                  formControlName="workPermitHours"
-                  inputmode="decimal"
-                  [class.is-invalid]="errorOf('foreign.workPermitHours')"
-                />
+                <label for="workPermitHours">{{ 'employee.field.workPermitHours' | transloco }}</label>
+                <input id="workPermitHours" class="input" formControlName="workPermitHours" inputmode="decimal"
+                       [class.is-invalid]="errorOf('foreign.workPermitHours')" />
                 @if (errorOf('foreign.workPermitHours'); as e) {
                   <span class="field-error">{{ e | transloco }}</span>
                 } @else {
@@ -424,22 +272,13 @@
             </div>
           }
 
-          <label class="check plain"
-            ><input type="checkbox" formControlName="hasCertificate" />{{
-              'employee.field.hasCertificate' | transloco
-            }}</label
-          >
+          <label class="check plain"><input type="checkbox" formControlName="hasCertificate" />{{ 'employee.field.hasCertificate' | transloco }}</label>
           @if (form.controls.foreign.controls.hasCertificate.value) {
             <div class="grid">
               <div class="field">
                 <label for="certCountry">{{ 'employee.field.certCountry' | transloco }}</label>
-                <input
-                  id="certCountry"
-                  class="input upper"
-                  formControlName="certCountry"
-                  maxlength="2"
-                  [class.is-invalid]="errorOf('foreign.certCountry')"
-                />
+                <input id="certCountry" class="input upper" formControlName="certCountry" maxlength="2"
+                       [class.is-invalid]="errorOf('foreign.certCountry')" />
                 @if (errorOf('foreign.certCountry'); as e) {
                   <span class="field-error">{{ e | transloco }}</span>
                 } @else {
@@ -459,28 +298,16 @@
                 <input id="certFrom" class="input" type="date" formControlName="certFrom" />
               </div>
               <div class="field">
-                <label for="certTo"
-                  >{{ 'employee.field.certTo' | transloco
-                  }}<span class="optional">{{ 'common.optional' | transloco }}</span></label
-                >
-                <input
-                  id="certTo"
-                  class="input"
-                  type="date"
-                  formControlName="certTo"
-                  [class.is-invalid]="groupError('certificateOrder', 'foreign.certTo')"
-                />
+                <label for="certTo">{{ 'employee.field.certTo' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+                <input id="certTo" class="input" type="date" formControlName="certTo"
+                       [class.is-invalid]="groupError('certificateOrder', 'foreign.certTo')" />
                 @if (groupError('certificateOrder', 'foreign.certTo')) {
-                  <span class="field-error">{{
-                    'employee.validation.certificateOrder' | transloco
-                  }}</span>
+                  <span class="field-error">{{ 'employee.validation.certificateOrder' | transloco }}</span>
                 }
               </div>
             </div>
             @if (groupError('certificateRequired', 'foreign.certCountry')) {
-              <span class="field-error">{{
-                'employee.validation.certificateRequired' | transloco
-              }}</span>
+              <span class="field-error">{{ 'employee.validation.certificateRequired' | transloco }}</span>
             }
           }
           <p class="hint">{{ 'employee.hint.foreign' | transloco }}</p>
@@ -494,33 +321,18 @@
       <div class="grid">
         <div class="field">
           <label for="hireDate">{{ 'employee.field.hireDate' | transloco }}</label>
-          <input
-            id="hireDate"
-            class="input"
-            type="date"
-            formControlName="hireDate"
-            [class.is-invalid]="errorOf('hireDate')"
-          />
-          @if (errorOf('hireDate'); as e) {
-            <span class="field-error">{{ e | transloco }}</span>
-          }
+          <input id="hireDate" class="input" type="date" formControlName="hireDate"
+                 [class.is-invalid]="errorOf('hireDate')" />
+          @if (errorOf('hireDate'); as e) { <span class="field-error">{{ e | transloco }}</span> }
         </div>
         <div class="field">
           <label for="retireDate">
-            {{ 'employee.field.retireDate' | transloco
-            }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+            {{ 'employee.field.retireDate' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
           </label>
-          <input
-            id="retireDate"
-            class="input"
-            type="date"
-            formControlName="retireDate"
-            [class.is-invalid]="groupError('retireBeforeHire', 'retireDate')"
-          />
+          <input id="retireDate" class="input" type="date" formControlName="retireDate"
+                 [class.is-invalid]="groupError('retireBeforeHire', 'retireDate')" />
           @if (groupError('retireBeforeHire', 'retireDate')) {
-            <span class="field-error">{{
-              'employee.validation.retireBeforeHire' | transloco
-            }}</span>
+            <span class="field-error">{{ 'employee.validation.retireBeforeHire' | transloco }}</span>
           }
         </div>
         @if (form.controls.retireDate.value) {
@@ -551,40 +363,25 @@
           <div class="grid">
             <div class="field">
               <label [for]="k + 'Acquired'">{{ 'employee.field.acquiredDate' | transloco }}</label>
-              <input
-                [id]="k + 'Acquired'"
-                class="input"
-                type="date"
-                formControlName="acquiredDate"
-                [class.is-invalid]="groupError(k + 'AcquiredRequired', k + '.acquiredDate')"
-              />
+              <input [id]="k + 'Acquired'" class="input" type="date" formControlName="acquiredDate"
+                     [class.is-invalid]="groupError(k + 'AcquiredRequired', k + '.acquiredDate')" />
               @if (groupError(k + 'AcquiredRequired', k + '.acquiredDate')) {
                 <span class="field-error">{{ 'employee.validation.required' | transloco }}</span>
               }
             </div>
             <div class="field">
               <label [for]="k + 'Lost'">
-                {{ 'employee.field.lostDate' | transloco
-                }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+                {{ 'employee.field.lostDate' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
               </label>
-              <input
-                [id]="k + 'Lost'"
-                class="input"
-                type="date"
-                formControlName="lostDate"
-                [class.is-invalid]="groupError(k + 'LostBeforeAcquired', k + '.lostDate')"
-              />
+              <input [id]="k + 'Lost'" class="input" type="date" formControlName="lostDate"
+                     [class.is-invalid]="groupError(k + 'LostBeforeAcquired', k + '.lostDate')" />
               @if (groupError(k + 'LostBeforeAcquired', k + '.lostDate')) {
-                <span class="field-error">{{
-                  'employee.validation.lostBeforeAcquired' | transloco
-                }}</span>
+                <span class="field-error">{{ 'employee.validation.lostBeforeAcquired' | transloco }}</span>
               }
             </div>
             @if (form.get(k + '.lostDate')?.value) {
               <div class="field">
-                <label [for]="k + 'LossReason'">{{
-                  'employee.field.lossReason' | transloco
-                }}</label>
+                <label [for]="k + 'LossReason'">{{ 'employee.field.lossReason' | transloco }}</label>
                 <select [id]="k + 'LossReason'" class="input" formControlName="lossReason">
                   <option value="">{{ 'common.select' | transloco }}</option>
                   @for (r of lossReasons; track r) {
@@ -610,28 +407,15 @@
         </div>
         <div class="field">
           <label for="optInDate">
-            {{ 'employee.field.optInDate' | transloco
-            }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+            {{ 'employee.field.optInDate' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
           </label>
           <input id="optInDate" class="input" type="date" formControlName="optInDate" />
           <span class="hint">{{ 'employee.hint.optIn' | transloco }}</span>
         </div>
       </div>
-      <label class="check plain"
-        ><input type="checkbox" formControlName="multipleOffices" />{{
-          'employee.field.multipleOffices' | transloco
-        }}</label
-      >
-      <label class="check plain"
-        ><input type="checkbox" formControlName="rehired" />{{
-          'employee.field.rehired' | transloco
-        }}</label
-      >
-      <label class="check plain"
-        ><input type="checkbox" formControlName="needsConfirmationCard" />{{
-          'employee.field.needsConfirmationCard' | transloco
-        }}</label
-      >
+      <label class="check plain"><input type="checkbox" formControlName="multipleOffices" />{{ 'employee.field.multipleOffices' | transloco }}</label>
+      <label class="check plain"><input type="checkbox" formControlName="rehired" />{{ 'employee.field.rehired' | transloco }}</label>
+      <label class="check plain"><input type="checkbox" formControlName="needsConfirmationCard" />{{ 'employee.field.needsConfirmationCard' | transloco }}</label>
     </section>
 
     <!-- 届出の番号 -->
@@ -641,31 +425,17 @@
       <div class="grid">
         <div class="field">
           <label for="insuredNumber">
-            {{ 'employee.field.insuredNumber' | transloco
-            }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+            {{ 'employee.field.insuredNumber' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
           </label>
-          <input
-            id="insuredNumber"
-            class="input"
-            formControlName="insuredNumber"
-            [class.is-invalid]="errorOf('insuredNumber')"
-          />
-          @if (errorOf('insuredNumber'); as e) {
-            <span class="field-error">{{ e | transloco }}</span>
-          }
+          <input id="insuredNumber" class="input" formControlName="insuredNumber" [class.is-invalid]="errorOf('insuredNumber')" />
+          @if (errorOf('insuredNumber'); as e) { <span class="field-error">{{ e | transloco }}</span> }
         </div>
         <div class="field">
           <label for="basicPensionNumber">
-            {{ 'employee.field.basicPensionNumber' | transloco
-            }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+            {{ 'employee.field.basicPensionNumber' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
           </label>
-          <input
-            id="basicPensionNumber"
-            class="input"
-            formControlName="basicPensionNumber"
-            inputmode="numeric"
-            [class.is-invalid]="errorOf('basicPensionNumber')"
-          />
+          <input id="basicPensionNumber" class="input" formControlName="basicPensionNumber" inputmode="numeric"
+                 [class.is-invalid]="errorOf('basicPensionNumber')" />
           @if (errorOf('basicPensionNumber'); as e) {
             <span class="field-error">{{ e | transloco }}</span>
           } @else {
@@ -680,17 +450,9 @@
       <h2>{{ 'employee.section.contact' | transloco }}</h2>
       <div class="grid">
         <div class="field">
-          <label for="postalCode"
-            >{{ 'employee.field.postalCode' | transloco
-            }}<span class="optional">{{ 'common.optional' | transloco }}</span></label
-          >
-          <input
-            id="postalCode"
-            class="input"
-            formControlName="postalCode"
-            inputmode="numeric"
-            [class.is-invalid]="errorOf('contact.postalCode')"
-          />
+          <label for="postalCode">{{ 'employee.field.postalCode' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="postalCode" class="input" formControlName="postalCode" inputmode="numeric"
+                 [class.is-invalid]="errorOf('contact.postalCode')" />
           @if (errorOf('contact.postalCode'); as e) {
             <span class="field-error">{{ e | transloco }}</span>
           } @else {
@@ -699,24 +461,12 @@
         </div>
         <div class="field"></div>
         <div class="field wide">
-          <label for="address"
-            >{{ 'employee.field.address' | transloco
-            }}<span class="optional">{{ 'common.optional' | transloco }}</span></label
-          >
+          <label for="address">{{ 'employee.field.address' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
           <input id="address" class="input" formControlName="address" />
         </div>
         <div class="field">
-          <label for="phone"
-            >{{ 'employee.field.phone' | transloco
-            }}<span class="optional">{{ 'common.optional' | transloco }}</span></label
-          >
-          <input
-            id="phone"
-            class="input"
-            formControlName="phone"
-            inputmode="tel"
-            [class.is-invalid]="errorOf('contact.phone')"
-          />
+          <label for="phone">{{ 'employee.field.phone' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="phone" class="input" formControlName="phone" inputmode="tel" [class.is-invalid]="errorOf('contact.phone')" />
           @if (errorOf('contact.phone'); as e) {
             <span class="field-error">{{ e | transloco }}</span>
           } @else {
@@ -724,20 +474,9 @@
           }
         </div>
         <div class="field">
-          <label for="email"
-            >{{ 'employee.field.email' | transloco
-            }}<span class="optional">{{ 'common.optional' | transloco }}</span></label
-          >
-          <input
-            id="email"
-            class="input"
-            formControlName="email"
-            inputmode="email"
-            [class.is-invalid]="errorOf('contact.email')"
-          />
-          @if (errorOf('contact.email'); as e) {
-            <span class="field-error">{{ e | transloco }}</span>
-          }
+          <label for="email">{{ 'employee.field.email' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="email" class="input" formControlName="email" inputmode="email" [class.is-invalid]="errorOf('contact.email')" />
+          @if (errorOf('contact.email'); as e) { <span class="field-error">{{ e | transloco }}</span> }
         </div>
       </div>
       <p class="hint">{{ 'employee.hint.email' | transloco }}</p>
@@ -748,17 +487,11 @@
       <h2>{{ 'employee.section.commute' | transloco }}</h2>
       <div class="grid">
         <div class="field">
-          <label for="commuteMethod"
-            >{{ 'employee.field.commuteMethod' | transloco
-            }}<span class="optional">{{ 'common.optional' | transloco }}</span></label
-          >
+          <label for="commuteMethod">{{ 'employee.field.commuteMethod' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
           <input id="commuteMethod" class="input" formControlName="method" />
         </div>
         <div class="field wide">
-          <label for="commuteRoute"
-            >{{ 'employee.field.commuteRoute' | transloco
-            }}<span class="optional">{{ 'common.optional' | transloco }}</span></label
-          >
+          <label for="commuteRoute">{{ 'employee.field.commuteRoute' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
           <input id="commuteRoute" class="input" formControlName="route" />
         </div>
       </div>
@@ -769,24 +502,15 @@
       <h2>{{ 'employee.section.bank' | transloco }}</h2>
       <div class="grid">
         <div class="field">
-          <label for="bankName"
-            >{{ 'employee.field.bankName' | transloco
-            }}<span class="optional">{{ 'common.optional' | transloco }}</span></label
-          >
+          <label for="bankName">{{ 'employee.field.bankName' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
           <input id="bankName" class="input" formControlName="bankName" />
         </div>
         <div class="field">
-          <label for="branchName"
-            >{{ 'employee.field.branchName' | transloco
-            }}<span class="optional">{{ 'common.optional' | transloco }}</span></label
-          >
+          <label for="branchName">{{ 'employee.field.branchName' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
           <input id="branchName" class="input" formControlName="branchName" />
         </div>
         <div class="field">
-          <label for="accountType"
-            >{{ 'employee.field.accountType' | transloco
-            }}<span class="optional">{{ 'common.optional' | transloco }}</span></label
-          >
+          <label for="accountType">{{ 'employee.field.accountType' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
           <select id="accountType" class="input" formControlName="accountType">
             <option value="">{{ 'common.select' | transloco }}</option>
             @for (t of accountTypes; track t) {
@@ -795,17 +519,9 @@
           </select>
         </div>
         <div class="field">
-          <label for="accountNumber"
-            >{{ 'employee.field.accountNumber' | transloco
-            }}<span class="optional">{{ 'common.optional' | transloco }}</span></label
-          >
-          <input
-            id="accountNumber"
-            class="input"
-            formControlName="accountNumber"
-            inputmode="numeric"
-            [class.is-invalid]="errorOf('bankAccount.accountNumber')"
-          />
+          <label for="accountNumber">{{ 'employee.field.accountNumber' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="accountNumber" class="input" formControlName="accountNumber" inputmode="numeric"
+                 [class.is-invalid]="errorOf('bankAccount.accountNumber')" />
           @if (errorOf('bankAccount.accountNumber'); as e) {
             <span class="field-error">{{ e | transloco }}</span>
           } @else {
@@ -813,10 +529,7 @@
           }
         </div>
         <div class="field wide">
-          <label for="holderKana"
-            >{{ 'employee.field.holderKana' | transloco
-            }}<span class="optional">{{ 'common.optional' | transloco }}</span></label
-          >
+          <label for="holderKana">{{ 'employee.field.holderKana' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
           <input id="holderKana" class="input" formControlName="holderKana" />
         </div>
       </div>

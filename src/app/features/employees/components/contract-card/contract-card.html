@@ -1,0 +1,266 @@
+<section class="card">
+  <div class="head">
+    <h2>{{ 'contract.title' | transloco }}</h2>
+    @if (context.isAdmin() && editing() === null) {
+      <button type="button" class="btn" (click)="startAdd()">
+        {{ (rows().length === 0 ? 'contract.addFirst' : 'contract.add') | transloco }}
+      </button>
+    }
+  </div>
+
+  @if (errorKey()) {
+    <div class="alert alert-danger">{{ errorKey()! | transloco }}</div>
+  }
+
+  <!-- 追加・編集のフォーム -->
+  @if (editing() !== null) {
+    <form class="editor" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <!-- ① 契約の形 -->
+      <h3>{{ 'contract.group.basic' | transloco }}</h3>
+      <div class="grid">
+        <div class="field">
+          <label for="ct-from">{{ 'contract.field.from' | transloco }}</label>
+          <input id="ct-from" class="input" type="date" formControlName="from" [class.is-invalid]="errorOf('from')" />
+          @if (errorOf('from'); as e) {
+            <span class="field-error">{{ e | transloco }}</span>
+          } @else if (warnings().includes('beforeHire')) {
+            <span class="hint warn">{{ 'contract.warning.beforeHire' | transloco }}</span>
+          } @else if (editing() === 'new' && rows().length > 0) {
+            <span class="hint">{{ 'contract.hint.copied' | transloco }}</span>
+          }
+        </div>
+        <div class="field">
+          <label for="ct-type">{{ 'contract.field.employmentType' | transloco }}</label>
+          <select id="ct-type" class="input" formControlName="employmentType">
+            @for (t of employmentTypes; track t) {
+              <option [value]="t">{{ 'contract.employmentType.' + t | transloco }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="ct-pay">{{ 'contract.field.payType' | transloco }}</label>
+          <select id="ct-pay" class="input" formControlName="payType">
+            @for (t of payTypes; track t) {
+              <option [value]="t">{{ 'contract.payType.' + t | transloco }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- ② 働く量 -->
+      <h3>{{ 'contract.group.hours' | transloco }}</h3>
+      <div class="units" role="radiogroup" [attr.aria-label]="'contract.field.hoursUnit' | transloco">
+        @for (u of hoursUnits; track u) {
+          <label class="radio">
+            <input type="radio" formControlName="hoursUnit" [value]="u" />{{ 'contract.hoursUnit.' + u | transloco }}
+          </label>
+        }
+      </div>
+      <div class="grid">
+        @if (form.controls.hoursUnit.value === 'cycle') {
+          <div class="field">
+            <label for="ct-weeks">{{ 'contract.field.cycleWeeks' | transloco }}</label>
+            <input id="ct-weeks" class="input num" inputmode="numeric" formControlName="cycleWeeks"
+                   [class.is-invalid]="errorOf('cycleWeeks')" />
+            @if (errorOf('cycleWeeks'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+        }
+        <div class="field">
+          <label for="ct-hours">{{ 'contract.hoursLabel.' + form.controls.hoursUnit.value | transloco }}</label>
+          <input id="ct-hours" class="input num" inputmode="decimal" formControlName="hours"
+                 [class.is-invalid]="errorOf('hours')" />
+          @if (errorOf('hours'); as e) {
+            <span class="field-error">{{ e | transloco }}</span>
+          } @else if (weeklyPreview(); as w) {
+            <span class="hint strong">{{ 'contract.hint.weekly' | transloco: { hours: w } }}</span>
+          } @else {
+            <span class="hint">{{ 'contract.hint.hours.' + form.controls.hoursUnit.value | transloco }}</span>
+          }
+        </div>
+        <div class="field">
+          <label for="ct-days">{{ 'contract.field.monthlyDays' | transloco }}</label>
+          <input id="ct-days" class="input num" inputmode="numeric" formControlName="monthlyDays"
+                 [class.is-invalid]="errorOf('monthlyDays')" />
+          @if (errorOf('monthlyDays'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+        </div>
+      </div>
+
+      <!-- ③ お金 -->
+      <h3>{{ 'contract.group.wage' | transloco }}</h3>
+      <div class="grid">
+        @if (wageField(); as wf) {
+          <div class="field">
+            <label for="ct-unit-wage">{{ 'contract.field.' + wf | transloco }}</label>
+            <input id="ct-unit-wage" class="input num" inputmode="numeric" [formControlName]="wf"
+                   [class.is-invalid]="errorOf(wf)" />
+            @if (errorOf(wf); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+        }
+        <div class="field">
+          <label for="ct-scheduled">{{ 'contract.field.scheduledWage' | transloco }}</label>
+          <input id="ct-scheduled" class="input num" inputmode="numeric" formControlName="scheduledWage"
+                 [class.is-invalid]="errorOf('scheduledWage')" />
+          @if (errorOf('scheduledWage'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          @if (candidate(); as c) {
+            <button type="button" class="candidate" (click)="useCandidate()">
+              {{ 'contract.candidate.' + form.controls.payType.value | transloco: { amount: yen(c) } }}
+            </button>
+          }
+        </div>
+        <div class="field">
+          <label for="ct-cash">{{ 'contract.field.expectedCash' | transloco }}</label>
+          <input id="ct-cash" class="input num" inputmode="numeric" formControlName="expectedCash"
+                 [class.is-invalid]="errorOf('expectedCash')" />
+          @if (errorOf('expectedCash'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+        </div>
+        <div class="field">
+          <label for="ct-inkind">{{ 'contract.field.expectedInKind' | transloco }}</label>
+          <input id="ct-inkind" class="input num" inputmode="numeric" formControlName="expectedInKind"
+                 [class.is-invalid]="errorOf('expectedInKind')" />
+          @if (errorOf('expectedInKind'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+        </div>
+      </div>
+      <ul class="hints">
+        <li>{{ 'contract.hint.scheduledWage' | transloco }}</li>
+        <li>{{ 'contract.hint.expected' | transloco }}</li>
+      </ul>
+
+      <!-- ④ 期間とその他 -->
+      <h3>{{ 'contract.group.period' | transloco }}</h3>
+      <div class="grid">
+        <div class="field">
+          <label for="ct-end">
+            {{ 'contract.field.periodEnd' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+          </label>
+          <input id="ct-end" class="input" type="date" formControlName="periodEnd" [class.is-invalid]="errorOf('periodEnd')" />
+          @if (errorOf('periodEnd'); as e) {
+            <span class="field-error">{{ e | transloco }}</span>
+          } @else {
+            <span class="hint">{{ 'contract.hint.periodEnd' | transloco }}</span>
+          }
+        </div>
+        @if (form.controls.periodEnd.value) {
+          <div class="field">
+            <label for="ct-renewal">{{ 'contract.field.renewal' | transloco }}</label>
+            <select id="ct-renewal" class="input" formControlName="renewal">
+              @for (r of renewalTypes; track r) {
+                <option [value]="r">{{ 'contract.renewal.' + r | transloco }}</option>
+              }
+            </select>
+          </div>
+        }
+      </div>
+
+      <button type="button" class="toggle" [attr.aria-expanded]="showMore()" (click)="showMore.set(!showMore())">
+        {{ (showMore() ? 'contract.more.close' : 'contract.more.open') | transloco }}
+      </button>
+      @if (showMore()) {
+        <div class="grid">
+          <div class="field">
+            <label for="ct-student">{{ 'contract.field.student' | transloco }}</label>
+            <select id="ct-student" class="input" formControlName="student">
+              @for (s of studentTypes; track s) {
+                <option [value]="s">{{ 'contract.student.' + s | transloco }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="ct-dispatch">{{ 'contract.field.dispatch' | transloco }}</label>
+            <select id="ct-dispatch" class="input" formControlName="dispatch">
+              @for (d of dispatchTypes; track d) {
+                <option [value]="d">{{ 'contract.dispatch.' + d | transloco }}</option>
+              }
+            </select>
+          </div>
+          <div class="field wide">
+            <label for="ct-note">
+              {{ 'contract.field.note' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+            </label>
+            <input id="ct-note" class="input" formControlName="note" maxlength="500" />
+          </div>
+        </div>
+        <label class="check"><input type="checkbox" formControlName="minimumWageReduction" />{{ 'contract.field.minimumWageReduction' | transloco }}</label>
+        <p class="hint">{{ 'contract.hint.student' | transloco }}</p>
+      }
+
+      @if (confirmingOverwrite()) {
+        <div class="alert alert-warning">{{ 'contract.overwrite' | transloco: { from: form.controls.from.value } }}</div>
+      }
+      <div class="actions">
+        <button type="button" class="btn" (click)="cancel()">{{ 'common.cancel' | transloco }}</button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          {{ (confirmingOverwrite() ? 'contract.overwriteButton' : 'common.save') | transloco }}
+        </button>
+      </div>
+    </form>
+  }
+
+  <!-- 履歴（新しい順） -->
+  @if (loading()) {
+    <p class="muted">{{ 'common.loading' | transloco }}</p>
+  } @else if (rows().length === 0) {
+    <p class="muted">{{ 'contract.empty' | transloco }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'contract.field.from' | transloco }}</th>
+            <th>{{ 'contract.col.type' | transloco }}</th>
+            <th class="num">{{ 'contract.col.weekly' | transloco }}</th>
+            <th class="num">{{ 'contract.col.days' | transloco }}</th>
+            <th class="num">{{ 'contract.col.unitWage' | transloco }}</th>
+            <th class="num">{{ 'contract.field.scheduledWage' | transloco }}</th>
+            <th>{{ 'contract.col.period' | transloco }}</th>
+            @if (context.isAdmin()) {
+              <th><span class="sr-only">{{ 'common.edit' | transloco }}</span></th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.from) {
+            <tr [class.current]="r.from === currentFrom()">
+              <td class="mono">
+                {{ r.from }}〜
+                @if (r.from === currentFrom()) { <span class="badge">{{ 'contract.current' | transloco }}</span> }
+              </td>
+              <td>
+                {{ 'contract.employmentType.' + r.employmentType | transloco }}・{{ 'contract.payType.' + r.payType | transloco }}
+                @if (r.student === 'daytime') { <span class="tag">{{ 'contract.student.daytime' | transloco }}</span> }
+                @if (r.dispatch !== 'none') { <span class="tag">{{ 'contract.dispatch.' + r.dispatch | transloco }}</span> }
+              </td>
+              <td class="num mono">{{ hoursText(r.weeklyMinutes) }}</td>
+              <td class="num mono">{{ r.monthlyDays }}</td>
+              <td class="num mono">{{ unitWage(r) }}</td>
+              <td class="num mono">{{ yen(r.scheduledWage) }}</td>
+              <td class="mono">
+                @if (r.periodEnd) {
+                  〜{{ r.periodEnd }}（{{ 'contract.renewal.' + r.renewal | transloco }}）
+                } @else {
+                  {{ 'contract.noPeriod' | transloco }}
+                }
+              </td>
+              @if (context.isAdmin()) {
+                <td class="row-actions">
+                  @if (confirmingDelete() === r.from) {
+                    <button type="button" class="link danger" [disabled]="saving()" (click)="remove(r.from)">
+                      {{ 'contract.confirmDelete' | transloco }}
+                    </button>
+                    <button type="button" class="link" (click)="confirmingDelete.set(null)">{{ 'common.cancel' | transloco }}</button>
+                  } @else {
+                    <button type="button" class="link" [disabled]="editing() !== null" (click)="startEdit(r)">
+                      {{ 'common.edit' | transloco }}
+                    </button>
+                    <button type="button" class="link" [disabled]="editing() !== null" (click)="confirmingDelete.set(r.from)">
+                      {{ 'common.delete' | transloco }}
+                    </button>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

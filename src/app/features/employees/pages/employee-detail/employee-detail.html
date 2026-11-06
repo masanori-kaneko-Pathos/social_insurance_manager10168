@@ -44,6 +44,9 @@
       <app-remuneration-card [employee]="e" (changed)="premiumCard.reload()" />
     </section>
 
+    <!-- 雇用契約の履歴 -->
+    <app-contract-card [employee]="e" />
+
     <!-- そのほかの情報（見るだけ。直すときは「編集」から） -->
     <section class="card">
       <h2>{{ 'employee.section.more' | transloco }}</h2>

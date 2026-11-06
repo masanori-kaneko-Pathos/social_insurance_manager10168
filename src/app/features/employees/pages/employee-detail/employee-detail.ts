@@ -10,6 +10,7 @@ import { RemunerationCard } from '../../components/remuneration-card/remuneratio
 import { PremiumCard } from '../../../premiums/components/premium-card/premium-card';
 import { BonusCard } from '../../../premiums/components/bonus-card/bonus-card';
 import { LeaveCard } from '../../components/leave-card/leave-card';
+import { ContractCard } from '../../components/contract-card/contract-card';
 import { exemptMonth } from '../../logic/leave';
 import { PayrollCard } from '../../../payrolls/components/payroll-card/payroll-card';
 import { formatPostalCode } from '../../../../shared/utils/text';
@@ -22,6 +23,7 @@ type Mode = 'fiscal' | 'calendar' | 'last12';
     RouterLink,
     TranslocoPipe,
     RemunerationCard,
+    ContractCard,
     PremiumCard,
     BonusCard,
     LeaveCard,
