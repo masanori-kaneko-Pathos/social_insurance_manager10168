@@ -1,0 +1,161 @@
+<a class="back" [routerLink]="['/o', context.current()?.id, 'payrolls']">
+  ← {{ 'payroll.listTitle' | transloco }}
+</a>
+
+<div class="page-head">
+  <div>
+    <h1>{{ 'payroll.monthTitle' | transloco: { month: month() } }}</h1>
+    @if (period(); as p) {
+      <p class="lead">
+        {{ 'payroll.monthLead' | transloco: { start: md(p.start), end: md(p.end), days: periodDays() } }}
+      </p>
+    }
+  </div>
+  <div class="month-nav">
+    <a class="btn" [routerLink]="['/o', context.current()?.id, 'payrolls', prevMonth()]" queryParamsHandling="preserve">
+      ← {{ prevMonth() }}
+    </a>
+    <a class="btn" [routerLink]="['/o', context.current()?.id, 'payrolls', nextMonth()]" queryParamsHandling="preserve">
+      {{ nextMonth() }} →
+    </a>
+  </div>
+</div>
+
+@if (loading()) {
+  <p class="muted">{{ 'common.loading' | transloco }}</p>
+} @else if (errorKey() === 'payroll.error.load' || errorKey() === 'payroll.error.badMonth') {
+  <div class="alert alert-danger">{{ errorKey()! | transloco }}</div>
+} @else if (views().length === 0) {
+  <section class="card empty">
+    <p>{{ 'payroll.emptyMonth' | transloco }}</p>
+  </section>
+} @else {
+  @if (isFuture()) {
+    <div class="alert alert-warning">{{ 'payroll.futureMonth' | transloco }}</div>
+  }
+  @if (!context.isAdmin()) {
+    <p class="muted">{{ 'payroll.readonly' | transloco }}</p>
+  }
+
+  <div class="toolbar">
+    <a [routerLink]="[]" [queryParams]="{ all: showAll() ? null : 1 }" queryParamsHandling="merge">
+      {{ (showAll() ? 'payroll.showBasic' : 'payroll.showAll') | transloco }}
+    </a>
+    @if (context.isAdmin()) {
+      <button type="button" class="btn" (click)="fillEmptyDays()">
+        {{ 'payroll.fillEmptyDays' | transloco }}
+      </button>
+    }
+  </div>
+
+  <div class="card table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ 'payroll.col.employee' | transloco }}</th>
+          <th class="num">{{ 'payroll.col.cash' | transloco }}</th>
+          <th class="num">{{ 'payroll.col.fixed' | transloco }}</th>
+          <th class="num">{{ 'payroll.col.days' | transloco }}</th>
+          @if (showAll()) {
+            <th class="num">{{ 'payroll.col.inKind' | transloco }}</th>
+            <th class="num">{{ 'payroll.col.retro' | transloco }}</th>
+            <th class="num">{{ 'payroll.col.absentDays' | transloco }}</th>
+            <th class="num">{{ 'payroll.col.hours' | transloco }}</th>
+            <th>{{ 'payroll.col.prorated' | transloco }}</th>
+            <th>{{ 'payroll.col.state' | transloco }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (v of views(); track v.employee.id) {
+          <tr [formGroup]="v.form" [class.has-error]="rowErrors().has(v.employee.id)">
+            <td>
+              <a class="name" [routerLink]="['/o', context.current()?.id, 'employees', v.employee.id]">
+                {{ name(v.employee) }}
+              </a>
+              @if (v.employee.employeeNumber) {
+                <span class="sub">{{ v.employee.employeeNumber }}</span>
+              }
+              <div class="tags">
+                @if (!v.row.saved) {
+                  <span class="badge badge-sub">{{ 'payroll.tag.notSaved' | transloco }}</span>
+                }
+                @if (!v.row.insured) {
+                  <span class="badge badge-sub">{{ 'payroll.tag.notInsured' | transloco }}</span>
+                }
+                @if (v.row.partial) {
+                  <span class="badge badge-warn">{{ 'payroll.tag.partial' | transloco }}</span>
+                }
+                @if (extraHidden(v)) {
+                  <span class="badge badge-info">{{ 'payroll.tag.extra' | transloco }}</span>
+                }
+              </div>
+            </td>
+            <td class="num"><input class="input num w-money" formControlName="cash" inputmode="numeric" /></td>
+            <td class="num"><input class="input num w-money" formControlName="fixed" inputmode="numeric" /></td>
+            <td class="num">
+              <div class="days">
+                <input class="input num w-days" formControlName="days" inputmode="numeric" />
+                @if (context.isAdmin()) {
+                  <button
+                    type="button"
+                    class="btn btn-small"
+                    (click)="fillCandidate(v)"
+                    [title]="'payroll.candidateTitle' | transloco"
+                  >
+                    {{ 'payroll.candidate' | transloco: { days: candidate(v) } }}
+                  </button>
+                }
+              </div>
+            </td>
+            @if (showAll()) {
+              <td class="num"><input class="input num w-money" formControlName="inKind" inputmode="numeric" /></td>
+              <td class="num"><input class="input num w-money" formControlName="retro" inputmode="numeric" /></td>
+              <td class="num"><input class="input num w-days" formControlName="absentDays" inputmode="numeric" /></td>
+              <td class="num"><input class="input num w-hours" formControlName="hours" placeholder="160:30" /></td>
+              <td><input type="checkbox" formControlName="prorated" /></td>
+              <td>
+                <select class="input" formControlName="state">
+                  @for (s of states; track s) {
+                    <option [value]="s">{{ 'payroll.state.' + s | transloco }}</option>
+                  }
+                </select>
+              </td>
+            }
+          </tr>
+          @if (rowErrors().get(v.employee.id); as errs) {
+            <tr class="error-row">
+              <td [attr.colspan]="showAll() ? 10 : 4">
+                @for (e of errs; track e) {
+                  <span>{{ 'payroll.rowError.' + e | transloco }}</span>
+                }
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (errorKey(); as key) {
+    <div class="alert alert-danger">{{ key | transloco }}</div>
+  }
+  @if (savedCount() !== null) {
+    <div class="alert alert-success">{{ 'payroll.savedCount' | transloco: { count: savedCount() } }}</div>
+  }
+
+  @if (context.isAdmin()) {
+    <div class="actions">
+      <button type="button" class="btn btn-primary" (click)="save()" [disabled]="saving()">
+        {{ (saving() ? 'payroll.saving' : 'payroll.save') | transloco }}
+      </button>
+    </div>
+  }
+
+  <ul class="hint">
+    <li>{{ 'payroll.hint.cash' | transloco }}</li>
+    <li>{{ 'payroll.hint.fixed' | transloco }}</li>
+    <li>{{ 'payroll.hint.days' | transloco }}</li>
+    <li>{{ 'payroll.hint.blank' | transloco }}</li>
+  </ul>
+}

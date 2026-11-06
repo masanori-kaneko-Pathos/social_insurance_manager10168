@@ -345,11 +345,11 @@
   },
   "premium": {
     "title": "Premiums (monthly)",
-    "premium.method": {
+    "method": {
       "payroll": "Deducted from pay",
       "cash": "Paid in cash"
     },
-    "premium.rounding": {
+    "rounding": {
       "combined": "health items rounded together",
       "separate": "health items rounded separately"
     },
@@ -387,7 +387,7 @@
     "prev": "Previous month",
     "next": "Next month",
     "thisMonth": "This month",
-    "premiumList.payMonth": "Deducted from pay in {{y}}-{{m}}",
+    "payMonth": "Deducted from pay in {{y}}-{{m}}",
     "summary": "Insured: {{count}}",
     "hidden": "({{count}} not insured this month are hidden)",
     "changedCount": "Changed from last month: {{count}}",
@@ -551,6 +551,84 @@
       "overlap": "This overlaps another leave.",
       "tooMany": "Up to 20 leaves can be registered.",
       "save": "Couldn't save. Try again later."
+    }
+  },
+  "payroll": {
+    "listTitle": "Payroll records",
+    "listLead": "Enter the payroll results (total pay, fixed wages, payment basis days) for each month paid. They are used for the annual and interim revisions of the standard monthly remuneration.",
+    "inputLatest": "Enter {{month}} payroll",
+    "prevYear": "← Previous 12 months",
+    "nextYear": "Next 12 months →",
+    "latest": "Latest",
+    "missingCount": "{{count}} missing",
+    "monthTitle": "Pay paid in {{month}}",
+    "monthLead": "Pay period {{start}}–{{end}} ({{days}} days)",
+    "emptyMonth": "No employees were employed during this pay period.",
+    "futureMonth": "The pay day for this month has not come yet.",
+    "readonly": "View only. Only administrators can enter records.",
+    "showAll": "Show all columns",
+    "showBasic": "Show basic columns only",
+    "fillEmptyDays": "Fill empty days with suggestions",
+    "candidate": "Use {{days}}",
+    "candidateTitle": "Calendar days employed minus days absent (for monthly salary)",
+    "save": "Save",
+    "saving": "Saving…",
+    "savedCount": "Saved ({{count}} employees)",
+    "cardTitle": "Payroll records",
+    "cardEmpty": "No records yet.",
+    "toList": "Go to payroll records",
+    "col": {
+      "paidMonth": "Month paid",
+      "period": "Pay period",
+      "saved": "Entered / employed",
+      "employee": "Employee",
+      "cash": "Cash pay",
+      "fixed": "Of which fixed wages",
+      "days": "Payment basis days",
+      "inKind": "In kind",
+      "retro": "Retroactive pay",
+      "absentDays": "Days absent",
+      "hours": "Hours worked",
+      "prorated": "Prorated",
+      "state": "Status"
+    },
+    "tag": {
+      "notSaved": "Not entered",
+      "notInsured": "Not insured",
+      "partial": "Joined or left mid-period",
+      "extra": "Other columns have values"
+    },
+    "state": {
+      "normal": "Normal",
+      "suspended": "On leave of absence",
+      "furlough": "Temporary layoff"
+    },
+    "rowError": {
+      "unreadable": "Some fields cannot be read as numbers",
+      "cashRequired": "Enter the cash pay",
+      "fixedRequired": "Enter the fixed wages (0 if none)",
+      "daysRequired": "Enter the payment basis days",
+      "notInteger": "Amounts must be whole numbers of 0 or more",
+      "tooLarge": "The amount is too large",
+      "fixedOverCash": "Fixed wages exceed the cash pay",
+      "retroOverTotal": "Retroactive pay exceeds cash plus in-kind pay",
+      "daysOutOfRange": "Payment basis days exceed the days in the pay period",
+      "absentOutOfRange": "Days absent exceed the days in the pay period",
+      "minutesOutOfRange": "Hours worked are too long",
+      "badState": "Select the status again"
+    },
+    "hint": {
+      "list": "\"Missing\" counts employees insured during the pay period who have no record yet (only months whose pay day has passed).",
+      "cash": "Cash pay: everything counted as remuneration (base pay, allowances, overtime, commuting allowance). Commuter passes for 3 or 6 months are divided by month.",
+      "fixed": "Fixed wages: pay whose amount or rate is set in advance, such as base pay, position allowance and commuting allowance. Overtime is not included.",
+      "days": "Payment basis days: calendar days of the period for monthly salary; \"company-set days − days absent\" for monthly salary with absence deductions; days worked (including paid leave) for daily or hourly pay.",
+      "blank": "Empty rows are not saved. Clearing a saved row and saving deletes that month's record."
+    },
+    "error": {
+      "load": "Could not load payroll records.",
+      "save": "Could not save. Please try again later.",
+      "rows": "Some rows have problems. Fix them and save again (nothing was saved).",
+      "badMonth": "The month is not valid."
     }
   }
 }

@@ -96,6 +96,20 @@ export const routes: Routes = [
               import('./features/premiums/pages/bonus-form/bonus-form').then((m) => m.BonusForm),
           },
           {
+            path: 'payrolls',
+            loadComponent: () =>
+              import('./features/payrolls/pages/payroll-list/payroll-list').then(
+                (m) => m.PayrollList,
+              ),
+          },
+          {
+            path: 'payrolls/:month',
+            loadComponent: () =>
+              import('./features/payrolls/pages/payroll-month/payroll-month').then(
+                (m) => m.PayrollMonth,
+              ),
+          },
+          {
             path: 'settings',
             data: { mode: 'edit' },
             loadComponent: () =>

@@ -263,6 +263,48 @@ service cloud.firestore {
 
           allow delete: if signedIn() && office().memberRoles[request.auth.uid] == 'admin';
         }
+      // ----- 給与の実績（従業員の下。ドキュメントIDは支払った月） -----
+        match /payrolls/{paidMonth} {
+          function yen(v) {
+            return v is int && v >= 0 && v <= 99999999;
+          }
+
+          function validPayroll(d) {
+            return d.keys().hasOnly(['officeId', 'employeeId', 'paidMonth', 'cash', 'fixed', 'inKind', 'retro',
+                                     'days', 'absentDays', 'workMinutes', 'prorated', 'state', 'createdAt', 'updatedAt'])
+              && d.keys().hasAll(['officeId', 'employeeId', 'paidMonth', 'cash', 'fixed', 'inKind', 'retro',
+                                  'days', 'absentDays', 'workMinutes', 'prorated', 'state', 'createdAt', 'updatedAt'])
+              // collectionGroup で読むときのための項目。パスと一致させる
+              && d.officeId == officeId
+              && d.employeeId == employeeId
+              && d.paidMonth == paidMonth
+              && paidMonth.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
+              && yen(d.cash) && yen(d.fixed) && yen(d.inKind) && yen(d.retro)
+              && d.fixed <= d.cash
+              && d.retro <= d.cash + d.inKind
+              && d.days is int && d.days >= 0 && d.days <= 31
+              && (d.absentDays == null || (d.absentDays is int && d.absentDays >= 0 && d.absentDays <= 31))
+              && (d.workMinutes == null || (d.workMinutes is int && d.workMinutes >= 0 && d.workMinutes <= 44640))
+              && d.prorated is bool
+              && d.state in ['normal', 'suspended', 'furlough'];
+          }
+
+          allow read: if signedIn() && request.auth.uid in office().memberUids;
+
+          allow create: if signedIn()
+            && office().memberRoles[request.auth.uid] == 'admin'
+            && validPayroll(request.resource.data)
+            && request.resource.data.createdAt == request.time
+            && request.resource.data.updatedAt == request.time;
+
+          allow update: if signedIn()
+            && office().memberRoles[request.auth.uid] == 'admin'
+            && validPayroll(request.resource.data)
+            && request.resource.data.createdAt == resource.data.createdAt
+            && request.resource.data.updatedAt == request.time;
+
+          allow delete: if signedIn() && office().memberRoles[request.auth.uid] == 'admin';
+        }
       }
 
       // ----- 組合健保の料率（事業所の下。ドキュメントIDは適用開始月） -----

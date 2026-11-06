@@ -1,0 +1,58 @@
+<div class="page-head">
+  <div>
+    <h1>{{ 'payroll.listTitle' | transloco }}</h1>
+    <p class="lead">{{ 'payroll.listLead' | transloco }}</p>
+  </div>
+  @if (context.isAdmin() && latest()) {
+    <a class="btn btn-primary" [routerLink]="['/o', context.current()?.id, 'payrolls', latest()]">
+      {{ 'payroll.inputLatest' | transloco: { month: latest() } }}
+    </a>
+  }
+</div>
+
+@if (loading()) {
+  <p class="muted">{{ 'common.loading' | transloco }}</p>
+} @else if (errorKey(); as key) {
+  <div class="alert alert-danger">{{ key | transloco }}</div>
+} @else {
+  <div class="pager">
+    <a [routerLink]="[]" [queryParams]="{ to: prevTo() }">{{ 'payroll.prevYear' | transloco }}</a>
+    <a [routerLink]="[]" [queryParams]="{ to: nextTo() }">{{ 'payroll.nextYear' | transloco }}</a>
+  </div>
+  <div class="card table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ 'payroll.col.paidMonth' | transloco }}</th>
+          <th>{{ 'payroll.col.period' | transloco }}</th>
+          <th class="num">{{ 'payroll.col.saved' | transloco }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of rows(); track r.month) {
+          <tr [class.future]="r.future">
+            <td class="mono">
+              <a class="name" [routerLink]="['/o', context.current()?.id, 'payrolls', r.month]">
+                {{ r.month }}
+              </a>
+              @if (r.month === latest()) {
+                <span class="badge badge-info">{{ 'payroll.latest' | transloco }}</span>
+              }
+            </td>
+            <td class="mono">{{ md(r.period.start) }}〜{{ md(r.period.end) }}</td>
+            <td class="num">{{ r.saved }} / {{ r.employed }}</td>
+            <td>
+              @if (r.missing > 0) {
+                <span class="badge badge-warn">
+                  {{ 'payroll.missingCount' | transloco: { count: r.missing } }}
+                </span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <p class="hint">{{ 'payroll.hint.list' | transloco }}</p>
+}

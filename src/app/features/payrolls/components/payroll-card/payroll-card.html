@@ -1,0 +1,54 @@
+<section class="card">
+  <div class="head">
+    <h2>{{ 'payroll.cardTitle' | transloco }}</h2>
+    <a [routerLink]="['/o', context.current()?.id, 'payrolls']">{{ 'payroll.toList' | transloco }}</a>
+  </div>
+
+  @if (loading()) {
+    <p class="muted">{{ 'common.loading' | transloco }}</p>
+  } @else if (errorKey(); as key) {
+    <div class="alert alert-danger">{{ key | transloco }}</div>
+  } @else if (items().length === 0) {
+    <p class="muted">{{ 'payroll.cardEmpty' | transloco }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'payroll.col.paidMonth' | transloco }}</th>
+            <th>{{ 'payroll.col.period' | transloco }}</th>
+            <th class="num">{{ 'payroll.col.cash' | transloco }}</th>
+            <th class="num">{{ 'payroll.col.fixed' | transloco }}</th>
+            <th class="num">{{ 'payroll.col.inKind' | transloco }}</th>
+            <th class="num">{{ 'payroll.col.retro' | transloco }}</th>
+            <th class="num">{{ 'payroll.col.days' | transloco }}</th>
+            <th class="num">{{ 'payroll.col.hours' | transloco }}</th>
+            <th>{{ 'payroll.col.state' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of items(); track p.paidMonth) {
+            <tr>
+              <td class="mono">
+                <a [routerLink]="['/o', context.current()?.id, 'payrolls', p.paidMonth]">{{ p.paidMonth }}</a>
+              </td>
+              <td class="mono">{{ periodText(p) }}</td>
+              <td class="num">{{ yen(p.cash) }}</td>
+              <td class="num">{{ yen(p.fixed) }}</td>
+              <td class="num">{{ p.inKind ? yen(p.inKind) : '—' }}</td>
+              <td class="num">{{ p.retro ? yen(p.retro) : '—' }}</td>
+              <td class="num">{{ p.days }}</td>
+              <td class="num">{{ hours(p.workMinutes) }}</td>
+              <td>
+                {{ 'payroll.state.' + p.state | transloco }}
+                @if (p.prorated) {
+                  <span class="sub">{{ 'payroll.col.prorated' | transloco }}</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

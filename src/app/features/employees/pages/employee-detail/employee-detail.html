@@ -126,6 +126,8 @@
     <app-premium-card #premiumCard [employee]="e" [months]="months()" />
     <!-- 賞与（見るだけ。入力は賞与の画面で） -->
     <app-bonus-card [employee]="e" />
+    <!-- 給与 -->
+    <app-payroll-card [employee]="e" />
     <!-- 産休・育休 -->
     <app-leave-card [employee]="e" (changed)="reloadEmployee()" />
   }

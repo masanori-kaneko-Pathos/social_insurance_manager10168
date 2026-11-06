@@ -19,12 +19,21 @@ import { PremiumCard } from '../../../premiums/components/premium-card/premium-c
 import { BonusCard } from '../../../premiums/components/bonus-card/bonus-card';
 import { LeaveCard } from '../../components/leave-card/leave-card';
 import { exemptMonth } from '../../logic/leave';
+import { PayrollCard } from '../../../payrolls/components/payroll-card/payroll-card';
 
 type Mode = 'fiscal' | 'calendar' | 'last12';
 
 @Component({
   selector: 'app-employee-detail',
-  imports: [RouterLink, TranslocoPipe, RemunerationCard, PremiumCard, BonusCard, LeaveCard],
+  imports: [
+    RouterLink,
+    TranslocoPipe,
+    RemunerationCard,
+    PremiumCard,
+    BonusCard,
+    LeaveCard,
+    PayrollCard,
+  ],
   templateUrl: './employee-detail.html',
   styleUrl: './employee-detail.css',
 })
