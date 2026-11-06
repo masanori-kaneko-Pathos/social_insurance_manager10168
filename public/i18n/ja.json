@@ -227,7 +227,7 @@
       "collection": "休業中で給与が出ない人だけ現金で払ってもらう、などのときに選びます。",
       "foreign": "国籍・地域は ISO の2文字のコードで入れます（ベトナム VN・中国 CN・フィリピン PH・ドイツ DE など）。社会保障協定の適用証明書がある期間は、日本の保険に加入しない扱いになることがあります。",
       "roman": "在留カードのとおりに入れます。小文字で打っても大文字にそろえます。",
-      "middleName": "父称（ロシアなど）もここに入れます。",
+      "middleName": "父称などもここに入れます。",
       "noRomanReason": "ローマ字氏名がないときだけ選びます。",
       "filingKana": "資格取得届に書く読み。年金機構からの通知書・資格確認書はこのカナで届きます。",
       "personName": "住民票に漢字氏名・通称名が載っている人だけ入れます。入れるときは氏と氏のフリガナまで。名がない人は名を空欄にします。",
@@ -1100,6 +1100,215 @@
       "expectedInKind": "金額を数字で入れてください（なければ0）。",
       "periodBeforeFrom": "終わりの日が、始まる日より前です。",
       "load": "雇用契約を読み込めませんでした。",
+      "save": "保存できませんでした。",
+      "delete": "消せませんでした。"
+    }
+  },
+  "dependent": {
+    "title": "扶養家族",
+    "add": "家族を足す",
+    "empty": "扶養家族はいません。",
+    "yen": "円",
+    "together": "同居",
+    "apart": "別居",
+    "scheduled": "これから",
+    "commonLawShort": "（未届）",
+    "thirdInsured": "国民年金の第3号被保険者になります",
+    "thirdInsuredShort": "第3号",
+    "confirmDelete": "この家族を消す",
+    "household": {
+      "insuredIncome": "この従業員の年収の見込み",
+      "spouseIncome": "扶養に入っていない配偶者の年収",
+      "manual": "（手で入れた額）",
+      "fromRecords": "（給与{{months}}か月分と直近1年の賞与から計算）",
+      "unknown": "給与の実績がないため計算できません。「直す」から入れてください。",
+      "insuredIncomeHint": "空欄なら給与・賞与の実績から計算します。届書の「被保険者の年収」と、同居の家族の「半分未満」の判定に使います。",
+      "spouseIncomeHint": "配偶者が扶養に入っておらず、子などを扶養に入れるときに書きます。夫婦のうち年収の多い方の扶養になります。"
+    },
+    "group": {
+      "who": "① 誰か",
+      "home": "② 住まい",
+      "income": "③ 収入と仕事",
+      "period": "④ 扶養の期間"
+    },
+    "field": {
+      "relationship": "続柄",
+      "relationshipNote": "続柄（具体的に）",
+      "lastName": "氏",
+      "firstName": "名",
+      "lastNameKana": "氏のフリガナ",
+      "firstNameKana": "名のフリガナ",
+      "birthDate": "生年月日",
+      "sex": "性別",
+      "basicPensionNumber": "基礎年金番号",
+      "nationality": "国籍（外国籍のとき）",
+      "alias": "外国人通称名",
+      "commonLaw": "未届（内縁の関係）",
+      "relationshipConfirmed": "続柄を戸籍謄本などで確認した（続柄確認済み）",
+      "phoneType": "電話の種類",
+      "remittance": "1回の仕送り額（円）",
+      "remittanceTimes": "年の仕送りの回数",
+      "hasOverseas": "海外に住んでいる（海外特例要件）",
+      "overseasReason": "海外特例要件の理由",
+      "overseasFrom": "該当した日",
+      "overseasTo": "該当しなくなった日",
+      "overseasEndReason": "該当しなくなった理由",
+      "reasonText": "理由（具体的に）",
+      "occupation": "職業",
+      "occupationNote": "職業（具体的に）",
+      "schoolYear": "何年生",
+      "annualIncome": "年収の見込み（円）",
+      "monthlyIncome": "月額（円）",
+      "disabled": "障害者（年収の上限が180万円になる）",
+      "contractHourly": "契約の時給（円）",
+      "contractWeeklyHours": "契約の週の時間",
+      "contractAllowances": "契約の月の手当（円）",
+      "contractBonus": "契約の年の賞与（円）",
+      "contractAnnualWage": "契約から見込む年収（円）",
+      "contractPeriodEnd": "契約期間の終わり",
+      "contractHoursClear": "労働時間がはっきり書いてある（「シフト制による」ではない）",
+      "contractAllowancesClear": "手当の額がはっきり書いてある（「通勤手当有」だけではない）",
+      "from": "被扶養者になった日",
+      "startReason": "扶養に入った理由",
+      "to": "被扶養者でなくなった日",
+      "endReason": "外れた理由",
+      "needsConfirmationCard": "資格確認書の発行が必要",
+      "note": "備考"
+    },
+    "relationship": {
+      "spouse": "配偶者（夫・妻）",
+      "child": "実子・養子",
+      "otherChild": "1以外の子",
+      "parent": "父母・養父母",
+      "parentInLaw": "義父母",
+      "youngerSibling": "弟妹",
+      "olderSibling": "兄姉",
+      "grandparent": "祖父母",
+      "greatGrandparent": "曽祖父母",
+      "grandchild": "孫",
+      "other": "その他"
+    },
+    "phoneType": {
+      "home": "自宅",
+      "mobile": "携帯",
+      "work": "勤務先",
+      "other": "その他"
+    },
+    "overseasReason": {
+      "study": "留学",
+      "accompany": "同行家族",
+      "specificActivity": "特定活動",
+      "marriageAbroad": "海外婚姻",
+      "other": "その他"
+    },
+    "overseasEndReason": {
+      "returned": "国内に転入",
+      "other": "その他"
+    },
+    "occupation": {
+      "none": "無職",
+      "partTime": "パート",
+      "pensioner": "年金受給者",
+      "child": "小・中学生以下",
+      "student": "高・大学生",
+      "other": "その他"
+    },
+    "incomeBasis": {
+      "estimate": "年収の見込みで判定",
+      "contract": "労働契約の内容で判定（給与収入だけの人。2026-04-01 から）"
+    },
+    "incomeSource": {
+      "estimate": "見込み",
+      "contract": "労働契約から"
+    },
+    "startReason": {
+      "spouseEmployment": "配偶者の就職",
+      "marriage": "婚姻",
+      "leftJob": "離職",
+      "incomeDecrease": "収入減少",
+      "birth": "出生",
+      "cohabitation": "同居",
+      "other": "その他"
+    },
+    "endReason": {
+      "death": "死亡",
+      "divorce": "離婚",
+      "employment": "就職",
+      "incomeIncrease": "収入増加",
+      "age75": "75歳到達",
+      "disability": "障害認定",
+      "other": "その他"
+    },
+    "candidate": {
+      "monthly": "候補：月額 × 12 ＝ {{amount}}円（押すと入る）",
+      "contract": "候補：時給×週の時間×52＋手当×12＋賞与 ＝ {{amount}}円（押すと入る）",
+      "from_acquired": "候補：資格取得日 {{date}}（取得届と同時に出すとき）",
+      "from_birth": "候補：生年月日 {{date}}（出生）"
+    },
+    "hint": {
+      "nationality": "国・地域のアルファベット2文字",
+      "address": "住民票の住所。別居なら必ず書きます。",
+      "monthly": "月額を入れると、年収の候補を出します（月 108,333円以下が130万円未満の目安）。",
+      "income": "今後1年の見込みです。障害・遺族年金、失業給付、傷病手当金・出産手当金などの非課税の収入も含めます。",
+      "contract": "労働条件通知書などに書かれた賃金（諸手当・賞与を含む）から見込む年収です。給与以外の収入がない人だけ使えます。扶養に関する申立書に「給与収入のみである」旨を本人が書きます。",
+      "contractPeriodEnd": "空欄なら期間の定めなし。扶養に入った日から1年未満で終わる契約は、この方法を使えません。",
+      "startReason": "資格取得届と同時に出すときは空欄でかまいません。",
+      "to": "死亡のときは、死亡日の翌日を入れます。",
+      "deleteVsEnd": "扶養から外れたときは、消さずに「被扶養者でなくなった日」を入れてください（届書と記録のため）。消すのは打ち間違いのときだけです。"
+    },
+    "col": {
+      "name": "氏名",
+      "age": "年齢",
+      "home": "住まい",
+      "check": "判定の候補",
+      "period": "期間"
+    },
+    "level": {
+      "ok": "基準内",
+      "review": "要確認",
+      "ng": "基準外"
+    },
+    "limitReason": {
+      "base": "ふつう",
+      "young": "19〜22歳の特例",
+      "senior": "60歳以上",
+      "disabled": "障害者"
+    },
+    "verdict": {
+      "limit": "上限 {{limit}}円（{{reason}}）",
+      "income": "年収 {{income}}円（{{source}}）",
+      "remittance": "仕送り 年 {{amount}}円",
+      "disclaimer": "扶養に入った日の時点の候補です。最後に決めるのは日本年金機構です。"
+    },
+    "issue": {
+      "age75": "75歳以上は後期高齢者医療制度に移るため、扶養に入れません。",
+      "cohabitationRequired": "この続柄は同居していることが必要です。",
+      "overLimit": "年収が上限以上です。",
+      "overInsured": "同居で、年収がこの従業員の年収を上回っています。",
+      "halfOrMore": "同居で、年収がこの従業員の年収の半分以上です（世帯の状況から認められることがあります）。",
+      "insuredIncomeUnknown": "この従業員の年収がわからないため、「半分未満」を確かめられません。",
+      "overRemittance": "別居で、年収が仕送りの年額以上です。",
+      "noRemittance": "別居なのに、仕送りの額が入っていません。"
+    },
+    "contractIssue": {
+      "notYet": "労働契約の方法は 2026-04-01 からです（見込みで判定しました）。",
+      "shortContract": "契約期間が扶養に入った日から1年未満のため、労働契約の方法は使えません（見込みで判定しました）。",
+      "unclearHours": "労働時間がはっきりしないため、労働契約の方法は使えません（見込みで判定しました）。",
+      "unclearAllowances": "手当の額がはっきりしないため、労働契約の方法は使えません（見込みで判定しました）。"
+    },
+    "error": {
+      "required": "入れてください。",
+      "kana": "カタカナで入れてください。",
+      "postalCode": "郵便番号は数字7桁です。",
+      "basicPensionNumber": "基礎年金番号は数字10桁です。",
+      "country": "アルファベット2文字で入れてください。",
+      "yen": "金額を数字で入れてください。",
+      "times": "1〜365で入れてください。",
+      "schoolYear": "1〜6で入れてください。",
+      "toBeforeFrom": "始まりの日より後にしてください。",
+      "fromBeforeBirth": "生年月日より後にしてください。",
+      "reasonMismatch": "この続柄では選べない理由です。",
+      "load": "扶養家族を読み込めませんでした。",
       "save": "保存できませんでした。",
       "delete": "消せませんでした。"
     }

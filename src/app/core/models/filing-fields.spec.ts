@@ -5,7 +5,7 @@
  */
 import { BonusPaymentDoc } from './bonus';
 import { ContractDoc } from './contract';
-import { DependentDoc } from './dependent';
+import { DependentDoc, OverseasSpecialDoc } from './dependent';
 import { EmployeeDoc, EnrollmentDoc, ForeignDoc, Leave, PersonName } from './employee';
 import { OfficeDoc } from './office';
 import { PayrollInput } from './payroll';
@@ -76,20 +76,41 @@ const BONUS: Record<string, Field<BonusPaymentDoc>> = {
 };
 
 /** 被扶養者（異動）届・第3号 */
-const DEPENDENT: Record<string, Field<DependentDoc>> = {
-  氏名: 'lastName',
-  生年月日: 'birthDate',
-  性別: 'sex',
-  続柄: 'relationship',
-  同居別居: 'livingTogether',
-  住所: 'address',
-  職業: 'occupation',
-  収入: 'annualIncome',
-  認定日: 'from',
-  削除日: 'to',
-  理由: 'endReason',
-  配偶者の基礎年金番号: 'basicPensionNumber',
-  第3号: 'thirdInsured',
+/** 被扶養者（異動）届・第3号被保険者関係届（様式コード 2202） */
+const DEPENDENT: Record<string, Field<DependentDoc> | Field<EmployeeDoc> | Field<OverseasSpecialDoc>> = {
+  A_被保険者の年収: 'annualIncomeEstimate', // 空なら実績から計算
+  B_C_氏名: 'lastName',
+  B_C_フリガナ: 'lastNameKana',
+  B_C_生年月日: 'birthDate',
+  B_C_性別: 'sex',
+  B_続柄_夫妻_未届: 'commonLaw',
+  C_続柄: 'relationship',
+  C_続柄_その他: 'relationshipNote',
+  B_基礎年金番号: 'basicPensionNumber',
+  B_外国籍: 'nationality',
+  B_外国人通称名: 'alias',
+  B_C_同居別居: 'livingTogether',
+  B_C_住所: 'address',
+  B_電話番号: 'phone',
+  B_電話の種類: 'phoneType',
+  B_C_海外特例要件: 'overseas',
+  海外特例_理由: 'reason',
+  海外特例_該当した日: 'from',
+  海外特例_非該当となった日: 'to',
+  B_C_被扶養者になった日: 'from',
+  B_C_扶養に入った理由: 'startReason',
+  B_C_職業: 'occupation',
+  C_学年: 'schoolYear',
+  B_C_収入: 'annualIncome',
+  B_C_被扶養者でなくなった日: 'to',
+  B_C_外れた理由: 'endReason',
+  B_C_備考_仕送り額: 'remittance',
+  申立書_仕送りの回数: 'remittanceTimes',
+  申立書_給与収入のみ: 'incomeBasis',
+  B_C_続柄確認済み: 'relationshipConfirmed',
+  B_C_資格確認書: 'needsConfirmationCard',
+  B_第3号被保険者: 'calc', // 配偶者で20〜59歳
+  _21_配偶者の年収: 'spouseAnnualIncome',
 };
 
 /** 産休・育休の申出書 */

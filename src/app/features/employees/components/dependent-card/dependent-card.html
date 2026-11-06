@@ -1,0 +1,507 @@
+<section class="card">
+  <div class="head">
+    <h2>{{ 'dependent.title' | transloco }}</h2>
+    @if (context.isAdmin() && editing() === null) {
+      <button type="button" class="btn" (click)="startAdd()">{{ 'dependent.add' | transloco }}</button>
+    }
+  </div>
+
+  @if (errorKey()) {
+    <div class="alert alert-danger">{{ errorKey()! | transloco }}</div>
+  }
+
+  <!-- 世帯の情報（被保険者の年収・扶養に入っていない配偶者の年収） -->
+  <div class="household">
+    @if (!editingHousehold()) {
+      <dl>
+        <div>
+          <dt>{{ 'dependent.household.insuredIncome' | transloco }}</dt>
+          <dd>
+            @if (employee().annualIncomeEstimate !== null) {
+              {{ yen(employee().annualIncomeEstimate!) }}{{ 'dependent.yen' | transloco }}
+              <span class="sub">{{ 'dependent.household.manual' | transloco }}</span>
+            } @else if (incomeCandidate(); as c) {
+              {{ yen(c.amount) }}{{ 'dependent.yen' | transloco }}
+              <span class="sub">{{ 'dependent.household.fromRecords' | transloco: { months: c.months } }}</span>
+            } @else {
+              <span class="sub">{{ 'dependent.household.unknown' | transloco }}</span>
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>{{ 'dependent.household.spouseIncome' | transloco }}</dt>
+          <dd>
+            @if (employee().spouseAnnualIncome !== null) {
+              {{ yen(employee().spouseAnnualIncome!) }}{{ 'dependent.yen' | transloco }}
+            } @else {
+              —
+            }
+          </dd>
+        </div>
+      </dl>
+      @if (context.isAdmin()) {
+        <button type="button" class="link" [disabled]="editing() !== null" (click)="startHousehold()">
+          {{ 'common.edit' | transloco }}
+        </button>
+      }
+    } @else {
+      <form class="household-form" [formGroup]="household" (ngSubmit)="saveHousehold()">
+        <div class="field">
+          <label for="hh-income">{{ 'dependent.household.insuredIncome' | transloco }}</label>
+          <input id="hh-income" class="input num" inputmode="numeric" formControlName="annualIncomeEstimate" />
+          <span class="hint">{{ 'dependent.household.insuredIncomeHint' | transloco }}</span>
+        </div>
+        <div class="field">
+          <label for="hh-spouse">{{ 'dependent.household.spouseIncome' | transloco }}</label>
+          <input id="hh-spouse" class="input num" inputmode="numeric" formControlName="spouseAnnualIncome" />
+          <span class="hint">{{ 'dependent.household.spouseIncomeHint' | transloco }}</span>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn" (click)="editingHousehold.set(false)">{{ 'common.cancel' | transloco }}</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ 'common.save' | transloco }}</button>
+        </div>
+      </form>
+    }
+  </div>
+
+  <!-- 追加・編集のフォーム -->
+  @if (editing() !== null) {
+    <form class="editor" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <!-- ① 誰か -->
+      <h3>{{ 'dependent.group.who' | transloco }}</h3>
+      <div class="grid">
+        <div class="field">
+          <label for="dp-rel">{{ 'dependent.field.relationship' | transloco }}</label>
+          <select id="dp-rel" class="input" formControlName="relationship">
+            @for (r of relationships; track r) {
+              <option [value]="r">{{ 'dependent.relationship.' + r | transloco }}</option>
+            }
+          </select>
+        </div>
+        @if (form.controls.relationship.value === 'other') {
+          <div class="field">
+            <label for="dp-rel-note">{{ 'dependent.field.relationshipNote' | transloco }}</label>
+            <input id="dp-rel-note" class="input" formControlName="relationshipNote" [class.is-invalid]="errorOf('relationshipNote')" />
+            @if (errorOf('relationshipNote'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+        }
+        <div class="field">
+          <label for="dp-last">{{ 'dependent.field.lastName' | transloco }}</label>
+          <input id="dp-last" class="input" formControlName="lastName" autocomplete="off" [class.is-invalid]="errorOf('lastName')" />
+          @if (errorOf('lastName'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+        </div>
+        <div class="field">
+          <label for="dp-first">{{ 'dependent.field.firstName' | transloco }}</label>
+          <input id="dp-first" class="input" formControlName="firstName" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="dp-last-kana">{{ 'dependent.field.lastNameKana' | transloco }}</label>
+          <input id="dp-last-kana" class="input" formControlName="lastNameKana" autocomplete="off" [class.is-invalid]="errorOf('lastNameKana')" />
+          @if (errorOf('lastNameKana'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+        </div>
+        <div class="field">
+          <label for="dp-first-kana">{{ 'dependent.field.firstNameKana' | transloco }}</label>
+          <input id="dp-first-kana" class="input" formControlName="firstNameKana" autocomplete="off" [class.is-invalid]="errorOf('firstNameKana')" />
+          @if (errorOf('firstNameKana'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+        </div>
+        <div class="field">
+          <label for="dp-birth">{{ 'dependent.field.birthDate' | transloco }}</label>
+          <input id="dp-birth" class="input" type="date" formControlName="birthDate" [class.is-invalid]="errorOf('birthDate')" />
+          @if (errorOf('birthDate'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+        </div>
+        <div class="field">
+          <label for="dp-sex">{{ 'dependent.field.sex' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <select id="dp-sex" class="input" formControlName="sex">
+            <option value="">{{ 'common.select' | transloco }}</option>
+            <option value="male">{{ 'employee.sex.male' | transloco }}</option>
+            <option value="female">{{ 'employee.sex.female' | transloco }}</option>
+          </select>
+        </div>
+        @if (isSpouse()) {
+          <div class="field">
+            <label for="dp-pension">{{ 'dependent.field.basicPensionNumber' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+            <input id="dp-pension" class="input" inputmode="numeric" formControlName="basicPensionNumber" [class.is-invalid]="errorOf('basicPensionNumber')" />
+            @if (errorOf('basicPensionNumber'); as e) {
+              <span class="field-error">{{ e | transloco }}</span>
+            } @else {
+              <span class="hint">{{ 'employee.hint.basicPensionNumber' | transloco }}</span>
+            }
+          </div>
+          <div class="field">
+            <label for="dp-nat">{{ 'dependent.field.nationality' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+            <input id="dp-nat" class="input upper" maxlength="2" formControlName="nationality" [class.is-invalid]="errorOf('nationality')" />
+            @if (errorOf('nationality'); as e) {
+              <span class="field-error">{{ e | transloco }}</span>
+            } @else {
+              <span class="hint">{{ 'dependent.hint.nationality' | transloco }}</span>
+            }
+          </div>
+          @if (form.controls.nationality.value) {
+            <div class="field">
+              <label for="dp-alias">{{ 'dependent.field.alias' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+              <input id="dp-alias" class="input" formControlName="alias" />
+            </div>
+          }
+        }
+      </div>
+      @if (isSpouse()) {
+        <label class="check"><input type="checkbox" formControlName="commonLaw" />{{ 'dependent.field.commonLaw' | transloco }}</label>
+      }
+      <label class="check"><input type="checkbox" formControlName="relationshipConfirmed" />{{ 'dependent.field.relationshipConfirmed' | transloco }}</label>
+
+      <!-- ② 住まい -->
+      <h3>{{ 'dependent.group.home' | transloco }}</h3>
+      <div class="units" role="radiogroup">
+        <label class="radio"><input type="radio" formControlName="livingTogether" [value]="true" />{{ 'dependent.together' | transloco }}</label>
+        <label class="radio"><input type="radio" formControlName="livingTogether" [value]="false" />{{ 'dependent.apart' | transloco }}</label>
+      </div>
+      <div class="grid">
+        <div class="field">
+          <label for="dp-postal">{{ 'employee.field.postalCode' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="dp-postal" class="input" inputmode="numeric" formControlName="postalCode" [class.is-invalid]="errorOf('postalCode')" />
+          @if (errorOf('postalCode'); as e) {
+            <span class="field-error">{{ e | transloco }}</span>
+          } @else {
+            <span class="hint">{{ 'employee.hint.postalCode' | transloco }}</span>
+          }
+        </div>
+        <div class="field wide">
+          <label for="dp-address">{{ 'employee.field.address' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="dp-address" class="input" formControlName="address" />
+          <span class="hint">{{ 'dependent.hint.address' | transloco }}</span>
+        </div>
+        @if (isSpouse()) {
+          <div class="field">
+            <label for="dp-phone">{{ 'employee.field.phone' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+            <input id="dp-phone" class="input" inputmode="tel" formControlName="phone" />
+          </div>
+          <div class="field">
+            <label for="dp-phone-type">{{ 'dependent.field.phoneType' | transloco }}</label>
+            <select id="dp-phone-type" class="input" formControlName="phoneType">
+              <option value="">{{ 'common.select' | transloco }}</option>
+              @for (t of phoneTypes; track t) {
+                <option [value]="t">{{ 'dependent.phoneType.' + t | transloco }}</option>
+              }
+            </select>
+          </div>
+        }
+        @if (!form.controls.livingTogether.value) {
+          <div class="field">
+            <label for="dp-remit">{{ 'dependent.field.remittance' | transloco }}</label>
+            <input id="dp-remit" class="input num" inputmode="numeric" formControlName="remittance" [class.is-invalid]="errorOf('remittance')" />
+            @if (errorOf('remittance'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+          <div class="field">
+            <label for="dp-remit-times">{{ 'dependent.field.remittanceTimes' | transloco }}</label>
+            <input id="dp-remit-times" class="input num" inputmode="numeric" formControlName="remittanceTimes" [class.is-invalid]="errorOf('remittanceTimes')" />
+            @if (errorOf('remittanceTimes'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+        }
+      </div>
+
+      <label class="check"><input type="checkbox" formControlName="hasOverseas" />{{ 'dependent.field.hasOverseas' | transloco }}</label>
+      @if (form.controls.hasOverseas.value) {
+        <div class="grid sub-block">
+          <div class="field">
+            <label for="dp-os-reason">{{ 'dependent.field.overseasReason' | transloco }}</label>
+            <select id="dp-os-reason" class="input" formControlName="overseasReason">
+              @for (r of overseasReasons; track r) {
+                <option [value]="r">{{ 'dependent.overseasReason.' + r | transloco }}</option>
+              }
+            </select>
+          </div>
+          @if (form.controls.overseasReason.value === 'other') {
+            <div class="field">
+              <label for="dp-os-reason-text">{{ 'dependent.field.reasonText' | transloco }}</label>
+              <input id="dp-os-reason-text" class="input" formControlName="overseasReasonText" />
+            </div>
+          }
+          <div class="field">
+            <label for="dp-os-from">{{ 'dependent.field.overseasFrom' | transloco }}</label>
+            <input id="dp-os-from" class="input" type="date" formControlName="overseasFrom" [class.is-invalid]="errorOf('overseasFrom')" />
+            @if (errorOf('overseasFrom'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+          <div class="field">
+            <label for="dp-os-to">{{ 'dependent.field.overseasTo' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+            <input id="dp-os-to" class="input" type="date" formControlName="overseasTo" [class.is-invalid]="errorOf('overseasTo')" />
+            @if (errorOf('overseasTo'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+          @if (form.controls.overseasTo.value) {
+            <div class="field">
+              <label for="dp-os-end">{{ 'dependent.field.overseasEndReason' | transloco }}</label>
+              <select id="dp-os-end" class="input" formControlName="overseasEndReason">
+                <option value="">{{ 'common.select' | transloco }}</option>
+                @for (r of overseasEndReasons; track r) {
+                  <option [value]="r">{{ 'dependent.overseasEndReason.' + r | transloco }}</option>
+                }
+              </select>
+            </div>
+            @if (form.controls.overseasEndReason.value === 'other') {
+              <div class="field">
+                <label for="dp-os-end-text">{{ 'dependent.field.reasonText' | transloco }}</label>
+                <input id="dp-os-end-text" class="input" formControlName="overseasEndReasonText" />
+              </div>
+            }
+          }
+        </div>
+      }
+
+      <!-- ③ 収入と仕事 -->
+      <h3>{{ 'dependent.group.income' | transloco }}</h3>
+      <div class="grid">
+        <div class="field">
+          <label for="dp-occ">{{ 'dependent.field.occupation' | transloco }}</label>
+          <select id="dp-occ" class="input" formControlName="occupation">
+            @for (o of occupations; track o) {
+              <option [value]="o">{{ 'dependent.occupation.' + o | transloco }}</option>
+            }
+          </select>
+        </div>
+        @if (form.controls.occupation.value === 'student') {
+          <div class="field">
+            <label for="dp-school">{{ 'dependent.field.schoolYear' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+            <input id="dp-school" class="input num" inputmode="numeric" formControlName="schoolYear" [class.is-invalid]="errorOf('schoolYear')" />
+            @if (errorOf('schoolYear'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+        }
+        @if (form.controls.occupation.value === 'other') {
+          <div class="field">
+            <label for="dp-occ-note">{{ 'dependent.field.occupationNote' | transloco }}</label>
+            <input id="dp-occ-note" class="input" formControlName="occupationNote" />
+          </div>
+        }
+        <div class="field">
+          <label for="dp-income">{{ 'dependent.field.annualIncome' | transloco }}</label>
+          <input id="dp-income" class="input num" inputmode="numeric" formControlName="annualIncome" [class.is-invalid]="errorOf('annualIncome')" />
+          @if (errorOf('annualIncome'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+        </div>
+        <div class="field">
+          <label for="dp-monthly">{{ 'dependent.field.monthlyIncome' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="dp-monthly" class="input num" inputmode="numeric" formControlName="monthlyIncome" />
+          @if (monthlyCandidate(); as c) {
+            <button type="button" class="candidate" (click)="useAnnual(c)">
+              {{ 'dependent.candidate.monthly' | transloco: { amount: yen(c) } }}
+            </button>
+          } @else {
+            <span class="hint">{{ 'dependent.hint.monthly' | transloco }}</span>
+          }
+        </div>
+      </div>
+      <p class="hint block">{{ 'dependent.hint.income' | transloco }}</p>
+      <label class="check"><input type="checkbox" formControlName="disabled" />{{ 'dependent.field.disabled' | transloco }}</label>
+
+      <!-- 労働契約の内容で判定（2026-04-01 から） -->
+      <div class="units" role="radiogroup">
+        @for (b of incomeBases; track b) {
+          <label class="radio"><input type="radio" formControlName="incomeBasis" [value]="b" />{{ 'dependent.incomeBasis.' + b | transloco }}</label>
+        }
+      </div>
+      @if (form.controls.incomeBasis.value === 'contract') {
+        <div class="sub-block">
+          <div class="grid">
+            <div class="field">
+              <label for="dp-c-hourly">{{ 'dependent.field.contractHourly' | transloco }}</label>
+              <input id="dp-c-hourly" class="input num" inputmode="numeric" formControlName="contractHourly" />
+            </div>
+            <div class="field">
+              <label for="dp-c-weekly">{{ 'dependent.field.contractWeeklyHours' | transloco }}</label>
+              <input id="dp-c-weekly" class="input num" inputmode="decimal" formControlName="contractWeeklyHours" />
+            </div>
+            <div class="field">
+              <label for="dp-c-allow">{{ 'dependent.field.contractAllowances' | transloco }}</label>
+              <input id="dp-c-allow" class="input num" inputmode="numeric" formControlName="contractAllowances" />
+            </div>
+            <div class="field">
+              <label for="dp-c-bonus">{{ 'dependent.field.contractBonus' | transloco }}</label>
+              <input id="dp-c-bonus" class="input num" inputmode="numeric" formControlName="contractBonus" />
+            </div>
+            <div class="field">
+              <label for="dp-c-wage">{{ 'dependent.field.contractAnnualWage' | transloco }}</label>
+              <input id="dp-c-wage" class="input num" inputmode="numeric" formControlName="contractAnnualWage" [class.is-invalid]="errorOf('contractAnnualWage')" />
+              @if (errorOf('contractAnnualWage'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+              @if (contractCandidate(); as c) {
+                <button type="button" class="candidate" (click)="useContractWage()">
+                  {{ 'dependent.candidate.contract' | transloco: { amount: yen(c) } }}
+                </button>
+              }
+            </div>
+            <div class="field">
+              <label for="dp-c-end">{{ 'dependent.field.contractPeriodEnd' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+              <input id="dp-c-end" class="input" type="date" formControlName="contractPeriodEnd" />
+              <span class="hint">{{ 'dependent.hint.contractPeriodEnd' | transloco }}</span>
+            </div>
+          </div>
+          <label class="check"><input type="checkbox" formControlName="contractHoursClear" />{{ 'dependent.field.contractHoursClear' | transloco }}</label>
+          <label class="check"><input type="checkbox" formControlName="contractAllowancesClear" />{{ 'dependent.field.contractAllowancesClear' | transloco }}</label>
+          <p class="hint block">{{ 'dependent.hint.contract' | transloco }}</p>
+        </div>
+      }
+
+      <!-- ④ 扶養の期間 -->
+      <h3>{{ 'dependent.group.period' | transloco }}</h3>
+      <div class="grid">
+        <div class="field">
+          <label for="dp-from">{{ 'dependent.field.from' | transloco }}</label>
+          <input id="dp-from" class="input" type="date" formControlName="from" [class.is-invalid]="errorOf('from')" />
+          @if (errorOf('from'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          @for (c of fromCandidates(); track c.key) {
+            <button type="button" class="candidate" (click)="useFrom(c.date)">
+              {{ 'dependent.candidate.from_' + c.key | transloco: { date: c.date } }}
+            </button>
+          }
+        </div>
+        <div class="field">
+          <label for="dp-start">{{ 'dependent.field.startReason' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <select id="dp-start" class="input" formControlName="startReason" [class.is-invalid]="errorOf('startReason')">
+            <option value="">{{ 'common.select' | transloco }}</option>
+            @for (r of startReasons(); track r) {
+              <option [value]="r">{{ 'dependent.startReason.' + r | transloco }}</option>
+            }
+          </select>
+          @if (errorOf('startReason'); as e) {
+            <span class="field-error">{{ e | transloco }}</span>
+          } @else {
+            <span class="hint">{{ 'dependent.hint.startReason' | transloco }}</span>
+          }
+        </div>
+        @if (form.controls.startReason.value === 'other') {
+          <div class="field">
+            <label for="dp-start-text">{{ 'dependent.field.reasonText' | transloco }}</label>
+            <input id="dp-start-text" class="input" formControlName="startReasonText" />
+          </div>
+        }
+        <div class="field">
+          <label for="dp-to">{{ 'dependent.field.to' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="dp-to" class="input" type="date" formControlName="to" [class.is-invalid]="errorOf('to')" />
+          @if (errorOf('to'); as e) {
+            <span class="field-error">{{ e | transloco }}</span>
+          } @else {
+            <span class="hint">{{ 'dependent.hint.to' | transloco }}</span>
+          }
+        </div>
+        @if (form.controls.to.value) {
+          <div class="field">
+            <label for="dp-end">{{ 'dependent.field.endReason' | transloco }}</label>
+            <select id="dp-end" class="input" formControlName="endReason" [class.is-invalid]="errorOf('endReason')">
+              <option value="">{{ 'common.select' | transloco }}</option>
+              @for (r of endReasons; track r) {
+                @if (r !== 'divorce' || isSpouse()) {
+                  <option [value]="r">{{ 'dependent.endReason.' + r | transloco }}</option>
+                }
+              }
+            </select>
+            @if (errorOf('endReason'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+          @if (form.controls.endReason.value === 'other') {
+            <div class="field">
+              <label for="dp-end-text">{{ 'dependent.field.reasonText' | transloco }}</label>
+              <input id="dp-end-text" class="input" formControlName="endReasonText" />
+            </div>
+          }
+        }
+        <div class="field wide">
+          <label for="dp-note">{{ 'dependent.field.note' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="dp-note" class="input" maxlength="500" formControlName="note" />
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" formControlName="needsConfirmationCard" />{{ 'dependent.field.needsConfirmationCard' | transloco }}</label>
+
+      <!-- 判定の候補（扶養に入った日の時点） -->
+      @if (preview(); as p) {
+        <div [class]="'verdict ' + p.level">
+          <strong>{{ 'dependent.level.' + p.level | transloco }}</strong>
+          <span>
+            {{ 'dependent.verdict.limit' | transloco: { limit: yen(p.limit), reason: ('dependent.limitReason.' + p.limitReason | transloco) } }}
+            ・{{ 'dependent.verdict.income' | transloco: { income: yen(p.income), source: ('dependent.incomeSource.' + p.incomeSource | transloco) } }}
+            @if (p.remittanceYear !== null) { ・{{ 'dependent.verdict.remittance' | transloco: { amount: yen(p.remittanceYear) } }} }
+            @if (p.thirdInsured) { ・{{ 'dependent.thirdInsured' | transloco }} }
+          </span>
+          @if (p.issues.length || p.contractIssues.length) {
+            <ul>
+              @for (i of p.issues; track i) { <li>{{ 'dependent.issue.' + i | transloco }}</li> }
+              @for (i of p.contractIssues; track i) { <li>{{ 'dependent.contractIssue.' + i | transloco }}</li> }
+            </ul>
+          }
+          <p class="note">{{ 'dependent.verdict.disclaimer' | transloco }}</p>
+        </div>
+      }
+
+      <div class="actions">
+        <button type="button" class="btn" (click)="cancel()">{{ 'common.cancel' | transloco }}</button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ 'common.save' | transloco }}</button>
+      </div>
+    </form>
+  }
+
+  <!-- 一覧 -->
+  @if (loading()) {
+    <p class="muted">{{ 'common.loading' | transloco }}</p>
+  } @else if (rows().length === 0) {
+    <p class="muted">{{ 'dependent.empty' | transloco }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'dependent.col.name' | transloco }}</th>
+            <th>{{ 'dependent.field.relationship' | transloco }}</th>
+            <th class="num">{{ 'dependent.col.age' | transloco }}</th>
+            <th>{{ 'dependent.col.home' | transloco }}</th>
+            <th class="num">{{ 'dependent.field.annualIncome' | transloco }}</th>
+            <th>{{ 'dependent.col.check' | transloco }}</th>
+            <th>{{ 'dependent.col.period' | transloco }}</th>
+            @if (context.isAdmin()) {
+              <th><span class="sr-only">{{ 'common.edit' | transloco }}</span></th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (d of sorted(); track d.id) {
+            <tr [class.ended]="!isActive(d)">
+              <td>
+                <div>{{ d.lastName }} {{ d.firstName }}</div>
+                <div class="sub">{{ d.lastNameKana }} {{ d.firstNameKana }}</div>
+              </td>
+              <td>
+                {{ 'dependent.relationship.' + d.relationship | transloco }}
+                @if (d.commonLaw) { {{ 'dependent.commonLawShort' | transloco }} }
+                @if (d.relationshipNote) { （{{ d.relationshipNote }}） }
+              </td>
+              <td class="num mono">{{ age(d) }}</td>
+              <td>{{ (d.livingTogether ? 'dependent.together' : 'dependent.apart') | transloco }}</td>
+              <td class="num mono">{{ yen(d.annualIncome) }}</td>
+              <td>
+                @if (checkOf(d); as c) {
+                  <span [class]="'badge ' + c.level">{{ 'dependent.level.' + c.level | transloco }}</span>
+                  @if (c.thirdInsured) { <span class="tag">{{ 'dependent.thirdInsuredShort' | transloco }}</span> }
+                  @for (i of c.issues; track i) {
+                    <div class="sub">{{ 'dependent.issue.' + i | transloco }}</div>
+                  }
+                } @else if (d.to && d.endReason) {
+                  <span class="sub">{{ 'dependent.endReason.' + d.endReason | transloco }}</span>
+                } @else {
+                  <span class="sub">{{ 'dependent.scheduled' | transloco }}</span>
+                }
+              </td>
+              <td class="mono">{{ d.from }}〜{{ d.to ?? '' }}</td>
+              @if (context.isAdmin()) {
+                <td class="row-actions">
+                  @if (confirmingDelete() === d.id) {
+                    <button type="button" class="link danger" [disabled]="saving()" (click)="remove(d.id)">
+                      {{ 'dependent.confirmDelete' | transloco }}
+                    </button>
+                    <button type="button" class="link" (click)="confirmingDelete.set(null)">{{ 'common.cancel' | transloco }}</button>
+                  } @else {
+                    <button type="button" class="link" [disabled]="editing() !== null" (click)="startEdit(d)">{{ 'common.edit' | transloco }}</button>
+                    <button type="button" class="link" [disabled]="editing() !== null" (click)="confirmingDelete.set(d.id)">{{ 'common.delete' | transloco }}</button>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">{{ 'dependent.hint.deleteVsEnd' | transloco }}</p>
+  }
+</section>

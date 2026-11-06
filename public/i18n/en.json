@@ -1103,5 +1103,214 @@
       "save": "Could not save.",
       "delete": "Could not delete."
     }
+  },
+  "dependent": {
+    "title": "Dependents",
+    "add": "Add family member",
+    "empty": "No dependents.",
+    "yen": " yen",
+    "together": "Living together",
+    "apart": "Living apart",
+    "scheduled": "Upcoming",
+    "commonLawShort": "(common-law)",
+    "thirdInsured": "Becomes a Category III insured person of the National Pension",
+    "thirdInsuredShort": "Cat. III",
+    "confirmDelete": "Delete this person",
+    "household": {
+      "insuredIncome": "This employee's expected annual income",
+      "spouseIncome": "Annual income of a spouse who is not a dependent",
+      "manual": "(entered manually)",
+      "fromRecords": "(from {{months}} months of pay and the last year's bonuses)",
+      "unknown": "Cannot calculate without pay records. Enter it via Edit.",
+      "insuredIncomeHint": "Leave blank to calculate from pay and bonus records. Used on the filing and for the \"less than half\" check.",
+      "spouseIncomeHint": "Fill in when the spouse is not a dependent and children etc. are added. Dependents go to the spouse with the higher income."
+    },
+    "group": {
+      "who": "1. Who",
+      "home": "2. Residence",
+      "income": "3. Income and occupation",
+      "period": "4. Period"
+    },
+    "field": {
+      "relationship": "Relationship",
+      "relationshipNote": "Relationship (details)",
+      "lastName": "Surname",
+      "firstName": "Given name",
+      "lastNameKana": "Surname reading",
+      "firstNameKana": "Given name reading",
+      "birthDate": "Date of birth",
+      "sex": "Sex",
+      "basicPensionNumber": "Basic pension number",
+      "nationality": "Nationality (if foreign)",
+      "alias": "Registered alias",
+      "commonLaw": "Common-law (unregistered)",
+      "relationshipConfirmed": "Relationship confirmed with family register etc.",
+      "phoneType": "Phone type",
+      "remittance": "Remittance per payment (yen)",
+      "remittanceTimes": "Remittances per year",
+      "hasOverseas": "Lives overseas (overseas exception)",
+      "overseasReason": "Reason for overseas exception",
+      "overseasFrom": "Applies from",
+      "overseasTo": "No longer applies from",
+      "overseasEndReason": "Reason it ended",
+      "reasonText": "Reason (details)",
+      "occupation": "Occupation",
+      "occupationNote": "Occupation (details)",
+      "schoolYear": "School year",
+      "annualIncome": "Expected annual income (yen)",
+      "monthlyIncome": "Monthly (yen)",
+      "disabled": "Person with a disability (limit becomes 1.8 million yen)",
+      "contractHourly": "Contract hourly wage (yen)",
+      "contractWeeklyHours": "Contract weekly hours",
+      "contractAllowances": "Contract monthly allowances (yen)",
+      "contractBonus": "Contract yearly bonus (yen)",
+      "contractAnnualWage": "Annual income from contract (yen)",
+      "contractPeriodEnd": "End of contract term",
+      "contractHoursClear": "Working hours are clearly stated (not \"by shift\")",
+      "contractAllowancesClear": "Allowance amounts are clearly stated",
+      "from": "Became a dependent on",
+      "startReason": "Reason for becoming a dependent",
+      "to": "Stopped being a dependent on",
+      "endReason": "Reason for leaving",
+      "needsConfirmationCard": "Needs an eligibility certificate",
+      "note": "Remarks"
+    },
+    "relationship": {
+      "spouse": "Spouse",
+      "child": "Child (biological/adopted)",
+      "otherChild": "Other child",
+      "parent": "Parent",
+      "parentInLaw": "Parent-in-law",
+      "youngerSibling": "Younger sibling",
+      "olderSibling": "Older sibling",
+      "grandparent": "Grandparent",
+      "greatGrandparent": "Great-grandparent",
+      "grandchild": "Grandchild",
+      "other": "Other"
+    },
+    "phoneType": {
+      "home": "Home",
+      "mobile": "Mobile",
+      "work": "Work",
+      "other": "Other"
+    },
+    "overseasReason": {
+      "study": "Study abroad",
+      "accompany": "Accompanying family",
+      "specificActivity": "Designated activities",
+      "marriageAbroad": "Married abroad",
+      "other": "Other"
+    },
+    "overseasEndReason": {
+      "returned": "Moved to Japan",
+      "other": "Other"
+    },
+    "occupation": {
+      "none": "Not employed",
+      "partTime": "Part-time",
+      "pensioner": "Pensioner",
+      "child": "Junior high or younger",
+      "student": "High school/university",
+      "other": "Other"
+    },
+    "incomeBasis": {
+      "estimate": "Judge by expected income",
+      "contract": "Judge by employment contract (salary only, from 2026-04-01)"
+    },
+    "incomeSource": {
+      "estimate": "expected",
+      "contract": "from contract"
+    },
+    "startReason": {
+      "spouseEmployment": "Spouse got a job",
+      "marriage": "Marriage",
+      "leftJob": "Left job",
+      "incomeDecrease": "Income decreased",
+      "birth": "Birth",
+      "cohabitation": "Started living together",
+      "other": "Other"
+    },
+    "endReason": {
+      "death": "Death",
+      "divorce": "Divorce",
+      "employment": "Employment",
+      "incomeIncrease": "Income increased",
+      "age75": "Turned 75",
+      "disability": "Disability certified",
+      "other": "Other"
+    },
+    "candidate": {
+      "monthly": "Suggestion: monthly × 12 = {{amount}} yen (click to use)",
+      "contract": "Suggestion: hourly × weekly hours × 52 + allowances × 12 + bonus = {{amount}} yen (click to use)",
+      "from_acquired": "Suggestion: coverage start {{date}} (when filed with the acquisition)",
+      "from_birth": "Suggestion: date of birth {{date}}"
+    },
+    "hint": {
+      "nationality": "Two-letter country/region code",
+      "address": "Address on the residence record. Required when living apart.",
+      "monthly": "Enter a monthly amount to get an annual suggestion (108,333 yen/month is about 1.3 million/year).",
+      "income": "Expected over the next year, including non-taxable income such as disability/survivor pensions, unemployment and sickness benefits.",
+      "contract": "Annual income expected from the wages in the employment contract (including allowances and bonuses). Only for people with salary income only, who must declare this on the filing.",
+      "contractPeriodEnd": "Leave blank for no fixed term. Contracts ending within one year of becoming a dependent cannot use this method.",
+      "startReason": "May be left blank when filed together with the acquisition notification.",
+      "to": "For death, enter the day after the date of death.",
+      "deleteVsEnd": "When someone stops being a dependent, enter the end date instead of deleting. Delete only to fix mistakes."
+    },
+    "col": {
+      "name": "Name",
+      "age": "Age",
+      "home": "Residence",
+      "check": "Eligibility (suggested)",
+      "period": "Period"
+    },
+    "level": {
+      "ok": "Meets criteria",
+      "review": "Check",
+      "ng": "Does not meet"
+    },
+    "limitReason": {
+      "base": "standard",
+      "young": "age 19–22 rule",
+      "senior": "60 or older",
+      "disabled": "disability"
+    },
+    "verdict": {
+      "limit": "Limit {{limit}} yen ({{reason}})",
+      "income": "income {{income}} yen ({{source}})",
+      "remittance": "remittance {{amount}} yen/year",
+      "disclaimer": "Suggested as of the date the person became a dependent. The final decision is made by the Japan Pension Service."
+    },
+    "issue": {
+      "age75": "People 75 or older move to the late-stage elderly medical care system.",
+      "cohabitationRequired": "This relationship requires living together.",
+      "overLimit": "Annual income is at or above the limit.",
+      "overInsured": "Living together and earning more than this employee.",
+      "halfOrMore": "Living together and earning half or more of this employee's income (may still be accepted).",
+      "insuredIncomeUnknown": "This employee's income is unknown, so the \"less than half\" check cannot be done.",
+      "overRemittance": "Living apart and income is at or above the yearly remittance.",
+      "noRemittance": "Living apart but no remittance amount entered."
+    },
+    "contractIssue": {
+      "notYet": "The contract method starts 2026-04-01 (judged by expected income).",
+      "shortContract": "Contract ends within a year, so the contract method cannot be used (judged by expected income).",
+      "unclearHours": "Hours are unclear, so the contract method cannot be used (judged by expected income).",
+      "unclearAllowances": "Allowances are unclear, so the contract method cannot be used (judged by expected income)."
+    },
+    "error": {
+      "required": "Required.",
+      "kana": "Use katakana.",
+      "postalCode": "Postal code is 7 digits.",
+      "basicPensionNumber": "Basic pension number is 10 digits.",
+      "country": "Use two letters.",
+      "yen": "Enter the amount in digits.",
+      "times": "Enter 1–365.",
+      "schoolYear": "Enter 1–6.",
+      "toBeforeFrom": "Must be after the start date.",
+      "fromBeforeBirth": "Must be after the date of birth.",
+      "reasonMismatch": "Not available for this relationship.",
+      "load": "Could not load dependents.",
+      "save": "Could not save.",
+      "delete": "Could not delete."
+    }
   }
 }

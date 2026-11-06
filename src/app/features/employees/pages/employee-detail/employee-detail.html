@@ -47,6 +47,9 @@
     <!-- 雇用契約の履歴 -->
     <app-contract-card [employee]="e" />
 
+    <!-- 扶養家族 -->
+    <app-dependent-card [employee]="e" (changed)="reloadEmployee()" />
+
     <!-- そのほかの情報（見るだけ。直すときは「編集」から） -->
     <section class="card">
       <h2>{{ 'employee.section.more' | transloco }}</h2>

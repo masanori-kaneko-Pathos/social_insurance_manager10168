@@ -319,6 +319,7 @@ service cloud.firestore {
               'health', 'pension', 'acquisitionType', 'multipleOffices', 'rehired', 'needsConfirmationCard', 'optInDate',
               'insuredNumber', 'basicPensionNumber',
               'contact', 'commute', 'bankAccount', 'collectionMethod', 'foreign', 'leaves', 'userUid',
+              'annualIncomeEstimate', 'spouseAnnualIncome',
               'createdAt', 'updatedAt'])
           && optStr(d.employeeNumber, 20)
           && str(d.lastName, 50) && str(d.lastNameKana, 50)
@@ -341,7 +342,9 @@ service cloud.firestore {
           && validForeign(d.foreign)
           // 休業：配列で20件まで。1件ずつの中身はアプリで確かめる（ルールに繰り返しがないため）
           && d.leaves is list && d.leaves.size() <= 20
-          && (d.userUid == null || d.userUid is string);
+          && (d.userUid == null || d.userUid is string)
+          && (d.annualIncomeEstimate == null || yen(d.annualIncomeEstimate))
+          && (d.spouseAnnualIncome == null || yen(d.spouseAnnualIncome));
       }
 
       match /employees/{employeeId} {
@@ -395,23 +398,64 @@ service cloud.firestore {
 
         // ----- 扶養家族（ID は自動） -----
         match /dependents/{dependentId} {
+          function validOverseasSpecial(o) {
+            return o == null || (o is map
+              && exactKeys(o, ['reason', 'reasonText', 'from', 'to', 'endReason', 'endReasonText'])
+              && o.reason in ['study', 'accompany', 'specificActivity', 'marriageAbroad', 'other']
+              && optStr(o.reasonText, 100) && isDate(o.from) && optDate(o.to)
+              && (o.endReason == null || o.endReason in ['returned', 'other'])
+              && optStr(o.endReasonText, 100));
+          }
+
+          function validContractIncome(c) {
+            return c == null || (c is map
+              && exactKeys(c, ['annualWage', 'periodEnd', 'hoursClear', 'allowancesClear'])
+              && yen(c.annualWage) && optDate(c.periodEnd)
+              && c.hoursClear is bool && c.allowancesClear is bool);
+          }
+
           function validDependent(d) {
             return exactKeys(d, ['lastName', 'firstName', 'lastNameKana', 'firstNameKana', 'birthDate', 'sex',
-                                 'relationship', 'relationshipNote', 'livingTogether', 'address', 'occupation',
-                                 'annualIncome', 'basicPensionNumber', 'thirdInsured', 'from', 'to', 'endReason',
-                                 'createdAt', 'updatedAt'])
-              && str(d.lastName, 50) && str(d.firstName, 50)
-              && str(d.lastNameKana, 50) && str(d.firstNameKana, 50)
+                                 'relationship', 'relationshipNote', 'commonLaw', 'nationality', 'alias',
+                                 'basicPensionNumber', 'relationshipConfirmed',
+                                 'livingTogether', 'postalCode', 'address', 'phone', 'phoneType',
+                                 'remittance', 'remittanceTimes', 'overseas',
+                                 'occupation', 'occupationNote', 'schoolYear', 'annualIncome', 'disabled',
+                                 'incomeBasis', 'contractIncome',
+                                 'from', 'startReason', 'startReasonText', 'to', 'endReason', 'endReasonText',
+                                 'needsConfirmationCard', 'note', 'createdAt', 'updatedAt'])
+              && str(d.lastName, 50) && optStr(d.firstName, 50)
+              && str(d.lastNameKana, 50) && optStr(d.firstNameKana, 50)
               && isDate(d.birthDate)
               && (d.sex == null || d.sex in ['male', 'female'])
-              && d.relationship in ['spouse', 'child', 'parent', 'grandparent', 'sibling', 'grandchild', 'other']
+              && d.relationship in ['spouse', 'child', 'otherChild', 'parent', 'parentInLaw', 'youngerSibling',
+                                    'olderSibling', 'grandparent', 'greatGrandparent', 'grandchild', 'other']
               && optStr(d.relationshipNote, 50)
-              && d.livingTogether is bool && optStr(d.address, 200) && optStr(d.occupation, 50)
-              && (d.annualIncome == null || yen(d.annualIncome))
+              && d.commonLaw is bool && (d.relationship == 'spouse' || d.commonLaw == false)
+              && optCode(d.nationality) && optStr(d.alias, 100)
               && (d.basicPensionNumber == null || (d.basicPensionNumber is string && d.basicPensionNumber.matches('^[0-9]{10}$')))
-              && d.thirdInsured is bool
-              && optDate(d.from) && optDate(d.to)
-              && (d.endReason == null || d.endReason in ['employment', 'income', 'death', 'separation', 'other']);
+              && d.relationshipConfirmed is bool
+              && d.livingTogether is bool
+              && (d.postalCode == null || (d.postalCode is string && d.postalCode.matches('^[0-9]{7}$')))
+              && optStr(d.address, 200) && optStr(d.phone, 20)
+              && (d.phoneType == null || d.phoneType in ['home', 'mobile', 'work', 'other'])
+              && (d.remittance == null || yen(d.remittance)) && optIntIn(d.remittanceTimes, 1, 365)
+              && validOverseasSpecial(d.overseas)
+              && d.occupation in ['none', 'partTime', 'pensioner', 'child', 'student', 'other']
+              && optStr(d.occupationNote, 50) && optIntIn(d.schoolYear, 1, 6)
+              && yen(d.annualIncome) && d.disabled is bool
+              && d.incomeBasis in ['estimate', 'contract']
+              && validContractIncome(d.contractIncome)
+              && (d.incomeBasis == 'estimate' || d.contractIncome != null)
+              && isDate(d.from)
+              && (d.startReason == null || d.startReason in ['spouseEmployment', 'marriage', 'leftJob', 'incomeDecrease',
+                                                             'birth', 'cohabitation', 'other'])
+              && optStr(d.startReasonText, 100)
+              && optDate(d.to)
+              && (d.endReason == null || d.endReason in ['death', 'divorce', 'employment', 'incomeIncrease', 'age75',
+                                                         'disability', 'other'])
+              && optStr(d.endReasonText, 100)
+              && d.needsConfirmationCard is bool && optStr(d.note, 500);
           }
 
           allow read: if isMember(officeId);

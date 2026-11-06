@@ -11,6 +11,7 @@ import { PremiumCard } from '../../../premiums/components/premium-card/premium-c
 import { BonusCard } from '../../../premiums/components/bonus-card/bonus-card';
 import { LeaveCard } from '../../components/leave-card/leave-card';
 import { ContractCard } from '../../components/contract-card/contract-card';
+import { DependentCard } from '../../components/dependent-card/dependent-card';
 import { exemptMonth } from '../../logic/leave';
 import { PayrollCard } from '../../../payrolls/components/payroll-card/payroll-card';
 import { formatPostalCode } from '../../../../shared/utils/text';
@@ -24,6 +25,7 @@ type Mode = 'fiscal' | 'calendar' | 'last12';
     TranslocoPipe,
     RemunerationCard,
     ContractCard,
+    DependentCard,
     PremiumCard,
     BonusCard,
     LeaveCard,

@@ -174,6 +174,11 @@ export interface EmployeeDoc {
   collectionMethod: CollectionMethod | null; // null ＝ 事業所の設定のまま
   foreign: ForeignDoc | null;
   leaves: Leave[];
+  // 扶養家族の判定と届書の材料（扶養家族のカードで入れる）
+  /** 被保険者の今後1年の年収の見込み。null なら給与・賞与の実績から計算する（届書 A⑦） */
+  annualIncomeEstimate: number | null;
+  /** 扶養に入っていない配偶者の年収（届書 ㉑。夫婦のどちらの扶養かを確かめる材料） */
+  spouseAnnualIncome: number | null;
   /** マイページのアカウント（まだなら null） */
   userUid: string | null;
   createdAt: Timestamp;
@@ -187,7 +192,10 @@ export interface Employee extends EmployeeDoc {
 export type EmployeeInput = Omit<EmployeeDoc, 'createdAt' | 'updatedAt'>;
 
 /** 登録・編集画面が扱う項目（休業はカード、マイページのアカウントは招待で保存する） */
-export type EmployeeBasicInput = Omit<EmployeeInput, 'leaves' | 'userUid'>;
+export type EmployeeBasicInput = Omit<
+  EmployeeInput,
+  'leaves' | 'userUid' | 'annualIncomeEstimate' | 'spouseAnnualIncome'
+>;
 
 // ===== 初期値 =====
 
@@ -219,5 +227,5 @@ export function emptyLeave(kind: LeaveKind, start: string): Leave {
 
 /** 登録画面が扱わない項目の初期値（登録のときに係が足す） */
 export function employeeExtras(): Omit<EmployeeInput, keyof EmployeeBasicInput> {
-  return { leaves: [], userUid: null };
+  return { leaves: [], userUid: null, annualIncomeEstimate: null, spouseAnnualIncome: null };
 }
