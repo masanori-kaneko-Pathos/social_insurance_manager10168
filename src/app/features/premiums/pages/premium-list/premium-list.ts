@@ -7,9 +7,8 @@ import { Employee } from '../../../../core/models/employee';
 import { Office } from '../../../../core/models/office';
 import { OfficeTotal } from '../../../../core/models/premium';
 import { RemunerationDoc } from '../../../../core/models/remuneration';
-import { todayLocal } from '../../../../shared/utils/date';
+import { todayLocal, shiftMonth, toYearMonth, YearMonth } from '../../../../shared/utils/date';
 import { EmployeeService } from '../../../employees/employee.service';
-import { shiftMonth, toYearMonth, YearMonth } from '../../../employees/logic/coverage';
 import { RemunerationService } from '../../../employees/remuneration.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import {

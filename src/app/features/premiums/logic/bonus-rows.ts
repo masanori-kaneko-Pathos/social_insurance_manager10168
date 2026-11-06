@@ -10,13 +10,8 @@ import {
   PremiumPart,
 } from '../../../core/models/premium';
 import { RatesForMonth } from '../../../core/models/rates';
-import {
-  CoverageInput,
-  DateStr,
-  healthLostDate,
-  pensionLostDate,
-  YearMonth,
-} from '../../employees/logic/coverage';
+import { CoverageInput, healthLostDate, pensionLostDate } from '../../employees/logic/coverage';
+import { DateStr, YearMonth } from '../../../shared/utils/date';
 import { BonusPayment, bonusStatus, calcBonuses } from './calc-bonus';
 import { PremiumSplit, splitContribution } from './premium-core';
 import { LeaveHolder } from '../../employees/logic/leave';

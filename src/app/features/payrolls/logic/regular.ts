@@ -12,7 +12,8 @@ import type { GradeRow } from '../../../core/models/rates';
 import type { RemunerationDoc, StandardRemuneration } from '../../../core/models/remuneration';
 import type { Payroll } from '../../../core/models/payroll';
 import { gradeOf } from '../../rates/logic/grade';
-import { addMonths, PayrollEmployee, PaySchedule, periodOf } from './payroll-rows';
+import { PayrollEmployee, PaySchedule, periodOf } from './payroll-rows';
+import { shiftMonth } from '../../../shared/utils/date';
 
 export const REGULAR_MIN_DAYS = 17;
 
@@ -260,7 +261,7 @@ export function decideRegular(x: RegularInput): RegularResult {
 
   // --- 年間平均（前年7月〜当年6月） ---
   const annualMonths = Array.from({ length: 12 }, (_, i) => {
-    const m = addMonths(`${y - 1}-07`, i);
+    const m = shiftMonth(`${y - 1}-07`, i);
     return useMonth(m, x.payrolls.get(m), acquired, x.schedule);
   });
   const annualUsed = annualMonths.filter((m) => m.used).length;

@@ -2,12 +2,9 @@
  * 料率の文字列 ⇔ 整数（RateMicro）の変換
  * 小数の計算を一切使わず、文字列のまま桁を組み立てる。
  */
+import { toHalfWidth } from '../../../shared/utils/text';
 import { RateMicro } from '../../../core/models/rates';
 
-/** 全角の数字・点を半角に */
-function toHalfWidth(s: string): string {
-  return s.replace(/[０-９．]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
-}
 
 /**
  * '10.06' → 100600、'4.2371' → 42371、'0.23' → 2300

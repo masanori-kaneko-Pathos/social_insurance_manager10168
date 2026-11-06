@@ -19,15 +19,8 @@ import {
   PremiumPart,
 } from '../../../core/models/premium';
 import { PickedRate, RatesForMonth } from '../../../core/models/rates';
-import {
-  ageReachDate,
-  CoverageInput,
-  DateStr,
-  fiscalYearOf,
-  healthLostDate,
-  pensionLostDate,
-  toYearMonth,
-} from '../../employees/logic/coverage';
+import { ageReachDate, CoverageInput, healthLostDate, pensionLostDate } from '../../employees/logic/coverage';
+import { DateStr, fiscalYearOf, toYearMonth } from '../../../shared/utils/date';
 import { makeGroups, makeLine, withTotals } from './premium-core';
 import { exemptBonus, LeaveHolder } from '../../employees/logic/leave';
 

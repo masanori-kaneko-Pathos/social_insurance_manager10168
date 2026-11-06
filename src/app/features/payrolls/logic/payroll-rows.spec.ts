@@ -1,19 +1,6 @@
 import { emptyPayrollInput, Payroll } from '../../../core/models/payroll';
-import {
-  addMonths,
-  daysBetween,
-  employedDuring,
-  hasExtra,
-  insuredDuring,
-  latestPaidMonth,
-  missingPayrolls,
-  PayrollEmployee,
-  payrollRows,
-  periodOf,
-  PaySchedule,
-  suggestDays,
-  validatePayroll,
-} from './payroll-rows';
+import { employedDuring, hasExtra, insuredDuring, latestPaidMonth, missingPayrolls, PayrollEmployee, payrollRows, periodOf, PaySchedule, suggestDays, validatePayroll } from './payroll-rows';
+import { shiftMonth, daysInclusive } from '../../../shared/utils/date';
 
 // 伊藤テスト中商事：月末締め・翌月25日払い
 const MONTH_END_NEXT: PaySchedule = { closingDay: 31, payDay: 25, payMonth: 'next' };
@@ -33,14 +20,14 @@ const A = emp('A', '2024-04-01', null);
 const D = emp('D', '2020-04-01', '2026-08-20', '2026-08-21');
 const F = emp('F', '2026-06-10', '2026-06-25', '2026-06-26');
 
-describe('addMonths / daysBetween', () => {
+describe('shiftMonth / daysInclusive', () => {
   it('年をまたぐ', () => {
-    expect(addMonths('2026-01', -1)).toBe('2025-12');
-    expect(addMonths('2026-12', 1)).toBe('2027-01');
+    expect(shiftMonth('2026-01', -1)).toBe('2025-12');
+    expect(shiftMonth('2026-12', 1)).toBe('2027-01');
   });
   it('両端を含む', () => {
-    expect(daysBetween('2026-10-01', '2026-10-31')).toBe(31);
-    expect(daysBetween('2026-06-10', '2026-06-10')).toBe(1);
+    expect(daysInclusive('2026-10-01', '2026-10-31')).toBe(31);
+    expect(daysInclusive('2026-06-10', '2026-06-10')).toBe(1);
   });
 });
 

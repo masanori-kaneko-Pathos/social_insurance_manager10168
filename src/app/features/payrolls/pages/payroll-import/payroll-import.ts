@@ -7,18 +7,10 @@ import { Payroll } from '../../../../core/models/payroll';
 import { CsvEncoding, decodeCsv, downloadCsv, parseCsv, safeFileName } from '../../../../shared/csv/csv';
 import { EmployeeService } from '../../../employees/employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
-import {
-  buildPayrollCsv,
-  classifyImport,
-  CsvLang,
-  ImportItem,
-  ImportRead,
-  monthsBetween,
-  PAYROLL_HEADERS,
-  payrollFileName,
-  readPayrollCsv,
-} from '../../logic/payroll-csv';
-import { addMonths, latestPaidMonth, scheduleOf, todayIso } from '../../logic/payroll-rows';
+import { buildPayrollCsv, classifyImport, CsvLang, ImportItem, ImportRead, PAYROLL_HEADERS, payrollFileName, readPayrollCsv } from '../../logic/payroll-csv';
+import { monthsBetween, shiftMonth, todayLocal } from '../../../../shared/utils/date';
+import { latestPaidMonth } from '../../logic/payroll-rows';
+import { payrollOf } from '../../../office/office-settings';
 import { PartialSaveError, PayrollService } from '../../payroll.service';
 
 /** 書き出せる期間の上限（月数） */
@@ -72,7 +64,7 @@ export class PayrollImport {
   // ----- 書き出し -----
   readonly latest = computed(() => {
     const office = this.context.current();
-    return office ? latestPaidMonth(todayIso(), scheduleOf(office)) : '';
+    return office ? latestPaidMonth(todayLocal(), payrollOf(office)) : '';
   });
   from = '';
   to = '';
@@ -147,14 +139,14 @@ export class PayrollImport {
       return;
     }
     const lang = this.lang();
-    const rows = buildPayrollCsv(this.employees, [...this.saved.values()], months, scheduleOf(office), lang);
-    downloadCsv(safeFileName(payrollFileName(office.name, this.from, this.to, todayIso(), lang)), rows);
+    const rows = buildPayrollCsv(this.employees, [...this.saved.values()], months, payrollOf(office), lang);
+    downloadCsv(safeFileName(payrollFileName(office.name, this.from, this.to, todayLocal(), lang)), rows);
   }
 
   /** 期間を「前の3か月」などにすばやく合わせる */
   setRange(months: number): void {
     this.to = this.latest();
-    this.from = addMonths(this.latest(), -(months - 1));
+    this.from = shiftMonth(this.latest(), -(months - 1));
   }
 
   // ===== 取り込み =====
@@ -171,7 +163,7 @@ export class PayrollImport {
     this.errorKey.set(null);
     try {
       const { text, encoding } = decodeCsv(await file.arrayBuffer());
-      const read = readPayrollCsv(parseCsv(text), this.employees, scheduleOf(office));
+      const read = readPayrollCsv(parseCsv(text), this.employees, payrollOf(office));
       this.preview.set({ fileName: file.name, encoding, read, ...classifyImport(read.items, this.saved) });
     } catch (err) {
       console.error(err);

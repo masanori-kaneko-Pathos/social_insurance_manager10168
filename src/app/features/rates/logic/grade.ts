@@ -5,6 +5,7 @@
 import { GradeRow, GradeTableDoc } from '../../../core/models/rates';
 import { StandardRemuneration } from '../../../core/models/remuneration';
 import { latest } from './pick-rates';
+import { toHalfWidth } from '../../../shared/utils/text';
 
 /** 報酬月額として受け付ける上限（1億円未満） */
 const MAX_AMOUNT = 99_999_999;
@@ -53,15 +54,8 @@ export function decideStandard(
  * '300000'、'300,000'、'３００，０００' を受け付ける。読めないもの・上限超えは null
  */
 export function parseYen(input: string): number | null {
-  const s = input
-    .replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
-    .replace(/[,，\s]/g, '');
+  const s = toHalfWidth(input).replace(/[,\s]/g, '');
   if (!/^\d{1,8}$/.test(s)) return null;
   const n = Number(s);
   return n <= MAX_AMOUNT ? n : null;
-}
-
-/** 300000 → '300,000' */
-export function formatYen(n: number): string {
-  return n.toLocaleString('ja-JP');
 }

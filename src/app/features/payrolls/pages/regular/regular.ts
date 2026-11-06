@@ -15,7 +15,7 @@ import { RemunerationService } from '../../../employees/remuneration.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import { gradeOf, pickGradeTable } from '../../../rates/logic/grade';
 import { RateService } from '../../../rates/rate.service';
-import { scheduleOf } from '../../logic/payroll-rows';
+import { payrollOf } from '../../../office/office-settings';
 import {
   decideRegular,
   GradeRows,
@@ -141,7 +141,7 @@ export class RegularPage {
         if (!byEmployee.has(p.employeeId)) byEmployee.set(p.employeeId, new Map());
         byEmployee.get(p.employeeId)!.set(p.paidMonth, p);
       }
-      const schedule = scheduleOf(office);
+      const schedule = payrollOf(office);
       this.views.set(
         employees.map((employee, i) => {
           const rems = remunerations[i];

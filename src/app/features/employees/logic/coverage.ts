@@ -4,8 +4,13 @@
  * 日付は 'YYYY-MM-DD'、年月は 'YYYY-MM' の文字列で扱う（文字列のまま大小比較できる）。
  */
 
-export type DateStr = string; // 'YYYY-MM-DD'
-export type YearMonth = string; // 'YYYY-MM'
+import {
+  addDays,
+  dateOf,
+  DateStr,
+  toYearMonth,
+  YearMonth,
+} from '../../../shared/utils/date';
 
 export interface Enrollment {
   enrolled: boolean;
@@ -26,33 +31,12 @@ export interface MonthlyCoverage {
   pension: boolean;
 }
 
-// ===== 1. 日付の小道具（タイムゾーンの影響を受けないよう UTC で計算） =====
-
-function toUtc(date: DateStr): Date {
-  const [y, m, d] = date.split('-').map(Number);
-  return new Date(Date.UTC(y, m - 1, d));
-}
-
-function fromUtc(dt: Date): DateStr {
-  return dt.toISOString().slice(0, 10);
-}
-
-export function addDays(date: DateStr, days: number): DateStr {
-  const dt = toUtc(date);
-  dt.setUTCDate(dt.getUTCDate() + days);
-  return fromUtc(dt);
-}
-
-export function toYearMonth(date: DateStr): YearMonth {
-  return date.slice(0, 7);
-}
-
 // ===== 2. 年齢 =====
 
 /** その年齢の誕生日（2/29生まれで平年の場合は 3/1 になる） */
 export function birthdayAt(birthDate: DateStr, age: number): DateStr {
   const [y, m, d] = birthDate.split('-').map(Number);
-  return fromUtc(new Date(Date.UTC(y + age, m - 1, d)));
+  return dateOf(y + age, m, d);
 }
 
 /** 法律上の年齢到達日 ＝ 誕生日の前日（年齢計算ニ関スル法律） */
@@ -121,35 +105,6 @@ export function coverageForMonth(input: CoverageInput, month: YearMonth): Monthl
 }
 
 // ===== 6. 期間の一覧 =====
-
-export function shiftMonth(month: YearMonth, diff: number): YearMonth {
-  const [y, m] = month.split('-').map(Number);
-  const total = y * 12 + (m - 1) + diff;
-  const ny = Math.floor(total / 12);
-  const nm = (total % 12) + 1;
-  return `${ny}-${String(nm).padStart(2, '0')}`;
-}
-
-/** 年度（4月〜翌3月） */
-export function monthsOfFiscalYear(fiscalYear: number): YearMonth[] {
-  return Array.from({ length: 12 }, (_, i) => shiftMonth(`${fiscalYear}-04`, i));
-}
-
-/** 暦年（1月〜12月） */
-export function monthsOfCalendarYear(year: number): YearMonth[] {
-  return Array.from({ length: 12 }, (_, i) => shiftMonth(`${year}-01`, i));
-}
-
-/** 指定した月までの直近12か月 */
-export function monthsLast12(endMonth: YearMonth): YearMonth[] {
-  return Array.from({ length: 12 }, (_, i) => shiftMonth(endMonth, i - 11));
-}
-
-/** その月が属する年度（1〜3月は前の年） */
-export function fiscalYearOf(month: YearMonth): number {
-  const [y, m] = month.split('-').map(Number);
-  return m >= 4 ? y : y - 1;
-}
 
 export function coverageForMonths(input: CoverageInput, months: YearMonth[]): MonthlyCoverage[] {
   return months.map((m) => coverageForMonth(input, m));

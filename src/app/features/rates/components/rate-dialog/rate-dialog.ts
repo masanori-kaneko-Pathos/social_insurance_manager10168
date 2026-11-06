@@ -20,7 +20,7 @@ import {
   RateMicro,
   RateSplit,
 } from '../../../../core/models/rates';
-import { shiftMonth } from '../../../employees/logic/coverage';
+import { shiftMonth } from '../../../../shared/utils/date';
 import { inRange, kyokaiChanges } from '../../logic/rate-changes';
 import {
   formatRate,

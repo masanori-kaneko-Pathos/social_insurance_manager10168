@@ -9,10 +9,9 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { EmployeeInput } from '../../../../core/models/employee';
-import { todayLocal } from '../../../../shared/utils/date';
+import { todayLocal, addDays } from '../../../../shared/utils/date';
 import { OfficeContext } from '../../../office/office-context.service';
 import { EmployeeService } from '../../employee.service';
-import { addDays } from '../../logic/coverage';
 
 const KANA = /^[ァ-ヶー・\s　]+$/;
 const NOT_BLANK = Validators.pattern(/\S/);

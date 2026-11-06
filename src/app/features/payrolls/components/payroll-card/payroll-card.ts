@@ -4,8 +4,9 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
 import { Payroll } from '../../../../core/models/payroll';
 import { OfficeContext } from '../../../office/office-context.service';
-import { formatHours } from '../../logic/payroll-input';
-import { periodOf, scheduleOf } from '../../logic/payroll-rows';
+import { formatHours } from '../../../../shared/utils/number';
+import { periodOf } from '../../logic/payroll-rows';
+import { payrollOf } from '../../../office/office-settings';
 import { PayrollService } from '../../payroll.service';
 
 /** 従業員の詳細：給与の実績（直近12件・見るだけ。入力は月の画面で） */
@@ -49,7 +50,7 @@ export class PayrollCard {
   periodText(p: Payroll): string {
     const office = this.context.current();
     if (!office) return '';
-    const { start, end } = periodOf(p.paidMonth, scheduleOf(office));
+    const { start, end } = periodOf(p.paidMonth, payrollOf(office));
     const md = (d: string) => `${Number(d.slice(5, 7))}/${Number(d.slice(8, 10))}`;
     return `${md(start)}〜${md(end)}`;
   }

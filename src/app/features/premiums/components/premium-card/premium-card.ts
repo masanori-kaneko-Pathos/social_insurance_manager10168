@@ -8,8 +8,7 @@ import {
   PremiumResult,
 } from '../../../../core/models/premium';
 import { RemunerationDoc } from '../../../../core/models/remuneration';
-import { todayLocal } from '../../../../shared/utils/date';
-import { toYearMonth, YearMonth } from '../../../employees/logic/coverage';
+import { todayLocal, toYearMonth, YearMonth } from '../../../../shared/utils/date';
 import { RemunerationService } from '../../../employees/remuneration.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import {

@@ -3,44 +3,7 @@
 
 import { PayrollInput, PayrollState } from '../../../core/models/payroll';
 import { PayrollError, validatePayroll } from './payroll-rows';
-
-// ===== 文字 → 数値 =====
-
-/** 全角の数字・記号を半角に */
-function toHalf(s: string): string {
-  return s.replace(/[０-９：．，]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
-}
-
-/**
- * 0以上の整数として読む。「320,000」「３２００００」も読める
- * 空欄は null、読めないものは undefined
- */
-export function parseNat(s: string): number | null | undefined {
-  const t = toHalf(s).replace(/[,\s]/g, '');
-  if (t === '') return null;
-  if (!/^\d+$/.test(t)) return undefined;
-  const n = Number(t);
-  return Number.isSafeInteger(n) ? n : undefined;
-}
-
-/**
- * 時間を分として読む。「160」→ 9600、「160:30」→ 9630、「160.5」→ 9630
- * 空欄は null、読めないものは undefined
- */
-export function parseHours(s: string): number | null | undefined {
-  const t = toHalf(s).replace(/\s/g, '');
-  if (t === '') return null;
-  let m = /^(\d+)(?::([0-5]\d))?$/.exec(t);
-  if (m) return Number(m[1]) * 60 + Number(m[2] ?? 0);
-  m = /^(\d+)\.(\d{1,2})$/.exec(t);
-  if (m) return Number(m[1]) * 60 + Math.round(Number(`0.${m[2]}`) * 60);
-  return undefined;
-}
-
-/** 分 → 「160:30」 */
-export function formatHours(minutes: number): string {
-  return `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}`;
-}
+import { formatHours, parseHours, parseNat } from '../../../shared/utils/number';
 
 // ===== 1行 =====
 

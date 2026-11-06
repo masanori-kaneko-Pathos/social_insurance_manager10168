@@ -1,9 +1,8 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Office } from '../../core/models/office';
+import { Office, OfficeRole } from '../../core/models/office';
 import { groupOfficesByCorporation } from './office-grouping';
 import { OfficeService } from './office.service';
 import { AuthService } from '../../core/auth/auth.service';
-import { OfficeRole } from '../../core/models/office';
 
 @Injectable({ providedIn: 'root' })
 export class OfficeContext {

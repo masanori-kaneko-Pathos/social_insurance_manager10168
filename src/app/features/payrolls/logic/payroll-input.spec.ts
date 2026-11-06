@@ -1,14 +1,6 @@
 import { emptyPayrollInput } from '../../../core/models/payroll';
-import {
-  candidateDays,
-  formatHours,
-  parseHours,
-  parseNat,
-  PayrollRowText,
-  readRow,
-  sameInput,
-  textOf,
-} from './payroll-input';
+import { candidateDays, PayrollRowText, readRow, sameInput, textOf } from './payroll-input';
+import { formatHours, parseHours, parseNat } from '../../../shared/utils/number';
 
 const blank = (): PayrollRowText => textOf(null);
 

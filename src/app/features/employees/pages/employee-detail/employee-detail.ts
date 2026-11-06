@@ -3,16 +3,8 @@ import { RouterLink, ActivatedRoute } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { EmployeeService } from '../../employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
-import { todayLocal, ageAt } from '../../../../shared/utils/date';
-import {
-  toYearMonth,
-  fiscalYearOf,
-  monthsLast12,
-  YearMonth,
-  monthsOfCalendarYear,
-  monthsOfFiscalYear,
-  coverageForMonths,
-} from '../../logic/coverage';
+import { todayLocal, ageAt, toYearMonth, fiscalYearOf, monthsLast12, YearMonth, monthsOfCalendarYear, monthsOfFiscalYear } from '../../../../shared/utils/date';
+import { coverageForMonths } from '../../logic/coverage';
 import { Employee } from '../../../../core/models/employee';
 import { RemunerationCard } from '../../components/remuneration-card/remuneration-card';
 import { PremiumCard } from '../../../premiums/components/premium-card/premium-card';

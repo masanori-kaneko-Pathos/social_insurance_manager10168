@@ -7,16 +7,9 @@ import { Employee } from '../../../../core/models/employee';
 import { Payroll } from '../../../../core/models/payroll';
 import { EmployeeService } from '../../../employees/employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
-import {
-  addMonths,
-  latestPaidMonth,
-  missingPayrolls,
-  Period,
-  payrollRows,
-  periodOf,
-  scheduleOf,
-  todayIso,
-} from '../../logic/payroll-rows';
+import { latestPaidMonth, missingPayrolls, Period, payrollRows, periodOf } from '../../logic/payroll-rows';
+import { payrollOf } from '../../../office/office-settings';
+import { shiftMonth, todayLocal } from '../../../../shared/utils/date';
 import { PayrollService } from '../../payroll.service';
 import { regularYearOf } from '../../logic/regular';
 
@@ -54,7 +47,7 @@ export class PayrollList {
   /** 支払日を過ぎた最新の月（＝ 実績が入っているべき月） */
   readonly latest = computed(() => {
     const office = this.context.current();
-    return office ? latestPaidMonth(todayIso(), scheduleOf(office)) : '';
+    return office ? latestPaidMonth(todayLocal(), payrollOf(office)) : '';
   });
 
   /** 一覧のいちばん上の月（?to=YYYY-MM。なければ最新の月の翌月まで見せる） */
@@ -63,13 +56,13 @@ export class PayrollList {
   });
   readonly top = computed(() => {
     const to = this.toParam();
-    return to && MONTH_RE.test(to) ? to : addMonths(this.latest(), 1);
+    return to && MONTH_RE.test(to) ? to : shiftMonth(this.latest(), 1);
   });
 
   readonly rows = computed<MonthRow[]>(() => {
     const office = this.context.current();
     if (!office || !this.latest()) return [];
-    const schedule = scheduleOf(office);
+    const schedule = payrollOf(office);
     const employees = this.employees();
     const byMonth = new Map<string, Map<string, Payroll>>();
     for (const p of this.payrolls()) {
@@ -77,7 +70,7 @@ export class PayrollList {
       byMonth.get(p.paidMonth)!.set(p.employeeId, p);
     }
     return Array.from({ length: 12 }, (_, i) => {
-      const month = addMonths(this.top(), -i);
+      const month = shiftMonth(this.top(), -i);
       const period = periodOf(month, schedule);
       const saved = byMonth.get(month) ?? new Map<string, Payroll>();
       const rows = payrollRows(employees, period, saved);
@@ -93,10 +86,10 @@ export class PayrollList {
     });
   });
 
-  readonly prevTo = computed(() => addMonths(this.top(), -12));
+  readonly prevTo = computed(() => shiftMonth(this.top(), -12));
   /** 定時決定の年（6月払いが済んでいれば今年） */
   readonly regularYear = computed(() => (this.latest() ? regularYearOf(this.latest()) : 0));
-  readonly nextTo = computed(() => addMonths(this.top(), 12));
+  readonly nextTo = computed(() => shiftMonth(this.top(), 12));
 
   constructor() {
     this.load();

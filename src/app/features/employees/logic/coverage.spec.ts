@@ -1,12 +1,5 @@
-import {
-  CoverageInput,
-  ageReachDate,
-  coverageForMonth,
-  defaultEnrollmentDates,
-  isChargedMonth,
-  monthsOfFiscalYear,
-  fiscalYearOf,
-} from './coverage';
+import { CoverageInput, ageReachDate, coverageForMonth, defaultEnrollmentDates, isChargedMonth } from './coverage';
+import { monthsOfFiscalYear, fiscalYearOf } from '../../../shared/utils/date';
 
 /** テスト用の従業員を作る（健保・厚年とも加入、指定がなければ退職なし） */
 function employee(birthDate: string, acquired: string, lost: string | null = null): CoverageInput {

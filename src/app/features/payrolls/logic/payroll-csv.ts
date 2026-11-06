@@ -3,8 +3,11 @@
 
 import { Payroll, PayrollInput, PayrollState } from '../../../core/models/payroll';
 import { isBlankRow } from '../../../shared/csv/csv';
-import { formatHours, PayrollRowText, readRow, RowError, sameInput } from './payroll-input';
-import { addMonths, daysBetween, employedDuring, PayrollEmployee, PaySchedule, periodOf } from './payroll-rows';
+import { toHalfWidth } from '../../../shared/utils/text';
+import { PayrollRowText, readRow, RowError, sameInput } from './payroll-input';
+import { formatHours } from '../../../shared/utils/number';
+import { employedDuring, PayrollEmployee, PaySchedule, periodOf } from './payroll-rows';
+import { daysInclusive } from '../../../shared/utils/date';
 
 // ===== 列 =====
 
@@ -79,10 +82,8 @@ const STATE_LABELS: Record<CsvLang, Record<PayrollState, string>> = {
 };
 
 const norm = (s: string) =>
-  s
-    .replace(/[０-９Ａ-Ｚａ-ｚ]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
-    .replace(/　/g, ' ')
-    .replace(/[／－ー‐]/g, (c) => (c === '／' ? '/' : '-'))
+  toHalfWidth(s)
+    .replace(/[ー‐]/g, '-') // 長音・ハイフンのような文字
     .trim();
 
 const headerKey = (s: string) => norm(s).toLowerCase().replace(/\s+/g, '');
@@ -285,7 +286,7 @@ export function readPayrollCsv(
     let periodDays = 31;
     if (employee && paidMonth) {
       const p = periodOf(paidMonth, schedule);
-      periodDays = daysBetween(p.start, p.end);
+      periodDays = daysInclusive(p.start, p.end);
       if (!employedDuring(employee, p)) codes.push('notEmployed');
       const key = `${employee.id}|${paidMonth}`;
       if (seen.has(key)) codes.push('duplicate');
@@ -348,13 +349,6 @@ export function classifyImport(
 }
 
 // ===== 書き出し =====
-
-/** from〜to の月（両端を含む。from > to なら空） */
-export function monthsBetween(from: string, to: string): string[] {
-  const out: string[] = [];
-  for (let m = from; m <= to; m = addMonths(m, 1)) out.push(m);
-  return out;
-}
 
 /**
  * 書き出しの行（見出し＋1人×1か月）。期間に在籍していた人を、月の順・渡された人の順で並べる

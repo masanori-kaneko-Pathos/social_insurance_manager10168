@@ -10,12 +10,8 @@ import {
 } from '../../../core/models/premium';
 import { RatesForMonth } from '../../../core/models/rates';
 import { StandardRemuneration } from '../../../core/models/remuneration';
-import {
-  CoverageInput,
-  coverageForMonth,
-  shiftMonth,
-  YearMonth,
-} from '../../employees/logic/coverage';
+import { CoverageInput, coverageForMonth } from '../../employees/logic/coverage';
+import { shiftMonth, YearMonth } from '../../../shared/utils/date';
 import { LeaveHolder } from '../../employees/logic/leave';
 import { latest } from '../../rates/logic/pick-rates';
 import { calcMonthly, RemunerationLike } from './calc-monthly';

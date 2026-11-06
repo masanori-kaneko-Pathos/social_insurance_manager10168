@@ -1,5 +1,6 @@
 import { GradeTableDoc } from '../../../core/models/rates';
-import { decideStandard, formatYen, gradeOf, parseYen, pickGradeTable } from './grade';
+import { decideStandard, gradeOf, parseYen, pickGradeTable } from './grade';
+import { formatYen } from '../../../shared/utils/number';
 
 // テスト用の等級表（本物の表の、下限・上限付近だけ）
 const HEALTH: GradeTableDoc = {

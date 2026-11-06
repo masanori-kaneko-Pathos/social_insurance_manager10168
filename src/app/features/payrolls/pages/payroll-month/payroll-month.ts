@@ -16,18 +16,9 @@ import {
   sameInput,
   textOf,
 } from '../../logic/payroll-input';
-import {
-  addMonths,
-  daysBetween,
-  hasExtra,
-  latestPaidMonth,
-  Period,
-  PayrollRow,
-  payrollRows,
-  periodOf,
-  scheduleOf,
-  todayIso,
-} from '../../logic/payroll-rows';
+import { hasExtra, latestPaidMonth, Period, PayrollRow, payrollRows, periodOf } from '../../logic/payroll-rows';
+import { payrollOf } from '../../../office/office-settings';
+import { shiftMonth, daysInclusive, todayLocal } from '../../../../shared/utils/date';
 import { PayrollChange, PayrollService } from '../../payroll.service';
 
 type RowForm = FormGroup<{
@@ -82,13 +73,13 @@ export class PayrollMonth {
 
   readonly periodDays = computed(() => {
     const p = this.period();
-    return p ? daysBetween(p.start, p.end) : 0;
+    return p ? daysInclusive(p.start, p.end) : 0;
   });
-  readonly prevMonth = computed(() => (this.month() ? addMonths(this.month(), -1) : ''));
-  readonly nextMonth = computed(() => (this.month() ? addMonths(this.month(), 1) : ''));
+  readonly prevMonth = computed(() => (this.month() ? shiftMonth(this.month(), -1) : ''));
+  readonly nextMonth = computed(() => (this.month() ? shiftMonth(this.month(), 1) : ''));
   readonly isFuture = computed(() => {
     const office = this.context.current();
-    return !!office && this.month() > latestPaidMonth(todayIso(), scheduleOf(office));
+    return !!office && this.month() > latestPaidMonth(todayLocal(), payrollOf(office));
   });
 
   private employees: Employee[] | null = null;
@@ -115,7 +106,7 @@ export class PayrollMonth {
     try {
       this.employees ??= await this.employeesApi.list(office.id);
       const employees = this.employees;
-      const period = periodOf(month, scheduleOf(office));
+      const period = periodOf(month, payrollOf(office));
       const saved = await this.payrollApi.month(
         office.id,
         employees.map((e) => e.id),

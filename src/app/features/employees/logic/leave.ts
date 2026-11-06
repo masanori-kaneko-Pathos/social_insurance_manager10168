@@ -13,7 +13,14 @@
  *   （2022年10月1日以降に始まった育休。終了日が未定のときは「超える」とみなす）
  * 免除でも標準賞与額は決まり、健保の年度累計には入る（日本年金機構）
  */
-import { addDays, DateStr, shiftMonth, toYearMonth, YearMonth } from './coverage';
+import {
+  addDays,
+  DateStr,
+  daysInclusive,
+  shiftMonth,
+  toYearMonth,
+  YearMonth,
+} from '../../../shared/utils/date';
 
 export type LeaveKind = 'maternity' | 'childcare'; // 産休 ／ 育休
 
@@ -30,16 +37,6 @@ export interface LeaveHolder {
 
 /** 同月14日のルール・賞与の1か月超のルールが始まった日 */
 export const RULE_2022_FROM = '2022-10-01';
-
-function utc(date: DateStr): number {
-  const [y, m, d] = date.split('-').map(Number);
-  return Date.UTC(y, m - 1, d);
-}
-
-/** a〜b の日数（両端を含む） */
-export function daysInclusive(a: DateStr, b: DateStr): number {
-  return Math.round((utc(b) - utc(a)) / 86_400_000) + 1;
-}
 
 /**
  * 開始日から「1か月」の期間の最後の日（民法の数え方：翌月の応当日の前日。応当日がなければ翌月の末日）

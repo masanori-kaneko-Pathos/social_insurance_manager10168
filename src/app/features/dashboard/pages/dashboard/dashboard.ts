@@ -7,7 +7,7 @@ import { AuthService } from '../../../../core/auth/auth.service';
 import { LanguageService } from '../../../../core/i18n/language.service';
 import { PREFECTURES } from '../../../../core/master/prefectures';
 import { Employee } from '../../../../core/models/employee';
-import { todayLocal } from '../../../../shared/utils/date';
+import { todayLocal, shiftMonth, toYearMonth, YearMonth } from '../../../../shared/utils/date';
 import { EmployeeService } from '../../../employees/employee.service';
 import {
   AGE_MILESTONES,
@@ -19,7 +19,6 @@ import {
   isActive,
   sortMonthOf,
 } from '../../../employees/logic/age-events';
-import { shiftMonth, toYearMonth, YearMonth } from '../../../employees/logic/coverage';
 import { OfficeContext } from '../../../office/office-context.service';
 
 /** 「以内」の範囲：今月から何か月先まで（0 は今月だけ） */

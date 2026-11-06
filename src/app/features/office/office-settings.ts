@@ -11,7 +11,7 @@ import {
   PremiumSettings,
 } from '../../core/models/office';
 import { DEFAULT_PREMIUM_OPTIONS } from '../../core/models/premium';
-import { shiftMonth, YearMonth } from '../employees/logic/coverage';
+import { shiftMonth, YearMonth } from '../../shared/utils/date';
 import { latest, noRates, OfficeForRates, pickRates, RateTables } from '../rates/logic/pick-rates';
 import { MonthRange, RatesForMonth } from '../../core/models/rates';
 

@@ -2,14 +2,8 @@
  * 年齢到達の検知（ダッシュボードの一覧に使う）
  * Angular・Firebase に依存しない純粋な関数だけで書く。
  */
-import {
-  ageReachDate,
-  birthdayAt,
-  CoverageInput,
-  DateStr,
-  toYearMonth,
-  YearMonth,
-} from './coverage';
+import { ageReachDate, birthdayAt, CoverageInput } from './coverage';
+import { DateStr, toYearMonth, YearMonth } from '../../../shared/utils/date';
 
 /** 知らせる年齢 */
 export type AgeMilestone = 40 | 60 | 65 | 70 | 75;
@@ -76,7 +70,6 @@ export function sortMonthOf(ev: AgeEvent, sort: AgeSort): YearMonth {
 
 export function compareAgeEvents(a: AgeEvent, b: AgeEvent, sort: AgeSort): number {
   return (
-    sortMonthOf(a, sort).localeCompare(sortMonthOf(b, sort)) ||
-    a.birthday.localeCompare(b.birthday)
+    sortMonthOf(a, sort).localeCompare(sortMonthOf(b, sort)) || a.birthday.localeCompare(b.birthday)
   );
 }

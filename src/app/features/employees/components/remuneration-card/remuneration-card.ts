@@ -10,12 +10,12 @@ import {
   RemunerationReason,
   StandardRemuneration,
 } from '../../../../core/models/remuneration';
-import { todayLocal } from '../../../../shared/utils/date';
+import { todayLocal, toYearMonth } from '../../../../shared/utils/date';
 import { OfficeContext } from '../../../office/office-context.service';
-import { decideStandard, formatYen, parseYen, pickGradeTable } from '../../../rates/logic/grade';
+import { decideStandard, parseYen, pickGradeTable } from '../../../rates/logic/grade';
+import { formatYen } from '../../../../shared/utils/number';
 import { latest } from '../../../rates/logic/pick-rates';
 import { RateService } from '../../../rates/rate.service';
-import { toYearMonth } from '../../logic/coverage';
 import { RemunerationService } from '../../remuneration.service';
 
 type Kind = 'health' | 'pension';

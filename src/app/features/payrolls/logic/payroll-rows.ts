@@ -4,18 +4,22 @@
 // - 支払基礎日数の候補（今は月給として暦日数。給与の形は雇用契約ができたら足す）
 // - 入力チェック
 //
-// 年月の道具はここに置いている（提出後に shared/utils へまとめる候補）
 
 import { Payroll, PayrollInput, PAYROLL_STATES } from '../../../core/models/payroll';
+import { PayrollSettings } from '../../../core/models/office';
+import {
+  addDays,
+  DateStr,
+  daysInclusive,
+  daysInMonth,
+  shiftMonth,
+  YearMonth,
+} from '../../../shared/utils/date';
 
 // ===== 型（今あるモデルから必要な所だけ受け取る） =====
 
-/** 事業所の payroll 設定のうち、ここで使う所 */
-export interface PaySchedule {
-  closingDay: number; // 1〜31（31 ＝ 月末）
-  payDay: number; // 1〜31（31 ＝ 月末）
-  payMonth: 'current' | 'next';
-}
+/** 事業所の給与の設定のうち、ここで使う所（締日・支払日・支払月） */
+export type PaySchedule = Pick<PayrollSettings, 'closingDay' | 'payDay' | 'payMonth'>;
 
 interface Enrollment {
   enrolled: boolean;
@@ -37,55 +41,11 @@ export interface Period {
   end: string; // 'YYYY-MM-DD'（この日を含む）
 }
 
-// ===== 年月・日付の道具 =====
-
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
-export function addMonths(ym: string, n: number): string {
-  const y = Number(ym.slice(0, 4));
-  const m = Number(ym.slice(5, 7));
-  const t = y * 12 + (m - 1) + n;
-  return `${String(Math.floor(t / 12)).padStart(4, '0')}-${pad2((t % 12) + 1)}`;
-}
-
-export function daysInMonth(ym: string): number {
-  return new Date(Date.UTC(Number(ym.slice(0, 4)), Number(ym.slice(5, 7)), 0)).getUTCDate();
-}
-
-function toUtc(date: string): number {
-  return Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10)));
-}
-
-function fromUtc(ms: number): string {
-  const d = new Date(ms);
-  return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`;
-}
-
-const DAY = 24 * 60 * 60 * 1000;
-
-/** 両端を含む日数 */
-export function daysBetween(start: string, end: string): number {
-  return Math.round((toUtc(end) - toUtc(start)) / DAY) + 1;
-}
-
 /** その月の締日（31 や 30 は、その月の末日で止める） */
-function closeDateOf(ym: string, closingDay: number): string {
+function closeDateOf(ym: YearMonth, closingDay: number): DateStr {
   return `${ym}-${pad2(Math.min(closingDay, daysInMonth(ym)))}`;
-}
-
-/** 端末の今日 'YYYY-MM-DD' */
-export function todayIso(now = new Date()): string {
-  return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
-}
-
-// ===== 事業所の締日・支払日 =====
-
-/** office-settings の初期値と同じ（月末締め・翌月25日払い） */
-export const DEFAULT_SCHEDULE: PaySchedule = { closingDay: 31, payDay: 25, payMonth: 'next' };
-
-/** 古い事業所のデータには payroll がないので初期値で埋める */
-export function scheduleOf(office: { payroll?: PaySchedule | null }): PaySchedule {
-  return office.payroll ?? DEFAULT_SCHEDULE;
 }
 
 // ===== 対象期間 =====
@@ -96,10 +56,10 @@ export function scheduleOf(office: { payroll?: PaySchedule | null }): PaySchedul
  *     20日締め・翌月払い、2026-11 払い → 2026-09-21〜2026-10-20
  */
 export function periodOf(paidMonth: string, s: PaySchedule): Period {
-  const endMonth = s.payMonth === 'next' ? addMonths(paidMonth, -1) : paidMonth;
+  const endMonth = s.payMonth === 'next' ? shiftMonth(paidMonth, -1) : paidMonth;
   const end = closeDateOf(endMonth, s.closingDay);
-  const prevClose = closeDateOf(addMonths(endMonth, -1), s.closingDay);
-  return { start: fromUtc(toUtc(prevClose) + DAY), end };
+  const prevClose = closeDateOf(shiftMonth(endMonth, -1), s.closingDay);
+  return { start: addDays(prevClose, 1), end };
 }
 
 /**
@@ -110,7 +70,7 @@ export function latestPaidMonth(today: string, s: PaySchedule): string {
   const ym = today.slice(0, 7);
   const day = Number(today.slice(8, 10));
   const payDay = Math.min(s.payDay, daysInMonth(ym));
-  return day >= payDay ? ym : addMonths(ym, -1);
+  return day >= payDay ? ym : shiftMonth(ym, -1);
 }
 
 // ===== 在籍・加入 =====
@@ -146,7 +106,7 @@ export function suggestDays(e: PayrollEmployee, p: Period): number {
   if (!employedDuring(e, p)) return 0;
   const start = e.hireDate > p.start ? e.hireDate : p.start;
   const end = e.retireDate != null && e.retireDate < p.end ? e.retireDate : p.end;
-  return daysBetween(start, end);
+  return daysInclusive(start, end);
 }
 
 // ===== 表の行と入れ忘れ =====
@@ -167,7 +127,7 @@ export function payrollRows(
   p: Period,
   saved: ReadonlyMap<string, Payroll>,
 ): PayrollRow[] {
-  const total = daysBetween(p.start, p.end);
+  const total = daysInclusive(p.start, p.end);
   return employees
     .filter((e) => employedDuring(e, p))
     .map((e) => {

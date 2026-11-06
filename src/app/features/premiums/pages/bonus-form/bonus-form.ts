@@ -12,7 +12,8 @@ import {
   premiumOf,
   ratesForOffice,
 } from '../../../office/office-settings';
-import { formatYen, parseYen } from '../../../rates/logic/grade';
+import { parseYen } from '../../../rates/logic/grade';
+import { formatYen } from '../../../../shared/utils/number';
 import { RateTables } from '../../../rates/logic/pick-rates';
 import { RateService } from '../../../rates/rate.service';
 import { BonusService } from '../../bonus.service';
