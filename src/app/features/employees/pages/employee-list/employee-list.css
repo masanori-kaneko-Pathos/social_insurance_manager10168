@@ -156,3 +156,16 @@
     overflow: hidden;
     clip: rect(0 0 0 0);
   }
+/* 見出しの行（あ・か…・A・B…・#） */
+.section-row th {
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--font-sm);
+  font-weight: 700;
+  text-align: left;
+  color: var(--color-text-sub);
+  background: var(--color-bg);
+}
+
+.alias {
+  margin-left: var(--space-xs);
+}

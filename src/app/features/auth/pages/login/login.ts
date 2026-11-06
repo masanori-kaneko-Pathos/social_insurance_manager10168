@@ -7,9 +7,10 @@ import { LangSwitch } from '../../../../shared/components/lang-switch/lang-switc
 import { PasswordField } from '../../../../shared/components/password-field/password-field';
 import { PasswordInputDirective } from '../../../../shared/components/password-field/password-input.directive';
 
+import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, LangSwitch, PasswordField, 
+  imports: [HalfWidthDigits, ReactiveFormsModule, RouterLink, TranslocoPipe, LangSwitch, PasswordField, 
     PasswordInputDirective ],
   templateUrl: './login.html',
   styleUrl: '../../auth-layout.css',

@@ -6,7 +6,7 @@
 import { BonusPaymentDoc } from './bonus';
 import { ContractDoc } from './contract';
 import { DependentDoc } from './dependent';
-import { EmployeeDoc, EnrollmentDoc, Leave } from './employee';
+import { EmployeeDoc, EnrollmentDoc, ForeignDoc, Leave, PersonName } from './employee';
 import { OfficeDoc } from './office';
 import { PayrollInput } from './payroll';
 import { IrregularDecisionDoc, RegularDecisionDoc } from './revision';
@@ -119,8 +119,25 @@ const CATEGORY: Record<string, Field<ContractDoc> | Field<OfficeDoc> | Field<Emp
   区分: 'calc',
 };
 
+/** ローマ字氏名届（厚生年金保険被保険者・国民年金第3号被保険者） */
+const ROMAN_NAME: Record<string, Field<EmployeeDoc> | Field<ForeignDoc> | Field<PersonName>> = {
+  基礎年金番号: 'basicPensionNumber',
+  性別: 'sex',
+  生年月日: 'birthDate',
+  住民登録の有無: 'residentRegistered',
+  ローマ字氏名_フリガナ: 'lastNameKana', // 取得届と同じフリガナ
+  ローマ字氏名: 'romanLastName',
+  漢字氏名: 'kanjiName',
+  通称名: 'alias',
+  氏_名_フリガナ: 'lastKana',
+  関連届書使用氏名: 'filingName',
+  ローマ字氏名がない理由: 'noRomanReason',
+  その他の理由: 'noRomanReasonText',
+  届が要るか: 'needsRomanNameFiling',
+};
+
 describe('答え合わせの表（届書の欄 → 入れ物の項目）', () => {
-  const tables = { ACQUISITION, LOSS, REGULAR, IRREGULAR, BONUS, DEPENDENT, LEAVE, CATEGORY };
+  const tables = { ACQUISITION, LOSS, REGULAR, IRREGULAR, BONUS, DEPENDENT, LEAVE, CATEGORY, ROMAN_NAME };
   for (const [name, table] of Object.entries(tables)) {
     it(`${name}：すべての欄に行き先がある`, () => {
       for (const [label, field] of Object.entries(table)) {

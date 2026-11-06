@@ -12,6 +12,7 @@ import { BonusCard } from '../../../premiums/components/bonus-card/bonus-card';
 import { LeaveCard } from '../../components/leave-card/leave-card';
 import { exemptMonth } from '../../logic/leave';
 import { PayrollCard } from '../../../payrolls/components/payroll-card/payroll-card';
+import { formatPostalCode } from '../../../../shared/utils/text';
 
 type Mode = 'fiscal' | 'calendar' | 'last12';
 
@@ -121,6 +122,44 @@ export class EmployeeDetail {
 
   age(e: Employee): number {
     return ageAt(e.birthDate, this.today);
+  }
+
+  // ===== そのほかの情報の表示 =====
+
+  commute(e: Employee): string {
+    return [e.commute.method, e.commute.route].filter((x) => !!x).join('：') || '—';
+  }
+
+  /** 基礎年金番号は下4桁だけ見せる */
+  pensionNumber(e: Employee): string {
+    const n = e.basicPensionNumber;
+    return n ? `****-**${n.slice(-4)}` : '—';
+  }
+
+  address(e: Employee): string {
+    const c = e.contact;
+    const zip = c.postalCode ? `〒${formatPostalCode(c.postalCode)} ` : '';
+    return zip + (c.address ?? '') || '—';
+  }
+
+  /** 外国籍の人のローマ字氏名（姓 名 ミドルネーム）。ないときは null */
+  romanName(e: Employee): string | null {
+    const f = e.foreign;
+    if (!f?.romanLastName) return null;
+    return [f.romanLastName, f.romanFirstName, f.romanMiddleName].filter((x) => !!x).join(' ');
+  }
+
+  /** 口座番号は下3桁だけ見せる */
+  bank(e: Employee): string {
+    const b = e.bankAccount;
+    if (!b.bankName && !b.accountNumber) return '—';
+    const num = b.accountNumber ? `****${b.accountNumber.slice(-3)}` : '';
+    return [b.bankName, b.branchName, num].filter((x) => !!x).join(' ');
+  }
+
+  /** 印のついている資格の細目 */
+  flags(e: Employee): ('multipleOffices' | 'rehired' | 'needsConfirmationCard')[] {
+    return (['multipleOffices', 'rehired', 'needsConfirmationCard'] as const).filter((k) => e[k]);
   }
 
   /** '2026-04' → '4' */

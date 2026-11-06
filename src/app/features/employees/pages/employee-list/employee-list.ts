@@ -5,12 +5,14 @@ import { Employee } from '../../../../core/models/employee';
 import { ageAt, todayLocal } from '../../../../shared/utils/date';
 import { OfficeContext } from '../../../office/office-context.service';
 import { EmployeeService } from '../../employee.service';
+import { groupByName, matchesName, RomanBy } from '../../logic/name-index';
 
+import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 type StatusFilter = 'active' | 'retired' | 'all';
 
 @Component({
   selector: 'app-employee-list',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [HalfWidthDigits, RouterLink, TranslocoPipe],
   templateUrl: './employee-list.html',
   styleUrl: './employee-list.css',
 })
@@ -23,20 +25,23 @@ export class EmployeeList {
   readonly loading = signal(true);
   readonly query = signal('');
   readonly status = signal<StatusFilter>('active');
+  /** ローマ字の列（A〜Z）を姓と名のどちらで並べるか */
+  readonly romanBy = signal<RomanBy>('last');
 
   readonly filtered = computed(() => {
-    const q = this.query().trim().toLowerCase();
+    const q = this.query();
     return this.employees().filter((e) => {
       const retired = this.isRetired(e);
       if (this.status() === 'active' && retired) return false;
       if (this.status() === 'retired' && !retired) return false;
-      if (!q) return true;
-      const text = [e.lastName, e.firstName, e.lastNameKana, e.firstNameKana, e.employeeNumber ?? '']
-        .join(' ')
-        .toLowerCase();
-      return text.includes(q);
+      return matchesName(e, q);
     });
   });
+
+  /** あ〜わ → A〜Z → # の見出しごと */
+  readonly sections = computed(() => groupByName(this.filtered(), this.romanBy()));
+  /** ローマ字の列に並ぶ人がいるときだけ「姓／名」の切り替えを出す */
+  readonly hasRoman = computed(() => this.sections().some((s) => /^[A-Z]$/.test(s.label)));
 
   constructor() {
     // 事業所が切り替わったら読み直す

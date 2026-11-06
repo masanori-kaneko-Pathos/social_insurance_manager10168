@@ -13,6 +13,7 @@ import { latestPaidMonth } from '../../logic/payroll-rows';
 import { payrollOf } from '../../../office/office-settings';
 import { PartialSaveError, PayrollService } from '../../payroll.service';
 
+import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 /** 書き出せる期間の上限（月数） */
 const MAX_MONTHS = 24;
 /** 確認画面に出すエラーの行数 */
@@ -42,7 +43,7 @@ interface Preview {
 
 @Component({
   selector: 'app-payroll-import',
-  imports: [RouterLink, TranslocoPipe, FormsModule],
+  imports: [HalfWidthDigits, RouterLink, TranslocoPipe, FormsModule],
   templateUrl: './payroll-import.html',
   styleUrl: './payroll-import.css',
 })

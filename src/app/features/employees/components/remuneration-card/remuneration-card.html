@@ -48,10 +48,11 @@
             inputmode="numeric"
             formControlName="monthlyAmount"
             [class.is-invalid]="errorOf('monthlyAmount')"
-            placeholder="300,000"
           />
           @if (errorOf('monthlyAmount'); as key) {
             <span class="field-error">{{ key | transloco }}</span>
+          } @else {
+            <span class="hint">{{ 'remuneration.hint.amount' | transloco }}</span>
           }
         </div>
       </div>

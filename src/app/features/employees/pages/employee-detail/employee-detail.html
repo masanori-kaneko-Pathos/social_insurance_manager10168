@@ -44,6 +44,90 @@
       <app-remuneration-card [employee]="e" (changed)="premiumCard.reload()" />
     </section>
 
+    <!-- そのほかの情報（見るだけ。直すときは「編集」から） -->
+    <section class="card">
+      <h2>{{ 'employee.section.more' | transloco }}</h2>
+      <dl class="info">
+        <div>
+          <dt>{{ 'employee.field.sex' | transloco }}</dt>
+          <dd>{{ e.sex ? ('employee.sex.' + e.sex | transloco) : '—' }}</dd>
+        </div>
+        @if (e.retireDate) {
+          <div>
+            <dt>{{ 'employee.field.retireReason' | transloco }}</dt>
+            <dd>{{ e.retireReason ? ('employee.retireReason.' + e.retireReason | transloco) : '—' }}</dd>
+          </div>
+        }
+        <div>
+          <dt>{{ 'employee.field.insuredNumber' | transloco }}</dt>
+          <dd class="mono">{{ e.insuredNumber ?? '—' }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'employee.field.basicPensionNumber' | transloco }}</dt>
+          <dd class="mono">{{ pensionNumber(e) }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'employee.field.acquisitionType' | transloco }}</dt>
+          <dd>{{ 'employee.acquisitionType.' + e.acquisitionType | transloco }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'employee.field.collectionMethod' | transloco }}</dt>
+          <dd>{{ 'employee.collectionMethod.' + (e.collectionMethod ?? 'office') | transloco }}</dd>
+        </div>
+        <div class="wide">
+          <dt>{{ 'employee.field.address' | transloco }}</dt>
+          <dd>{{ address(e) }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'employee.field.phone' | transloco }}</dt>
+          <dd class="mono">{{ e.contact.phone ?? '—' }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'employee.field.email' | transloco }}</dt>
+          <dd>{{ e.contact.email ?? '—' }}</dd>
+        </div>
+        <div class="wide">
+          <dt>{{ 'employee.section.commute' | transloco }}</dt>
+          <dd>{{ commute(e) }}</dd>
+        </div>
+        <div class="wide">
+          <dt>{{ 'employee.section.bank' | transloco }}</dt>
+          <dd>{{ bank(e) }}</dd>
+        </div>
+        @if (flags(e).length > 0) {
+          <div class="wide">
+            <dt>{{ 'employee.section.details' | transloco }}</dt>
+            <dd>
+              @for (f of flags(e); track f) {
+                <span class="badge">{{ 'employee.field.' + f | transloco }}</span>
+              }
+              @if (e.optInDate) {
+                <span class="badge">{{ 'employee.field.optInDate' | transloco }} {{ e.optInDate }}</span>
+              }
+            </dd>
+          </div>
+        }
+        @if (e.foreign; as f) {
+          <div class="wide">
+            <dt>{{ 'employee.section.foreign' | transloco }}</dt>
+            <dd>
+              @if (romanName(e); as r) { {{ r }} } @else { {{ 'employee.noRomanReason.' + f.noRomanReason | transloco }} }
+              （{{ f.nationality }}）
+              @if (f.kanjiName; as k) { ・{{ 'employee.personName.kanjiName' | transloco }} {{ k.last }} {{ k.first }} }
+              @if (f.alias; as a) { ・{{ 'employee.personName.alias' | transloco }} {{ a.last }} {{ a.first }} }
+              ・{{ 'employee.field.filingName' | transloco }}：{{ 'employee.filingName.' + f.filingName | transloco }}
+              @if (!f.residentRegistered) { ・{{ 'employee.detail.notResidentRegistered' | transloco }} }
+              @if (f.needsRomanNameFiling) { <span class="badge">{{ 'employee.field.needsRomanNameFiling' | transloco }}</span> }
+              @if (f.residenceStatus) { ・{{ f.residenceStatus }} }
+              @if (f.residenceExpiry) { ・{{ 'employee.field.residenceExpiry' | transloco }} {{ f.residenceExpiry }} }
+              @if (f.workPermit) { ・{{ 'employee.field.workPermit' | transloco }} }
+              @if (f.certificate; as c) { ・{{ 'employee.field.hasCertificate' | transloco }}（{{ c.country }} {{ c.from }}〜{{ c.to ?? '' }}） }
+            </dd>
+          </div>
+        }
+      </dl>
+    </section>
+
     <!-- 月ごとの加入状況 -->
     <section class="card">
       <div class="coverage-head">

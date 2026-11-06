@@ -13,6 +13,7 @@ import { LangSwitch } from '../../../../shared/components/lang-switch/lang-switc
 import { PasswordField } from '../../../../shared/components/password-field/password-field';
 import { PasswordInputDirective } from '../../../../shared/components/password-field/password-input.directive';
 
+import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 /** 8文字以上・英字と数字を両方含む（kensyu10168のパスワードポリシーと同じ） */
 const PASSWORD_RULE = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 
@@ -27,7 +28,7 @@ type FieldName = 'displayName' | 'email' | 'password' | 'passwordConfirm';
 
 @Component({
   selector: 'app-signup',
-  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, LangSwitch, PasswordField, PasswordInputDirective],
+  imports: [HalfWidthDigits, ReactiveFormsModule, RouterLink, TranslocoPipe, LangSwitch, PasswordField, PasswordInputDirective],
   templateUrl: './signup.html',
   styleUrl: '../../auth-layout.css',
 })

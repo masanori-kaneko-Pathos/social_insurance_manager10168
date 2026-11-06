@@ -20,6 +20,15 @@
         </button>
       }
     </div>
+    @if (hasRoman()) {
+      <div class="segmented" role="group" [attr.aria-label]="'employee.list.romanBy' | transloco">
+        @for (b of ['last', 'first']; track b) {
+          <button type="button" [class.active]="romanBy() === b" (click)="romanBy.set($any(b))">
+            {{ 'employee.list.romanBy_' + b | transloco }}
+          </button>
+        }
+      </div>
+    }
   </div>
   
   @if (loading()) {
@@ -49,13 +58,20 @@
             }
           </tr>
         </thead>
+        @for (sec of sections(); track sec.label) {
         <tbody>
-          @for (e of filtered(); track e.id) {
+          <tr class="section-row">
+            <th [attr.colspan]="context.isAdmin() ? 6 : 5" scope="rowgroup">{{ sec.label }}</th>
+          </tr>
+          @for (e of sec.items; track e.id) {
             <tr [class.retired]="isRetired(e)">
               <td class="mono">{{ e.employeeNumber ?? '—' }}</td>
               <td>
                 <div class="name"><a [routerLink]="[e.id]">{{ e.lastName }} {{ e.firstName }}</a></div>
-                <div class="kana">{{ e.lastNameKana }} {{ e.firstNameKana }}</div>
+                <div class="kana">
+                  {{ e.lastNameKana }} {{ e.firstNameKana }}
+                  @if (e.foreign?.alias; as a) { <span class="alias">（{{ a.last }} {{ a.first }}）</span> }
+                </div>
               </td>
               <td class="num">{{ age(e) }}</td>
               <td class="mono">{{ e.hireDate }}</td>
@@ -72,6 +88,7 @@
             </tr>
           }
         </tbody>
+        }
       </table>
     </div>
   }

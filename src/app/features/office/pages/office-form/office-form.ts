@@ -42,6 +42,7 @@ import {
 } from '../../office-settings';
 import { RateDialog, RateDialogTarget } from '../../../rates/components/rate-dialog/rate-dialog';
 
+import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 /** 法人番号を入れたら法人名も必須 */
 function corporateNameRequired(g: AbstractControl): ValidationErrors | null {
   const num = (g.get('corporateNumber')?.value ?? '').trim();
@@ -83,7 +84,7 @@ const emptyToNull = (v: string) => (v.trim() ? v.trim() : null);
 
 @Component({
   selector: 'app-office-form',
-  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, RateDialog],
+  imports: [HalfWidthDigits, ReactiveFormsModule, RouterLink, TranslocoPipe, RateDialog],
   templateUrl: './office-form.html',
   styleUrl: './office-form.css',
 })

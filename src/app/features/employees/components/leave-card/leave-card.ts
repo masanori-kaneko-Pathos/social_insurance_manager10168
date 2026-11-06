@@ -6,6 +6,7 @@ import { OfficeContext } from '../../../office/office-context.service';
 import { EmployeeService } from '../../employee.service';
 import { exemptRangeOf, LeaveLike } from '../../logic/leave';
 
+import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 const DATE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 const NEW = 'new';
 /** ルールの上限と同じ */
@@ -20,7 +21,7 @@ interface Row {
 /** 従業員の詳細に出す「産休・育休」（追加・編集・削除は管理者だけ） */
 @Component({
   selector: 'app-leave-card',
-  imports: [ReactiveFormsModule, TranslocoPipe],
+  imports: [HalfWidthDigits, ReactiveFormsModule, TranslocoPipe],
   templateUrl: './leave-card.html',
   styleUrl: './leave-card.css',
 })

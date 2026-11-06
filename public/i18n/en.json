@@ -10,7 +10,10 @@
     "save": "Save",
     "saving": "Saving…",
     "cancel": "Cancel",
-    "delete": "Delete"
+    "delete": "Delete",
+    "hint": {
+      "postalCode": "7 digits (no hyphen needed)"
+    }
   },
   "auth": {
     "password": {
@@ -80,9 +83,16 @@
       "agesLabel": "Ages",
       "age": "Age {{age}}",
       "sortLabel": "Sort",
-      "sort": { "birthday": "By birthday", "effect": "By effective month" },
+      "sort": {
+        "birthday": "By birthday",
+        "effect": "By effective month"
+      },
       "monthLabel": "{{y}}-{{m}}",
-      "col": { "age": "Reaching", "birthday": "Birthday", "what": "What changes / filings" },
+      "col": {
+        "age": "Reaching",
+        "birthday": "Birthday",
+        "what": "What changes / filings"
+      },
       "what": {
         "40": "Long-term care premiums start (no filing needed).",
         "60": "If pay drops on re-employment after retirement, consider same-day loss and re-acquisition to lower the standard remuneration immediately.",
@@ -108,12 +118,15 @@
     "list": {
       "title": "Employees",
       "add": "Add employee",
-      "search": "Filter by name, kana or employee number",
+      "search": "Filter by name, kana, roman letters, alias or employee number",
       "age": "Age",
       "insurance": "Social insurance",
       "emptyTitle": "Add your first employee",
       "emptyBody": "Once you add employees, you can check their insurance coverage and premiums.",
-      "noMatch": "No employees match your filters."
+      "noMatch": "No employees match your filters.",
+      "romanBy": "Roman-letter order",
+      "romanBy_last": "A–Z: surname",
+      "romanBy_first": "A–Z: given name"
     },
     "status": {
       "active": "Active",
@@ -132,7 +145,15 @@
     "section": {
       "basic": "Basic information",
       "employment": "Employment period",
-      "insurance": "Insurance eligibility"
+      "insurance": "Insurance eligibility",
+      "details": "Coverage details",
+      "numbers": "Filing numbers",
+      "contact": "Contact",
+      "commute": "Commute",
+      "bank": "Payroll bank account",
+      "collection": "How premiums are collected",
+      "foreign": "Foreign national information",
+      "more": "Other information"
     },
     "field": {
       "employeeNumber": "Employee number",
@@ -145,7 +166,53 @@
       "hireDate": "Hire date",
       "retireDate": "Retirement date",
       "acquiredDate": "Coverage start date",
-      "lostDate": "Coverage end date"
+      "lostDate": "Coverage end date",
+      "sex": "Sex",
+      "retireReason": "Reason for leaving",
+      "lossReason": "Reason coverage ended",
+      "acquisitionType": "Enrollment type",
+      "optInDate": "Date of request to enroll",
+      "multipleOffices": "Works at two or more offices",
+      "rehired": "Enrolled on re-employment after retirement (same-day loss and re-acquisition)",
+      "needsConfirmationCard": "Needs an eligibility certificate",
+      "insuredNumber": "Insured person reference number",
+      "basicPensionNumber": "Basic pension number",
+      "postalCode": "Postal code",
+      "address": "Address",
+      "phone": "Phone",
+      "email": "Email",
+      "commuteMethod": "Commute method",
+      "commuteRoute": "Commute route",
+      "bankName": "Bank",
+      "branchName": "Branch",
+      "accountType": "Account type",
+      "accountNumber": "Account number",
+      "holderKana": "Account holder (katakana)",
+      "collectionMethod": "Employee share collected by",
+      "nationality": "Nationality/region (2-letter code)",
+      "residenceCardNumber": "Residence card number",
+      "residenceStatus": "Status of residence",
+      "residenceExpiry": "Period of stay ends",
+      "noAddressReason": "Reason for no address",
+      "workPermit": "Has permission for activities outside status",
+      "workPermitHours": "Permitted hours (per week)",
+      "hasCertificate": "Has a certificate of coverage from the other country (social security agreement)",
+      "certCountry": "Certificate country (2-letter code)",
+      "certCovers": "Certificate covers",
+      "certFrom": "Certificate valid from",
+      "certTo": "Certificate valid until",
+      "nationalityType": "Nationality",
+      "romanLastName": "Surname (roman letters)",
+      "romanFirstName": "Given name (roman letters)",
+      "romanMiddleName": "Middle name",
+      "noRomanReason": "Reason for no roman-letter name",
+      "noRomanReasonText": "Other reason",
+      "filingLastKana": "Name reading in katakana (surname)",
+      "filingFirstKana": "Name reading in katakana (given name)",
+      "filingName": "Name used on filings",
+      "sortByKana": "Sort by katakana reading in the list (あ–わ)",
+      "residentRegistered": "Has resident registration in Japan",
+      "needsRomanNameFiling": "File the roman-letter name notification"
     },
     "insurance": {
       "health": "Enrolled in health insurance",
@@ -153,7 +220,27 @@
     },
     "hint": {
       "autoDates": "The start date is set to the hire date, and the end date to the day after retirement. You can change them if needed.",
-      "care": "Long-term care insurance applies automatically to health insurance members aged 40 to 64."
+      "care": "Long-term care insurance applies automatically to health insurance members aged 40 to 64.",
+      "optIn": "For short-time workers with a minimum wage reduction permit (specified reduction special cases), the date they asked to be enrolled.",
+      "numbers": "The insured person reference number is notified by the pension office after the enrollment filing. The basic pension number is used when the filing does not include the My Number.",
+      "email": "The email address is also used to invite the employee to My Page.",
+      "collection": "Choose this, for example, to have only employees on unpaid leave pay in cash.",
+      "foreign": "Enter the nationality as an ISO 2-letter code (Vietnam VN, China CN, Philippines PH, Germany DE, etc.). While a certificate of coverage under a social security agreement is valid, the employee may not be enrolled in Japanese insurance.",
+      "roman": "Enter as on the residence card. Converted to capitals.",
+      "middleName": "Patronymics also go here.",
+      "noRomanReason": "Choose only when the person has no roman-letter name.",
+      "filingKana": "The reading written on the acquisition notification. Notices from the pension service use this katakana.",
+      "personName": "Only for people whose residence record shows a kanji name or alias. Surname and its reading are required; leave the given name blank if there is none.",
+      "filingName": "Choose the name written on the related filings. This name is shown in the app and on filings.",
+      "sortByKana": "Check for people who use a Japanese surname, to list them under あ–わ.",
+      "needsRomanNameFiling": "Required with the acquisition notification when the person has no My Number or it is not linked to the basic pension number. Checked automatically for people without resident registration.",
+      "country": "Two-letter country/region code (e.g. VN, CN)",
+      "residenceCard": "Number at the top right of the residence card (2 letters, 8 digits, 2 letters)",
+      "workPermitHours": "Hours per week (usually 28)",
+      "basicPensionNumber": "10 digits (no hyphen needed)",
+      "postalCode": "7 digits (no hyphen needed)",
+      "phone": "Digits only (no hyphens needed)",
+      "digitsOnly": "Digits only"
     },
     "validation": {
       "required": "This field is required.",
@@ -161,7 +248,21 @@
       "kana": "Enter in katakana.",
       "birthFuture": "Date can't be in the future.",
       "retireBeforeHire": "Retirement date must be after the hire date.",
-      "lostBeforeAcquired": "End date must be after the start date."
+      "lostBeforeAcquired": "End date must be after the start date.",
+      "postalCode": "Enter 7 digits (hyphen optional).",
+      "basicPensionNumber": "Enter 10 digits (e.g. 1234-567890).",
+      "digits": "Enter digits only (up to 8).",
+      "email": "Enter a valid email address.",
+      "country": "Enter a 2-letter code (e.g. VN).",
+      "residenceCard": "Enter 2 letters, 8 digits and 2 letters (e.g. AB12345678CD).",
+      "hours": "Enter the hours as a number (e.g. 28).",
+      "certificateOrder": "The end date must be after the start date.",
+      "certificateRequired": "Enter the certificate country and start date.",
+      "romanRequired": "Enter the surname in roman letters, or choose why there is none.",
+      "roman": "Use roman letters (A–Z).",
+      "phone": "Enter the phone number in digits.",
+      "personNameIncomplete": "Enter the surname and its reading.",
+      "filingNameMissing": "The chosen name has not been entered."
     },
     "error": {
       "save": "Couldn't save. Try again later.",
@@ -187,7 +288,72 @@
       "monthSuffix": "",
       "futureHint": "Faded marks are future months (planned).",
       "exemptMark": "Ex",
-      "exemptHint": "\"Ex\" marks months exempt from premiums due to maternity/childcare leave (coverage continues)."
+      "exemptHint": "\"Ex\" marks months exempt from premiums due to maternity/childcare leave (coverage continues).",
+      "notResidentRegistered": "No resident registration"
+    },
+    "sex": {
+      "male": "Male",
+      "female": "Female"
+    },
+    "retireReason": {
+      "resign": "Resigned",
+      "death": "Death",
+      "transfer": "Transfer",
+      "other": "Other"
+    },
+    "lossReason": {
+      "retire": "Leaving etc.",
+      "death": "Death",
+      "age75": "Reached age 75",
+      "disability": "Disability certification",
+      "agreement": "Social security agreement"
+    },
+    "acquisitionType": {
+      "standard": "Health and pension",
+      "mutualAidLoan": "Seconded from mutual aid",
+      "seamenContinued": "Continued seamen’s insurance"
+    },
+    "accountType": {
+      "ordinary": "Ordinary",
+      "current": "Current",
+      "savings": "Savings"
+    },
+    "collectionMethod": {
+      "office": "Use the office setting",
+      "payroll": "Deducted from pay",
+      "cash": "Paid in cash by the employee"
+    },
+    "noAddressReason": {
+      "overseas": "Lives overseas",
+      "shortStay": "Short-term stay",
+      "other": "Other"
+    },
+    "certCovers": {
+      "pension": "Pension only",
+      "pensionAndHealth": "Pension and health"
+    },
+    "nationalityType": {
+      "japanese": "Japanese",
+      "foreign": "Foreign national"
+    },
+    "noRomanReason": {
+      "shortStay": "Short-term resident",
+      "overseas": "Lives overseas",
+      "notOnCard": "No roman-letter name on the residence card",
+      "other": "Other"
+    },
+    "filingName": {
+      "roman": "Roman-letter name",
+      "kanji": "Kanji name",
+      "alias": "Registered alias"
+    },
+    "personName": {
+      "kanjiName": "Kanji name (residence record)",
+      "alias": "Registered alias (residence record)",
+      "last": "Surname",
+      "first": "Given name",
+      "lastKana": "Surname reading",
+      "firstKana": "Given name reading"
     }
   },
   "office": {
@@ -277,8 +443,14 @@
       "showRates": "View rates"
     },
     "insurerRates": "View or set this society's rates",
-    "day": { "end": "End of month", "n": "Day {{d}}" },
-    "payMonth": { "current": "Same month", "next": "Next month" },
+    "day": {
+      "end": "End of month",
+      "n": "Day {{d}}"
+    },
+    "payMonth": {
+      "current": "Same month",
+      "next": "Next month"
+    },
     "deduction": {
       "next": "Next-month deduction (last month's premium from this month's pay)",
       "current": "Same-month deduction (this month's premium from this month's pay)"
@@ -341,6 +513,9 @@
       "needMonth": "Select the effective month to choose grades automatically.",
       "noTable": "No grade table for this month (available from March 2024).",
       "needAmount": "Enter the monthly pay as a number to choose grades automatically."
+    },
+    "hint": {
+      "amount": "Yen. Commas are optional."
     }
   },
   "premium": {
@@ -426,7 +601,11 @@
     "totalsHint": "Payment is the sum of all totals rounded down to the yen; the employer share is payment minus the employees' total (Japan Pension Service method).",
     "exempt": "Exempt",
     "bonusTitle": "Monthly and bonus",
-    "bonusRows": { "monthly": "Monthly", "bonus": "Bonus", "sum": "Total (monthly + bonus)" },
+    "bonusRows": {
+      "monthly": "Monthly",
+      "bonus": "Bonus",
+      "sum": "Total (monthly + bonus)"
+    },
     "bonusProblems": "{{count}} employee(s) could not be calculated for bonuses (not included in totals).",
     "bonusHint": "Bonus premiums are paid together with the monthly premiums for the month the bonus was paid. Each is rounded down to the yen and then added, so the total may differ from the notice by 1 yen.",
     "toBonuses": "Go to bonuses",
@@ -626,7 +805,8 @@
       "fixed": "Fixed wages: pay whose amount or rate is set in advance, such as base pay, position allowance and commuting allowance. Overtime is not included.",
       "inKind": "In kind: convert housing, dormitories and meals at the government-set value for the prefecture and enter the amount after the employee's own payment (this differs from the tax value).",
       "days": "Payment basis days: calendar days of the period for monthly salary; \"company-set days − days absent\" for monthly salary with absence deductions; days worked (including paid leave) for daily or hourly pay.",
-      "blank": "Empty rows are not saved. Clearing a saved row and saving deletes that month's record."
+      "blank": "Empty rows are not saved. Clearing a saved row and saving deletes that month's record.",
+      "hours": "Hours worked: enter as \"160:30\" (160 h 30 min) or \"160.5\"."
     },
     "error": {
       "load": "Could not load payroll records.",
@@ -715,6 +895,89 @@
       "save": "Could not apply. Please try again later.",
       "badYear": "The year is not valid.",
       "noGrades": "There is no grade table for September of this year."
+    }
+  },
+  "payrollCsv": {
+    "title": "Payroll records CSV",
+    "lead": "Export a CSV, fix it in Excel, and import it back as is (the same format both ways).",
+    "adminOnly": "Only administrators can import or export CSV files.",
+    "export": {
+      "title": "1. Export",
+      "lead": "Exports one row per employee per month for employees employed during the selected period. Entered months have numbers and missing months are blank, so the file also works as a template.",
+      "from": "From month paid",
+      "to": "To month paid",
+      "last1": "Latest month",
+      "last3": "Last 3 months",
+      "last12": "Last 12 months",
+      "button": "Export CSV",
+      "hint": "Encoded as UTF-8 with BOM (opens directly in Excel). Up to 24 months."
+    },
+    "import": {
+      "title": "2. Import",
+      "lead": "After you choose a file, a review screen appears. Nothing is saved until you press Import.",
+      "choose": "Choose CSV file",
+      "done": "Imported {{n}} records.",
+      "toList": "Go to payroll records",
+      "partial": "Saving failed partway. {{done}} of {{total}} records were saved. Import the same file again to add only the rest (saved records show as unchanged).",
+      "progress": "Saving… {{done}} / {{total}}",
+      "missingColumns": "Required columns are missing:",
+      "columnsHint": "Available column headers: {{cols}}",
+      "zeroPadded": "For {{n}} rows whose employee number lost its leading zeros, the zeros were restored for matching (Excel can drop them).",
+      "hasErrors": "Some rows have problems, so nothing can be imported. Fix the CSV and choose it again (nothing was saved).",
+      "moreErrors": "{{n}} more rows have problems.",
+      "moreItems": "{{n}} more",
+      "nothing": "There is nothing to import (all rows match saved records or are blank).",
+      "button": "Import ({{c}} new, {{u}} overwrite)"
+    },
+    "encoding": {
+      "utf-8": "UTF-8",
+      "shift_jis": "Shift_JIS (Excel format)"
+    },
+    "col": {
+      "employeeNumber": "Employee number",
+      "name": "Name",
+      "paidMonth": "Month paid",
+      "cash": "Cash pay",
+      "fixed": "Fixed wages",
+      "days": "Payment basis days",
+      "inKind": "In kind",
+      "retro": "Retroactive pay",
+      "absentDays": "Days absent",
+      "hours": "Hours worked",
+      "prorated": "Prorated",
+      "state": "Status"
+    },
+    "count": {
+      "created": "{{n}} new",
+      "updated": "{{n}} overwrite",
+      "unchanged": "{{n}} unchanged",
+      "unfilled": "{{n}} blank rows skipped",
+      "errors": "{{n}} rows with problems"
+    },
+    "line": "Row",
+    "problem": "Problem",
+    "overwrite": "Overwrite",
+    "rowError": {
+      "noEmployeeNumber": "Employee number is empty",
+      "unknownEmployee": "No employee has this number",
+      "ambiguousEmployee": "More than one employee matches this number",
+      "badMonth": "Month paid cannot be read (e.g. 2026-10)",
+      "notEmployed": "Not employed during this pay period",
+      "duplicate": "The same employee and month appear in an earlier row",
+      "badProrated": "Enter 1 or leave Prorated blank",
+      "badState": "Status must be Normal, Leave of absence or Temporary layoff"
+    },
+    "hint": {
+      "columns": "Columns are read by header name (any order; unknown columns are ignored). Required: employee number, month paid, cash pay, fixed wages, payment basis days.",
+      "excel": "CSV files saved by Excel (Shift_JIS) can be read as is, including months Excel turned into dates like 2026/10/1 and employee numbers that lost leading zeros.",
+      "allOrNothing": "If any row has a problem, nothing is saved. Records are saved in groups of 500."
+    },
+    "error": {
+      "load": "Could not load employees or payroll records.",
+      "range": "Select a valid period (the start is after the end).",
+      "tooLong": "Select 24 months or fewer.",
+      "read": "Could not read the file. Make sure it is a CSV file.",
+      "save": "Could not save (nothing was saved). Please try again later."
     }
   }
 }

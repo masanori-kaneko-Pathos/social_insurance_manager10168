@@ -31,6 +31,7 @@ import {
 } from '../../logic/rate-format';
 import { RateService } from '../../rate.service';
 
+import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 /** 窓で扱う期間と保険者（開く側で、保存済みの履歴から作る） */
 export interface RateDialogTarget {
   officeId: string;
@@ -56,7 +57,7 @@ const CHILD_SUPPORT_DEFAULT: RateSplit = { employee: 1150, employer: 1150 };
 
 @Component({
   selector: 'app-rate-dialog',
-  imports: [ReactiveFormsModule, TranslocoPipe],
+  imports: [HalfWidthDigits, ReactiveFormsModule, TranslocoPipe],
   templateUrl: './rate-dialog.html',
   styleUrl: './rate-dialog.css',
 })

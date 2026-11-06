@@ -89,3 +89,53 @@
   .actions a.btn {
     text-decoration: none;
   }
+h3 {
+  margin: var(--space-md) 0 var(--space-sm);
+  font-size: var(--font-sm);
+}
+
+/* 2列の表の中で、1行まるごと使う欄（住所・経路など） */
+.field.wide {
+  grid-column: 1 / -1;
+}
+
+/* 太字にしないチェック（細かい設定） */
+.check.plain {
+  font-weight: 400;
+}
+
+/* 国籍の切り替え（いちばん上） */
+.nationality {
+  display: flex;
+  gap: var(--space-lg);
+  margin: 0 0 var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+}
+
+.radio {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* 住民票の漢字氏名・通称名 */
+.person-name {
+  margin: 0 0 var(--space-md);
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.person-name legend {
+  padding: 0 var(--space-xs);
+  font-weight: 600;
+}
+
+/* ローマ字・国コード・在留カード番号は大文字で見せる（保存も大文字） */
+.upper {
+  text-transform: uppercase;
+}

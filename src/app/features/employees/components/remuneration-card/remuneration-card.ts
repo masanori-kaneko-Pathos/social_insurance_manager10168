@@ -18,6 +18,7 @@ import { latest } from '../../../rates/logic/pick-rates';
 import { RateService } from '../../../rates/rate.service';
 import { RemunerationService } from '../../remuneration.service';
 
+import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 type Kind = 'health' | 'pension';
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -25,7 +26,7 @@ const YEN = /^[0-9０-９,，\s]+$/;
 
 @Component({
   selector: 'app-remuneration-card',
-  imports: [ReactiveFormsModule, TranslocoPipe],
+  imports: [HalfWidthDigits, ReactiveFormsModule, TranslocoPipe],
   templateUrl: './remuneration-card.html',
   styleUrl: './remuneration-card.css',
 })

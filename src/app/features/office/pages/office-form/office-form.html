@@ -132,7 +132,6 @@
               class="input"
               inputmode="numeric"
               maxlength="8"
-              placeholder="100-0001"
               formControlName="postalCode"
               [class.is-invalid]="errorOf('postalCode')"
             />
@@ -154,6 +153,8 @@
             <span class="field-error">{{ 'office.postal.notFound' | transloco }}</span>
           } @else if (postalStatus() === 'failed') {
             <span class="field-error">{{ 'office.postal.failed' | transloco }}</span>
+          } @else {
+            <span class="hint">{{ 'common.hint.postalCode' | transloco }}</span>
           }
         </div>
 

@@ -10,7 +10,10 @@
     "save": "保存する",
     "saving": "保存中…",
     "cancel": "キャンセル",
-    "delete": "削除"
+    "delete": "削除",
+    "hint": {
+      "postalCode": "数字7桁（ハイフンは不要）"
+    }
   },
   "auth": {
     "password": {
@@ -71,13 +74,25 @@
     "ages": {
       "title": "年齢到達のお知らせ",
       "within": "期間",
-      "withinOption": { "0": "今月", "1": "来月まで", "6": "半年以内", "12": "1年以内" },
+      "withinOption": {
+        "0": "今月",
+        "1": "来月まで",
+        "6": "半年以内",
+        "12": "1年以内"
+      },
       "agesLabel": "年齢",
       "age": "{{age}}歳",
       "sortLabel": "並べ方",
-      "sort": { "birthday": "誕生日順", "effect": "影響が出る順" },
+      "sort": {
+        "birthday": "誕生日順",
+        "effect": "影響が出る順"
+      },
       "monthLabel": "{{y}}年{{m}}月",
-      "col": { "age": "到達する年齢", "birthday": "誕生日", "what": "変わること・手続きの目安" },
+      "col": {
+        "age": "到達する年齢",
+        "birthday": "誕生日",
+        "what": "変わること・手続きの目安"
+      },
       "what": {
         "40": "介護保険料がかかり始めます（届出は不要）。",
         "60": "定年後の再雇用で給与が下がる場合は、「同日得喪」（資格喪失届と取得届を同時に出す）で標準報酬月額をすぐ下げられます。",
@@ -103,12 +118,15 @@
     "list": {
       "title": "従業員",
       "add": "従業員を登録",
-      "search": "氏名・フリガナ・社員番号で絞り込み",
+      "search": "氏名・フリガナ・ローマ字・通称・社員番号で絞り込み",
       "age": "年齢",
       "insurance": "社会保険",
       "emptyTitle": "従業員を登録しましょう",
       "emptyBody": "従業員を登録すると、社会保険の加入状況や保険料を確認できます。",
-      "noMatch": "条件に合う従業員がいません。"
+      "noMatch": "条件に合う従業員がいません。",
+      "romanBy": "ローマ字の並べ方",
+      "romanBy_last": "A〜Z：姓",
+      "romanBy_first": "A〜Z：名"
     },
     "status": {
       "active": "在籍中",
@@ -127,7 +145,15 @@
     "section": {
       "basic": "基本情報",
       "employment": "在籍期間",
-      "insurance": "社会保険の資格"
+      "insurance": "社会保険の資格",
+      "details": "資格の細目",
+      "numbers": "届出の番号",
+      "contact": "連絡先",
+      "commute": "通勤",
+      "bank": "給与の口座",
+      "collection": "保険料の集め方",
+      "foreign": "外国人の情報",
+      "more": "そのほかの情報"
     },
     "field": {
       "employeeNumber": "社員番号",
@@ -140,7 +166,53 @@
       "hireDate": "入社日",
       "retireDate": "退職日",
       "acquiredDate": "資格取得日",
-      "lostDate": "資格喪失日"
+      "lostDate": "資格喪失日",
+      "sex": "性別",
+      "retireReason": "退職の理由",
+      "lossReason": "喪失の原因",
+      "acquisitionType": "取得区分",
+      "optInDate": "加入を申し出た日",
+      "multipleOffices": "二以上の事業所に勤務",
+      "rehired": "退職後の継続再雇用で取得（同日得喪）",
+      "needsConfirmationCard": "資格確認書の発行が必要",
+      "insuredNumber": "被保険者整理番号",
+      "basicPensionNumber": "基礎年金番号",
+      "postalCode": "郵便番号",
+      "address": "住所",
+      "phone": "電話番号",
+      "email": "メールアドレス",
+      "commuteMethod": "通勤の手段",
+      "commuteRoute": "通勤の経路",
+      "bankName": "銀行",
+      "branchName": "支店",
+      "accountType": "種別",
+      "accountNumber": "口座番号",
+      "holderKana": "口座名義（カナ）",
+      "collectionMethod": "本人負担の集め方",
+      "nationality": "国籍・地域（2文字のコード）",
+      "residenceCardNumber": "在留カード番号",
+      "residenceStatus": "在留資格",
+      "residenceExpiry": "在留期間の満了日",
+      "noAddressReason": "住所がない理由",
+      "workPermit": "資格外活動の許可がある",
+      "workPermitHours": "許可された時間（週）",
+      "hasCertificate": "相手国の適用証明書がある（社会保障協定）",
+      "certCountry": "証明書の国（2文字のコード）",
+      "certCovers": "証明書の範囲",
+      "certFrom": "証明書の期間（から）",
+      "certTo": "証明書の期間（まで）",
+      "nationalityType": "国籍",
+      "romanLastName": "ローマ字の姓",
+      "romanFirstName": "ローマ字の名",
+      "romanMiddleName": "ミドルネーム",
+      "noRomanReason": "ローマ字氏名がない理由",
+      "noRomanReasonText": "その他の理由",
+      "filingLastKana": "フリガナ（姓）",
+      "filingFirstKana": "フリガナ（名）",
+      "filingName": "取得届などに使う氏名",
+      "sortByKana": "一覧ではカナの読みで並べる（あ〜わの列）",
+      "residentRegistered": "日本で住民登録をしている（住民票がある）",
+      "needsRomanNameFiling": "ローマ字氏名届を出す"
     },
     "insurance": {
       "health": "健康保険に加入する",
@@ -148,7 +220,27 @@
     },
     "hint": {
       "autoDates": "資格取得日は入社日、資格喪失日は退職日の翌日が自動で入ります。必要に応じて変更できます。",
-      "care": "介護保険は、健康保険の加入者が40歳以上65歳未満の期間、自動で対象になります。"
+      "care": "介護保険は、健康保険の加入者が40歳以上65歳未満の期間、自動で対象になります。",
+      "optIn": "最低賃金の減額の特例許可を受けている短時間労働者（特定減額特例対象者）が、加入を申し出た日です。",
+      "numbers": "被保険者整理番号は、資格取得届を出した後に年金事務所から通知されます。基礎年金番号は、届書にマイナンバーを書かないときに使います。",
+      "email": "メールアドレスは、マイページの招待にも使います。",
+      "collection": "休業中で給与が出ない人だけ現金で払ってもらう、などのときに選びます。",
+      "foreign": "国籍・地域は ISO の2文字のコードで入れます（ベトナム VN・中国 CN・フィリピン PH・ドイツ DE など）。社会保障協定の適用証明書がある期間は、日本の保険に加入しない扱いになることがあります。",
+      "roman": "在留カードのとおりに入れます。小文字で打っても大文字にそろえます。",
+      "middleName": "父称などもここに入れます。",
+      "noRomanReason": "ローマ字氏名がないときだけ選びます。",
+      "filingKana": "資格取得届に書く読み。年金機構からの通知書・資格確認書はこのカナで届きます。",
+      "personName": "住民票に漢字氏名・通称名が載っている人だけ入れます。入れるときは氏と氏のフリガナまで。名がない人は名を空欄にします。",
+      "filingName": "同時に出す資格取得届などに書いた氏名を選びます（ローマ字氏名届の「関連届書使用氏名」）。この氏名がアプリの画面と届書に出ます。",
+      "sortByKana": "日本の姓を名乗っている人などは、チェックするとあ〜わの列に並びます。",
+      "needsRomanNameFiling": "個人番号と基礎年金番号が結びついていない人・個人番号のない人は、資格取得届と一緒にローマ字氏名届を出します。住民登録がない人には自動でチェックが入ります。",
+      "country": "国・地域のアルファベット2文字（ベトナムは VN、中国は CN など）",
+      "residenceCard": "在留カードの右上の番号（英字2・数字8・英字2）",
+      "workPermitHours": "週の時間（許可は通常28時間）",
+      "basicPensionNumber": "数字10桁（ハイフンは不要）",
+      "postalCode": "数字7桁（ハイフンは不要）",
+      "phone": "数字だけで入れられます（ハイフンは不要）",
+      "digitsOnly": "数字だけ"
     },
     "validation": {
       "required": "入力してください。",
@@ -156,7 +248,21 @@
       "kana": "カタカナで入力してください。",
       "birthFuture": "未来の日付は入力できません。",
       "retireBeforeHire": "退職日は入社日より後にしてください。",
-      "lostBeforeAcquired": "資格喪失日は資格取得日より後にしてください。"
+      "lostBeforeAcquired": "資格喪失日は資格取得日より後にしてください。",
+      "postalCode": "7桁の数字で入れてください（ハイフンは任意）。",
+      "basicPensionNumber": "10桁の数字で入れてください（例：1234-567890）。",
+      "digits": "数字だけで入れてください（8桁まで）。",
+      "email": "メールアドレスの形式が正しくありません。",
+      "country": "2文字のコードで入れてください（例：VN）。",
+      "residenceCard": "英字2文字・数字8桁・英字2文字で入れてください（例：AB12345678CD）。",
+      "hours": "時間を数字で入れてください（例：28）。",
+      "certificateOrder": "終わりの日は始まりの日より後にしてください。",
+      "certificateRequired": "証明書の国と期間（から）を入れてください。",
+      "romanRequired": "ローマ字の姓を入れるか、ローマ字氏名がない理由を選んでください。",
+      "roman": "ローマ字（A〜Z）で入れてください。",
+      "phone": "電話番号は数字で入れてください。",
+      "personNameIncomplete": "氏と氏のフリガナを入れてください。",
+      "filingNameMissing": "選んだ氏名がまだ入っていません。"
     },
     "error": {
       "save": "保存できませんでした。時間をおいてお試しください。",
@@ -182,7 +288,72 @@
       "monthSuffix": "月",
       "futureHint": "薄い表示は、今日より先の月（予定）です。",
       "exemptMark": "免",
-      "exemptHint": "「免」は産休・育休で保険料が免除される月です（資格は続いています）。"
+      "exemptHint": "「免」は産休・育休で保険料が免除される月です（資格は続いています）。",
+      "notResidentRegistered": "住民登録なし"
+    },
+    "sex": {
+      "male": "男",
+      "female": "女"
+    },
+    "retireReason": {
+      "resign": "退職",
+      "death": "死亡",
+      "transfer": "転勤",
+      "other": "その他"
+    },
+    "lossReason": {
+      "retire": "退職等",
+      "death": "死亡",
+      "age75": "75歳到達",
+      "disability": "障害認定",
+      "agreement": "社会保障協定"
+    },
+    "acquisitionType": {
+      "standard": "健保・厚年",
+      "mutualAidLoan": "共済出向",
+      "seamenContinued": "船保任継"
+    },
+    "accountType": {
+      "ordinary": "普通",
+      "current": "当座",
+      "savings": "貯蓄"
+    },
+    "collectionMethod": {
+      "office": "事業所の設定のまま",
+      "payroll": "給与から控除",
+      "cash": "本人が現金で払う"
+    },
+    "noAddressReason": {
+      "overseas": "海外在住",
+      "shortStay": "短期在留",
+      "other": "その他"
+    },
+    "certCovers": {
+      "pension": "年金だけ",
+      "pensionAndHealth": "年金と医療"
+    },
+    "nationalityType": {
+      "japanese": "日本国籍",
+      "foreign": "外国籍"
+    },
+    "noRomanReason": {
+      "shortStay": "短期在留者",
+      "overseas": "海外に住所がある",
+      "notOnCard": "在留カード等にローマ字氏名がない",
+      "other": "その他"
+    },
+    "filingName": {
+      "roman": "ローマ字氏名",
+      "kanji": "漢字氏名",
+      "alias": "通称名"
+    },
+    "personName": {
+      "kanjiName": "漢字氏名（住民票）",
+      "alias": "通称名（住民票）",
+      "last": "氏",
+      "first": "名",
+      "lastKana": "氏のフリガナ",
+      "firstKana": "名のフリガナ"
     }
   },
   "office": {
@@ -272,8 +443,14 @@
       "showRates": "料率を見る"
     },
     "insurerRates": "この組合の料率を見る・設定する",
-    "day": { "end": "月末", "n": "{{d}}日" },
-    "payMonth": { "current": "当月", "next": "翌月" },
+    "day": {
+      "end": "月末",
+      "n": "{{d}}日"
+    },
+    "payMonth": {
+      "current": "当月",
+      "next": "翌月"
+    },
     "deduction": {
       "next": "翌月控除（前月分の保険料を、当月に支払う給与から控除）",
       "current": "当月控除（当月分の保険料を、当月に支払う給与から控除）"
@@ -336,12 +513,21 @@
       "needMonth": "適用開始月を選ぶと、等級を自動で選びます。",
       "noTable": "この月の等級表がありません（2024年3月分から登録できます）。",
       "needAmount": "報酬月額を数字で入力すると、等級を自動で選びます。"
+    },
+    "hint": {
+      "amount": "円。カンマはあってもなくても大丈夫です。"
     }
   },
   "premium": {
     "title": "保険料（月額）",
-    "method": { "payroll": "給与から控除", "cash": "現金払い" },
-    "rounding": { "combined": "健保等は合算して端数処理", "separate": "健保等はそれぞれ端数処理" },
+    "method": {
+      "payroll": "給与から控除",
+      "cash": "現金払い"
+    },
+    "rounding": {
+      "combined": "健保等は合算して端数処理",
+      "separate": "健保等はそれぞれ端数処理"
+    },
     "col": {
       "month": "月",
       "employee": "本人負担",
@@ -415,7 +601,11 @@
     "totalsHint": "納付額は全員の全額を合計して1円未満を切り捨てた額、会社負担は「納付額 − 本人負担の合計」です（日本年金機構の考え方）。",
     "exempt": "免除",
     "bonusTitle": "月額と賞与",
-    "bonusRows": { "monthly": "月額", "bonus": "賞与", "sum": "合計（月額＋賞与）" },
+    "bonusRows": {
+      "monthly": "月額",
+      "bonus": "賞与",
+      "sum": "合計（月額＋賞与）"
+    },
     "bonusProblems": "賞与で計算できない人が {{count}}人います（合計に入っていません）。",
     "bonusHint": "賞与の保険料は、支払った月の月額と一緒に納めます。納付額は月額・賞与それぞれで1円未満を切り捨てて足しているため、納入告知書と1円違う場合があります。",
     "toBonuses": "賞与の一覧へ",
@@ -615,7 +805,8 @@
       "fixed": "固定的賃金：基本給・役付手当・通勤手当など、額や率があらかじめ決まっているもの。残業代は入りません。",
       "inKind": "現物：社宅・寮・食事などは、都道府県ごとに国が決めた価額で円に直し、本人の負担分を引いた額を入れます（税金の評価額とは違います）。",
       "days": "支払基礎日数：月給は対象期間の暦日数、欠勤を引く月給は「会社の決めた日数 − 欠勤日数」、日給・時給は出勤した日数（有給を含む）。",
-      "blank": "何も入れていない行は保存しません。保存済みの行を空にして保存すると、その月の実績は消えます。"
+      "blank": "何も入れていない行は保存しません。保存済みの行を空にして保存すると、その月の実績は消えます。",
+      "hours": "実労働時間：「160:30」（160時間30分）か「160.5」の形で入れます。"
     },
     "error": {
       "load": "給与の実績を読み込めませんでした。",

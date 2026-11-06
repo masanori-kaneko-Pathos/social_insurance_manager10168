@@ -77,10 +77,40 @@ export interface CertificateDoc {
   covers: AgreementCovers;
 }
 
+/** 一覧で並ぶ列：あ〜わ（カナ）か A〜Z（ローマ字） */
+export const NAME_ORDERS = ['kana', 'roman'] as const;
+export type NameOrder = (typeof NAME_ORDERS)[number];
+
+/** ローマ字氏名がない理由（ローマ字氏名届の C 欄） */
+export const NO_ROMAN_REASONS = ['shortStay', 'overseas', 'notOnCard', 'other'] as const;
+export type NoRomanReason = (typeof NO_ROMAN_REASONS)[number];
+
+/** 資格取得届などに使う氏名（ローマ字氏名届の「関連届書使用氏名」） */
+export const FILING_NAMES = ['roman', 'kanji', 'alias'] as const;
+export type FilingName = (typeof FILING_NAMES)[number];
+
+/** 氏・名とそれぞれのフリガナ（住民票の漢字氏名・通称名） */
+export interface PersonName {
+  last: string;
+  first: string;
+  lastKana: string;
+  firstKana: string;
+}
+
 /** 外国人の情報（該当者だけ。日本人は null） */
 export interface ForeignDoc {
-  romanName: string;
-  middleName: string | null;
+  // 氏名（ローマ字氏名届の A・B 欄）
+  romanLastName: string | null; // 在留カードのとおり。大文字
+  romanFirstName: string | null;
+  romanMiddleName: string | null; // ミドルネーム・父称など
+  noRomanReason: NoRomanReason | null; // ローマ字氏名がないとき
+  noRomanReasonText: string | null; // 「その他」の理由
+  kanjiName: PersonName | null; // 住民票の漢字氏名（任意）
+  alias: PersonName | null; // 住民票の通称名（任意）
+  filingName: FilingName; // 取得届などに使う氏名
+  residentRegistered: boolean; // 住民登録の有無
+  needsRomanNameFiling: boolean; // ローマ字氏名届が要る（個人番号と基礎年金番号が結びついていない等）
+  // 在留
   nationality: string; // 国・地域コード
   residenceCardNumber: string | null;
   residenceStatus: string | null; // 在留資格
@@ -113,10 +143,13 @@ export interface Leave {
 export interface EmployeeDoc {
   // 基本
   employeeNumber: string | null;
+  /** 届書に使う氏名。外国籍は「取得届などに使う氏名」（ローマ字・漢字・通称のどれか）を写す */
   lastName: string;
   firstName: string;
+  /** 届書のフリガナ（年金機構の通知はこのカナで届く） */
   lastNameKana: string;
   firstNameKana: string;
+  nameOrder: NameOrder; // 一覧で並ぶ列（日本国籍は kana、外国籍は roman が初期値）
   birthDate: string;
   sex: Sex | null;
   // 在籍
@@ -153,20 +186,8 @@ export interface Employee extends EmployeeDoc {
 
 export type EmployeeInput = Omit<EmployeeDoc, 'createdAt' | 'updatedAt'>;
 
-/** 今の登録・編集画面が扱う項目（それ以外はまとまりごとのカードで保存する） */
-export type EmployeeBasicInput = Pick<
-  EmployeeInput,
-  | 'employeeNumber'
-  | 'lastName'
-  | 'firstName'
-  | 'lastNameKana'
-  | 'firstNameKana'
-  | 'birthDate'
-  | 'hireDate'
-  | 'retireDate'
-  | 'health'
-  | 'pension'
->;
+/** 登録・編集画面が扱う項目（休業はカード、マイページのアカウントは招待で保存する） */
+export type EmployeeBasicInput = Omit<EmployeeInput, 'leaves' | 'userUid'>;
 
 // ===== 初期値 =====
 
@@ -198,22 +219,5 @@ export function emptyLeave(kind: LeaveKind, start: string): Leave {
 
 /** 登録画面が扱わない項目の初期値（登録のときに係が足す） */
 export function employeeExtras(): Omit<EmployeeInput, keyof EmployeeBasicInput> {
-  return {
-    sex: null,
-    retireReason: null,
-    acquisitionType: 'standard',
-    multipleOffices: false,
-    rehired: false,
-    needsConfirmationCard: false,
-    optInDate: null,
-    insuredNumber: null,
-    basicPensionNumber: null,
-    contact: emptyContact(),
-    commute: { method: null, route: null },
-    bankAccount: emptyBankAccount(),
-    collectionMethod: null,
-    foreign: null,
-    leaves: [],
-    userUid: null,
-  };
+  return { leaves: [], userUid: null };
 }

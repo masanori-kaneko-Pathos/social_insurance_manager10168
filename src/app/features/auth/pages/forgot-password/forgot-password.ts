@@ -6,9 +6,10 @@ import { AuthService, toAuthErrorKey } from '../../../../core/auth/auth.service'
 import { LanguageService } from '../../../../core/i18n/language.service';
 import { LangSwitch } from '../../../../shared/components/lang-switch/lang-switch';
 
+import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 @Component({
   selector: 'app-forgot-password',
-  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, LangSwitch],
+  imports: [HalfWidthDigits, ReactiveFormsModule, RouterLink, TranslocoPipe, LangSwitch],
   templateUrl: './forgot-password.html',
   styleUrl: '../../auth-layout.css',
 })

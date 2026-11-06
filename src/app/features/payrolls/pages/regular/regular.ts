@@ -26,6 +26,7 @@ import {
 import { PayrollService } from '../../payroll.service';
 import { RegularService } from '../../regular.service';
 
+import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 interface View {
   employee: Employee;
   result: RegularResult;
@@ -49,7 +50,7 @@ interface Checks {
 
 @Component({
   selector: 'app-regular',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [HalfWidthDigits, RouterLink, TranslocoPipe],
   templateUrl: './regular.html',
   styleUrl: './regular.css',
 })

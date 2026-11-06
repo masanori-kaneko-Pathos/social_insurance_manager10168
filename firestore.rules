@@ -282,11 +282,27 @@ service cloud.firestore {
           && c.covers in ['pension', 'pensionAndHealth']);
       }
 
+      function validPersonName(n) {
+        return n == null || (n is map && exactKeys(n, ['last', 'first', 'lastKana', 'firstKana'])
+          && str(n.last, 50) && optStr(n.first, 50) && str(n.lastKana, 50) && optStr(n.firstKana, 50));
+      }
+
       function validForeign(f) {
         return f == null || (f is map && exactKeys(f, [
-              'romanName', 'middleName', 'nationality', 'residenceCardNumber', 'residenceStatus',
+              'romanLastName', 'romanFirstName', 'romanMiddleName', 'noRomanReason', 'noRomanReasonText',
+              'kanjiName', 'alias', 'filingName', 'residentRegistered', 'needsRomanNameFiling',
+              'nationality', 'residenceCardNumber', 'residenceStatus',
               'residenceExpiry', 'workPermit', 'workPermitWeeklyMinutes', 'certificate', 'noAddressReason'])
-          && str(f.romanName, 100) && optStr(f.middleName, 100)
+          && optStr(f.romanLastName, 50) && optStr(f.romanFirstName, 50) && optStr(f.romanMiddleName, 50)
+          // ローマ字氏名か、ない理由のどちらかがある
+          && (f.romanLastName != null || f.noRomanReason != null)
+          && (f.noRomanReason == null || f.noRomanReason in ['shortStay', 'overseas', 'notOnCard', 'other'])
+          && optStr(f.noRomanReasonText, 100)
+          && validPersonName(f.kanjiName) && validPersonName(f.alias)
+          && f.filingName in ['roman', 'kanji', 'alias']
+          && (f.filingName != 'kanji' || f.kanjiName != null)
+          && (f.filingName != 'alias' || f.alias != null)
+          && f.residentRegistered is bool && f.needsRomanNameFiling is bool
           && optCode(f.nationality) && f.nationality != null
           && (f.residenceCardNumber == null
               || (f.residenceCardNumber is string && f.residenceCardNumber.matches('^[A-Z]{2}[0-9]{8}[A-Z]{2}$')))
@@ -298,15 +314,18 @@ service cloud.firestore {
 
       function validEmployee(d) {
         return exactKeys(d, [
-              'employeeNumber', 'lastName', 'firstName', 'lastNameKana', 'firstNameKana', 'birthDate', 'sex',
+              'employeeNumber', 'lastName', 'firstName', 'lastNameKana', 'firstNameKana', 'nameOrder', 'birthDate', 'sex',
               'hireDate', 'retireDate', 'retireReason',
               'health', 'pension', 'acquisitionType', 'multipleOffices', 'rehired', 'needsConfirmationCard', 'optInDate',
               'insuredNumber', 'basicPensionNumber',
               'contact', 'commute', 'bankAccount', 'collectionMethod', 'foreign', 'leaves', 'userUid',
               'createdAt', 'updatedAt'])
           && optStr(d.employeeNumber, 20)
-          && str(d.lastName, 50) && str(d.firstName, 50)
-          && str(d.lastNameKana, 50) && str(d.firstNameKana, 50)
+          && str(d.lastName, 50) && str(d.lastNameKana, 50)
+          // 名：外国籍で名のない人（姓だけの国）は空でもよい
+          && (str(d.firstName, 50) || (d.foreign != null && d.firstName == ''))
+          && (str(d.firstNameKana, 50) || (d.foreign != null && d.firstNameKana == ''))
+          && d.nameOrder in ['kana', 'roman']
           && isDate(d.birthDate)
           && (d.sex == null || d.sex in ['male', 'female'])
           && isDate(d.hireDate) && optDate(d.retireDate)

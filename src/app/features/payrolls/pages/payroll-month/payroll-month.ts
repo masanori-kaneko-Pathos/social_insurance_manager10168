@@ -21,6 +21,7 @@ import { payrollOf } from '../../../office/office-settings';
 import { shiftMonth, daysInclusive, todayLocal } from '../../../../shared/utils/date';
 import { PayrollChange, PayrollService } from '../../payroll.service';
 
+import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 type RowForm = FormGroup<{
   cash: FormControl<string>;
   fixed: FormControl<string>;
@@ -43,7 +44,7 @@ const MONTH_RE = /^[0-9]{4}-(0[1-9]|1[0-2])$/;
 
 @Component({
   selector: 'app-payroll-month',
-  imports: [RouterLink, TranslocoPipe, ReactiveFormsModule],
+  imports: [HalfWidthDigits, RouterLink, TranslocoPipe, ReactiveFormsModule],
   templateUrl: './payroll-month.html',
   styleUrl: './payroll-month.css',
 })
