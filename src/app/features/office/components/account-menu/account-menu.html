@@ -1,0 +1,57 @@
+<button
+  type="button"
+  class="trigger"
+  (click)="toggle()"
+  [attr.aria-expanded]="open()"
+  aria-haspopup="menu"
+>
+  <svg class="icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+    <path d="M2 4.5h7M12.5 4.5h1.5M2 11.5h1.5M7 11.5h7" />
+    <circle cx="10.75" cy="4.5" r="1.75" />
+    <circle cx="5.25" cy="11.5" r="1.75" />
+  </svg>
+  <span>{{ 'account.menu' | transloco }}</span>
+  <svg class="chevron" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+    <path d="M6 9l6 6 6-6" />
+  </svg>
+</button>
+
+@if (open()) {
+  <div class="panel" role="menu" animate.enter="panel-enter" animate.leave="panel-leave">
+    <div class="who">
+      <span class="label">{{ 'account.signedInAs' | transloco }}</span>
+      <span class="name">{{ profile()?.displayName }}</span>
+      @if (profile()?.email; as email) {
+        <span class="email">{{ email }}</span>
+      }
+    </div>
+
+    <div class="section">
+      <span class="label">{{ 'account.language' | transloco }}</span>
+      <div class="lang" role="group" aria-label="Language">
+        <button
+          type="button"
+          role="menuitemradio"
+          [attr.aria-checked]="language.lang() === 'ja'"
+          [class.active]="language.lang() === 'ja'"
+          (click)="setLang('ja')"
+        >
+          日本語
+        </button>
+        <button
+          type="button"
+          role="menuitemradio"
+          [attr.aria-checked]="language.lang() === 'en'"
+          [class.active]="language.lang() === 'en'"
+          (click)="setLang('en')"
+        >
+          English
+        </button>
+      </div>
+    </div>
+
+    <button type="button" class="item logout" role="menuitem" (click)="logout()" [disabled]="loggingOut()">
+      {{ 'common.logout' | transloco }}
+    </button>
+  </div>
+}

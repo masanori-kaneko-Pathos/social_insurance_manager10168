@@ -1,0 +1,162 @@
+:host {
+  position: relative;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  height: 36px;
+  padding: 0 var(--space-sm);
+  font: inherit;
+  font-size: var(--font-sm);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.trigger:hover {
+  background: var(--color-bg);
+}
+
+svg {
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon {
+  stroke-width: 1.4;
+}
+
+.chevron {
+  stroke-width: 2;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.trigger[aria-expanded='true'] .chevron {
+  transform: rotate(180deg);
+}
+
+/* ===== パネル（右端にそろえる） ===== */
+.panel {
+  position: absolute;
+  top: calc(100% + var(--space-xs));
+  right: 0;
+  z-index: 10;
+  min-width: 240px;
+  padding: var(--space-xs) 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popover);
+  transform-origin: top right;
+}
+
+/* 開くとき・閉じるとき（閉じるときは開くときの逆。終わってから消える） */
+.panel-enter {
+  animation: panel-in var(--dur-fast) var(--ease-out);
+}
+
+.panel-leave {
+  animation: panel-in var(--dur-fast) var(--ease-out) reverse forwards;
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.who,
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-sm) var(--space-md);
+}
+
+.who {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.label {
+  font-size: var(--font-xs, 12px);
+  color: var(--color-text-sub);
+}
+
+.name {
+  font-weight: 600;
+}
+
+.email {
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+  word-break: break-all;
+}
+
+.section {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.lang {
+  display: flex;
+  margin-top: var(--space-xs);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.lang button {
+  flex: 1;
+  padding: var(--space-xs) var(--space-sm);
+  font: inherit;
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+  background: var(--color-surface);
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.lang button + button {
+  border-left: 1px solid var(--color-border-strong);
+}
+
+.lang button.active {
+  color: var(--color-text);
+  background: var(--color-highlight);
+  font-weight: 600;
+}
+
+.item {
+  display: block;
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  font: inherit;
+  font-size: var(--font-sm);
+  text-align: left;
+  color: var(--color-text);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.item:hover {
+  background: var(--color-bg);
+}
+
+.logout {
+  color: var(--color-danger-text);
+}

@@ -4,11 +4,8 @@
     <app-office-switcher />
   </div>
   <div class="header-right">
-    <app-lang-switch />
-    <span class="user-name">{{ profile()?.displayName }}</span>
-    <button class="btn" type="button" (click)="logout()" [disabled]="loggingOut()">
-      {{ 'common.logout' | transloco }}
-    </button>
+    <!-- 言語・ログインしている人・ログアウトは「設定」のメニューにまとめる -->
+    <app-account-menu />
   </div>
 </header>
 

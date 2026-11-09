@@ -1648,5 +1648,10 @@
       "save": "Could not import. Please try again later.",
       "partial": "Stopped partway. Check the list and import only the remaining rows."
     }
+  },
+  "account": {
+    "menu": "Settings",
+    "signedInAs": "Signed in as",
+    "language": "Language"
   }
 }

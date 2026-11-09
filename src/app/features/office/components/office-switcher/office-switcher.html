@@ -13,7 +13,7 @@
 </button>
 
 @if (open()) {
-  <div class="panel" role="menu">
+  <div class="panel" role="menu" animate.enter="panel-enter" animate.leave="panel-leave">
     @for (g of context.groups(); track g.key) {
       <div class="group">
         @if (g.label || context.groups().length > 1) {

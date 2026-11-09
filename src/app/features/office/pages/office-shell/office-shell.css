@@ -34,12 +34,6 @@
     background: var(--color-primary);
   }
   
-  .user-name {
-    font-size: var(--font-sm);
-    color: var(--color-text-sub);
-    white-space: nowrap;
-  }
-  
   .shell-body {
     display: flex;
     min-height: calc(100vh - 56px);
