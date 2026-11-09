@@ -12,6 +12,7 @@ import {
   toYearMonth,
   YearMonth,
 } from '../../../shared/utils/date';
+import { careExemptMonth, CareExemptionLike } from './care-exemption';
 import { contractAt } from './contract-form-model';
 
 export interface Enrollment {
@@ -24,6 +25,8 @@ export interface CoverageInput {
   birthDate: DateStr;
   health: Enrollment;
   pension: Enrollment;
+  /** 介護保険の適用除外（R4。ない・空なら除外なし） */
+  careExemptions?: readonly CareExemptionLike[];
 }
 
 export interface MonthlyCoverage {
@@ -98,12 +101,20 @@ export function coverageForMonth(input: CoverageInput, month: YearMonth): Monthl
     input.pension.enrolled &&
     isChargedMonth(input.pension.acquiredDate, pensionLostDate(input), month);
 
-  // 介護保険：健康保険の保険料がかかっていて、40歳到達の月 〜 65歳到達の月の前月
-  const careStart = toYearMonth(ageReachDate(input.birthDate, 40));
-  const careEnd = toYearMonth(ageReachDate(input.birthDate, 65));
-  const care = health && month >= careStart && month < careEnd;
+  const care = health && isCareMonth(input, month);
 
   return { month, health, care, pension };
+}
+
+/**
+ * 介護保険の第2号被保険者の月か（健康保険の加入は見ない）
+ * - 40歳到達の月 〜 65歳到達の月の前月
+ * - ただし、介護保険の適用除外の月は除く（care-exemption.ts）
+ */
+export function isCareMonth(input: Pick<CoverageInput, 'birthDate' | 'careExemptions'>, month: YearMonth): boolean {
+  const careStart = toYearMonth(ageReachDate(input.birthDate, 40));
+  const careEnd = toYearMonth(ageReachDate(input.birthDate, 65));
+  return month >= careStart && month < careEnd && !careExemptMonth(input.careExemptions, month);
 }
 
 // ===== 6. 期間の一覧 =====

@@ -10,6 +10,7 @@ import { Employee } from '../../../../core/models/employee';
 import { RemunerationCard } from '../../components/remuneration-card/remuneration-card';
 import { PremiumCard } from '../../../premiums/components/premium-card/premium-card';
 import { BonusCard } from '../../../premiums/components/bonus-card/bonus-card';
+import { CareExemptionCard } from '../../components/care-exemption-card/care-exemption-card';
 import { LeaveCard } from '../../components/leave-card/leave-card';
 import { ContractCard } from '../../components/contract-card/contract-card';
 import { DependentCard } from '../../components/dependent-card/dependent-card';
@@ -32,6 +33,7 @@ type Mode = 'fiscal' | 'calendar' | 'last12';
     PremiumCard,
     BonusCard,
     LeaveCard,
+    CareExemptionCard,
     PayrollCard,
     HistoryCard,
     RecalcCard,

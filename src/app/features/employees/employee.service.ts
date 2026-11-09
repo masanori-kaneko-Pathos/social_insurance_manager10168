@@ -10,6 +10,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../core/firebase';
 import {
+  CareExemption,
   Employee,
   EmployeeBasicInput,
   EmployeeDoc,
@@ -67,5 +68,11 @@ export class EmployeeService {
   async updateLeaves(officeId: string, employeeId: string, leaves: Leave[]): Promise<void> {
     const ref = doc(this.col(officeId), employeeId);
     await this.history.write(officeId, employeeId, 'employee', ref, 'update', { leaves });
+  }
+
+  /** 介護保険の適用除外だけを書き換える */
+  async updateCareExemptions(officeId: string, employeeId: string, careExemptions: CareExemption[]): Promise<void> {
+    const ref = doc(this.col(officeId), employeeId);
+    await this.history.write(officeId, employeeId, 'employee', ref, 'update', { careExemptions });
   }
 }

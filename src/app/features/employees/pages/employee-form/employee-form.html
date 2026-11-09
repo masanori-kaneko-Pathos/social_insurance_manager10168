@@ -309,6 +309,16 @@
             @if (groupError('certificateRequired', 'foreign.certCountry')) {
               <span class="field-error">{{ 'employee.validation.certificateRequired' | transloco }}</span>
             }
+            <!-- 社会保障協定のマスタとの照らし合わせ -->
+            @if (certAgreement(); as a) {
+              <p class="hint">
+                {{ 'employee.agreement.info' | transloco: { name: a.name, from: a.from, covers: ('employee.certCovers.' + a.covers | transloco) } }}
+                @if (a.note) { <br />{{ a.note }} }
+              </p>
+            }
+            @for (w of certWarnings(); track w) {
+              <p class="hint warn">{{ 'employee.agreement.warning.' + w | transloco }}</p>
+            }
           }
           <p class="hint">{{ 'employee.hint.foreign' | transloco }}</p>
         </div>

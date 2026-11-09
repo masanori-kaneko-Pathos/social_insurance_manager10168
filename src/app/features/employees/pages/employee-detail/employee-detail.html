@@ -229,6 +229,8 @@
     <app-payroll-card [employee]="e" />
     <!-- 産休・育休 -->
     <app-leave-card [employee]="e" (changed)="reloadEmployee()" />
+    <!-- 介護保険の適用除外（海外居住・施設入所など） -->
+    <app-care-exemption-card [employee]="e" (changed)="reloadEmployee()" />
     <!-- 遡及計算（訂正したときの差額。結果は別に保存） -->
     <app-recalc-card [employee]="e" />
     <!-- 変更履歴（足すだけの記録。いちばん下） -->

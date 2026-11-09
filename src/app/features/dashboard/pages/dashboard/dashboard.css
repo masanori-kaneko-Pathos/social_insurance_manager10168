@@ -213,12 +213,14 @@ thead th {
 
 .kind-acquire,
 .kind-lose,
+.kind-agreement,
 .kind-office {
   background: var(--color-danger-bg);
   color: var(--color-danger-text);
 }
 
 .kind-upcoming,
+.kind-certificateEnd,
 .kind-categoryChange {
   background: var(--color-warning-bg);
   color: var(--color-warning-text);

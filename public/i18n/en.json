@@ -13,7 +13,8 @@
     "delete": "Delete",
     "hint": {
       "postalCode": "7 digits (no hyphen needed)"
-    }
+    },
+    "close": "Close"
   },
   "auth": {
     "password": {
@@ -114,14 +115,18 @@
         "upcoming": "Upcoming",
         "categoryChange": "Category change",
         "noContract": "No contract",
-        "office": "Office settings"
+        "office": "Office settings",
+        "agreement": "Agreement check",
+        "certificateEnd": "Certificate ending"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. File the acquisition notification (enter the acquisition date and enroll).",
         "lose": "Now \"{{today}}\", but enrolled in social insurance. Check whether a loss notification is needed or review the contract.",
         "upcoming": "Becomes \"{{next}}\" from {{date}}. Prepare the notifications for that day.",
         "categoryChange": "Becomes \"{{next}}\" from {{date}} (still insured). A category change notification is needed.",
-        "noContract": "No employment contract in effect today, so the category cannot be judged."
+        "noContract": "No employment contract in effect today, so the category cannot be judged.",
+        "agreement": "A certificate of coverage under a social security agreement (from {{date}}) is valid, but the person is enrolled in an exempt insurance. Check whether a loss notice (reason: social security agreement) is needed.",
+        "certificateEnd": "The certificate of coverage ends, so the person joins Japanese social insurance from {{date}}. Prepare the acquisition notice (if the assignment is extended, check the extended certificate)."
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -437,6 +442,18 @@
       },
       "hint": "Multiple choices in one filter match any of them; different filters must all match. Category and employment type load contracts when used.",
       "status": "Status"
+    },
+    "agreement": {
+      "info": "Agreement with {{name}} (effective {{from}}): exempt in Japan — {{covers}}.",
+      "warning": {
+        "noAgreement": "Japan has no social security agreement with this country (or it is not in the list). The certificate does not exempt Japanese insurance.",
+        "beforeEffective": "The certificate starts before the agreement took effect.",
+        "coversWider": "Under this agreement only the pension is exempt in Japan. The person joins health (and care) insurance.",
+        "coversNarrower": "This agreement can also exempt health insurance. Check what the certificate says.",
+        "noEnd": "A certificate states the assignment period. Enter the end date.",
+        "expired": "The certificate has ended. The person joins Japanese insurance from the next day.",
+        "expiringSoon": "The certificate ends soon. Extend it or prepare to join Japanese insurance."
+      }
     }
   },
   "office": {
@@ -1007,7 +1024,7 @@
       "list": "\"Missing\" counts employees insured during the pay period who have no record yet (only months whose pay day has passed).",
       "cash": "Cash pay: everything counted as remuneration for social insurance (base pay, allowances, overtime, commuting allowance; the \"social insurance amount\" in payroll software). Divide 3- or 6-month commuter passes by month, and exclude travel expenses, congratulatory or condolence payments and retirement allowances.",
       "fixed": "Fixed wages: pay whose amount or rate is set in advance, such as base pay, position allowance and commuting allowance. Overtime is not included.",
-      "inKind": "In kind: convert housing, dormitories and meals at the government-set value for the prefecture and enter the amount after the employee's own payment (this differs from the tax value).",
+      "inKind": "In kind: company housing, dormitories and meals are converted to yen with the value set by the government for each prefecture, minus what the employee pays (different from the tax valuation). Use \"Calculate\" for meals and housing.",
       "days": "Payment basis days: calendar days of the period for monthly salary; \"company-set days − days absent\" for monthly salary with absence deductions; days worked (including paid leave) for daily or hourly pay.",
       "blank": "Empty rows are not saved. Clearing a saved row and saving deletes that month's record.",
       "hours": "Hours worked: enter as \"160:30\" (160 h 30 min) or \"160.5\"."
@@ -1737,7 +1754,8 @@
       "leaves": "Leaves",
       "contact_address": "Address",
       "health_enrolled": "Enrolled",
-      "pension_enrolled": "Enrolled"
+      "pension_enrolled": "Enrolled",
+      "careExemptions": "Long-term care insurance exemption"
     }
   },
   "recalc": {
@@ -1800,5 +1818,113 @@
       "save": "Could not save.",
       "delete": "Could not delete."
     }
+  },
+  "careExemption": {
+    "title": "Long-term care insurance exemption",
+    "add": "Add exemption",
+    "empty": "No long-term care insurance exemptions.",
+    "reason": {
+      "overseas": "Living overseas",
+      "facility": "Resident of an exempt facility",
+      "residenceStatus": "Foreign national with a period of stay of 3 months or less"
+    },
+    "attachment": {
+      "overseas": "Attach: certificate of removal from the resident register (original, without My Number). The employer who ordered the transfer may fill in the form instead.",
+      "facility": "Attach: a document proving admission to the facility or hospital.",
+      "residenceStatus": "Attach: proof of the period of stay (e.g. a copy of the landing permission stamp in the passport) and a document such as the employment contract showing the contract period."
+    },
+    "field": {
+      "reason": "Reason",
+      "from": "Date applicable",
+      "to": "Date no longer applicable",
+      "filedOn": "Exemption notice filed on",
+      "endFiledOn": "End notice filed on",
+      "note": "Note",
+      "period": "Period",
+      "months": "Months without care premium",
+      "filing": "Notice"
+    },
+    "hint": {
+      "to": "The day the person became insured for long-term care again (returned to Japan, left the facility, etc.).",
+      "rule": "No care premium from the month of the applicable date until the month before the end date (if both fall in the same month, the premium is charged). File one notice per insured person or dependent without delay.",
+      "list": "Applies to people aged 40–64. For dependents the notice is still required, but the premium (Kyokai Kenpo) does not change."
+    },
+    "ongoing": "ongoing",
+    "sameMonth": "None (ended in the same month)",
+    "filing": {
+      "start": {
+        "needed": "Exemption notice not filed",
+        "done": "Exemption notice filed"
+      },
+      "end": {
+        "needed": "End notice not filed",
+        "done": "End notice filed"
+      }
+    },
+    "markStart": "Mark exemption notice filed",
+    "markEnd": "Mark end notice filed",
+    "confirmDelete": "Delete",
+    "warning": {
+      "outsideCareAge": "This period does not overlap the care insurance age ({{from}} to the day before {{to}}). Premiums do not change."
+    },
+    "error": {
+      "required": "Required.",
+      "date": "Invalid date.",
+      "order": "Must be after the applicable date.",
+      "beforeFrom": "Earlier than the date of the event.",
+      "noEnd": "Enter the end date first.",
+      "overlap": "Overlaps another exemption.",
+      "tooMany": "Up to 10 exemptions.",
+      "save": "Could not save. Please try again."
+    }
+  },
+  "inKind": {
+    "open": "Calc",
+    "openTitle": "Calculate in-kind meals and housing with the prefecture values",
+    "title": "In-kind calculation: {{name}} (paid {{month}})",
+    "table": "Uses the values for {{name}} (table from {{from}}), the prefecture of the workplace (office address).",
+    "kumiai": "A health insurance society may set its own values in its rules. Health insurance follows those values; check with the society (the pension uses this table).",
+    "meal": "Meals",
+    "mealRates": "Month {{month}} yen / day {{day}} yen (breakfast {{b}}, lunch {{l}}, dinner {{d}})",
+    "fullMonth": "All three meals every day for the whole month (use the monthly value)",
+    "breakfasts": "Breakfasts",
+    "lunches": "Lunches",
+    "dinners": "Dinners",
+    "mealPays": "Employee pays for meals (yen/month)",
+    "housing": "Housing (company housing, dormitory)",
+    "housingRate": {
+      "tatami": "{{yen}} yen per tatami mat per month (until Sep 2026)",
+      "sqm": "{{yen}} yen per square meter of total floor area per month (from Oct 2026)"
+    },
+    "size": {
+      "tatami": "Size (tatami mats)",
+      "sqm": "Size (square meters)"
+    },
+    "sizeHint": {
+      "tatami": "Mats in living rooms, bedrooms, guest rooms, studies, dining rooms, etc. Exclude entrance, kitchen, toilet, bath, hallways, shops and offices.",
+      "sqm": "Total floor area, including kitchen, toilet, bath and hallways. Exclude separate storage sheds and garages and shared areas. Up to 2 decimals."
+    },
+    "housingPays": "Employee pays for housing (yen/month)",
+    "twoThirds": "The employee pays at least two-thirds of the value, so meals are not counted as remuneration.",
+    "total": "Amount counted",
+    "yen": "yen",
+    "apply": "Use this amount",
+    "hint": "Fractions of a yen are rounded down. Own products, commuter passes, etc. are valued at market price and are not part of this calculation. A value set in a labor agreement is treated as the market price. Press Save after entering.",
+    "formError": {
+      "count": "Enter counts as whole numbers from 0 to 93.",
+      "yen": "Enter the employee payment in whole yen.",
+      "size": "Enter a size greater than 0 (up to 2 decimals).",
+      "movedIn": "Enter a move-in date in this month."
+    },
+    "error": {
+      "load": "Could not load in-kind values.",
+      "noTable": "No value table is registered for {{month}} (masterInKind).",
+      "noPrefecture": "No values for the office prefecture. Check the office settings."
+    },
+    "prefecture": "Prefecture for values",
+    "officePrefecture": " (office)",
+    "prefectureHint": "Table from {{from}}. Use the prefecture of the workplace (the office that manages personnel, labor and payroll), not where the housing is. If the head office and branches form one covered office, choose again.",
+    "movedIn": "Moved in mid-month on",
+    "movedInHint": "Prorated: monthly value × days from move-in ÷ days in the month."
   }
 }

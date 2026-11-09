@@ -1,0 +1,1050 @@
+[
+ {
+  "from": "2026-04",
+  "housingUnit": "tatami",
+  "prefectures": {
+   "01": {
+    "name": "北海道",
+    "meal": {
+     "month": 25500,
+     "day": 850,
+     "breakfast": 210,
+     "lunch": 300,
+     "dinner": 340
+    },
+    "housing": 1110
+   },
+   "02": {
+    "name": "青森",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 1040
+   },
+   "03": {
+    "name": "岩手",
+    "meal": {
+     "month": 24600,
+     "day": 820,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 320
+    },
+    "housing": 1110
+   },
+   "04": {
+    "name": "宮城",
+    "meal": {
+     "month": 24600,
+     "day": 820,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 320
+    },
+    "housing": 1520
+   },
+   "05": {
+    "name": "秋田",
+    "meal": {
+     "month": 24600,
+     "day": 820,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 320
+    },
+    "housing": 1110
+   },
+   "06": {
+    "name": "山形",
+    "meal": {
+     "month": 25200,
+     "day": 840,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 340
+    },
+    "housing": 1250
+   },
+   "07": {
+    "name": "福島",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 1200
+   },
+   "08": {
+    "name": "茨城",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 1340
+   },
+   "09": {
+    "name": "栃木",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 1320
+   },
+   "10": {
+    "name": "群馬",
+    "meal": {
+     "month": 23700,
+     "day": 790,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 310
+    },
+    "housing": 1280
+   },
+   "11": {
+    "name": "埼玉",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 1810
+   },
+   "12": {
+    "name": "千葉",
+    "meal": {
+     "month": 24900,
+     "day": 830,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 330
+    },
+    "housing": 1760
+   },
+   "13": {
+    "name": "東京",
+    "meal": {
+     "month": 25500,
+     "day": 850,
+     "breakfast": 210,
+     "lunch": 300,
+     "dinner": 340
+    },
+    "housing": 2830
+   },
+   "14": {
+    "name": "神奈川",
+    "meal": {
+     "month": 25200,
+     "day": 840,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 340
+    },
+    "housing": 2150
+   },
+   "15": {
+    "name": "新潟",
+    "meal": {
+     "month": 24600,
+     "day": 820,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 320
+    },
+    "housing": 1360
+   },
+   "16": {
+    "name": "富山",
+    "meal": {
+     "month": 24900,
+     "day": 830,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 330
+    },
+    "housing": 1290
+   },
+   "17": {
+    "name": "石川",
+    "meal": {
+     "month": 25200,
+     "day": 840,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 340
+    },
+    "housing": 1340
+   },
+   "18": {
+    "name": "福井",
+    "meal": {
+     "month": 25500,
+     "day": 850,
+     "breakfast": 210,
+     "lunch": 300,
+     "dinner": 340
+    },
+    "housing": 1220
+   },
+   "19": {
+    "name": "山梨",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 1260
+   },
+   "20": {
+    "name": "長野",
+    "meal": {
+     "month": 23700,
+     "day": 790,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 310
+    },
+    "housing": 1250
+   },
+   "21": {
+    "name": "岐阜",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 1230
+   },
+   "22": {
+    "name": "静岡",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 1460
+   },
+   "23": {
+    "name": "愛知",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 1560
+   },
+   "24": {
+    "name": "三重",
+    "meal": {
+     "month": 24900,
+     "day": 830,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 330
+    },
+    "housing": 1260
+   },
+   "25": {
+    "name": "滋賀",
+    "meal": {
+     "month": 24600,
+     "day": 820,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 320
+    },
+    "housing": 1410
+   },
+   "26": {
+    "name": "京都",
+    "meal": {
+     "month": 25200,
+     "day": 840,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 340
+    },
+    "housing": 1810
+   },
+   "27": {
+    "name": "大阪",
+    "meal": {
+     "month": 24600,
+     "day": 820,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 320
+    },
+    "housing": 1780
+   },
+   "28": {
+    "name": "兵庫",
+    "meal": {
+     "month": 24900,
+     "day": 830,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 330
+    },
+    "housing": 1580
+   },
+   "29": {
+    "name": "奈良",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 1310
+   },
+   "30": {
+    "name": "和歌山",
+    "meal": {
+     "month": 24600,
+     "day": 820,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 320
+    },
+    "housing": 1170
+   },
+   "31": {
+    "name": "鳥取",
+    "meal": {
+     "month": 25500,
+     "day": 850,
+     "breakfast": 210,
+     "lunch": 300,
+     "dinner": 340
+    },
+    "housing": 1190
+   },
+   "32": {
+    "name": "島根",
+    "meal": {
+     "month": 25500,
+     "day": 850,
+     "breakfast": 210,
+     "lunch": 300,
+     "dinner": 340
+    },
+    "housing": 1150
+   },
+   "33": {
+    "name": "岡山",
+    "meal": {
+     "month": 24900,
+     "day": 830,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 330
+    },
+    "housing": 1360
+   },
+   "34": {
+    "name": "広島",
+    "meal": {
+     "month": 25200,
+     "day": 840,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 340
+    },
+    "housing": 1410
+   },
+   "35": {
+    "name": "山口",
+    "meal": {
+     "month": 25200,
+     "day": 840,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 340
+    },
+    "housing": 1140
+   },
+   "36": {
+    "name": "徳島",
+    "meal": {
+     "month": 24900,
+     "day": 830,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 330
+    },
+    "housing": 1160
+   },
+   "37": {
+    "name": "香川",
+    "meal": {
+     "month": 24900,
+     "day": 830,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 330
+    },
+    "housing": 1210
+   },
+   "38": {
+    "name": "愛媛",
+    "meal": {
+     "month": 24900,
+     "day": 830,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 330
+    },
+    "housing": 1130
+   },
+   "39": {
+    "name": "高知",
+    "meal": {
+     "month": 25200,
+     "day": 840,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 340
+    },
+    "housing": 1130
+   },
+   "40": {
+    "name": "福岡",
+    "meal": {
+     "month": 24600,
+     "day": 820,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 320
+    },
+    "housing": 1430
+   },
+   "41": {
+    "name": "佐賀",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 1170
+   },
+   "42": {
+    "name": "長崎",
+    "meal": {
+     "month": 24900,
+     "day": 830,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 330
+    },
+    "housing": 1150
+   },
+   "43": {
+    "name": "熊本",
+    "meal": {
+     "month": 25200,
+     "day": 840,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 340
+    },
+    "housing": 1150
+   },
+   "44": {
+    "name": "大分",
+    "meal": {
+     "month": 24600,
+     "day": 820,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 320
+    },
+    "housing": 1170
+   },
+   "45": {
+    "name": "宮崎",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 1080
+   },
+   "46": {
+    "name": "鹿児島",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 1110
+   },
+   "47": {
+    "name": "沖縄",
+    "meal": {
+     "month": 26400,
+     "day": 880,
+     "breakfast": 220,
+     "lunch": 310,
+     "dinner": 350
+    },
+    "housing": 1290
+   }
+  },
+  "source": "日本年金機構「令和8年4月から現物給与の価額が改正されます」（20150511.files/2026.pdf）。食事は R8.4.1 から、住宅は「R8.9.30まで（1畳につき）」の列"
+ },
+ {
+  "from": "2026-10",
+  "housingUnit": "sqm",
+  "prefectures": {
+   "01": {
+    "name": "北海道",
+    "meal": {
+     "month": 25500,
+     "day": 850,
+     "breakfast": 210,
+     "lunch": 300,
+     "dinner": 340
+    },
+    "housing": 530
+   },
+   "02": {
+    "name": "青森",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 460
+   },
+   "03": {
+    "name": "岩手",
+    "meal": {
+     "month": 24600,
+     "day": 820,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 320
+    },
+    "housing": 520
+   },
+   "04": {
+    "name": "宮城",
+    "meal": {
+     "month": 24600,
+     "day": 820,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 320
+    },
+    "housing": 680
+   },
+   "05": {
+    "name": "秋田",
+    "meal": {
+     "month": 24600,
+     "day": 820,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 320
+    },
+    "housing": 490
+   },
+   "06": {
+    "name": "山形",
+    "meal": {
+     "month": 25200,
+     "day": 840,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 340
+    },
+    "housing": 540
+   },
+   "07": {
+    "name": "福島",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 540
+   },
+   "08": {
+    "name": "茨城",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 600
+   },
+   "09": {
+    "name": "栃木",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 590
+   },
+   "10": {
+    "name": "群馬",
+    "meal": {
+     "month": 23700,
+     "day": 790,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 310
+    },
+    "housing": 550
+   },
+   "11": {
+    "name": "埼玉",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 840
+   },
+   "12": {
+    "name": "千葉",
+    "meal": {
+     "month": 24900,
+     "day": 830,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 330
+    },
+    "housing": 830
+   },
+   "13": {
+    "name": "東京",
+    "meal": {
+     "month": 25500,
+     "day": 850,
+     "breakfast": 210,
+     "lunch": 300,
+     "dinner": 340
+    },
+    "housing": 1330
+   },
+   "14": {
+    "name": "神奈川",
+    "meal": {
+     "month": 25200,
+     "day": 840,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 340
+    },
+    "housing": 1010
+   },
+   "15": {
+    "name": "新潟",
+    "meal": {
+     "month": 24600,
+     "day": 820,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 320
+    },
+    "housing": 580
+   },
+   "16": {
+    "name": "富山",
+    "meal": {
+     "month": 24900,
+     "day": 830,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 330
+    },
+    "housing": 560
+   },
+   "17": {
+    "name": "石川",
+    "meal": {
+     "month": 25200,
+     "day": 840,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 340
+    },
+    "housing": 580
+   },
+   "18": {
+    "name": "福井",
+    "meal": {
+     "month": 25500,
+     "day": 850,
+     "breakfast": 210,
+     "lunch": 300,
+     "dinner": 340
+    },
+    "housing": 540
+   },
+   "19": {
+    "name": "山梨",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 560
+   },
+   "20": {
+    "name": "長野",
+    "meal": {
+     "month": 23700,
+     "day": 790,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 310
+    },
+    "housing": 560
+   },
+   "21": {
+    "name": "岐阜",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 540
+   },
+   "22": {
+    "name": "静岡",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 650
+   },
+   "23": {
+    "name": "愛知",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 710
+   },
+   "24": {
+    "name": "三重",
+    "meal": {
+     "month": 24900,
+     "day": 830,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 330
+    },
+    "housing": 580
+   },
+   "25": {
+    "name": "滋賀",
+    "meal": {
+     "month": 24600,
+     "day": 820,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 320
+    },
+    "housing": 640
+   },
+   "26": {
+    "name": "京都",
+    "meal": {
+     "month": 25200,
+     "day": 840,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 340
+    },
+    "housing": 830
+   },
+   "27": {
+    "name": "大阪",
+    "meal": {
+     "month": 24600,
+     "day": 820,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 320
+    },
+    "housing": 820
+   },
+   "28": {
+    "name": "兵庫",
+    "meal": {
+     "month": 24900,
+     "day": 830,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 330
+    },
+    "housing": 730
+   },
+   "29": {
+    "name": "奈良",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 580
+   },
+   "30": {
+    "name": "和歌山",
+    "meal": {
+     "month": 24600,
+     "day": 820,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 320
+    },
+    "housing": 490
+   },
+   "31": {
+    "name": "鳥取",
+    "meal": {
+     "month": 25500,
+     "day": 850,
+     "breakfast": 210,
+     "lunch": 300,
+     "dinner": 340
+    },
+    "housing": 500
+   },
+   "32": {
+    "name": "島根",
+    "meal": {
+     "month": 25500,
+     "day": 850,
+     "breakfast": 210,
+     "lunch": 300,
+     "dinner": 340
+    },
+    "housing": 500
+   },
+   "33": {
+    "name": "岡山",
+    "meal": {
+     "month": 24900,
+     "day": 830,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 330
+    },
+    "housing": 620
+   },
+   "34": {
+    "name": "広島",
+    "meal": {
+     "month": 25200,
+     "day": 840,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 340
+    },
+    "housing": 670
+   },
+   "35": {
+    "name": "山口",
+    "meal": {
+     "month": 25200,
+     "day": 840,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 340
+    },
+    "housing": 500
+   },
+   "36": {
+    "name": "徳島",
+    "meal": {
+     "month": 24900,
+     "day": 830,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 330
+    },
+    "housing": 510
+   },
+   "37": {
+    "name": "香川",
+    "meal": {
+     "month": 24900,
+     "day": 830,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 330
+    },
+    "housing": 550
+   },
+   "38": {
+    "name": "愛媛",
+    "meal": {
+     "month": 24900,
+     "day": 830,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 330
+    },
+    "housing": 500
+   },
+   "39": {
+    "name": "高知",
+    "meal": {
+     "month": 25200,
+     "day": 840,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 340
+    },
+    "housing": 490
+   },
+   "40": {
+    "name": "福岡",
+    "meal": {
+     "month": 24600,
+     "day": 820,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 320
+    },
+    "housing": 670
+   },
+   "41": {
+    "name": "佐賀",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 510
+   },
+   "42": {
+    "name": "長崎",
+    "meal": {
+     "month": 24900,
+     "day": 830,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 330
+    },
+    "housing": 510
+   },
+   "43": {
+    "name": "熊本",
+    "meal": {
+     "month": 25200,
+     "day": 840,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 340
+    },
+    "housing": 530
+   },
+   "44": {
+    "name": "大分",
+    "meal": {
+     "month": 24600,
+     "day": 820,
+     "breakfast": 210,
+     "lunch": 290,
+     "dinner": 320
+    },
+    "housing": 530
+   },
+   "45": {
+    "name": "宮崎",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 490
+   },
+   "46": {
+    "name": "鹿児島",
+    "meal": {
+     "month": 24300,
+     "day": 810,
+     "breakfast": 200,
+     "lunch": 280,
+     "dinner": 330
+    },
+    "housing": 470
+   },
+   "47": {
+    "name": "沖縄",
+    "meal": {
+     "month": 26400,
+     "day": 880,
+     "breakfast": 220,
+     "lunch": 310,
+     "dinner": 350
+    },
+    "housing": 620
+   }
+  },
+  "source": "日本年金機構「令和8年4月から現物給与の価額が改正されます」（20150511.files/2026.pdf）。住宅は「R8.10.1から（総面積1平方メートルにつき）」の列"
+ }
+]

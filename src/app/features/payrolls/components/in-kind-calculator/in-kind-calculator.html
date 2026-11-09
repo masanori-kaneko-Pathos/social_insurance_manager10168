@@ -1,0 +1,128 @@
+<section class="card calc" aria-labelledby="in-kind-title">
+  <div class="head">
+    <h2 id="in-kind-title">{{ 'inKind.title' | transloco: { name: employeeName(), month: month() } }}</h2>
+    <button type="button" class="btn btn-small" (click)="closed.emit()">{{ 'common.close' | transloco }}</button>
+  </div>
+
+  @if (loadError()) {
+    <div class="alert alert-danger">{{ 'inKind.error.load' | transloco }}</div>
+  } @else if (tables() === null) {
+    <p class="muted">{{ 'common.loading' | transloco }}</p>
+  } @else if (!table()) {
+    <div class="alert alert-warning">{{ 'inKind.error.noTable' | transloco: { month: month() } }}</div>
+  } @else {
+    @let t = table()!;
+    <div class="pref">
+      <label for="ik-pref">{{ 'inKind.prefecture' | transloco }}</label>
+      <select id="ik-pref" class="input" [value]="prefectureCode()" (change)="choosePrefecture($any($event.target).value)">
+        @for (o of prefectureOptions(); track o.code) {
+          <option [value]="o.code">{{ o.name }}{{ o.code === prefecture() ? ('inKind.officePrefecture' | transloco) : '' }}</option>
+        }
+      </select>
+      <span class="hint">{{ 'inKind.prefectureHint' | transloco: { from: t.from } }}</span>
+    </div>
+  }
+  @if (table() && !pref()) {
+    <div class="alert alert-warning">{{ 'inKind.error.noPrefecture' | transloco }}</div>
+  } @else if (pref(); as p) {
+    @let t = table()!;
+    @if (kumiai()) {
+      <p class="hint warn">{{ 'inKind.kumiai' | transloco }}</p>
+    }
+
+    <form [formGroup]="form" novalidate>
+      <!-- 食事 -->
+      <fieldset>
+        <label class="check"><input type="checkbox" formControlName="useMeal" />{{ 'inKind.meal' | transloco }}</label>
+        @if (form.controls.useMeal.value) {
+          <p class="rates">
+            {{ 'inKind.mealRates' | transloco: { month: p.meal.month, day: p.meal.day, b: p.meal.breakfast, l: p.meal.lunch, d: p.meal.dinner } }}
+          </p>
+          <label class="check"><input type="checkbox" formControlName="fullMonth" />{{ 'inKind.fullMonth' | transloco }}</label>
+          <div class="grid">
+            @if (!form.controls.fullMonth.value) {
+              <div class="field">
+                <label for="ik-b">{{ 'inKind.breakfasts' | transloco }}</label>
+                <input id="ik-b" class="input num" inputmode="numeric" formControlName="breakfasts" />
+              </div>
+              <div class="field">
+                <label for="ik-l">{{ 'inKind.lunches' | transloco }}</label>
+                <input id="ik-l" class="input num" inputmode="numeric" formControlName="lunches" />
+              </div>
+              <div class="field">
+                <label for="ik-d">{{ 'inKind.dinners' | transloco }}</label>
+                <input id="ik-d" class="input num" inputmode="numeric" formControlName="dinners" />
+              </div>
+            }
+            <div class="field">
+              <label for="ik-mp">{{ 'inKind.mealPays' | transloco }}</label>
+              <input id="ik-mp" class="input num" inputmode="numeric" formControlName="mealPays" />
+            </div>
+          </div>
+        }
+      </fieldset>
+
+      <!-- 住宅 -->
+      <fieldset>
+        <label class="check"><input type="checkbox" formControlName="useHousing" />{{ 'inKind.housing' | transloco }}</label>
+        @if (form.controls.useHousing.value) {
+          <p class="rates">{{ 'inKind.housingRate.' + t.housingUnit | transloco: { yen: p.housing } }}</p>
+          <div class="grid">
+            <div class="field">
+              <label for="ik-size">{{ 'inKind.size.' + t.housingUnit | transloco }}</label>
+              <input id="ik-size" class="input num" inputmode="decimal" formControlName="size" />
+              <span class="hint">{{ 'inKind.sizeHint.' + t.housingUnit | transloco }}</span>
+            </div>
+            <div class="field">
+              <label for="ik-moved">{{ 'inKind.movedIn' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+              <input id="ik-moved" class="input" type="date" formControlName="movedIn" />
+              <span class="hint">{{ 'inKind.movedInHint' | transloco }}</span>
+            </div>
+            <div class="field">
+              <label for="ik-hp">{{ 'inKind.housingPays' | transloco }}</label>
+              <input id="ik-hp" class="input num" inputmode="numeric" formControlName="housingPays" />
+            </div>
+          </div>
+        }
+      </fieldset>
+    </form>
+
+    @for (e of errors(); track e) {
+      <p class="field-error">{{ 'inKind.formError.' + e | transloco }}</p>
+    }
+
+    @if (result(); as r) {
+      <table class="breakdown">
+        <tbody>
+          @if (r.meal; as m) {
+            <tr>
+              <th>{{ 'inKind.meal' | transloco }}</th>
+              <td class="num">{{ m.value.toLocaleString() }}</td>
+              <td class="num">− {{ m.employeePays.toLocaleString() }}</td>
+              <td class="num">{{ m.counted.toLocaleString() }}</td>
+            </tr>
+            @if (m.twoThirds) {
+              <tr><td colspan="4" class="note">{{ 'inKind.twoThirds' | transloco }}</td></tr>
+            }
+          }
+          @if (r.housing; as h) {
+            <tr>
+              <th>{{ 'inKind.housing' | transloco }}</th>
+              <td class="num">{{ h.value.toLocaleString() }}</td>
+              <td class="num">− {{ h.employeePays.toLocaleString() }}</td>
+              <td class="num">{{ h.counted.toLocaleString() }}</td>
+            </tr>
+          }
+          <tr class="total">
+            <th>{{ 'inKind.total' | transloco }}</th>
+            <td colspan="3" class="num">{{ r.total.toLocaleString() }} {{ 'inKind.yen' | transloco }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="actions">
+        <button type="button" class="btn btn-primary" (click)="use()">{{ 'inKind.apply' | transloco }}</button>
+      </div>
+    }
+    <p class="hint">{{ 'inKind.hint' | transloco }}</p>
+  }
+</section>

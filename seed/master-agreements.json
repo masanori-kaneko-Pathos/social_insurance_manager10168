@@ -1,0 +1,218 @@
+[
+  {
+    "country": "DE",
+    "name": "ドイツ",
+    "from": "2000-02",
+    "covers": "pension",
+    "totalization": true,
+    "note": null,
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "GB",
+    "name": "英国",
+    "from": "2001-02",
+    "covers": "pension",
+    "totalization": false,
+    "note": null,
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "KR",
+    "name": "韓国",
+    "from": "2005-04",
+    "covers": "pension",
+    "totalization": false,
+    "note": null,
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "US",
+    "name": "アメリカ",
+    "from": "2005-10",
+    "covers": "pensionAndHealth",
+    "totalization": true,
+    "note": null,
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "BE",
+    "name": "ベルギー",
+    "from": "2007-01",
+    "covers": "pensionAndHealth",
+    "totalization": true,
+    "note": null,
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "FR",
+    "name": "フランス",
+    "from": "2007-06",
+    "covers": "pensionAndHealth",
+    "totalization": true,
+    "note": null,
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "CA",
+    "name": "カナダ",
+    "from": "2008-03",
+    "covers": "pension",
+    "totalization": true,
+    "note": "相手国側はケベック州年金制度を除く。",
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "AU",
+    "name": "オーストラリア",
+    "from": "2009-01",
+    "covers": "pension",
+    "totalization": true,
+    "note": null,
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "NL",
+    "name": "オランダ",
+    "from": "2009-03",
+    "covers": "pensionAndHealth",
+    "totalization": true,
+    "note": null,
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "CZ",
+    "name": "チェコ",
+    "from": "2009-06",
+    "covers": "pensionAndHealth",
+    "totalization": true,
+    "note": "2018年8月1日に協定の一部を改正する議定書が発効。",
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "ES",
+    "name": "スペイン",
+    "from": "2010-12",
+    "covers": "pension",
+    "totalization": true,
+    "note": null,
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "IE",
+    "name": "アイルランド",
+    "from": "2010-12",
+    "covers": "pension",
+    "totalization": true,
+    "note": null,
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "BR",
+    "name": "ブラジル",
+    "from": "2012-03",
+    "covers": "pension",
+    "totalization": true,
+    "note": null,
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "CH",
+    "name": "スイス",
+    "from": "2012-03",
+    "covers": "pensionAndHealth",
+    "totalization": true,
+    "note": null,
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "HU",
+    "name": "ハンガリー",
+    "from": "2014-01",
+    "covers": "pensionAndHealth",
+    "totalization": true,
+    "note": null,
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "IN",
+    "name": "インド",
+    "from": "2016-10",
+    "covers": "pension",
+    "totalization": true,
+    "note": null,
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "LU",
+    "name": "ルクセンブルク",
+    "from": "2017-08",
+    "covers": "pensionAndHealth",
+    "totalization": true,
+    "note": null,
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "PH",
+    "name": "フィリピン",
+    "from": "2018-08",
+    "covers": "pension",
+    "totalization": true,
+    "note": null,
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "SK",
+    "name": "スロバキア",
+    "from": "2019-07",
+    "covers": "pension",
+    "totalization": true,
+    "note": null,
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "CN",
+    "name": "中国",
+    "from": "2019-09",
+    "covers": "pension",
+    "totalization": false,
+    "note": null,
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "FI",
+    "name": "フィンランド",
+    "from": "2022-02",
+    "covers": "pension",
+    "totalization": true,
+    "note": "日本側は雇用保険も対象（このアプリの範囲外）。",
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "SE",
+    "name": "スウェーデン",
+    "from": "2022-06",
+    "covers": "pension",
+    "totalization": true,
+    "note": null,
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "IT",
+    "name": "イタリア",
+    "from": "2024-04",
+    "covers": "pension",
+    "totalization": false,
+    "note": "日本側は雇用保険も対象（このアプリの範囲外）。",
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  },
+  {
+    "country": "AT",
+    "name": "オーストリア",
+    "from": "2025-12",
+    "covers": "pension",
+    "totalization": true,
+    "note": "表の日本側には医療保険もあるが、オーストリアから日本へ一時派遣される人は日本の医療保険にも加入する（※3）。日本で免除されるのは年金だけとして扱う。",
+    "source": "日本年金機構「協定を結んでいる国との協定発効時期および対象となる社会保障制度」（2026-11-09 確認）"
+  }
+]

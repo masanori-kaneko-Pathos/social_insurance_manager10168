@@ -154,7 +154,12 @@ export class Dashboard {
     const byId = new Map(this.employees().map((e) => [e.id, e]));
     const list = this.employees().flatMap((e) =>
       personTodos(
-        { ...e, optOutDate: e.optOutDate ?? null, contracts: this.contracts().get(e.id) ?? [] },
+        {
+          ...e,
+          optOutDate: e.optOutDate ?? null,
+          contracts: this.contracts().get(e.id) ?? [],
+          certificate: e.foreign?.certificate ?? null,
+        },
         office,
         criteria,
         this.today,

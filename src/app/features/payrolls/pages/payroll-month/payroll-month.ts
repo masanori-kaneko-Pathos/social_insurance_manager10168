@@ -22,6 +22,7 @@ import { shiftMonth, daysInclusive, todayLocal } from '../../../../shared/utils/
 import { PayrollChange, PayrollService } from '../../payroll.service';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
+import { InKindCalculator } from '../../components/in-kind-calculator/in-kind-calculator';
 type RowForm = FormGroup<{
   cash: FormControl<string>;
   fixed: FormControl<string>;
@@ -44,7 +45,7 @@ const MONTH_RE = /^[0-9]{4}-(0[1-9]|1[0-2])$/;
 
 @Component({
   selector: 'app-payroll-month',
-  imports: [HalfWidthDigits, RouterLink, TranslocoPipe, ReactiveFormsModule],
+  imports: [HalfWidthDigits, InKindCalculator, RouterLink, TranslocoPipe, ReactiveFormsModule],
   templateUrl: './payroll-month.html',
   styleUrl: './payroll-month.css',
 })
@@ -85,6 +86,20 @@ export class PayrollMonth {
 
   private employees: Employee[] | null = null;
 
+  /** 現物給与の計算を開いている行（null は閉じている） */
+  readonly inKindFor = signal<ViewRow | null>(null);
+
+  openInKind(v: ViewRow): void {
+    this.inKindFor.set(v);
+  }
+
+  /** 計算した額を現物の欄に入れる（保存は「保存する」で、ほかの欄と一緒に） */
+  applyInKind(v: ViewRow, yen: number): void {
+    v.form.controls.inKind.setValue(String(yen));
+    v.form.markAsDirty();
+    this.inKindFor.set(null);
+  }
+
   constructor() {
     this.route.paramMap
       .pipe(takeUntilDestroyed(inject(DestroyRef)))
@@ -104,6 +119,7 @@ export class PayrollMonth {
       return;
     }
     this.month.set(month);
+    this.inKindFor.set(null);
     try {
       this.employees ??= await this.employeesApi.list(office.id);
       const employees = this.employees;

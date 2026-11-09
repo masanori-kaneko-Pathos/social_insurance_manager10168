@@ -143,6 +143,10 @@ service cloud.firestore {
       allow read: if signedIn();
       allow write: if false;
     }
+    match /masterInKind/{id} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
 
     // ============================================================
     // 事業所 offices/{officeId}
@@ -320,15 +324,21 @@ service cloud.firestore {
           && (f.noAddressReason == null || f.noAddressReason in ['overseas', 'shortStay', 'other']));
       }
 
+      function EMPLOYEE_KEYS() {
+        return [
+          'employeeNumber', 'lastName', 'firstName', 'lastNameKana', 'firstNameKana', 'nameOrder', 'birthDate', 'sex',
+          'hireDate', 'retireDate', 'retireReason',
+          'health', 'pension', 'acquisitionType', 'multipleOffices', 'rehired', 'needsConfirmationCard', 'optInDate', 'optOutDate',
+          'insuredNumber', 'basicPensionNumber',
+          'contact', 'commute', 'bankAccount', 'collectionMethod', 'foreign', 'leaves', 'userUid',
+          'annualIncomeEstimate', 'spouseAnnualIncome',
+          'createdAt', 'updatedAt'];
+      }
+
       function validEmployee(d) {
-        return exactKeys(d, [
-              'employeeNumber', 'lastName', 'firstName', 'lastNameKana', 'firstNameKana', 'nameOrder', 'birthDate', 'sex',
-              'hireDate', 'retireDate', 'retireReason',
-              'health', 'pension', 'acquisitionType', 'multipleOffices', 'rehired', 'needsConfirmationCard', 'optInDate', 'optOutDate',
-              'insuredNumber', 'basicPensionNumber',
-              'contact', 'commute', 'bankAccount', 'collectionMethod', 'foreign', 'leaves', 'userUid',
-              'annualIncomeEstimate', 'spouseAnnualIncome',
-              'createdAt', 'updatedAt'])
+        // careExemptions は後から足した項目なので、古い文書にはなくてもよい（ほかは全部そろっている）
+        return d.keys().hasOnly(EMPLOYEE_KEYS().concat(['careExemptions']))
+          && d.keys().hasAll(EMPLOYEE_KEYS())
           && optStr(d.employeeNumber, 20)
           && str(d.lastName, 50) && str(d.lastNameKana, 50)
           // 名：外国籍で名のない人（姓だけの国）は空でもよい
@@ -350,6 +360,8 @@ service cloud.firestore {
           && validForeign(d.foreign)
           // 休業：配列で20件まで。1件ずつの中身はアプリで確かめる（ルールに繰り返しがないため）
           && d.leaves is list && d.leaves.size() <= 20
+          // 介護保険の適用除外：配列で10件まで（中身はアプリで確かめる）
+          && (!('careExemptions' in d) || (d.careExemptions is list && d.careExemptions.size() <= 10))
           && (d.userUid == null || d.userUid is string)
           && (d.annualIncomeEstimate == null || yen(d.annualIncomeEstimate))
           && (d.spouseAnnualIncome == null || yen(d.spouseAnnualIncome));
@@ -582,21 +594,6 @@ service cloud.firestore {
           allow read: if isMember(officeId);
           allow create: if isAdmin(officeId) && validLeaveEnd(request.resource.data) && created(request.resource.data);
           allow update: if isAdmin(officeId) && validLeaveEnd(request.resource.data) && updated(request.resource.data);
-          allow delete: if isAdmin(officeId);
-        }
-
-        // ----- 介護保険の適用除外（ID ＝ 該当した日） -----
-        match /careExemptions/{from} {
-          function validCareExemption(d) {
-            return exactKeys(d, ['from', 'to', 'reason', 'note', 'createdAt', 'updatedAt'])
-              && d.from == from && isDate(from) && optDate(d.to)
-              && d.reason in ['facility', 'overseas', 'residenceStatus']
-              && optStr(d.note, 200);
-          }
-
-          allow read: if isMember(officeId);
-          allow create: if isAdmin(officeId) && validCareExemption(request.resource.data) && created(request.resource.data);
-          allow update: if isAdmin(officeId) && validCareExemption(request.resource.data) && updated(request.resource.data);
           allow delete: if isAdmin(officeId);
         }
 

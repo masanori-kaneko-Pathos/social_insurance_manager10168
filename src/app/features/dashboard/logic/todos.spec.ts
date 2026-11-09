@@ -1,4 +1,5 @@
 import type { ClassifyContract, ClassifyCriteria, ClassifyOffice } from '../../employees/logic/classify';
+import type { CertificateLike } from '../../employees/logic/agreement';
 import { personTodos, sortTodos, TodoPerson } from './todos';
 
 // 週40時間・月20日、2026-10 から特定適用事業所（seed/test-data と同じ）
@@ -75,5 +76,39 @@ describe('personTodos', () => {
       ...todos({ id: 'a', hireDate: '2026-04-01', health: off, pension: off, contracts: [part({ from: '2026-04-01' })] }),
     ];
     expect(sortTodos(list).map((t) => t.employeeId)).toEqual(['a', 'b', 'c']);
+  });
+});
+
+describe('personTodos：社会保障協定の適用証明書', () => {
+  const us = (p: Partial<CertificateLike> = {}): CertificateLike => ({
+    country: 'US', from: '2026-04-01', to: '2029-03-31', covers: 'pensionAndHealth', ...p,
+  });
+
+  it('年金・医療とも免除で、どちらも未加入 → やることなし（取得届を出さない）', () => {
+    expect(todos({ health: off, pension: off, certificate: us() })).toEqual([]);
+  });
+
+  it('年金だけ免除で、健保に入っていない → 資格取得届（健保）', () => {
+    const t = todos({ health: off, pension: off, certificate: us({ country: 'DE', covers: 'pension' }) });
+    expect(t.map((x) => x.kind)).toEqual(['acquire']);
+  });
+
+  it('年金だけ免除で、健保だけ加入 → やることなし', () => {
+    expect(todos({ pension: off, certificate: us({ country: 'DE', covers: 'pension' }) })).toEqual([]);
+  });
+
+  it('証明書があるのに厚年に入っている → 喪失届（協定）', () => {
+    const t = todos({ certificate: us({ country: 'DE', covers: 'pension' }) });
+    expect(t.map((x) => [x.kind, x.date])).toEqual([['agreement', '2026-04-01']]);
+  });
+
+  it('証明書が60日以内に切れる → 翌日から加入', () => {
+    const t = todos({ health: off, pension: off, certificate: us({ to: '2026-12-31' }) });
+    expect(t.map((x) => [x.kind, x.date])).toEqual([['certificateEnd', '2027-01-01']]);
+  });
+
+  it('証明書が切れたのに未加入 → 資格取得届', () => {
+    const t = todos({ health: off, pension: off, certificate: us({ to: '2026-10-31' }) });
+    expect(t.map((x) => [x.kind, x.date])).toEqual([['acquire', '2026-11-01']]);
   });
 });

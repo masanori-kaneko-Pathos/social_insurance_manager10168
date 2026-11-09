@@ -77,6 +77,20 @@ export interface CertificateDoc {
   covers: AgreementCovers;
 }
 
+/** 介護保険の適用除外の事由（介護保険適用除外等該当・非該当届） */
+export type CareExemptionReason = 'overseas' | 'facility' | 'residenceStatus'; // 国外居住・適用除外施設・在留3か月以下
+export const CARE_EXEMPTION_REASONS: readonly CareExemptionReason[] = ['overseas', 'facility', 'residenceStatus'];
+
+/** 介護保険の適用除外（40〜64歳でも介護保険料がかからない期間） */
+export interface CareExemption {
+  reason: CareExemptionReason;
+  from: string; // 該当年月日（届書のとおり）
+  to: string | null; // 非該当年月日（日本に戻った・退所した など）
+  filedOn: string | null; // 該当届を出した日
+  endFiledOn: string | null; // 非該当届を出した日
+  note: string | null;
+}
+
 /** 一覧で並ぶ列：あ〜わ（カナ）か A〜Z（ローマ字） */
 export const NAME_ORDERS = ['kana', 'roman'] as const;
 export type NameOrder = (typeof NAME_ORDERS)[number];
@@ -199,6 +213,8 @@ export interface EmployeeDoc {
   collectionMethod: CollectionMethod | null; // null ＝ 事業所の設定のまま
   foreign: ForeignDoc | null;
   leaves: Leave[];
+  /** 介護保険の適用除外（古い文書にはない＝ 空とみなす） */
+  careExemptions?: CareExemption[];
   // 扶養家族の判定と届書の材料（扶養家族のカードで入れる）
   /** 被保険者の今後1年の年収の見込み。null なら給与・賞与の実績から計算する（届書 A⑦） */
   annualIncomeEstimate: number | null;
@@ -219,7 +235,7 @@ export type EmployeeInput = Omit<EmployeeDoc, 'createdAt' | 'updatedAt'>;
 /** 登録・編集画面が扱う項目（休業はカード、マイページのアカウントは招待で保存する） */
 export type EmployeeBasicInput = Omit<
   EmployeeInput,
-  'leaves' | 'userUid' | 'annualIncomeEstimate' | 'spouseAnnualIncome'
+  'leaves' | 'careExemptions' | 'userUid' | 'annualIncomeEstimate' | 'spouseAnnualIncome'
 >;
 
 // ===== 初期値 =====
@@ -258,5 +274,5 @@ export function emptyLeave(kind: LeaveKind, start: string): Leave {
 
 /** 登録画面が扱わない項目の初期値（登録のときに係が足す） */
 export function employeeExtras(): Omit<EmployeeInput, keyof EmployeeBasicInput> {
-  return { leaves: [], userUid: null, annualIncomeEstimate: null, spouseAnnualIncome: null };
+  return { leaves: [], careExemptions: [], userUid: null, annualIncomeEstimate: null, spouseAnnualIncome: null };
 }

@@ -9,27 +9,6 @@ import { StandardRemuneration } from './remuneration';
  * - 遡及計算の結果（カタログ【9】。元のデータは書き換えない）
  */
 
-// ===== 介護保険の適用除外 offices/{o}/employees/{e}/careExemptions/{from} =====
-
-/** 介護施設に入所・海外に居住・在留資格（日本に住所がない など） */
-export type CareExemptionReason = 'facility' | 'overseas' | 'residenceStatus';
-export const CARE_EXEMPTION_REASONS: readonly CareExemptionReason[] = [
-  'facility',
-  'overseas',
-  'residenceStatus',
-];
-
-export interface CareExemptionDoc {
-  from: string; // 該当した日（＝ ドキュメントID）
-  to: string | null; // 非該当になった日
-  reason: CareExemptionReason;
-  note: string | null;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-}
-
-export type CareExemption = Omit<CareExemptionDoc, 'createdAt' | 'updatedAt'>;
-
 // ===== 海外赴任 offices/{o}/employees/{e}/overseas/{from} =====
 
 export interface OverseasDoc {

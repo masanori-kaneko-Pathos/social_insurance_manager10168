@@ -19,7 +19,7 @@ import {
   PremiumPart,
 } from '../../../core/models/premium';
 import { PickedRate, RatesForMonth } from '../../../core/models/rates';
-import { ageReachDate, CoverageInput, healthLostDate, pensionLostDate } from '../../employees/logic/coverage';
+import { CoverageInput, healthLostDate, isCareMonth, pensionLostDate } from '../../employees/logic/coverage';
 import { DateStr, fiscalYearOf, toYearMonth } from '../../../shared/utils/date';
 import { makeGroups, makeLine, withTotals } from './premium-core';
 import { exemptBonus, LeaveHolder } from '../../employees/logic/leave';
@@ -72,8 +72,6 @@ export function calcBonuses(input: BonusInput): BonusPremiumResult[] {
   const options = input.options ?? DEFAULT_PREMIUM_OPTIONS;
   const healthLost = healthLostDate(employee);
   const pensionLost = pensionLostDate(employee);
-  const careStart = toYearMonth(ageReachDate(employee.birthDate, 40));
-  const careEnd = toYearMonth(ageReachDate(employee.birthDate, 65));
 
   const healthCumByYear = new Map<number, number>(); // 年度 → 健保の標準賞与額の累計
   const pensionSumByMonth = new Map<string, number>(); // 月 → 厚年の標準賞与額の合計
@@ -130,7 +128,7 @@ export function calcBonuses(input: BonusInput): BonusPremiumResult[] {
 
     if (healthStatus === 'charged') {
       add('health', healthBase, rates.health);
-      if (month >= careStart && month < careEnd) add('care', healthBase, rates.care);
+      if (isCareMonth(employee, month)) add('care', healthBase, rates.care); // 適用除外の月は除く
       add('childSupport', healthBase, rates.childSupport);
     }
     if (pensionStatus === 'charged') {

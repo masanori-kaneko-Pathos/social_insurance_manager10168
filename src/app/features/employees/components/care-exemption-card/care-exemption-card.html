@@ -1,0 +1,145 @@
+<section class="card">
+  <div class="head">
+    <h2>{{ 'careExemption.title' | transloco }}</h2>
+    @if (context.isAdmin() && editing() === null) {
+      <button type="button" class="btn" (click)="startAdd()">{{ 'careExemption.add' | transloco }}</button>
+    }
+  </div>
+
+  @if (errorKey(); as key) {
+    <div class="alert alert-danger">{{ key | transloco }}</div>
+  }
+
+  @if (editing() !== null) {
+    <form class="editor" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="grid">
+        <div class="field wide">
+          <label for="care-reason">{{ 'careExemption.field.reason' | transloco }}</label>
+          <select id="care-reason" class="input" formControlName="reason">
+            @for (r of reasons; track r) {
+              <option [value]="r">{{ 'careExemption.reason.' + r | transloco }}</option>
+            }
+          </select>
+          <span class="hint">{{ 'careExemption.attachment.' + form.controls.reason.value | transloco }}</span>
+        </div>
+        <div class="field">
+          <label for="care-from">{{ 'careExemption.field.from' | transloco }}</label>
+          <input id="care-from" class="input" type="date" formControlName="from" [class.is-invalid]="errorOf('from')" />
+          @if (errorOf('from'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+        </div>
+        <div class="field">
+          <label for="care-to">{{ 'careExemption.field.to' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="care-to" class="input" type="date" formControlName="to" [class.is-invalid]="errorOf('to')" />
+          @if (errorOf('to'); as e) {
+            <span class="field-error">{{ e | transloco }}</span>
+          } @else {
+            <span class="hint">{{ 'careExemption.hint.to' | transloco }}</span>
+          }
+        </div>
+        <div class="field">
+          <label for="care-filed">{{ 'careExemption.field.filedOn' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="care-filed" class="input" type="date" formControlName="filedOn" [class.is-invalid]="errorOf('filedOn')" />
+          @if (errorOf('filedOn'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+        </div>
+        <div class="field">
+          <label for="care-end-filed">{{ 'careExemption.field.endFiledOn' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="care-end-filed" class="input" type="date" formControlName="endFiledOn" [class.is-invalid]="errorOf('endFiledOn')" />
+          @if (errorOf('endFiledOn'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+        </div>
+        <div class="field wide">
+          <label for="care-note">{{ 'careExemption.field.note' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="care-note" class="input" maxlength="200" formControlName="note" />
+        </div>
+      </div>
+
+      @for (w of warnings(); track w) {
+        <p class="hint warn">{{ 'careExemption.warning.' + w | transloco: { from: careAge().from, to: careAge().to } }}</p>
+      }
+      @if (formErrorKey(); as key) {
+        <p class="field-error">{{ key | transloco }}</p>
+      }
+      <p class="hint">{{ 'careExemption.hint.rule' | transloco }}</p>
+
+      <div class="actions">
+        <button type="button" class="btn" (click)="cancel()">{{ 'common.cancel' | transloco }}</button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          {{ (saving() ? 'common.saving' : 'common.save') | transloco }}
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (rows().length === 0) {
+    <p class="muted">{{ 'careExemption.empty' | transloco }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'careExemption.field.reason' | transloco }}</th>
+            <th>{{ 'careExemption.field.period' | transloco }}</th>
+            <th>{{ 'careExemption.field.months' | transloco }}</th>
+            <th>{{ 'careExemption.field.filing' | transloco }}</th>
+            @if (context.isAdmin()) {
+              <th><span class="sr-only">{{ 'common.edit' | transloco }}</span></th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.index) {
+            <tr>
+              <td>
+                {{ 'careExemption.reason.' + r.item.reason | transloco }}
+                @if (r.item.note) { <div class="sub">{{ r.item.note }}</div> }
+              </td>
+              <td class="mono">{{ r.item.from }} 〜 {{ r.item.to ?? '' }}</td>
+              <td class="mono">
+                @if (r.months; as m) {
+                  {{ m.from }} 〜 {{ m.to ?? ('careExemption.ongoing' | transloco) }}
+                } @else {
+                  <span class="muted">{{ 'careExemption.sameMonth' | transloco }}</span>
+                }
+              </td>
+              <td>
+                <div>
+                  <span [class]="'status ' + r.filing.start">{{ 'careExemption.filing.start.' + r.filing.start | transloco }}</span>
+                  @if (r.item.filedOn) { <span class="sub"> {{ r.item.filedOn }}</span> }
+                </div>
+                @if (r.filing.end !== 'none') {
+                  <div>
+                    <span [class]="'status ' + r.filing.end">{{ 'careExemption.filing.end.' + r.filing.end | transloco }}</span>
+                    @if (r.item.endFiledOn) { <span class="sub"> {{ r.item.endFiledOn }}</span> }
+                  </div>
+                }
+              </td>
+              @if (context.isAdmin()) {
+                <td class="row-actions">
+                  @if (confirmingDelete() === r.index) {
+                    <button type="button" class="link danger" [disabled]="saving()" (click)="remove(r.index)">
+                      {{ 'careExemption.confirmDelete' | transloco }}
+                    </button>
+                    <button type="button" class="link" (click)="confirmingDelete.set(null)">{{ 'common.cancel' | transloco }}</button>
+                  } @else {
+                    @if (r.filing.start === 'needed') {
+                      <button type="button" class="link" [disabled]="editing() !== null || saving()" (click)="markFiled(r.index, 'start')">
+                        {{ 'careExemption.markStart' | transloco }}
+                      </button>
+                    }
+                    @if (r.filing.end === 'needed') {
+                      <button type="button" class="link" [disabled]="editing() !== null || saving()" (click)="markFiled(r.index, 'end')">
+                        {{ 'careExemption.markEnd' | transloco }}
+                      </button>
+                    }
+                    <button type="button" class="link" [disabled]="editing() !== null" (click)="startEdit(r)">{{ 'common.edit' | transloco }}</button>
+                    <button type="button" class="link" [disabled]="editing() !== null" (click)="confirmingDelete.set(r.index)">{{ 'common.delete' | transloco }}</button>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  <p class="hint">{{ 'careExemption.hint.list' | transloco }}</p>
+</section>

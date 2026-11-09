@@ -59,6 +59,18 @@
     }
   </div>
 
+  <!-- 現物給与の計算（1人分。「この額を入れる」で現物の欄に入る） -->
+  @if (inKindFor(); as v) {
+    <app-in-kind-calculator
+      [month]="month()"
+      [prefecture]="context.current()?.prefecture ?? ''"
+      [kumiai]="context.current()?.healthInsurer.type === 'kumiai'"
+      [employeeName]="v.employee.lastName + ' ' + v.employee.firstName"
+      (apply)="applyInKind(v, $event)"
+      (closed)="inKindFor.set(null)"
+    />
+  }
+
   <div class="card table-wrap">
     <table>
       <thead>
@@ -128,7 +140,14 @@
             </td>
             @if (showAll()) {
               <td class="num">
-                <input class="input num w-money" formControlName="inKind" inputmode="numeric" />
+                <div class="days">
+                  <input class="input num w-money" formControlName="inKind" inputmode="numeric" />
+                  @if (context.isAdmin()) {
+                    <button type="button" class="btn btn-small" (click)="openInKind(v)" [title]="'inKind.openTitle' | transloco">
+                      {{ 'inKind.open' | transloco }}
+                    </button>
+                  }
+                </div>
               </td>
               <td class="num">
                 <input class="input num w-money" formControlName="retro" inputmode="numeric" />

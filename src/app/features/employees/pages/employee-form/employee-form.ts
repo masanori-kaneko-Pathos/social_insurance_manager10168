@@ -25,6 +25,9 @@ import { toHalfWidth } from '../../../../shared/utils/text';
 import { OfficeContext } from '../../../office/office-context.service';
 import { premiumOf } from '../../../office/office-settings';
 import { EmployeeService } from '../../employee.service';
+import { AgreementService } from '../../agreement.service';
+import { AgreementDoc } from '../../../../core/models/master';
+import { CertificateLike, certificateWarnings, defaultCovers } from '../../logic/agreement';
 import {
   emptyEmployeeForm,
   EmployeeFormValue,
@@ -121,7 +124,19 @@ export class EmployeeForm {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly employees = inject(EmployeeService);
+  private readonly agreementsApi = inject(AgreementService);
   readonly context = inject(OfficeContext);
+  /** 社会保障協定のマスタ（読めなければ空のまま。照らし合わせが出ないだけ） */
+  readonly agreements = signal<AgreementDoc[]>([]);
+  /** 適用証明書の入力（照らし合わせ用） */
+  private readonly cert = signal<CertificateLike | null>(null);
+  readonly certAgreement = computed(() => {
+    const c = this.cert();
+    return c ? (this.agreements().find((a) => a.country === c.country) ?? null) : null;
+  });
+  readonly certWarnings = computed(() =>
+    this.agreements().length === 0 ? [] : certificateWarnings(this.cert(), this.agreements(), todayLocal()),
+  );
   /** 事業所の本人負担の集め方（「事業所の設定のまま」の後ろに出す） */
   readonly officeMethod = computed(() => {
     const o = this.context.current();
@@ -276,7 +291,30 @@ export class EmployeeForm {
     c.foreign.controls.residentRegistered.valueChanges.subscribe((registered) => {
       if (!registered) c.foreign.controls.needsRomanNameFiling.setValue(true);
     });
+    // 適用証明書：国を入れたら、協定の範囲を初期値に入れる。入力が変わるたびに照らし合わせる
+    const f = c.foreign.controls;
+    f.certCountry.valueChanges.subscribe((country) => {
+      const covers = defaultCovers(country.trim().toUpperCase(), this.agreements());
+      if (covers && f.certCovers.value !== covers) f.certCovers.setValue(covers);
+    });
+    c.foreign.valueChanges.subscribe(() => this.syncCert());
+    this.agreementsApi.list().then(
+      (list) => {
+        this.agreements.set(list);
+        this.syncCert();
+      },
+      (err) => console.error(err),
+    );
     if (this.isEdit) this.loadForEdit();
+  }
+
+  private syncCert(): void {
+    const f = this.form.controls.foreign.getRawValue();
+    this.cert.set(
+      f.hasCertificate && f.certCountry.trim() && f.certFrom
+        ? { country: f.certCountry.trim().toUpperCase(), from: f.certFrom, to: f.certTo || null, covers: f.certCovers }
+        : null,
+    );
   }
 
   private syncAcquired(value: string): void {
@@ -314,6 +352,7 @@ export class EmployeeForm {
       this.lastAutoLost = e.retireDate ? addDays(e.retireDate, 1) : '';
       // 読み込みで自動入力が走らないように
       this.form.setValue(toEmployeeForm(e), { emitEvent: false });
+      this.syncCert();
     } catch (err) {
       console.error(err);
       this.errorKey.set('employee.error.load');
