@@ -1,8 +1,7 @@
 import type { Employee } from '../../../core/models/employee';
-import { matchesCoverage, sortEmployees } from './employee-sort';
+import { sortEmployees } from './employee-sort';
 
 const on = (d: string) => ({ enrolled: true, acquiredDate: d, lostDate: null, lossReason: null });
-const off = { enrolled: false, acquiredDate: null, lostDate: null, lossReason: null };
 
 function emp(p: Partial<Employee>): Employee {
   return {
@@ -35,24 +34,5 @@ describe('sortEmployees', () => {
   it('同じ値なら氏名の順', () => {
     const D = emp({ lastNameKana: 'イトウ', hireDate: '2020-04-01' });
     expect(nums(sortEmployees([B, D], 'hire', 'asc'))).toEqual(['アオキ', 'イトウ']);
-  });
-});
-
-describe('matchesCoverage：今月の加入状況', () => {
-  const M = '2026-11';
-  it('健保・厚年・加入なし', () => {
-    expect(matchesCoverage(emp({}), 'health', M)).toBeTrue();
-    expect(matchesCoverage(emp({ health: off, pension: off }), 'none', M)).toBeTrue();
-    expect(matchesCoverage(emp({ health: off, pension: off }), 'health', M)).toBeFalse();
-  });
-  it('70歳以上は厚年に入らない（年齢による喪失も入れる）', () => {
-    const old = emp({ birthDate: '1956-08-01' }); // 2026-07-31 に70歳
-    expect(matchesCoverage(old, 'pension', M)).toBeFalse();
-    expect(matchesCoverage(old, 'health', M)).toBeTrue();
-  });
-  it('介護：40歳到達の月から', () => {
-    const forty = emp({ birthDate: '1986-12-01' }); // 2026-11-30 に40歳
-    expect(matchesCoverage(forty, 'care', '2026-10')).toBeFalse();
-    expect(matchesCoverage(forty, 'care', M)).toBeTrue();
   });
 });

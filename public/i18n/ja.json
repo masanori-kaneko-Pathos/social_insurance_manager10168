@@ -163,16 +163,6 @@
       "romanBy_last": "A〜Z：姓",
       "romanBy_first": "A〜Z：名",
       "import": "CSV で取り込む",
-      "coverageLabel": "今月の加入",
-      "coverage": {
-        "all": "すべて",
-        "health": "健保",
-        "pension": "厚年",
-        "care": "介護の対象",
-        "none": "加入なし"
-      },
-      "categoryLabel": "区分で絞り込む",
-      "categoryAll": "区分：すべて",
       "categoryShort": {
         "regular": "通常",
         "shortTime": "短時間",
@@ -415,6 +405,38 @@
       "first": "名",
       "lastKana": "氏のフリガナ",
       "firstKana": "名のフリガナ"
+    },
+    "filter": {
+      "button": "フィルター",
+      "title": "絞り込みの条件",
+      "clear": "条件をクリア",
+      "coverage": "今月の加入",
+      "category": "区分（今日）",
+      "employment": "雇用形態（今日の契約）",
+      "hire": "入社日",
+      "age": "年齢（今日）",
+      "ageUnit": "歳",
+      "sex": "性別",
+      "nationality": "国籍",
+      "from": "から",
+      "to": "まで",
+      "cov": {
+        "health": "健保",
+        "pension": "厚年",
+        "care": "介護の対象",
+        "none": "加入なし"
+      },
+      "sexOpt": {
+        "male": "男性",
+        "female": "女性",
+        "unset": "未入力"
+      },
+      "nat": {
+        "japan": "日本",
+        "foreign": "外国籍"
+      },
+      "hint": "同じ条件の中で複数選ぶと「どれか」、違う条件どうしは「どれも」で絞ります。区分・雇用形態は、選んだときに契約を読みます。",
+      "status": "在籍"
     }
   },
   "office": {

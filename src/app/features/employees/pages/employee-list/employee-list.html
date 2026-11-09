@@ -9,6 +9,96 @@
   </div>
   
   <div class="toolbar">
+    <!-- フィルター（複数の条件を組み合わせる。選んだらすぐ反映） -->
+    <div class="filter-wrap" #filterWrap>
+      <button
+        type="button"
+        class="btn filter-btn"
+        [class.on]="filterCount() > 0"
+        [attr.aria-expanded]="filterOpen()"
+        (click)="filterOpen.set(!filterOpen())"
+      >
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+          <path d="M2 3.5h12L9.5 9v4l-3 1.5V9z" />
+        </svg>
+        {{ 'employee.filter.button' | transloco }}
+        @if (filterCount() > 0) { <span class="count">{{ filterCount() }}</span> }
+      </button>
+
+      @if (filterOpen()) {
+        @let f = filter();
+        <div class="filter-panel" animate.enter="panel-enter" animate.leave="panel-leave">
+          <div class="filter-head">
+            <strong>{{ 'employee.filter.title' | transloco }}</strong>
+            <button type="button" class="link" (click)="clearFilter()" [disabled]="filterCount() === 0">
+              {{ 'employee.filter.clear' | transloco }}
+            </button>
+          </div>
+
+          <fieldset>
+            <legend>{{ 'employee.filter.status' | transloco }}</legend>
+            @for (st of statuses; track st) {
+              <label class="opt"><input type="radio" name="status" [checked]="status() === st" (change)="setStatus(st)" />{{ 'employee.status.' + st | transloco }}</label>
+            }
+          </fieldset>
+
+          <fieldset>
+            <legend>{{ 'employee.filter.coverage' | transloco }}</legend>
+            @for (o of options.coverage; track o) {
+              <label class="opt"><input type="checkbox" [checked]="isOn('coverage', o)" (change)="toggleOption('coverage', o)" />{{ 'employee.filter.cov.' + o | transloco }}</label>
+            }
+          </fieldset>
+
+          <fieldset>
+            <legend>
+              {{ 'employee.filter.category' | transloco }}
+              @if (categoryLoading()) { <span class="muted">{{ 'common.loading' | transloco }}</span> }
+            </legend>
+            @for (o of options.category; track o) {
+              <label class="opt"><input type="checkbox" [checked]="isOn('category', o)" (change)="toggleOption('category', o)" />{{ 'employee.list.categoryShort.' + o | transloco }}</label>
+            }
+          </fieldset>
+
+          <fieldset>
+            <legend>{{ 'employee.filter.employment' | transloco }}</legend>
+            @for (o of options.employment; track o) {
+              <label class="opt"><input type="checkbox" [checked]="isOn('employment', o)" (change)="toggleOption('employment', o)" />{{ 'contract.employmentType.' + o | transloco }}</label>
+            }
+          </fieldset>
+
+          <fieldset class="range">
+            <legend>{{ 'employee.filter.hire' | transloco }}</legend>
+            <input class="input" type="date" [value]="f.hireFrom ?? ''" (change)="setDate('hireFrom', $any($event.target).value)" [attr.aria-label]="'employee.filter.from' | transloco" />
+            <span>〜</span>
+            <input class="input" type="date" [value]="f.hireTo ?? ''" (change)="setDate('hireTo', $any($event.target).value)" [attr.aria-label]="'employee.filter.to' | transloco" />
+          </fieldset>
+
+          <fieldset class="range">
+            <legend>{{ 'employee.filter.age' | transloco }}</legend>
+            <input class="input age" inputmode="numeric" maxlength="3" [value]="f.ageMin ?? ''" (change)="setAge('ageMin', $any($event.target).value)" [attr.aria-label]="'employee.filter.from' | transloco" />
+            <span>〜</span>
+            <input class="input age" inputmode="numeric" maxlength="3" [value]="f.ageMax ?? ''" (change)="setAge('ageMax', $any($event.target).value)" [attr.aria-label]="'employee.filter.to' | transloco" />
+            <span class="muted">{{ 'employee.filter.ageUnit' | transloco }}</span>
+          </fieldset>
+
+          <fieldset>
+            <legend>{{ 'employee.filter.sex' | transloco }}</legend>
+            @for (o of options.sex; track o) {
+              <label class="opt"><input type="checkbox" [checked]="isOn('sex', o)" (change)="toggleOption('sex', o)" />{{ 'employee.filter.sexOpt.' + o | transloco }}</label>
+            }
+          </fieldset>
+
+          <fieldset>
+            <legend>{{ 'employee.filter.nationality' | transloco }}</legend>
+            @for (o of options.nationality; track o) {
+              <label class="opt"><input type="checkbox" [checked]="isOn('nationality', o)" (change)="toggleOption('nationality', o)" />{{ 'employee.filter.nat.' + o | transloco }}</label>
+            }
+          </fieldset>
+
+          <p class="hint">{{ 'employee.filter.hint' | transloco }}</p>
+        </div>
+      }
+    </div>
     <input
       class="input search"
       type="search"
@@ -16,35 +106,6 @@
       [value]="query()"
       (input)="onQuery($event)"
     />
-    <div class="segmented" role="group">
-      @for (s of statuses; track s) {
-        <button type="button" [class.active]="status() === s" (click)="setStatus(s)">
-          {{ 'employee.status.' + s | transloco }}
-        </button>
-      }
-    </div>
-    <!-- 今月の加入状況で絞り込む -->
-    <div class="segmented" role="group" [attr.aria-label]="'employee.list.coverageLabel' | transloco">
-      @for (c of coverageFilters; track c) {
-        <button type="button" [class.active]="coverage() === c" (click)="setCoverage(c)">
-          {{ 'employee.list.coverage.' + c | transloco }}
-        </button>
-      }
-    </div>
-    <!-- 区分（選んだときだけ契約を読む） -->
-    <label class="category-filter">
-      <span class="sr-only">{{ 'employee.list.categoryLabel' | transloco }}</span>
-      <select class="input" [value]="category()" (change)="setCategory($any($event.target).value)">
-        @for (c of categoryFilters; track c) {
-          <option [value]="c" [selected]="category() === c">
-            {{ (c === 'all' ? 'employee.list.categoryAll' : 'contract.category.' + c) | transloco }}
-          </option>
-        }
-      </select>
-      @if (categoryLoading()) {
-        <span class="muted">{{ 'common.loading' | transloco }}</span>
-      }
-    </label>
     @if (hasRoman()) {
       <div class="segmented" role="group" [attr.aria-label]="'employee.list.romanBy' | transloco">
         @for (b of ['last', 'first']; track b) {

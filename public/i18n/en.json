@@ -163,16 +163,6 @@
       "romanBy_last": "A–Z: surname",
       "romanBy_first": "A–Z: given name",
       "import": "Import CSV",
-      "coverageLabel": "Coverage this month",
-      "coverage": {
-        "all": "All",
-        "health": "Health",
-        "pension": "Pension",
-        "care": "Long-term care",
-        "none": "Not covered"
-      },
-      "categoryLabel": "Filter by category",
-      "categoryAll": "Category: all",
       "categoryShort": {
         "regular": "Regular",
         "shortTime": "Short-time",
@@ -415,6 +405,38 @@
       "first": "Given name",
       "lastKana": "Surname reading",
       "firstKana": "Given name reading"
+    },
+    "filter": {
+      "button": "Filter",
+      "title": "Filters",
+      "clear": "Clear",
+      "coverage": "Coverage this month",
+      "category": "Category (today)",
+      "employment": "Employment type (today)",
+      "hire": "Hire date",
+      "age": "Age (today)",
+      "ageUnit": "years",
+      "sex": "Sex",
+      "nationality": "Nationality",
+      "from": "from",
+      "to": "to",
+      "cov": {
+        "health": "Health",
+        "pension": "Pension",
+        "care": "Long-term care",
+        "none": "Not covered"
+      },
+      "sexOpt": {
+        "male": "Male",
+        "female": "Female",
+        "unset": "Not entered"
+      },
+      "nat": {
+        "japan": "Japan",
+        "foreign": "Foreign"
+      },
+      "hint": "Multiple choices in one filter match any of them; different filters must all match. Category and employment type load contracts when used.",
+      "status": "Status"
     }
   },
   "office": {

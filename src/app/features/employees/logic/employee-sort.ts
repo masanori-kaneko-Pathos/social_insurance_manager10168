@@ -1,17 +1,12 @@
-// 従業員一覧の並び替えと、加入での絞り込み
+// 従業員一覧の並び替え（絞り込みは employee-filter.ts）
 // Angular・Firebase に依存しない純粋な関数
 
 import type { Employee } from '../../../core/models/employee';
-import type { YearMonth } from '../../../shared/utils/date';
-import { coverageForMonth } from './coverage';
 import { sortKeyOf } from './name-index';
 
 export const SORT_KEYS = ['name', 'number', 'age', 'hire'] as const;
 export type SortKey = (typeof SORT_KEYS)[number];
 export type SortDir = 'asc' | 'desc';
-
-export const COVERAGE_FILTERS = ['all', 'health', 'pension', 'care', 'none'] as const;
-export type CoverageFilter = (typeof COVERAGE_FILTERS)[number];
 
 type SortTarget = Pick<
   Employee,
@@ -49,24 +44,4 @@ export function sortEmployees<T extends SortTarget>(list: readonly T[], key: Sor
     }
   };
   return [...list].sort((a, b) => cmp(a, b) || byName(a, b));
-}
-
-/** 今月の加入状況での絞り込み（年齢による喪失も入れる） */
-export function matchesCoverage(
-  e: Pick<Employee, 'birthDate' | 'health' | 'pension'>,
-  filter: CoverageFilter,
-  month: YearMonth,
-): boolean {
-  if (filter === 'all') return true;
-  const c = coverageForMonth(e, month);
-  switch (filter) {
-    case 'health':
-      return c.health;
-    case 'pension':
-      return c.pension;
-    case 'care':
-      return c.care;
-    case 'none':
-      return !c.health && !c.pension;
-  }
 }

@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -11,24 +11,38 @@ import { OfficeContext } from '../../../office/office-context.service';
 import { ContractService } from '../../contract.service';
 import { EmployeeService } from '../../employee.service';
 import { Category, classify, Classification } from '../../logic/classify';
+import { SORT_KEYS, SortDir, SortKey, sortEmployees } from '../../logic/employee-sort';
+import { contractAt } from '../../logic/contract-form-model';
 import {
-  COVERAGE_FILTERS,
-  CoverageFilter,
-  matchesCoverage,
-  SORT_KEYS,
-  SortDir,
-  SortKey,
-  sortEmployees,
-} from '../../logic/employee-sort';
+  activeCount,
+  CATEGORY_OPTIONS,
+  COVERAGE_OPTIONS,
+  EMPLOYMENT_OPTIONS,
+  EmployeeFilter,
+  emptyFilter,
+  filterFromQuery,
+  filterToQuery,
+  matchesFilter,
+  NATIONALITY_OPTIONS,
+  needsContracts,
+  SEX_OPTIONS,
+  toggle,
+} from '../../logic/employee-filter';
 import { groupByName, matchesName, NameSection, RomanBy } from '../../logic/name-index';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 type StatusFilter = 'active' | 'retired' | 'all';
 const STATUSES: readonly StatusFilter[] = ['active', 'retired', 'all'];
 
-/** 区分の絞り込み（all は絞らない） */
-export const CATEGORY_FILTERS = ['all', 'regular', 'shortTime', 'reducedWage', 'excluded', 'unknown'] as const;
-type CategoryFilter = (typeof CATEGORY_FILTERS)[number];
+/** フィルターの「どれか」の条件（選択肢の付け外しで使う） */
+type ListField = 'coverage' | 'category' | 'employment' | 'sex' | 'nationality';
+const ORDERS: Record<ListField, readonly string[]> = {
+  coverage: COVERAGE_OPTIONS,
+  category: CATEGORY_OPTIONS,
+  employment: EMPLOYMENT_OPTIONS,
+  sex: SEX_OPTIONS,
+  nationality: NATIONALITY_OPTIONS,
+};
 
 const pick = <T extends string>(list: readonly T[], v: string | null, fallback: T): T =>
   v && (list as readonly string[]).includes(v) ? (v as T) : fallback;
@@ -38,6 +52,10 @@ const pick = <T extends string>(list: readonly T[], v: string | null, fallback: 
   imports: [HalfWidthDigits, RouterLink, TranslocoPipe],
   templateUrl: './employee-list.html',
   styleUrl: './employee-list.css',
+  host: {
+    '(document:click)': 'onDocumentClick($event)',
+    '(document:keydown.escape)': 'filterOpen.set(false)',
+  },
 })
 export class EmployeeList {
   private readonly employeesApi = inject(EmployeeService);
@@ -53,11 +71,16 @@ export class EmployeeList {
   readonly loading = signal(true);
 
   readonly statuses = STATUSES;
-  readonly coverageFilters = COVERAGE_FILTERS;
-  readonly categoryFilters = CATEGORY_FILTERS;
   readonly sortKeys = SORT_KEYS;
+  readonly options = {
+    coverage: COVERAGE_OPTIONS,
+    category: CATEGORY_OPTIONS,
+    employment: EMPLOYMENT_OPTIONS,
+    sex: SEX_OPTIONS,
+    nationality: NATIONALITY_OPTIONS,
+  };
 
-  // ===== 表示の状態は URL に持つ（?q=&status=&sort=&dir=&cov=&cat=） =====
+  // ===== 表示の状態は URL に持つ（?q=&status=&sort=&dir= と、フィルターの条件） =====
   private readonly params = toSignal(this.route.queryParamMap, {
     initialValue: this.route.snapshot.queryParamMap,
   });
@@ -67,8 +90,13 @@ export class EmployeeList {
   readonly sortKey = computed<SortKey>(() => pick(SORT_KEYS, this.params().get('sort'), 'number'));
   readonly sortDir = computed<SortDir>(() => (this.params().get('dir') === 'desc' ? 'desc' : 'asc'));
   readonly isDefaultSort = computed(() => this.sortKey() === 'number' && this.sortDir() === 'asc');
-  readonly coverage = computed<CoverageFilter>(() => pick(COVERAGE_FILTERS, this.params().get('cov'), 'all'));
-  readonly category = computed<CategoryFilter>(() => pick(CATEGORY_FILTERS, this.params().get('cat'), 'all'));
+  readonly filter = computed<EmployeeFilter>(() => filterFromQuery((k) => this.params().get(k)));
+  /** 使っている条件の数（在籍は「在籍中」以外を選んだら1つと数える） */
+  readonly filterCount = computed(() => activeCount(this.filter()) + (this.status() === 'active' ? 0 : 1));
+
+  /** フィルターのパネル（外を押す・Esc で閉じる） */
+  readonly filterOpen = signal(false);
+  private readonly filterWrap = viewChild<ElementRef<HTMLElement>>('filterWrap');
 
   /** ローマ字の列（A〜Z）を姓と名のどちらで並べるか（見た目だけなので URL には入れない） */
   readonly romanBy = signal<RomanBy>('last');
@@ -99,15 +127,21 @@ export class EmployeeList {
 
   readonly filtered = computed(() => {
     const q = this.query();
-    const cat = this.category();
+    const f = this.filter();
     const classes = this.classifications();
+    const contracts = this.contracts();
     return this.employees().filter((e) => {
       const retired = this.isRetired(e);
       if (this.status() === 'active' && retired) return false;
       if (this.status() === 'retired' && !retired) return false;
-      if (!matchesCoverage(e, this.coverage(), this.thisMonth)) return false;
-      if (cat !== 'all' && classes && classes.get(e.id)?.category !== cat) return false;
-      return matchesName(e, q);
+      const ctx = {
+        today: this.today,
+        month: this.thisMonth,
+        // 契約を読み終わるまでは undefined（絞らない）
+        category: classes?.get(e.id)?.category,
+        employment: contracts ? (contractAt(contracts.get(e.id) ?? [], this.today)?.employmentType ?? null) : undefined,
+      };
+      return matchesFilter(e, f, ctx) && matchesName(e, q);
     });
   });
 
@@ -135,10 +169,10 @@ export class EmployeeList {
       const officeId = this.context.current()?.id;
       if (officeId) this.load(officeId);
     });
-    // 区分で絞り込むときだけ、契約を読む
+    // 区分・雇用形態で絞り込むときだけ、契約を読む
     effect(() => {
       const officeId = this.context.current()?.id;
-      if (officeId && this.category() !== 'all' && !this.contracts() && !this.loading()) {
+      if (officeId && needsContracts(this.filter()) && !this.contracts() && !this.loading()) {
         this.loadContracts(officeId);
       }
     });
@@ -195,12 +229,38 @@ export class EmployeeList {
     this.setQuery({ status: s === 'active' ? null : s });
   }
 
-  setCoverage(c: CoverageFilter): void {
-    this.setQuery({ cov: c === 'all' ? null : c });
+  // ===== フィルター（選んだらすぐ反映） =====
+
+  private setFilter(patch: Partial<EmployeeFilter>): void {
+    this.setQuery(filterToQuery({ ...this.filter(), ...patch }));
   }
 
-  setCategory(c: string): void {
-    this.setQuery({ cat: c === 'all' ? null : c });
+  isOn(field: ListField, value: string): boolean {
+    return (this.filter()[field] as readonly string[]).includes(value);
+  }
+
+  toggleOption(field: ListField, value: string): void {
+    const next = toggle(this.filter()[field] as string[], value, ORDERS[field]);
+    this.setFilter({ [field]: next } as Partial<EmployeeFilter>);
+  }
+
+  setDate(field: 'hireFrom' | 'hireTo', value: string): void {
+    this.setFilter({ [field]: value || null });
+  }
+
+  setAge(field: 'ageMin' | 'ageMax', value: string): void {
+    const n = /^\d{1,3}$/.test(value.trim()) ? Number(value.trim()) : null;
+    this.setFilter({ [field]: n });
+  }
+
+  /** 条件をクリア（在籍も「在籍中」に戻す） */
+  clearFilter(): void {
+    this.setQuery({ ...filterToQuery(emptyFilter()), status: null });
+  }
+
+  onDocumentClick(event: MouseEvent): void {
+    const wrap = this.filterWrap()?.nativeElement;
+    if (this.filterOpen() && wrap && !wrap.contains(event.target as Node)) this.filterOpen.set(false);
   }
 
   /**
