@@ -106,7 +106,7 @@
       "error": "従業員を読み込めませんでした。"
     },
     "todo": {
-      "title": "やること",
+      "title": "To-do リスト",
       "empty": "今は手続きが要りそうな人はいません。",
       "kind": {
         "acquire": "資格取得届",
@@ -130,16 +130,24 @@
       "toSettings": "事業所の設定へ",
       "toRevisions": "改定の候補（随時改定・休業終了時改定）を見る",
       "hint": "契約・事業所の設定・加入の状態から、開くたびに計算しています。60日先までの変わり目を出します。年齢による喪失（70歳・75歳）は下の年齢到達の一覧で見ます。",
-      "error": "やることの材料を読み込めませんでした。"
+      "error": "To-do リストの材料を読み込めませんでした。"
     }
   },
   "nav": {
     "label": "メニュー",
-    "dashboard": "やること",
+    "dashboard": "To-do リスト",
     "employees": "従業員",
     "premiums": "保険料",
     "bonuses": "賞与",
-    "settings": "事業所の設定"
+    "settings": "事業所の設定",
+    "revisions": "改定の候補",
+    "regular": "定時決定",
+    "group": {
+      "people": "人",
+      "monthly": "毎月",
+      "revision": "年1回・随時",
+      "setup": "設定"
+    }
   },
   "employee": {
     "list": {

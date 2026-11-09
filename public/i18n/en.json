@@ -106,7 +106,7 @@
       "error": "Couldn't load employees."
     },
     "todo": {
-      "title": "To do",
+      "title": "To-do list",
       "empty": "Nothing needs action now.",
       "kind": {
         "acquire": "Acquisition",
@@ -135,11 +135,19 @@
   },
   "nav": {
     "label": "Menu",
-    "dashboard": "To do",
+    "dashboard": "To-do list",
     "employees": "Employees",
     "premiums": "Premiums",
     "bonuses": "Bonuses",
-    "settings": "Office settings"
+    "settings": "Office settings",
+    "revisions": "Revisions",
+    "regular": "Regular decision",
+    "group": {
+      "people": "People",
+      "monthly": "Monthly",
+      "revision": "Yearly / as needed",
+      "setup": "Setup"
+    }
   },
   "employee": {
     "list": {

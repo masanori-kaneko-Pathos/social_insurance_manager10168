@@ -14,27 +14,42 @@
 
 <div class="shell-body">
   <nav class="side-nav" [attr.aria-label]="'nav.label' | transloco">
+    <!-- 業務の頻度で並べる：毎日 → 人 → 毎月 → 年1回・随時 → 設定 -->
     <a
       [routerLink]="['/o', officeId()]"
       routerLinkActive="active"
       [routerLinkActiveOptions]="{ exact: true }"
     >
-      {{ 'nav.dashboard' | transloco }}
+      <app-icon name="todo" />{{ 'nav.dashboard' | transloco }}
     </a>
+
+    <span class="nav-group">{{ 'nav.group.people' | transloco }}</span>
     <a [routerLink]="['/o', officeId(), 'employees']" routerLinkActive="active">
-      {{ 'nav.employees' | transloco }}
+      <app-icon name="people" />{{ 'nav.employees' | transloco }}
+    </a>
+
+    <span class="nav-group">{{ 'nav.group.monthly' | transloco }}</span>
+    <a [routerLink]="['/o', officeId(), 'payrolls']" routerLinkActive="active">
+      <app-icon name="payroll" />{{ 'payroll.listTitle' | transloco }}
     </a>
     <a [routerLink]="['/o', officeId(), 'premiums']" routerLinkActive="active">
-      {{ 'nav.premiums' | transloco }}
-    </a>
-    <a [routerLink]="['/o', officeId(), 'payrolls']" routerLinkActive="active">
-      {{ 'payroll.listTitle' | transloco }}
+      <app-icon name="premium" />{{ 'nav.premiums' | transloco }}
     </a>
     <a [routerLink]="['/o', officeId(), 'bonuses']" routerLinkActive="active">
-      {{ 'nav.bonuses' | transloco }}
+      <app-icon name="bonus" />{{ 'nav.bonuses' | transloco }}
     </a>
+
+    <span class="nav-group">{{ 'nav.group.revision' | transloco }}</span>
+    <a [routerLink]="['/o', officeId(), 'revisions']" routerLinkActive="active">
+      <app-icon name="revision" />{{ 'nav.revisions' | transloco }}
+    </a>
+    <a [routerLink]="['/o', officeId(), 'regular', regularYear()]" routerLinkActive="active">
+      <app-icon name="regular" />{{ 'nav.regular' | transloco }}
+    </a>
+
+    <span class="nav-group">{{ 'nav.group.setup' | transloco }}</span>
     <a [routerLink]="['/o', officeId(), 'settings']" routerLinkActive="active">
-      {{ 'nav.settings' | transloco }}
+      <app-icon name="settings" />{{ 'nav.settings' | transloco }}
     </a>
   </nav>
 

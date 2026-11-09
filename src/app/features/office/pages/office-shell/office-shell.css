@@ -57,6 +57,9 @@
   }
   
   .side-nav a {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
     padding: var(--space-sm) var(--space-md);
     font-size: var(--font-sm);
     color: var(--color-text-sub);
@@ -65,6 +68,23 @@
     transition: background-color var(--dur-fast) var(--ease-out);
   }
   
+  .side-nav a app-icon {
+    opacity: 0.75;
+  }
+
+  .side-nav a.active app-icon {
+    opacity: 1;
+    color: var(--color-text);
+  }
+
+  /* まとまりの見出し（小さく・薄く） */
+  .nav-group {
+    margin: var(--space-md) var(--space-md) 0;
+    font-size: var(--font-xs, 12px);
+    color: var(--color-text-sub);
+    letter-spacing: 0.04em;
+  }
+
   .side-nav a:hover {
     background: var(--color-bg);
   }
@@ -94,5 +114,14 @@
       overflow-x: auto;
       border-right: 0;
       border-bottom: 1px solid var(--color-border);
+    }
+
+    /* 横に並べるときは、まとまりの見出しを出さない */
+    .nav-group {
+      display: none;
+    }
+
+    .side-nav a {
+      white-space: nowrap;
     }
   }
