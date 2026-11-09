@@ -99,3 +99,16 @@ export function fiscalYearOf(month: YearMonth): number {
   const [y, m] = month.split('-').map(Number);
   return m >= 4 ? y : y - 1;
 }
+
+/**
+ * 「from から nか月」の期間の最後の日（暦月で数える。民法の期間の数え方）
+ * - nか月後の同じ日の前日（8/1 から2か月 → 9/30、8/15 から2か月 → 10/14）
+ * - nか月後に同じ日がなければ、その月の月末（12/31 から2か月 → 2/28）
+ */
+export function monthsPeriodEnd(from: DateStr, months: number): DateStr {
+  const [y, m, d] = from.split('-').map(Number);
+  const target = shiftMonth(`${String(y).padStart(4, '0')}-${pad2(m)}`, months);
+  const last = daysInMonth(target);
+  if (d > last) return `${target}-${pad2(last)}`;
+  return addDays(`${target}-${pad2(d)}`, -1);
+}

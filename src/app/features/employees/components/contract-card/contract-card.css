@@ -256,3 +256,15 @@ h3:first-child {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
 }
+
+/* 2か月以内の契約の質問 */
+.short-period {
+  margin: var(--space-sm) 0;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-warning-bg);
+  border-radius: var(--radius-md);
+}
+
+.short-period .check {
+  display: block;
+}

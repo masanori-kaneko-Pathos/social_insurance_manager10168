@@ -110,6 +110,9 @@
               @if (e.optInDate) {
                 <span class="badge">{{ 'employee.field.optInDate' | transloco }} {{ e.optInDate }}</span>
               }
+              @if (e.optOutDate) {
+                <span class="badge">{{ 'employee.field.optOutDate' | transloco }} {{ e.optOutDate }}</span>
+              }
             </dd>
           </div>
         }

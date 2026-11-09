@@ -324,7 +324,7 @@ service cloud.firestore {
         return exactKeys(d, [
               'employeeNumber', 'lastName', 'firstName', 'lastNameKana', 'firstNameKana', 'nameOrder', 'birthDate', 'sex',
               'hireDate', 'retireDate', 'retireReason',
-              'health', 'pension', 'acquisitionType', 'multipleOffices', 'rehired', 'needsConfirmationCard', 'optInDate',
+              'health', 'pension', 'acquisitionType', 'multipleOffices', 'rehired', 'needsConfirmationCard', 'optInDate', 'optOutDate',
               'insuredNumber', 'basicPensionNumber',
               'contact', 'commute', 'bankAccount', 'collectionMethod', 'foreign', 'leaves', 'userUid',
               'annualIncomeEstimate', 'spouseAnnualIncome',
@@ -342,7 +342,7 @@ service cloud.firestore {
           && validEnrollment(d.health) && validEnrollment(d.pension)
           && d.acquisitionType in ['standard', 'mutualAidLoan', 'seamenContinued']
           && d.multipleOffices is bool && d.rehired is bool && d.needsConfirmationCard is bool
-          && optDate(d.optInDate)
+          && optDate(d.optInDate) && optDate(d.optOutDate)
           && optStr(d.insuredNumber, 10)
           && (d.basicPensionNumber == null || (d.basicPensionNumber is string && d.basicPensionNumber.matches('^[0-9]{10}$')))
           && validContact(d.contact) && validCommute(d.commute) && validBank(d.bankAccount)
@@ -383,7 +383,9 @@ service cloud.firestore {
           function validContract(d) {
             return exactKeys(d, ['from', 'employmentType', 'payType', 'weeklyMinutes', 'monthlyDays', 'scheduledWage',
                                  'expectedCash', 'expectedInKind', 'hourlyWage', 'dailyWage', 'periodEnd', 'renewal',
-                                 'student', 'minimumWageReduction', 'dispatch', 'note', 'createdAt', 'updatedAt'])
+                                 'student', 'minimumWageReduction', 'dispatch',
+                                 'specialEmployment', 'renewalPrecedent', 'noExtensionAgreed',
+                                 'note', 'createdAt', 'updatedAt'])
               && d.from == from && isDate(from)
               && d.employmentType in ['regular', 'contract', 'part', 'arbeit', 'shokutaku', 'other']
               && d.payType in ['monthly', 'dailyMonthly', 'daily', 'hourly']
@@ -395,6 +397,8 @@ service cloud.firestore {
               && d.student in ['none', 'daytime', 'other']
               && d.minimumWageReduction is bool
               && d.dispatch in ['none', 'dispatch', 'contract']
+              && d.specialEmployment in ['none', 'daily', 'seasonal', 'temporaryBusiness']
+              && d.renewalPrecedent is bool && d.noExtensionAgreed is bool
               && optStr(d.note, 500);
           }
 

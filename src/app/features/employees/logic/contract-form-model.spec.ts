@@ -6,6 +6,7 @@ import {
   ContractFormValue,
   emptyContractForm,
   fromContractForm,
+  isShortPeriod,
   nextContractForm,
   scheduledWageCandidate,
   toContractForm,
@@ -129,5 +130,39 @@ describe('contractAt', () => {
     expect(contractAt(rows, '2026-09-30')?.from).toBe('2025-04-01');
     expect(contractAt(rows, '2026-10-01')?.from).toBe('2026-10-01');
     expect(contractAt(rows, '2025-01-01')).toBeNull();
+  });
+});
+
+describe('isShortPeriod と、2か月以内の契約だけの項目', () => {
+  it('暦月で2か月以内か（8/1〜9/30 は以内、10/1 までなら超える）', () => {
+    expect(isShortPeriod('2026-08-01', '2026-09-30')).toBeTrue();
+    expect(isShortPeriod('2026-08-01', '2026-10-01')).toBeFalse();
+    expect(isShortPeriod('2026-08-01', null)).toBeFalse();
+  });
+  it('2か月を超える契約では、更新の実績・労使の合意は保存しない', () => {
+    const v = { ...partTimer(), periodEnd: '2027-03-31', renewalPrecedent: true, noExtensionAgreed: true };
+    const r = fromContractForm(v)!;
+    expect(r.renewalPrecedent).toBeFalse();
+    expect(r.noExtensionAgreed).toBeFalse();
+  });
+  it('2か月以内なら保存する。雇い方もそのまま', () => {
+    const v = {
+      ...partTimer(),
+      periodEnd: '2026-11-30',
+      renewalPrecedent: true,
+      specialEmployment: 'seasonal' as const,
+    };
+    const r = fromContractForm(v)!;
+    expect(r.renewalPrecedent).toBeTrue();
+    expect(r.specialEmployment).toBe('seasonal');
+  });
+  it('項目がない古い契約は、ふつう・なし・なしで開く', () => {
+    const old = { ...fromContractForm(partTimer())! } as Partial<Contract>;
+    delete old.specialEmployment;
+    delete old.renewalPrecedent;
+    delete old.noExtensionAgreed;
+    const v = toContractForm(old as Contract);
+    expect(v.specialEmployment).toBe('none');
+    expect(v.renewalPrecedent).toBeFalse();
   });
 });

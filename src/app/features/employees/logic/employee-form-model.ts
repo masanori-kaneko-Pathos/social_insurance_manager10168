@@ -84,6 +84,7 @@ export interface EmployeeFormValue {
   rehired: boolean;
   needsConfirmationCard: boolean;
   optInDate: string;
+  optOutDate: string;
   insuredNumber: string;
   basicPensionNumber: string;
   contact: { postalCode: string; address: string; phone: string; email: string };
@@ -197,6 +198,7 @@ export function emptyEmployeeForm(): EmployeeFormValue {
     rehired: false,
     needsConfirmationCard: false,
     optInDate: '',
+    optOutDate: '',
     insuredNumber: '',
     basicPensionNumber: '',
     contact: { postalCode: '', address: '', phone: '', email: '' },
@@ -241,6 +243,7 @@ export function toEmployeeForm(e: Employee): EmployeeFormValue {
     rehired: e.rehired,
     needsConfirmationCard: e.needsConfirmationCard,
     optInDate: e.optInDate ?? '',
+    optOutDate: e.optOutDate ?? '', // 11/9 より前のデータにはない
     insuredNumber: e.insuredNumber ?? '',
     basicPensionNumber: e.basicPensionNumber ?? '',
     contact: {
@@ -380,6 +383,7 @@ export function fromEmployeeForm(v: EmployeeFormValue): EmployeeBasicInput {
     rehired: v.rehired,
     needsConfirmationCard: v.needsConfirmationCard,
     optInDate: toNull(v.optInDate),
+    optOutDate: toNull(v.optOutDate),
     insuredNumber: toNull(toHalfWidth(v.insuredNumber)),
     basicPensionNumber: digitsOrNull(v.basicPensionNumber),
     contact: {

@@ -212,7 +212,8 @@
       "filingName": "Name used on filings",
       "sortByKana": "Sort by katakana reading in the list (あ–わ)",
       "residentRegistered": "Has resident registration in Japan",
-      "needsRomanNameFiling": "File the roman-letter name notification"
+      "needsRomanNameFiling": "File the roman-letter name notification",
+      "optOutDate": "Date of request to withdraw"
     },
     "insurance": {
       "health": "Enrolled in health insurance",
@@ -240,7 +241,8 @@
       "basicPensionNumber": "10 digits (no hyphen needed)",
       "postalCode": "7 digits (no hyphen needed)",
       "phone": "Digits only (no hyphens needed)",
-      "digitsOnly": "Digits only"
+      "digitsOnly": "Digits only",
+      "optOut": "For specified reduction special cases, the date they asked to withdraw from coverage."
     },
     "validation": {
       "required": "This field is required.",
@@ -1133,7 +1135,10 @@
       "student": "Student",
       "minimumWageReduction": "Has a minimum wage reduction permit",
       "dispatch": "Dispatch / contracting",
-      "note": "Note"
+      "note": "Note",
+      "specialEmployment": "Type of employment",
+      "renewalPrecedent": "Others on similar contracts at this office have been renewed",
+      "noExtensionAgreed": "Both parties agreed in writing (email OK) not to extend beyond the first period"
     },
     "col": {
       "type": "Type / pay",
@@ -1203,7 +1208,14 @@
       "scheduledWage": "Scheduled wage: base pay and allowances. Excludes one-off pay, bonuses, overtime/holiday/night premiums, attendance, commuting and family allowances.",
       "expected": "Expected monthly pay: the amount on the acquisition notification. Scheduled wage plus expected overtime, commuting allowance, etc. (copied from the scheduled wage if empty).",
       "periodEnd": "Leave blank for no fixed term.",
-      "student": "Daytime students are not covered as short-time workers (evening, correspondence, part-time school and students on leave are)."
+      "student": "Daytime students are not covered as short-time workers (evening, correspondence, part-time school and students on leave are).",
+      "special": {
+        "daily": "Insured from the day employment continues beyond one month.",
+        "seasonal": "Insured from the start if planned to continue beyond 4 months. Enter the end date.",
+        "temporaryBusiness": "Insured from the start if planned to continue beyond 6 months. Enter the end date."
+      },
+      "shortPeriod": "This contract is 2 months or shorter. If the contract says it will (or may) be renewed, or there is a precedent below, the employee is insured from the start, unless both parties agreed otherwise.",
+      "shortPeriodChange": "If renewal becomes expected later, add a new contract starting on the agreement date and update the renewal. The employee is insured from that day."
     },
     "warning": {
       "beforeHire": "Starts before the hire date (can still be saved)."
@@ -1222,6 +1234,12 @@
       "load": "Could not load contracts.",
       "save": "Could not save.",
       "delete": "Could not delete."
+    },
+    "specialEmployment": {
+      "none": "Ordinary",
+      "daily": "Day laborer",
+      "seasonal": "Seasonal work",
+      "temporaryBusiness": "Temporary business"
     }
   },
   "dependent": {

@@ -156,6 +156,10 @@ const CATEGORY: Record<string, Field<ContractDoc> | Field<OfficeDoc> | Field<Emp
   学生: 'student',
   雇用期間: 'periodEnd',
   加入の申し出: 'optInDate',
+  喪失の申し出: 'optOutDate',
+  雇い方: 'specialEmployment', // 日雇い・季節的業務・臨時的事業
+  更新の実績: 'renewalPrecedent',
+  超えて使わない合意: 'noExtensionAgreed',
   区分: 'calc',
 };
 

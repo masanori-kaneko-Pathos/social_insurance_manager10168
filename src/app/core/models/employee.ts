@@ -188,6 +188,7 @@ export interface EmployeeDoc {
   rehired: boolean; // 退職後の継続再雇用（同日得喪）で取得した
   needsConfirmationCard: boolean; // 資格確認書の発行が必要
   optInDate: string | null; // 特定減額特例対象者が加入を申し出た日
+  optOutDate: string | null; // 特定減額特例対象者が喪失を申し出た日（任意の喪失）
   // 届出の番号
   insuredNumber: string | null; // 被保険者整理番号（年金事務所から通知される）
   basicPensionNumber: string | null; // 基礎年金番号（10桁）

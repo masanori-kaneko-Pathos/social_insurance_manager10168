@@ -9,8 +9,10 @@ import {
   EmploymentType,
   PayType,
   RenewalType,
+  SpecialEmployment,
   StudentType,
 } from '../../../core/models/contract';
+import { monthsPeriodEnd } from '../../../shared/utils/date';
 import { formatHours, formatYen, parseHours, parseNat } from '../../../shared/utils/number';
 
 /**
@@ -43,6 +45,9 @@ export interface ContractFormValue {
   student: StudentType;
   minimumWageReduction: boolean;
   dispatch: DispatchType;
+  specialEmployment: SpecialEmployment;
+  renewalPrecedent: boolean;
+  noExtensionAgreed: boolean;
   note: string;
 }
 
@@ -70,6 +75,11 @@ export function weeklyMinutesOf(
       return Math.round(m / w);
     }
   }
+}
+
+/** 2か月以内の期間を定めた契約か（暦月で数える。Q&A 問8） */
+export function isShortPeriod(from: string, periodEnd: string | null): boolean {
+  return !!from && !!periodEnd && periodEnd <= monthsPeriodEnd(from, 2);
 }
 
 /** 時給・日給の欄を出すか */
@@ -123,6 +133,9 @@ export function emptyContractForm(from: string): ContractFormValue {
     student: 'none',
     minimumWageReduction: false,
     dispatch: 'none',
+    specialEmployment: 'none',
+    renewalPrecedent: false,
+    noExtensionAgreed: false,
     note: '',
   };
 }
@@ -147,6 +160,10 @@ export function toContractForm(c: Contract): ContractFormValue {
     student: c.student,
     minimumWageReduction: c.minimumWageReduction,
     dispatch: c.dispatch,
+    // 11/9 より前の契約には項目がない
+    specialEmployment: c.specialEmployment ?? 'none',
+    renewalPrecedent: c.renewalPrecedent ?? false,
+    noExtensionAgreed: c.noExtensionAgreed ?? false,
     note: c.note ?? '',
   };
 }
@@ -212,6 +229,7 @@ export function fromContractForm(v: ContractFormValue): ContractInput | null {
   if (Object.keys(contractErrors(v)).length > 0) return null;
   const wageField = wageFieldOf(v.payType);
   const hasPeriod = v.periodEnd !== '';
+  const short = isShortPeriod(v.from, v.periodEnd || null);
   return {
     from: v.from,
     employmentType: v.employmentType,
@@ -230,6 +248,10 @@ export function fromContractForm(v: ContractFormValue): ContractInput | null {
     student: v.student,
     minimumWageReduction: v.minimumWageReduction,
     dispatch: v.dispatch,
+    specialEmployment: v.specialEmployment,
+    // 更新の実績・労使の合意は、2か月以内の契約のときだけ意味がある
+    renewalPrecedent: short ? v.renewalPrecedent : false,
+    noExtensionAgreed: short ? v.noExtensionAgreed : false,
     note: v.note.trim() ? v.note.trim() : null,
   };
 }

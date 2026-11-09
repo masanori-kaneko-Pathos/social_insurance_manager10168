@@ -129,6 +129,17 @@
       <h3>{{ 'contract.group.period' | transloco }}</h3>
       <div class="grid">
         <div class="field">
+          <label for="ct-special">{{ 'contract.field.specialEmployment' | transloco }}</label>
+          <select id="ct-special" class="input" formControlName="specialEmployment">
+            @for (s of specialEmployments; track s) {
+              <option [value]="s">{{ 'contract.specialEmployment.' + s | transloco }}</option>
+            }
+          </select>
+          @if (form.controls.specialEmployment.value !== 'none') {
+            <span class="hint">{{ 'contract.hint.special.' + form.controls.specialEmployment.value | transloco }}</span>
+          }
+        </div>
+        <div class="field">
           <label for="ct-end">
             {{ 'contract.field.periodEnd' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
           </label>
@@ -150,6 +161,15 @@
           </div>
         }
       </div>
+      <!-- 2か月以内の契約：最初から加入になるか（令和4年10月施行の Q&A 問2） -->
+      @if (shortPeriod() && form.controls.specialEmployment.value === 'none') {
+        <div class="short-period">
+          <p class="hint">{{ 'contract.hint.shortPeriod' | transloco }}</p>
+          <label class="check"><input type="checkbox" formControlName="renewalPrecedent" />{{ 'contract.field.renewalPrecedent' | transloco }}</label>
+          <label class="check"><input type="checkbox" formControlName="noExtensionAgreed" />{{ 'contract.field.noExtensionAgreed' | transloco }}</label>
+          <p class="hint">{{ 'contract.hint.shortPeriodChange' | transloco }}</p>
+        </div>
+      }
 
       <button type="button" class="toggle" [attr.aria-expanded]="showMore()" (click)="showMore.set(!showMore())">
         {{ (showMore() ? 'contract.more.close' : 'contract.more.open') | transloco }}
@@ -228,6 +248,7 @@
                 {{ 'contract.employmentType.' + r.employmentType | transloco }}・{{ 'contract.payType.' + r.payType | transloco }}
                 @if (r.student === 'daytime') { <span class="tag">{{ 'contract.student.daytime' | transloco }}</span> }
                 @if (r.dispatch !== 'none') { <span class="tag">{{ 'contract.dispatch.' + r.dispatch | transloco }}</span> }
+                @if (r.specialEmployment && r.specialEmployment !== 'none') { <span class="tag">{{ 'contract.specialEmployment.' + r.specialEmployment | transloco }}</span> }
               </td>
               <td class="num mono">{{ hoursText(r.weeklyMinutes) }}</td>
               <td class="num mono">{{ r.monthlyDays }}</td>

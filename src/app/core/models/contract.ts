@@ -32,6 +32,21 @@ export const RENEWAL_TYPES: readonly RenewalType[] = ['none', 'possible', 'expec
 export type DispatchType = 'none' | 'dispatch' | 'contract';
 export const DISPATCH_TYPES: readonly DispatchType[] = ['none', 'dispatch', 'contract'];
 
+/**
+ * 雇い方（健保法3条1項2・4・5号、厚年法12条1・3・4号）
+ * - none：ふつう（2か月以内の期間を定めた契約も、ここ。期間と更新の見込みで判定する）
+ * - daily：日々雇い入れ（1か月を超えて続けて使われた日から加入）
+ * - seasonal：季節的業務（続けて4か月を超える予定なら最初から加入）
+ * - temporaryBusiness：臨時的事業の事業所（続けて6か月を超える予定なら最初から加入）
+ */
+export type SpecialEmployment = 'none' | 'daily' | 'seasonal' | 'temporaryBusiness';
+export const SPECIAL_EMPLOYMENTS: readonly SpecialEmployment[] = [
+  'none',
+  'daily',
+  'seasonal',
+  'temporaryBusiness',
+];
+
 export interface ContractDoc {
   from: string; // 'YYYY-MM-DD'（＝ ドキュメントID）
   employmentType: EmploymentType;
@@ -50,6 +65,11 @@ export interface ContractDoc {
   student: StudentType;
   minimumWageReduction: boolean; // 最低賃金の減額の特例許可（最低賃金法第7条）
   dispatch: DispatchType;
+  specialEmployment: SpecialEmployment;
+  /** 2か月以内の契約：同じ事業所で、同じような契約の人が更新して働いた実績がある（Q&A 問2(イ)。人の判断） */
+  renewalPrecedent: boolean;
+  /** 2か月以内の契約：最初の期間を超えて使わないことを、労使が書面で合意している（Q&A 問2 ただし書き） */
+  noExtensionAgreed: boolean;
   note: string | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;

@@ -412,6 +412,13 @@
           <input id="optInDate" class="input" type="date" formControlName="optInDate" />
           <span class="hint">{{ 'employee.hint.optIn' | transloco }}</span>
         </div>
+        <div class="field">
+          <label for="optOutDate">
+            {{ 'employee.field.optOutDate' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+          </label>
+          <input id="optOutDate" class="input" type="date" formControlName="optOutDate" />
+          <span class="hint">{{ 'employee.hint.optOut' | transloco }}</span>
+        </div>
       </div>
       <label class="check plain"><input type="checkbox" formControlName="multipleOffices" />{{ 'employee.field.multipleOffices' | transloco }}</label>
       <label class="check plain"><input type="checkbox" formControlName="rehired" />{{ 'employee.field.rehired' | transloco }}</label>

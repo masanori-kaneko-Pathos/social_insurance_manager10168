@@ -186,6 +186,7 @@ export class EmployeeForm {
         rehired: [v.rehired],
         needsConfirmationCard: [v.needsConfirmationCard],
         optInDate: [v.optInDate],
+        optOutDate: [v.optOutDate],
         insuredNumber: [v.insuredNumber, [Validators.maxLength(10)]],
         basicPensionNumber: [v.basicPensionNumber, [halfPattern(PATTERNS.basicPensionNumber)]],
         contact: this.fb.group({

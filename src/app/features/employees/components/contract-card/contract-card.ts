@@ -7,6 +7,7 @@ import {
   EMPLOYMENT_TYPES,
   PAY_TYPES,
   RENEWAL_TYPES,
+  SPECIAL_EMPLOYMENTS,
   STUDENT_TYPES,
 } from '../../../../core/models/contract';
 import { Employee } from '../../../../core/models/employee';
@@ -23,6 +24,7 @@ import {
   emptyContractForm,
   fromContractForm,
   HOURS_UNITS,
+  isShortPeriod,
   nextContractForm,
   scheduledWageCandidate,
   toContractForm,
@@ -56,6 +58,13 @@ export class ContractCard implements OnInit {
   readonly renewalTypes = RENEWAL_TYPES;
   readonly studentTypes = STUDENT_TYPES;
   readonly dispatchTypes = DISPATCH_TYPES;
+  readonly specialEmployments = SPECIAL_EMPLOYMENTS;
+
+  /** 2か月以内の契約か（更新の実績・労使の合意の欄を出す） */
+  shortPeriod(): boolean {
+    const v = this.form.getRawValue();
+    return isShortPeriod(v.from ?? '', v.periodEnd || null);
+  }
   readonly yen = formatYen;
   readonly hoursText = formatHours;
   readonly today = todayLocal();
