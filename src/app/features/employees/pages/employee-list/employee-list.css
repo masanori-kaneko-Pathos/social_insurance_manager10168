@@ -169,3 +169,8 @@
 .alias {
   margin-left: var(--space-xs);
 }
+
+.head-actions {
+  display: flex;
+  gap: var(--space-sm);
+}

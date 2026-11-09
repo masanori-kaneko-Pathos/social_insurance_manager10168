@@ -126,7 +126,8 @@
       "noMatch": "No employees match your filters.",
       "romanBy": "Roman-letter order",
       "romanBy_last": "A–Z: surname",
-      "romanBy_first": "A–Z: given name"
+      "romanBy_first": "A–Z: given name",
+      "import": "Import CSV"
     },
     "status": {
       "active": "Active",
@@ -1545,6 +1546,72 @@
     "error": {
       "load": "Could not load data for revision candidates.",
       "save": "Could not apply. Please try again later."
+    }
+  },
+  "employeeCsv": {
+    "title": "Import employees (CSV)",
+    "lead": "One row per employee with basic data and the first employment contract. Social insurance enrollment and standard remuneration are calculated from the contract and shown for review (columns can override them).",
+    "adminOnly": "Only administrators can import.",
+    "step1": "1. Download the template",
+    "templateHint": "It has a header row and 2 example rows. Edit it in Excel (UTF-8 or Shift_JIS).",
+    "template": "Download template",
+    "columnsTitle": "How to fill in the columns",
+    "columnsHint": "Required: employee number, last name kana, birth date, hire date, employment type, pay type, weekly hours, monthly days, scheduled wage (and last name for Japanese nationals). Dates as 2026-04-01; hours as 40:00. Values can be the Japanese words or codes (regular, part, hourly, etc.). Leave enrollment blank to decide by category.",
+    "step2": "2. Choose a file and review",
+    "choose": "Choose CSV file",
+    "missingColumns": "Required columns are missing:",
+    "hasErrors": "{{n}} row(s) have errors. Fix them and choose the file again (nothing is imported while errors remain).",
+    "planTitle": "To import: {{n}} ({{insured}} insured)",
+    "col": {
+      "line": "Line",
+      "column": "Column",
+      "problem": "Problem",
+      "number": "No.",
+      "name": "Name",
+      "hire": "Hire date",
+      "contract": "Contract",
+      "category": "Category (hire date)",
+      "enrolled": "Enrolled",
+      "standard": "Standard remuneration",
+      "leaves": "Leaves"
+    },
+    "ins": {
+      "health": "Health",
+      "pension": "Pension"
+    },
+    "warning": {
+      "notInsured": "Not insured",
+      "unknownCategory": "Cannot judge (registered as not insured)",
+      "override": "Enrollment overridden",
+      "oldTable": "Before grade tables (oldest table used)"
+    },
+    "planError": {
+      "duplicateInFile": "Line {{line}}: employee number {{number}} appears more than once.",
+      "alreadyExists": "Line {{line}}: employee number {{number}} already exists (only new employees can be imported)."
+    },
+    "rowError": {
+      "required": "Required.",
+      "date": "Cannot read the date (use 2026-04-01).",
+      "month": "Cannot read the month (use 2026-04).",
+      "choice": "Not one of the allowed values.",
+      "yesNo": "Use yes or no.",
+      "number": "Use a whole number of 0 or more.",
+      "kana": "Use katakana.",
+      "roman": "Use half-width letters.",
+      "country": "Use a 2-letter ISO code (VN, CN, etc.).",
+      "retireBeforeHire": "Retirement date is before the hire date.",
+      "hireBeforeBirth": "Hire date is before the birth date.",
+      "leaveKind": "Cannot read the leave type.",
+      "endBeforeStart": "End date is before the start date."
+    },
+    "import": "Import {{n}}",
+    "progress": "Importing… {{done}}/{{total}}",
+    "done": "Imported {{n}} employee(s).",
+    "toList": "Go to employee list",
+    "error": {
+      "read": "Could not read the file. Make sure it is a CSV.",
+      "save": "Could not import. Please try again later.",
+      "partial": "Stopped partway. Check the list and import only the remaining rows."
     }
   }
 }

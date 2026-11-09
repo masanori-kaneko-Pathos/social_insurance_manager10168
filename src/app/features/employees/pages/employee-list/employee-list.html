@@ -1,7 +1,10 @@
 <div class="page-head">
     <h1>{{ 'employee.list.title' | transloco }}</h1>
     @if (context.isAdmin()) {
-      <a class="btn btn-primary" routerLink="new">{{ 'employee.list.add' | transloco }}</a>
+      <span class="head-actions">
+        <a class="btn" routerLink="import">{{ 'employee.list.import' | transloco }}</a>
+        <a class="btn btn-primary" routerLink="new">{{ 'employee.list.add' | transloco }}</a>
+      </span>
     }
   </div>
   
@@ -38,7 +41,10 @@
       <h2>{{ 'employee.list.emptyTitle' | transloco }}</h2>
       <p>{{ 'employee.list.emptyBody' | transloco }}</p>
       @if (context.isAdmin()) {
-        <a class="btn btn-primary" routerLink="new">{{ 'employee.list.add' | transloco }}</a>
+        <span class="head-actions">
+          <a class="btn btn-primary" routerLink="new">{{ 'employee.list.add' | transloco }}</a>
+          <a class="btn" routerLink="import">{{ 'employee.list.import' | transloco }}</a>
+        </span>
       }
     </section>
   } @else if (filtered().length === 0) {

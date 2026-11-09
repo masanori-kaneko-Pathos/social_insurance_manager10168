@@ -53,6 +53,13 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'employees/import',
+            loadComponent: () =>
+              import('./features/employees/pages/employee-import/employee-import').then(
+                (m) => m.EmployeeImport,
+              ),
+          },
+          {
             path: 'employees/new',
             loadComponent: () =>
               import('./features/employees/pages/employee-form/employee-form').then(

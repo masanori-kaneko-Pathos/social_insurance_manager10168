@@ -35,7 +35,7 @@ export interface StartMonth {
 
 /**
  * 起算月の候補を出す
- * - 給与の実績の fixed（固定的賃金）が、前の月の実績と変わった月
+ * - 給与の実績の fixed（固定的賃金）が、前の月の実績と変わった月（前の月が0円なら、最後に払った月と比べる）
  * - 遡及支払額（retro）がある月（さかのぼった昇給の差額を払った月。26ページの記入例）
  * - wageChanges で人が足した月（manual）を足し、外した月（dismissed）を除く
  * 同じ月に複数あれば1つにまとめる（人が足したもの → 額の変化 → 遡及 の順に向きを採る）
@@ -46,14 +46,18 @@ export function findStartMonths(
 ): StartMonth[] {
   const found = new Map<string, StartMonth>();
   const months = [...payrolls.keys()].sort();
+  // 比べる相手は、前の月の実績。ただし固定的賃金が0円の月（休業中など）は飛ばして、最後に払った月と比べる
+  // （育休明けに「0円 → 19万円で上がった」と読まないため。休業前の27万円 → 19万円なら「下がった」）
+  let last: Payroll | null = null;
   for (const m of months) {
     const p = payrolls.get(m)!;
     const prev = payrolls.get(shiftMonth(m, -1));
-    if (prev && p.fixed !== prev.fixed) {
-      found.set(m, { month: m, direction: p.fixed > prev.fixed ? 'up' : 'down', source: 'fixed' });
+    if (p.fixed > 0 && last && prev && p.fixed !== last.fixed) {
+      found.set(m, { month: m, direction: p.fixed > last.fixed ? 'up' : 'down', source: 'fixed' });
     } else if (p.retro > 0) {
       found.set(m, { month: m, direction: 'up', source: 'retro' });
     }
+    if (p.fixed > 0) last = p;
   }
   for (const w of wageChanges) {
     if (w.source === 'dismissed') found.delete(w.month);

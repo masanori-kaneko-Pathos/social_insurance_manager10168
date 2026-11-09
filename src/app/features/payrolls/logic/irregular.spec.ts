@@ -57,6 +57,19 @@ describe('findStartMonths：起算月の候補', () => {
     const m = new Map([pay('2026-04', 210600, 200000), pay('2026-05', 283600, 200000, 30, 30000)]);
     expect(findStartMonths(m)).toEqual([{ month: '2026-05', direction: 'up', source: 'retro' }]);
   });
+  it('休業で0円の月は飛ばして、最後に払った月と比べる（育休明けの時短は「下がった」）', () => {
+    const m = new Map([
+      pay('2025-06', 270000, 270000),
+      pay('2025-07', 0, 0, 0),
+      pay('2026-08', 0, 0, 0),
+      pay('2026-09', 200000, 190000),
+      pay('2026-10', 200000, 190000),
+    ]);
+    expect(findStartMonths(m)).toEqual([{ month: '2026-09', direction: 'down', source: 'fixed' }]);
+  });
+  it('実績の初めの月（比べる相手がない）は候補にしない', () => {
+    expect(findStartMonths(new Map([pay('2026-04', 200000, 200000)]))).toEqual([]);
+  });
   it('人が足した月・外した月（wageChanges）', () => {
     const m = new Map([pay('2026-03', 215600, 205000), pay('2026-04', 258600, 235000)]);
     const changes = [
