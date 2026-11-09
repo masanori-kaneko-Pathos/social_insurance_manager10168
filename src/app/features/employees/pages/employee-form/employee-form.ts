@@ -23,6 +23,7 @@ import {
 import { addDays, todayLocal } from '../../../../shared/utils/date';
 import { toHalfWidth } from '../../../../shared/utils/text';
 import { OfficeContext } from '../../../office/office-context.service';
+import { premiumOf } from '../../../office/office-settings';
 import { EmployeeService } from '../../employee.service';
 import {
   emptyEmployeeForm,
@@ -121,6 +122,11 @@ export class EmployeeForm {
   private readonly router = inject(Router);
   private readonly employees = inject(EmployeeService);
   readonly context = inject(OfficeContext);
+  /** 事業所の本人負担の集め方（「事業所の設定のまま」の後ろに出す） */
+  readonly officeMethod = computed(() => {
+    const o = this.context.current();
+    return o ? premiumOf(o).method : 'payroll';
+  });
 
   readonly employeeId = this.route.snapshot.paramMap.get('employeeId');
   readonly isEdit = this.employeeId !== null;

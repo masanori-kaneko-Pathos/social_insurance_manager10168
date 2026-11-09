@@ -549,7 +549,9 @@
         <div class="field">
           <label for="collectionMethod">{{ 'employee.field.collectionMethod' | transloco }}</label>
           <select id="collectionMethod" class="input" formControlName="collectionMethod">
-            <option value="">{{ 'employee.collectionMethod.office' | transloco }}</option>
+            <option value="">
+              {{ 'employee.collectionMethod.office' | transloco: { method: ('employee.collectionMethod.' + officeMethod() | transloco) } }}
+            </option>
             @for (m of collectionMethods; track m) {
               <option [value]="m">{{ 'employee.collectionMethod.' + m | transloco }}</option>
             }

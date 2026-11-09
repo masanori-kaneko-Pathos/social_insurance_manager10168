@@ -268,3 +268,39 @@ h3:first-child {
 .short-period .check {
   display: block;
 }
+
+/* 今日の被保険者区分 */
+.category {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-xs) var(--space-sm);
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.category.out {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.category.unknown {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.category .label {
+  font-size: var(--font-sm);
+}
+
+.category .reason {
+  flex-basis: 100%;
+  font-size: var(--font-sm);
+}
+
+.category .hint {
+  flex-basis: 100%;
+}

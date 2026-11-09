@@ -12,6 +12,16 @@
     <div class="alert alert-danger">{{ errorKey()! | transloco }}</div>
   }
 
+  <!-- 今日の被保険者区分（保存しない。契約・事業所の設定・基準から毎回計算） -->
+  @if (classification(); as c) {
+    <div class="category" [class.out]="!insured(c)" [class.unknown]="c.category === 'unknown'">
+      <span class="label">{{ 'contract.category.today' | transloco }}</span>
+      <strong>{{ 'contract.category.' + c.category | transloco }}</strong>
+      <span class="reason">{{ 'contract.reason.' + c.reason | transloco }}</span>
+      <span class="hint">{{ 'contract.category.ageHint' | transloco }}</span>
+    </div>
+  }
+
   <!-- 追加・編集のフォーム -->
   @if (editing() !== null) {
     <form class="editor" [formGroup]="form" (ngSubmit)="save()" novalidate>

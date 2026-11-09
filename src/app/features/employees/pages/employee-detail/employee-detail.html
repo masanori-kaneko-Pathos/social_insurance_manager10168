@@ -78,7 +78,13 @@
         </div>
         <div>
           <dt>{{ 'employee.field.collectionMethod' | transloco }}</dt>
-          <dd>{{ 'employee.collectionMethod.' + (e.collectionMethod ?? 'office') | transloco }}</dd>
+          <dd>
+            @if (e.collectionMethod) {
+              {{ 'employee.collectionMethod.' + e.collectionMethod | transloco }}
+            } @else {
+              {{ 'employee.collectionMethod.office' | transloco: { method: ('employee.collectionMethod.' + officeMethod() | transloco) } }}
+            }
+          </dd>
         </div>
         <div class="wide">
           <dt>{{ 'employee.field.address' | transloco }}</dt>

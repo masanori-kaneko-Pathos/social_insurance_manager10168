@@ -321,7 +321,7 @@
       "savings": "Savings"
     },
     "collectionMethod": {
-      "office": "Use the office setting",
+      "office": "Same as office setting ({{method}})",
       "payroll": "Deducted from pay",
       "cash": "Paid in cash by the employee"
     },
@@ -1240,6 +1240,32 @@
       "daily": "Day laborer",
       "seasonal": "Seasonal work",
       "temporaryBusiness": "Temporary business"
+    },
+    "category": {
+      "today": "Category today",
+      "regular": "Regular worker (insured)",
+      "shortTime": "Short-time worker (insured)",
+      "reducedWage": "Specified reduced-wage worker (insured by request)",
+      "excluded": "Not insured",
+      "unknown": "Cannot judge",
+      "ageHint": "Loss of coverage by age (pension at 70, health at 75) is shown in the monthly coverage below."
+    },
+    "reason": {
+      "threeQuarters": "Both weekly hours and monthly days are at least 3/4 of a regular worker.",
+      "shortTimeRequirements": "Below 3/4, but insured as a short-time worker: specified applicable office, 20+ hours a week, not a student.",
+      "optedIn": "A specified reduced-wage worker who requested to be insured.",
+      "notSpecific": "Below 3/4 and the office is not a specified applicable office, so not insured.",
+      "under20h": "Below 3/4 and under 20 hours a week, so not insured.",
+      "student": "Below 3/4 and a daytime student, so not insured.",
+      "lowWage": "Below 3/4 and scheduled wage under the wage requirement (88,000 yen, until Sep 2026), so not insured.",
+      "reducedWage": "A specified reduced-wage worker without a request to be insured, so not insured.",
+      "daily": "Day laborer: not insured until employment continues beyond one month.",
+      "shortTerm": "Contract of 2 months or less with no expected renewal, so not insured. Insured from the day employment continues beyond the period.",
+      "seasonal": "Seasonal work planned for 4 months or less, so not insured.",
+      "temporaryBusiness": "Temporary business planned for 6 months or less, so not insured.",
+      "noContract": "No employment contract in effect today.",
+      "noStandard": "The full-time schedule in office settings is blank, so the 3/4 rule cannot be judged.",
+      "noCriteria": "Coverage criteria (masterCriteria) are not registered."
     }
   },
   "dependent": {

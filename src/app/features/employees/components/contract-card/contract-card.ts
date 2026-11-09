@@ -1,4 +1,7 @@
 import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
+import { CriteriaDoc } from '../../../../core/models/master';
+import { CriteriaService } from '../../../office/criteria.service';
+import { classify, isInsured } from '../../logic/classify';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import {
@@ -45,6 +48,7 @@ import {
 export class ContractCard implements OnInit {
   private readonly fb = inject(FormBuilder).nonNullable;
   private readonly api = inject(ContractService);
+  private readonly criteriaApi = inject(CriteriaService);
   readonly context = inject(OfficeContext);
 
   readonly employee = input.required<Employee>();
@@ -99,6 +103,30 @@ export class ContractCard implements OnInit {
     const m = weeklyMinutesOf(v.hoursUnit, v.hours, v.cycleWeeks);
     return m == null ? null : formatHours(m);
   });
+  /** 加入の基準（masterCriteria。null ＝ 読み込み中） */
+  readonly criteriaRows = signal<CriteriaDoc[] | null>(null);
+
+  /** 今日の被保険者区分と理由（契約・事業所の設定・基準から毎回計算。退職した人は出さない） */
+  readonly classification = computed(() => {
+    const office = this.context.current();
+    const criteria = this.criteriaRows();
+    const e = this.employee();
+    if (!office || criteria === null || this.loading()) return null;
+    if (e.retireDate && e.retireDate < this.today) return null;
+    return classify(
+      {
+        birthDate: e.birthDate,
+        optInDate: e.optInDate,
+        optOutDate: e.optOutDate ?? null, // 11/9 より前のデータにはない
+        contracts: this.rows(),
+      },
+      { standardHours: office.standardHours ?? null, specificApplication: office.specificApplication },
+      criteria,
+      this.today,
+    );
+  });
+  readonly insured = isInsured;
+
   /** 今日に効いている契約（一覧で目立たせる） */
   readonly currentFrom = computed(() => contractAt(this.rows(), this.today)?.from ?? null);
 
@@ -119,6 +147,13 @@ export class ContractCard implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    this.criteriaApi
+      .list()
+      .then((rows) => this.criteriaRows.set(rows))
+      .catch((err) => {
+        console.error(err);
+        this.criteriaRows.set([]); // 基準がないときは「判定できない（基準が未登録）」になる
+      });
   }
 
   private get officeId(): string | null {

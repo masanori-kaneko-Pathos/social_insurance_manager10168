@@ -3,6 +3,7 @@ import { RouterLink, ActivatedRoute } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { EmployeeService } from '../../employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
+import { premiumOf } from '../../../office/office-settings';
 import { todayLocal, ageAt, toYearMonth, fiscalYearOf, monthsLast12, YearMonth, monthsOfCalendarYear, monthsOfFiscalYear } from '../../../../shared/utils/date';
 import { coverageForMonths } from '../../logic/coverage';
 import { Employee } from '../../../../core/models/employee';
@@ -38,6 +39,11 @@ export class EmployeeDetail {
   private readonly route = inject(ActivatedRoute);
   private readonly employeesApi = inject(EmployeeService);
   readonly context = inject(OfficeContext);
+  /** 事業所の本人負担の集め方（「事業所の設定のまま」の後ろに出す） */
+  readonly officeMethod = computed(() => {
+    const o = this.context.current();
+    return o ? premiumOf(o).method : 'payroll';
+  });
 
   readonly today = todayLocal();
   readonly thisMonth = toYearMonth(this.today);
