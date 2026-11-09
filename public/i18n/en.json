@@ -162,7 +162,30 @@
       "romanBy": "Roman-letter order",
       "romanBy_last": "A–Z: surname",
       "romanBy_first": "A–Z: given name",
-      "import": "Import CSV"
+      "import": "Import CSV",
+      "coverageLabel": "Coverage this month",
+      "coverage": {
+        "all": "All",
+        "health": "Health",
+        "pension": "Pension",
+        "care": "Long-term care",
+        "none": "Not covered"
+      },
+      "categoryLabel": "Filter by category",
+      "categoryAll": "Category: all",
+      "categoryShort": {
+        "regular": "Regular",
+        "shortTime": "Short-time",
+        "reducedWage": "Reduced wage",
+        "excluded": "Not insured",
+        "unknown": "Cannot judge"
+      },
+      "sort": {
+        "name": "Name",
+        "number": "No.",
+        "age": "Age",
+        "hire": "Hire date"
+      }
     },
     "status": {
       "active": "Active",

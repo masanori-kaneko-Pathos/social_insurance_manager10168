@@ -162,7 +162,30 @@
       "romanBy": "ローマ字の並べ方",
       "romanBy_last": "A〜Z：姓",
       "romanBy_first": "A〜Z：名",
-      "import": "CSV で取り込む"
+      "import": "CSV で取り込む",
+      "coverageLabel": "今月の加入",
+      "coverage": {
+        "all": "すべて",
+        "health": "健保",
+        "pension": "厚年",
+        "care": "介護の対象",
+        "none": "加入なし"
+      },
+      "categoryLabel": "区分で絞り込む",
+      "categoryAll": "区分：すべて",
+      "categoryShort": {
+        "regular": "通常",
+        "shortTime": "短時間",
+        "reducedWage": "特定減額",
+        "excluded": "加入しない",
+        "unknown": "判定できない"
+      },
+      "sort": {
+        "name": "氏名",
+        "number": "社員番号",
+        "age": "年齢",
+        "hire": "入社日"
+      }
     },
     "status": {
       "active": "在籍中",

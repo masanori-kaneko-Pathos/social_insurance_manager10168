@@ -174,3 +174,69 @@
   display: flex;
   gap: var(--space-sm);
 }
+
+/* 並び替えの見出し */
+th .sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  font: inherit;
+  font-weight: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+th .sort:hover {
+  text-decoration: underline;
+}
+
+th .sort.on {
+  color: var(--color-text);
+}
+
+th .arrow {
+  display: inline-block;
+  min-width: 1em;
+  font-size: 0.75em;
+}
+
+.category-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.category-filter select {
+  width: auto;
+}
+
+.badge-cat.cat-shortTime,
+.badge-cat.cat-reducedWage {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.badge-cat.cat-excluded {
+  background: var(--color-bg);
+}
+
+.badge-cat.cat-unknown {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+/* 画面には出さず、読み上げだけに使う */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

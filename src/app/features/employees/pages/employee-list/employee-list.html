@@ -17,12 +17,34 @@
       (input)="onQuery($event)"
     />
     <div class="segmented" role="group">
-      @for (s of ['active', 'retired', 'all']; track s) {
-        <button type="button" [class.active]="status() === s" (click)="status.set($any(s))">
+      @for (s of statuses; track s) {
+        <button type="button" [class.active]="status() === s" (click)="setStatus(s)">
           {{ 'employee.status.' + s | transloco }}
         </button>
       }
     </div>
+    <!-- 今月の加入状況で絞り込む -->
+    <div class="segmented" role="group" [attr.aria-label]="'employee.list.coverageLabel' | transloco">
+      @for (c of coverageFilters; track c) {
+        <button type="button" [class.active]="coverage() === c" (click)="setCoverage(c)">
+          {{ 'employee.list.coverage.' + c | transloco }}
+        </button>
+      }
+    </div>
+    <!-- 区分（選んだときだけ契約を読む） -->
+    <label class="category-filter">
+      <span class="sr-only">{{ 'employee.list.categoryLabel' | transloco }}</span>
+      <select class="input" [value]="category()" (change)="setCategory($any($event.target).value)">
+        @for (c of categoryFilters; track c) {
+          <option [value]="c" [selected]="category() === c">
+            {{ (c === 'all' ? 'employee.list.categoryAll' : 'contract.category.' + c) | transloco }}
+          </option>
+        }
+      </select>
+      @if (categoryLoading()) {
+        <span class="muted">{{ 'common.loading' | transloco }}</span>
+      }
+    </label>
     @if (hasRoman()) {
       <div class="segmented" role="group" [attr.aria-label]="'employee.list.romanBy' | transloco">
         @for (b of ['last', 'first']; track b) {
@@ -54,10 +76,15 @@
       <table>
         <thead>
           <tr>
-            <th>{{ 'employee.field.employeeNumber' | transloco }}</th>
-            <th>{{ 'employee.field.name' | transloco }}</th>
-            <th class="num">{{ 'employee.list.age' | transloco }}</th>
-            <th>{{ 'employee.field.hireDate' | transloco }}</th>
+            <!-- 見出しを押すと並び替え（もう一度押すと逆順） -->
+            @for (k of sortKeys; track k) {
+              <th [class.num]="k === 'age'" [attr.aria-sort]="ariaSort(k)">
+                <button type="button" class="sort" [class.on]="sortKey() === k" (click)="sortBy(k)">
+                  {{ 'employee.list.sort.' + k | transloco }}
+                  <span class="arrow" aria-hidden="true">{{ sortKey() === k ? (sortDir() === 'asc' ? '▲' : '▼') : '' }}</span>
+                </button>
+              </th>
+            }
             <th>{{ 'employee.list.insurance' | transloco }}</th>
             @if (context.isAdmin()) {
               <th><span class="sr-only">{{ 'common.edit' | transloco }}</span></th>
@@ -66,12 +93,13 @@
         </thead>
         @for (sec of sections(); track sec.label) {
         <tbody>
-          <tr class="section-row">
-            <th [attr.colspan]="context.isAdmin() ? 6 : 5" scope="rowgroup">{{ sec.label }}</th>
-          </tr>
+          @if (sec.label) {
+            <tr class="section-row">
+              <th [attr.colspan]="context.isAdmin() ? 6 : 5" scope="rowgroup">{{ sec.label }}</th>
+            </tr>
+          }
           @for (e of sec.items; track e.id) {
             <tr [class.retired]="isRetired(e)">
-              <td class="mono">{{ e.employeeNumber ?? '—' }}</td>
               <td>
                 <div class="name"><a [routerLink]="[e.id]">{{ e.lastName }} {{ e.firstName }}</a></div>
                 <div class="kana">
@@ -79,12 +107,14 @@
                   @if (e.foreign?.alias; as a) { <span class="alias">（{{ a.last }} {{ a.first }}）</span> }
                 </div>
               </td>
+              <td class="mono">{{ e.employeeNumber ?? '—' }}</td>
               <td class="num">{{ age(e) }}</td>
               <td class="mono">{{ e.hireDate }}</td>
               <td>
                 @if (e.health.enrolled) { <span class="badge">{{ 'employee.badge.health' | transloco }}</span> }
                 @if (e.pension.enrolled) { <span class="badge">{{ 'employee.badge.pension' | transloco }}</span> }
                 @if (isRetired(e)) { <span class="badge badge-muted">{{ 'employee.status.retired' | transloco }}</span> }
+                @if (categoryOf(e); as c) { <span class="badge badge-cat cat-{{ c }}">{{ 'employee.list.categoryShort.' + c | transloco }}</span> }
               </td>
               @if (context.isAdmin()) {
                 <td class="actions">
