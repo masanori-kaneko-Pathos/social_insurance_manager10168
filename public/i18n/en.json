@@ -1739,5 +1739,66 @@
       "health_enrolled": "Enrolled",
       "pension_enrolled": "Enrolled"
     }
+  },
+  "recalc": {
+    "title": "Retroactive recalculation",
+    "start": "Correct and recalculate",
+    "lead": "When acquisition/loss dates or standard remuneration were wrong or missed, recalculate each month with the rates of that time and show the difference. Results are saved separately; original data is not changed.",
+    "reason": "What is corrected",
+    "reasonPlaceholder": "e.g. Missed acquisition notification (acquired 2026-01-01)",
+    "enrollmentTitle": "Enrollment correction",
+    "fixEnrollment": "Correct acquisition/loss dates",
+    "ins": {
+      "health": "Health insurance",
+      "pension": "Pension"
+    },
+    "acquired": "Acquired",
+    "lost": "Lost",
+    "periodsTitle": "Standard remuneration correction",
+    "periodsHint": "Enter the correct monthly remuneration per period (grades come from the table of the start month). Leave \"to\" blank for ongoing. Check \"not insured\" for periods without coverage.",
+    "from": "From",
+    "to": "To",
+    "amount": "Monthly remuneration (yen)",
+    "notInsured": "Not insured",
+    "addPeriod": "Add period",
+    "removePeriod": "Remove",
+    "rangeTitle": "Months to recalculate",
+    "calculate": "Calculate",
+    "employee": {
+      "collect": "Collect from employee",
+      "refund": "Refund to employee",
+      "zero": "No employee difference"
+    },
+    "employer": {
+      "collect": "Additional employer cost",
+      "refund": "Returned to employer",
+      "zero": "No employer difference"
+    },
+    "expiredAlert": "{{n}} month(s) are past the 2-year limitation period. Their employee difference ({{yen}} yen) is not included.",
+    "col": {
+      "month": "Month",
+      "before": "Current employee share",
+      "after": "Corrected employee share",
+      "diff": "Employee difference",
+      "employerDiff": "Employer difference (approx.)"
+    },
+    "expired": "Expired",
+    "missing": "Some premiums cannot be calculated",
+    "resultHint": "Difference = corrected − current. Employer difference per person is an estimate; the office payment is determined per office.",
+    "save": "Save result",
+    "saving": "Saving…",
+    "savedTitle": "Saved results",
+    "delete": "Delete this result",
+    "error": {
+      "load": "Could not load data for recalculation.",
+      "periodMonth": "Select the months of the period.",
+      "amount": "Enter the remuneration as a number (or check not insured).",
+      "periodOrder": "\"To\" is before \"from\", or no grade table.",
+      "nothing": "Correct enrollment or standard remuneration.",
+      "range": "Select the months to recalculate.",
+      "reason": "Enter what is corrected.",
+      "save": "Could not save.",
+      "delete": "Could not delete."
+    }
   }
 }

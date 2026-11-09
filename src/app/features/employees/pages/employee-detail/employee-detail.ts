@@ -16,6 +16,7 @@ import { DependentCard } from '../../components/dependent-card/dependent-card';
 import { exemptMonth } from '../../logic/leave';
 import { PayrollCard } from '../../../payrolls/components/payroll-card/payroll-card';
 import { HistoryCard } from '../../components/history-card/history-card';
+import { RecalcCard } from '../../../premiums/components/recalc-card/recalc-card';
 import { formatPostalCode } from '../../../../shared/utils/text';
 
 type Mode = 'fiscal' | 'calendar' | 'last12';
@@ -33,6 +34,7 @@ type Mode = 'fiscal' | 'calendar' | 'last12';
     LeaveCard,
     PayrollCard,
     HistoryCard,
+    RecalcCard,
   ],
   templateUrl: './employee-detail.html',
   styleUrl: './employee-detail.css',

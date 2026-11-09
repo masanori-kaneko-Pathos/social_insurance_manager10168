@@ -1,0 +1,169 @@
+<section class="card">
+  <div class="head">
+    <h2>{{ 'recalc.title' | transloco }}</h2>
+    @if (context.isAdmin() && !editing()) {
+      <button type="button" class="btn" (click)="start()" [disabled]="loading()">{{ 'recalc.start' | transloco }}</button>
+    }
+  </div>
+  <p class="hint">{{ 'recalc.lead' | transloco }}</p>
+
+  @if (errorKey(); as e) {
+    <div class="alert alert-danger">{{ e | transloco }}</div>
+  }
+
+  <!-- ===== 訂正の入力 ===== -->
+  @if (editing()) {
+    <div class="editor">
+      <div class="field">
+        <label for="rc-reason">{{ 'recalc.reason' | transloco }}</label>
+        <input id="rc-reason" class="input" maxlength="200" [value]="reason()" (input)="reason.set($any($event.target).value)"
+          [placeholder]="'recalc.reasonPlaceholder' | transloco" />
+      </div>
+
+      <h3>{{ 'recalc.enrollmentTitle' | transloco }}</h3>
+      <label class="check">
+        <input type="checkbox" [checked]="fixEnrollment()" (change)="fixEnrollment.set($any($event.target).checked); result.set(null)" />
+        {{ 'recalc.fixEnrollment' | transloco }}
+      </label>
+      @if (fixEnrollment()) {
+        <div class="grid">
+          @for (k of ['health', 'pension']; track k) {
+            @let row = k === 'health' ? health() : pension();
+            <fieldset>
+              <legend>{{ 'recalc.ins.' + k | transloco }}</legend>
+              <label>{{ 'recalc.acquired' | transloco }}
+                <input class="input" type="date" [value]="row.acquiredDate" (change)="setEnrollment($any(k), 'acquiredDate', $any($event.target).value)" />
+              </label>
+              <label>{{ 'recalc.lost' | transloco }}
+                <input class="input" type="date" [value]="row.lostDate" (change)="setEnrollment($any(k), 'lostDate', $any($event.target).value)" />
+              </label>
+            </fieldset>
+          }
+        </div>
+      }
+
+      <h3>{{ 'recalc.periodsTitle' | transloco }}</h3>
+      <p class="hint">{{ 'recalc.periodsHint' | transloco }}</p>
+      @for (r of periods(); track $index; let i = $index) {
+        <div class="period">
+          <input class="input" type="month" [value]="r.from" (change)="setPeriod(i, { from: $any($event.target).value })" [attr.aria-label]="'recalc.from' | transloco" />
+          <span>〜</span>
+          <input class="input" type="month" [value]="r.to" (change)="setPeriod(i, { to: $any($event.target).value })" [attr.aria-label]="'recalc.to' | transloco" />
+          <input class="input num amount" inputmode="numeric" [value]="r.amount" [disabled]="r.notInsured"
+            (input)="setPeriod(i, { amount: $any($event.target).value })" [placeholder]="'recalc.amount' | transloco" />
+          <label class="check small">
+            <input type="checkbox" [checked]="r.notInsured" (change)="setPeriod(i, { notInsured: $any($event.target).checked })" />
+            {{ 'recalc.notInsured' | transloco }}
+          </label>
+          <button type="button" class="link" (click)="removePeriod(i)">{{ 'recalc.removePeriod' | transloco }}</button>
+        </div>
+      }
+      <button type="button" class="link" (click)="addPeriod()">＋ {{ 'recalc.addPeriod' | transloco }}</button>
+
+      <h3>{{ 'recalc.rangeTitle' | transloco }}</h3>
+      <div class="period">
+        <input class="input" type="month" [value]="from()" (change)="from.set($any($event.target).value); result.set(null)" />
+        <span>〜</span>
+        <input class="input" type="month" [value]="to()" (change)="to.set($any($event.target).value); result.set(null)" />
+      </div>
+
+      @if (formError(); as e) {
+        <div class="alert alert-danger">{{ e | transloco }}</div>
+      }
+      <div class="actions">
+        <button type="button" class="btn" (click)="cancel()">{{ 'common.cancel' | transloco }}</button>
+        <button type="button" class="btn btn-primary" (click)="calculate()">{{ 'recalc.calculate' | transloco }}</button>
+      </div>
+
+      <!-- ===== 結果 ===== -->
+      @if (result(); as r) {
+        <div class="result">
+          <div class="totals">
+            <div class="total {{ sign(r.diffEmployeeYen) }}">
+              <span class="label">{{ 'recalc.employee.' + sign(r.diffEmployeeYen) | transloco }}</span>
+              <strong class="num">{{ yen(abs(r.diffEmployeeYen)) }}円</strong>
+            </div>
+            <div class="total {{ sign(r.diffEmployerMilli) }}">
+              <span class="label">{{ 'recalc.employer.' + sign(r.diffEmployerMilli) | transloco }}</span>
+              <strong class="num">{{ milli(abs(r.diffEmployerMilli)) }}円</strong>
+            </div>
+          </div>
+          @if (expiredCount() > 0) {
+            <div class="alert alert-warning">
+              {{ 'recalc.expiredAlert' | transloco: { n: expiredCount(), yen: yen(r.expiredEmployeeYen) } }}
+            </div>
+          }
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>{{ 'recalc.col.month' | transloco }}</th>
+                  <th class="num">{{ 'recalc.col.before' | transloco }}</th>
+                  <th class="num">{{ 'recalc.col.after' | transloco }}</th>
+                  <th class="num">{{ 'recalc.col.diff' | transloco }}</th>
+                  <th class="num">{{ 'recalc.col.employerDiff' | transloco }}</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (m of r.months; track m.month) {
+                  <tr [class.expired]="m.expired" [class.changed]="m.afterEmployeeYen !== m.beforeEmployeeYen">
+                    <td class="mono">{{ m.month }}</td>
+                    <td class="num">{{ yen(m.beforeEmployeeYen) }}</td>
+                    <td class="num">{{ yen(m.afterEmployeeYen) }}</td>
+                    <td class="num">{{ yen(m.afterEmployeeYen - m.beforeEmployeeYen) }}</td>
+                    <td class="num">{{ milli((m.afterTotalMilli - m.afterEmployeeYen * 1000) - (m.beforeTotalMilli - m.beforeEmployeeYen * 1000)) }}</td>
+                    <td>
+                      @if (m.expired) { <span class="badge">{{ 'recalc.expired' | transloco }}</span> }
+                      @if (m.missing) { <span class="badge warn">{{ 'recalc.missing' | transloco }}</span> }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="hint">{{ 'recalc.resultHint' | transloco }}</p>
+          <div class="actions">
+            <button type="button" class="btn btn-primary" (click)="save()" [disabled]="saving()">
+              {{ (saving() ? 'recalc.saving' : 'recalc.save') | transloco }}
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ===== 保存した結果 ===== -->
+  @if (saved().length > 0) {
+    <h3>{{ 'recalc.savedTitle' | transloco }}</h3>
+    @for (s of saved(); track s.id) {
+      <div class="saved">
+        <button type="button" class="saved-head" (click)="openSaved.set(openSaved() === s.id ? null : s.id)" [attr.aria-expanded]="openSaved() === s.id">
+          <span class="mono">{{ when(s) }}</span>
+          <span class="reason">{{ s.reason }}</span>
+          <span class="num {{ sign(s.diffEmployeeYen) }}">
+            {{ 'recalc.employee.' + sign(s.diffEmployeeYen) | transloco }} {{ yen(abs(s.diffEmployeeYen)) }}円
+          </span>
+        </button>
+        @if (openSaved() === s.id) {
+          <table>
+            <tbody>
+              @for (m of s.months; track m.month) {
+                @if (m.afterEmployeeYen !== m.beforeEmployeeYen) {
+                  <tr [class.expired]="m.expired">
+                    <td class="mono">{{ m.month }}</td>
+                    <td class="num">{{ yen(m.beforeEmployeeYen) }} → {{ yen(m.afterEmployeeYen) }}</td>
+                    <td>@if (m.expired) { <span class="badge">{{ 'recalc.expired' | transloco }}</span> }</td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+          @if (context.isAdmin()) {
+            <button type="button" class="link danger" (click)="remove(s.id)">{{ 'recalc.delete' | transloco }}</button>
+          }
+        }
+      </div>
+    }
+  }
+</section>
