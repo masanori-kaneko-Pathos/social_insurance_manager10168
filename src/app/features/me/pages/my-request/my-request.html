@@ -1,0 +1,43 @@
+<app-me-header [officeName]="me.office()?.name ?? null" />
+
+<main class="me-main">
+  <a class="back" routerLink="/me">← {{ 'me.title' | transloco }}</a>
+
+  @if (loading()) {
+    <p class="muted">{{ 'common.loading' | transloco }}</p>
+  } @else if (!request()) {
+    <div class="alert alert-danger">{{ 'me.error.request' | transloco }}</div>
+  } @else {
+    @let r = request()!;
+    <h1>{{ r.title }}</h1>
+    <p class="hint">
+      <span [class]="'status ' + r.status">{{ 'me.status.' + r.status | transloco }}</span>
+      @if (r.dueDate) { {{ 'request.dueOn' | transloco: { date: r.dueDate } }} }
+    </p>
+
+    @if (done()) {
+      <div class="alert alert-success">{{ 'me.sent' | transloco }}</div>
+    }
+    @if (errorKey(); as key) {
+      <div class="alert alert-danger">{{ key | transloco }}</div>
+    }
+    @if (r.comment) {
+      <p class="comment">{{ (r.status === 'rejected' ? 'me.rejectedComment' : 'me.adminComment') | transloco: { comment: r.comment } }}</p>
+    }
+
+    <section class="card">
+      @if (answerable()) {
+        <p class="hint">{{ 'me.answerLead' | transloco }}</p>
+        <app-answer-form [questions]="r.questions" [(answers)]="answers" [showErrors]="submitted()" [current]="current()" />
+        <div class="actions">
+          <button type="button" class="btn btn-primary" [disabled]="sending()" (click)="send()">
+            {{ (sending() ? 'me.sending' : 'me.send') | transloco }}
+          </button>
+        </div>
+      } @else {
+        <app-answer-view [questions]="r.questions" [answers]="r.answers" />
+        <p class="hint">{{ 'me.afterSubmit.' + r.status | transloco }}</p>
+      }
+    </section>
+  }
+</main>

@@ -38,7 +38,13 @@ export class HistoryService {
   }
 
   /** 履歴を batch に足す（呼ぶ側がまとめて commit する） */
-  addTo(batch: WriteBatch, officeId: string, employeeId: string, target: string, changes: readonly FieldChange[]): void {
+  addTo(
+    batch: WriteBatch,
+    officeId: string,
+    employeeId: string,
+    target: string,
+    changes: readonly FieldChange[],
+  ): void {
     const uid = this.uid();
     for (const c of changes) {
       batch.set(doc(this.col(officeId, employeeId)), {
@@ -67,11 +73,12 @@ export class HistoryService {
   ): Promise<void> {
     const snap = await getDoc(ref);
     const before = snap.exists() ? (snap.data() as Record<string, unknown>) : null;
-    const after = op === 'delete' ? null : op === 'update' ? { ...(before ?? {}), ...data } : { ...data };
+    const after =
+      op === 'delete' ? null : op === 'update' ? { ...(before ?? {}), ...data } : { ...data };
     const changes = changesOf(before, after).slice(0, MAX_HISTORY_IN_BATCH);
-
     const batch = writeBatch(db);
-    if (op === 'set') batch.set(ref, { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+    if (op === 'set')
+      batch.set(ref, { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
     else if (op === 'update') batch.update(ref, { ...data, updatedAt: serverTimestamp() });
     else batch.delete(ref);
     this.addTo(batch, officeId, employeeId, target, changes);
@@ -80,7 +87,9 @@ export class HistoryService {
 
   /** 新しい順（多すぎる人は max 件まで） */
   async list(officeId: string, employeeId: string, max = 200): Promise<ChangeHistory[]> {
-    const snap = await getDocs(query(this.col(officeId, employeeId), orderBy('changedAt', 'desc'), limit(max)));
+    const snap = await getDocs(
+      query(this.col(officeId, employeeId), orderBy('changedAt', 'desc'), limit(max)),
+    );
     return snap.docs.map((d) => ({ id: d.id, ...(d.data() as HistoryDoc) }));
   }
 }

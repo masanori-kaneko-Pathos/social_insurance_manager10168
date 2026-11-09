@@ -1,0 +1,42 @@
+.answers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0 var(--space-md);
+}
+
+.field.wide {
+  grid-column: 1 / -1;
+}
+
+.optional {
+  margin-left: var(--space-xs);
+  padding: 0 6px;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+}
+
+.now,
+.hint {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.input.num {
+  text-align: right;
+}
+
+.yesno {
+  display: flex;
+  gap: var(--space-md);
+  padding: var(--space-xs) 0;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-sm);
+  cursor: pointer;
+}

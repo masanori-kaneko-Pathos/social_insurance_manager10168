@@ -102,3 +102,19 @@ export function officeExtras(): Omit<OfficeInput, keyof OfficeBasicInput> {
     bonusMonths: [],
   };
 }
+
+/**
+ * 従業員に見せてよい事業所の設定（offices/{o}/shared/forEmployees）
+ * 事業所の文書そのもの（住所・番号・メンバーなど）は従業員に見せない。
+ * マイページの保険料の計算に要るものだけを、管理者が保存するたびに写す（掲示板に貼り出すイメージ）
+ */
+export interface OfficeForEmployeesDoc {
+  name: string;
+  prefecture: string;
+  healthInsurer: HealthInsurer;
+  insurerHistory: InsurerPeriod[];
+  premium: PremiumSettings;
+  updatedAt: Timestamp;
+}
+
+export const FOR_EMPLOYEES_KEYS = ['name', 'prefecture', 'healthInsurer', 'insurerHistory', 'premium'] as const;

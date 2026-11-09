@@ -1,0 +1,38 @@
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>{{ 'request.col.question' | transloco }}</th>
+        @if (current()) { <th>{{ 'request.col.now' | transloco }}</th> }
+        <th>{{ 'request.col.answer' | transloco }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (r of rows(); track r.q.id) {
+        <tr [class.changed]="current() && r.willBe !== null && !r.same">
+          <th scope="row">
+            @if (r.q.field) { {{ 'request.field.' + r.q.field | transloco }} } @else { {{ r.q.label }} }
+            @if (!r.q.field) { <div class="sub">{{ 'request.noField' | transloco }}</div> }
+          </th>
+          @if (current()) {
+            <td>
+              @if (r.q.field) {
+                @if (translatable(r.q) && r.now) { {{ display(r.q, r.now) | transloco }} } @else { {{ r.now ?? '' }} }
+              }
+            </td>
+          }
+          <td>
+            @if (r.answer === '') {
+              <span class="muted">{{ 'request.noAnswer' | transloco }}</span>
+            } @else if (translatable(r.q)) {
+              {{ display(r.q, r.answer) | transloco }}
+            } @else {
+              {{ r.willBe ?? r.answer }}
+            }
+            @if (current() && r.same) { <span class="sub">{{ 'request.same' | transloco }}</span> }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

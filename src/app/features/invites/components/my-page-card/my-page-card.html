@@ -1,0 +1,67 @@
+@if (context.isAdmin()) {
+  <section class="card">
+    <div class="head">
+      <h2>{{ 'myPageCard.title' | transloco }}</h2>
+      <a class="btn" [routerLink]="['/o', context.current()?.id, 'requests', 'new']" [queryParams]="{ employee: employee().id }">
+        {{ 'myPageCard.sendRequest' | transloco }}
+      </a>
+    </div>
+
+    @if (errorKey(); as key) {
+      <div class="alert alert-danger">{{ key | transloco }}</div>
+    }
+
+    @if (loading()) {
+      <p class="muted">{{ 'common.loading' | transloco }}</p>
+    } @else {
+      <!-- アカウント -->
+      @if (linked()) {
+        <p><span class="status done">{{ 'myPageCard.linked' | transloco }}</span></p>
+      } @else if (active(); as a) {
+        <p>
+          <span class="status">{{ 'myPageCard.invited' | transloco }}</span>
+          <span class="sub">{{ 'myPageCard.expires' | transloco: { date: expires(a) } }}</span>
+          @if (a.email) { <span class="sub">{{ 'myPageCard.onlyFor' | transloco: { email: a.email } }}</span> }
+        </p>
+        <div class="link-row">
+          <input class="input" readonly [value]="link()" (focus)="$any($event.target).select()" aria-label="invite link" />
+          <button type="button" class="btn" (click)="copy()">
+            {{ (copied() ? 'myPageCard.copied' : 'myPageCard.copy') | transloco }}
+          </button>
+          <button type="button" class="link danger" [disabled]="working()" (click)="revoke(a.code)">
+            {{ 'myPageCard.revoke' | transloco }}
+          </button>
+        </div>
+        <p class="hint">{{ 'myPageCard.linkHint' | transloco }}</p>
+      } @else {
+        <div class="invite-row">
+          <div class="field">
+            <label for="invite-email">{{ 'myPageCard.email' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+            <input id="invite-email" class="input" type="email" [value]="email()" (input)="email.set($any($event.target).value)"
+                   [class.is-invalid]="!emailValid()" />
+            <span class="hint">{{ 'myPageCard.emailHint' | transloco }}</span>
+          </div>
+          <button type="button" class="btn btn-primary" [disabled]="working() || !emailValid()" (click)="invite()">
+            {{ 'myPageCard.invite' | transloco }}
+          </button>
+        </div>
+      }
+
+      <!-- 依頼と申請 -->
+      <h3>{{ 'myPageCard.requests' | transloco }}</h3>
+      @if (sortedRequests().length === 0) {
+        <p class="muted">{{ 'myPageCard.noRequests' | transloco }}</p>
+      } @else {
+        <ul class="requests">
+          @for (r of sortedRequests(); track r.id) {
+            <li>
+              <span [class]="'req-status ' + r.status">{{ 'request.status.' + r.status | transloco }}</span>
+              <a [routerLink]="['/o', context.current()?.id, 'requests', r.id]">{{ r.title }}</a>
+              <span class="sub">{{ 'request.direction.' + r.direction | transloco }}</span>
+            </li>
+          }
+        </ul>
+      }
+    }
+  </section>
+}

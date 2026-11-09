@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
+import { employeeGuard, staffGuard } from './core/auth/role.guard';
 import { guestGuard } from './core/auth/guest.guard';
 import { officeGuard } from './features/office/office.guard';
 import { startGuard } from './features/office/start.guard';
@@ -23,20 +24,49 @@ export const routes: Routes = [
       import('./features/auth/pages/forgot-password/forgot-password').then((m) => m.ForgotPassword),
   },
 
+  // ===== 招待（ログイン前でも開く。画面の中でログインの状態を見る） =====
+  {
+    path: 'invite/:officeId/:code',
+    loadComponent: () =>
+      import('./features/invites/pages/invite-accept/invite-accept').then((m) => m.InviteAccept),
+  },
+
   // ===== ログイン後（親で authGuard を1回だけ） =====
   {
     path: '',
     canActivate: [authGuard],
     children: [
       { path: '', pathMatch: 'full', canActivate: [startGuard], children: [] },
+      // ----- 従業員のマイページ -----
+      {
+        path: 'me',
+        canActivate: [employeeGuard],
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./features/me/pages/my-page/my-page').then((m) => m.MyPage),
+          },
+          {
+            path: 'requests/:requestId',
+            loadComponent: () =>
+              import('./features/me/pages/my-request/my-request').then((m) => m.MyRequest),
+          },
+          {
+            path: 'change',
+            loadComponent: () =>
+              import('./features/me/pages/my-change/my-change').then((m) => m.MyChange),
+          },
+        ],
+      },
       {
         path: 'offices/new',
+        canActivate: [staffGuard],
         loadComponent: () =>
           import('./features/office/pages/office-form/office-form').then((m) => m.OfficeForm),
       },
       {
         path: 'o/:officeId',
-        canActivate: [officeGuard],
+        canActivate: [staffGuard, officeGuard],
         loadComponent: () =>
           import('./features/office/pages/office-shell/office-shell').then((m) => m.OfficeShell),
         children: [
@@ -132,6 +162,21 @@ export const routes: Routes = [
             path: 'revisions',
             loadComponent: () =>
               import('./features/payrolls/pages/revisions/revisions').then((m) => m.RevisionsPage),
+          },
+          {
+            path: 'requests',
+            loadComponent: () =>
+              import('./features/requests/pages/request-list/request-list').then((m) => m.RequestList),
+          },
+          {
+            path: 'requests/new',
+            loadComponent: () =>
+              import('./features/requests/pages/request-new/request-new').then((m) => m.RequestNew),
+          },
+          {
+            path: 'requests/:requestId',
+            loadComponent: () =>
+              import('./features/requests/pages/request-review/request-review').then((m) => m.RequestReview),
           },
           {
             path: 'settings',

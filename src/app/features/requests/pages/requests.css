@@ -1,0 +1,264 @@
+/* 依頼の3つの画面（一覧・新しい依頼・確認）で共通 */
+:host {
+  display: block;
+}
+
+.back {
+  display: inline-block;
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-sm);
+}
+
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+h1 {
+  margin: 0;
+  font-size: var(--font-xl);
+}
+
+h2 {
+  margin: 0 0 var(--space-md);
+  font-size: var(--font-md);
+}
+
+.page-head .btn {
+  text-decoration: none;
+}
+
+.lead {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.card {
+  margin-bottom: var(--space-lg);
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+
+.tabs a {
+  padding: 2px var(--space-sm);
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+  text-decoration: none;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
+.tabs a.active {
+  color: var(--color-text);
+  border-color: var(--color-text);
+}
+
+.count {
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+th,
+td {
+  padding: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+thead th {
+  font-weight: 400;
+  color: var(--color-text-sub);
+  white-space: nowrap;
+}
+
+.status {
+  display: inline-block;
+  padding: 0 6px;
+  font-size: var(--font-xs);
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.status.submitted {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.status.approved {
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+}
+
+.sub {
+  display: block;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.muted {
+  margin: 0;
+  color: var(--color-text-sub);
+}
+
+.hint {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.hint.warn {
+  color: var(--color-warning-text);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0 var(--space-md);
+}
+
+.field.wide {
+  grid-column: 1 / -1;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-sm);
+  cursor: pointer;
+}
+
+.optional {
+  margin-left: var(--space-xs);
+  padding: 0 6px;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}
+
+.link {
+  padding: 0 var(--space-xs);
+  font: inherit;
+  font-size: var(--font-sm);
+  color: var(--color-text);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link.danger {
+  color: var(--color-danger-text);
+}
+
+.link:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 新しい依頼：質問の一覧 */
+.questions {
+  margin: 0 0 var(--space-md);
+  padding: 0;
+  list-style: none;
+}
+
+.questions li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-sm);
+}
+
+.questions .q-label {
+  flex: 1 1 200px;
+}
+
+.add-question {
+  padding: var(--space-md);
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+}
+
+/* 新しい依頼：あて先 */
+.people {
+  max-height: 360px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.people label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-sm);
+  cursor: pointer;
+}
+
+.people-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.people-tools .input {
+  flex: 1 1 200px;
+}
+
+.badge {
+  padding: 0 6px;
+  font-size: var(--font-xs);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+}
+
+/* 確認：書き換わる項目 */
+.changes {
+  margin: 0 0 var(--space-md);
+  padding-left: 1.2em;
+  font-size: var(--font-sm);
+}
+
+textarea.input {
+  height: auto;
+  min-height: 72px;
+  padding: var(--space-xs) var(--space-sm);
+}

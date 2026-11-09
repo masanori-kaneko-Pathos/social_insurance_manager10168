@@ -1,0 +1,76 @@
+<a class="back" [routerLink]="['/o', context.current()?.id, 'requests']">← {{ 'request.listTitle' | transloco }}</a>
+
+@if (loading()) {
+  <p class="muted">{{ 'common.loading' | transloco }}</p>
+} @else if (!request()) {
+  <div class="alert alert-danger">{{ 'request.error.notFound' | transloco }}</div>
+} @else {
+  @let r = request()!;
+  <div class="page-head">
+    <div>
+      <h1>{{ r.title }}</h1>
+      <p class="lead">
+        <span [class]="'status ' + r.status">{{ 'request.status.' + r.status | transloco }}</span>
+        {{ 'request.type.' + r.type | transloco }}・{{ 'request.direction.' + r.direction | transloco }}
+        @if (employee(); as e) {
+          ・<a [routerLink]="['/o', context.current()?.id, 'employees', e.id]">{{ nameOf(e) }}</a>
+        }
+        @if (r.dueDate) { ・{{ 'request.dueOn' | transloco: { date: r.dueDate } }} }
+      </p>
+    </div>
+  </div>
+
+  @if (errorKey(); as key) {
+    <div class="alert alert-danger">{{ key | transloco }}</div>
+  }
+
+  <section class="card">
+    <h2>{{ 'request.answers' | transloco }}</h2>
+    @if (r.status === 'open') {
+      <p class="hint">{{ 'request.waiting' | transloco }}</p>
+    }
+    <app-answer-view [questions]="r.questions" [answers]="r.answers" [current]="current()" />
+    @if (r.comment) {
+      <p class="hint">{{ 'request.commentWas' | transloco: { comment: r.comment } }}</p>
+    }
+  </section>
+
+  @if (canDecide()) {
+    <section class="card">
+      <h2>{{ 'request.decide' | transloco }}</h2>
+      @if (changes().length > 0) {
+        <p class="hint">{{ 'request.willChange' | transloco }}</p>
+        <ul class="changes">
+          @for (c of changes(); track c.field) {
+            <li>{{ 'request.field.' + c.field | transloco }}：{{ c.before ?? '—' }} → <strong>{{ c.after }}</strong></li>
+          }
+        </ul>
+      } @else {
+        <p class="hint">{{ 'request.nothingToWrite' | transloco }}</p>
+      }
+      <div class="field">
+        <label for="req-comment">{{ 'request.comment' | transloco }}</label>
+        <textarea id="req-comment" class="input" maxlength="500" [value]="comment()" (input)="comment.set($any($event.target).value)"
+                  [class.is-invalid]="triedReject() && !comment().trim()"></textarea>
+        <span class="hint">{{ 'request.commentHint' | transloco }}</span>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn" [disabled]="working()" (click)="reject()">{{ 'request.reject' | transloco }}</button>
+        <button type="button" class="btn btn-primary" [disabled]="working()" (click)="approve()">
+          {{ (changes().length > 0 ? 'request.approveAndWrite' : 'request.approve') | transloco }}
+        </button>
+      </div>
+    </section>
+  }
+
+  @if (context.isAdmin()) {
+    <div class="actions">
+      @if (confirmingDelete()) {
+        <button type="button" class="link danger" [disabled]="working()" (click)="remove()">{{ 'request.confirmDelete' | transloco }}</button>
+        <button type="button" class="link" (click)="confirmingDelete.set(false)">{{ 'common.cancel' | transloco }}</button>
+      } @else {
+        <button type="button" class="link danger" (click)="confirmingDelete.set(true)">{{ 'request.delete' | transloco }}</button>
+      }
+    </div>
+  }
+}

@@ -79,3 +79,8 @@
   .forgot a {
     color: var(--color-text-sub);
   }
+/* 招待の画面：入力欄の下の説明 */
+.hint {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}

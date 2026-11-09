@@ -20,7 +20,9 @@
     @for (r of todos(); track r.todo.employeeId + r.todo.kind) {
       <div class="todo-item">
         <span class="kind kind-{{ r.todo.kind }}">{{ 'dashboard.todo.kind.' + r.todo.kind | transloco }}</span>
-        <a class="who" [routerLink]="['/o', office()?.id, 'employees', r.employee.id]">{{ employeeName(r.employee) }}</a>
+        <a class="who" [routerLink]="['/o', office()?.id, 'employees', r.employee.id]">
+          @if (r.employee.employeeNumber) { <span class="emp-no">{{ r.employee.employeeNumber }}</span> }{{ employeeName(r.employee) }}
+        </a>
         <span class="what">
           {{ 'dashboard.todo.text.' + r.todo.kind | transloco: {
             date: r.todo.date,
@@ -37,6 +39,13 @@
     }
   }
 
+  @if (submittedRequests() > 0) {
+    <div class="todo-item">
+      <span class="kind kind-acquire">{{ 'dashboard.todo.kind.requests' | transloco }}</span>
+      <span>{{ 'dashboard.todo.text.requests' | transloco: { count: submittedRequests() } }}</span>
+      <a [routerLink]="['/o', office()?.id, 'requests']" [queryParams]="{ status: 'submitted' }">{{ 'dashboard.todo.toRequests' | transloco }} →</a>
+    </div>
+  }
   <div class="todo-links">
     <a [routerLink]="['/o', office()?.id, 'revisions']">{{ 'dashboard.todo.toRevisions' | transloco }} →</a>
     @if (regularSeason(); as y) {
@@ -158,6 +167,7 @@
                     class="name"
                     [routerLink]="['/o', office()?.id, 'employees', r.employee.id]"
                   >
+                    @if (r.employee.employeeNumber) { <span class="emp-no">{{ r.employee.employeeNumber }}</span> }
                     {{ r.employee.lastName }} {{ r.employee.firstName }}
                   </a>
                 </td>

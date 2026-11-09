@@ -149,9 +149,11 @@
         <div class="field">
           <label for="birthDate">{{ 'employee.field.birthDate' | transloco }}</label>
           <input id="birthDate" class="input" type="date" formControlName="birthDate"
-                 [class.is-invalid]="errorOf('birthDate') || groupError('birthFuture', 'birthDate')" />
+                 [class.is-invalid]="errorOf('birthDate') || groupError('birthFuture', 'birthDate') || groupError('birthTooYoung', 'birthDate')" />
           @if (errorOf('birthDate'); as e) {
             <span class="field-error">{{ e | transloco }}</span>
+          } @else if (groupError('birthTooYoung', 'birthDate')) {
+            <span class="field-error">{{ 'employee.validation.birthTooYoung' | transloco }}</span>
           } @else if (groupError('birthFuture', 'birthDate')) {
             <span class="field-error">{{ 'employee.validation.birthFuture' | transloco }}</span>
           }
@@ -547,8 +549,15 @@
         </div>
         <div class="field wide">
           <label for="holderKana">{{ 'employee.field.holderKana' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
-          <input id="holderKana" class="input" formControlName="holderKana" />
+          <input id="holderKana" class="input" formControlName="holderKana"
+                 [class.is-invalid]="errorOf('bankAccount.holderKana')" />
+          @if (errorOf('bankAccount.holderKana'); as e) {
+            <span class="field-error">{{ e | transloco }}</span>
+          }
         </div>
+        @if (groupError('bankIncomplete', 'bankAccount.bankName')) {
+          <p class="field-error wide">{{ 'employee.validation.bankIncomplete' | transloco }}</p>
+        }
       </div>
     </section>
 
@@ -572,6 +581,9 @@
     </section>
 
     <div class="actions">
+      @if (errorKey(); as key) {
+        <span class="field-error actions-error">{{ key | transloco }}</span>
+      }
       <a class="btn" [routerLink]="backLink()">{{ 'common.back' | transloco }}</a>
       <button class="btn btn-primary" type="submit" [disabled]="submitting()">
         {{ (submitting() ? 'common.saving' : 'common.save') | transloco }}

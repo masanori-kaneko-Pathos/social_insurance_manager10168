@@ -144,3 +144,9 @@ h3 {
 .hint.warn {
   color: var(--color-warning-text);
 }
+
+/* 保存できないときの知らせ（ボタンの横） */
+.actions-error {
+  margin-right: auto;
+  align-self: center;
+}

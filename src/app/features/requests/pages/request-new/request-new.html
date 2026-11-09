@@ -1,0 +1,145 @@
+<a class="back" [routerLink]="['/o', context.current()?.id, 'requests']">← {{ 'request.listTitle' | transloco }}</a>
+
+<div class="page-head">
+  <div>
+    <h1>{{ 'request.new' | transloco }}</h1>
+    <p class="lead">{{ 'request.newLead' | transloco }}</p>
+  </div>
+</div>
+
+@if (errorKey(); as key) {
+  <div class="alert alert-danger">{{ key | transloco }}</div>
+}
+
+<!-- 1. 中身 -->
+<section class="card">
+  <h2>{{ 'request.step.content' | transloco }}</h2>
+  <div class="grid">
+    <div class="field">
+      <label for="req-type">{{ 'request.col.type' | transloco }}</label>
+      <select id="req-type" class="input" [value]="type()" (change)="chooseType($any($event.target).value)">
+        @for (t of types; track t) {
+          <option [value]="t" [selected]="type() === t">{{ 'request.type.' + t | transloco }}</option>
+        }
+      </select>
+      <span class="hint">{{ 'request.typeHint.' + type() | transloco }}</span>
+    </div>
+    <div class="field">
+      <label for="req-title">{{ 'request.col.title' | transloco }}</label>
+      <input id="req-title" class="input" maxlength="100" [value]="title()" (input)="title.set($any($event.target).value)"
+             [class.is-invalid]="submitted() && !title().trim()" />
+    </div>
+    <div class="field">
+      <label for="req-due">{{ 'request.col.due' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+      <input id="req-due" class="input" type="date" [min]="today" [value]="dueDate()" (input)="dueDate.set($any($event.target).value)" />
+    </div>
+  </div>
+
+  <h2>{{ 'request.questions' | transloco }}</h2>
+  @if (questions().length === 0) {
+    <p class="muted">{{ 'request.noQuestions' | transloco }}</p>
+  } @else {
+    <ul class="questions">
+      @for (q of questions(); track q.id; let first = $first; let last = $last) {
+        <li>
+          <span class="q-label">
+            @if (q.field) { {{ 'request.field.' + q.field | transloco }} } @else { {{ q.label }} }
+            <span class="sub">
+              {{ (q.field ? 'request.writesTo' : 'request.qtype.' + q.type) | transloco }}
+              @if (q.choices && !q.field) { ：{{ q.choices.join(' / ') }} }
+            </span>
+          </span>
+          <label class="check"><input type="checkbox" [checked]="q.required" (change)="toggleRequired(q.id)" />{{ 'request.required' | transloco }}</label>
+          <button type="button" class="link" [disabled]="first" (click)="move(q.id, -1)" [attr.aria-label]="'request.up' | transloco">↑</button>
+          <button type="button" class="link" [disabled]="last" (click)="move(q.id, 1)" [attr.aria-label]="'request.down' | transloco">↓</button>
+          <button type="button" class="link danger" (click)="removeQuestion(q.id)">{{ 'common.delete' | transloco }}</button>
+        </li>
+      }
+    </ul>
+  }
+
+  <div class="add-question">
+    <div class="grid">
+      <div class="field">
+        <label for="add-field">{{ 'request.addField' | transloco }}</label>
+        <select id="add-field" class="input" [value]="newField()" (change)="newField.set($any($event.target).value)">
+          <option value="">{{ 'common.select' | transloco }}</option>
+          @for (f of fields; track f) {
+            @if (!usedFields().has(f)) {
+              <option [value]="f">{{ 'request.field.' + f | transloco }}</option>
+            }
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <button type="button" class="btn" [disabled]="!newField()" (click)="addField()">{{ 'request.add' | transloco }}</button>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="field">
+        <label for="add-label">{{ 'request.addCustom' | transloco }}</label>
+        <input id="add-label" class="input" maxlength="100" [value]="newLabel()" (input)="newLabel.set($any($event.target).value)" />
+      </div>
+      <div class="field">
+        <label for="add-type">{{ 'request.qtypeLabel' | transloco }}</label>
+        <select id="add-type" class="input" [value]="newType()" (change)="newType.set($any($event.target).value)">
+          @for (t of questionTypes; track t) {
+            <option [value]="t" [selected]="newType() === t">{{ 'request.qtype.' + t | transloco }}</option>
+          }
+        </select>
+      </div>
+      @if (newType() === 'choice') {
+        <div class="field">
+          <label for="add-choices">{{ 'request.choices' | transloco }}</label>
+          <input id="add-choices" class="input" [value]="newChoices()" (input)="newChoices.set($any($event.target).value)" />
+          <span class="hint">{{ 'request.choicesHint' | transloco }}</span>
+        </div>
+      }
+      <div class="field">
+        <label>&nbsp;</label>
+        <div class="actions">
+          <label class="check"><input type="checkbox" [checked]="newRequired()" (change)="newRequired.set(!newRequired())" />{{ 'request.required' | transloco }}</label>
+          <button type="button" class="btn" [disabled]="!canAddCustom()" (click)="addCustom()">{{ 'request.add' | transloco }}</button>
+        </div>
+      </div>
+    </div>
+    <p class="hint">{{ 'request.addHint' | transloco }}</p>
+  </div>
+</section>
+
+<!-- 2. あて先 -->
+<section class="card">
+  <h2>{{ 'request.step.to' | transloco }}</h2>
+  <div class="people-tools">
+    <input class="input" type="search" [placeholder]="'request.searchPeople' | transloco" [value]="search()"
+           (input)="search.set($any($event.target).value)" />
+    <button type="button" class="link" (click)="selectVisible(true)">{{ 'request.selectAll' | transloco }}</button>
+    <button type="button" class="link" (click)="selectVisible(false)">{{ 'request.clearAll' | transloco }}</button>
+    <span class="hint">{{ 'request.selectedCount' | transloco: { count: selected().size } }}</span>
+  </div>
+  <div class="people">
+    @for (e of visible(); track e.id) {
+      <label>
+        <input type="checkbox" [checked]="selected().has(e.id)" (change)="toggle(e.id)" />
+        <span>{{ e.employeeNumber ?? '' }} {{ nameOf(e) }}</span>
+        @if (!e.userUid) { <span class="badge">{{ 'request.noAccount' | transloco }}</span> }
+      </label>
+    }
+  </div>
+  @if (selectedNoAccount() > 0) {
+    <p class="hint warn">{{ 'request.noAccountWarn' | transloco: { count: selectedNoAccount() } }}</p>
+  }
+</section>
+
+@if (submitted()) {
+  @for (p of problems(); track p) {
+    <p class="field-error">{{ p | transloco }}</p>
+  }
+}
+<div class="actions">
+  <a class="btn" [routerLink]="['/o', context.current()?.id, 'requests']">{{ 'common.cancel' | transloco }}</a>
+  <button type="button" class="btn btn-primary" [disabled]="sending()" (click)="send()">
+    {{ (sending() ? 'request.sending' : 'request.send') | transloco: { count: selected().size } }}
+  </button>
+</div>

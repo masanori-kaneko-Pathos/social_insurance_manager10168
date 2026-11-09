@@ -10,6 +10,9 @@ export const startGuard: CanActivateFn = async () => {
 
   const uid = auth.user()!.uid;
 
+  // 0. 従業員のアカウントはマイページへ
+  if (auth.profile()?.role === 'employee') return router.createUrlTree(['/me']);
+
   // 1. 最後に開いた事業所が読めれば、そこへ
   const currentId = auth.profile()?.currentOfficeId;
   if (currentId && (await offices.tryGet(currentId))) {

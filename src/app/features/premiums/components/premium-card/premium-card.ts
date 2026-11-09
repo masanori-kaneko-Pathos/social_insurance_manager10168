@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
+import { Office } from '../../../../core/models/office';
 import {
   PremiumGroup,
   PremiumLine,
@@ -24,6 +25,9 @@ import { calcMonthly } from '../../logic/calc-monthly';
 import { splitContribution } from '../../logic/premium-core';
 import { formatMilli } from '../../logic/rounding';
 
+/** 保険料の計算に要る事業所の設定（事業所の文書そのものか、従業員向けに写したもの） */
+export type OfficeForPremium = Pick<Office, 'id' | 'prefecture' | 'healthInsurer' | 'insurerHistory' | 'premium'>;
+
 /** 1か月分の行（計算でエラーが出た月は result を null にする） */
 interface MonthRow {
   month: YearMonth;
@@ -45,13 +49,19 @@ export class PremiumCard implements OnInit {
   readonly context = inject(OfficeContext);
 
   readonly employee = input.required<Employee>();
+  /**
+   * 計算に使う事業所の設定。渡さなければ今開いている事業所（OfficeContext）
+   * マイページでは、従業員に見せてよい分だけ写した文書（offices/{o}/shared/forEmployees）を渡す
+   */
+  readonly office = input<OfficeForPremium | null>(null);
+  private readonly officeNow = computed<OfficeForPremium | null>(() => this.office() ?? this.context.current());
   /** 表に並べる月（詳細画面の期間の切り替えと連動） */
   readonly months = input.required<YearMonth[]>();
 
   readonly thisMonth = toYearMonth(todayLocal());
   /** 保険料の計算方法（事業所の設定） */
   readonly options = computed<PremiumOptions>(() => {
-    const office = this.context.current();
+    const office = this.officeNow();
     return office ? premiumOf(office) : DEFAULT_PREMIUM;
   });
 
@@ -65,7 +75,7 @@ export class PremiumCard implements OnInit {
   /** 月ごとの保険料（月・報酬の履歴・料率のどれかが変われば自動で計算し直す） */
   readonly rows = computed<MonthRow[]>(() => {
     const tables = this.tables();
-    const office = this.context.current();
+    const office = this.officeNow();
     if (!tables || !office) return [];
     const employee = this.employee();
     const remunerations = this.remunerations();
@@ -90,7 +100,7 @@ export class PremiumCard implements OnInit {
 
   /** 料率と報酬の履歴を読み直す（標準報酬のカードで保存・削除したときにも呼ばれる） */
   async reload(): Promise<void> {
-    const office = this.context.current();
+    const office = this.officeNow();
     if (!office) return;
     this.loading.set(true);
     this.errorKey.set(null);

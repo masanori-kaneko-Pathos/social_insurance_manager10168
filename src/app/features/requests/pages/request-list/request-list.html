@@ -1,0 +1,66 @@
+<div class="page-head">
+  <div>
+    <h1>{{ 'request.listTitle' | transloco }}</h1>
+    <p class="lead">{{ 'request.listLead' | transloco }}</p>
+  </div>
+  @if (context.isAdmin()) {
+    <a class="btn btn-primary" [routerLink]="['/o', context.current()?.id, 'requests', 'new']">{{ 'request.new' | transloco }}</a>
+  }
+</div>
+
+<nav class="tabs" [attr.aria-label]="'request.filter' | transloco">
+  <a [routerLink]="[]" [queryParams]="{ status: null }" [class.active]="filter() === 'all'">
+    {{ 'request.status.all' | transloco }}<span class="count">{{ counts()['all'] ?? 0 }}</span>
+  </a>
+  @for (s of statuses; track s) {
+    <a [routerLink]="[]" [queryParams]="{ status: s }" [class.active]="filter() === s">
+      {{ 'request.status.' + s | transloco }}<span class="count">{{ counts()[s] ?? 0 }}</span>
+    </a>
+  }
+</nav>
+
+@if (errorKey(); as key) {
+  <div class="alert alert-danger">{{ key | transloco }}</div>
+}
+
+<section class="card">
+  @if (loading()) {
+    <p class="muted">{{ 'common.loading' | transloco }}</p>
+  } @else if (rows().length === 0) {
+    <p class="muted">{{ 'request.empty' | transloco }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'request.col.status' | transloco }}</th>
+            <th>{{ 'request.col.title' | transloco }}</th>
+            <th>{{ 'request.col.employee' | transloco }}</th>
+            <th>{{ 'request.col.direction' | transloco }}</th>
+            <th>{{ 'request.col.due' | transloco }}</th>
+            <th>{{ 'request.col.updated' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.id) {
+            <tr>
+              <td><span [class]="'status ' + r.status">{{ 'request.status.' + r.status | transloco }}</span></td>
+              <td>
+                <a [routerLink]="['/o', context.current()?.id, 'requests', r.id]">{{ r.title }}</a>
+                <span class="sub">{{ 'request.type.' + r.type | transloco }}</span>
+              </td>
+              <td>
+                <a [routerLink]="['/o', context.current()?.id, 'employees', r.employeeId]">
+                  @if (numberOf(r.employeeId); as no) { <span class="emp-no">{{ no }}</span> }{{ nameOf(r.employeeId) }}
+                </a>
+              </td>
+              <td>{{ 'request.direction.' + r.direction | transloco }}</td>
+              <td>{{ r.dueDate ?? '' }}</td>
+              <td>{{ updated(r) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

@@ -117,7 +117,8 @@
         "noContract": "No contract",
         "office": "Office settings",
         "agreement": "Agreement check",
-        "certificateEnd": "Certificate ending"
+        "certificateEnd": "Certificate ending",
+        "requests": "To review"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. File the acquisition notification (enter the acquisition date and enroll).",
@@ -126,7 +127,8 @@
         "categoryChange": "Becomes \"{{next}}\" from {{date}} (still insured). A category change notification is needed.",
         "noContract": "No employment contract in effect today, so the category cannot be judged.",
         "agreement": "A certificate of coverage under a social security agreement (from {{date}}) is valid, but the person is enrolled in an exempt insurance. Check whether a loss notice (reason: social security agreement) is needed.",
-        "certificateEnd": "The certificate of coverage ends, so the person joins Japanese social insurance from {{date}}. Prepare the acquisition notice (if the assignment is extended, check the extended certificate)."
+        "certificateEnd": "The certificate of coverage ends, so the person joins Japanese social insurance from {{date}}. Prepare the acquisition notice (if the assignment is extended, check the extended certificate).",
+        "requests": "{{count}} answered requests or change applications from employees are waiting for review."
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -135,7 +137,8 @@
       "toSettings": "Office settings",
       "toRevisions": "See revision candidates",
       "hint": "Calculated each time from contracts, office settings and enrollment. Shows changes up to 60 days ahead. Loss by age (70/75) is in the age list below.",
-      "error": "Could not load data for the to-do list."
+      "error": "Could not load data for the to-do list.",
+      "toRequests": "Review"
     }
   },
   "nav": {
@@ -152,7 +155,8 @@
       "monthly": "Monthly",
       "revision": "Yearly / as needed",
       "setup": "Setup"
-    }
+    },
+    "requests": "Requests"
   },
   "employee": {
     "list": {
@@ -318,13 +322,18 @@
       "roman": "Use roman letters (A–Z).",
       "phone": "Enter the phone number in digits.",
       "personNameIncomplete": "Enter the surname and its reading.",
-      "filingNameMissing": "The chosen name has not been entered."
+      "filingNameMissing": "The chosen name has not been entered.",
+      "accountNumber": "Enter a 7-digit account number.",
+      "holderKana": "Enter the account holder in full-width katakana (spaces, parentheses, periods and hyphens are allowed).",
+      "birthTooYoung": "The person would be under 15 on the hire date. Check the date of birth and hire date.",
+      "bankIncomplete": "When entering a bank account, fill in the bank, branch, type, number and holder."
     },
     "error": {
       "save": "Couldn't save. Try again later.",
       "load": "Couldn't load.",
       "notFound": "Employee not found.",
-      "notAdmin": "Only administrators of this office can add or edit employees."
+      "notAdmin": "Only administrators of this office can add or edit employees.",
+      "invalid": "Please fix the fields marked in red."
     },
     "detail": {
       "back": "Employees",
@@ -1926,5 +1935,269 @@
     "prefectureHint": "Table from {{from}}. Use the prefecture of the workplace (the office that manages personnel, labor and payroll), not where the housing is. If the head office and branches form one covered office, choose again.",
     "movedIn": "Moved in mid-month on",
     "movedInHint": "Prorated: monthly value × days from move-in ÷ days in the month."
+  },
+  "invite": {
+    "accept": {
+      "title": "Create your My Page account",
+      "lead": "This is an invitation from your company. Choose a name, email and password to see your social insurance information and answer requests from the company.",
+      "emailHint": "If the company specified an email address in the invitation, register with that address.",
+      "submit": "Create account",
+      "submitting": "Creating…",
+      "hasAccount": "Already have an account?",
+      "otherAccount": "You are signed in with another account. To use this invitation, sign out and open this link again."
+    },
+    "error": {
+      "badLink": "The invitation link is invalid. Ask the person in charge to send it again.",
+      "notFound": "This invitation was not found (it may have been revoked). Please check with the person in charge.",
+      "used": "This invitation has already been used. If you created the account, please sign in.",
+      "expired": "This invitation has expired. Ask the person in charge for a new one.",
+      "email": "This invitation is for a different email address. Register with the invited address.",
+      "kind": "This invitation is not for My Page.",
+      "denied": "The invitation could not be used (expired, already used, or a different address). Please check with the person in charge."
+    }
+  },
+  "myPageCard": {
+    "title": "My Page",
+    "sendRequest": "Send a request",
+    "linked": "Has a My Page account",
+    "invited": "Invited",
+    "expires": "Expires {{date}}",
+    "onlyFor": "registration with {{email}} only",
+    "copy": "Copy link",
+    "copied": "Copied",
+    "revoke": "Revoke",
+    "linkHint": "Send this link to the employee (email, chat, etc.). Anyone who has the link can create an account as this person, so send it carefully.",
+    "email": "Employee's email address",
+    "emailHint": "The invitation works only when registering with this address, so it cannot be used even if the link reaches someone else. If empty, anyone with the link can register.",
+    "invite": "Create invitation link",
+    "requests": "Requests",
+    "noRequests": "None yet.",
+    "error": {
+      "load": "Could not load My Page information.",
+      "create": "Could not create the invitation.",
+      "revoke": "Could not revoke the invitation."
+    }
+  },
+  "request": {
+    "listTitle": "Requests",
+    "listLead": "Requests to employees (onboarding, change notices, etc.) and change applications from employees. Items to review are shown first.",
+    "new": "Send a request",
+    "newLead": "Pick a template, add or remove questions, and send to one or many employees. Approved answers are written to the employee's record (with change history).",
+    "filter": "Filter by status",
+    "empty": "No requests with this status.",
+    "status": {
+      "all": "All",
+      "open": "Awaiting answer",
+      "submitted": "To review",
+      "approved": "Approved",
+      "rejected": "Returned"
+    },
+    "type": {
+      "onboarding": "Onboarding",
+      "change": "Change notice",
+      "custom": "Custom"
+    },
+    "typeHint": {
+      "onboarding": "Asks for contact, commute and bank account together.",
+      "change": "Asks for postal code, address and commute after a move.",
+      "custom": "Add your own questions."
+    },
+    "direction": {
+      "toEmployee": "From the company",
+      "fromEmployee": "From the employee"
+    },
+    "defaultTitle": {
+      "onboarding": "Onboarding information",
+      "change": "Please report your changes"
+    },
+    "col": {
+      "status": "Status",
+      "title": "Title",
+      "employee": "Employee",
+      "direction": "Direction",
+      "due": "Due",
+      "updated": "Updated",
+      "type": "Template",
+      "question": "Question",
+      "now": "Current",
+      "answer": "Answer"
+    },
+    "step": {
+      "content": "1. Content",
+      "to": "2. Recipients"
+    },
+    "questions": "Questions",
+    "noQuestions": "No questions. Add some below.",
+    "writesTo": "Answer is written to the employee record",
+    "required": "Required",
+    "up": "Move up",
+    "down": "Move down",
+    "addField": "Add an employee record field",
+    "addCustom": "Add a custom question",
+    "qtypeLabel": "Answer type",
+    "qtype": {
+      "text": "Text",
+      "date": "Date",
+      "number": "Number",
+      "choice": "Choice",
+      "yesno": "Yes / No"
+    },
+    "choices": "Choices",
+    "choicesHint": "Separate with commas, at least two.",
+    "add": "Add",
+    "addHint": "Answers to custom questions are only kept as a record and are not written to the employee record. My Number is not collected here.",
+    "searchPeople": "Search by name, kana or employee number",
+    "selectAll": "Select all shown",
+    "clearAll": "Clear selection",
+    "selectedCount": "{{count}} selected",
+    "noAccount": "No My Page",
+    "noAccountWarn": "{{count}} of the selected people have no My Page account yet. The request is saved, but they can see it only after creating an account (invite them from the employee page).",
+    "problem": {
+      "title": "Enter a title.",
+      "noQuestion": "Add at least one question.",
+      "noEmployee": "Select at least one recipient.",
+      "due": "The due date must be today or later."
+    },
+    "send": "Send to {{count}}",
+    "sending": "Sending…",
+    "dueOn": "Due {{date}}",
+    "answers": "Answers",
+    "waiting": "No answer yet.",
+    "commentWas": "Previous comment: {{comment}}",
+    "decide": "Approve or return",
+    "willChange": "Approving will update these fields in the employee record (kept in the change history).",
+    "nothingToWrite": "Nothing will be written (only record-only questions, or the same values as now).",
+    "comment": "Comment",
+    "commentHint": "When returning, write what needs fixing (required). Optional when approving; it is shown in the employee's notice.",
+    "reject": "Return",
+    "approve": "Approve",
+    "approveAndWrite": "Approve and write",
+    "delete": "Delete this request",
+    "confirmDelete": "Delete",
+    "notice": {
+      "approved": "\"{{title}}\" was approved",
+      "rejected": "\"{{title}}\" was returned"
+    },
+    "now": "Now: {{value}}",
+    "same": "(same as now)",
+    "noAnswer": "(no answer)",
+    "noField": "Record only",
+    "yesno": {
+      "yes": "Yes",
+      "no": "No"
+    },
+    "answerError": {
+      "required": "Please answer.",
+      "format": "Invalid format.",
+      "tooLong": "Up to 1000 characters."
+    },
+    "field": {
+      "contact": {
+        "postalCode": "Postal code",
+        "address": "Address",
+        "phone": "Phone",
+        "email": "Email"
+      },
+      "commute": {
+        "method": "Commute method",
+        "route": "Commute route"
+      },
+      "bankAccount": {
+        "bankName": "Bank",
+        "branchName": "Branch",
+        "accountType": "Account type",
+        "accountNumber": "Account number",
+        "holderKana": "Account holder (katakana)"
+      }
+    },
+    "fieldHint": {
+      "contact": {
+        "postalCode": "7 digits, with or without a hyphen.",
+        "address": "As on your resident record.",
+        "phone": "",
+        "email": ""
+      },
+      "commute": {
+        "method": "Train, bus, car, etc.",
+        "route": "e.g. A Station – B Station"
+      },
+      "bankAccount": {
+        "bankName": "",
+        "branchName": "",
+        "accountType": "",
+        "accountNumber": "7 digits",
+        "holderKana": "Full-width katakana"
+      }
+    },
+    "error": {
+      "load": "Could not load requests.",
+      "send": "Could not send the request.",
+      "approve": "Could not approve.",
+      "reject": "Could not return.",
+      "delete": "Could not delete.",
+      "notFound": "Request not found."
+    }
+  },
+  "me": {
+    "title": "My Page",
+    "hello": "Hello, {{name}}",
+    "inbox": "Inbox",
+    "inboxEmpty": "No notices.",
+    "kind": {
+      "request": "Request",
+      "notice": "Notice"
+    },
+    "requests": "Requests and applications",
+    "applyChange": "Apply for a change",
+    "noRequests": "No requests or applications.",
+    "toMe": "Requests from the company",
+    "fromMe": "My applications",
+    "status": {
+      "open": "Please answer",
+      "submitted": "Under review",
+      "approved": "Approved",
+      "rejected": "Returned (please fix and resend)"
+    },
+    "answer": "Answer",
+    "premiumHint": "Premiums are calculated as standard monthly remuneration (grade) × rate. Click a month to see the formula. If it differs from the payroll deduction, ask the person in charge.",
+    "noOfficeCopy": "Premiums are not ready yet (ask the person in charge to save the office settings once).",
+    "profile": "My information",
+    "fixInfo": "Apply when something changes",
+    "name": "Name",
+    "health": "Health insurance",
+    "pension": "Employees' pension",
+    "enrolledSince": "Enrolled since {{date}}",
+    "notEnrolled": "Not enrolled",
+    "bank": "Salary account",
+    "answerLead": "Enter your answers and press Send. The person in charge will review them; once approved, the company record is updated.",
+    "send": "Send",
+    "sending": "Sending…",
+    "sent": "Sent. Please wait for the review.",
+    "rejectedComment": "Reason for return: {{comment}}",
+    "adminComment": "Comment: {{comment}}",
+    "afterSubmit": {
+      "open": "",
+      "submitted": "The person in charge is reviewing it.",
+      "approved": "Approved. The company record has been updated.",
+      "rejected": ""
+    },
+    "chooseFields": "Choose what to change",
+    "group": {
+      "contact": "Contact",
+      "commute": "Commute",
+      "bankAccount": "Salary account"
+    },
+    "changeHint": "Apply to the company for a change of address, phone number, salary account, etc. Once approved, the company record is updated.",
+    "newValues": "New values",
+    "sendChange": "Apply",
+    "changeTitle": "Change application",
+    "noFieldChosen": "Choose at least one item to change.",
+    "error": {
+      "load": "Could not load My Page.",
+      "noEmployee": "Your employee record was not found. Please check with the person in charge.",
+      "lists": "Could not load the inbox and requests.",
+      "request": "Could not open this request.",
+      "submit": "Could not send. Please try again."
+    }
   }
 }

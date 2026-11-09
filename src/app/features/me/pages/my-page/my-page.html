@@ -1,0 +1,112 @@
+<app-me-header [officeName]="me.office()?.name ?? null" />
+
+<main class="me-main">
+  @if (me.loading() && !me.employee()) {
+    <p class="muted">{{ 'common.loading' | transloco }}</p>
+  } @else if (me.errorKey(); as key) {
+    <div class="alert alert-danger">{{ key | transloco }}</div>
+  } @else if (me.employee(); as e) {
+    <h1>{{ 'me.hello' | transloco: { name: e.lastName + ' ' + e.firstName } }}</h1>
+
+    @if (listError(); as key) {
+      <div class="alert alert-danger">{{ key | transloco }}</div>
+    }
+
+    <!-- 受信箱 -->
+    <section class="card">
+      <div class="head">
+        <h2>{{ 'me.inbox' | transloco }} @if (unread() > 0) { <span class="unread">{{ unread() }}</span> }</h2>
+      </div>
+      @if (inbox().length === 0) {
+        <p class="muted">{{ 'me.inboxEmpty' | transloco }}</p>
+      } @else {
+        <ul class="inbox">
+          @for (n of inbox(); track n.id) {
+            <li [class.is-unread]="!n.readAt">
+              <button type="button" class="inbox-item" (click)="open(n)">
+                <span class="kind">{{ 'me.kind.' + n.kind | transloco }}</span>
+                <span class="title">{{ n.title }}</span>
+                <span class="date">{{ date(n) }}</span>
+              </button>
+              @if (n.body) { <p class="body">{{ n.body }}</p> }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- 依頼と申請 -->
+    <section class="card">
+      <div class="head">
+        <h2>{{ 'me.requests' | transloco }}</h2>
+        <a class="btn" routerLink="/me/change">{{ 'me.applyChange' | transloco }}</a>
+      </div>
+      @if (toMe().length === 0 && fromMe().length === 0) {
+        <p class="muted">{{ 'me.noRequests' | transloco }}</p>
+      }
+      @if (toMe().length > 0) {
+        <h3>{{ 'me.toMe' | transloco }}</h3>
+        <ul class="requests">
+          @for (r of toMe(); track r.id) {
+            <li>
+              <span [class]="'status ' + r.status">{{ 'me.status.' + r.status | transloco }}</span>
+              <a [routerLink]="['/me', 'requests', r.id]">{{ r.title }}</a>
+              @if (r.dueDate) { <span class="sub">{{ 'request.dueOn' | transloco: { date: r.dueDate } }}</span> }
+              @if (answerable(r.status)) { <a class="btn btn-small" [routerLink]="['/me', 'requests', r.id]">{{ 'me.answer' | transloco }}</a> }
+            </li>
+          }
+        </ul>
+      }
+      @if (fromMe().length > 0) {
+        <h3>{{ 'me.fromMe' | transloco }}</h3>
+        <ul class="requests">
+          @for (r of fromMe(); track r.id) {
+            <li>
+              <span [class]="'status ' + r.status">{{ 'me.status.' + r.status | transloco }}</span>
+              <a [routerLink]="['/me', 'requests', r.id]">{{ r.title }}</a>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- 保険料 -->
+    @if (me.office(); as office) {
+      <app-premium-card [employee]="e" [office]="office" [months]="months" />
+      <p class="hint">{{ 'me.premiumHint' | transloco }}</p>
+    } @else {
+      <p class="hint">{{ 'me.noOfficeCopy' | transloco }}</p>
+    }
+
+    <!-- 自分の情報 -->
+    <section class="card">
+      <div class="head">
+        <h2>{{ 'me.profile' | transloco }}</h2>
+        <a class="link" routerLink="/me/change">{{ 'me.fixInfo' | transloco }}</a>
+      </div>
+      <dl class="info">
+        <dt>{{ 'employee.field.employeeNumber' | transloco }}</dt><dd>{{ e.employeeNumber ?? '—' }}</dd>
+        <dt>{{ 'me.name' | transloco }}</dt><dd>{{ e.lastName }} {{ e.firstName }}（{{ e.lastNameKana }} {{ e.firstNameKana }}）</dd>
+        <dt>{{ 'employee.field.hireDate' | transloco }}</dt><dd>{{ e.hireDate }}</dd>
+        <dt>{{ 'me.health' | transloco }}</dt>
+        <dd>{{ (e.health.enrolled ? 'me.enrolledSince' : 'me.notEnrolled') | transloco: { date: e.health.acquiredDate } }}</dd>
+        <dt>{{ 'me.pension' | transloco }}</dt>
+        <dd>{{ (e.pension.enrolled ? 'me.enrolledSince' : 'me.notEnrolled') | transloco: { date: e.pension.acquiredDate } }}</dd>
+        <dt>{{ 'employee.field.postalCode' | transloco }}</dt><dd>{{ postal(e.contact.postalCode) || '—' }}</dd>
+        <dt>{{ 'employee.field.address' | transloco }}</dt><dd>{{ e.contact.address ?? '—' }}</dd>
+        <dt>{{ 'employee.field.phone' | transloco }}</dt><dd>{{ e.contact.phone ?? '—' }}</dd>
+        <dt>{{ 'employee.field.email' | transloco }}</dt><dd>{{ e.contact.email ?? '—' }}</dd>
+        <dt>{{ 'employee.field.commuteMethod' | transloco }}</dt><dd>{{ e.commute.method ?? '—' }}</dd>
+        <dt>{{ 'employee.field.commuteRoute' | transloco }}</dt><dd>{{ e.commute.route ?? '—' }}</dd>
+        <dt>{{ 'me.bank' | transloco }}</dt>
+        <dd>
+          @if (e.bankAccount.bankName) {
+            {{ e.bankAccount.bankName }} {{ e.bankAccount.branchName ?? '' }}
+            @if (e.bankAccount.accountType) { {{ 'employee.accountType.' + e.bankAccount.accountType | transloco }} }
+            {{ masked(e.bankAccount.accountNumber) }}
+          } @else { — }
+        </dd>
+      </dl>
+    </section>
+  }
+</main>

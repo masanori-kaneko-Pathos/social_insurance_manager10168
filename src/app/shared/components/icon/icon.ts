@@ -8,7 +8,8 @@ export type IconName =
   | 'bonus'
   | 'revision'
   | 'regular'
-  | 'settings';
+  | 'settings'
+  | 'inbox';
 
 /**
  * 小さな線画のアイコン（16px。色は文字色をそのまま使う）
@@ -67,6 +68,10 @@ export type IconName =
           <path d="M2 4.5h7M12.5 4.5h1.5M2 11.5h1.5M7 11.5h7" />
           <circle cx="10.75" cy="4.5" r="1.75" />
           <circle cx="5.25" cy="11.5" r="1.75" />
+        }
+        @case ('inbox') {
+          <path d="M2 9.5l2-6.5h8l2 6.5v4H2z" />
+          <path d="M2 9.5h3.5l1 1.5h3l1-1.5H14" />
         }
       }
     </svg>

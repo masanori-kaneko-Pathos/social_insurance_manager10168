@@ -20,6 +20,7 @@ import {
   sortMonthOf,
 } from '../../../employees/logic/age-events';
 import { OfficeContext } from '../../../office/office-context.service';
+import { RequestService } from '../../../requests/request.service';
 import { ContractDoc } from '../../../../core/models/contract';
 import { CriteriaDoc } from '../../../../core/models/master';
 import { ContractService } from '../../../employees/contract.service';
@@ -59,6 +60,7 @@ export class Dashboard {
   private readonly employeesApi = inject(EmployeeService);
   private readonly contractsApi = inject(ContractService);
   private readonly criteriaApi = inject(CriteriaService);
+  private readonly requestsApi = inject(RequestService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -136,6 +138,8 @@ export class Dashboard {
   private readonly contracts = signal<Map<string, ContractDoc[]>>(new Map());
   private readonly criteria = signal<CriteriaDoc[] | null>(null);
   readonly todosLoading = signal(true);
+  /** 確認待ちの依頼・申請の数 */
+  readonly submittedRequests = signal(0);
 
   /** 事業所の設定で、判定の前に要るものが足りない */
   readonly officeTodos = computed(() => {
@@ -198,6 +202,12 @@ export class Dashboard {
       this.loading.set(false);
     }
     await this.loadTodos(officeId);
+    if (this.context.isAdmin()) {
+      this.requestsApi
+        .countSubmitted(officeId)
+        .then((n) => this.submittedRequests.set(n))
+        .catch((err) => console.error(err));
+    }
   }
 
   /** やることの材料：在籍している人の契約と、加入の基準（退職した人の契約は読まない） */

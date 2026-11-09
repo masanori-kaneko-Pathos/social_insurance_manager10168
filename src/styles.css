@@ -198,3 +198,25 @@ input[type='password']::-ms-clear {
   background: var(--color-danger-bg);
   color: var(--color-danger-text);
 }
+/* ===== リンク =====
+   ブラウザの初期の色（青・踏んだら紫）をやめ、文字の色＋下線にそろえる。
+   :where() で詳しさを0にして、.btn など部品側の色が必ず勝つようにする */
+a:where(:link, :visited) {
+  color: var(--color-text);
+  text-decoration-color: var(--color-accent-sub);
+  text-underline-offset: 2px;
+}
+
+a:where(:link, :visited):hover {
+  color: var(--color-primary-hover);
+  text-decoration-color: currentColor;
+}
+
+/* 名前の前に出す社員番号（同姓・同名の見分け用） */
+.emp-no {
+  margin-right: var(--space-xs);
+  font-size: var(--font-xs);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-sub);
+}

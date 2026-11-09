@@ -54,6 +54,28 @@ export class AuthService {
     }
   }
 
+  /**
+   * 招待からの新規登録：Auth のアカウントを作り、attach（users などを書く）を呼ぶ
+   * attach が失敗したら Auth のアカウントも消して「中途半端」を残さない（signUp と同じ考え方）
+   */
+  async signUpWith(
+    email: string,
+    password: string,
+    displayName: string,
+    attach: (user: User, lang: Lang) => Promise<void>,
+  ): Promise<void> {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    try {
+      await updateProfile(cred.user, { displayName });
+      await attach(cred.user, this.language.lang() as Lang);
+      const profile = await this.profiles.load(cred.user.uid);
+      if (profile) this.language.applyFromProfile(profile.lang);
+    } catch (err) {
+      await deleteUser(cred.user).catch(() => { });
+      throw err;
+    }
+  }
+
   async login(email: string, password: string): Promise<void> {
     const cred = await signInWithEmailAndPassword(auth, email, password);
     const ok = await this.loadProfileOrSignOut(cred.user);

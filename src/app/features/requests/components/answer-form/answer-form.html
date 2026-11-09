@@ -1,0 +1,48 @@
+<div class="answers">
+  @for (q of questions(); track q.id) {
+    <div class="field" [class.wide]="q.field === 'contact.address' || q.field === 'commute.route' || q.type === 'text' && !q.field">
+      <label [for]="inputId(q)">
+        @if (q.field) { {{ 'request.field.' + q.field | transloco }} } @else { {{ q.label }} }
+        @if (!q.required) { <span class="optional">{{ 'common.optional' | transloco }}</span> }
+      </label>
+      @if (q.field && current()[q.field]; as now) {
+        <span class="now">{{ 'request.now' | transloco: { value: now } }}</span>
+      }
+      @switch (q.type) {
+        @case ('date') {
+          <input [id]="inputId(q)" class="input" type="date" [value]="value(q.id)" [disabled]="disabled()"
+                 [class.is-invalid]="errorOf(q.id)" (input)="set(q.id, $any($event.target).value)" />
+        }
+        @case ('number') {
+          <input [id]="inputId(q)" class="input num" inputmode="decimal" [value]="value(q.id)" [disabled]="disabled()"
+                 [class.is-invalid]="errorOf(q.id)" (input)="set(q.id, $any($event.target).value)" />
+        }
+        @case ('choice') {
+          <select [id]="inputId(q)" class="input" [value]="value(q.id)" [disabled]="disabled()"
+                  [class.is-invalid]="errorOf(q.id)" (change)="set(q.id, $any($event.target).value)">
+            <option value="">{{ 'common.select' | transloco }}</option>
+            @for (c of q.choices ?? []; track c) {
+              <option [value]="c" [selected]="value(q.id) === c">{{ choiceLabel(q, c) | transloco }}</option>
+            }
+          </select>
+        }
+        @case ('yesno') {
+          <div class="yesno" [id]="inputId(q)">
+            @for (c of ['yes', 'no']; track c) {
+              <label class="check">
+                <input type="radio" [name]="inputId(q)" [value]="c" [checked]="value(q.id) === c" [disabled]="disabled()"
+                       (change)="set(q.id, c)" />{{ 'request.yesno.' + c | transloco }}
+              </label>
+            }
+          </div>
+        }
+        @default {
+          <input [id]="inputId(q)" class="input" [value]="value(q.id)" [disabled]="disabled()" maxlength="1000"
+                 [class.is-invalid]="errorOf(q.id)" (input)="set(q.id, $any($event.target).value)" />
+          @if (q.field) { <span class="hint">{{ 'request.fieldHint.' + q.field | transloco }}</span> }
+        }
+      }
+      @if (errorOf(q.id); as e) { <span class="field-error">{{ e | transloco }}</span> }
+    </div>
+  }
+</div>

@@ -24,6 +24,9 @@
     <a [routerLink]="['/o', officeId(), 'employees']" routerLinkActive="active">
       <app-icon name="people" />{{ 'nav.employees' | transloco }}
     </a>
+    <a [routerLink]="['/o', officeId(), 'requests']" routerLinkActive="active">
+      <app-icon name="inbox" />{{ 'nav.requests' | transloco }}
+    </a>
 
     <span class="nav-group">{{ 'nav.group.monthly' | transloco }}</span>
     <a [routerLink]="['/o', officeId(), 'payrolls']" routerLinkActive="active">

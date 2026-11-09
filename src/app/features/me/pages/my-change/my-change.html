@@ -1,0 +1,38 @@
+<app-me-header [officeName]="me.office()?.name ?? null" />
+
+<main class="me-main">
+  <a class="back" routerLink="/me">← {{ 'me.title' | transloco }}</a>
+  <h1>{{ 'me.applyChange' | transloco }}</h1>
+
+  @if (errorKey(); as key) {
+    <div class="alert alert-danger">{{ key | transloco }}</div>
+  }
+
+  <section class="card">
+    <h2>{{ 'me.chooseFields' | transloco }}</h2>
+    @for (g of groups; track g.key) {
+      <h3>{{ 'me.group.' + g.key | transloco }}</h3>
+      <div class="fields">
+        @for (f of g.fields; track f) {
+          <label class="check"><input type="checkbox" [checked]="chosen().has(f)" (change)="toggle(f)" />{{ 'request.field.' + f | transloco }}</label>
+        }
+      </div>
+    }
+    <p class="hint">{{ 'me.changeHint' | transloco }}</p>
+  </section>
+
+  @if (questions().length > 0) {
+    <section class="card">
+      <h2>{{ 'me.newValues' | transloco }}</h2>
+      <app-answer-form [questions]="questions()" [(answers)]="answers" [showErrors]="submitted()" [current]="current()" />
+      <div class="actions">
+        <a class="btn" routerLink="/me">{{ 'common.cancel' | transloco }}</a>
+        <button type="button" class="btn btn-primary" [disabled]="sending()" (click)="send()">
+          {{ (sending() ? 'me.sending' : 'me.sendChange') | transloco }}
+        </button>
+      </div>
+    </section>
+  } @else if (submitted()) {
+    <p class="field-error">{{ 'me.noFieldChosen' | transloco }}</p>
+  }
+</main>

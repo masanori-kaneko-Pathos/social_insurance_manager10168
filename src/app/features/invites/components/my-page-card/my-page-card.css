@@ -1,0 +1,120 @@
+:host {
+  display: block;
+}
+
+.card {
+  margin-bottom: var(--space-lg);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+h2 {
+  margin: 0;
+  font-size: var(--font-md);
+}
+
+h3 {
+  margin: var(--space-lg) 0 var(--space-sm);
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+  font-weight: 400;
+}
+
+.status,
+.req-status {
+  display: inline-block;
+  padding: 0 6px;
+  font-size: var(--font-xs);
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.status.done,
+.req-status.approved {
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+}
+
+.req-status.submitted {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.sub {
+  margin-left: var(--space-sm);
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.link-row,
+.invite-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-sm);
+}
+
+.link-row .input {
+  flex: 1 1 320px;
+  font-size: var(--font-xs);
+}
+
+.invite-row .field {
+  flex: 1 1 280px;
+  margin-bottom: 0;
+}
+
+.hint {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.optional {
+  margin-left: var(--space-xs);
+  padding: 0 6px;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+}
+
+.link {
+  padding: 0 var(--space-xs);
+  font: inherit;
+  font-size: var(--font-sm);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link.danger {
+  color: var(--color-danger-text);
+}
+
+.requests {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.requests li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-sm);
+}
+
+.muted {
+  margin: 0;
+  color: var(--color-text-sub);
+}

@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
+  FormGroup,
   ReactiveFormsModule,
   ValidationErrors,
   ValidatorFn,
@@ -62,12 +63,18 @@ function wholeForm(g: AbstractControl): ValidationErrors | null {
     if (!v.firstNameKana.trim()) errors['firstNameKanaRequired'] = true;
   }
   if (v.birthDate && v.birthDate > todayLocal()) errors['birthFuture'] = true;
+  // 入社日に15歳未満は雇えない（労働基準法56条。年少者の例外は、このアプリでは扱わない）
+  else if (v.birthDate && v.hireDate && v.hireDate < addYears(v.birthDate, 15)) errors['birthTooYoung'] = true;
   if (v.retireDate && v.hireDate && v.retireDate < v.hireDate) errors['retireBeforeHire'] = true;
   for (const k of ['health', 'pension'] as const) {
     const e = v[k];
     if (e.enrolled && !e.acquiredDate) errors[`${k}AcquiredRequired`] = true;
     if (e.acquiredDate && e.lostDate && e.lostDate <= e.acquiredDate) errors[`${k}LostBeforeAcquired`] = true;
   }
+  // 口座：1つでも入れたら、銀行・支店・種別・番号・名義を全部（振込に使えない半端な口座を残さない）
+  const b = v.bankAccount;
+  const bankFilled = [b.bankName, b.branchName, b.accountType, b.accountNumber, b.holderKana].map((x) => !!x?.trim());
+  if (bankFilled.some((x) => x) && !bankFilled.every((x) => x)) errors['bankIncomplete'] = true;
   if (v.hasForeign) {
     const f = v.foreign;
     // ローマ字氏名か、ない理由のどちらか
@@ -105,7 +112,8 @@ const PATTERN_KEYS: Record<string, string> = {
   phone: 'employee.validation.phone',
   postalCode: 'employee.validation.postalCode',
   basicPensionNumber: 'employee.validation.basicPensionNumber',
-  accountNumber: 'employee.validation.digits',
+  accountNumber: 'employee.validation.accountNumber',
+  holderKana: 'employee.validation.holderKana',
   email: 'employee.validation.email',
   nationality: 'employee.validation.country',
   certCountry: 'employee.validation.country',
@@ -225,7 +233,7 @@ export class EmployeeForm {
           branchName: [v.bankAccount.branchName, [Validators.maxLength(50)]],
           accountType: [v.bankAccount.accountType],
           accountNumber: [v.bankAccount.accountNumber, [halfPattern(PATTERNS.accountNumber)]],
-          holderKana: [v.bankAccount.holderKana, [Validators.maxLength(100)]],
+          holderKana: [v.bankAccount.holderKana, [Validators.pattern(PATTERNS.holderKana), Validators.maxLength(100)]],
         }),
         collectionMethod: [v.collectionMethod],
         foreign: this.fb.group({
@@ -382,6 +390,12 @@ export class EmployeeForm {
   async submit(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      // 何も起きないように見えないよう、ボタンの横に知らせて、最初の赤い欄まで動かす
+      this.errorKey.set('employee.error.invalid');
+      console.warn('[employee-form] 直すところ', invalidPaths(this.form));
+      setTimeout(() =>
+        document.querySelector('.is-invalid, .field-error')?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+      );
       return;
     }
     const officeId = this.context.current()?.id;
@@ -407,4 +421,22 @@ export class EmployeeForm {
       this.submitting.set(false);
     }
   }
+}
+
+/** エラーのある欄の場所（'foreign.certFrom' など。まとまり全体のエラーは '(全体)' つき） */
+function invalidPaths(c: AbstractControl, path = ''): string[] {
+  const out: string[] = [];
+  if (c.errors) out.push(`${path || '(全体)'}: ${Object.keys(c.errors).join(',')}`);
+  if (c instanceof FormGroup) {
+    for (const [k, child] of Object.entries(c.controls)) out.push(...invalidPaths(child, path ? `${path}.${k}` : k));
+  }
+  return out;
+}
+
+/** 'YYYY-MM-DD' の n 年後（2/29 生まれは、うるう年でない年は 3/1 として比べる） */
+function addYears(date: string, n: number): string {
+  const y = Number(date.slice(0, 4)) + n;
+  const md = date.slice(5);
+  const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  return md === '02-29' && !leap ? `${y}-03-01` : `${y}-${md}`;
 }
