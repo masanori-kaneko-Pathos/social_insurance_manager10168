@@ -1,0 +1,161 @@
+<a class="back" [routerLink]="['/o', context.current()?.id, 'payrolls']">
+  ← {{ 'payroll.listTitle' | transloco }}
+</a>
+
+<h1>{{ 'revision.title' | transloco }}</h1>
+<p class="lead">{{ 'revision.lead' | transloco: { from: fromMonth } }}</p>
+
+@if (errorKey(); as e) {
+  <div class="alert alert-danger">{{ e | transloco }}</div>
+}
+@if (savedKey(); as s) {
+  <div class="alert alert-success" role="status">{{ s | transloco }}</div>
+}
+
+<!-- 1行の中身（候補・様子見・反映済み・当たらなかったもの で使い回す） -->
+<ng-template #row let-v>
+  <div class="item">
+    <div class="item-head">
+      <span class="badge type-{{ v.item.type }}">{{ typeKey(v) | transloco }}</span>
+      <a class="who" [routerLink]="['/o', context.current()?.id, 'employees', v.employee.id]">{{ name(v.employee) }}</a>
+      <span class="months mono">
+        {{ 'revision.span' | transloco: { start: startOf(v), revised: v.item.result.revisedFrom } }}
+      </span>
+      @if (v.item.type === 'irregular') {
+        <span class="sub">{{ 'revision.source.' + v.item.result.start.source | transloco }}・{{ 'revision.direction.' + v.item.result.start.direction | transloco }}</span>
+      } @else {
+        <span class="sub">{{ 'revision.leaveEnd' | transloco: { date: v.item.result.leaveEnd } }}</span>
+      }
+    </div>
+
+    <table class="months-table">
+      <thead>
+        <tr>
+          <th>{{ 'revision.col.month' | transloco }}</th>
+          <th class="num">{{ 'revision.col.days' | transloco }}</th>
+          <th class="num">{{ 'revision.col.amount' | transloco }}</th>
+          <th class="num">{{ 'revision.col.retro' | transloco }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (m of v.item.result.months; track m.month) {
+          <tr [class.unused]="m.payroll && !m.used">
+            <td class="mono">{{ m.month }}</td>
+            @if (m.payroll; as p) {
+              <td class="num mono">
+                {{ p.days }}
+                <span class="sub">／{{ 'revision.minDays' | transloco: { n: m.minDays } }}</span>
+              </td>
+              <td class="num mono">{{ yen(m.amount) }}</td>
+              <td class="num mono">{{ p.retro ? yen(p.retro) : '—' }}</td>
+            } @else {
+              <td colspan="3" class="sub">{{ 'revision.noRecord' | transloco }}</td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (v.item.result.average; as a) {
+      <p class="avg">
+        {{ 'revision.average' | transloco: { n: yen(a.average) } }}
+        @if (a.retro > 0) {
+          ・{{ 'revision.corrected' | transloco: { n: yen(a.corrected) } }}
+        }
+      </p>
+    }
+
+    @if (v.item.result.health; as h) {
+      <div class="judge">
+        @for (j of [
+          { key: 'health', v: h },
+          { key: 'pension', v: v.item.result.pension }
+        ]; track j.key) {
+          @if (j.v; as x) {
+            <span class="ins" [class.revise]="x.revise">
+              {{ 'revision.ins.' + j.key | transloco }}：
+              <span class="mono">{{ x.before.grade }}級 {{ yen(x.before.standard) }} → {{ x.after.grade }}級 {{ yen(x.after.standard) }}</span>
+              （{{ diffLabel(x.diff) }}）
+              @if (x.special) { <span class="badge">{{ 'revision.special' | transloco }}</span> }
+              {{ (x.revise ? 'revision.revise' : 'revision.keep') | transloco }}
+            </span>
+          } @else {
+            <span class="ins sub">{{ 'revision.ins.' + j.key | transloco }}：{{ 'revision.noPension' | transloco }}</span>
+          }
+        }
+      </div>
+    }
+
+    @if (v.group === 'other') {
+      <p class="why">{{ 'revision.status.' + v.item.result.status | transloco }}</p>
+    }
+    @if (v.group === 'waiting') {
+      <p class="why">{{ 'revision.waiting' | transloco: { n: missingOf(v) } }}</p>
+    }
+
+    @if (v.group === 'candidate' && context.isAdmin()) {
+      <div class="actions">
+        @if (v.item.type === 'leaveEnd') {
+          <label class="requested">
+            {{ 'revision.requestedOn' | transloco }}
+            <input class="input" type="date" [value]="requestedOf(v)" (change)="setRequested(v, $any($event.target).value)" />
+          </label>
+        }
+        <button type="button" class="btn btn-primary" [disabled]="!canReflect(v)" (click)="reflect(v)">
+          {{ (saving() === v.key ? 'revision.saving' : 'revision.reflect') | transloco }}
+        </button>
+      </div>
+      @if (v.item.type === 'leaveEnd') {
+        <p class="hint">{{ 'revision.hint.' + v.item.result.kind | transloco }}</p>
+      }
+    }
+  </div>
+</ng-template>
+
+@if (loading()) {
+  <p class="muted">{{ 'common.loading' | transloco }}</p>
+} @else {
+  @let g = groups();
+
+  <section class="card">
+    <h2>{{ 'revision.group.candidate' | transloco: { n: g.candidate.length } }}</h2>
+    @if (g.candidate.length === 0) {
+      <p class="muted">{{ 'revision.empty' | transloco }}</p>
+    }
+    @for (v of g.candidate; track v.key) {
+      <ng-container *ngTemplateOutlet="row; context: { $implicit: v }" />
+    }
+    <p class="hint">{{ 'revision.hint.priority' | transloco }}</p>
+  </section>
+
+  @if (g.waiting.length > 0) {
+    <section class="card">
+      <h2>{{ 'revision.group.waiting' | transloco: { n: g.waiting.length } }}</h2>
+      @for (v of g.waiting; track v.key) {
+        <ng-container *ngTemplateOutlet="row; context: { $implicit: v }" />
+      }
+    </section>
+  }
+
+  @if (g.reflected.length > 0) {
+    <section class="card">
+      <h2>{{ 'revision.group.reflected' | transloco: { n: g.reflected.length } }}</h2>
+      @for (v of g.reflected; track v.key) {
+        <ng-container *ngTemplateOutlet="row; context: { $implicit: v }" />
+      }
+    </section>
+  }
+
+  @if (g.other.length > 0) {
+    <section class="card">
+      <button type="button" class="toggle" [attr.aria-expanded]="showOther()" (click)="showOther.set(!showOther())">
+        {{ 'revision.group.other' | transloco: { n: g.other.length } }} {{ showOther() ? '▲' : '▼' }}
+      </button>
+      @if (showOther()) {
+        @for (v of g.other; track v.key) {
+          <ng-container *ngTemplateOutlet="row; context: { $implicit: v }" />
+        }
+      }
+    </section>
+  }
+}

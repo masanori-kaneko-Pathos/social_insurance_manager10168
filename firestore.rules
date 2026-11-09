@@ -367,7 +367,7 @@ service cloud.firestore {
           function validRemuneration(d) {
             return exactKeys(d, ['from', 'reason', 'monthlyAmount', 'health', 'pension', 'createdAt', 'updatedAt'])
               && d.from == remMonth && isMonth(remMonth)
-              && d.reason in ['acquisition', 'regular', 'irregular', 'other']
+              && d.reason in ['acquisition', 'regular', 'irregular', 'leaveEnd', 'other']
               && yen(d.monthlyAmount)
               && std(d.health) && std(d.pension);
           }
@@ -568,12 +568,12 @@ service cloud.firestore {
         // ----- 休業終了時改定の記録（ID ＝ 起算月） -----
         match /leaveEndDecisions/{startMonth} {
           function validLeaveEnd(d) {
-            return exactKeys(d, ['officeId', 'employeeId', 'startMonth', 'leaveKind', 'leaveEnd', 'revisedFrom',
+            return exactKeys(d, ['officeId', 'employeeId', 'startMonth', 'leaveKind', 'leaveEnd', 'requestedOn', 'revisedFrom',
                                  'usedMonths', 'total', 'average', 'monthlyAmount', 'health', 'pension',
                                  'createdAt', 'updatedAt'])
               && d.officeId == officeId && d.employeeId == employeeId
               && d.startMonth == startMonth && isMonth(startMonth) && isMonth(d.revisedFrom)
-              && d.leaveKind in ['maternity', 'childcare'] && isDate(d.leaveEnd)
+              && d.leaveKind in ['maternity', 'childcare'] && isDate(d.leaveEnd) && isDate(d.requestedOn)
               && d.usedMonths is list && d.usedMonths.size() <= 3
               && d.total is int && d.total >= 0 && yen(d.average) && yen(d.monthlyAmount)
               && std(d.health) && std(d.pension);

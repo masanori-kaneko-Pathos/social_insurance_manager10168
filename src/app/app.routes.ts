@@ -122,6 +122,11 @@ export const routes: Routes = [
               import('./features/payrolls/pages/regular/regular').then((m) => m.RegularPage),
           },
           {
+            path: 'revisions',
+            loadComponent: () =>
+              import('./features/payrolls/pages/revisions/revisions').then((m) => m.RevisionsPage),
+          },
+          {
             path: 'settings',
             data: { mode: 'edit' },
             loadComponent: () =>

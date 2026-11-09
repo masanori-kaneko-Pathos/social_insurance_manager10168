@@ -1,0 +1,141 @@
+.back {
+  display: inline-block;
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+h1 {
+  margin: 0;
+  font-size: var(--font-xl);
+}
+
+h2 {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-lg);
+}
+
+.lead {
+  margin: var(--space-xs) 0 var(--space-md);
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.card {
+  margin-bottom: var(--space-md);
+}
+
+.item {
+  padding: var(--space-sm) 0 var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.item:last-of-type {
+  border-bottom: none;
+}
+
+.item-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.who {
+  font-weight: 600;
+}
+
+.badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--color-highlight, #f2d6b3);
+  font-size: var(--font-xs, 12px);
+}
+
+.badge.type-leaveEnd {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.sub,
+.muted,
+.hint {
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.mono,
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.num {
+  text-align: right;
+}
+
+.months-table {
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+  margin: var(--space-xs) 0;
+}
+
+.months-table th,
+.months-table td {
+  padding: 2px var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.months-table tr.unused td {
+  color: var(--color-text-sub);
+  text-decoration: line-through;
+}
+
+.avg {
+  margin: var(--space-xs) 0;
+  font-size: var(--font-sm);
+}
+
+.judge {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--font-sm);
+}
+
+.ins.revise {
+  font-weight: 600;
+  color: var(--color-success-text);
+}
+
+.why {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-sm);
+  color: var(--color-warning-text);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.requested {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--font-sm);
+}
+
+.toggle {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: var(--font-lg);
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+}

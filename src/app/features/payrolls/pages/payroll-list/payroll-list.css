@@ -111,3 +111,9 @@ tr.future td {
   display: flex;
   gap: var(--space-sm);
 }
+
+.to-regular {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}

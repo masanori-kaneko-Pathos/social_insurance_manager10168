@@ -24,6 +24,9 @@
     <a [routerLink]="['/o', context.current()?.id, 'regular', regularYear()]">
       {{ 'payroll.toRegular' | transloco: { year: regularYear() } }} →
     </a>
+    <a [routerLink]="['/o', context.current()?.id, 'revisions']">
+      {{ 'payroll.toRevisions' | transloco }} →
+    </a>
   </p>
   <div class="pager">
     <a [routerLink]="[]" [queryParams]="{ to: prevTo() }">{{ 'payroll.prevYear' | transloco }}</a>

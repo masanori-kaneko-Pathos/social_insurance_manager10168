@@ -106,6 +106,7 @@ export interface LeaveEndDecisionDoc {
   startMonth: string; // 終了日の翌日が属する月（＝ ドキュメントID）
   leaveKind: 'maternity' | 'childcare'; // 産前産後休業終了時改定／育児休業等終了時改定
   leaveEnd: string; // 休業の終了日
+  requestedOn: string; // 本人から申出を受けた日（申出がないと届を出せない）
   revisedFrom: string; // 改定月（起算月から4か月目）
   usedMonths: string[];
   total: number;

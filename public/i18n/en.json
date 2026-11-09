@@ -550,7 +550,8 @@
       "acquisition": "On enrollment",
       "regular": "Annual review",
       "irregular": "Interim revision",
-      "other": "Other (e.g. after childcare leave)"
+      "other": "Other",
+      "leaveEnd": "Revision after maternity/childcare leave"
     },
     "selectGrade": "Select a grade",
     "gradeLabel": "Grade {{grade}}  JPY {{standard}}",
@@ -935,7 +936,8 @@
       "save": "Could not save. Please try again later.",
       "rows": "Some rows have problems. Fix them and save again (nothing was saved).",
       "badMonth": "The month is not valid."
-    }
+    },
+    "toRevisions": "Revision candidates (irregular / after leave)"
   },
   "regular": {
     "title": "Annual review {{year}}",
@@ -1475,6 +1477,74 @@
       "load": "Could not load dependents.",
       "save": "Could not save.",
       "delete": "Could not delete."
+    }
+  },
+  "revision": {
+    "title": "Revision candidates",
+    "lead": "Candidates for irregular revision and revision after maternity/childcare leave, based on payroll records. Only those starting from {{from}} are shown (the 2-year limitation period as a guide).",
+    "span": "Start {{start}} → revised from {{revised}}",
+    "leaveEnd": "Leave ended {{date}}",
+    "type": {
+      "irregular": "Irregular revision",
+      "maternity": "After maternity leave",
+      "childcare": "After childcare leave"
+    },
+    "source": {
+      "fixed": "Fixed wage changed",
+      "retro": "Retroactive pay",
+      "manual": "Added manually"
+    },
+    "direction": {
+      "up": "up",
+      "down": "down",
+      "unclear": "direction to confirm"
+    },
+    "col": {
+      "month": "Paid month",
+      "days": "Base days",
+      "amount": "Pay (cash + in kind)",
+      "retro": "Retroactive pay"
+    },
+    "minDays": "min {{n}}",
+    "noRecord": "No record yet",
+    "average": "Average {{n}} yen",
+    "corrected": "Corrected average (without retroactive pay) {{n}} yen",
+    "ins": {
+      "health": "Health insurance",
+      "pension": "Pension"
+    },
+    "special": "Upper/lower limit exception",
+    "revise": "→ revise",
+    "keep": "→ no change",
+    "noPension": "Not covered by pension in the revision month",
+    "waiting": "Can be judged after {{n}} more month(s) of records.",
+    "status": {
+      "shortDays": "Not applicable: a month is below the minimum base days.",
+      "noGradeDiff": "Not applicable: the grade difference is too small (2 grades for irregular, 1 grade after leave).",
+      "opposite": "Not applicable: the fixed wage and the average grade moved in opposite directions.",
+      "noStandard": "No current standard remuneration.",
+      "followedByChildcare": "Childcare leave started the day after maternity leave, so this is judged when childcare leave ends.",
+      "noChild": "The child condition cannot be confirmed (child under 3 at the end of childcare leave, or birth date for maternity leave)."
+    },
+    "requestedOn": "Date the employee requested",
+    "reflect": "Apply",
+    "saving": "Applying…",
+    "saved": "Applied. Added the standard remuneration from the revision month.",
+    "empty": "No candidates now.",
+    "group": {
+      "candidate": "Candidates ({{n}})",
+      "waiting": "Waiting for records ({{n}})",
+      "reflected": "Applied ({{n}})",
+      "other": "Not applicable ({{n}})"
+    },
+    "hint": {
+      "priority": "When they overlap, revision after leave is listed first (acquisition → after leave → irregular → regular). Applying one creates that month's standard remuneration, so the other shows as applied.",
+      "maternity": "Requires the employee's request. If remuneration goes down, also guide them to the special measure for the child-rearing period.",
+      "childcare": "Requires the employee's request. If remuneration goes down, also guide them to the special measure for the child-rearing period."
+    },
+    "error": {
+      "load": "Could not load data for revision candidates.",
+      "save": "Could not apply. Please try again later."
     }
   }
 }
