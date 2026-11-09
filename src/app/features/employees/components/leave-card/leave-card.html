@@ -2,9 +2,7 @@
   <div class="head">
     <h2>{{ 'leave.title' | transloco }}</h2>
     @if (context.isAdmin() && editing() === null) {
-      <button type="button" class="btn" (click)="startAdd()">
-        {{ 'leave.add' | transloco }}
-      </button>
+      <button type="button" class="btn" (click)="startAdd()">{{ 'leave.add' | transloco }}</button>
     }
   </div>
 
@@ -24,31 +22,147 @@
             }
           </select>
         </div>
+      </div>
 
+      <!-- 産休：出産の日付から期間の候補を出す -->
+      @if (isMaternity()) {
+        <div class="grid">
+          <div class="field">
+            <label for="leave-expected">{{ 'leave.field.expectedBirthDate' | transloco }}</label>
+            <input id="leave-expected" class="input" type="date" formControlName="expectedBirthDate" [class.is-invalid]="errorOf('expectedBirthDate')" />
+            @if (errorOf('expectedBirthDate'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+          <div class="field">
+            <label for="leave-birth">{{ 'leave.field.birthDate' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+            <input id="leave-birth" class="input" type="date" formControlName="birthDate" />
+            <span class="hint">{{ 'leave.hint.birthDate' | transloco }}</span>
+          </div>
+        </div>
+        <label class="check"><input type="checkbox" formControlName="multipleBirth" />{{ 'leave.field.multipleBirth' | transloco }}</label>
+        @if (range(); as r) {
+          <p class="range">{{ 'leave.range' | transloco: { from: r.from, to: r.to, base: r.base } }}</p>
+        }
+      }
+
+      <!-- 育休・出生時育休：養育する子 -->
+      @if (isChildcare()) {
+        <div class="grid">
+          <div class="field">
+            <label for="leave-child-last">{{ 'leave.field.childLast' | transloco }}</label>
+            <input id="leave-child-last" class="input" formControlName="childLast" [class.is-invalid]="errorOf('childLast')" />
+            @if (errorOf('childLast'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+          <div class="field">
+            <label for="leave-child-first">{{ 'leave.field.childFirst' | transloco }}</label>
+            <input id="leave-child-first" class="input" formControlName="childFirst" />
+          </div>
+          <div class="field">
+            <label for="leave-child-last-kana">{{ 'leave.field.childLastKana' | transloco }}</label>
+            <input id="leave-child-last-kana" class="input" formControlName="childLastKana" [class.is-invalid]="errorOf('childLastKana')" />
+            @if (errorOf('childLastKana'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+          <div class="field">
+            <label for="leave-child-first-kana">{{ 'leave.field.childFirstKana' | transloco }}</label>
+            <input id="leave-child-first-kana" class="input" formControlName="childFirstKana" [class.is-invalid]="errorOf('childFirstKana')" />
+            @if (errorOf('childFirstKana'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+          <div class="field">
+            <label for="leave-child-birth">{{ 'leave.field.childBirthDate' | transloco }}</label>
+            <input id="leave-child-birth" class="input" type="date" formControlName="childBirthDate" [class.is-invalid]="errorOf('childBirthDate')" />
+            @if (errorOf('childBirthDate'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          </div>
+          <div class="field">
+            <label for="leave-child-type">{{ 'leave.field.childType' | transloco }}</label>
+            <select id="leave-child-type" class="input" formControlName="childType">
+              @for (t of childTypes; track t) {
+                <option [value]="t">{{ 'leave.childType.' + t | transloco }}</option>
+              }
+            </select>
+          </div>
+          @if (form.controls.childType.value === 'other') {
+            <div class="field">
+              <label for="leave-custody">{{ 'leave.field.custodyStart' | transloco }}</label>
+              <input id="leave-custody" class="input" type="date" formControlName="custodyStart" [class.is-invalid]="errorOf('custodyStart')" />
+              @if (errorOf('custodyStart'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+            </div>
+          }
+        </div>
+        @if (form.controls.kind.value === 'childcare') {
+          <label class="check"><input type="checkbox" formControlName="papaMamaPlus" />{{ 'leave.field.papaMamaPlus' | transloco }}</label>
+        }
+      }
+
+      <!-- 期間 -->
+      <div class="grid">
         <div class="field">
           <label for="leave-start">{{ 'leave.field.start' | transloco }}</label>
-          <input id="leave-start" class="input" type="date" formControlName="start" />
+          <input id="leave-start" class="input" type="date" formControlName="start" [class.is-invalid]="errorOf('start')" />
+          @if (errorOf('start'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          @if (range(); as r) {
+            @if (form.controls.start.value !== r.from) {
+              <button type="button" class="candidate" (click)="use('start', r.from)">{{ 'leave.candidate.maternityStart' | transloco: { date: r.from } }}</button>
+            }
+          }
+          @if (earliest(); as d) {
+            @if (form.controls.start.value !== d) {
+              <button type="button" class="candidate" (click)="use('start', d)">{{ 'leave.candidate.childcareStart' | transloco: { date: d } }}</button>
+            }
+          }
         </div>
-
         <div class="field">
-          <label for="leave-end">{{ 'leave.field.end' | transloco }}</label>
-          <input id="leave-end" class="input" type="date" formControlName="end" />
-          <label class="check">
-            <input type="checkbox" formControlName="undecided" />
-            {{ 'leave.undecided' | transloco }}
+          <label for="leave-planned">
+            {{ 'leave.field.plannedEnd' | transloco }}
+            @if (!isExempt()) { <span class="optional">{{ 'common.optional' | transloco }}</span> }
           </label>
+          <input id="leave-planned" class="input" type="date" formControlName="plannedEnd" [class.is-invalid]="errorOf('plannedEnd')" />
+          @if (errorOf('plannedEnd'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          @if (range(); as r) {
+            @if (form.controls.plannedEnd.value !== r.to) {
+              <button type="button" class="candidate" (click)="use('plannedEnd', r.to)">{{ 'leave.candidate.maternityEnd' | transloco: { date: r.to } }}</button>
+            }
+          }
+          @for (x of limits(); track x.key) {
+            @if (form.controls.plannedEnd.value !== x.date) {
+              <button type="button" class="candidate" (click)="use('plannedEnd', x.date)">{{ 'leave.candidate.' + x.key | transloco: { date: x.date } }}</button>
+            }
+          }
+        </div>
+        <div class="field">
+          <label for="leave-end">{{ 'leave.field.end' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="leave-end" class="input" type="date" formControlName="end" [class.is-invalid]="errorOf('end')" />
+          @if (errorOf('end'); as e) {
+            <span class="field-error">{{ e | transloco }}</span>
+          } @else {
+            <span class="hint">{{ 'leave.hint.end' | transloco }}</span>
+          }
+        </div>
+        @if (isChildcare()) {
+          <div class="field">
+            <label for="leave-work">{{ 'leave.field.workDays' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+            <input id="leave-work" class="input num" inputmode="numeric" formControlName="workDays" [class.is-invalid]="errorOf('workDays')" />
+            @if (errorOf('workDays'); as e) {
+              <span class="field-error">{{ e | transloco }}</span>
+            } @else {
+              <span class="hint">{{ 'leave.hint.workDays' | transloco }}</span>
+            }
+          </div>
+        }
+        <div class="field wide">
+          <label for="leave-note">{{ 'leave.field.note' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="leave-note" class="input" maxlength="200" formControlName="note" />
         </div>
       </div>
 
+      @for (w of warnings(); track w) {
+        <p class="hint warn">{{ 'leave.warning.' + w | transloco }}</p>
+      }
       @if (formErrorKey(); as key) {
         <p class="field-error">{{ key | transloco }}</p>
       }
-      <p class="hint">{{ 'leave.hint.rule' | transloco }}</p>
+      <p class="hint">{{ (isExempt() ? 'leave.hint.rule' : 'leave.hint.noExempt') | transloco }}</p>
 
       <div class="actions">
-        <button type="button" class="btn" (click)="cancel()">
-          {{ 'common.cancel' | transloco }}
-        </button>
+        <button type="button" class="btn" (click)="cancel()">{{ 'common.cancel' | transloco }}</button>
         <button type="submit" class="btn btn-primary" [disabled]="saving()">
           {{ (saving() ? 'common.saving' : 'common.save') | transloco }}
         </button>
@@ -67,23 +181,38 @@
             <th>{{ 'leave.field.kind' | transloco }}</th>
             <th>{{ 'leave.field.period' | transloco }}</th>
             <th>{{ 'leave.field.exempt' | transloco }}</th>
+            <th>{{ 'leave.field.filing' | transloco }}</th>
             @if (context.isAdmin()) {
-              <th>
-                <span class="sr-only">{{ 'common.edit' | transloco }}</span>
-              </th>
+              <th><span class="sr-only">{{ 'common.edit' | transloco }}</span></th>
             }
           </tr>
         </thead>
         <tbody>
           @for (r of rows(); track r.index) {
             <tr>
-              <td>{{ 'leave.kind.' + r.leave.kind | transloco }}</td>
+              <td>
+                {{ 'leave.kind.' + r.leave.kind | transloco }}
+                @if (r.leave.child; as c) { <div class="sub">{{ c.last }} {{ c.first }}</div> }
+                @if (r.leave.birthDate) {
+                  <div class="sub">{{ 'leave.bornOn' | transloco: { date: r.leave.birthDate } }}</div>
+                } @else if (r.leave.expectedBirthDate) {
+                  <div class="sub">{{ 'leave.expectedOn' | transloco: { date: r.leave.expectedBirthDate } }}</div>
+                }
+              </td>
               <td class="mono">
                 {{ r.leave.start }} 〜
                 @if (r.leave.end) {
                   {{ r.leave.end }}
+                  @if (r.leave.plannedEnd && r.leave.end !== r.leave.plannedEnd) {
+                    <div class="sub">{{ 'leave.plannedWas' | transloco: { date: r.leave.plannedEnd } }}</div>
+                  }
+                } @else if (r.leave.plannedEnd) {
+                  {{ r.leave.plannedEnd }} <span class="sub">{{ 'leave.planned' | transloco }}</span>
                 } @else {
                   <span class="badge">{{ 'leave.undecided' | transloco }}</span>
+                }
+                @if (r.withinMonthDays !== null) {
+                  <div class="sub">{{ 'leave.withinMonth' | transloco: { days: r.withinMonthDays, work: r.leave.workDays ?? 0 } }}</div>
                 }
               </td>
               <td class="mono">
@@ -93,37 +222,32 @@
                   <span class="muted">{{ 'leave.noExempt' | transloco }}</span>
                 }
               </td>
+              <td>
+                @if (r.filing.status !== 'none') {
+                  <span [class]="'status ' + r.filing.status">{{ 'leave.filing.' + r.filing.status | transloco }}</span>
+                  @if (r.filing.status !== 'done' && r.filing.deadline) {
+                    <div class="sub">{{ 'leave.deadline' | transloco: { date: r.filing.deadline } }}</div>
+                  }
+                  @if (r.leave.filed; as f) {
+                    <div class="sub">{{ 'leave.filedOn' | transloco: { date: f.filedOn } }}</div>
+                  }
+                }
+              </td>
               @if (context.isAdmin()) {
                 <td class="row-actions">
                   @if (confirmingDelete() === r.index) {
-                    <button
-                      type="button"
-                      class="link danger"
-                      [disabled]="saving()"
-                      (click)="remove(r.index)"
-                    >
+                    <button type="button" class="link danger" [disabled]="saving()" (click)="remove(r.index)">
                       {{ 'leave.confirmDelete' | transloco }}
                     </button>
-                    <button type="button" class="link" (click)="confirmingDelete.set(null)">
-                      {{ 'common.cancel' | transloco }}
-                    </button>
+                    <button type="button" class="link" (click)="confirmingDelete.set(null)">{{ 'common.cancel' | transloco }}</button>
                   } @else {
-                    <button
-                      type="button"
-                      class="link"
-                      [disabled]="editing() !== null"
-                      (click)="startEdit(r)"
-                    >
-                      {{ 'common.edit' | transloco }}
-                    </button>
-                    <button
-                      type="button"
-                      class="link"
-                      [disabled]="editing() !== null"
-                      (click)="confirmingDelete.set(r.index)"
-                    >
-                      {{ 'common.delete' | transloco }}
-                    </button>
+                    @if (r.filing.status !== 'none' && r.filing.status !== 'done') {
+                      <button type="button" class="link" [disabled]="editing() !== null || saving()" (click)="recordFiled(r.index)">
+                        {{ 'leave.markFiled' | transloco }}
+                      </button>
+                    }
+                    <button type="button" class="link" [disabled]="editing() !== null" (click)="startEdit(r)">{{ 'common.edit' | transloco }}</button>
+                    <button type="button" class="link" [disabled]="editing() !== null" (click)="confirmingDelete.set(r.index)">{{ 'common.delete' | transloco }}</button>
                   }
                 </td>
               }

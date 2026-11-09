@@ -6,7 +6,7 @@
 import { BonusPaymentDoc } from './bonus';
 import { ContractDoc } from './contract';
 import { DependentDoc, OverseasSpecialDoc } from './dependent';
-import { EmployeeDoc, EnrollmentDoc, ForeignDoc, Leave, PersonName } from './employee';
+import { EmployeeDoc, EnrollmentDoc, FiledLeave, ForeignDoc, Leave, PersonName } from './employee';
 import { OfficeDoc } from './office';
 import { PayrollInput } from './payroll';
 import { IrregularDecisionDoc, RegularDecisionDoc } from './revision';
@@ -114,16 +114,35 @@ const DEPENDENT: Record<string, Field<DependentDoc> | Field<EmployeeDoc> | Field
 };
 
 /** 産休・育休の申出書 */
-const LEAVE: Record<string, Field<Leave>> = {
+/** 産前産後休業取得者申出書/変更（終了）届（2273） */
+const MATERNITY: Record<string, Field<Leave> | Field<FiledLeave>> = {
+  共通_出産予定年月日: 'expectedBirthDate',
+  共通_出産種別: 'multipleBirth',
+  共通_産前産後休業開始年月日: 'start',
+  共通_終了予定年月日: 'plannedEnd',
+  共通_出産年月日: 'birthDate',
+  共通欄は前回出した中身: 'filed',
+  A変更_変更後の出産予定日_開始_終了予定: 'calc', // 今の中身
+  B終了_終了年月日: 'end',
+};
+
+/** 育児休業等取得者申出書（新規・延長）/終了届（2263）。出生時育休も同じ届 */
+const LEAVE: Record<string, Field<Leave> | Field<PersonName>> = {
   種類: 'kind',
-  開始: 'start',
-  終了: 'end',
-  出産予定日: 'expectedBirthDate',
-  出産日: 'birthDate',
-  多胎: 'multipleBirth',
-  子の氏名: 'childName',
-  子の生年月日: 'childBirthDate',
-  就業日数: 'workDays',
+  養育する子の氏名: 'child',
+  子の氏_名_フリガナ: 'lastKana',
+  養育する子の生年月日: 'childBirthDate',
+  区分_実子その他: 'childType',
+  養育開始年月日: 'custodyStart',
+  育児休業等開始年月日: 'start',
+  育児休業等終了予定年月日: 'plannedEnd',
+  取得日数: 'calc', // 月の中で終わるとき（同じ月の休業を合計）
+  就業予定日数: 'workDays',
+  パパママ育休プラス: 'papaMamaPlus',
+  A延長_変更後の終了予定日: 'plannedEnd',
+  B終了_終了年月日: 'end',
+  C取得内訳: 'calc', // 同じ月の休業を並べる
+  備考: 'note',
 };
 
 /** 被保険者区分変更届・加入判定 */
@@ -158,7 +177,7 @@ const ROMAN_NAME: Record<string, Field<EmployeeDoc> | Field<ForeignDoc> | Field<
 };
 
 describe('答え合わせの表（届書の欄 → 入れ物の項目）', () => {
-  const tables = { ACQUISITION, LOSS, REGULAR, IRREGULAR, BONUS, DEPENDENT, LEAVE, CATEGORY, ROMAN_NAME };
+  const tables = { ACQUISITION, LOSS, REGULAR, IRREGULAR, BONUS, DEPENDENT, MATERNITY, LEAVE, CATEGORY, ROMAN_NAME };
   for (const [name, table] of Object.entries(tables)) {
     it(`${name}：すべての欄に行き先がある`, () => {
       for (const [label, field] of Object.entries(table)) {

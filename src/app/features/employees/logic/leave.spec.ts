@@ -116,3 +116,32 @@ describe('休業の種類（11/6 追加）', () => {
     expect(exemptBonus([{ kind: 'care', start: '2026-06-01', end: '2026-08-31' }], '2026-07-10')).toBeFalse();
   });
 });
+
+describe('終了予定日と実際の終了日', () => {
+  it('終了日がなければ終了予定日で計算し、早く終われば終了日で計算する', () => {
+    const planned: LeaveLike = { kind: 'maternity', start: '2025-05-20', end: null, plannedEnd: '2025-08-25' };
+    expect(exemptRangeOf(planned)).toEqual({ from: '2025-05', to: '2025-07' });
+    expect(exemptRangeOf({ ...planned, end: '2025-08-07' })).toEqual({ from: '2025-05', to: '2025-07' });
+    expect(exemptRangeOf({ ...planned, end: '2025-06-30' })).toEqual({ from: '2025-05', to: '2025-06' });
+  });
+  it('どちらもなければ未定', () => {
+    expect(exemptRangeOf({ kind: 'childcare', start: '2026-04-01', end: null, plannedEnd: null })).toEqual({ from: '2026-04', to: null });
+  });
+  it('介護休業・休職は免除の月を出さない', () => {
+    expect(exemptRangeOf({ kind: 'care', start: '2026-04-01', end: '2026-06-30' })).toBeNull();
+  });
+});
+
+describe('同じ月の中で何回か取った育休は日数を合計する', () => {
+  const a: LeaveLike = { kind: 'paternity', start: '2026-07-01', end: null, plannedEnd: '2026-07-07', workDays: 0 }; // 7日
+  const b: LeaveLike = { kind: 'paternity', start: '2026-07-15', end: null, plannedEnd: '2026-07-21', workDays: 0 }; // 7日
+  it('7日＋7日＝14日で免除。1回だけなら免除なし', () => {
+    expect(exemptMonth([a], '2026-07')).toBeFalse();
+    expect(exemptMonth([a, b], '2026-07')).toBeTrue();
+    expect(exemptRangeOf(a, [a, b])).toEqual({ from: '2026-07', to: '2026-07' });
+    expect(exemptRangeOf(a)).toBeNull();
+  });
+  it('就業予定日数は合計から除く', () => {
+    expect(exemptMonth([a, { ...b, workDays: 1 }], '2026-07')).toBeFalse();
+  });
+});

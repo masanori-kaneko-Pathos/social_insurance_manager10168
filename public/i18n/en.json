@@ -702,35 +702,95 @@
     }
   },
   "leave": {
-    "title": "Maternity / childcare leave",
+    "title": "Leave",
     "add": "Add leave",
     "empty": "No leave registered.",
     "kind": {
       "maternity": "Maternity leave",
-      "childcare": "Childcare leave"
+      "childcare": "Childcare leave",
+      "paternity": "Postnatal paternity leave",
+      "care": "Family care leave",
+      "suspension": "Leave of absence"
+    },
+    "childType": {
+      "natural": "Biological child",
+      "other": "Other (adopted etc.)"
     },
     "field": {
       "kind": "Type",
-      "start": "Start date",
-      "end": "End date",
+      "start": "Start",
+      "plannedEnd": "Planned end",
+      "end": "Actual end",
       "period": "Period",
-      "exempt": "Exempt months"
+      "exempt": "Months exempt from premiums",
+      "filing": "Filing",
+      "expectedBirthDate": "Expected birth date",
+      "birthDate": "Birth date",
+      "multipleBirth": "Multiple birth",
+      "childLast": "Child's surname",
+      "childFirst": "Child's given name",
+      "childLastKana": "Child's surname reading",
+      "childFirstKana": "Child's given name reading",
+      "childBirthDate": "Child's date of birth",
+      "childType": "Type",
+      "custodyStart": "Custody start date",
+      "papaMamaPlus": "Papa-Mama Ikukyu Plus applies",
+      "workDays": "Planned working days",
+      "note": "Note"
     },
+    "range": "Maternity leave can be {{from}} – {{to}} (42 days before {{base}} to 56 days after birth)",
+    "candidate": {
+      "maternityStart": "Suggestion: {{date}} (start of range)",
+      "maternityEnd": "Suggestion: {{date}} (56 days after birth)",
+      "childcareStart": "Suggestion: {{date}} (day after the 56-day postnatal period)",
+      "age1": "Suggestion: {{date}} (day before 1st birthday)",
+      "age1_2": "Suggestion: {{date}} (day before age 1y2m, Papa-Mama Plus)",
+      "age1_6": "Suggestion: {{date}} (day before age 1y6m, extension)",
+      "age2": "Suggestion: {{date}} (day before 2nd birthday, re-extension)"
+    },
+    "warning": {
+      "beforeMaternityRange": "Start is before the maternity leave range.",
+      "afterMaternityRange": "Planned end is after the maternity leave range.",
+      "beforeChildcareStart": "A mother's childcare leave for her biological child starts after the 56-day postnatal period.",
+      "paternityOver28": "Postnatal paternity leave is up to 28 days in total.",
+      "beyondAge2": "Planned end is after the child turns 2."
+    },
+    "filing": {
+      "needApply": "Not yet filed",
+      "needChange": "Change notice needed",
+      "needExtension": "Extension needed",
+      "needEnd": "End notice needed",
+      "done": "Filed"
+    },
+    "markFiled": "Mark as filed",
+    "filedOn": "Last filed {{date}}",
+    "deadline": "Due about {{date}}",
+    "bornOn": "Born {{date}}",
+    "expectedOn": "Expected {{date}}",
+    "planned": "(planned)",
+    "plannedWas": "Planned {{date}}",
+    "withinMonth": "Ends within the month: {{days}} days, {{work}} working days",
     "undecided": "Undecided",
     "ongoing": "(end undecided)",
-    "noExempt": "No exemption (under 14 days in the month)",
-    "confirmDelete": "Confirm delete",
+    "noExempt": "No exemption",
+    "confirmDelete": "Delete",
     "hint": {
-      "rule": "Exempt from the start month to the month before the day after the leave ends. Childcare leave ending within the same month is exempt if 14 days or more. Bonuses are exempt only for childcare leave longer than one month.",
-      "list": "To receive the exemption, the employer must file a request with the pension office (and the health insurance society, if applicable)."
+      "rule": "Exempt from the start month to the month before the month containing the day after the end (or planned end). Childcare leave ending within a month is exempt if the month's childcare leave totals 14 days or more (excluding working days). Bonuses are exempt only for childcare leave over one month.",
+      "noExempt": "Family care leave and leaves of absence have no premium exemption. Recorded for standard remuneration decisions.",
+      "birthDate": "After the birth, enter it to update the suggested period.",
+      "end": "Enter only if the leave ended earlier than planned.",
+      "workDays": "Working days during postnatal paternity leave, or planned working days for leave ending within the month.",
+      "list": "The employer must file the request (during the leave or within a month after). Press \"Mark as filed\" to remember what was filed and be told when a change, extension or end notice is needed."
     },
     "error": {
-      "start": "Enter the start date.",
-      "end": "Enter the end date or check \"Undecided\".",
-      "order": "The end date must be after the start date.",
-      "overlap": "This overlaps another leave.",
+      "required": "Required.",
+      "order": "Must be after the start date.",
+      "kana": "Use katakana.",
+      "days": "Enter the number of days.",
+      "workDaysOver": "More than the days of leave.",
+      "overlap": "Overlaps another leave.",
       "tooMany": "Up to 20 leaves can be registered.",
-      "save": "Couldn't save. Try again later."
+      "save": "Could not save. Please try again later."
     }
   },
   "payroll": {

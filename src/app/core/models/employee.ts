@@ -121,20 +121,44 @@ export interface ForeignDoc {
   noAddressReason: NoAddressReason | null;
 }
 
-/** 休業（終了日 null は「未定」） */
+/** 養育する子の区分（育児休業等取得者申出書 ⑧） */
+export const CHILD_TYPES = ['natural', 'other'] as const; // 実子・その他（養子など）
+export type ChildType = (typeof CHILD_TYPES)[number];
+
+/** 最後に出した届の中身（今の中身と比べて、変更届・延長・終了届が要るかを出す） */
+export interface FiledLeave {
+  filedOn: string; // 届を出した日
+  start: string;
+  plannedEnd: string | null;
+  end: string | null;
+  expectedBirthDate: string | null;
+  birthDate: string | null;
+  multipleBirth: boolean;
+}
+
+/**
+ * 休業（産前産後休業取得者申出書 2273・育児休業等取得者申出書 2263 の欄に合わせる）
+ * 保険料の免除は「終了日、なければ終了予定日」で計算する。両方なければ「未定」
+ */
 export interface Leave {
   kind: LeaveKind;
   start: string; // 'YYYY-MM-DD'
-  end: string | null;
+  plannedEnd: string | null; // 終了予定日
+  end: string | null; // 実際に終わった日（予定より早く終わったときなど。予定どおりなら空でよい）
   /** 産休：出産予定日・出産日・多胎（産前は42日、多胎は98日） */
   expectedBirthDate: string | null;
   birthDate: string | null;
   multipleBirth: boolean;
-  /** 育休・出生時育休：子の氏名・生年月日 */
-  childName: string | null;
+  /** 育休・出生時育休：養育する子 */
+  child: PersonName | null;
   childBirthDate: string | null;
-  /** 出生時育休：休業中に働いた日数（14日の数え方から除く） */
+  childType: ChildType | null;
+  custodyStart: string | null; // 養育開始日（実子以外）
+  papaMamaPlus: boolean; // パパ・ママ育休プラス
+  /** 育休・出生時育休：就業予定日数（月の中で終わる育休の14日の数え方から除く） */
   workDays: number | null;
+  note: string | null;
+  filed: FiledLeave | null;
 }
 
 // ===== 従業員 =====
@@ -215,13 +239,19 @@ export function emptyLeave(kind: LeaveKind, start: string): Leave {
   return {
     kind,
     start,
+    plannedEnd: null,
     end: null,
     expectedBirthDate: null,
     birthDate: null,
     multipleBirth: false,
-    childName: null,
+    child: null,
     childBirthDate: null,
+    childType: null,
+    custodyStart: null,
+    papaMamaPlus: false,
     workDays: null,
+    note: null,
+    filed: null,
   };
 }
 
