@@ -176,11 +176,11 @@ export class PayrollMonth {
       const r = readRow(v.form.getRawValue(), this.periodDays());
       const id = v.employee.id;
       if (r.kind === 'blank') {
-        if (v.row.saved) changes.push({ employeeId: id, input: null, exists: true });
+        if (v.row.saved) changes.push({ employeeId: id, input: null, exists: true, before: v.row.saved });
       } else if (r.kind === 'invalid') {
         errors.set(id, r.errors);
       } else if (!v.row.saved || !sameInput(r.input, v.row.saved)) {
-        changes.push({ employeeId: id, input: r.input, exists: !!v.row.saved });
+        changes.push({ employeeId: id, input: r.input, exists: !!v.row.saved, before: v.row.saved ?? null });
       }
     }
     this.rowErrors.set(errors);

@@ -184,6 +184,7 @@ export class PayrollImport {
       paidMonth: it.paidMonth,
       input: it.input,
       exists: this.saved.has(`${it.employeeId}|${it.paidMonth}`),
+      before: this.saved.get(`${it.employeeId}|${it.paidMonth}`) ?? null,
     }));
     this.saving.set(true);
     this.progress.set({ done: 0, total: writes.length });

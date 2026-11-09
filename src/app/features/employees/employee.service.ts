@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HistoryService } from './history.service';
 import {
   addDoc,
   collection,
@@ -6,7 +7,6 @@ import {
   getDoc,
   getDocs,
   serverTimestamp,
-  updateDoc,
 } from 'firebase/firestore';
 import { db } from '../../core/firebase';
 import {
@@ -22,6 +22,8 @@ const kana = (e: Employee) => e.lastNameKana + e.firstNameKana;
 
 @Injectable({ providedIn: 'root' })
 export class EmployeeService {
+  private readonly history = inject(HistoryService);
+
   private col(officeId: string) {
     return collection(db, 'offices', officeId, 'employees');
   }
@@ -56,17 +58,14 @@ export class EmployeeService {
     employeeId: string,
     input: EmployeeBasicInput | Partial<EmployeeInput>,
   ): Promise<void> {
-    await updateDoc(doc(this.col(officeId), employeeId), {
-      ...input,
-      updatedAt: serverTimestamp(),
-    });
+    // 書き込みと変更履歴は同じ batch（HistoryService）
+    const ref = doc(this.col(officeId), employeeId);
+    await this.history.write(officeId, employeeId, 'employee', ref, 'update', { ...input });
   }
 
   /** 産休・育休だけを書き換える（ほかの項目には触らない） */
   async updateLeaves(officeId: string, employeeId: string, leaves: Leave[]): Promise<void> {
-    await updateDoc(doc(this.col(officeId), employeeId), {
-      leaves,
-      updatedAt: serverTimestamp(),
-    });
+    const ref = doc(this.col(officeId), employeeId);
+    await this.history.write(officeId, employeeId, 'employee', ref, 'update', { leaves });
   }
 }

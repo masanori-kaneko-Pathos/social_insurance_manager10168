@@ -1,4 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HistoryService } from '../employees/history.service';
+import { changesOf } from '../employees/logic/history';
 import { collection, doc, getDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { db } from '../../core/firebase';
 import { RegularDecision } from '../../core/models/revision';
@@ -7,6 +9,8 @@ import { RemunerationInput } from '../../core/models/remuneration';
 /** 定時決定の記録と、9月分の標準報酬への反映 */
 @Injectable({ providedIn: 'root' })
 export class RegularService {
+  private readonly history = inject(HistoryService);
+
   private emp(officeId: string, employeeId: string) {
     return ['offices', officeId, 'employees', employeeId] as const;
   }
@@ -40,7 +44,7 @@ export class RegularService {
     items: readonly { decision: RegularDecision; remuneration: RemunerationInput; decisionExists: boolean }[],
   ): Promise<void> {
     if (items.length === 0) return;
-    if (items.length * 2 > 500) throw new Error('too many changes in one batch');
+    if (items.length * 3 > 500) throw new Error('too many changes in one batch'); // 記録・標準報酬・履歴
     const batch = writeBatch(db);
     for (const { decision: d, remuneration: r, decisionExists } of items) {
       const base = this.emp(d.officeId, d.employeeId);
@@ -55,6 +59,7 @@ export class RegularService {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+      this.history.addTo(batch, d.officeId, d.employeeId, `remunerations/${r.from}`, changesOf(null, { ...r }));
     }
     await batch.commit();
   }

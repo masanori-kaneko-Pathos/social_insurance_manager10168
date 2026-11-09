@@ -1698,5 +1698,46 @@
     "menu": "設定",
     "signedInAs": "ログイン中",
     "language": "表示の言語"
+  },
+  "history": {
+    "title": "変更履歴",
+    "lead": "誰が・いつ・何を変えたかの記録です。足すだけで、直したり消したりはできません。",
+    "empty": "まだ記録はありません。",
+    "error": "変更履歴を読み込めませんでした。",
+    "more": "すべて表示（{{n}}件）",
+    "me": "自分",
+    "yes": "はい",
+    "no": "いいえ",
+    "created": "登録",
+    "deleted": "削除",
+    "col": {
+      "when": "日時",
+      "what": "何を",
+      "before": "変更前",
+      "after": "変更後",
+      "who": "誰が"
+    },
+    "ins": {
+      "health": "健康保険",
+      "pension": "厚生年金"
+    },
+    "target": {
+      "employee": "従業員の情報",
+      "contracts": "雇用契約（{{key}}〜）",
+      "remunerations": "標準報酬（{{key}}〜）",
+      "dependents": "扶養家族",
+      "payrolls": "給与の実績（{{key}} 支払）",
+      "bonusPayments": "賞与（{{key}} 支払）"
+    },
+    "bonus": {
+      "amount": "賞与額",
+      "inKind": "賞与の現物"
+    },
+    "field": {
+      "leaves": "産休・育休・休業",
+      "contact_address": "住所",
+      "health_enrolled": "加入",
+      "pension_enrolled": "加入"
+    }
   }
 }

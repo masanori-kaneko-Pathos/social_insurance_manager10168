@@ -1,4 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HistoryService } from '../employees/history.service';
+import { changesOf } from '../employees/logic/history';
 import { collection, doc, getDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { db } from '../../core/firebase';
 import { RemunerationInput } from '../../core/models/remuneration';
@@ -11,6 +13,8 @@ import { IrregularDecision, LeaveEndDecision } from '../../core/models/revision'
  */
 @Injectable({ providedIn: 'root' })
 export class RevisionService {
+  private readonly history = inject(HistoryService);
+
   private emp(officeId: string, employeeId: string) {
     return ['offices', officeId, 'employees', employeeId] as const;
   }
@@ -32,6 +36,7 @@ export class RevisionService {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
+    this.history.addTo(batch, d.officeId, d.employeeId, `remunerations/${r.from}`, changesOf(null, { ...r }));
     await batch.commit();
   }
 

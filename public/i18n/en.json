@@ -1698,5 +1698,46 @@
     "menu": "Settings",
     "signedInAs": "Signed in as",
     "language": "Language"
+  },
+  "history": {
+    "title": "Change history",
+    "lead": "Who changed what and when. Records are only added, never edited or deleted.",
+    "empty": "No records yet.",
+    "error": "Could not load the change history.",
+    "more": "Show all ({{n}})",
+    "me": "You",
+    "yes": "Yes",
+    "no": "No",
+    "created": "Created",
+    "deleted": "Deleted",
+    "col": {
+      "when": "When",
+      "what": "What",
+      "before": "Before",
+      "after": "After",
+      "who": "Who"
+    },
+    "ins": {
+      "health": "Health",
+      "pension": "Pension"
+    },
+    "target": {
+      "employee": "Employee",
+      "contracts": "Contract (from {{key}})",
+      "remunerations": "Standard remuneration (from {{key}})",
+      "dependents": "Dependent",
+      "payrolls": "Payroll (paid {{key}})",
+      "bonusPayments": "Bonus (paid {{key}})"
+    },
+    "bonus": {
+      "amount": "Bonus amount",
+      "inKind": "Bonus in kind"
+    },
+    "field": {
+      "leaves": "Leaves",
+      "contact_address": "Address",
+      "health_enrolled": "Enrolled",
+      "pension_enrolled": "Enrolled"
+    }
   }
 }

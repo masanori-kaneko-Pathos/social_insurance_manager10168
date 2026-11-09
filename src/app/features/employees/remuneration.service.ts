@@ -1,19 +1,14 @@
-import { Injectable } from '@angular/core';
-import {
-  collection,
-  deleteDoc,
-  doc,
-  getDocs,
-  serverTimestamp,
-  setDoc,
-  updateDoc,
-} from 'firebase/firestore';
+import { Injectable, inject } from '@angular/core';
+import { collection, doc, getDocs } from 'firebase/firestore';
+import { HistoryService } from './history.service';
 import { db } from '../../core/firebase';
 import { RemunerationDoc, RemunerationInput } from '../../core/models/remuneration';
 
 /** 従業員ごとの標準報酬月額の履歴（ドキュメントIDは適用開始月） */
 @Injectable({ providedIn: 'root' })
 export class RemunerationService {
+  private readonly history = inject(HistoryService);
+
   private col(officeId: string, employeeId: string) {
     return collection(db, 'offices', officeId, 'employees', employeeId, 'remunerations');
   }
@@ -26,22 +21,19 @@ export class RemunerationService {
       .sort((a, b) => b.from.localeCompare(a.from));
   }
 
+  /** 書き込みと変更履歴は同じ batch（HistoryService） */
   async create(officeId: string, employeeId: string, input: RemunerationInput): Promise<void> {
-    await setDoc(doc(this.col(officeId, employeeId), input.from), {
-      ...input,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+    const ref = doc(this.col(officeId, employeeId), input.from);
+    await this.history.write(officeId, employeeId, `remunerations/${input.from}`, ref, 'set', { ...input });
   }
 
   async update(officeId: string, employeeId: string, input: RemunerationInput): Promise<void> {
-    await updateDoc(doc(this.col(officeId, employeeId), input.from), {
-      ...input,
-      updatedAt: serverTimestamp(),
-    });
+    const ref = doc(this.col(officeId, employeeId), input.from);
+    await this.history.write(officeId, employeeId, `remunerations/${input.from}`, ref, 'update', { ...input });
   }
 
   async delete(officeId: string, employeeId: string, from: string): Promise<void> {
-    await deleteDoc(doc(this.col(officeId, employeeId), from));
+    const ref = doc(this.col(officeId, employeeId), from);
+    await this.history.write(officeId, employeeId, `remunerations/${from}`, ref, 'delete');
   }
 }

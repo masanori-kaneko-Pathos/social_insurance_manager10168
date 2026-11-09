@@ -1,0 +1,47 @@
+<section class="card">
+  <h2>{{ 'history.title' | transloco }}</h2>
+  <p class="hint">{{ 'history.lead' | transloco }}</p>
+
+  @if (errorKey(); as e) {
+    <div class="alert alert-danger">{{ e | transloco }}</div>
+  }
+
+  @if (loading()) {
+    <p class="muted">{{ 'common.loading' | transloco }}</p>
+  } @else if (rows().length === 0) {
+    <p class="muted">{{ 'history.empty' | transloco }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'history.col.when' | transloco }}</th>
+            <th>{{ 'history.col.what' | transloco }}</th>
+            <th>{{ 'history.col.before' | transloco }}</th>
+            <th>{{ 'history.col.after' | transloco }}</th>
+            <th>{{ 'history.col.who' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (h of visible(); track h.id) {
+            <tr>
+              <td class="mono when">{{ when(h) }}</td>
+              <td>
+                <div class="target">{{ target(h) }}</div>
+                <div class="field">{{ field(h) }}</div>
+              </td>
+              <td><div class="value" [title]="h.before ?? ''">{{ value(h.before) }}</div></td>
+              <td><div class="value after" [title]="h.after ?? ''">{{ value(h.after) }}</div></td>
+              <td class="sub">{{ who(h) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (hasMore() && !showAll()) {
+      <button type="button" class="link" (click)="showAll.set(true)">
+        {{ 'history.more' | transloco: { n: rows().length } }}
+      </button>
+    }
+  }
+</section>

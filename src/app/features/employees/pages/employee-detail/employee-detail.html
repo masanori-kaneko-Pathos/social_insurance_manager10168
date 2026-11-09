@@ -41,11 +41,11 @@
         </div>
       </dl>
       <!-- 標準報酬月額 -->
-      <app-remuneration-card [employee]="e" (changed)="premiumCard.reload()" />
+      <app-remuneration-card [employee]="e" (changed)="premiumCard.reload(); historyCard.load()" />
     </section>
 
     <!-- 雇用契約の履歴 -->
-    <app-contract-card [employee]="e" />
+    <app-contract-card [employee]="e" (changed)="historyCard.load()" />
 
     <!-- 扶養家族 -->
     <app-dependent-card [employee]="e" (changed)="reloadEmployee()" />
@@ -229,5 +229,7 @@
     <app-payroll-card [employee]="e" />
     <!-- 産休・育休 -->
     <app-leave-card [employee]="e" (changed)="reloadEmployee()" />
+    <!-- 変更履歴（足すだけの記録。いちばん下） -->
+    <app-history-card #historyCard [employee]="e" />
   }
 }
