@@ -161,7 +161,8 @@ function averageOf(months: MonthUse[], withoutRetro: boolean): number {
  * - 下：片方が「1級の標準報酬 − (2級の下限 − 1級の標準報酬)」未満、もう片方が2級
  *   厚年：66.5万円以上 と 60.5万〜63.5万円未満（資料と一致）
  *   健保：141.5万円以上 と 129.5万〜135.5万円未満、5.3万円未満 と 6.3万〜7.3万円未満
- *   （手元の資料は健保の数字の一部が読み取れないため、厚年と同じ考え方で出している）
+ *   （11/9 に年金機構「随時改定」のページの表（厚年 66.5万・8.3万、健保 141.5万・5.3万）と一致を確認。sources.md R3）
+ * 随時改定（irregular.ts）でも、従前の報酬月額と平均でこの関数を使う
  */
 export function oneGradeException(rows: GradeRow[], a: number, b: number): boolean {
   const sorted = [...rows].sort((x, y) => x.grade - y.grade);
