@@ -376,7 +376,8 @@
       "filing": "Filing information",
       "history": "Insurer and location history",
       "payroll": "Payroll and deduction",
-      "premium": "Premium calculation"
+      "premium": "Premium calculation",
+      "coverage": "Social insurance coverage"
     },
     "field": {
       "name": "Office name",
@@ -470,6 +471,65 @@
       "label": "Switch office",
       "others": "Others",
       "add": "Add office"
+    },
+    "coverage": {
+      "standardTitle": "Full-time schedule",
+      "specificTitle": "Specified applicable office",
+      "fundTitle": "Employees' pension fund",
+      "bonusTitle": "Planned bonus months",
+      "inKindTitle": "Benefits in kind",
+      "field": {
+        "hours": "Scheduled hours per week",
+        "hoursUnit": "Unit of hours",
+        "days": "Scheduled days per month",
+        "since": "Applicable from",
+        "insuredCount": "Company size (pension insured across the corporation)",
+        "pensionFund": "Member of an employees' pension fund",
+        "housing": "Company housing / dormitory",
+        "meals": "Meals"
+      },
+      "unit": {
+        "week": "Week",
+        "month": "Month"
+      },
+      "specific": {
+        "none": "Not applicable",
+        "applied": "Applicable",
+        "voluntary": "Voluntary (labor-management agreement)"
+      },
+      "hint": {
+        "standard": "Full-time schedule. Employees at 3/4 or more are regular insured; others are judged as short-time workers.",
+        "hours": "Enter as \"40:00\" or \"40\".",
+        "month": "Monthly hours are saved as weekly hours (× 12 ÷ 52; 173:20 a month → 40:00 a week).",
+        "specific": "Once applicable, the office stays applicable even if headcount drops.",
+        "insuredCount": "If blank, the app counts employees of this office. If the corporation has other offices, enter the total.",
+        "pensionFund": "Very few offices are members. Used for the acquisition notification.",
+        "bonus": "Used to check bonus payment notifications and non-payment reports.",
+        "inKind": "Used to check that benefits in kind are entered in payroll records. Valuation is not supported yet."
+      },
+      "count": "Count",
+      "counting": "Counting…",
+      "countFailed": "Could not count. Please try again later.",
+      "counted": "Employed in {{month}}, under 70, meeting the 3/4 rule: {{n}} (this office only)",
+      "noContract": "{{n}} without a contract were not counted.",
+      "needStandard": "Enter the full-time schedule to count.",
+      "criteria": "Current threshold: {{n}} or more (from {{from}})",
+      "criteriaNone": "No company size requirement now (from {{from}})",
+      "criteriaMissing": "Coverage criteria (masterCriteria) are not registered.",
+      "month": "{{m}}",
+      "warn": {
+        "noStandardHours": "The 3/4 rule cannot be judged while the schedule is blank.",
+        "maybeSpecific": "If headcount is expected to reach the threshold ({{n}} or more) for 6+ months a year, the office becomes a specified applicable office. Check notices from the Japan Pension Service.",
+        "bonusAsPay": "Payments made 4 or more times a year are treated as remuneration, not bonuses."
+      },
+      "error": {
+        "hours": "Enter hours as \"40:00\".",
+        "hoursRange": "Exceeds 168 hours a week.",
+        "days": "Enter a number from 1 to 31.",
+        "pair": "Enter both hours and days (leave both blank to skip).",
+        "since": "Select the month.",
+        "count": "Enter a number of 0 or more."
+      }
     }
   },
   "remuneration": {

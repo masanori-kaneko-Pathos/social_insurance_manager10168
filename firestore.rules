@@ -187,7 +187,15 @@ service cloud.firestore {
 
     function validSpecificApplication(s) {
       return s is map && exactKeys(s, ['since', 'voluntary', 'insuredCount'])
-        && optMonth(s.since) && s.voluntary is bool && optIntIn(s.insuredCount, 0, 1000000);
+        && optMonth(s.since) && s.voluntary is bool && optIntIn(s.insuredCount, 0, 1000000)
+        && (s.since != null || s.voluntary == false); // 該当していないのに「任意」はない
+    }
+
+    // 賞与の支払予定月：1〜12 だけ、重複なし（重複を落とした数が元の数と同じ ＝ 重複なし）
+    function validBonusMonths(m) {
+      return m is list && m.size() <= 12
+        && m.toSet().size() == m.size()
+        && m.toSet().hasOnly([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
     }
 
     function validOffice(d) {
@@ -212,7 +220,7 @@ service cloud.firestore {
         && d.pensionFund is bool
         && d.inKind is map && exactKeys(d.inKind, ['housing', 'meals'])
         && d.inKind.housing is bool && d.inKind.meals is bool
-        && d.bonusMonths is list && d.bonusMonths.size() <= 12;
+        && validBonusMonths(d.bonusMonths);
     }
 
     match /offices/{officeId} {

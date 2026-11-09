@@ -183,3 +183,67 @@ h3 {
 .history-action .btn {
   height: 32px;
 }
+
+/* 社会保険の適用 */
+.unit {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+.since,
+.count {
+  max-width: 360px;
+}
+
+.count-result {
+  display: block;
+  margin-top: var(--space-xs, 4px);
+  font-size: var(--font-sm);
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs, 4px);
+  margin-right: var(--space-md);
+  cursor: pointer;
+}
+
+.checks {
+  margin-bottom: var(--space-xs, 4px);
+}
+
+/* 候補ボタン・月のトグル */
+.chip {
+  flex: 0 0 auto;
+  padding: 4px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.chip:hover:not(:disabled) {
+  border-color: var(--color-primary);
+}
+
+.chip.on {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  font-weight: 600;
+}
+
+.chip:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.months {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs, 4px);
+  margin-bottom: var(--space-xs, 4px);
+}

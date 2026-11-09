@@ -1,0 +1,8 @@
+[
+  { "from": "2024-10", "sizeMin": 51, "weeklyMinutesMin": 1200, "wageMin": 88000, "reducedWageMin": null, "source": "日本年金機構「短時間労働者に対する適用拡大」（2024年10月〜 51人以上）" },
+  { "from": "2026-10", "sizeMin": 51, "weeklyMinutesMin": 1200, "wageMin": null, "reducedWageMin": 88000, "source": "日本年金機構「短時間労働者に対する適用拡大」（2026年10月 賃金要件の撤廃・特定減額特例対象者）" },
+  { "from": "2027-10", "sizeMin": 36, "weeklyMinutesMin": 1200, "wageMin": null, "reducedWageMin": 88000, "source": "日本年金機構「短時間労働者に対する適用拡大」（2027年10月〜 36人以上）" },
+  { "from": "2029-10", "sizeMin": 21, "weeklyMinutesMin": 1200, "wageMin": null, "reducedWageMin": 88000, "source": "日本年金機構「短時間労働者に対する適用拡大」（2029年10月〜 21人以上）" },
+  { "from": "2032-10", "sizeMin": 11, "weeklyMinutesMin": 1200, "wageMin": null, "reducedWageMin": 88000, "source": "日本年金機構「短時間労働者に対する適用拡大」（2032年10月〜 11人以上）" },
+  { "from": "2035-10", "sizeMin": null, "weeklyMinutesMin": 1200, "wageMin": null, "reducedWageMin": 88000, "source": "日本年金機構「短時間労働者に対する適用拡大」（2035年10月〜 規模の要件なし）" }
+]

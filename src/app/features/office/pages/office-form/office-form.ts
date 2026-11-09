@@ -20,7 +20,7 @@ import {
   HealthInsurerType,
   InsurerPeriod,
   Office,
-  OfficeBasicInput,
+  OfficeInput,
   PayrollSettings,
 } from '../../../../core/models/office';
 import { CollectionMethod, HealthRounding } from '../../../../core/models/premium';
@@ -43,6 +43,33 @@ import {
 import { RateDialog, RateDialogTarget } from '../../../rates/components/rate-dialog/rate-dialog';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
+import { CriteriaDoc } from '../../../../core/models/master';
+import { todayLocal, toYearMonth } from '../../../../shared/utils/date';
+import { parseNat } from '../../../../shared/utils/number';
+import { ContractService } from '../../../employees/contract.service';
+import { EmployeeService } from '../../../employees/employee.service';
+import {
+  countHeadcount,
+  criteriaAt,
+  HeadcountTarget,
+  WorkSchedule,
+} from '../../../employees/logic/coverage';
+import { CriteriaService } from '../../criteria.service';
+import {
+  CoverageFormValue,
+  CoverageWarning,
+  coverageErrors,
+  coverageWarnings,
+  fromCoverageForm,
+  MONTHS_OF_YEAR,
+  SpecificChoice,
+  SPECIFIC_CHOICES,
+  STANDARD_HOURS_CANDIDATE,
+  StandardHoursUnit,
+  standardWeeklyMinutes,
+  toCoverageForm,
+  toggleMonth,
+} from '../../logic/office-form-model';
 /** 法人番号を入れたら法人名も必須 */
 function corporateNameRequired(g: AbstractControl): ValidationErrors | null {
   const num = (g.get('corporateNumber')?.value ?? '').trim();
@@ -97,6 +124,9 @@ export class OfficeForm {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly language = inject(LanguageService);
+  private readonly criteria = inject(CriteriaService);
+  private readonly employees = inject(EmployeeService);
+  private readonly contracts = inject(ContractService);
   readonly context = inject(OfficeContext);
 
   readonly prefectures = PREFECTURES;
@@ -136,6 +166,19 @@ export class OfficeForm {
       healthRounding: [DEFAULT_PREMIUM.healthRounding as HealthRounding],
       // 編集で保険者・都道府県を変えたときの「何月分から」
       changeFrom: [''],
+      // 社会保険の適用・賞与の支払予定月・現物（形は logic/office-form-model.ts の CoverageFormValue）
+      coverage: this.fb.nonNullable.group({
+        hoursUnit: ['week' as StandardHoursUnit],
+        hours: [''],
+        monthlyDays: [''],
+        specific: ['none' as SpecificChoice],
+        specificSince: [''],
+        insuredCount: [''],
+        pensionFund: [false],
+        bonusMonths: this.fb.nonNullable.control<number[]>([]),
+        housing: [false],
+        meals: [false],
+      }),
     },
     { validators: [corporateNameRequired, kumiaiNameRequired] },
   );
@@ -182,6 +225,45 @@ export class OfficeForm {
       this.office()?.healthInsurer.type !== 'kumiai',
   );
 
+  // ===== 社会保険の適用 =====
+  readonly specificChoices = SPECIFIC_CHOICES;
+  readonly months = MONTHS_OF_YEAR;
+  readonly standardCandidate = STANDARD_HOURS_CANDIDATE;
+  /** 人数を数える月・基準を選ぶ月（今月） */
+  readonly thisMonth = toYearMonth(todayLocal());
+
+  readonly coverageValue = computed<CoverageFormValue>(() => this.value().coverage);
+  readonly coverageErrs = computed(() => coverageErrors(this.coverageValue()));
+
+  /** 加入の基準（masterCriteria）と、今月の基準 */
+  readonly criteriaRows = signal<CriteriaDoc[] | null>(null);
+  readonly criteriaNow = computed(() => criteriaAt(this.criteriaRows() ?? [], this.thisMonth));
+
+  /** 画面に入っている所定（読めなければ null）。数えた人数は、所定を直すとすぐ変わる */
+  private readonly formStandard = computed<WorkSchedule | null>(() => {
+    const v = this.coverageValue();
+    const weekly = standardWeeklyMinutes(v);
+    const days = parseNat(v.monthlyDays);
+    return weekly && days ? { weeklyMinutes: weekly, monthlyDays: days } : null;
+  });
+
+  /** 「数える」で読んだ従業員と契約（null ＝ まだ数えていない） */
+  readonly people = signal<HeadcountTarget[] | null>(null);
+  readonly counting = signal<'idle' | 'loading' | 'failed'>('idle');
+  readonly headcount = computed(() => {
+    const p = this.people();
+    return p ? countHeadcount(p, this.formStandard(), this.thisMonth) : null;
+  });
+
+  /** 注意：人数は、手で入れた人数があればそれ、なければ数えた人数 */
+  readonly coverageWarns = computed(() => {
+    const typed = parseNat(this.coverageValue().insuredCount);
+    return coverageWarnings(this.coverageValue(), {
+      headcount: typed ?? this.headcount()?.counted ?? null,
+      sizeMin: this.criteriaNow()?.sizeMin ?? null,
+    });
+  });
+
   readonly myOffices = signal<Office[]>([]);
   readonly copied = signal(false);
   readonly postalStatus = signal<'idle' | 'loading' | 'notFound' | 'failed'>('idle');
@@ -190,6 +272,13 @@ export class OfficeForm {
   readonly errorKey = signal<string | null>(null);
 
   constructor() {
+    this.criteria
+      .list()
+      .then((rows) => this.criteriaRows.set(rows))
+      .catch((err) => {
+        console.error(err);
+        this.criteriaRows.set([]);
+      });
     if (this.isEdit) {
       const o = this.context.current();
       if (o) this.fillFrom(o);
@@ -230,6 +319,7 @@ export class OfficeForm {
       method: premium.method,
       healthRounding: premium.healthRounding,
       changeFrom: '',
+      coverage: toCoverageForm(o),
     });
   }
 
@@ -307,7 +397,67 @@ export class OfficeForm {
       method: premium.method,
       healthRounding: premium.healthRounding,
     });
+    // 所定と特定適用事業所は法人単位で同じことが多いので写す（人数・基金・賞与・現物は事業所ごと）
+    const cov = toCoverageForm(o);
+    this.form.controls.coverage.patchValue({
+      hoursUnit: cov.hoursUnit,
+      hours: cov.hours,
+      monthlyDays: cov.monthlyDays,
+      specific: cov.specific,
+      specificSince: cov.specificSince,
+    });
     this.copied.set(true);
+  }
+
+  // ===== 社会保険の適用 =====
+
+  /** 適用の欄のエラーの翻訳キー（触る前・正しいときは null） */
+  coverageErrorOf(name: keyof CoverageFormValue): string | null {
+    if (!this.form.controls.coverage.controls[name].touched) return null;
+    const e = this.coverageErrs()[name];
+    return e ? `office.coverage.error.${e}` : null;
+  }
+
+  hasWarning(w: CoverageWarning): boolean {
+    return this.coverageWarns().includes(w);
+  }
+
+  /** 候補ボタン：週 40:00 */
+  fillStandardHours(): void {
+    this.form.controls.coverage.patchValue({ hoursUnit: 'week', hours: this.standardCandidate });
+    this.form.controls.coverage.controls.hours.markAsTouched();
+  }
+
+  toggleBonusMonth(month: number): void {
+    const c = this.form.controls.coverage.controls.bonusMonths;
+    c.setValue(toggleMonth(c.value, month));
+    c.markAsDirty();
+  }
+
+  /**
+   * 企業規模の人数を数える（この事業所の従業員と、1人ずつの契約を読む）
+   * 人数が多いと読む回数が増える（課金）ので、開いたときではなく、押したときだけ読む
+   */
+  async countPeople(): Promise<void> {
+    const o = this.office();
+    if (!o) return;
+    this.counting.set('loading');
+    try {
+      const list = await this.employees.list(o.id);
+      const people = await Promise.all(
+        list.map(async (e) => ({
+          birthDate: e.birthDate,
+          hireDate: e.hireDate,
+          retireDate: e.retireDate,
+          contracts: await this.contracts.list(o.id, e.id),
+        })),
+      );
+      this.people.set(people);
+      this.counting.set('idle');
+    } catch (err) {
+      console.error(err);
+      this.counting.set('failed');
+    }
   }
 
   /** 履歴の月の表示（「最初から」は文字で） */
@@ -345,7 +495,12 @@ export class OfficeForm {
   async submit(): Promise<void> {
     if (this.readOnly) return;
     const changeFrom = this.form.controls.changeFrom;
-    if (this.form.invalid || (this.insurerChanged() && !MONTH.test(changeFrom.value))) {
+    const coverage = fromCoverageForm(this.form.controls.coverage.getRawValue());
+    if (
+      this.form.invalid ||
+      !coverage ||
+      (this.insurerChanged() && !MONTH.test(changeFrom.value))
+    ) {
       this.form.markAllAsTouched();
       return;
     }
@@ -378,6 +533,7 @@ export class OfficeForm {
         deduction: v.deduction,
       },
       premium: { method: v.method, healthRounding: v.healthRounding },
+      ...coverage,
     };
 
     try {
@@ -387,7 +543,7 @@ export class OfficeForm {
         const history = this.insurerChanged()
           ? withInsurerChange(insurerHistoryOf(office), { from: changeFrom.value, ...period })
           : insurerHistoryOf(office);
-        const input: OfficeBasicInput = { ...base, insurerHistory: history };
+        const input: OfficeInput = { ...base, insurerHistory: history };
         await this.offices.update(office.id, input);
         const fresh = await this.offices.get(office.id);
         if (fresh) {
@@ -399,7 +555,7 @@ export class OfficeForm {
         this.saved.set(true);
       } else {
         // 新規登録：履歴は「最初から今の値」の1行
-        const input: OfficeBasicInput = {
+        const input: OfficeInput = {
           ...base,
           insurerHistory: [{ from: FROM_THE_START, ...period }],
         };

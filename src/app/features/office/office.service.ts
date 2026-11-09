@@ -22,7 +22,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class OfficeService {
   /** 事業所を作成し、自分の currentOfficeId をその事業所にする（同時に） */
-  async create(uid: string, input: OfficeBasicInput): Promise<string> {
+  async create(uid: string, input: OfficeBasicInput | OfficeInput): Promise<string> {
     const officeRef = doc(collection(db, 'offices'));
     const batch = writeBatch(db);
     const full: OfficeInput = { ...officeExtras(), ...input };

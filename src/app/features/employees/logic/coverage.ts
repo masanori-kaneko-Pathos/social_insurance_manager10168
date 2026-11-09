@@ -8,9 +8,11 @@ import {
   addDays,
   dateOf,
   DateStr,
+  daysInMonth,
   toYearMonth,
   YearMonth,
 } from '../../../shared/utils/date';
+import { contractAt } from './contract-form-model';
 
 export interface Enrollment {
   enrolled: boolean;
@@ -116,4 +118,89 @@ export function defaultEnrollmentDates(hireDate: DateStr, retireDate: DateStr | 
     acquiredDate: hireDate,
     lostDate: retireDate ? addDays(retireDate, 1) : null,
   };
+}
+
+// ===== 7. 4分の3基準と特定適用事業所（短時間労働者の加入） =====
+
+/** 通常の労働者の所定（事業所の設定）と、1人の契約の所定。どちらも同じ形 */
+export interface WorkSchedule {
+  weeklyMinutes: number; // 週の所定労働時間（分）
+  monthlyDays: number; // 月の所定労働日数
+}
+
+/**
+ * 4分の3基準（日本年金機構「短時間労働者に対する適用拡大」）
+ * - meets：週の所定労働時間と月の所定労働日数が、どちらも通常の労働者の4分の3以上（一般の被保険者）
+ * - below：どちらかが4分の3未満（短時間労働者として判定する）
+ * - unknown：事業所の所定が入っていないので判定できない
+ * 小数を出さないよう「× 4 と × 3」で比べる（週40時間なら 30時間ちょうどは meets）
+ */
+export type ThreeQuarters = 'meets' | 'below' | 'unknown';
+
+export function threeQuartersOf(work: WorkSchedule, standard: WorkSchedule | null): ThreeQuarters {
+  if (!standard) return 'unknown';
+  const hoursOk = work.weeklyMinutes * 4 >= standard.weeklyMinutes * 3;
+  const daysOk = work.monthlyDays * 4 >= standard.monthlyDays * 3;
+  return hoursOk && daysOk ? 'meets' : 'below';
+}
+
+/**
+ * その月に特定適用事業所か（任意特定適用も含む）
+ * 一度該当すると、人数が減っても自動では外れない（年金機構の扱い）ので、該当した月以後はずっと true
+ */
+export function isSpecificApplied(
+  s: { since: YearMonth | null } | null | undefined,
+  month: YearMonth,
+): boolean {
+  return !!s?.since && s.since <= month;
+}
+
+/** その月に使う加入の基準（masterCriteria のうち、from がその月以前でいちばん新しい行。なければ null） */
+export function criteriaAt<T extends { from: YearMonth }>(rows: T[], month: YearMonth): T | null {
+  let best: T | null = null;
+  for (const r of rows) if (r.from <= month && (!best || r.from > best.from)) best = r;
+  return best;
+}
+
+/** 人数を数えるときに使う従業員の項目 */
+export interface HeadcountTarget {
+  birthDate: DateStr;
+  hireDate: DateStr;
+  retireDate: DateStr | null;
+  contracts: (WorkSchedule & { from: DateStr })[];
+}
+
+export interface Headcount {
+  counted: number; // 数えた人（企業規模の人数）
+  noContract: number; // 在籍・70歳未満だが、その月の契約がなくて判定できなかった人
+}
+
+/**
+ * 企業規模の人数（厚生年金の被保険者の数え方）
+ * - その月に在籍している（入社の月 〜 退職の月）
+ * - 70歳未満（70歳到達の月より前。厚年の資格がある人）
+ * - その月の末日に効いている契約が、4分の3基準を満たす（短時間労働者は数えない）
+ * 事業所の所定がなければ数えられないので null
+ */
+export function countHeadcount(
+  people: HeadcountTarget[],
+  standard: WorkSchedule | null,
+  month: YearMonth,
+): Headcount | null {
+  if (!standard) return null;
+  const monthEnd = `${month}-${String(daysInMonth(month)).padStart(2, '0')}`;
+  let counted = 0;
+  let noContract = 0;
+  for (const p of people) {
+    if (toYearMonth(p.hireDate) > month) continue;
+    if (p.retireDate && toYearMonth(p.retireDate) < month) continue;
+    if (month >= toYearMonth(ageReachDate(p.birthDate, 70))) continue;
+    const contract = contractAt(p.contracts, monthEnd);
+    if (!contract) {
+      noContract++;
+      continue;
+    }
+    if (threeQuartersOf(contract, standard) === 'meets') counted++;
+  }
+  return { counted, noContract };
 }
