@@ -31,9 +31,24 @@ service cloud.firestore {
       return signedIn() && officeOf(officeId).memberRoles[request.auth.uid] == 'admin';
     }
 
+    // ----- 従業員のアカウント（マイページ）。users の employeeRef で、どの事業所のどの従業員かが決まる -----
+    function isEmployeeOf(officeId) {
+      return signedIn() && myUser().role == 'employee' && myUser().employeeRef.officeId == officeId;
+    }
+
+    function isEmployeeSelf(officeId, employeeId) {
+      return isEmployeeOf(officeId) && myUser().employeeRef.employeeId == employeeId;
+    }
+
+    /** 自分の従業員ID（isEmployeeOf のあとで使う） */
+    function myEmployeeId() {
+      return myUser().employeeRef.employeeId;
+    }
+
     // ----- 形 -----
+    // 項目がちょうど keys だけ：全部あって、数が同じ（hasOnly と hasAll を両方使うより、評価の数が少ない）
     function exactKeys(d, keys) {
-      return d.keys().hasOnly(keys) && d.keys().hasAll(keys);
+      return d.keys().hasAll(keys) && d.keys().size() == keys.size();
     }
 
     function str(v, max) {
@@ -97,17 +112,34 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if isSelf(uid);
 
-      // 新規登録は「事業所を作れるアカウント」だけ（従業員・一般ユーザーは招待で作る。マイページの工事で足す）
+      function inviteAfter(ref) {
+        return getAfter(/databases/$(database)/documents/offices/$(ref.officeId)/invites/$(ref.inviteCode)).data;
+      }
+
+      // 従業員のアカウント：招待を使うのと同じ batch で作る（招待の usedBy が自分になっている）
+      function validEmployeeUser(d) {
+        return d.role == 'employee'
+          && d.currentOfficeId == null
+          && d.employeeRef is map && exactKeys(d.employeeRef, ['officeId', 'employeeId', 'inviteCode'])
+          && d.employeeRef.officeId is string && d.employeeRef.employeeId is string
+          && d.employeeRef.inviteCode is string
+          && inviteAfter(d.employeeRef).kind == 'employee'
+          && inviteAfter(d.employeeRef).employeeId == d.employeeRef.employeeId
+          && inviteAfter(d.employeeRef).usedBy == request.auth.uid;
+      }
+
+      // 新規登録は「事業所を作れるアカウント」か、招待を使った従業員（一般ユーザーの招待は、あとで足す）
       allow create: if isSelf(uid)
         && exactKeys(request.resource.data,
              ['email', 'displayName', 'role', 'currentOfficeId', 'lang', 'employeeRef', 'createdAt', 'updatedAt'])
         && request.resource.data.email == request.auth.token.email
         && str(request.resource.data.displayName, 50)
-        && request.resource.data.role == 'admin'
-        && request.resource.data.currentOfficeId == null
         && request.resource.data.lang in ['ja', 'en']
-        && request.resource.data.employeeRef == null
-        && created(request.resource.data);
+        && created(request.resource.data)
+        && ((request.resource.data.role == 'admin'
+              && request.resource.data.currentOfficeId == null
+              && request.resource.data.employeeRef == null)
+            || validEmployeeUser(request.resource.data));
 
       // 開いている事業所は「自分がメンバーの事業所」にしか切り替えられない
       allow update: if isSelf(uid)
@@ -229,6 +261,7 @@ service cloud.firestore {
 
     match /offices/{officeId} {
       // 読む：メンバーだけ（一覧の検索も、array-contains で自分に絞ったものだけ通る）
+      // 従業員のアカウントには見せない（要るものは shared/forEmployees に写す）
       allow read: if signedIn() && request.auth.uid in resource.data.memberUids;
 
       // 作る：事業所を作れるアカウントだけ。メンバーは自分1人・権限は admin で始める
@@ -268,25 +301,6 @@ service cloud.firestore {
           && (e.lossReason == null || e.lossReason in ['retire', 'death', 'age75', 'disability', 'agreement']);
       }
 
-      function validContact(c) {
-        return c is map && exactKeys(c, ['postalCode', 'address', 'phone', 'email'])
-          && (c.postalCode == null || (c.postalCode is string && c.postalCode.matches('^[0-9]{7}$')))
-          && optStr(c.address, 200) && optStr(c.phone, 20) && optStr(c.email, 254);
-      }
-
-      function validCommute(c) {
-        return c is map && exactKeys(c, ['method', 'route'])
-          && optStr(c.method, 50) && optStr(c.route, 200);
-      }
-
-      function validBank(b) {
-        return b is map && exactKeys(b, ['bankName', 'branchName', 'accountType', 'accountNumber', 'holderKana'])
-          && optStr(b.bankName, 50) && optStr(b.branchName, 50)
-          && (b.accountType == null || b.accountType in ['ordinary', 'current', 'savings'])
-          && (b.accountNumber == null || (b.accountNumber is string && b.accountNumber.matches('^[0-9]{1,8}$')))
-          && optStr(b.holderKana, 100);
-      }
-
       function validCertificate(c) {
         return c == null || (c is map && exactKeys(c, ['country', 'from', 'to', 'covers'])
           && optCode(c.country) && c.country != null
@@ -294,83 +308,63 @@ service cloud.firestore {
           && c.covers in ['pension', 'pensionAndHealth']);
       }
 
-      function validPersonName(n) {
-        return n == null || (n is map && exactKeys(n, ['last', 'first', 'lastKana', 'firstKana'])
-          && str(n.last, 50) && optStr(n.first, 50) && str(n.lastKana, 50) && optStr(n.firstKana, 50));
+      // ----- 従業員の文書の検査は「最小限」にする -----
+      // Firestore のルールには「1回の判定で数える式は1000まで」という上限がある。
+      // 従業員の文書は項目が多く、全部を確かめると上限を超えて、正しいデータでも断られる（外国籍の人の登録で起きた）。
+      // そこで、ルールでは「誰が書けるか（管理者だけ）」と、保険料・届出に効く所だけを確かめ、
+      // 1項目ずつの細かい形（文字数・郵便番号・口座番号・ローマ字 など）は、画面と CSV の取り込みで確かめる。
+
+      // old：更新のときは今の文書、作るときは null。更新では、変わっていないまとまりの検査を飛ばす
+      function unchanged(d, old, k) {
+        return old != null && d[k] == old[k];
       }
 
-      function validForeign(f) {
-        return f == null || (f is map && exactKeys(f, [
-              'romanLastName', 'romanFirstName', 'romanMiddleName', 'noRomanReason', 'noRomanReasonText',
-              'kanjiName', 'alias', 'filingName', 'residentRegistered', 'needsRomanNameFiling',
-              'nationality', 'residenceCardNumber', 'residenceStatus',
-              'residenceExpiry', 'workPermit', 'workPermitWeeklyMinutes', 'certificate', 'noAddressReason'])
-          && optStr(f.romanLastName, 50) && optStr(f.romanFirstName, 50) && optStr(f.romanMiddleName, 50)
-          // ローマ字氏名か、ない理由のどちらかがある
-          && (f.romanLastName != null || f.noRomanReason != null)
-          && (f.noRomanReason == null || f.noRomanReason in ['shortStay', 'overseas', 'notOnCard', 'other'])
-          && optStr(f.noRomanReasonText, 100)
-          && validPersonName(f.kanjiName) && validPersonName(f.alias)
-          && f.filingName in ['roman', 'kanji', 'alias']
-          && (f.filingName != 'kanji' || f.kanjiName != null)
-          && (f.filingName != 'alias' || f.alias != null)
-          && f.residentRegistered is bool && f.needsRomanNameFiling is bool
-          && optCode(f.nationality) && f.nationality != null
-          && (f.residenceCardNumber == null
-              || (f.residenceCardNumber is string && f.residenceCardNumber.matches('^[A-Z]{2}[0-9]{8}[A-Z]{2}$')))
-          && optStr(f.residenceStatus, 50) && optDate(f.residenceExpiry)
-          && f.workPermit is bool && optIntIn(f.workPermitWeeklyMinutes, 0, 10080)
-          && validCertificate(f.certificate)
-          && (f.noAddressReason == null || f.noAddressReason in ['overseas', 'shortStay', 'other']));
-      }
-
-      function EMPLOYEE_KEYS() {
-        return [
-          'employeeNumber', 'lastName', 'firstName', 'lastNameKana', 'firstNameKana', 'nameOrder', 'birthDate', 'sex',
-          'hireDate', 'retireDate', 'retireReason',
-          'health', 'pension', 'acquisitionType', 'multipleOffices', 'rehired', 'needsConfirmationCard', 'optInDate', 'optOutDate',
-          'insuredNumber', 'basicPensionNumber',
-          'contact', 'commute', 'bankAccount', 'collectionMethod', 'foreign', 'leaves', 'userUid',
-          'annualIncomeEstimate', 'spouseAnnualIncome',
-          'createdAt', 'updatedAt'];
-      }
-
-      function validEmployee(d) {
-        // careExemptions は後から足した項目なので、古い文書にはなくてもよい（ほかは全部そろっている）
-        return d.keys().hasOnly(EMPLOYEE_KEYS().concat(['careExemptions']))
-          && d.keys().hasAll(EMPLOYEE_KEYS())
+      function validEmployee(d, old) {
+        return d.keys().size() <= 33
+          && d.keys().hasAll(['lastName', 'lastNameKana', 'birthDate', 'hireDate', 'health', 'pension',
+                              'contact', 'bankAccount', 'foreign', 'leaves', 'userUid', 'createdAt', 'updatedAt'])
+          // 氏名・番号
           && optStr(d.employeeNumber, 20)
           && str(d.lastName, 50) && str(d.lastNameKana, 50)
-          // 名：外国籍で名のない人（姓だけの国）は空でもよい
           && (str(d.firstName, 50) || (d.foreign != null && d.firstName == ''))
-          && (str(d.firstNameKana, 50) || (d.foreign != null && d.firstNameKana == ''))
-          && d.nameOrder in ['kana', 'roman']
-          && isDate(d.birthDate)
           && (d.sex == null || d.sex in ['male', 'female'])
-          && isDate(d.hireDate) && optDate(d.retireDate)
+          && (d.basicPensionNumber == null || d.basicPensionNumber.matches('^[0-9]{10}$'))
+          // 日付：生年月日 < 入社日 ≦ 退職日
+          && isDate(d.birthDate) && isDate(d.hireDate) && optDate(d.retireDate)
+          && d.birthDate < d.hireDate
+          && (d.retireDate == null || d.hireDate <= d.retireDate)
           && (d.retireReason == null || d.retireReason in ['resign', 'death', 'transfer', 'other'])
-          && validEnrollment(d.health) && validEnrollment(d.pension)
-          && d.acquisitionType in ['standard', 'mutualAidLoan', 'seamenContinued']
-          && d.multipleOffices is bool && d.rehired is bool && d.needsConfirmationCard is bool
-          && optDate(d.optInDate) && optDate(d.optOutDate)
-          && optStr(d.insuredNumber, 10)
-          && (d.basicPensionNumber == null || (d.basicPensionNumber is string && d.basicPensionNumber.matches('^[0-9]{10}$')))
-          && validContact(d.contact) && validCommute(d.commute) && validBank(d.bankAccount)
-          && (d.collectionMethod == null || d.collectionMethod in ['payroll', 'cash'])
-          && validForeign(d.foreign)
-          // 休業：配列で20件まで。1件ずつの中身はアプリで確かめる（ルールに繰り返しがないため）
+          // 加入：保険料に直接効くので、変わったときは形まで確かめる
+          && (unchanged(d, old, 'health') || validEnrollment(d.health))
+          && (unchanged(d, old, 'pension') || validEnrollment(d.pension))
+          // 連絡先・口座：番号の形だけ（郵便番号7桁・口座番号7桁）
+          && (unchanged(d, old, 'contact')
+              || (d.contact.postalCode == null || d.contact.postalCode.matches('^[0-9]{7}$')))
+          && (unchanged(d, old, 'bankAccount')
+              || (d.bankAccount.accountNumber == null || d.bankAccount.accountNumber.matches('^[0-9]{7}$')))
+          // 外国籍：国籍のコードと、社会保障協定の適用証明書（保険料に効く）
+          && (unchanged(d, old, 'foreign') || d.foreign == null
+              || (d.foreign is map && optCode(d.foreign.nationality) && d.foreign.nationality != null
+                  && validCertificate(d.foreign.certificate)))
+          // 休業・介護保険の適用除外：配列で件数まで（1件ずつの中身はアプリで確かめる）
           && d.leaves is list && d.leaves.size() <= 20
-          // 介護保険の適用除外：配列で10件まで（中身はアプリで確かめる）
           && (!('careExemptions' in d) || (d.careExemptions is list && d.careExemptions.size() <= 10))
-          && (d.userUid == null || d.userUid is string)
-          && (d.annualIncomeEstimate == null || yen(d.annualIncomeEstimate))
-          && (d.spouseAnnualIncome == null || yen(d.spouseAnnualIncome));
+          && (d.userUid == null || d.userUid is string);
       }
 
       match /employees/{employeeId} {
-        allow read: if isMember(officeId);
-        allow create: if isAdmin(officeId) && validEmployee(request.resource.data) && created(request.resource.data);
-        allow update: if isAdmin(officeId) && validEmployee(request.resource.data) && updated(request.resource.data);
+        allow read: if isMember(officeId) || isEmployeeSelf(officeId, employeeId);
+        allow create: if isAdmin(officeId) && validEmployee(request.resource.data, null) && created(request.resource.data);
+        allow update: if isAdmin(officeId) && validEmployee(request.resource.data, resource.data) && updated(request.resource.data);
+        // 招待を使った本人が、マイページのアカウントを結びつける（userUid だけ。users を作るのと同じ batch）
+        allow update: if signedIn()
+          && resource.data.userUid == null
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['userUid', 'updatedAt'])
+          && request.resource.data.userUid == request.auth.uid
+          && request.resource.data.updatedAt == request.time
+          && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'employee'
+          && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.employeeRef.officeId == officeId
+          && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.employeeRef.employeeId == employeeId;
         // 削除：しない（退職は退職日で表す）
         allow delete: if false;
 
@@ -384,7 +378,7 @@ service cloud.firestore {
               && std(d.health) && std(d.pension);
           }
 
-          allow read: if isMember(officeId);
+          allow read: if isMember(officeId) || isEmployeeSelf(officeId, employeeId);
           allow create: if isAdmin(officeId) && validRemuneration(request.resource.data) && created(request.resource.data);
           allow update: if isAdmin(officeId) && validRemuneration(request.resource.data) && updated(request.resource.data);
           allow delete: if isAdmin(officeId);
@@ -414,7 +408,7 @@ service cloud.firestore {
               && optStr(d.note, 500);
           }
 
-          allow read: if isMember(officeId);
+          allow read: if isMember(officeId) || isEmployeeSelf(officeId, employeeId);
           allow create: if isAdmin(officeId) && validContract(request.resource.data) && created(request.resource.data);
           allow update: if isAdmin(officeId) && validContract(request.resource.data) && updated(request.resource.data);
           allow delete: if isAdmin(officeId);
@@ -482,7 +476,7 @@ service cloud.firestore {
               && d.needsConfirmationCard is bool && optStr(d.note, 500);
           }
 
-          allow read: if isMember(officeId);
+          allow read: if isMember(officeId) || isEmployeeSelf(officeId, employeeId);
           allow create: if isAdmin(officeId) && validDependent(request.resource.data) && created(request.resource.data);
           allow update: if isAdmin(officeId) && validDependent(request.resource.data) && updated(request.resource.data);
           allow delete: if isAdmin(officeId);
@@ -647,6 +641,23 @@ service cloud.firestore {
       // 事業所の下のほかの入れ物
       // ==========================================================
 
+      // ----- 従業員に見せてよい設定の写し（shared/forEmployees の1件だけ） -----
+      // 事業所の文書（住所・番号・メンバー）は従業員に見せず、保険料の計算に要る設定だけを管理者が写す
+      match /shared/{docId} {
+        allow read: if isMember(officeId) || isEmployeeOf(officeId);
+        // 事業所を作るのと同じ batch でも書けるように、getAfter で管理者かを見る
+        allow write: if signedIn()
+          && getAfter(/databases/$(database)/documents/offices/$(officeId)).data.memberRoles[request.auth.uid] == 'admin'
+          && docId == 'forEmployees'
+          && exactKeys(request.resource.data, ['name', 'prefecture', 'healthInsurer', 'insurerHistory', 'premium', 'updatedAt'])
+          && str(request.resource.data.name, 100)
+          && request.resource.data.prefecture is string
+          && request.resource.data.healthInsurer is map
+          && validInsurerHistory(request.resource.data)
+          && validPremiumSettings(request.resource.data.premium)
+          && request.resource.data.updatedAt == request.time;
+      }
+
       // ----- 組合健保の料率（ID ＝ 適用開始月） -----
       // 「その月が組合の期間か」はルールでは確かめられない（履歴を1行ずつ見られない）のでアプリで確かめる。
       match /kumiaiRates/{rateMonth} {
@@ -656,7 +667,7 @@ service cloud.firestore {
             && validSplit(d.health) && validSplit(d.care) && validSplit(d.childSupport);
         }
 
-        allow read: if isMember(officeId);
+        allow read: if isMember(officeId) || isEmployeeOf(officeId);
         allow create: if isAdmin(officeId) && validKumiaiRate(request.resource.data) && created(request.resource.data);
         allow update: if isAdmin(officeId) && validKumiaiRate(request.resource.data) && updated(request.resource.data);
         allow delete: if isAdmin(officeId);
@@ -694,13 +705,25 @@ service cloud.firestore {
             && d.createdBy == request.auth.uid && d.createdAt == request.time;
         }
 
-        allow read: if isAdmin(officeId);
+        // 1件を読む：コードを知っている人（ログインしていれば）。一覧：管理者だけ
+        allow get: if signedIn();
+        allow list: if isAdmin(officeId);
         allow create: if isAdmin(officeId) && validInvite(request.resource.data);
-        allow update: if false;
+        // 使う：従業員の招待を、期限内に1回だけ。users を作るのと同じ batch（users の employeeRef がこの招待）
+        allow update: if signedIn()
+          && resource.data.kind == 'employee'
+          && resource.data.usedBy == null
+          && resource.data.expiresAt > request.time
+          && (resource.data.email == null || resource.data.email == request.auth.token.email)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedBy', 'usedAt'])
+          && request.resource.data.usedBy == request.auth.uid
+          && request.resource.data.usedAt == request.time
+          && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.employeeRef.officeId == officeId
+          && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.employeeRef.inviteCode == code;
         allow delete: if isAdmin(officeId);
       }
 
-      // ----- 依頼と申請（ID は自動）※ 従業員が答える・申請する部分は、マイページの工事で足す -----
+      // ----- 依頼と申請（ID は自動）。管理者が出す・確かめる／従業員が答える・申請する -----
       match /requests/{requestId} {
         function validRequest(d) {
           return exactKeys(d, ['type', 'direction', 'employeeId', 'title', 'questions', 'answers', 'status', 'comment',
@@ -717,17 +740,46 @@ service cloud.firestore {
             && d.createdBy is string;
         }
 
-        allow read: if isAdmin(officeId);
+        // 従業員は自分あての分だけ（一覧は employeeId で絞った検索だけ通る）
+        allow read: if isAdmin(officeId)
+          || (isEmployeeOf(officeId) && resource.data.employeeId == myEmployeeId());
+
         allow create: if isAdmin(officeId) && validRequest(request.resource.data)
+          && request.resource.data.direction == 'toEmployee'
+          && request.resource.data.status == 'open'
+          && request.resource.data.answers.size() == 0
           && request.resource.data.createdBy == request.auth.uid
           && created(request.resource.data);
-        allow update: if isAdmin(officeId) && validRequest(request.resource.data) && updated(request.resource.data);
+        // 従業員からの変更の申請：答えを入れて、提出済みで作る
+        allow create: if isEmployeeOf(officeId) && validRequest(request.resource.data)
+          && request.resource.data.direction == 'fromEmployee'
+          && request.resource.data.type == 'change'
+          && request.resource.data.employeeId == myEmployeeId()
+          && request.resource.data.status == 'submitted'
+          && request.resource.data.comment == null
+          && request.resource.data.dueDate == null
+          && request.resource.data.createdBy == request.auth.uid
+          && created(request.resource.data);
+
+        // 管理者：承認・差し戻し（質問・あて先・向きは変えない）
+        allow update: if isAdmin(officeId) && validRequest(request.resource.data) && updated(request.resource.data)
+          && !request.resource.data.diff(resource.data).affectedKeys()
+               .hasAny(['type', 'direction', 'employeeId', 'questions', 'createdBy', 'createdAt']);
+        // 従業員：まだ・差し戻しの依頼（申請）に答えて、提出する
+        allow update: if isEmployeeOf(officeId)
+          && resource.data.employeeId == myEmployeeId()
+          && resource.data.status in ['open', 'rejected']
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answers', 'status', 'updatedAt'])
+          && request.resource.data.status == 'submitted'
+          && request.resource.data.answers is map && request.resource.data.answers.size() <= 50
+          && request.resource.data.updatedAt == request.time;
         allow delete: if isAdmin(officeId);
       }
 
-      // ----- 受信箱（ID は自動）※ 従業員が読む部分は、マイページの工事で足す -----
+      // ----- 受信箱（ID は自動）。管理者が書き、従業員が読む -----
       match /notifications/{notificationId} {
-        allow read: if isAdmin(officeId);
+        allow read: if isAdmin(officeId)
+          || (isEmployeeOf(officeId) && resource.data.employeeId == myEmployeeId());
         allow create: if isAdmin(officeId)
           && exactKeys(request.resource.data, ['employeeId', 'kind', 'title', 'body', 'link', 'readAt', 'createdAt'])
           && request.resource.data.employeeId is string
@@ -737,7 +789,12 @@ service cloud.firestore {
           && optStr(request.resource.data.link, 200)
           && request.resource.data.readAt == null
           && request.resource.data.createdAt == request.time;
-        allow update: if false;
+        // 従業員：既読にするだけ
+        allow update: if isEmployeeOf(officeId)
+          && resource.data.employeeId == myEmployeeId()
+          && resource.data.readAt == null
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readAt'])
+          && request.resource.data.readAt == request.time;
         allow delete: if isAdmin(officeId);
       }
 
