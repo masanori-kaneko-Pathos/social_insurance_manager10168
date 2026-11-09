@@ -240,3 +240,7 @@ th .arrow {
   white-space: nowrap;
   border: 0;
 }
+
+th .arrow.default {
+  opacity: 0.4;
+}

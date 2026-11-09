@@ -81,7 +81,8 @@
               <th [class.num]="k === 'age'" [attr.aria-sort]="ariaSort(k)">
                 <button type="button" class="sort" [class.on]="sortKey() === k" (click)="sortBy(k)">
                   {{ 'employee.list.sort.' + k | transloco }}
-                  <span class="arrow" aria-hidden="true">{{ sortKey() === k ? (sortDir() === 'asc' ? '▲' : '▼') : '' }}</span>
+                  <!-- デフォルト（社員番号の昇順）のときは矢印を薄く出す -->
+                  <span class="arrow" [class.default]="isDefaultSort()" aria-hidden="true">{{ sortKey() === k ? (sortDir() === 'asc' ? '▲' : '▼') : '' }}</span>
                 </button>
               </th>
             }

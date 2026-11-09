@@ -63,8 +63,10 @@ export class EmployeeList {
   });
   readonly query = computed(() => this.params().get('q') ?? '');
   readonly status = computed(() => pick(STATUSES, this.params().get('status'), 'active'));
-  readonly sortKey = computed<SortKey>(() => pick(SORT_KEYS, this.params().get('sort'), 'name'));
+  /** 並び替え。sort がなければデフォルト（社員番号の昇順） */
+  readonly sortKey = computed<SortKey>(() => pick(SORT_KEYS, this.params().get('sort'), 'number'));
   readonly sortDir = computed<SortDir>(() => (this.params().get('dir') === 'desc' ? 'desc' : 'asc'));
+  readonly isDefaultSort = computed(() => this.sortKey() === 'number' && this.sortDir() === 'asc');
   readonly coverage = computed<CoverageFilter>(() => pick(COVERAGE_FILTERS, this.params().get('cov'), 'all'));
   readonly category = computed<CategoryFilter>(() => pick(CATEGORY_FILTERS, this.params().get('cat'), 'all'));
 
@@ -201,10 +203,22 @@ export class EmployeeList {
     this.setQuery({ cat: c === 'all' ? null : c });
   }
 
-  /** 見出しを押す：同じ列なら向きを変える、違う列ならその列の昇順 */
+  /**
+   * 見出しを押すたびに回す
+   * - 氏名・年齢・入社日：デフォルト → 昇順 → 降順 → デフォルト
+   * - 社員番号：デフォルト（＝社員番号の昇順）→ 降順 → デフォルト
+   */
   sortBy(key: SortKey): void {
-    const dir: SortDir = this.sortKey() === key && this.sortDir() === 'asc' ? 'desc' : 'asc';
-    this.setQuery({ sort: key === 'name' ? null : key, dir: dir === 'asc' ? null : dir });
+    const same = this.sortKey() === key;
+    let next: { sort: SortKey; dir: SortDir } | null; // null ＝ デフォルト
+    if (key === 'number') {
+      next = this.isDefaultSort() ? { sort: 'number', dir: 'desc' } : null;
+    } else if (!same) {
+      next = { sort: key, dir: 'asc' };
+    } else {
+      next = this.sortDir() === 'asc' ? { sort: key, dir: 'desc' } : null;
+    }
+    this.setQuery(next ? { sort: next.sort, dir: next.dir === 'asc' ? null : 'desc' } : { sort: null, dir: null });
   }
 
   ariaSort(key: SortKey): 'ascending' | 'descending' | 'none' {
