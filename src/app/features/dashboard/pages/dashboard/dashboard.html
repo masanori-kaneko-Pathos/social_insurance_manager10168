@@ -1,5 +1,51 @@
 <h1>{{ 'dashboard.greeting' | transloco: { name: profile()?.displayName ?? '' } }}</h1>
 
+<!-- やること（手続きが要りそうな人。開くたびに計算する） -->
+<section class="card todo">
+  <h2>{{ 'dashboard.todo.title' | transloco }}</h2>
+
+  @for (t of officeTodos(); track t) {
+    <div class="todo-item office">
+      <span class="kind kind-office">{{ 'dashboard.todo.kind.office' | transloco }}</span>
+      <span>{{ 'dashboard.todo.office.' + t | transloco }}</span>
+      @if (t === 'noStandard') {
+        <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>
+      }
+    </div>
+  }
+
+  @if (todosLoading()) {
+    <p class="muted">{{ 'common.loading' | transloco }}</p>
+  } @else {
+    @for (r of todos(); track r.todo.employeeId + r.todo.kind) {
+      <div class="todo-item">
+        <span class="kind kind-{{ r.todo.kind }}">{{ 'dashboard.todo.kind.' + r.todo.kind | transloco }}</span>
+        <a class="who" [routerLink]="['/o', office()?.id, 'employees', r.employee.id]">{{ employeeName(r.employee) }}</a>
+        <span class="what">
+          {{ 'dashboard.todo.text.' + r.todo.kind | transloco: {
+            date: r.todo.date,
+            today: ('contract.category.' + r.todo.today.category | transloco),
+            next: r.todo.next ? ('contract.category.' + r.todo.next.category | transloco) : ''
+          } }}
+        </span>
+        <span class="why">{{ 'contract.reason.' + (r.todo.next ?? r.todo.today).reason | transloco }}</span>
+      </div>
+    } @empty {
+      @if (officeTodos().length === 0) {
+        <p class="muted">{{ 'dashboard.todo.empty' | transloco }}</p>
+      }
+    }
+  }
+
+  <div class="todo-links">
+    <a [routerLink]="['/o', office()?.id, 'revisions']">{{ 'dashboard.todo.toRevisions' | transloco }} →</a>
+    @if (regularSeason(); as y) {
+      <a [routerLink]="['/o', office()?.id, 'regular', y]">{{ 'payroll.toRegular' | transloco: { year: y } }} →</a>
+    }
+  </div>
+  <p class="hint">{{ 'dashboard.todo.hint' | transloco }}</p>
+</section>
+
 @if (office(); as o) {
   <section class="card summary">
     <h2>{{ o.name }}</h2>

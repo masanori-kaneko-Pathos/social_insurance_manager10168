@@ -182,3 +182,56 @@ thead th {
   font-size: var(--font-xs);
   color: var(--color-text-sub);
 }
+
+/* やること */
+.todo-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-xs) var(--space-sm);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.todo-item .who {
+  font-weight: 600;
+}
+
+.todo-item .why {
+  flex-basis: 100%;
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.kind {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: var(--font-xs, 12px);
+  background: var(--color-highlight, #f2d6b3);
+}
+
+.kind-acquire,
+.kind-lose,
+.kind-office {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+
+.kind-upcoming,
+.kind-categoryChange {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.todo-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+.todo .hint {
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}

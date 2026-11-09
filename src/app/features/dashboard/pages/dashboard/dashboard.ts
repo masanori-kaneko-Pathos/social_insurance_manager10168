@@ -20,6 +20,16 @@ import {
   sortMonthOf,
 } from '../../../employees/logic/age-events';
 import { OfficeContext } from '../../../office/office-context.service';
+import { ContractDoc } from '../../../../core/models/contract';
+import { CriteriaDoc } from '../../../../core/models/master';
+import { ContractService } from '../../../employees/contract.service';
+import { CriteriaService } from '../../../office/criteria.service';
+import { personTodos, sortTodos, Todo } from '../../logic/todos';
+
+interface TodoRow {
+  todo: Todo;
+  employee: Employee;
+}
 
 /** 「以内」の範囲：今月から何か月先まで（0 は今月だけ） */
 const WITHIN = [0, 1, 6, 12] as const;
@@ -47,6 +57,8 @@ export class Dashboard {
   private readonly context = inject(OfficeContext);
   private readonly language = inject(LanguageService);
   private readonly employeesApi = inject(EmployeeService);
+  private readonly contractsApi = inject(ContractService);
+  private readonly criteriaApi = inject(CriteriaService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -120,6 +132,47 @@ export class Dashboard {
 
   readonly count = computed(() => this.groups().reduce((s, g) => s + g.rows.length, 0));
 
+  // ===== やること（区分の判定と加入の状態から） =====
+  private readonly contracts = signal<Map<string, ContractDoc[]>>(new Map());
+  private readonly criteria = signal<CriteriaDoc[] | null>(null);
+  readonly todosLoading = signal(true);
+
+  /** 事業所の設定で、判定の前に要るものが足りない */
+  readonly officeTodos = computed(() => {
+    const o = this.office();
+    const list: ('noStandard' | 'noCriteria')[] = [];
+    if (o && !o.standardHours) list.push('noStandard');
+    if (this.criteria()?.length === 0) list.push('noCriteria');
+    return list;
+  });
+
+  readonly todos = computed<TodoRow[]>(() => {
+    const o = this.office();
+    const criteria = this.criteria();
+    if (!o || !criteria) return [];
+    const office = { standardHours: o.standardHours ?? null, specificApplication: o.specificApplication };
+    const byId = new Map(this.employees().map((e) => [e.id, e]));
+    const list = this.employees().flatMap((e) =>
+      personTodos(
+        { ...e, optOutDate: e.optOutDate ?? null, contracts: this.contracts().get(e.id) ?? [] },
+        office,
+        criteria,
+        this.today,
+      ),
+    );
+    return sortTodos(list).map((todo) => ({ todo, employee: byId.get(todo.employeeId)! }));
+  });
+
+  /** 定時決定の時期（6〜8月）は、定時決定の画面への入口を出す */
+  readonly regularSeason = computed(() => {
+    const m = Number(this.thisMonth.slice(5));
+    return m >= 6 && m <= 8 ? Number(this.thisMonth.slice(0, 4)) : null;
+  });
+
+  employeeName(e: Employee): string {
+    return `${e.lastName} ${e.firstName}`.trim();
+  }
+
   constructor() {
     // 事業所が切り替わったら読み直す
     effect(() => {
@@ -138,6 +191,26 @@ export class Dashboard {
       this.errorKey.set('dashboard.ages.error');
     } finally {
       this.loading.set(false);
+    }
+    await this.loadTodos(officeId);
+  }
+
+  /** やることの材料：在籍している人の契約と、加入の基準（退職した人の契約は読まない） */
+  private async loadTodos(officeId: string): Promise<void> {
+    this.todosLoading.set(true);
+    try {
+      const active = this.employees().filter((e) => !e.retireDate || e.retireDate >= this.today);
+      const [criteria, lists] = await Promise.all([
+        this.criteriaApi.list(),
+        Promise.all(active.map((e) => this.contractsApi.list(officeId, e.id))),
+      ]);
+      this.criteria.set(criteria);
+      this.contracts.set(new Map(active.map((e, i) => [e.id, lists[i]])));
+    } catch (err) {
+      console.error(err);
+      this.errorKey.set('dashboard.todo.error');
+    } finally {
+      this.todosLoading.set(false);
     }
   }
 

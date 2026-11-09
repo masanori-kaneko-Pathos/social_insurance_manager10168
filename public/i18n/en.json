@@ -104,11 +104,38 @@
       "empty": "No one reaches a milestone in this period.",
       "hint": "Only current employees are shown. Ages 40, 65 and 75 apply to health insurance members; age 70 to pension members. Filings are a guide.",
       "error": "Couldn't load employees."
+    },
+    "todo": {
+      "title": "To do",
+      "empty": "Nothing needs action now.",
+      "kind": {
+        "acquire": "Acquisition",
+        "lose": "Review enrollment",
+        "upcoming": "Upcoming",
+        "categoryChange": "Category change",
+        "noContract": "No contract",
+        "office": "Office settings"
+      },
+      "text": {
+        "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. File the acquisition notification (enter the acquisition date and enroll).",
+        "lose": "Now \"{{today}}\", but enrolled in social insurance. Check whether a loss notification is needed or review the contract.",
+        "upcoming": "Becomes \"{{next}}\" from {{date}}. Prepare the notifications for that day.",
+        "categoryChange": "Becomes \"{{next}}\" from {{date}} (still insured). A category change notification is needed.",
+        "noContract": "No employment contract in effect today, so the category cannot be judged."
+      },
+      "office": {
+        "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
+        "noCriteria": "Coverage criteria (masterCriteria) are not registered."
+      },
+      "toSettings": "Office settings",
+      "toRevisions": "See revision candidates",
+      "hint": "Calculated each time from contracts, office settings and enrollment. Shows changes up to 60 days ahead. Loss by age (70/75) is in the age list below.",
+      "error": "Could not load data for the to-do list."
     }
   },
   "nav": {
     "label": "Menu",
-    "dashboard": "Dashboard",
+    "dashboard": "To do",
     "employees": "Employees",
     "premiums": "Premiums",
     "bonuses": "Bonuses",
