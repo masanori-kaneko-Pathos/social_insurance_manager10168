@@ -1,0 +1,125 @@
+<dialog
+  #dialog
+  class="todo-dialog"
+  aria-labelledby="todo-dialog-title"
+  (pointerdown)="onPointerDown($event)"
+  (click)="onClick($event)"
+  (close)="onClosed()"
+>
+  <form class="dialog-body" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <header class="dialog-head">
+      <div>
+        <h2 id="todo-dialog-title">{{ 'todoAction.title.' + mode() | transloco }}</h2>
+        <p class="sub">{{ employeeName() }}</p>
+      </div>
+      <button type="button" class="close-btn" (click)="close()" [attr.aria-label]="'common.close' | transloco">×</button>
+    </header>
+
+    <p class="lead">{{ 'todoAction.lead.' + mode() | transloco }}</p>
+
+    @if (loading()) {
+      <p class="muted">{{ 'common.loading' | transloco }}</p>
+    } @else {
+      @if (mode() === 'category') {
+        <p class="fixed">{{ 'todoAction.field.changeDate' | transloco }}：<span class="mono">{{ request().date }}</span></p>
+      } @else {
+        <!-- 日付と保険 -->
+        <div class="field">
+          <label for="td-date">{{ 'todoAction.field.date.' + mode() | transloco }}</label>
+          <input id="td-date" class="input" type="date" formControlName="date" [class.is-invalid]="errorOf('date')" />
+          @if (errorOf('date'); as e) {
+            <span class="field-error">{{ e | transloco }}</span>
+          }
+        </div>
+
+        @if (!request().plans.health && !request().plans.pension) {
+          <div class="alert alert-warning">{{ 'todoAction.noPlan.' + mode() | transloco }}</div>
+        } @else {
+          <fieldset>
+            <legend>{{ 'todoAction.field.plans' | transloco }}</legend>
+            @if (request().plans.health) {
+              <label class="check"><input type="checkbox" formControlName="health" />{{ 'remuneration.field.health' | transloco }}</label>
+            }
+            @if (request().plans.pension) {
+              <label class="check"><input type="checkbox" formControlName="pension" />{{ 'remuneration.field.pension' | transloco }}</label>
+            }
+            @if (errorOf('health'); as e) {
+              <span class="field-error">{{ e | transloco }}</span>
+            }
+          </fieldset>
+        }
+
+        @if (mode() === 'loss') {
+          <div class="field">
+            <label for="td-reason">{{ 'todoAction.field.reason' | transloco }}</label>
+            <select id="td-reason" class="input" formControlName="reason">
+              @for (r of lossReasons; track r) {
+                <option [value]="r">{{ 'employee.lossReason.' + r | transloco }}</option>
+              }
+            </select>
+            @if (form.controls.reason.value === 'agreement') {
+              <span class="hint">{{ 'todoAction.hint.agreement' | transloco }}</span>
+            }
+          </div>
+        }
+
+        <!-- 取得届：報酬月額と等級（資格取得時決定） -->
+        @if (mode() === 'acquire') {
+          @if (monthSaved()) {
+            <p class="hint">{{ 'todoAction.hint.monthSaved' | transloco: { month: month() } }}</p>
+          } @else {
+            <div class="field">
+              <label for="td-amount">{{ 'todoAction.field.amount' | transloco }}</label>
+              <input id="td-amount" class="input num" formControlName="amount" inputmode="numeric" [class.is-invalid]="errorOf('amount')" />
+              <span class="hint">{{ 'todoAction.hint.amount' | transloco }}</span>
+              @if (errorOf('amount'); as e) {
+                <span class="field-error">{{ e | transloco }}</span>
+              }
+            </div>
+            <div class="grades">
+              <div class="field">
+                <label for="td-hg">{{ 'remuneration.field.health' | transloco }}</label>
+                <select id="td-hg" class="input" formControlName="healthGrade">
+                  <option value="">{{ 'common.select' | transloco }}</option>
+                  @for (g of healthRows(); track g.grade) {
+                    <option [value]="g.grade">{{ 'todoAction.grade' | transloco: { grade: g.grade, standard: yen(g.standard) } }}</option>
+                  }
+                </select>
+              </div>
+              <div class="field">
+                <label for="td-pg">{{ 'remuneration.field.pension' | transloco }}</label>
+                <select id="td-pg" class="input" formControlName="pensionGrade">
+                  <option value="">{{ 'common.select' | transloco }}</option>
+                  @for (g of pensionRows(); track g.grade) {
+                    <option [value]="g.grade">{{ 'todoAction.grade' | transloco: { grade: g.grade, standard: yen(g.standard) } }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <span class="hint">{{ 'todoAction.hint.grade' | transloco: { month: month() } }}</span>
+            @if (errorOf('healthGrade'); as e) {
+              <span class="field-error">{{ e | transloco }}</span>
+            }
+          }
+        }
+      }
+
+      <!-- 提出日（空なら、作っただけでまだ出していない） -->
+      <div class="field">
+        <label for="td-sub">{{ 'todoAction.field.submittedOn' | transloco }}</label>
+        <input id="td-sub" class="input" type="date" formControlName="submittedOn" [class.is-invalid]="errorOf('submittedOn')" />
+        <span class="hint">{{ 'todoAction.hint.submittedOn' | transloco }}</span>
+      </div>
+
+      @if (errorKey(); as k) {
+        <div class="alert alert-danger">{{ k | transloco }}</div>
+      }
+      <div class="actions">
+        <button type="button" class="btn" (click)="close()">{{ 'common.cancel' | transloco }}</button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          {{ (saving() ? 'common.saving' : 'common.save') | transloco }}
+        </button>
+      </div>
+    }
+  </form>
+</dialog>

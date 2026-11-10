@@ -59,11 +59,14 @@ export interface Todo {
 /** その日に加入しているか（資格取得日〜喪失日の前日） */
 function enrolledOn(e: TodoPerson['health'], date: DateStr): boolean {
   return (
-    e.enrolled &&
-    !!e.acquiredDate &&
-    e.acquiredDate <= date &&
-    (!e.lostDate || e.lostDate > date)
+    e.enrolled && !!e.acquiredDate && e.acquiredDate <= date && (!e.lostDate || e.lostDate > date)
   );
+}
+
+/** 今日加入している保険が、どれも喪失日まで登録済みか（先に資格喪失届を出した） */
+function lossScheduled(p: TodoPerson, today: DateStr): boolean {
+  const on = [p.health, p.pension].filter((e) => enrolledOn(e, today));
+  return on.length > 0 && on.every((e) => e.lostDate !== null);
 }
 
 export interface TodoOptions {
@@ -108,9 +111,15 @@ export function personTodos(
   const enrolledNow = (!exempt.health && healthOn) || (!exempt.pension && pensionOn);
   const allExempt = exempt.health && exempt.pension;
 
-  if (insuredNow && (exempt.health && healthOn || exempt.pension && pensionOn)) {
+  if (insuredNow && ((exempt.health && healthOn) || (exempt.pension && pensionOn))) {
     // 証明書が効いているのに、免除される保険に入っている（入社時に取得してしまった・証明書があとから届いた など）
-    todos.push({ kind: 'agreement', employeeId: p.id, today: now, date: p.certificate!.from, next: null });
+    todos.push({
+      kind: 'agreement',
+      employeeId: p.id,
+      today: now,
+      date: p.certificate!.from,
+      next: null,
+    });
   }
 
   if (insuredNow && !allExempt && !enrolledNow) {
@@ -125,7 +134,12 @@ export function personTodos(
     const certTo = p.certificate?.to;
     if (certTo && certTo < today && addDays(certTo, 1) > since) since = addDays(certTo, 1);
     todos.push({ kind: 'acquire', employeeId: p.id, today: now, date: since, next: null });
-  } else if (!insuredNow && now.category === 'excluded' && enrolledNow) {
+  } else if (
+    !insuredNow &&
+    now.category === 'excluded' &&
+    enrolledNow &&
+    !lossScheduled(p, today)
+  ) {
     todos.push({ kind: 'lose', employeeId: p.id, today: now, date: null, next: null });
   }
 
@@ -145,7 +159,11 @@ export function personTodos(
     const c = at(d);
     if (c.category === 'unknown') continue;
     if (isInsured(c) !== insuredNow) {
-      todos.push({ kind: 'upcoming', employeeId: p.id, today: now, date: d, next: c });
+      // 先に登録してあれば出さない（その日に加入している／していない が、もう合っている）
+      const enrolledThen = enrolledOn(p.health, d) || enrolledOn(p.pension, d);
+      if (enrolledThen !== isInsured(c)) {
+        todos.push({ kind: 'upcoming', employeeId: p.id, today: now, date: d, next: c });
+      }
       break;
     }
     if (insuredNow && c.category !== now.category) {

@@ -1,0 +1,128 @@
+/* 窓の作りは rate-dialog と同じ（余白は中の .dialog-body に持たせて、背景のクリックと見分ける） */
+.todo-dialog {
+  width: min(520px, calc(100vw - 32px));
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-popover);
+  overflow: hidden;
+}
+
+.todo-dialog[open] {
+  animation: dialog-in var(--dur-base) var(--ease-out);
+}
+
+/* ::backdrop は CSS 変数を引き継がないことがあるので、色は直接書く（焦げ茶 #3e1e02） */
+.todo-dialog::backdrop {
+  background: rgb(62 30 2 / 45%);
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.dialog-body {
+  max-height: calc(100vh - 64px);
+  overflow: auto;
+  padding: var(--space-lg);
+}
+
+.dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.dialog-head h2 {
+  margin: 0;
+  font-size: var(--font-lg);
+}
+
+.sub,
+.lead,
+.muted {
+  margin: var(--space-xs) 0 var(--space-md);
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.close-btn {
+  width: 36px;
+  height: 36px;
+  font-size: var(--font-lg);
+  color: var(--color-text-sub);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  background: var(--color-bg);
+}
+
+.field {
+  margin-bottom: var(--space-md);
+}
+
+fieldset {
+  margin: 0 0 var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-right: var(--space-md);
+  cursor: pointer;
+}
+
+.grades {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.grades .field {
+  margin-bottom: 0;
+}
+
+.hint {
+  display: block;
+  margin-top: var(--space-xs);
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.input.num,
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.input.num {
+  text-align: right;
+}
+
+.fixed {
+  margin: 0 0 var(--space-md);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}

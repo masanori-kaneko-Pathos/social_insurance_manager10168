@@ -77,10 +77,13 @@
         <tr>
           <th>{{ 'payroll.col.employee' | transloco }}</th>
           <th class="num">{{ 'payroll.col.cash' | transloco }}</th>
+          @if (showAll()) {
+            <th class="num">{{ 'payroll.col.inKind' | transloco }}</th>
+            <th class="num">{{ 'payroll.col.total' | transloco }}</th>
+          }
           <th class="num">{{ 'payroll.col.fixed' | transloco }}</th>
           <th class="num">{{ 'payroll.col.days' | transloco }}</th>
           @if (showAll()) {
-            <th class="num">{{ 'payroll.col.inKind' | transloco }}</th>
             <th class="num">{{ 'payroll.col.retro' | transloco }}</th>
             <th class="num">{{ 'payroll.col.absentDays' | transloco }}</th>
             <th class="num">{{ 'payroll.col.hours' | transloco }}</th>
@@ -120,6 +123,24 @@
             <td class="num">
               <input class="input num w-money" formControlName="cash" inputmode="numeric" />
             </td>
+            @if (showAll()) {
+              <td class="num">
+                <div class="days">
+                  <input class="input num w-money" formControlName="inKind" inputmode="numeric" />
+                  @if (context.isAdmin()) {
+                    <button
+                      type="button"
+                      class="btn btn-small"
+                      (click)="openInKind(v)"
+                      [title]="'inKind.openTitle' | transloco"
+                    >
+                      {{ 'inKind.open' | transloco }}
+                    </button>
+                  }
+                </div>
+              </td>
+              <td class="num">{{ total(v) }}</td>
+            }
             <td class="num">
               <input class="input num w-money" formControlName="fixed" inputmode="numeric" />
             </td>
@@ -139,16 +160,6 @@
               </div>
             </td>
             @if (showAll()) {
-              <td class="num">
-                <div class="days">
-                  <input class="input num w-money" formControlName="inKind" inputmode="numeric" />
-                  @if (context.isAdmin()) {
-                    <button type="button" class="btn btn-small" (click)="openInKind(v)" [title]="'inKind.openTitle' | transloco">
-                      {{ 'inKind.open' | transloco }}
-                    </button>
-                  }
-                </div>
-              </td>
               <td class="num">
                 <input class="input num w-money" formControlName="retro" inputmode="numeric" />
               </td>
@@ -170,7 +181,7 @@
           </tr>
           @if (rowErrors().get(v.employee.id); as errs) {
             <tr class="error-row">
-              <td [attr.colspan]="showAll() ? 10 : 4">
+              <td [attr.colspan]="showAll() ? 11 : 4">
                 @for (e of errs; track e) {
                   <span>{{ 'payroll.rowError.' + e | transloco }}</span>
                 }

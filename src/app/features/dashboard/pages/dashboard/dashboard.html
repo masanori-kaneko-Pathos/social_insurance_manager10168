@@ -1,51 +1,148 @@
-<h1>{{ 'dashboard.greeting' | transloco: { name: profile()?.displayName ?? '' } }}</h1>
+<div class="page-head">
+  <h1>{{ 'dashboard.todo.title' | transloco }}</h1>
+  @if (!loading() && total() > 0) {
+    <span class="total">{{ 'dashboard.todo.total' | transloco: { count: total() } }}</span>
+  }
+</div>
 
-<!-- やること（手続きが要りそうな人。開くたびに計算する） -->
-<section class="card todo">
-  <h2>{{ 'dashboard.todo.title' | transloco }}</h2>
-
-  @for (t of officeTodos(); track t) {
-    <div class="todo-item office">
-      <span class="kind kind-office">{{ 'dashboard.todo.kind.office' | transloco }}</span>
-      <span>{{ 'dashboard.todo.office.' + t | transloco }}</span>
-      @if (t === 'noStandard') {
-        <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>
-      }
-    </div>
+@if (loading()) {
+  <p class="muted">{{ 'common.loading' | transloco }}</p>
+} @else {
+  @if (errorKey(); as k) {
+    <div class="alert alert-danger">{{ k | transloco }}</div>
+  }
+  @if (groups().length === 0) {
+    <section class="card">
+      <p class="muted">{{ 'dashboard.todo.empty' | transloco }}</p>
+    </section>
   }
 
-  @if (todosLoading()) {
-    <p class="muted">{{ 'common.loading' | transloco }}</p>
-  } @else {
-    @for (r of todos(); track r.todo.employeeId + r.todo.kind) {
-      <div class="todo-item">
-        <span class="kind kind-{{ r.todo.kind }}">{{ 'dashboard.todo.kind.' + r.todo.kind | transloco }}</span>
-        <a class="who" [routerLink]="['/o', office()?.id, 'employees', r.employee.id]">
-          @if (r.employee.employeeNumber) { <span class="emp-no">{{ r.employee.employeeNumber }}</span> }{{ employeeName(r.employee) }}
-        </a>
-        <span class="what">
-          {{ 'dashboard.todo.text.' + r.todo.kind | transloco: {
-            date: r.todo.date,
-            today: ('contract.category.' + r.todo.today.category | transloco),
-            next: r.todo.next ? ('contract.category.' + r.todo.next.category | transloco) : ''
-          } }}
-        </span>
-        <span class="why">{{ 'contract.reason.' + (r.todo.next ?? r.todo.today).reason | transloco }}</span>
-      </div>
-    } @empty {
-      @if (officeTodos().length === 0) {
-        <p class="muted">{{ 'dashboard.todo.empty' | transloco }}</p>
-      }
+  @for (g of groups(); track g.kind; let i = $index) {
+    @if (sectionStarts(i)) {
+      <h2 class="section">{{ 'dashboard.todo.section.' + g.section | transloco }}</h2>
     }
+    <section class="card group">
+      <div class="group-head">
+        <h3>
+          <span class="kind kind-{{ g.kind }}">{{ 'dashboard.todo.kind.' + g.kind | transloco }}</span>
+          @if (g.kind !== 'office' && g.kind !== 'requests') {
+            <span class="count">{{ 'dashboard.todo.count' | transloco: { count: g.items.length } }}</span>
+          }
+        </h3>
+        @if (g.kind === 'age') {
+          <a [routerLink]="['/o', office()?.id, 'ages']">{{ 'dashboard.todo.toAges' | transloco }} →</a>
+        }
+      </div>
+
+      @let v = visible(g);
+      @for (it of v.shown; track it.key) {
+        @let e = employeeOf(it);
+        <div class="todo-item">
+          @if (e) {
+            <a class="who" [routerLink]="['/o', office()?.id, 'employees', e.id]">
+              @if (e.employeeNumber) {
+                <span class="emp-no">{{ e.employeeNumber }}</span>
+              }{{ employeeName(e) }}
+            </a>
+          }
+          <span class="what">
+            @switch (it.kind) {
+              @case ('age') {
+                {{ 'dashboard.todo.text.age' | transloco: { date: it.date, age: it.age!.age } }}
+                {{ 'dashboard.ages.what.' + it.age!.age | transloco }}
+              }
+              @case ('office') {
+                {{ 'dashboard.todo.office.' + it.office | transloco }}
+              }
+              @case ('requests') {
+                {{ 'dashboard.todo.text.requests' | transloco: { count: submittedRequests() } }}
+              }
+              @default {
+                {{
+                  'dashboard.todo.text.' + it.kind
+                    | transloco
+                      : {
+                          date: it.date,
+                          today: ('contract.category.' + it.todo!.today.category | transloco),
+                          next: it.todo!.next ? ('contract.category.' + it.todo!.next.category | transloco) : ''
+                        }
+                }}
+              }
+            }
+          </span>
+          @if (it.todo; as t) {
+            @let c = t.next ?? t.today;
+            @let p = reasonParams(c);
+            <span class="why">
+              @if (c.below) {
+                {{ 'contract.below.' + c.below | transloco: p }}
+              }
+              {{ 'contract.reason.' + c.reason | transloco: p }}
+            </span>
+          }
+
+          <div class="item-actions">
+            @if (requestOf(it); as r) {
+              <button type="button" class="btn btn-small btn-primary" (click)="openAction(it)">
+                {{ 'todoAction.button.' + (it.kind === 'upcoming' ? 'early' : r.mode) | transloco }}
+              </button>
+            }
+            @if (canDismiss(it)) {
+              <button type="button" class="btn btn-small" [disabled]="busyKey() === it.key" (click)="dismiss(it)">
+                {{ 'dashboard.todo.dismiss' | transloco }}
+              </button>
+            }
+            @switch (it.kind) {
+              @case ('noContract') {
+                <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]">{{ 'dashboard.todo.toContract' | transloco }} →</a>
+              }
+              @case ('lose') {
+                <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]">{{ 'dashboard.todo.toContractCheck' | transloco }} →</a>
+              }
+              @case ('office') {
+                @if (it.office === 'noStandard') {
+                  <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>
+                }
+              }
+              @case ('requests') {
+                <a [routerLink]="['/o', office()?.id, 'requests']" [queryParams]="{ status: 'submitted' }">{{ 'dashboard.todo.toRequests' | transloco }} →</a>
+              }
+            }
+          </div>
+        </div>
+      }
+
+      <div class="group-foot">
+        @if (v.rest > 0 || expanded().has(g.kind)) {
+          <button type="button" class="link-btn" (click)="toggleExpanded(g.kind)">
+            {{ (expanded().has(g.kind) ? 'dashboard.todo.showLess' : 'dashboard.todo.showMore') | transloco: { count: v.rest } }}
+          </button>
+        }
+        @if (g.dismissed.length > 0) {
+          <button type="button" class="link-btn" (click)="toggleDismissed(g.kind)">
+            {{ (showDismissed().has(g.kind) ? 'dashboard.todo.hideDismissed' : 'dashboard.todo.showDismissed') | transloco: { count: g.dismissed.length } }}
+          </button>
+        }
+      </div>
+      @if (showDismissed().has(g.kind)) {
+        @for (it of g.dismissed; track it.key) {
+          @let e = employeeOf(it);
+          <div class="todo-item dismissed">
+            @if (e) {
+              <span class="who">{{ employeeName(e) }}</span>
+            }
+            <span class="what">{{ it.date }}</span>
+            @if (isAdmin()) {
+              <button type="button" class="btn btn-small" [disabled]="busyKey() === it.key" (click)="undismiss(it)">
+                {{ 'dashboard.todo.undismiss' | transloco }}
+              </button>
+            }
+          </div>
+        }
+      }
+    </section>
   }
 
-  @if (submittedRequests() > 0) {
-    <div class="todo-item">
-      <span class="kind kind-acquire">{{ 'dashboard.todo.kind.requests' | transloco }}</span>
-      <span>{{ 'dashboard.todo.text.requests' | transloco: { count: submittedRequests() } }}</span>
-      <a [routerLink]="['/o', office()?.id, 'requests']" [queryParams]="{ status: 'submitted' }">{{ 'dashboard.todo.toRequests' | transloco }} →</a>
-    </div>
-  }
   <div class="todo-links">
     <a [routerLink]="['/o', office()?.id, 'revisions']">{{ 'dashboard.todo.toRevisions' | transloco }} →</a>
     @if (regularSeason(); as y) {
@@ -53,146 +150,14 @@
     }
   </div>
   <p class="hint">{{ 'dashboard.todo.hint' | transloco }}</p>
-</section>
-
-@if (office(); as o) {
-  <section class="card summary">
-    <h2>{{ o.name }}</h2>
-    <dl>
-      <div class="row">
-        <dt>{{ 'office.field.prefecture' | transloco }}</dt>
-        <dd>{{ prefectureName() }}</dd>
-      </div>
-      <div class="row">
-        <dt>{{ 'office.field.insurerType' | transloco }}</dt>
-        <dd>{{ 'office.insurer.' + o.healthInsurer.type | transloco }}</dd>
-      </div>
-      @if (o.healthInsurer.kumiaiName) {
-        <div class="row">
-          <dt>{{ 'office.field.kumiaiName' | transloco }}</dt>
-          <dd>{{ o.healthInsurer.kumiaiName }}</dd>
-        </div>
-      }
-      <div class="row">
-        <dt>{{ 'office.field.officeSymbol' | transloco }}</dt>
-        <dd [class.not-set]="!o.officeSymbol">
-          {{ o.officeSymbol ?? ('dashboard.notSet' | transloco) }}
-        </dd>
-      </div>
-    </dl>
-  </section>
 }
 
-<!-- 年齢到達 -->
-<section class="card ages">
-  <h2>{{ 'dashboard.ages.title' | transloco }}</h2>
-
-  <div class="controls">
-    <div class="segmented" role="group" [attr.aria-label]="'dashboard.ages.within' | transloco">
-      @for (n of withinOptions; track n) {
-        <button
-          type="button"
-          [class.active]="within() === n"
-          [attr.aria-pressed]="within() === n"
-          (click)="setWithin(n)"
-        >
-          {{ 'dashboard.ages.withinOption.' + n | transloco }}
-        </button>
-      }
-    </div>
-
-    <div class="chips" role="group" [attr.aria-label]="'dashboard.ages.agesLabel' | transloco">
-      @for (a of allAges; track a) {
-        <button
-          type="button"
-          class="chip"
-          [class.on]="isAgeOn(a)"
-          [attr.aria-pressed]="isAgeOn(a)"
-          (click)="toggleAge(a)"
-        >
-          {{ 'dashboard.ages.age' | transloco: { age: a } }}
-        </button>
-      }
-    </div>
-
-    <div class="segmented" role="group" [attr.aria-label]="'dashboard.ages.sortLabel' | transloco">
-      <button
-        type="button"
-        [class.active]="sort() === 'birthday'"
-        [attr.aria-pressed]="sort() === 'birthday'"
-        (click)="setSort('birthday')"
-      >
-        {{ 'dashboard.ages.sort.birthday' | transloco }}
-      </button>
-      <button
-        type="button"
-        [class.active]="sort() === 'effect'"
-        [attr.aria-pressed]="sort() === 'effect'"
-        (click)="setSort('effect')"
-      >
-        {{ 'dashboard.ages.sort.effect' | transloco }}
-      </button>
-    </div>
-  </div>
-
-  @if (loading()) {
-    <p class="muted">{{ 'common.loading' | transloco }}</p>
-  } @else if (errorKey(); as key) {
-    <div class="alert alert-danger">{{ key | transloco }}</div>
-  } @else if (count() === 0) {
-    <p class="muted">{{ 'dashboard.ages.empty' | transloco }}</p>
-  } @else {
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>{{ 'employee.field.name' | transloco }}</th>
-            <th>{{ 'employee.field.birthDate' | transloco }}</th>
-            <th>{{ 'dashboard.ages.col.age' | transloco }}</th>
-            <th>{{ 'dashboard.ages.col.birthday' | transloco }}</th>
-            <th>{{ 'dashboard.ages.col.what' | transloco }}</th>
-          </tr>
-        </thead>
-        @for (g of groups(); track g.month) {
-          <tbody>
-            <tr class="month-row">
-              <th colspan="5" scope="rowgroup">
-                {{ 'dashboard.ages.monthLabel' | transloco: monthParts(g.month) }}
-              </th>
-            </tr>
-            @for (r of g.rows; track r.employee.id + '-' + r.event.age) {
-              <tr>
-                <td>
-                  <a
-                    class="name"
-                    [routerLink]="['/o', office()?.id, 'employees', r.employee.id]"
-                  >
-                    @if (r.employee.employeeNumber) { <span class="emp-no">{{ r.employee.employeeNumber }}</span> }
-                    {{ r.employee.lastName }} {{ r.employee.firstName }}
-                  </a>
-                </td>
-                <td class="mono">{{ r.employee.birthDate }}</td>
-                <td>
-                  <span class="age-badge age-{{ r.event.age }}">{{
-                    'dashboard.ages.age' | transloco: { age: r.event.age }
-                  }}</span>
-                </td>
-                <td class="mono">{{ r.event.birthday }}</td>
-                <td class="what">
-                  {{ 'dashboard.ages.what.' + r.event.age | transloco }}
-                  @if (effectDiffers(r.event)) {
-                    <span class="note">{{
-                      'dashboard.ages.effectNote'
-                        | transloco: monthParts(r.event.effectMonth)
-                    }}</span>
-                  }
-                </td>
-              </tr>
-            }
-          </tbody>
-        }
-      </table>
-    </div>
-  }
-  <p class="hint">{{ 'dashboard.ages.hint' | transloco }}</p>
-</section>
+@if (open(); as o) {
+  <app-todo-dialog
+    [request]="o.request"
+    [person]="o.person"
+    [employeeName]="o.name"
+    (saved)="afterSave()"
+    (closed)="open.set(null)"
+  />
+}

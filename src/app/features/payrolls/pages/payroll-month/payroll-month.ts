@@ -15,8 +15,16 @@ import {
   RowError,
   sameInput,
   textOf,
+  totalOf,
 } from '../../logic/payroll-input';
-import { hasExtra, latestPaidMonth, Period, PayrollRow, payrollRows, periodOf } from '../../logic/payroll-rows';
+import {
+  hasExtra,
+  latestPaidMonth,
+  Period,
+  PayrollRow,
+  payrollRows,
+  periodOf,
+} from '../../logic/payroll-rows';
 import { payrollOf } from '../../../office/office-settings';
 import { shiftMonth, daysInclusive, todayLocal } from '../../../../shared/utils/date';
 import { PayrollChange, PayrollService } from '../../payroll.service';
@@ -158,7 +166,11 @@ export class PayrollMonth {
       state: this.fb.control<PayrollState>(t.state),
     });
   }
-
+  /** 合計の列（支払額＋現物）。読めないときは「—」 */
+  total(v: ViewRow): string {
+    const t = totalOf(v.form.controls.cash.value, v.form.controls.inKind.value);
+    return t === null ? '—' : t.toLocaleString('ja-JP');
+  }
   /** 日数の候補（在籍していた暦日数 − 欠勤日数） */
   candidate(v: ViewRow): number {
     return candidateDays(v.row.suggestedDays, v.form.controls.absentDays.value);
@@ -192,11 +204,17 @@ export class PayrollMonth {
       const r = readRow(v.form.getRawValue(), this.periodDays());
       const id = v.employee.id;
       if (r.kind === 'blank') {
-        if (v.row.saved) changes.push({ employeeId: id, input: null, exists: true, before: v.row.saved });
+        if (v.row.saved)
+          changes.push({ employeeId: id, input: null, exists: true, before: v.row.saved });
       } else if (r.kind === 'invalid') {
         errors.set(id, r.errors);
       } else if (!v.row.saved || !sameInput(r.input, v.row.saved)) {
-        changes.push({ employeeId: id, input: r.input, exists: !!v.row.saved, before: v.row.saved ?? null });
+        changes.push({
+          employeeId: id,
+          input: r.input,
+          exists: !!v.row.saved,
+          before: v.row.saved ?? null,
+        });
       }
     }
     this.rowErrors.set(errors);

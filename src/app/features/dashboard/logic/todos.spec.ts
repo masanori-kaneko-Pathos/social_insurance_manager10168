@@ -112,3 +112,30 @@ describe('personTodos：社会保障協定の適用証明書', () => {
     expect(t.map((x) => [x.kind, x.date])).toEqual([['acquire', '2026-11-01']]);
   });
 });
+
+describe('personTodos：先に登録してあれば出さない', () => {
+  it('T12：加入する日（11/20）を取得日にして登録済みなら、upcoming は出ない', () => {
+    const t = todos({
+      hireDate: '2026-10-20',
+      health: on('2026-11-20'),
+      pension: on('2026-11-20'),
+      contracts: [full({ from: '2026-10-20', specialEmployment: 'daily' })],
+    });
+    expect(t).toEqual([]);
+  });
+  it('加入しない区分なのに加入している人でも、喪失日を登録済みなら lose は出ない', () => {
+    const t = todos({
+      contracts: [part({ weeklyMinutes: 600 })],
+      health: { enrolled: true, acquiredDate: '2024-04-01', lostDate: '2026-11-21' },
+      pension: { enrolled: true, acquiredDate: '2024-04-01', lostDate: '2026-11-21' },
+    });
+    expect(t).toEqual([]);
+  });
+  it('片方だけ喪失日を入れたなら、まだ lose が出る', () => {
+    const t = todos({
+      contracts: [part({ weeklyMinutes: 600 })],
+      health: { enrolled: true, acquiredDate: '2024-04-01', lostDate: '2026-11-21' },
+    });
+    expect(t[0].kind).toBe('lose');
+  });
+});

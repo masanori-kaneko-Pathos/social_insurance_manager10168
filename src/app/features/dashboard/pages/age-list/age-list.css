@@ -1,0 +1,156 @@
+h1 {
+  margin: var(--space-sm) 0 var(--space-lg);
+  font-size: var(--font-xl);
+}
+
+.back {
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+  text-decoration: none;
+}
+
+/* ===== 年齢到達 ===== */
+.ages {
+  margin-bottom: var(--space-lg);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.segmented button {
+  padding: var(--space-xs) var(--space-md);
+  font: inherit;
+  font-size: var(--font-sm);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 0;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.segmented button + button {
+  border-left: 1px solid var(--color-border-strong);
+}
+
+.segmented button.active {
+  background: var(--color-highlight);
+  font-weight: 600;
+}
+
+.chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.chip {
+  padding: 2px var(--space-sm);
+  font: inherit;
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.chip.on {
+  color: var(--color-text);
+  background: var(--color-highlight);
+  border-color: var(--color-accent-sub);
+  font-weight: 600;
+}
+
+.muted {
+  margin: 0;
+  color: var(--color-text-sub);
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+th,
+td {
+  padding: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+thead th {
+  font-weight: 400;
+  color: var(--color-text-sub);
+  white-space: nowrap;
+}
+
+.month-row th {
+  padding-top: var(--space-md);
+  font-weight: 600;
+  background: var(--color-bg);
+}
+
+.mono {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.name {
+  color: var(--color-text);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.age-badge {
+  display: inline-block;
+  padding: 0 var(--space-sm);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-strong);
+}
+
+.age-badge.age-70,
+.age-badge.age-75 {
+  background: var(--color-highlight);
+  border-color: var(--color-accent-sub);
+}
+
+.what {
+  min-width: 280px;
+}
+
+.note {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--font-xs);
+  color: var(--color-warning-text);
+}
+
+.hint {
+  margin: var(--space-sm) 0 0;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+

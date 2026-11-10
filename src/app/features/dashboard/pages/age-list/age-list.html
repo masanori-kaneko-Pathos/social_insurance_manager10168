@@ -1,0 +1,114 @@
+<!-- 年齢到達の一覧（To-do リストから「1年先まで見る」で来る） -->
+<a class="back" [routerLink]="['/o', office()?.id]">‹ {{ 'nav.dashboard' | transloco }}</a>
+<h1>{{ 'dashboard.ages.title' | transloco }}</h1>
+
+<section class="card ages">
+  <div class="controls">
+    <div class="segmented" role="group" [attr.aria-label]="'dashboard.ages.within' | transloco">
+      @for (n of withinOptions; track n) {
+        <button
+          type="button"
+          [class.active]="within() === n"
+          [attr.aria-pressed]="within() === n"
+          (click)="setWithin(n)"
+        >
+          {{ 'dashboard.ages.withinOption.' + n | transloco }}
+        </button>
+      }
+    </div>
+
+    <div class="chips" role="group" [attr.aria-label]="'dashboard.ages.agesLabel' | transloco">
+      @for (a of allAges; track a) {
+        <button
+          type="button"
+          class="chip"
+          [class.on]="isAgeOn(a)"
+          [attr.aria-pressed]="isAgeOn(a)"
+          (click)="toggleAge(a)"
+        >
+          {{ 'dashboard.ages.age' | transloco: { age: a } }}
+        </button>
+      }
+    </div>
+
+    <div class="segmented" role="group" [attr.aria-label]="'dashboard.ages.sortLabel' | transloco">
+      <button
+        type="button"
+        [class.active]="sort() === 'birthday'"
+        [attr.aria-pressed]="sort() === 'birthday'"
+        (click)="setSort('birthday')"
+      >
+        {{ 'dashboard.ages.sort.birthday' | transloco }}
+      </button>
+      <button
+        type="button"
+        [class.active]="sort() === 'effect'"
+        [attr.aria-pressed]="sort() === 'effect'"
+        (click)="setSort('effect')"
+      >
+        {{ 'dashboard.ages.sort.effect' | transloco }}
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p class="muted">{{ 'common.loading' | transloco }}</p>
+  } @else if (errorKey(); as key) {
+    <div class="alert alert-danger">{{ key | transloco }}</div>
+  } @else if (count() === 0) {
+    <p class="muted">{{ 'dashboard.ages.empty' | transloco }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'employee.field.name' | transloco }}</th>
+            <th>{{ 'employee.field.birthDate' | transloco }}</th>
+            <th>{{ 'dashboard.ages.col.age' | transloco }}</th>
+            <th>{{ 'dashboard.ages.col.birthday' | transloco }}</th>
+            <th>{{ 'dashboard.ages.col.what' | transloco }}</th>
+          </tr>
+        </thead>
+        @for (g of groups(); track g.month) {
+          <tbody>
+            <tr class="month-row">
+              <th colspan="5" scope="rowgroup">
+                {{ 'dashboard.ages.monthLabel' | transloco: monthParts(g.month) }}
+              </th>
+            </tr>
+            @for (r of g.rows; track r.employee.id + '-' + r.event.age) {
+              <tr>
+                <td>
+                  <a
+                    class="name"
+                    [routerLink]="['/o', office()?.id, 'employees', r.employee.id]"
+                  >
+                    @if (r.employee.employeeNumber) { <span class="emp-no">{{ r.employee.employeeNumber }}</span> }
+                    {{ r.employee.lastName }} {{ r.employee.firstName }}
+                  </a>
+                </td>
+                <td class="mono">{{ r.employee.birthDate }}</td>
+                <td>
+                  <span class="age-badge age-{{ r.event.age }}">{{
+                    'dashboard.ages.age' | transloco: { age: r.event.age }
+                  }}</span>
+                </td>
+                <td class="mono">{{ r.event.birthday }}</td>
+                <td class="what">
+                  {{ 'dashboard.ages.what.' + r.event.age | transloco }}
+                  @if (effectDiffers(r.event)) {
+                    <span class="note">{{
+                      'dashboard.ages.effectNote'
+                        | transloco: monthParts(r.event.effectMonth)
+                    }}</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        }
+      </table>
+    </div>
+  }
+  <p class="hint">{{ 'dashboard.ages.hint' | transloco }}</p>
+</section>

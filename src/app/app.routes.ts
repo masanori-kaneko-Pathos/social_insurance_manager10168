@@ -44,7 +44,8 @@ export const routes: Routes = [
         children: [
           {
             path: '',
-            loadComponent: () => import('./features/me/pages/my-page/my-page').then((m) => m.MyPage),
+            loadComponent: () =>
+              import('./features/me/pages/my-page/my-page').then((m) => m.MyPage),
           },
           {
             path: 'requests/:requestId',
@@ -74,6 +75,11 @@ export const routes: Routes = [
             path: '',
             loadComponent: () =>
               import('./features/dashboard/pages/dashboard/dashboard').then((m) => m.Dashboard),
+          },
+          {
+            path: 'ages',
+            loadComponent: () =>
+              import('./features/dashboard/pages/age-list/age-list').then((m) => m.AgeList),
           },
           {
             path: 'employees',
@@ -166,7 +172,9 @@ export const routes: Routes = [
           {
             path: 'requests',
             loadComponent: () =>
-              import('./features/requests/pages/request-list/request-list').then((m) => m.RequestList),
+              import('./features/requests/pages/request-list/request-list').then(
+                (m) => m.RequestList,
+              ),
           },
           {
             path: 'requests/new',
@@ -176,7 +184,9 @@ export const routes: Routes = [
           {
             path: 'requests/:requestId',
             loadComponent: () =>
-              import('./features/requests/pages/request-review/request-review').then((m) => m.RequestReview),
+              import('./features/requests/pages/request-review/request-review').then(
+                (m) => m.RequestReview,
+              ),
           },
           {
             path: 'settings',

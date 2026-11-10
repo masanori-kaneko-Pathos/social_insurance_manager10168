@@ -110,25 +110,27 @@
       "title": "To-do list",
       "empty": "Nothing needs action now.",
       "kind": {
-        "acquire": "Acquisition",
+        "acquire": "Application to Enroll (資格取得届)",
         "lose": "Review enrollment",
         "upcoming": "Upcoming",
-        "categoryChange": "Category change",
+        "categoryChange": "Category change (区分変更届)",
         "noContract": "No contract",
         "office": "Office settings",
         "agreement": "Agreement check",
         "certificateEnd": "Certificate ending",
-        "requests": "To review"
+        "requests": "To review",
+        "age": "Age milestones"
       },
       "text": {
-        "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. File the Application to Enroll in EPI / EHI (資格取得届) (enter the acquisition date and enroll).",
+        "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. An Application to Enroll in EPI / EHI (資格取得届) is needed.",
         "lose": "Now \"{{today}}\", but enrolled in social insurance. Check whether a Coverage-end Report (資格喪失届) is needed or review the contract.",
         "upcoming": "Becomes \"{{next}}\" from {{date}}. Prepare the notifications for that day.",
         "categoryChange": "Becomes \"{{next}}\" from {{date}} (still insured). A category change notification is needed.",
         "noContract": "No employment contract in effect today, so the category cannot be judged.",
         "agreement": "A certificate of coverage under a social security agreement (from {{date}}) is valid, but the person is enrolled in an exempt insurance. Check whether a loss notice (reason: social security agreement) is needed.",
         "certificateEnd": "The certificate of coverage ends, so the person joins Japanese social insurance from {{date}}. Prepare the Application to Enroll in EPI / EHI (資格取得届) (if the assignment is extended, check the extended certificate).",
-        "requests": "{{count}} answered requests or change applications from employees are waiting for review."
+        "requests": "{{count}} answered requests or change applications from employees are waiting for review.",
+        "age": "Turns {{age}} on {{date}}."
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -136,9 +138,26 @@
       },
       "toSettings": "Office settings",
       "toRevisions": "See revision candidates",
-      "hint": "Calculated each time from contracts, office settings and enrollment. Shows changes up to 60 days ahead. Loss by age (70/75) is in the age list below.",
+      "hint": "Calculated each time from contracts, office settings and enrollment. Shows changes within 60 days and age milestones this month and next. Saving in a form window records the enrollment and the filing and removes the item.",
       "error": "Could not load data for the to-do list.",
-      "toRequests": "Review"
+      "toRequests": "Review",
+      "section": {
+        "now": "Now",
+        "soon": "Coming up",
+        "missing": "Missing information"
+      },
+      "total": "{{count}} item(s)",
+      "count": "{{count}}",
+      "dismiss": "Checked",
+      "undismiss": "Undo",
+      "showMore": "Show {{count}} more",
+      "showLess": "Show less",
+      "showDismissed": "Show checked ({{count}})",
+      "hideDismissed": "Hide checked",
+      "toAges": "See up to one year ahead",
+      "toContract": "Add a contract",
+      "toContractCheck": "Check the contract",
+      "errorDismiss": "Could not save. Please try again."
     }
   },
   "nav": {
@@ -2210,6 +2229,58 @@
       "lists": "Could not load the inbox and requests.",
       "request": "Could not open this request.",
       "submit": "Could not send. Please try again."
+    }
+  },
+  "todoAction": {
+    "title": {
+      "acquire": "Application to Enroll in EPI / EHI (資格取得届)",
+      "loss": "Coverage-end Report (資格喪失届)",
+      "category": "Insured category change report (被保険者区分変更届)"
+    },
+    "lead": {
+      "acquire": "Enter what you wrote on the form. Saving records the enrollment, the Standard Monthly Remuneration (SMR) decided on enrollment and the filing at once.",
+      "loss": "Enter what you wrote on the form. Saving records the coverage-end date, the reason and the filing at once.",
+      "category": "Filed when the category changes while still insured (regular worker, short-time worker, etc.). Saving records the filing and removes the item."
+    },
+    "field": {
+      "date": {
+        "acquire": "Date of enrollment",
+        "loss": "Coverage-end date"
+      },
+      "changeDate": "Date the category changes",
+      "plans": "Insurance",
+      "reason": "Reason",
+      "amount": "Monthly remuneration (yen)",
+      "submittedOn": "Date submitted"
+    },
+    "hint": {
+      "amount": "Defaults to the expected pay in the employment contract (money + in kind). Use the same total as \"monthly remuneration\" on the form.",
+      "grade": "Suggested from the grade table for {{month}}. If the official notice differs, select it again.",
+      "monthSaved": "An SMR from {{month}} is already registered, so it is not entered here (not overwritten).",
+      "submittedOn": "Leave blank to record it as prepared but not yet submitted.",
+      "agreement": "Using the enrollment date means the person is treated as never enrolled (when the certificate applies from before joining)."
+    },
+    "noPlan": {
+      "acquire": "No insurance can be enrolled on this date (already enrolled, age, or social security agreement).",
+      "loss": "No insurance is enrolled on this date."
+    },
+    "button": {
+      "acquire": "Filed Application to Enroll",
+      "loss": "Filed Coverage-end Report",
+      "category": "Filed category change",
+      "early": "Register in advance"
+    },
+    "grade": "Grade {{grade}} ({{standard}} yen)",
+    "error": {
+      "date": "Invalid date.",
+      "beforeHire": "Cannot be before the hire date.",
+      "beforeAcquired": "Must be after the enrollment date.",
+      "noPlan": "Select at least one insurance.",
+      "amount": "Enter the monthly remuneration as a number.",
+      "grade": "Select the health and pension grades.",
+      "submittedOn": "Invalid date.",
+      "load": "Could not load the grade tables or SMR.",
+      "save": "Could not save. Please try again."
     }
   }
 }
