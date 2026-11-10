@@ -30,8 +30,8 @@
                 <div class="target">{{ target(h) }}</div>
                 <div class="field">{{ field(h) }}</div>
               </td>
-              <td><div class="value" [title]="h.before ?? ''">{{ value(h.before) }}</div></td>
-              <td><div class="value after" [title]="h.after ?? ''">{{ value(h.after) }}</div></td>
+              <td><div class="value">{{ cell(h, 'before') }}</div></td>
+              <td><div class="value after">{{ cell(h, 'after') }}</div></td>
               <td class="sub">{{ who(h) }}</td>
             </tr>
           }

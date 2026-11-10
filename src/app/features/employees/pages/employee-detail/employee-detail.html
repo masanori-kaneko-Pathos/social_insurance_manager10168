@@ -33,7 +33,7 @@
     </div>
 
     <!-- タブ（開いているタブは URL に持つ） -->
-    <nav class="tabs" [attr.aria-label]="'employee.tab.label' | transloco">
+    <nav class="page-tabs" [attr.aria-label]="'employee.tab.label' | transloco">
       @for (t of tabs(); track t) {
         <a
           [routerLink]="[]"

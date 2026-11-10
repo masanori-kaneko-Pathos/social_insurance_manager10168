@@ -225,12 +225,23 @@
               <td class="num">{{ yen(t.employeeYen) }}</td>
               <td class="num">{{ yen(t.employerYen) }}</td>
             </tr>
+            <!-- 健康保険料の内訳（全額だけ。本人負担は合算して端数処理するので、保険ごとには決まらない） -->
+            @if (t.category === 'health') {
+              @for (p of healthParts(); track p.part) {
+                <tr class="sub-row">
+                  <th scope="row">{{ 'premiumList.part.' + p.part | transloco }}</th>
+                  <td class="num">{{ yen(p.totalYen) }}</td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              }
+            }
           }
           <tr class="grand-total">
             <th scope="row">{{ 'premiumList.grandTotal' | transloco }}</th>
             <td class="num strong">{{ yen(grandTotalYen()) }}</td>
-            <td></td>
-            <td></td>
+            <td class="num strong">{{ yen(employeeTotalYen()) }}</td>
+            <td class="num strong">{{ yen(employerTotalYen()) }}</td>
           </tr>
         </tbody>
       </table>

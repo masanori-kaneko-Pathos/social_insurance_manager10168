@@ -48,6 +48,12 @@
     padding: var(--space-lg) var(--space-sm);
     background: var(--color-surface);
     border-right: 1px solid var(--color-border);
+    /* ページを下へ動かしても、サイドバーは画面に貼りついたまま（長いときはサイドバーの中だけ動く） */
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
+    overflow-y: auto;
   }
   
   .side-nav a {
@@ -102,6 +108,8 @@
     }
   
     .side-nav {
+      position: static;
+      height: auto;
       flex-direction: row;
       width: auto;
       padding: var(--space-sm);

@@ -29,6 +29,8 @@
       }
     }
 
+    <p class="required-note">{{ 'common.requiredNote' | transloco }}</p>
+
     @if (show('basic')) {
       <!-- 基本情報 -->
       <section class="card">
@@ -60,8 +62,10 @@
           </div>
 
           @if (!isForeign()) {
+            <!-- 姓・名を同じ行に、その下にセイ・メイ（画面の幅に関係なく） -->
+            <div class="name-pair">
             <div class="field">
-              <label for="lastName">{{ 'employee.field.lastName' | transloco }}</label>
+              <label for="lastName">{{ 'employee.field.lastName' | transloco }}<span class="req" aria-hidden="true">※</span></label>
               <input id="lastName" class="input" formControlName="lastName" autocomplete="off"
                      [class.is-invalid]="errorOf('lastName') || groupError('lastNameRequired', 'lastName')" />
               @if (errorOf('lastName'); as e) {
@@ -71,7 +75,7 @@
               }
             </div>
             <div class="field">
-              <label for="firstName">{{ 'employee.field.firstName' | transloco }}</label>
+              <label for="firstName">{{ 'employee.field.firstName' | transloco }}<span class="req" aria-hidden="true">※</span></label>
               <input id="firstName" class="input" formControlName="firstName" autocomplete="off"
                      [class.is-invalid]="errorOf('firstName') || groupError('firstNameRequired', 'firstName')" />
               @if (errorOf('firstName'); as e) {
@@ -80,11 +84,13 @@
                 <span class="field-error">{{ 'employee.validation.required' | transloco }}</span>
               }
             </div>
+            </div>
           } @else {
             <!-- 外国籍：ローマ字氏名（在留カードのとおり） -->
             <ng-container formGroupName="foreign">
+              <div class="name-pair">
               <div class="field">
-                <label for="romanLastName">{{ 'employee.field.romanLastName' | transloco }}</label>
+                <label for="romanLastName">{{ 'employee.field.romanLastName' | transloco }}<span class="req" aria-hidden="true">※</span></label>
                 <input id="romanLastName" class="input upper" formControlName="romanLastName" autocomplete="off"
                        [class.is-invalid]="errorOf('foreign.romanLastName') || groupError('romanRequired', 'foreign.romanLastName')" />
                 @if (errorOf('foreign.romanLastName'); as e) {
@@ -102,6 +108,7 @@
                 <input id="romanFirstName" class="input upper" formControlName="romanFirstName" autocomplete="off"
                        [class.is-invalid]="errorOf('foreign.romanFirstName')" />
                 @if (errorOf('foreign.romanFirstName'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+              </div>
               </div>
               <div class="field">
                 <label for="romanMiddleName">
@@ -129,7 +136,7 @@
               </div>
               @if (form.controls.foreign.controls.noRomanReason.value === 'other') {
                 <div class="field wide">
-                  <label for="noRomanReasonText">{{ 'employee.field.noRomanReasonText' | transloco }}</label>
+                  <label for="noRomanReasonText">{{ 'employee.field.noRomanReasonText' | transloco }}<span class="req" aria-hidden="true">※</span></label>
                   <input id="noRomanReasonText" class="input" formControlName="noRomanReasonText"
                          [class.is-invalid]="groupError('noRomanReasonTextRequired', 'foreign.noRomanReasonText')" />
                   @if (groupError('noRomanReasonTextRequired', 'foreign.noRomanReasonText')) {
@@ -141,8 +148,9 @@
           }
 
           <!-- フリガナ：日本国籍も外国籍も、届書に書く読み -->
+          <div class="name-pair">
           <div class="field">
-            <label for="lastNameKana">{{ (isForeign() ? 'employee.field.filingLastKana' : 'employee.field.lastNameKana') | transloco }}</label>
+            <label for="lastNameKana">{{ (isForeign() ? 'employee.field.filingLastKana' : 'employee.field.lastNameKana') | transloco }}<span class="req" aria-hidden="true">※</span></label>
             <input id="lastNameKana" class="input" formControlName="lastNameKana" autocomplete="off"
                    [class.is-invalid]="errorOf('lastNameKana')" />
             @if (errorOf('lastNameKana'); as e) {
@@ -164,9 +172,10 @@
               <span class="field-error">{{ 'employee.validation.required' | transloco }}</span>
             }
           </div>
+          </div>
 
           <div class="field">
-            <label for="birthDate">{{ 'employee.field.birthDate' | transloco }}</label>
+            <label for="birthDate">{{ 'employee.field.birthDate' | transloco }}<span class="req" aria-hidden="true">※</span></label>
             <input id="birthDate" class="input" type="date" formControlName="birthDate"
                    [class.is-invalid]="errorOf('birthDate') || groupError('birthFuture', 'birthDate') || groupError('birthTooYoung', 'birthDate')" />
             @if (errorOf('birthDate'); as e) {
@@ -181,7 +190,9 @@
 
         @if (isForeign()) {
           <div formGroupName="foreign">
-            <!-- 住民票の漢字氏名・通称名（任意） -->
+            <!-- 住民票の漢字氏名・通称名（任意）：ふだんは閉じておく。入っていれば開いたまま -->
+            <details class="fold" #pn [open]="pn.open || anyFilled('foreign.kanjiName') || anyFilled('foreign.alias')">
+            <summary>{{ 'employee.fold.personName' | transloco }}</summary>
             @for (k of personNameKinds; track k) {
               <fieldset class="person-name" [formGroupName]="k">
                 <legend>
@@ -203,6 +214,7 @@
               </fieldset>
             }
             <p class="hint">{{ 'employee.hint.personName' | transloco }}</p>
+            </details>
 
             <div class="grid">
               <div class="field">
@@ -234,9 +246,18 @@
         <div formGroupName="foreign">
           <div class="grid">
             <div class="field">
-              <label for="nationality">{{ 'employee.field.nationality' | transloco }}</label>
-              <input id="nationality" class="input upper" formControlName="nationality" maxlength="2"
-                     [class.is-invalid]="errorOf('foreign.nationality') || groupError('nationalityRequired', 'foreign.nationality')" />
+              <label for="nationality">{{ 'employee.field.nationality' | transloco }}<span class="req" aria-hidden="true">※</span></label>
+              <!-- 国のコードの A〜Z 順（名前はその画面の言語） -->
+              <select id="nationality" class="input" formControlName="nationality"
+                      [class.is-invalid]="errorOf('foreign.nationality') || groupError('nationalityRequired', 'foreign.nationality')">
+                <option value="">{{ 'common.select' | transloco }}</option>
+                @for (c of countries(); track c.code) {
+                  <option [value]="c.code">{{ c.code }} — {{ c.name }}</option>
+                }
+                @if (unlistedNationality(); as n) {
+                  <option [value]="n">{{ n }}</option>
+                }
+              </select>
               @if (errorOf('foreign.nationality'); as e) {
                 <span class="field-error">{{ e | transloco }}</span>
               } @else if (groupError('nationalityRequired', 'foreign.nationality')) {
@@ -257,7 +278,20 @@
             </div>
             <div class="field">
               <label for="residenceStatus">{{ 'employee.field.residenceStatus' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
-              <input id="residenceStatus" class="input" formControlName="residenceStatus" />
+              <!-- 在留カードの表記で保存する。就労できる資格を上に、外交・公用はいちばん下 -->
+              <select id="residenceStatus" class="input" formControlName="residenceStatus">
+                <option value="">{{ 'common.select' | transloco }}</option>
+                @for (g of residenceGroups; track g) {
+                  <optgroup [label]="'employee.residenceGroup.' + g | transloco">
+                    @for (s of residenceOf(g); track s.ja) {
+                      <option [value]="s.ja">{{ isEn() ? s.en + '（' + s.ja + '）' : s.ja }}</option>
+                    }
+                  </optgroup>
+                }
+                @if (unlistedResidence(); as r) {
+                  <option [value]="r">{{ r }}</option>
+                }
+              </select>
             </div>
             <div class="field">
               <label for="residenceExpiry">{{ 'employee.field.residenceExpiry' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
@@ -282,7 +316,7 @@
           @if (form.controls.foreign.controls.workPermit.value) {
             <div class="grid">
               <div class="field">
-                <label for="workPermitHours">{{ 'employee.field.workPermitHours' | transloco }}</label>
+                <label for="workPermitHours">{{ 'employee.field.workPermitHours' | transloco }}<span class="req" aria-hidden="true">※</span></label>
                 <input id="workPermitHours" class="input" formControlName="workPermitHours" inputmode="decimal"
                        [class.is-invalid]="errorOf('foreign.workPermitHours')" />
                 @if (errorOf('foreign.workPermitHours'); as e) {
@@ -298,7 +332,7 @@
           @if (form.controls.foreign.controls.hasCertificate.value) {
             <div class="grid">
               <div class="field">
-                <label for="certCountry">{{ 'employee.field.certCountry' | transloco }}</label>
+                <label for="certCountry">{{ 'employee.field.certCountry' | transloco }}<span class="req" aria-hidden="true">※</span></label>
                 <!-- 協定のある国から選ぶ（マスタが読めないときだけ、2文字のコードを打つ） -->
                 @if (agreementOptions().length > 0) {
                   <select id="certCountry" class="input" formControlName="certCountry"
@@ -330,7 +364,7 @@
                 </select>
               </div>
               <div class="field">
-                <label for="certFrom">{{ 'employee.field.certFrom' | transloco }}</label>
+                <label for="certFrom">{{ 'employee.field.certFrom' | transloco }}<span class="req" aria-hidden="true">※</span></label>
                 <input id="certFrom" class="input" type="date" formControlName="certFrom" />
               </div>
               <div class="field">
@@ -367,7 +401,7 @@
         <h2>{{ 'employee.section.employment' | transloco }}</h2>
         <div class="grid">
           <div class="field">
-            <label for="hireDate">{{ 'employee.field.hireDate' | transloco }}</label>
+            <label for="hireDate">{{ 'employee.field.hireDate' | transloco }}<span class="req" aria-hidden="true">※</span></label>
             <input id="hireDate" class="input" type="date" formControlName="hireDate"
                    [class.is-invalid]="errorOf('hireDate')" />
             @if (errorOf('hireDate'); as e) { <span class="field-error">{{ e | transloco }}</span> }
@@ -452,21 +486,27 @@
               }
             </select>
           </div>
-          <div class="field">
-            <label for="optInDate">
-              {{ 'employee.field.optInDate' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
-            </label>
-            <input id="optInDate" class="input" type="date" formControlName="optInDate" />
-            <span class="hint">{{ 'employee.hint.optIn' | transloco }}</span>
-          </div>
-          <div class="field">
-            <label for="optOutDate">
-              {{ 'employee.field.optOutDate' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
-            </label>
-            <input id="optOutDate" class="input" type="date" formControlName="optOutDate" />
-            <span class="hint">{{ 'employee.hint.optOut' | transloco }}</span>
-          </div>
         </div>
+        <!-- 特定減額特例の申出日：ほとんどの人には関係ないので閉じておく -->
+        <details class="fold" #oi [open]="oi.open || anyFilled('optInDate') || anyFilled('optOutDate')">
+          <summary>{{ 'employee.fold.optIn' | transloco }}</summary>
+          <div class="grid">
+            <div class="field">
+              <label for="optInDate">
+                {{ 'employee.field.optInDate' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+              </label>
+              <input id="optInDate" class="input" type="date" formControlName="optInDate" />
+              <span class="hint">{{ 'employee.hint.optIn' | transloco }}</span>
+            </div>
+            <div class="field">
+              <label for="optOutDate">
+                {{ 'employee.field.optOutDate' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+              </label>
+              <input id="optOutDate" class="input" type="date" formControlName="optOutDate" />
+              <span class="hint">{{ 'employee.hint.optOut' | transloco }}</span>
+            </div>
+          </div>
+        </details>
         <label class="check plain"><input type="checkbox" formControlName="multipleOffices" />{{ 'employee.field.multipleOffices' | transloco }}</label>
         <label class="check plain"><input type="checkbox" formControlName="rehired" />{{ 'employee.field.rehired' | transloco }}</label>
         <label class="check plain"><input type="checkbox" formControlName="needsConfirmationCard" />{{ 'employee.field.needsConfirmationCard' | transloco }}</label>

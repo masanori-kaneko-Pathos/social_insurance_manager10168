@@ -284,6 +284,7 @@ th .arrow.default {
   z-index: 10;
   width: min(420px, calc(100vw - 32px));
   max-height: 70vh;
+  overflow-x: hidden; /* 日付の欄などがはみ出しても、横のスクロールバーを出さない */
   overflow-y: auto;
   padding: var(--space-md);
   background: var(--color-surface);

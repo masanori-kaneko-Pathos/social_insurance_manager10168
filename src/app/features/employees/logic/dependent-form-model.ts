@@ -251,6 +251,8 @@ export function dependentErrors(v: DependentFormValue): Partial<Record<Dependent
   if (v.postalCode.trim() && !/^\d{7}$/.test(digits(v.postalCode))) e.postalCode = 'postalCode';
 
   if (!v.livingTogether) {
+    // 別居なら住所は必須（被扶養者（異動）届の住所欄・別居の申立てで要る）
+    if (!v.address.trim()) e.address = 'required';
     if (v.remittance.trim() && parseNat(v.remittance) == null) e.remittance = 'yen';
     const t = parseNat(v.remittanceTimes);
     if (v.remittanceTimes.trim() && (t == null || t < 1 || t > 365)) e.remittanceTimes = 'times';

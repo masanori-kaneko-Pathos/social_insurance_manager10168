@@ -42,6 +42,13 @@ import {
   toEmployeeForm,
 } from '../../logic/employee-form-model';
 import { EmployeeStep, nextStep, prevStep, stepBlocked, stepsFor, STEP_CONTROLS } from '../../logic/employee-steps';
+import {
+  countryOptions,
+  RESIDENCE_GROUPS,
+  RESIDENCE_STATUSES,
+  ResidenceGroup,
+} from '../../logic/foreign-options';
+import { LanguageService } from '../../../../core/i18n/language.service';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 const NOT_BLANK = Validators.pattern(/\S/);
@@ -145,6 +152,27 @@ export class EmployeeForm {
     const c = this.cert();
     return c ? (this.agreements().find((a) => a.country === c.country) ?? null) : null;
   });
+  // ===== 国籍・在留資格の選択肢 =====
+  private readonly language = inject(LanguageService);
+  readonly isEn = computed(() => this.language.lang() === 'en');
+  readonly countries = computed(() => countryOptions(this.language.lang()));
+  readonly residenceGroups = RESIDENCE_GROUPS;
+
+  residenceOf(g: ResidenceGroup) {
+    return RESIDENCE_STATUSES.filter((s) => s.group === g);
+  }
+
+  /** 前に打ち込んだ、一覧にない国籍・在留資格（選択肢に残して、消えないようにする） */
+  unlistedNationality(): string | null {
+    const v = this.form.controls.foreign.controls.nationality.value.trim().toUpperCase();
+    return v && !this.countries().some((c) => c.code === v) ? v : null;
+  }
+
+  unlistedResidence(): string | null {
+    const v = this.form.controls.foreign.controls.residenceStatus.value.trim();
+    return v && !RESIDENCE_STATUSES.some((s) => s.ja === v) ? v : null;
+  }
+
   /** 適用証明書の国の選択肢：協定のある国（国名の順） */
   readonly agreementOptions = computed(() =>
     [...this.agreements()].sort((a, b) => a.name.localeCompare(b.name, 'ja')),
@@ -429,6 +457,13 @@ export class EmployeeForm {
   }
 
   /** 項目のエラー（触る前・正しいときは null） */
+  /** 折りたたみ欄に何か入っていれば、開いたままにする（入れた値が隠れないように） */
+  anyFilled(path: string): boolean {
+    const has = (x: unknown): boolean =>
+      typeof x === 'string' ? x.trim() !== '' : !!x && typeof x === 'object' && Object.values(x).some(has);
+    return has(this.form.get(path)?.value);
+  }
+
   errorOf(path: string): string | null {
     const c = this.form.get(path);
     if (!c || !c.touched || !c.errors) return null;

@@ -1,9 +1,10 @@
+/* 見出しのすぐ右に「‹ 年月 › 今月」を置く（左寄せ。「今月」が出ても ‹ › の位置が動かない） */
 .page-head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-md);
+  justify-content: flex-start;
+  gap: var(--space-lg);
   margin-bottom: var(--space-md);
 }
 
@@ -30,7 +31,7 @@ h2 {
 }
 
 .period-label {
-  min-width: 9em;
+  min-width: 11em; /* 「2026年10月分」と「12月」で幅が変わって › が動かないように */
   text-align: center;
   font-weight: 600;
 }
@@ -208,4 +209,16 @@ tr.changed td {
 .totals h3 {
   margin: var(--space-lg) 0 var(--space-sm);
   font-size: var(--font-sm);
+}
+
+/* 健康保険料の内訳（1段下げて小さく） */
+.sub-row th,
+.sub-row td {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.sub-row th {
+  padding-left: var(--space-lg);
+  font-weight: 400;
 }

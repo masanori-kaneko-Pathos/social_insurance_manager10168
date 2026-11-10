@@ -5,7 +5,7 @@ import { Employee } from '../../../../core/models/employee';
 import { ChangeHistory } from '../../../../core/models/employee-records';
 import { OfficeContext } from '../../../office/office-context.service';
 import { HistoryService } from '../../history.service';
-import { displayValue } from '../../logic/history';
+import { displayValue, recordSummary } from '../../logic/history';
 
 /** 最初に出す件数（「もっと見る」で全部） */
 const FIRST = 20;
@@ -112,6 +112,18 @@ export class HistoryCard {
       }
     }
     return path;
+  }
+
+  /**
+   * 変更前・変更後の欄
+   * 登録・削除の行は中身の JSON を出さず、種類ごとの短い要約（氏名・契約の始まる日など）にする
+   */
+  cell(h: ChangeHistory, side: 'before' | 'after'): string {
+    const v = h[side];
+    if (h.field !== '*') return this.value(v);
+    if (v === null) return '—';
+    const kind = h.target.split('/')[0];
+    return recordSummary(kind, v, (k) => this.t(k) ?? k) ?? '—';
   }
 
   value(v: string | null): string {

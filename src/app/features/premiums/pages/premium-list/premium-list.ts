@@ -23,7 +23,7 @@ import {
 } from '../../../office/office-settings';
 import { noRates, pickRates, RateTables } from '../../../rates/logic/pick-rates';
 import { RateService } from '../../../rates/rate.service';
-import { officeTotals } from '../../logic/premium-core';
+import { healthPartTotals, officeTotals } from '../../logic/premium-core';
 import { buildPremiumRow, PremiumRow } from '../../logic/premium-rows';
 import { formatMilli } from '../../logic/rounding';
 import { BonusPayment } from '../../../../core/models/bonus';
@@ -128,8 +128,16 @@ export class PremiumList {
     officeTotals(this.rows().flatMap((r) => (r.state === 'ok' && r.result ? [r.result] : []))),
   );
 
+  /** 健康保険料の内訳（健康保険・介護保険・子ども・子育て支援金の全額） */
+  readonly healthParts = computed(() =>
+    healthPartTotals(this.rows().flatMap((r) => (r.state === 'ok' && r.result ? [r.result] : []))),
+  );
+
   /** 納付額の合計（納入告知書と照らし合わせる用） */
   readonly grandTotalYen = computed(() => this.totals().reduce((s, t) => s + t.totalYen, 0));
+  /** 本人負担・会社負担の総合計 */
+  readonly employeeTotalYen = computed(() => this.totals().reduce((s, t) => s + t.employeeYen, 0));
+  readonly employerTotalYen = computed(() => this.totals().reduce((s, t) => s + t.employerYen, 0));
 
   readonly changedCount = computed(() => this.rows().filter((r) => r.changes.length > 0).length);
 

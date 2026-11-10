@@ -15,7 +15,8 @@
       "postalCode": "7 digits (no hyphen needed)"
     },
     "close": "Close",
-    "saved": "Saved"
+    "saved": "Saved",
+    "requiredNote": "Items marked ※ are required."
   },
   "auth": {
     "password": {
@@ -228,7 +229,7 @@
       "insurance": "Insurance eligibility",
       "details": "Coverage details",
       "numbers": "Filing numbers",
-      "contact": "Contact",
+      "contact": "Address & contact",
       "commute": "Commute",
       "bank": "Payroll bank account",
       "collection": "How premiums are collected",
@@ -517,7 +518,7 @@
       "history": "History"
     },
     "overview": {
-      "grade": "Current Standard Monthly Remuneration (SMR)",
+      "grade": "Standard Monthly Remuneration (SMR)",
       "gradeValue": "Health grade {{health}}, pension grade {{pension}} ({{standard}} yen)",
       "premium": "Employee share for {{month}}",
       "yen": " yen",
@@ -533,6 +534,16 @@
         "noInsuredNumber": "Insured person number is not entered (enter it when the notice arrives).",
         "noAddress": "Address is not entered (Application to Enroll by basic pension number, My Page)."
       }
+    },
+    "residenceGroup": {
+      "work": "Statuses that allow work",
+      "status": "Statuses based on personal status",
+      "nonWork": "Statuses that do not allow work",
+      "diplomatic": "Diplomat / Official"
+    },
+    "fold": {
+      "personName": "Enter the kanji name / alias on the residence record",
+      "optIn": "Enter request dates for the special reduced-wage rule"
     }
   },
   "office": {
@@ -594,7 +605,7 @@
       "switchToKumiai": "Until kumiai rates are registered, health premiums from the switch month show as 'No rate registered'.",
       "method": "Per-employee settings (e.g. cash for employees on leave) are coming later.",
       "healthRounding": "There is no official guidance, so both are available. The method once published by the ministry is 'together'.",
-      "nameEn": "Shown instead of the office name on English screens (if blank, the Japanese name is used)."
+      "nameEn": "Enter the English name if there is one."
     },
     "postal": {
       "search": "Find address",
@@ -815,7 +826,7 @@
     "col": {
       "healthStd": "Health std.",
       "pensionStd": "Pension std.",
-      "health": "Health etc.",
+      "health": "Health, care & child support",
       "pension": "Pension",
       "sum": "Total",
       "payment": "Payment",
@@ -831,7 +842,7 @@
       "other": "Changed"
     },
     "category": {
-      "health": "Health insurance (incl. care and child care support)",
+      "health": "Health insurance, long-term care insurance and child and child care support contribution",
       "pension": "Pension",
       "childContribution": "Child and childcare contributions"
     },
@@ -853,6 +864,11 @@
     "toBonuses": "Go to bonuses",
     "error": {
       "load": "Could not load premiums."
+    },
+    "part": {
+      "health": "of which health insurance",
+      "care": "of which long-term care insurance",
+      "childSupport": "of which child and child care support contribution"
     }
   },
   "rateDialog": {
@@ -1426,7 +1442,7 @@
       "temporaryBusiness": "Temporary business"
     },
     "category": {
-      "today": "Category today",
+      "today": "Category",
       "regular": "Regular worker (insured)",
       "shortTime": "Short-time worker (insured)",
       "reducedWage": "Specified reduced-wage worker (insured by request)",
@@ -1455,6 +1471,9 @@
       "hours": "Weekly hours are below 3/4 of a regular worker ({{work}} of {{std}}).",
       "days": "Monthly days are below 3/4 of a regular worker ({{days}} of {{stdDays}} days).",
       "both": "Weekly hours ({{work}} of {{std}}) and monthly days ({{days}} of {{stdDays}} days) are both below 3/4 of a regular worker."
+    },
+    "fold": {
+      "inKind": "Enter the expected in-kind amount (housing, meals, etc.)"
     }
   },
   "dependent": {
@@ -1531,7 +1550,7 @@
     "relationship": {
       "spouse": "Spouse",
       "child": "Child (biological/adopted)",
-      "otherChild": "Other child",
+      "otherChild": "Other child (not biological or adopted, e.g. a stepchild)",
       "parent": "Parent",
       "parentInLaw": "Parent-in-law",
       "youngerSibling": "Younger sibling",
@@ -1803,7 +1822,8 @@
   "account": {
     "menu": "Settings",
     "signedInAs": "Signed in as",
-    "language": "Language"
+    "language": "Language",
+    "logoutConfirm": "Log out?"
   },
   "history": {
     "title": "Change history",
@@ -1846,6 +1866,11 @@
       "health_enrolled": "Enrolled",
       "pension_enrolled": "Enrolled",
       "careExemptions": "Periods without long-term care premiums (exemption)"
+    },
+    "summary": {
+      "private": "Address, contact, commute and bank account",
+      "remuneration": "Health grade {health} / pension grade {pension} (monthly remuneration ¥{amount})",
+      "payroll": "Paid in money ¥{cash}"
     }
   },
   "recalc": {
@@ -2265,7 +2290,7 @@
     },
     "chooseFields": "Choose what to change",
     "group": {
-      "contact": "Contact",
+      "contact": "Address & contact",
       "commute": "Commute",
       "bankAccount": "Salary account"
     },

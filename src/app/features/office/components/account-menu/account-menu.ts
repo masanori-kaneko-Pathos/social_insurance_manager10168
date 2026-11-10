@@ -1,6 +1,6 @@
 import { Component, ElementRef, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { LanguageService } from '../../../../core/i18n/language.service';
 import { OfficeContext } from '../../office-context.service';
@@ -23,6 +23,7 @@ export class AccountMenu {
   private readonly auth = inject(AuthService);
   private readonly context = inject(OfficeContext);
   private readonly router = inject(Router);
+  private readonly transloco = inject(TranslocoService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly language = inject(LanguageService);
 
@@ -47,6 +48,8 @@ export class AccountMenu {
   }
 
   async logout(): Promise<void> {
+    // 押し間違いで締め出されないように、ひと声かける（ブラウザの確認窓）
+    if (!window.confirm(this.transloco.translate('account.logoutConfirm'))) return;
     this.loggingOut.set(true);
     try {
       this.close();

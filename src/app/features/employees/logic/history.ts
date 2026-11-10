@@ -124,3 +124,51 @@ export function bonusChanges(
   }
   return out;
 }
+
+/**
+ * 登録・削除の行に出す短い要約（中身の JSON をそのまま出さない）
+ * 種類ごとに、人が見て「どれのことか」わかる項目だけを拾う。選択肢の値は label で言葉に直す
+ * 拾えないとき（知らない種類・形が違う）は null → 画面は「—」
+ */
+export function recordSummary(
+  kind: string,
+  json: string | null,
+  label: (key: string) => string,
+): string | null {
+  if (json === null) return null;
+  let o: Record<string, unknown>;
+  try {
+    o = JSON.parse(json) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+  if (!o || typeof o !== 'object') return null;
+  const s = (k: string) => (typeof o[k] === 'string' ? (o[k] as string) : '');
+  const n = (v: unknown) => (typeof v === 'number' ? v.toLocaleString('ja-JP') : '');
+  const grade = (v: unknown) =>
+    v && typeof v === 'object' && 'grade' in v ? String((v as { grade: unknown }).grade) : '';
+  switch (kind) {
+    case 'employee':
+      return `${s('lastName')} ${s('firstName')}`.trim() || null;
+    case 'details':
+      return label('history.summary.private');
+    case 'contracts':
+      return [s('from') && `${s('from')}〜`, s('employmentType') && label(`contract.employmentType.${s('employmentType')}`)]
+        .filter((x) => !!x)
+        .join(' ') || null;
+    case 'remunerations':
+      return label('history.summary.remuneration')
+        .replace('{health}', grade(o['health']))
+        .replace('{pension}', grade(o['pension']))
+        .replace('{amount}', n(o['monthlyAmount']));
+    case 'dependents': {
+      const name = `${s('lastName')} ${s('firstName')}`.trim();
+      const rel = s('relationship') && label(`dependent.relationship.${s('relationship')}`);
+      return [name, rel && `（${rel}）`].join('') || null;
+    }
+    case 'payrolls':
+      return o['cash'] !== undefined ? label('history.summary.payroll').replace('{cash}', n(o['cash'])) : null;
+    default:
+      return null;
+  }
+}

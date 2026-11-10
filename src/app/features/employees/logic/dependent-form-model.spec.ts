@@ -40,6 +40,7 @@ function parentApart(): DependentFormValue {
     birthDate: '1939-07-07',
     relationship: 'parent',
     livingTogether: false,
+    address: '大阪府大阪市北区梅田1-1-1',
     remittance: '150,000',
     remittanceTimes: '12',
     startReason: 'incomeDecrease',
@@ -50,6 +51,10 @@ describe('dependentErrors', () => {
   it('ちゃんと入っていればエラーなし', () => {
     expect(dependentErrors(spouse())).toEqual({});
     expect(dependentErrors(parentApart())).toEqual({});
+  });
+  it('別居なら住所が必須（同居なら要らない）', () => {
+    expect(dependentErrors({ ...parentApart(), address: ' ' }).address).toBe('required');
+    expect(dependentErrors({ ...spouse(), address: '' }).address).toBeUndefined();
   });
   it('必須・カナ・番号の形', () => {
     const e = dependentErrors({ ...spouse(), lastName: '', lastNameKana: 'ねんきん', basicPensionNumber: '123', postalCode: '12' });

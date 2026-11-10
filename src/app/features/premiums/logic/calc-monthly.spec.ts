@@ -2,7 +2,7 @@ import { MasterRateDoc, RatesForMonth } from '../../../core/models/rates';
 import { CoverageInput } from '../../employees/logic/coverage';
 import { pickRates } from '../../rates/logic/pick-rates';
 import { calcMonthly, RemunerationLike } from './calc-monthly';
-import { officeTotals } from './premium-core';
+import { healthPartTotals, officeTotals } from './premium-core';
 import { EXCEL_SAGA, EXCEL_TOKYO } from './excel-r8.fixture';
 
 // 令和8年度の料率（東京 9.85%、佐賀 10.55%、介護 1.62%、支援金 0.23%、厚年 18.3%、拠出金 0.36%）
@@ -289,6 +289,22 @@ describe('officeTotals：事業所の合計（日本年金機構の考え方）'
     expect(health.totalYen).toBe(14348);
     expect(health.employeeYen).toBe(7173);
     expect(health.employerYen).toBe(7175);
+  });
+});
+
+describe('healthPartTotals：健康保険料の内訳（全額）', () => {
+  it('東京22級（30万円）・2026-11：健保 29,550円・支援金 690円（30歳なので介護は0円）', () => {
+    const r = calcMonthly({
+      month: '2026-11',
+      employee: AGE30,
+      remunerations: [rem('2024-04', [22, 300000], [19, 300000])],
+      rates: rates('13', '2026-11'),
+    });
+    expect(healthPartTotals([r])).toEqual([
+      { part: 'health', totalYen: 29550 },
+      { part: 'care', totalYen: 0 },
+      { part: 'childSupport', totalYen: 690 },
+    ]);
   });
 });
 

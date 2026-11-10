@@ -9,8 +9,9 @@
   --color-text-sub: #7a5a3c;
   --color-border: #e6dccf;
   --color-border-strong: #dcd0c0;
-  --color-primary: #f29544;
-  --color-primary-hover: #e88634;
+  /* 11/10：強すぎたので明るめに。文字は焦げ茶のまま（白い文字だと明るさの差が 1.9 で読みにくいため） */
+  --color-primary: #f6ad6a;
+  --color-primary-hover: #f29a4f;
   --color-on-primary: #3e1e02;
   --color-highlight: #f2d6b3;
   --color-accent-sub: #d9ad77;
@@ -223,28 +224,25 @@ a:where(:link, :visited):hover {
 }
 
 /* ===== タブ（GitHub 風。従業員のページ） ===== */
-.tabs {
-  display: flex;
-  gap: var(--space-xs);
-  margin: 0 0 var(--space-lg);
-  border-bottom: 1px solid var(--color-border);
+.page-tabs {
+  margin: 0 0 var(--space-md);
   overflow-x: auto;
+  overflow-y: hidden;
 }
 
-.tabs a {
+.page-tabs a {
   padding: var(--space-sm) var(--space-md);
   color: var(--color-text-sub);
   text-decoration: none;
   white-space: nowrap;
   border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
 }
 
-.tabs a:hover {
+.page-tabs a:hover {
   color: var(--color-text);
 }
 
-.tabs a.active {
+.page-tabs a.active {
   color: var(--color-text);
   font-weight: 600;
   border-bottom-color: var(--color-primary);
@@ -362,4 +360,66 @@ a:where(:link, :visited):hover {
     opacity: 1;
     transform: translateX(-50%);
   }
+}
+/* ===== 必須の印（11/10：「任意」を出すのをやめ、必須の欄にだけ ※ を付ける） ===== */
+/* 各画面の CSS にも .optional があり、そちらのほうが強い（画面ごとの印が付く）ので !important で消す */
+.optional {
+  display: none !important;
+}
+
+.req {
+  margin-left: 2px;
+  color: var(--color-danger-text);
+}
+
+.required-note {
+  margin: 0 0 var(--space-md);
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+/* ===== 姓・名を同じ行に、その下にセイ・メイ（2列の表の中で1行を使う） ===== */
+.name-pair {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 var(--space-md);
+}
+
+/* ===== ふだんは閉じておく入力欄（漢字氏名・特定減額特例・現物など） ===== */
+.fold {
+  margin: var(--space-sm) 0;
+}
+
+.fold > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  cursor: pointer;
+  color: var(--color-text-sub);
+  font-size: var(--font-sm);
+  list-style: none;
+}
+
+.fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.fold > summary::before {
+  content: '＋';
+  display: inline-grid;
+  place-items: center;
+  width: 1.25em;
+  height: 1.25em;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-xs);
+}
+
+.fold[open] > summary::before {
+  content: '－';
+}
+
+.fold[open] > summary {
+  margin-bottom: var(--space-sm);
 }

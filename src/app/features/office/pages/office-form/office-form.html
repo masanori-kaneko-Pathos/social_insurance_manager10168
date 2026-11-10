@@ -36,12 +36,13 @@
   }
 
   <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <p class="required-note">{{ 'common.requiredNote' | transloco }}</p>
     <!-- 基本情報 -->
     <section class="card">
       <h2>{{ 'office.section.basic' | transloco }}</h2>
       <div class="grid">
         <div class="field full">
-          <label for="name">{{ 'office.field.name' | transloco }}</label>
+          <label for="name">{{ 'office.field.name' | transloco }}<span class="req" aria-hidden="true">※</span></label>
           <input
             id="name"
             class="input"
@@ -96,7 +97,7 @@
         </div>
 
         <div class="field">
-          <label for="ownerName">{{ 'office.field.ownerName' | transloco }}</label>
+          <label for="ownerName">{{ 'office.field.ownerName' | transloco }}<span class="req" aria-hidden="true">※</span></label>
           <input
             id="ownerName"
             class="input"
@@ -165,7 +166,7 @@
         </div>
 
         <div class="field">
-          <label for="prefecture">{{ 'office.field.prefecture' | transloco }}</label>
+          <label for="prefecture">{{ 'office.field.prefecture' | transloco }}<span class="req" aria-hidden="true">※</span></label>
           <select
             id="prefecture"
             class="input"
@@ -185,7 +186,7 @@
         </div>
 
         <div class="field full">
-          <label for="address">{{ 'office.field.address' | transloco }}</label>
+          <label for="address">{{ 'office.field.address' | transloco }}<span class="req" aria-hidden="true">※</span></label>
           <input
             id="address"
             class="input"
@@ -218,7 +219,7 @@
 
       @if (insurerType() === 'kumiai') {
         <div class="field">
-          <label for="kumiaiName">{{ 'office.field.kumiaiName' | transloco }}</label>
+          <label for="kumiaiName">{{ 'office.field.kumiaiName' | transloco }}<span class="req" aria-hidden="true">※</span></label>
           <input
             id="kumiaiName"
             class="input"
@@ -482,7 +483,7 @@
       <h2>{{ 'office.section.payroll' | transloco }}</h2>
       <div class="grid">
         <div class="field">
-          <label for="closingDay">{{ 'office.field.closingDay' | transloco }}</label>
+          <label for="closingDay">{{ 'office.field.closingDay' | transloco }}<span class="req" aria-hidden="true">※</span></label>
           <select id="closingDay" class="input" formControlName="closingDay">
             @for (d of days; track d) {
               <option [ngValue]="d">
@@ -495,7 +496,7 @@
         </div>
 
         <div class="field">
-          <label for="payDay">{{ 'office.field.payDay' | transloco }}</label>
+          <label for="payDay">{{ 'office.field.payDay' | transloco }}<span class="req" aria-hidden="true">※</span></label>
           <div class="row">
             <select
               class="input"

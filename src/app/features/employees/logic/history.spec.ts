@@ -1,4 +1,13 @@
-import { bonusChanges, changesOf, displayValue, flatten, MAX_VALUE_LENGTH, summarize, toValue } from './history';
+import {
+  bonusChanges,
+  changesOf,
+  displayValue,
+  flatten,
+  MAX_VALUE_LENGTH,
+  recordSummary,
+  summarize,
+  toValue,
+} from './history';
 
 describe('flatten', () => {
   it('まとまりは中まで、配列は丸ごと。作成・更新の日時は比べない', () => {
@@ -76,5 +85,37 @@ describe('bonusChanges：賞与の額が変わった人ごと', () => {
     expect(m.get('B')).toEqual({ field: 'amount', before: '300000', after: '320000' });
     expect(m.get('C')?.after).toBeNull();
     expect(m.get('D')?.before).toBeNull();
+  });
+});
+
+describe('recordSummary：登録・削除の行の要約', () => {
+  const ja: Record<string, string> = {
+    'contract.employmentType.part': 'パート',
+    'dependent.relationship.spouse': '配偶者（夫・妻）',
+    'history.summary.private': '住所・連絡先・通勤・口座',
+    'history.summary.remuneration': '健保 {health}級・厚年 {pension}級（報酬月額 {amount}円）',
+    'history.summary.payroll': '支払額 {cash}円',
+  };
+  const label = (k: string) => ja[k] ?? k;
+  it('従業員は氏名', () => {
+    expect(recordSummary('employee', JSON.stringify({ lastName: '田中', firstName: '花子', source: 'csv' }), label)).toBe('田中 花子');
+  });
+  it('契約は始まる日と雇用の形（選択肢は言葉に直す）', () => {
+    expect(recordSummary('contracts', JSON.stringify({ from: '2026-04-01', employmentType: 'part' }), label)).toBe('2026-04-01〜 パート');
+  });
+  it('標準報酬は等級と報酬月額', () => {
+    const r = { health: { grade: 6, standard: 104000 }, pension: { grade: 3, standard: 104000 }, monthlyAmount: 104000 };
+    expect(recordSummary('remunerations', JSON.stringify(r), label)).toBe('健保 6級・厚年 3級（報酬月額 104,000円）');
+  });
+  it('扶養家族は氏名と続柄', () => {
+    expect(recordSummary('dependents', JSON.stringify({ lastName: '田中', firstName: '一郎', relationship: 'spouse' }), label)).toBe('田中 一郎（配偶者（夫・妻））');
+  });
+  it('鍵付きの文書は中身を出さない', () => {
+    expect(recordSummary('details', JSON.stringify({ contact: { address: '東京都' } }), label)).toBe('住所・連絡先・通勤・口座');
+  });
+  it('知らない種類・壊れた中身は null', () => {
+    expect(recordSummary('xyz', '{}', label)).toBeNull();
+    expect(recordSummary('employee', 'not json', label)).toBeNull();
+    expect(recordSummary('employee', null, label)).toBeNull();
   });
 });

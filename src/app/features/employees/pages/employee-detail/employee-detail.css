@@ -9,16 +9,17 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: var(--space-md);
-    margin: var(--space-sm) 0 var(--space-lg);
+    margin: var(--space-xs) 0 var(--space-sm);
   }
   
   .page-head a.btn {
     text-decoration: none;
   }
   
+  /* 見出しは小さめに（画面の下の中身を広く見せる） */
   h1 {
     margin: 0;
-    font-size: var(--font-xl);
+    font-size: var(--font-lg);
   }
   
   .kana {

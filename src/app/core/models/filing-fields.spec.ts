@@ -6,15 +6,7 @@
 import { BonusPaymentDoc } from './bonus';
 import { ContractDoc } from './contract';
 import { DependentDoc, OverseasSpecialDoc } from './dependent';
-import {
-  EmployeeDoc,
-  EmployeePrivateDoc,
-  EnrollmentDoc,
-  FiledLeave,
-  ForeignDoc,
-  Leave,
-  PersonName,
-} from './employee';
+import { EmployeeDoc, EmployeePrivateDoc, EnrollmentDoc, FiledLeave, ForeignDoc, Leave, PersonName } from './employee';
 import { OfficeDoc } from './office';
 import { PayrollInput } from './payroll';
 import { IrregularDecisionDoc, RegularDecisionDoc } from './revision';
@@ -24,11 +16,7 @@ type Field<T> = keyof T | 'calc';
 /** 資格取得届 */
 const ACQUISITION: Record<
   string,
-  | Field<EmployeeDoc>
-  | Field<EmployeePrivateDoc>
-  | Field<ContractDoc>
-  | Field<OfficeDoc>
-  | Field<EnrollmentDoc>
+  Field<EmployeeDoc> | Field<EmployeePrivateDoc> | Field<ContractDoc> | Field<OfficeDoc> | Field<EnrollmentDoc>
 > = {
   被保険者整理番号: 'insuredNumber',
   氏名: 'lastName',
@@ -46,7 +34,7 @@ const ACQUISITION: Record<
   備考_二以上事業所: 'multipleOffices',
   備考_短時間労働者: 'calc',
   備考_継続再雇用: 'rehired',
-  住所: 'contact',
+  住所: 'contact', // 鍵付きの文書（details/private）
   資格確認書: 'needsConfirmationCard',
 };
 
@@ -92,10 +80,7 @@ const BONUS: Record<string, Field<BonusPaymentDoc>> = {
 
 /** 被扶養者（異動）届・第3号 */
 /** 被扶養者（異動）届・第3号被保険者関係届（様式コード 2202） */
-const DEPENDENT: Record<
-  string,
-  Field<DependentDoc> | Field<EmployeeDoc> | Field<OverseasSpecialDoc>
-> = {
+const DEPENDENT: Record<string, Field<DependentDoc> | Field<EmployeeDoc> | Field<OverseasSpecialDoc>> = {
   A_被保険者の年収: 'annualIncomeEstimate', // 空なら実績から計算
   B_C_氏名: 'lastName',
   B_C_フリガナ: 'lastNameKana',
@@ -199,18 +184,7 @@ const ROMAN_NAME: Record<string, Field<EmployeeDoc> | Field<ForeignDoc> | Field<
 };
 
 describe('答え合わせの表（届書の欄 → 入れ物の項目）', () => {
-  const tables = {
-    ACQUISITION,
-    LOSS,
-    REGULAR,
-    IRREGULAR,
-    BONUS,
-    DEPENDENT,
-    MATERNITY,
-    LEAVE,
-    CATEGORY,
-    ROMAN_NAME,
-  };
+  const tables = { ACQUISITION, LOSS, REGULAR, IRREGULAR, BONUS, DEPENDENT, MATERNITY, LEAVE, CATEGORY, ROMAN_NAME };
   for (const [name, table] of Object.entries(tables)) {
     it(`${name}：すべての欄に行き先がある`, () => {
       for (const [label, field] of Object.entries(table)) {

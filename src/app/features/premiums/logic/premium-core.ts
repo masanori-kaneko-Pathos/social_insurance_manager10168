@@ -120,3 +120,21 @@ export function officeTotals(results: PremiumResult[]): OfficeTotal[] {
     return { category, totalYen, employeeYen: s.employee, employerYen: totalYen - s.employee };
   });
 }
+
+/**
+ * 健康保険料の内訳（健康保険・介護保険・子ども・子育て支援金）の全額
+ * 納付額は3つを合わせて1円未満を切り捨てるので、ここはそれぞれを切り捨てた目安（合計と1〜2円ずれることがある）
+ * 本人負担は「合算してから端数処理」の設定だと保険ごとに決まらないので、全額だけを出す
+ */
+export function healthPartTotals(results: PremiumResult[]): { part: 'health' | 'care' | 'childSupport'; totalYen: number }[] {
+  const parts = ['health', 'care', 'childSupport'] as const;
+  const sums = new Map<PremiumPart, Milli>(parts.map((p) => [p, 0]));
+  for (const r of results) {
+    for (const g of r.groups) {
+      for (const l of g.lines) {
+        if (sums.has(l.part)) sums.set(l.part, sums.get(l.part)! + l.totalMilli);
+      }
+    }
+  }
+  return parts.map((part) => ({ part, totalYen: floorYen(sums.get(part)!) }));
+}

@@ -67,11 +67,12 @@
   <!-- 追加・編集のフォーム -->
   @if (editing() !== null) {
     <form class="editor" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <p class="required-note">{{ 'common.requiredNote' | transloco }}</p>
       <!-- ① 誰か -->
       <h3>{{ 'dependent.group.who' | transloco }}</h3>
       <div class="grid">
         <div class="field">
-          <label for="dp-rel">{{ 'dependent.field.relationship' | transloco }}</label>
+          <label for="dp-rel">{{ 'dependent.field.relationship' | transloco }}<span class="req" aria-hidden="true">※</span></label>
           <select id="dp-rel" class="input" formControlName="relationship">
             @for (r of relationships; track r) {
               <option [value]="r">{{ 'dependent.relationship.' + r | transloco }}</option>
@@ -85,8 +86,9 @@
             @if (errorOf('relationshipNote'); as e) { <span class="field-error">{{ e | transloco }}</span> }
           </div>
         }
+        <div class="name-pair">
         <div class="field">
-          <label for="dp-last">{{ 'dependent.field.lastName' | transloco }}</label>
+          <label for="dp-last">{{ 'dependent.field.lastName' | transloco }}<span class="req" aria-hidden="true">※</span></label>
           <input id="dp-last" class="input" formControlName="lastName" autocomplete="off" [class.is-invalid]="errorOf('lastName')" />
           @if (errorOf('lastName'); as e) { <span class="field-error">{{ e | transloco }}</span> }
         </div>
@@ -94,8 +96,10 @@
           <label for="dp-first">{{ 'dependent.field.firstName' | transloco }}</label>
           <input id="dp-first" class="input" formControlName="firstName" autocomplete="off" />
         </div>
+        </div>
+        <div class="name-pair">
         <div class="field">
-          <label for="dp-last-kana">{{ 'dependent.field.lastNameKana' | transloco }}</label>
+          <label for="dp-last-kana">{{ 'dependent.field.lastNameKana' | transloco }}<span class="req" aria-hidden="true">※</span></label>
           <input id="dp-last-kana" class="input" formControlName="lastNameKana" autocomplete="off" [class.is-invalid]="errorOf('lastNameKana')" />
           @if (errorOf('lastNameKana'); as e) { <span class="field-error">{{ e | transloco }}</span> }
         </div>
@@ -104,8 +108,9 @@
           <input id="dp-first-kana" class="input" formControlName="firstNameKana" autocomplete="off" [class.is-invalid]="errorOf('firstNameKana')" />
           @if (errorOf('firstNameKana'); as e) { <span class="field-error">{{ e | transloco }}</span> }
         </div>
+        </div>
         <div class="field">
-          <label for="dp-birth">{{ 'dependent.field.birthDate' | transloco }}</label>
+          <label for="dp-birth">{{ 'dependent.field.birthDate' | transloco }}<span class="req" aria-hidden="true">※</span></label>
           <input id="dp-birth" class="input" type="date" formControlName="birthDate" [class.is-invalid]="errorOf('birthDate')" />
           @if (errorOf('birthDate'); as e) { <span class="field-error">{{ e | transloco }}</span> }
         </div>
@@ -166,8 +171,9 @@
           }
         </div>
         <div class="field wide">
-          <label for="dp-address">{{ 'employee.field.address' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
-          <input id="dp-address" class="input" formControlName="address" />
+          <label for="dp-address">{{ 'employee.field.address' | transloco }}@if (!form.controls.livingTogether.value) {<span class="req" aria-hidden="true">※</span>}</label>
+          <input id="dp-address" class="input" formControlName="address" [class.is-invalid]="errorOf('address')" />
+          @if (errorOf('address'); as e) { <span class="field-error">{{ e | transloco }}</span> }
           <span class="hint">{{ 'dependent.hint.address' | transloco }}</span>
         </div>
         @if (isSpouse()) {
@@ -341,7 +347,7 @@
       <h3>{{ 'dependent.group.period' | transloco }}</h3>
       <div class="grid">
         <div class="field">
-          <label for="dp-from">{{ 'dependent.field.from' | transloco }}</label>
+          <label for="dp-from">{{ 'dependent.field.from' | transloco }}<span class="req" aria-hidden="true">※</span></label>
           <input id="dp-from" class="input" type="date" formControlName="from" [class.is-invalid]="errorOf('from')" />
           @if (errorOf('from'); as e) { <span class="field-error">{{ e | transloco }}</span> }
           @for (c of fromCandidates(); track c.key) {
