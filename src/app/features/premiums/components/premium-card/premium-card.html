@@ -16,8 +16,8 @@
     @if (empty(); as r) {
       <p class="muted">
         {{
-          'employee.detail.emptyReason.' +
-            (r.kind === 'afterLoss' && r.age ? 'afterLossAge' : r.kind) | transloco: r
+          'employee.detail.emptyReason.' + (r.kind === 'afterLoss' && r.age ? 'afterLossAge' : r.kind)
+          | transloco: r
         }}
       </p>
     }
@@ -34,6 +34,7 @@
         <tbody>
           @for (row of rows(); track row.month) {
             <tr
+              [id]="'premium-' + row.month"
               class="month-row"
               [class.future]="isFuture(row.month)"
               [class.open]="openMonth() === row.month"

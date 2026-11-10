@@ -112,6 +112,11 @@ export class EmployeeDetail {
     initialValue: this.route.snapshot.queryParamMap,
   });
   readonly tab = computed<EmployeeTab>(() => tabOf(this.params().get('tab')));
+  /** 保険料一覧の「計算 ›」から来たとき（?month=2026-11）：その月の根拠を開く */
+  readonly focusMonth = computed<YearMonth | null>(() => {
+    const m = this.params().get('month');
+    return m && /^\d{4}-(0[1-9]|1[0-2])$/.test(m) ? (m as YearMonth) : null;
+  });
 
   // ===== 箱（signal） =====
   readonly employee = signal<EmployeeFull | null>(null);
@@ -130,7 +135,7 @@ export class EmployeeDetail {
   readonly modes: Mode[] = ['fiscal', 'calendar', 'last12'];
   readonly kinds = ['health', 'care', 'pension'] as const;
   readonly mode = signal<Mode>('fiscal');
-  readonly year = signal(fiscalYearOf(this.thisMonth));
+  readonly year = signal(fiscalYearOf(this.focusMonth() ?? this.thisMonth)); // その月を含む年度から見せる
 
   // ===== 加入と保険料のタブ =====
 

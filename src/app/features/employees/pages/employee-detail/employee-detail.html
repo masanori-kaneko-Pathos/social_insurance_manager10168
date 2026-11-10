@@ -249,7 +249,7 @@
         </section>
 
         <!-- 保険料（期間の切り替えは加入状況の表と共通） -->
-        <app-premium-card [employee]="e" [months]="months()" />
+        <app-premium-card [employee]="e" [months]="months()" [focusMonth]="focusMonth()" />
         <app-bonus-card [employee]="e" />
         <!-- 遡及計算（訂正したときの差額。結果は別に保存） -->
         <app-recalc-card [employee]="e" />

@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, input, signal } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
 import { Office } from '../../../../core/models/office';
@@ -27,10 +27,7 @@ import { splitContribution } from '../../logic/premium-core';
 import { formatMilli } from '../../logic/rounding';
 
 /** 保険料の計算に要る事業所の設定（事業所の文書そのものか、従業員向けに写したもの） */
-export type OfficeForPremium = Pick<
-  Office,
-  'id' | 'prefecture' | 'healthInsurer' | 'insurerHistory' | 'premium'
->;
+export type OfficeForPremium = Pick<Office, 'id' | 'prefecture' | 'healthInsurer' | 'insurerHistory' | 'premium'>;
 
 /** 1か月分の行（計算でエラーが出た月は result を null にする） */
 interface MonthRow {
@@ -58,11 +55,11 @@ export class PremiumCard implements OnInit {
    * マイページでは、従業員に見せてよい分だけ写した文書（offices/{o}/shared/forEmployees）を渡す
    */
   readonly office = input<OfficeForPremium | null>(null);
-  private readonly officeNow = computed<OfficeForPremium | null>(
-    () => this.office() ?? this.context.current(),
-  );
+  private readonly officeNow = computed<OfficeForPremium | null>(() => this.office() ?? this.context.current());
   /** 表に並べる月（詳細画面の期間の切り替えと連動） */
   readonly months = input.required<YearMonth[]>();
+  /** 最初から根拠を開いておく月（保険料一覧の「計算 ›」から来たとき） */
+  readonly focusMonth = input<YearMonth | null>(null);
 
   readonly thisMonth = toYearMonth(todayLocal());
   /** 表の月がすべて空のときの理由（1か月でもかかる月があれば null） */
@@ -100,6 +97,17 @@ export class PremiumCard implements OnInit {
         return { month, result: null, error: true };
       }
     });
+  });
+
+  /** 読み込みが終わったら、focusMonth の行を開いて画面の真ん中へ（1回だけ） */
+  private focused = false;
+  private readonly focusEffect = effect(() => {
+    const m = this.focusMonth();
+    if (this.focused || !m || this.loading()) return;
+    if (!this.rows().some((r) => r.month === m && r.result)) return;
+    this.focused = true;
+    this.openMonth.set(m);
+    setTimeout(() => document.getElementById(`premium-${m}`)?.scrollIntoView({ block: 'center' }));
   });
 
   ngOnInit(): void {

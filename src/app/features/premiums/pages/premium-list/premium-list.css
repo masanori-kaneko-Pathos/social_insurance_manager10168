@@ -133,21 +133,82 @@ td.num {
 
 .name {
   color: var(--color-text);
-  font-weight: 600;
+  font-weight: 500;
+  text-decoration: none; /* 一覧では線を引かない（押せることは、上に乗せたときの線で分かる） */
+}
+
+.name:hover {
+  text-decoration: underline;
 }
 
 tr.problem td {
   background: var(--color-warning-bg);
 }
 
-tr.changed td {
-  background: color-mix(in srgb, var(--color-highlight) 45%, transparent);
+/* 11/10：色の帯は「直してほしい行」だけ。変わった人はバッジで分かる */
+tbody tr:not(.problem):hover td {
+  background: color-mix(in srgb, var(--color-highlight) 30%, transparent);
 }
 
-.grade {
+/* 並べ替えの見出し（ボタンだが、見た目は見出しのまま） */
+.sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.sort:hover {
+  color: var(--color-text);
+}
+
+.arrow {
+  min-width: 1em;
+  font-size: var(--font-xs);
+  color: var(--color-primary-hover);
+}
+
+.th-note {
+  display: block;
+  font-size: var(--font-xs);
+}
+
+/* 本人負担の内訳の見出しは長いので折り返す */
+th.part-head {
+  max-width: 9em;
+  white-space: normal;
+  line-height: 1.3;
+}
+
+/* 標準報酬：健保と厚年が違う人だけ2段 */
+.std-line {
+  display: block;
+  line-height: 1.4;
+}
+
+.std-label {
   margin-right: var(--space-xs);
   font-size: var(--font-xs);
   color: var(--color-text-sub);
+}
+
+td.calc a {
+  font-size: var(--font-xs);
+  white-space: nowrap;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 .badge {

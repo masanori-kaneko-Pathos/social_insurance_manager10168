@@ -1,6 +1,7 @@
 import { Component, input } from '@angular/core';
 
 export type IconName =
+  | 'home'
   | 'todo'
   | 'people'
   | 'payroll'
@@ -32,6 +33,10 @@ export type IconName =
       focusable="false"
     >
       @switch (name()) {
+        @case ('home') {
+          <path d="M2 7.5L8 2.5l6 5" />
+          <path d="M3.5 6.5v7h3.5v-4h2v4h3.5v-7" />
+        }
         @case ('todo') {
           <path d="M2.5 4.5l1.5 1.5 2.5-3" />
           <path d="M8.5 4.5h5" />

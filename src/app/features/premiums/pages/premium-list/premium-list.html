@@ -94,28 +94,45 @@
       <table>
         <thead>
           <tr>
-            <th rowspan="2">{{ 'employee.field.employeeNumber' | transloco }}</th>
-            <th rowspan="2">{{ 'employee.field.name' | transloco }}</th>
-            <th rowspan="2" class="num">{{ 'premiumList.col.healthStd' | transloco }}</th>
-            <th rowspan="2" class="num">{{ 'premiumList.col.pensionStd' | transloco }}</th>
+            <th rowspan="2" [attr.aria-sort]="ariaSort('number')">
+              <button type="button" class="sort" (click)="sortBy('number')">
+                {{ 'employee.field.employeeNumber' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('number') }}</span>
+              </button>
+            </th>
+            <th rowspan="2" [attr.aria-sort]="ariaSort('name')">
+              <button type="button" class="sort" (click)="sortBy('name')">
+                {{ 'employee.field.name' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('name') }}</span>
+              </button>
+            </th>
+            <th rowspan="2" class="num">{{ 'premiumList.col.standard' | transloco }}</th>
             <th colspan="3" class="group-head">{{ 'premium.col.employee' | transloco }}</th>
-            <th rowspan="2" class="num">{{ 'premium.col.employer' | transloco }}</th>
+            <th rowspan="2" class="num" [attr.aria-sort]="ariaSort('employer')">
+              <button type="button" class="sort" (click)="sortBy('employer')">
+                {{ 'premium.col.employer' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('employer') }}</span>
+              </button>
+              <span class="th-note">{{ 'premiumList.employerNote' | transloco }}</span>
+            </th>
             <th rowspan="2" class="num">{{ 'premium.col.total' | transloco }}</th>
             @if (showContribution()) {
               <th rowspan="2" class="num contribution">
                 {{ 'premiumList.col.contribution' | transloco }}
               </th>
             }
+            <th rowspan="2"><span class="sr-only">{{ 'premiumList.col.calc' | transloco }}</span></th>
           </tr>
           <tr>
-            <th class="num">{{ 'premiumList.col.health' | transloco }}</th>
-            <th class="num">{{ 'premiumList.col.pension' | transloco }}</th>
-            <th class="num">{{ 'premiumList.col.sum' | transloco }}</th>
+            <th class="num part-head">{{ 'premiumList.col.health' | transloco }}</th>
+            <th class="num part-head">{{ 'premiumList.col.pension' | transloco }}</th>
+            <th class="num" [attr.aria-sort]="ariaSort('employee')">
+              <button type="button" class="sort" (click)="sortBy('employee')">
+                {{ 'premiumList.col.sum' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('employee') }}</span>
+              </button>
+            </th>
           </tr>
         </thead>
         <tbody>
-          @for (r of rows(); track r.employee.id) {
-            <tr [class.problem]="r.state !== 'ok'" [class.changed]="r.changes.length > 0">
+          @for (r of sortedRows(); track r.employee.id) {
+            <tr [class.problem]="r.state !== 'ok' && r.state !== 'exempt'">
               <td class="mono">{{ r.employee.employeeNumber ?? '—' }}</td>
               <td>
                 <a
@@ -130,30 +147,20 @@
                   }}</span>
                 }
               </td>
+              @if (r.state === 'ok' || r.state === 'exempt') {
+                <td class="num std">
+                  @let sv = standardOf(r);
+                  @if (sv?.kind === 'split') {
+                    <span class="std-line"><span class="std-label">{{ 'premiumList.std.health' | transloco }}</span>{{ yen($any(sv).health) }}</span>
+                    <span class="std-line"><span class="std-label">{{ 'premiumList.std.pension' | transloco }}</span>{{ yen($any(sv).pension) }}</span>
+                  } @else if (sv) {
+                    {{ yen($any(sv).yen) }}
+                  } @else {
+                    —
+                  }
+                </td>
+              }
               @if (r.state === 'ok') {
-                <td class="num">
-                  @if (r.health) {
-                    <span class="grade">{{
-                      'remuneration.gradeShort' | transloco: { grade: r.health.grade }
-                    }}</span>
-                    {{ yen(r.health.standard) }}
-                  } @else {
-                    —
-                  }
-                  @if (r.care) {
-                    <span class="badge badge-care">{{ 'premiumList.care' | transloco }}</span>
-                  }
-                </td>
-                <td class="num">
-                  @if (r.pension) {
-                    <span class="grade">{{
-                      'remuneration.gradeShort' | transloco: { grade: r.pension.grade }
-                    }}</span>
-                    {{ yen(r.pension.standard) }}
-                  } @else {
-                    —
-                  }
-                </td>
                 <td class="num">{{ yen(r.healthEmployeeYen) }}</td>
                 <td class="num">{{ r.pension ? yen(r.pensionEmployeeYen) : '—' }}</td>
                 <td class="num strong">{{ yen(r.result!.employeeYen) }}</td>
@@ -165,35 +172,25 @@
                   </td>
                 }
               } @else if (r.state === 'exempt') {
-                <td class="num">
-                  @if (r.health) {
-                    <span class="grade">{{
-                      'remuneration.gradeShort' | transloco: { grade: r.health.grade }
-                    }}</span>
-                    {{ yen(r.health.standard) }}
-                  } @else {
-                    —
-                  }
-                </td>
-                <td class="num">
-                  @if (r.pension) {
-                    <span class="grade">{{
-                      'remuneration.gradeShort' | transloco: { grade: r.pension.grade }
-                    }}</span>
-                    {{ yen(r.pension.standard) }}
-                  } @else {
-                    —
-                  }
-                </td>
                 <td [attr.colspan]="showContribution() ? 6 : 5" class="muted">
                   <span class="badge badge-care">{{ 'premiumList.exempt' | transloco }}</span>
                   {{ 'premium.exempt' | transloco }}
                 </td>
               } @else {
-                <td [attr.colspan]="showContribution() ? 8 : 7" class="warn">
+                <td [attr.colspan]="showContribution() ? 7 : 6" class="warn">
                   {{ missingKey(r) | transloco }}
                 </td>
               }
+              <td class="calc">
+                @if (r.state === 'ok' || r.state === 'exempt') {
+                  <!-- その人のページで、この月の計算の根拠を開く -->
+                  <a
+                    [routerLink]="['/o', context.current()?.id, 'employees', r.employee.id]"
+                    [queryParams]="{ tab: 'insurance', month: month() }"
+                    >{{ 'premiumList.calc' | transloco }} ›</a
+                  >
+                }
+              </td>
             </tr>
           }
         </tbody>

@@ -1,3 +1,15 @@
+/* 11/10：見出しまわりを上に詰める（共通の余白 xl のうち、この画面だけ少し戻す） */
+:host {
+  display: block;
+  margin-top: calc(-1 * var(--space-md));
+}
+
+@media (max-width: 720px) {
+  :host {
+    margin-top: 0; /* スマホは共通の余白がもともと小さい */
+  }
+}
+
 .back {
     font-size: var(--font-sm);
     color: var(--color-text-sub);

@@ -31,6 +31,15 @@ import { BonusService } from '../../bonus.service';
 import { addTotals, collectBonusResults } from '../../logic/bonus-rows';
 import { downloadCsv, safeFileName } from '../../../../shared/csv/csv';
 import { buildPremiumCsv, PremiumCsvRow, premiumFileName } from '../../logic/premium-csv';
+import {
+  DEFAULT_PREMIUM_SORT,
+  nextSort,
+  PremiumSort,
+  PremiumSortKey,
+  sortPremiumRows,
+  standardView,
+  StandardView,
+} from '../../logic/premium-list-view';
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -117,6 +126,29 @@ export class PremiumList {
   /** 表に出す人（その月に加入していない人は隠す） */
   readonly rows = computed(() => this.allRows().filter((r) => r.state !== 'none'));
   readonly hiddenCount = computed(() => this.allRows().length - this.rows().length);
+
+  /** 並べ替え（見出しを押す。月を変えても並びはそのまま） */
+  readonly sort = signal<PremiumSort>(DEFAULT_PREMIUM_SORT);
+  readonly sortedRows = computed(() => sortPremiumRows(this.rows(), this.sort()));
+
+  sortBy(key: PremiumSortKey): void {
+    this.sort.update((cur) => nextSort(cur, key));
+  }
+
+  /** 読み上げ用（表の見出しの aria-sort） */
+  ariaSort(key: PremiumSortKey): 'ascending' | 'descending' | null {
+    const s = this.sort();
+    return s.key === key ? (s.dir === 'asc' ? 'ascending' : 'descending') : null;
+  }
+
+  arrow(key: PremiumSortKey): string {
+    const s = this.sort();
+    return s.key === key ? (s.dir === 'asc' ? '▲' : '▼') : '';
+  }
+
+  standardOf(r: ListItem): StandardView {
+    return standardView(r.health, r.pension);
+  }
 
   /** 計算できなかった人（表の上に警告として出す） */
   readonly problems = computed(() =>

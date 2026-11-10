@@ -178,7 +178,8 @@
       "setup": "Setup"
     },
     "requests": "Requests",
-    "help": "Help"
+    "help": "Help",
+    "home": "Home"
   },
   "employee": {
     "list": {
@@ -826,13 +827,15 @@
     "col": {
       "healthStd": "Health std.",
       "pensionStd": "Pension std.",
-      "health": "Health, care & child support",
-      "pension": "Pension",
+      "health": "Health insurance, long-term care & child support",
+      "pension": "Employees’ Pension Insurance",
       "sum": "Total",
       "payment": "Payment",
       "employeeSum": "Employee total",
       "employerSum": "Employer",
-      "contribution": "Contribution (employer)"
+      "contribution": "Contribution (employer)",
+      "standard": "Standard Monthly Remuneration",
+      "calc": "How it was calculated"
     },
     "change": {
       "new": "New",
@@ -869,7 +872,13 @@
       "health": "of which health insurance",
       "care": "of which long-term care insurance",
       "childSupport": "of which child and child care support contribution"
-    }
+    },
+    "calc": "Details",
+    "std": {
+      "health": "Health",
+      "pension": "Pension"
+    },
+    "employerNote": "incl. fractions of ¥1"
   },
   "rateDialog": {
     "title": "Health insurance rates",
