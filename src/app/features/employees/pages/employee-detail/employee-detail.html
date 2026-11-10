@@ -61,7 +61,9 @@
         @if (e.retireDate) {
           <div>
             <dt>{{ 'employee.field.retireReason' | transloco }}</dt>
-            <dd>{{ e.retireReason ? ('employee.retireReason.' + e.retireReason | transloco) : '—' }}</dd>
+            <dd>
+              {{ e.retireReason ? ('employee.retireReason.' + e.retireReason | transloco) : '—' }}
+            </dd>
           </div>
         }
         <div>
@@ -82,7 +84,11 @@
             @if (e.collectionMethod) {
               {{ 'employee.collectionMethod.' + e.collectionMethod | transloco }}
             } @else {
-              {{ 'employee.collectionMethod.office' | transloco: { method: ('employee.collectionMethod.' + officeMethod() | transloco) } }}
+              {{
+                'employee.collectionMethod.office'
+                  | transloco
+                    : { method: ('employee.collectionMethod.' + officeMethod() | transloco) }
+              }}
             }
           </dd>
         </div>
@@ -114,10 +120,14 @@
                 <span class="badge">{{ 'employee.field.' + f | transloco }}</span>
               }
               @if (e.optInDate) {
-                <span class="badge">{{ 'employee.field.optInDate' | transloco }} {{ e.optInDate }}</span>
+                <span class="badge"
+                  >{{ 'employee.field.optInDate' | transloco }} {{ e.optInDate }}</span
+                >
               }
               @if (e.optOutDate) {
-                <span class="badge">{{ 'employee.field.optOutDate' | transloco }} {{ e.optOutDate }}</span>
+                <span class="badge"
+                  >{{ 'employee.field.optOutDate' | transloco }} {{ e.optOutDate }}</span
+                >
               }
             </dd>
           </div>
@@ -126,17 +136,40 @@
           <div class="wide">
             <dt>{{ 'employee.section.foreign' | transloco }}</dt>
             <dd>
-              @if (romanName(e); as r) { {{ r }} } @else { {{ 'employee.noRomanReason.' + f.noRomanReason | transloco }} }
+              @if (romanName(e); as r) {
+                {{ r }}
+              } @else {
+                {{ 'employee.noRomanReason.' + f.noRomanReason | transloco }}
+              }
               （{{ f.nationality }}）
-              @if (f.kanjiName; as k) { ・{{ 'employee.personName.kanjiName' | transloco }} {{ k.last }} {{ k.first }} }
-              @if (f.alias; as a) { ・{{ 'employee.personName.alias' | transloco }} {{ a.last }} {{ a.first }} }
-              ・{{ 'employee.field.filingName' | transloco }}：{{ 'employee.filingName.' + f.filingName | transloco }}
-              @if (!f.residentRegistered) { ・{{ 'employee.detail.notResidentRegistered' | transloco }} }
-              @if (f.needsRomanNameFiling) { <span class="badge">{{ 'employee.field.needsRomanNameFiling' | transloco }}</span> }
-              @if (f.residenceStatus) { ・{{ f.residenceStatus }} }
-              @if (f.residenceExpiry) { ・{{ 'employee.field.residenceExpiry' | transloco }} {{ f.residenceExpiry }} }
-              @if (f.workPermit) { ・{{ 'employee.field.workPermit' | transloco }} }
-              @if (f.certificate; as c) { ・{{ 'employee.field.hasCertificate' | transloco }}（{{ c.country }} {{ c.from }}〜{{ c.to ?? '' }}） }
+              @if (f.kanjiName; as k) {
+                ・{{ 'employee.personName.kanjiName' | transloco }} {{ k.last }} {{ k.first }}
+              }
+              @if (f.alias; as a) {
+                ・{{ 'employee.personName.alias' | transloco }} {{ a.last }} {{ a.first }}
+              }
+              ・{{ 'employee.field.filingName' | transloco }}：{{
+                'employee.filingName.' + f.filingName | transloco
+              }}
+              @if (!f.residentRegistered) {
+                ・{{ 'employee.detail.notResidentRegistered' | transloco }}
+              }
+              @if (f.needsRomanNameFiling) {
+                <span class="badge">{{ 'employee.field.needsRomanNameFiling' | transloco }}</span>
+              }
+              @if (f.residenceStatus) {
+                ・{{ f.residenceStatus }}
+              }
+              @if (f.residenceExpiry) {
+                ・{{ 'employee.field.residenceExpiry' | transloco }} {{ f.residenceExpiry }}
+              }
+              @if (f.workPermit) {
+                ・{{ 'employee.field.workPermit' | transloco }}
+              }
+              @if (f.certificate; as c) {
+                ・{{ 'employee.field.hasCertificate' | transloco }}（{{ c.country }}
+                {{ c.from }}〜{{ c.to ?? '' }}）
+              }
             </dd>
           </div>
         }
@@ -181,7 +214,14 @@
           </button>
         }
       </div>
-
+      @if (empty(); as r) {
+        <p class="hint">
+          {{
+            'employee.detail.emptyReason.' +
+              (r.kind === 'afterLoss' && r.age ? 'afterLossAge' : r.kind) | transloco: r
+          }}
+        </p>
+      }
       <div class="table-wrap">
         <table>
           <thead>

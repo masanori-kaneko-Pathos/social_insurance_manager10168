@@ -1,5 +1,5 @@
 import { emptyPayrollInput } from '../../../core/models/payroll';
-import { candidateDays, PayrollRowText, readRow, sameInput, textOf } from './payroll-input';
+import { candidateDays, PayrollRowText, readRow, sameInput, textOf, totalOf } from './payroll-input';
 import { formatHours, parseHours, parseNat } from '../../../shared/utils/number';
 
 const blank = (): PayrollRowText => textOf(null);
@@ -90,5 +90,21 @@ describe('candidateDays', () => {
     expect(candidateDays(31, '')).toBe(31);
     expect(candidateDays(31, 'x')).toBe(31);
     expect(candidateDays(20, '25')).toBe(20);
+  });
+});
+
+describe('totalOf（合計の列）', () => {
+  it('支払額＋現物', () => {
+    expect(totalOf('250000', '12610')).toBe(262610);
+  });
+  it('現物が空なら支払額だけ', () => {
+    expect(totalOf('250000', '')).toBe(250000);
+  });
+  it('支払額が空・読めないときは出さない', () => {
+    expect(totalOf('', '12610')).toBeNull();
+    expect(totalOf('abc', '')).toBeNull();
+  });
+  it('現物が読めないときも出さない', () => {
+    expect(totalOf('250000', 'x')).toBeNull();
   });
 });

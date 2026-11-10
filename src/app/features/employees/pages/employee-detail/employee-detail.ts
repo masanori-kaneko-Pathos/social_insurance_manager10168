@@ -4,8 +4,17 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { EmployeeService } from '../../employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import { premiumOf } from '../../../office/office-settings';
-import { todayLocal, ageAt, toYearMonth, fiscalYearOf, monthsLast12, YearMonth, monthsOfCalendarYear, monthsOfFiscalYear } from '../../../../shared/utils/date';
-import { coverageForMonths } from '../../logic/coverage';
+import {
+  todayLocal,
+  ageAt,
+  toYearMonth,
+  fiscalYearOf,
+  monthsLast12,
+  YearMonth,
+  monthsOfCalendarYear,
+  monthsOfFiscalYear,
+} from '../../../../shared/utils/date';
+import { coverageForMonths, emptyReason } from '../../logic/coverage';
 import { Employee } from '../../../../core/models/employee';
 import { RemunerationCard } from '../../components/remuneration-card/remuneration-card';
 import { PremiumCard } from '../../../premiums/components/premium-card/premium-card';
@@ -80,6 +89,12 @@ export class EmployeeDetail {
   readonly rows = computed(() => {
     const e = this.employee();
     return e ? coverageForMonths(e, this.months()) : [];
+  });
+
+  /** 表の月がすべて空のときの理由（1か月でもかかる月があれば null） */
+  readonly empty = computed(() => {
+    const e = this.employee();
+    return e ? emptyReason(e, this.months()) : null;
   });
 
   constructor() {

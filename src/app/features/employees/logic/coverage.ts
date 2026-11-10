@@ -111,7 +111,10 @@ export function coverageForMonth(input: CoverageInput, month: YearMonth): Monthl
  * - 40歳到達の月 〜 65歳到達の月の前月
  * - ただし、介護保険の適用除外の月は除く（care-exemption.ts）
  */
-export function isCareMonth(input: Pick<CoverageInput, 'birthDate' | 'careExemptions'>, month: YearMonth): boolean {
+export function isCareMonth(
+  input: Pick<CoverageInput, 'birthDate' | 'careExemptions'>,
+  month: YearMonth,
+): boolean {
   const careStart = toYearMonth(ageReachDate(input.birthDate, 40));
   const careEnd = toYearMonth(ageReachDate(input.birthDate, 65));
   return month >= careStart && month < careEnd && !careExemptMonth(input.careExemptions, month);
@@ -121,6 +124,53 @@ export function isCareMonth(input: Pick<CoverageInput, 'birthDate' | 'careExempt
 
 export function coverageForMonths(input: CoverageInput, months: YearMonth[]): MonthlyCoverage[] {
   return months.map((m) => coverageForMonth(input, m));
+}
+
+/** 表の月がすべて空（健保も厚年もかからない）ときの理由 */
+export type EmptyReason =
+  | { kind: 'notEnrolled' } // どちらの保険にも加入していない
+  | { kind: 'beforeAcquire'; date: DateStr } // まだ資格を取得していない
+  | { kind: 'afterLoss'; date: DateStr; age: 70 | 75 | null }; // もう資格を喪失した（age：年齢による喪失）
+
+/**
+ * 月ごとの加入状況・保険料の表が、すべての月で空のときの理由
+ * 1か月でもかかる月があれば null（表を見ればわかるので、理由は出さない）
+ * 取得前と喪失後がまじるなど、ひとことで言えないときも null
+ */
+export function emptyReason(input: CoverageInput, months: YearMonth[]): EmptyReason | null {
+  if (months.length === 0) return null;
+  if (coverageForMonths(input, months).some((c) => c.health || c.pension)) return null;
+
+  const plans = [
+    {
+      e: input.health,
+      lost: healthLostDate(input),
+      ageDate: birthdayAt(input.birthDate, 75),
+      age: 75 as const,
+    },
+    {
+      e: input.pension,
+      lost: pensionLostDate(input),
+      ageDate: ageReachDate(input.birthDate, 70),
+      age: 70 as const,
+    },
+  ].filter((p) => p.e.enrolled && p.e.acquiredDate);
+  if (plans.length === 0) return { kind: 'notEnrolled' };
+
+  const first = months.reduce((a, b) => (a < b ? a : b));
+  const last = months.reduce((a, b) => (a > b ? a : b));
+
+  // 表の最後の月より後に取得する
+  const acquired = plans.map((p) => p.e.acquiredDate!).reduce((a, b) => (a < b ? a : b));
+  if (last < toYearMonth(acquired)) return { kind: 'beforeAcquire', date: acquired };
+
+  // 表の最初の月までに、どの保険も喪失している（いちばん遅い喪失日で言う）
+  const losses = plans.filter((p) => p.lost !== null);
+  if (losses.length < plans.length) return null;
+  const latest = losses.reduce((a, b) => (a.lost! >= b.lost! ? a : b));
+  if (first < toYearMonth(latest.lost!)) return null;
+  const byAge = latest.lost === latest.ageDate && latest.e.lostDate !== latest.lost;
+  return { kind: 'afterLoss', date: latest.lost!, age: byAge ? latest.age : null };
 }
 
 /** 入社日・退職日から、取得日・喪失日の初期値を出す（E2） */

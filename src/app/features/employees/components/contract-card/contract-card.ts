@@ -1,7 +1,7 @@
 import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { CriteriaDoc } from '../../../../core/models/master';
 import { CriteriaService } from '../../../office/criteria.service';
-import { classify, isInsured } from '../../logic/classify';
+import { classify, isInsured, reasonParams } from '../../logic/classify';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import {
@@ -120,12 +120,16 @@ export class ContractCard implements OnInit {
         optOutDate: e.optOutDate ?? null, // 11/9 より前のデータにはない
         contracts: this.rows(),
       },
-      { standardHours: office.standardHours ?? null, specificApplication: office.specificApplication },
+      {
+        standardHours: office.standardHours ?? null,
+        specificApplication: office.specificApplication,
+      },
       criteria,
       this.today,
     );
   });
   readonly insured = isInsured;
+  readonly reasonParams = reasonParams;
 
   /** 今日に効いている契約（一覧で目立たせる） */
   readonly currentFrom = computed(() => contractAt(this.rows(), this.today)?.from ?? null);
@@ -208,7 +212,10 @@ export class ContractCard implements OnInit {
   startAdd(): void {
     const latest = this.rows()[0]; // 新しい順
     this.form.controls.from.enable();
-    this.open(latest ? nextContractForm(latest, '') : emptyContractForm(this.employee().hireDate), 'new');
+    this.open(
+      latest ? nextContractForm(latest, '') : emptyContractForm(this.employee().hireDate),
+      'new',
+    );
   }
 
   startEdit(row: ContractDoc): void {

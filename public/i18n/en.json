@@ -98,8 +98,8 @@
         "40": "Long-term care premiums start (no filing needed).",
         "60": "If pay drops on re-employment after retirement, consider same-day loss and re-acquisition to lower the standard remuneration immediately.",
         "65": "Long-term care premiums stop (moves to the municipal care insurance; no filing needed).",
-        "70": "Pension coverage ends. No filing if pay is unchanged (handled by the Japan Pension Service); otherwise file the age-70 notification within 5 days.",
-        "75": "Health coverage ends (moves to the late-stage elderly medical system). File the loss of coverage within 5 days. Dependents need to join another plan such as National Health Insurance."
+        "70": "Pension coverage ends. No filing if pay is unchanged (handled by the Japan Pension Service); otherwise file the Report of Worker Attaining Age 70 (70歳到達届) within 5 days.",
+        "75": "Health coverage ends (moves to the late-stage elderly medical system). File the Coverage-end Report (資格喪失届) within 5 days. Dependents need to join another plan such as National Health Insurance."
       },
       "effectNote": "Born on the 1st, so the age is treated as reached in the previous month ({{y}}-{{m}}).",
       "empty": "No one reaches a milestone in this period.",
@@ -121,13 +121,13 @@
         "requests": "To review"
       },
       "text": {
-        "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. File the acquisition notification (enter the acquisition date and enroll).",
-        "lose": "Now \"{{today}}\", but enrolled in social insurance. Check whether a loss notification is needed or review the contract.",
+        "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. File the Application to Enroll in EPI / EHI (資格取得届) (enter the acquisition date and enroll).",
+        "lose": "Now \"{{today}}\", but enrolled in social insurance. Check whether a Coverage-end Report (資格喪失届) is needed or review the contract.",
         "upcoming": "Becomes \"{{next}}\" from {{date}}. Prepare the notifications for that day.",
         "categoryChange": "Becomes \"{{next}}\" from {{date}} (still insured). A category change notification is needed.",
         "noContract": "No employment contract in effect today, so the category cannot be judged.",
         "agreement": "A certificate of coverage under a social security agreement (from {{date}}) is valid, but the person is enrolled in an exempt insurance. Check whether a loss notice (reason: social security agreement) is needed.",
-        "certificateEnd": "The certificate of coverage ends, so the person joins Japanese social insurance from {{date}}. Prepare the acquisition notice (if the assignment is extended, check the extended certificate).",
+        "certificateEnd": "The certificate of coverage ends, so the person joins Japanese social insurance from {{date}}. Prepare the Application to Enroll in EPI / EHI (資格取得届) (if the assignment is extended, check the extended certificate).",
         "requests": "{{count}} answered requests or change applications from employees are waiting for review."
       },
       "office": {
@@ -149,7 +149,7 @@
     "bonuses": "Bonuses",
     "settings": "Office settings",
     "revisions": "Revisions",
-    "regular": "Regular decision",
+    "regular": "Annual determination",
     "group": {
       "people": "People",
       "monthly": "Monthly",
@@ -270,7 +270,7 @@
       "filingName": "Name used on filings",
       "sortByKana": "Sort by katakana reading in the list (あ–わ)",
       "residentRegistered": "Has resident registration in Japan",
-      "needsRomanNameFiling": "File the roman-letter name notification",
+      "needsRomanNameFiling": "File the Report of Insured Worker's Name in English Alphabet (ローマ字氏名届)",
       "optOutDate": "Date of request to withdraw"
     },
     "insurance": {
@@ -288,11 +288,11 @@
       "roman": "Enter as on the residence card. Converted to capitals.",
       "middleName": "Patronymics also go here.",
       "noRomanReason": "Choose only when the person has no roman-letter name.",
-      "filingKana": "The reading written on the acquisition notification. Notices from the pension service use this katakana.",
+      "filingKana": "The reading written on the Application to Enroll (資格取得届). Notices from the pension service use this katakana.",
       "personName": "Only for people whose residence record shows a kanji name or alias. Surname and its reading are required; leave the given name blank if there is none.",
       "filingName": "Choose the name written on the related filings. This name is shown in the app and on filings.",
       "sortByKana": "Check for people who use a Japanese surname, to list them under あ–わ.",
-      "needsRomanNameFiling": "Required with the acquisition notification when the person has no My Number or it is not linked to the basic pension number. Checked automatically for people without resident registration.",
+      "needsRomanNameFiling": "Required with the Application to Enroll (資格取得届) when the person has no My Number or it is not linked to the basic pension number. Checked automatically for people without resident registration.",
       "country": "Two-letter country/region code (e.g. VN, CN)",
       "residenceCard": "Number at the top right of the residence card (2 letters, 8 digits, 2 letters)",
       "workPermitHours": "Hours per week (usually 28)",
@@ -354,7 +354,13 @@
       "futureHint": "Faded marks are future months (planned).",
       "exemptMark": "Ex",
       "exemptHint": "\"Ex\" marks months exempt from premiums due to maternity/childcare leave (coverage continues).",
-      "notResidentRegistered": "No resident registration"
+      "notResidentRegistered": "No resident registration",
+      "emptyReason": {
+        "notEnrolled": "Not enrolled in health insurance or pension, so no premiums.",
+        "beforeAcquire": "Coverage starts on {{date}}. No premiums for earlier months.",
+        "afterLoss": "Coverage ended on {{date}}, so no premiums.",
+        "afterLossAge": "Coverage ended on {{date}} on reaching age {{age}}, so no premiums."
+      }
     },
     "sex": {
       "male": "Male",
@@ -508,7 +514,7 @@
       "payMonth": "Pay month",
       "deduction": "Premium deduction",
       "method": "Employee share collected by",
-      "healthRounding": "Rounding of health, care and child support"
+      "healthRounding": "Rounding of health, care and child care support"
     },
     "insurer": {
       "kyokai": "Japan Health Insurance Association (Kyokai Kenpo)",
@@ -566,8 +572,8 @@
       "current": "Same-month deduction (this month's premium from this month's pay)"
     },
     "method": {
-      "payroll": "Deducted from pay (50 sen or less rounded down)",
-      "cash": "Paid in cash (under 50 sen rounded down)"
+      "payroll": "Deducted from pay (50 sen (1/100 yen) or less rounded down)",
+      "cash": "Paid in cash (under 50 sen (1/100 yen) rounded down)"
     },
     "healthRounding": {
       "combined": "Round together",
@@ -612,8 +618,8 @@
         "month": "Monthly hours are saved as weekly hours (× 12 ÷ 52; 173:20 a month → 40:00 a week).",
         "specific": "Once applicable, the office stays applicable even if headcount drops.",
         "insuredCount": "If blank, the app counts employees of this office. If the corporation has other offices, enter the total.",
-        "pensionFund": "Very few offices are members. Used for the acquisition notification.",
-        "bonus": "Used to check bonus payment notifications and non-payment reports.",
+        "pensionFund": "Very few offices are members. Used for the Application to Enroll (資格取得届).",
+        "bonus": "Used to check Bonus Payment Reports (賞与支払届) and non-payment reports.",
         "inKind": "Used to check that benefits in kind are entered in payroll records. Valuation is not supported yet."
       },
       "count": "Count",
@@ -642,7 +648,7 @@
     }
   },
   "remuneration": {
-    "title": "Standard monthly remuneration",
+    "title": "Standard Monthly Remuneration (SMR) (標準報酬月額, hyōjun hōshū getsugaku)",
     "add": "Add",
     "empty": "Nothing registered yet.",
     "current": "Current",
@@ -655,10 +661,10 @@
     },
     "reason": {
       "acquisition": "On enrollment",
-      "regular": "Annual review",
-      "irregular": "Interim revision",
+      "regular": "Annual SMR determination (定時決定)",
+      "irregular": "SMR revision after a pay change (随時改定)",
       "other": "Other",
-      "leaveEnd": "Revision after maternity/childcare leave"
+      "leaveEnd": "Revision after maternity/childcare leave (産休・育休終了時改定)"
     },
     "selectGrade": "Select a grade",
     "gradeLabel": "Grade {{grade}}  JPY {{standard}}",
@@ -705,13 +711,13 @@
       "total": "Total"
     },
     "monthLabel": "{{y}}-{{m}}",
-    "contributionNote": "Child contribution (not a premium; paid by the employer only)",
+    "contributionNote": "Child and childcare contributions (子ども・子育て拠出金; not a premium, paid by the employer only)",
     "part": {
       "health": "Health insurance",
       "care": "Long-term care",
-      "childSupport": "Child support levy",
+      "childSupport": "Child and Child Care Support Contribution (子ども・子育て支援金)",
       "pension": "Pension",
-      "childContribution": "Child contribution"
+      "childContribution": "Child and childcare contributions (子ども・子育て拠出金)"
     },
     "formula": "JPY {{base}} (grade {{grade}}) × {{rate}} = JPY {{total}}",
     "rateNote": "Employee {{employee}} / Employer {{employer}} (rate from {{from}})",
@@ -759,9 +765,9 @@
       "other": "Changed"
     },
     "category": {
-      "health": "Health insurance (incl. care and child support)",
+      "health": "Health insurance (incl. care and child care support)",
       "pension": "Pension",
-      "childContribution": "Child contribution"
+      "childContribution": "Child and childcare contributions"
     },
     "showContribution": "Show contribution",
     "hideContribution": "Hide contribution",
@@ -804,7 +810,7 @@
     "addTitle": "Add rate",
     "editTitle": "Edit rate from {{month}}",
     "confirmDelete": "Confirm delete",
-    "childSupportHint": "The child support levy starts from April 2026 (default 0.23%). Enter 0 for earlier months.",
+    "childSupportHint": "The Child and Child Care Support Contribution starts from April 2026 (default 0.23%). Enter 0 for earlier months.",
     "saveHint": "Nothing is saved until you press Save. Closing with ×, the background or Esc discards your input.",
     "error": {
       "fromRange": "Select a month within this period.",
@@ -835,7 +841,7 @@
       "people": "People",
       "payment": "Payment",
       "amount": "Bonus amount",
-      "standard": "Standard bonus"
+      "standard": "Standard Bonus Amount (SBA) (標準賞与額)"
     },
     "peopleCount": "{{count}}",
     "hasProblems": "Some can't be calculated",
@@ -855,11 +861,11 @@
     "hint": {
       "paidDate": "Premiums depend on the payment date (none before coverage starts or on/after it ends).",
       "needDate": "Enter the payment date to show eligible employees.",
-      "standard": "Standard bonus = bonus amount rounded down to the nearest 1,000 yen. Caps: health etc. JPY 5.73M per fiscal year (Apr–Mar); pension etc. JPY 1.5M per month.",
+      "standard": "Standard Bonus Amount (SBA) = bonus amount rounded down to the nearest 1,000 yen. Caps: health etc. JPY 5.73M per fiscal year (Apr–Mar); pension etc. JPY 1.5M per month.",
       "hidden": "({{count}} not insured on the payment date are hidden)",
       "deduct": "The employee share is deducted from this bonus and paid together with that month's monthly premiums.",
       "unsaved": "Nothing is saved until you press Save.",
-      "list": "Payment is the total of health insurance, pension and child contribution."
+      "list": "Payment is the total of health insurance, pension and child and childcare contributions."
     },
     "error": {
       "load": "Couldn't load bonus data.",
@@ -965,7 +971,7 @@
   },
   "payroll": {
     "listTitle": "Payroll records",
-    "listLead": "Enter the payroll results (total pay, fixed wages, payment basis days) for each month paid. They are used for the annual and interim revisions of the standard monthly remuneration.",
+    "listLead": "Enter the payroll results (total pay, fixed wages, payment basis days) for each month paid. They are used for the annual SMR determination and SMR revisions.",
     "inputLatest": "Enter {{month}} payroll",
     "prevYear": "← Previous 12 months",
     "nextYear": "Next 12 months →",
@@ -976,8 +982,8 @@
     "emptyMonth": "No employees were employed during this pay period.",
     "futureMonth": "The pay day for this month has not come yet.",
     "readonly": "View only. Only administrators can enter records.",
-    "showAll": "Show all columns",
-    "showBasic": "Show basic columns only",
+    "showAll": "Also enter in-kind pay and details",
+    "showBasic": "Amount paid in money only",
     "fillEmptyDays": "Fill empty days with suggestions",
     "candidate": "Use {{days}}",
     "candidateTitle": "Calendar days employed minus days absent (for monthly salary)",
@@ -987,22 +993,23 @@
     "cardTitle": "Payroll records",
     "cardEmpty": "No records yet.",
     "toList": "Go to payroll records",
-    "toRegular": "Annual review {{year}}",
+    "toRegular": "Annual SMR determination {{year}}",
     "csv": "Import / export CSV",
     "col": {
       "paidMonth": "Month paid",
       "period": "Pay period",
       "saved": "Entered / employed",
       "employee": "Employee",
-      "cash": "Cash pay",
-      "fixed": "Of which fixed wages",
-      "days": "Payment basis days",
-      "inKind": "In kind",
+      "cash": "Paid in money",
+      "fixed": "Of which monthly fixed payment (固定的賃金)",
+      "days": "Basis days (支払基礎日数)",
+      "inKind": "In kind (現物)",
       "retro": "Retroactive pay",
       "absentDays": "Days absent",
       "hours": "Hours worked",
       "prorated": "Prorated",
-      "state": "Status"
+      "state": "Status",
+      "total": "Total"
     },
     "tag": {
       "notSaved": "Not entered",
@@ -1017,13 +1024,13 @@
     },
     "rowError": {
       "unreadable": "Some fields cannot be read as numbers",
-      "cashRequired": "Enter the cash pay",
+      "cashRequired": "Enter the amount paid in money",
       "fixedRequired": "Enter the fixed wages (0 if none)",
       "daysRequired": "Enter the payment basis days",
       "notInteger": "Amounts must be whole numbers of 0 or more",
       "tooLarge": "The amount is too large",
-      "fixedOverCash": "Fixed wages exceed the cash pay",
-      "retroOverTotal": "Retroactive pay exceeds cash plus in-kind pay",
+      "fixedOverCash": "Fixed wages exceed the amount paid in money",
+      "retroOverTotal": "Retroactive pay exceeds the amount paid in money plus in kind",
       "daysOutOfRange": "Payment basis days exceed the days in the pay period",
       "absentOutOfRange": "Days absent exceed the days in the pay period",
       "minutesOutOfRange": "Hours worked are too long",
@@ -1031,10 +1038,10 @@
     },
     "hint": {
       "list": "\"Missing\" counts employees insured during the pay period who have no record yet (only months whose pay day has passed).",
-      "cash": "Cash pay: everything counted as remuneration for social insurance (base pay, allowances, overtime, commuting allowance; the \"social insurance amount\" in payroll software). Divide 3- or 6-month commuter passes by month, and exclude travel expenses, congratulatory or condolence payments and retirement allowances.",
-      "fixed": "Fixed wages: pay whose amount or rate is set in advance, such as base pay, position allowance and commuting allowance. Overtime is not included.",
-      "inKind": "In kind: company housing, dormitories and meals are converted to yen with the value set by the government for each prefecture, minus what the employee pays (different from the tax valuation). Use \"Calculate\" for meals and housing.",
-      "days": "Payment basis days: calendar days of the period for monthly salary; \"company-set days − days absent\" for monthly salary with absence deductions; days worked (including paid leave) for daily or hourly pay.",
+      "cash": "Paid in money (the \"通貨\" column of the forms): everything counted as remuneration for social insurance (base pay, allowances, overtime, commuting allowance; the \"social insurance amount\" in payroll software). Divide 3- or 6-month commuter passes by month, and exclude travel expenses, congratulatory or condolence payments and retirement allowances.",
+      "fixed": "Monthly fixed payment (MFP, 固定的賃金): pay whose amount or rate is set in advance, such as base pay, position allowance and commuting allowance. Overtime is not included.",
+      "inKind": "Remuneration provided in kind (現物給与): company housing, dormitories and meals are converted to yen with the value set by the government for each prefecture, minus what the employee pays (different from the tax valuation). Use \"Calculate\" for meals and housing.",
+      "days": "Work days subject to remuneration payment (支払基礎日数): calendar days of the period for monthly salary; \"company-set days − days absent\" for monthly salary with absence deductions; days worked (including paid leave) for daily or hourly pay.",
       "blank": "Empty rows are not saved. Clearing a saved row and saving deletes that month's record.",
       "hours": "Hours worked: enter as \"160:30\" (160 h 30 min) or \"160.5\"."
     },
@@ -1047,8 +1054,8 @@
     "toRevisions": "Revision candidates (irregular / after leave)"
   },
   "regular": {
-    "title": "Annual review {{year}}",
-    "lead": "Sets the standard monthly remuneration from September {{year}} based on the average pay paid in April, May and June {{year}} (file the report between July 1 and 10).",
+    "title": "Annual SMR determination {{year}} (定時決定, teiji kettei)",
+    "lead": "Sets the standard monthly remuneration from September {{year}} based on the average pay paid in April, May and June {{year}} (file the Remuneration Report (算定基礎届, santei kiso todoke) between July 1 and 10).",
     "sum": {
       "all": "{{n}} in scope",
       "up": "Up {{n}}",
@@ -1059,7 +1066,7 @@
       "annual": "{{n}} annual-average candidates",
       "reflected": "{{n}} applied to September"
     },
-    "empty": "No one is in scope for the annual review.",
+    "empty": "No one is in scope for the annual SMR determination.",
     "col": {
       "employee": "Employee",
       "month": "Paid in month {{m}}",
@@ -1113,16 +1120,16 @@
     "excluded": {
       "notInsured": "Not insured on July 1",
       "acquiredFromJune": "Coverage started on or after June 1 (keeps the amount set on enrollment)",
-      "irregular": "Has an interim revision in July–September"
+      "irregular": "Has an SMR revision after a pay change in July–September"
     },
     "hint": {
-      "rule": "Uses the average pay (cash + in kind) paid in April, May and June. Months with fewer than 17 payment basis days, the month of joining mid-period and months of leave of absence are excluded. If all three are excluded, the previous amount stays.",
+      "rule": "Uses the average pay (paid in money + in kind) paid in April, May and June. Months with fewer than 17 payment basis days, the month of joining mid-period and months of leave of absence are excluded. If all three are excluded, the previous amount stays.",
       "days": "The thresholds for short-time workers (11 days) and part-timers (15 days) are not supported yet (17 days is used for everyone).",
-      "reflect": "Applying saves the standard remuneration from September (reason: annual review) and a record of how it was decided. Existing September entries are not overwritten.",
+      "reflect": "Applying saves the standard remuneration from September (reason: annual SMR determination) and a record of how it was decided. Existing September entries are not overwritten.",
       "notice": "If the official notice differs, correct it in Standard monthly remuneration on the employee page."
     },
     "error": {
-      "load": "Could not load the data for the annual review.",
+      "load": "Could not load the data for the annual SMR determination.",
       "save": "Could not apply. Please try again later.",
       "badYear": "The year is not valid.",
       "noGrades": "There is no grade table for September of this year."
@@ -1168,7 +1175,7 @@
       "employeeNumber": "Employee number",
       "name": "Name",
       "paidMonth": "Month paid",
-      "cash": "Cash pay",
+      "cash": "Paid in money",
       "fixed": "Fixed wages",
       "days": "Payment basis days",
       "inKind": "In kind",
@@ -1199,7 +1206,7 @@
       "badState": "Status must be Normal, Leave of absence or Temporary layoff"
     },
     "hint": {
-      "columns": "Columns are read by header name (any order; unknown columns are ignored). Required: employee number, month paid, cash pay, fixed wages, payment basis days.",
+      "columns": "Columns are read by header name (any order; unknown columns are ignored). Required: employee number, month paid, paid in money, fixed wages, payment basis days.",
       "excel": "CSV files saved by Excel (Shift_JIS) can be read as is, including months Excel turned into dates like 2026/10/1 and employee numbers that lost leading zeros.",
       "allOrNothing": "If any row has a problem, nothing is saved. Records are saved in groups of 500."
     },
@@ -1213,7 +1220,7 @@
   },
   "contract": {
     "title": "Employment contract",
-    "add": "Contract changed",
+    "add": "Change contract terms",
     "addFirst": "Add contract",
     "empty": "No contract yet. Used to decide part-time coverage and more.",
     "current": "Now",
@@ -1315,7 +1322,7 @@
         "cycle": "For schedules that vary by week. The cycle total is averaged per week."
       },
       "scheduledWage": "Scheduled wage: base pay and allowances. Excludes one-off pay, bonuses, overtime/holiday/night premiums, attendance, commuting and family allowances.",
-      "expected": "Expected monthly pay: the amount on the acquisition notification. Scheduled wage plus expected overtime, commuting allowance, etc. (copied from the scheduled wage if empty).",
+      "expected": "Expected monthly pay: the amount on the Application to Enroll (資格取得届). Scheduled wage plus expected overtime, commuting allowance, etc. (copied from the scheduled wage if empty).",
       "periodEnd": "Leave blank for no fixed term.",
       "student": "Daytime students are not covered as short-time workers (evening, correspondence, part-time school and students on leave are).",
       "special": {
@@ -1360,14 +1367,14 @@
       "ageHint": "Loss of coverage by age (pension at 70, health at 75) is shown in the monthly coverage below."
     },
     "reason": {
-      "threeQuarters": "Both weekly hours and monthly days are at least 3/4 of a regular worker.",
-      "shortTimeRequirements": "Below 3/4, but insured as a short-time worker: specified applicable office, 20+ hours a week, not a student.",
+      "threeQuarters": "Weekly hours {{work}} and monthly days {{days}} are both at least 3/4 of a regular worker ({{std}}, {{stdDays}} days).",
+      "shortTimeRequirements": "Insured as a short-time worker: specified applicable office, {{minHours}}+ hours a week ({{work}}), not a student.",
       "optedIn": "A specified reduced-wage worker who requested to be insured.",
-      "notSpecific": "Below 3/4 and the office is not a specified applicable office, so not insured.",
-      "under20h": "Below 3/4 and under 20 hours a week, so not insured.",
-      "student": "Below 3/4 and a daytime student, so not insured.",
-      "lowWage": "Below 3/4 and scheduled wage under the wage requirement (88,000 yen, until Sep 2026), so not insured.",
-      "reducedWage": "A specified reduced-wage worker without a request to be insured, so not insured.",
+      "notSpecific": "The office is not a specified applicable office, so not insured.",
+      "under20h": "Weekly hours are under {{minHours}} ({{work}}), so not insured.",
+      "student": "A daytime student, so not insured.",
+      "lowWage": "Scheduled wage ({{wage}} yen) is under the wage requirement ({{wageMin}} yen a month, until Sep 2026), so not insured.",
+      "reducedWage": "A specified reduced-wage worker (minimum wage reduction permit, scheduled wage {{wage}} yen under {{reducedWageMin}} yen) without a request to be insured, so not insured.",
       "daily": "Day laborer: not insured until employment continues beyond one month.",
       "shortTerm": "Contract of 2 months or less with no expected renewal, so not insured. Insured from the day employment continues beyond the period.",
       "seasonal": "Seasonal work planned for 4 months or less, so not insured.",
@@ -1375,11 +1382,16 @@
       "noContract": "No employment contract in effect today.",
       "noStandard": "The full-time schedule in office settings is blank, so the 3/4 rule cannot be judged.",
       "noCriteria": "Coverage criteria (masterCriteria) are not registered."
+    },
+    "below": {
+      "hours": "Weekly hours are below 3/4 of a regular worker ({{work}} of {{std}}).",
+      "days": "Monthly days are below 3/4 of a regular worker ({{days}} of {{stdDays}} days).",
+      "both": "Weekly hours ({{work}} of {{std}}) and monthly days ({{days}} of {{stdDays}} days) are both below 3/4 of a regular worker."
     }
   },
   "dependent": {
     "title": "Dependents",
-    "add": "Add family member",
+    "add": "Add dependent",
     "empty": "No dependents.",
     "yen": " yen",
     "together": "Living together",
@@ -1525,7 +1537,7 @@
       "income": "Expected over the next year, including non-taxable income such as disability/survivor pensions, unemployment and sickness benefits.",
       "contract": "Annual income expected from the wages in the employment contract (including allowances and bonuses). Only for people with salary income only, who must declare this on the filing.",
       "contractPeriodEnd": "Leave blank for no fixed term. Contracts ending within one year of becoming a dependent cannot use this method.",
-      "startReason": "May be left blank when filed together with the acquisition notification.",
+      "startReason": "May be left blank when filed together with the Application to Enroll (資格取得届).",
       "to": "For death, enter the day after the date of death.",
       "deleteVsEnd": "When someone stops being a dependent, enter the end date instead of deleting. Delete only to fix mistakes."
     },
@@ -1587,12 +1599,12 @@
     }
   },
   "revision": {
-    "title": "Revision candidates",
-    "lead": "Candidates for irregular revision and revision after maternity/childcare leave, based on payroll records. Only those starting from {{from}} are shown (the 2-year limitation period as a guide).",
+    "title": "SMR revision candidates",
+    "lead": "Candidates for SMR revision after a pay change (随時改定, zuiji kaitei) and revision after maternity/childcare leave (産休・育休終了時改定), based on payroll records. Only those starting from {{from}} are shown (the 2-year limitation period as a guide).",
     "span": "Start {{start}} → revised from {{revised}}",
     "leaveEnd": "Leave ended {{date}}",
     "type": {
-      "irregular": "Irregular revision",
+      "irregular": "SMR revision after a pay change (随時改定)",
       "maternity": "After maternity leave",
       "childcare": "After childcare leave"
     },
@@ -1609,7 +1621,7 @@
     "col": {
       "month": "Paid month",
       "days": "Base days",
-      "amount": "Pay (cash + in kind)",
+      "amount": "Pay (money + in kind)",
       "retro": "Retroactive pay"
     },
     "minDays": "min {{n}}",
@@ -1764,7 +1776,7 @@
       "contact_address": "Address",
       "health_enrolled": "Enrolled",
       "pension_enrolled": "Enrolled",
-      "careExemptions": "Long-term care insurance exemption"
+      "careExemptions": "Periods without long-term care premiums (exemption)"
     }
   },
   "recalc": {
@@ -1772,7 +1784,7 @@
     "start": "Correct and recalculate",
     "lead": "When acquisition/loss dates or standard remuneration were wrong or missed, recalculate each month with the rates of that time and show the difference. Results are saved separately; original data is not changed.",
     "reason": "What is corrected",
-    "reasonPlaceholder": "e.g. Missed acquisition notification (acquired 2026-01-01)",
+    "reasonPlaceholder": "e.g. Missed Application to Enroll (acquired 2026-01-01)",
     "enrollmentTitle": "Enrollment correction",
     "fixEnrollment": "Correct acquisition/loss dates",
     "ins": {
@@ -1829,16 +1841,16 @@
     }
   },
   "careExemption": {
-    "title": "Long-term care insurance exemption",
-    "add": "Add exemption",
-    "empty": "No long-term care insurance exemptions.",
+    "title": "Periods without long-term care premiums (介護保険適用除外, exemption)",
+    "add": "Add period",
+    "empty": "No periods without long-term care premiums.",
     "reason": {
-      "overseas": "Living overseas",
+      "overseas": "Moved overseas (removed from the resident register)",
       "facility": "Resident of an exempt facility",
       "residenceStatus": "Foreign national with a period of stay of 3 months or less"
     },
     "attachment": {
-      "overseas": "Attach: certificate of removal from the resident register (original, without My Number). The employer who ordered the transfer may fill in the form instead.",
+      "overseas": "A training or business trip of about a month does not qualify unless the person is removed from the resident register. Attach: certificate of removal from the resident register (original, without My Number). The employer who ordered the transfer may fill in the form instead.",
       "facility": "Attach: a document proving admission to the facility or hospital.",
       "residenceStatus": "Attach: proof of the period of stay (e.g. a copy of the landing permission stamp in the passport) and a document such as the employment contract showing the contract period."
     },
@@ -1846,8 +1858,8 @@
       "reason": "Reason",
       "from": "Date applicable",
       "to": "Date no longer applicable",
-      "filedOn": "Exemption notice filed on",
-      "endFiledOn": "End notice filed on",
+      "filedOn": "Exemption notice (該当届, when exempted) filed on",
+      "endFiledOn": "End notice (非該当届, when covered again) filed on",
       "note": "Note",
       "period": "Period",
       "months": "Months without care premium",
@@ -1862,16 +1874,16 @@
     "sameMonth": "None (ended in the same month)",
     "filing": {
       "start": {
-        "needed": "Exemption notice not filed",
-        "done": "Exemption notice filed"
+        "needed": "Exemption notice (when exempted) not filed",
+        "done": "Exemption notice (when exempted) filed"
       },
       "end": {
-        "needed": "End notice not filed",
-        "done": "End notice filed"
+        "needed": "End notice (when covered again) not filed",
+        "done": "End notice (when covered again) filed"
       }
     },
-    "markStart": "Mark exemption notice filed",
-    "markEnd": "Mark end notice filed",
+    "markStart": "Mark exemption notice (when exempted) filed",
+    "markEnd": "Mark end notice (when covered again) filed",
     "confirmDelete": "Delete",
     "warning": {
       "outsideCareAge": "This period does not overlap the care insurance age ({{from}} to the day before {{to}}). Premiums do not change."
@@ -1882,8 +1894,8 @@
       "order": "Must be after the applicable date.",
       "beforeFrom": "Earlier than the date of the event.",
       "noEnd": "Enter the end date first.",
-      "overlap": "Overlaps another exemption.",
-      "tooMany": "Up to 10 exemptions.",
+      "overlap": "Overlaps another period.",
+      "tooMany": "Up to 10 periods.",
       "save": "Could not save. Please try again."
     }
   },
@@ -1933,7 +1945,7 @@
     "prefecture": "Prefecture for values",
     "officePrefecture": " (office)",
     "prefectureHint": "Table from {{from}}. Use the prefecture of the workplace (the office that manages personnel, labor and payroll), not where the housing is. If the head office and branches form one covered office, choose again.",
-    "movedIn": "Moved in mid-month on",
+    "movedIn": "Move-in date",
     "movedInHint": "Prorated: monthly value × days from move-in ÷ days in the month."
   },
   "invite": {

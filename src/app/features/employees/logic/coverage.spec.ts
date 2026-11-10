@@ -1,4 +1,4 @@
-import { CoverageInput, ageReachDate, coverageForMonth, defaultEnrollmentDates, isChargedMonth } from './coverage';
+import { CoverageInput, ageReachDate, coverageForMonth, defaultEnrollmentDates, emptyReason, isChargedMonth } from './coverage';
 import { monthsOfFiscalYear, fiscalYearOf } from '../../../shared/utils/date';
 
 /** テスト用の従業員を作る（健保・厚年とも加入、指定がなければ退職なし） */
@@ -141,4 +141,50 @@ describe('期間の一覧と初期値', () => {
 it('fiscalYearOf：1〜3月は前の年度、4月からその年の年度', () => {
   expect(fiscalYearOf('2027-03')).toBe(2026);
   expect(fiscalYearOf('2026-04')).toBe(2026);
+});
+
+describe('emptyReason：表の月がすべて空のときの理由', () => {
+  const fy2026 = monthsOfFiscalYear(2026); // 2026-04 〜 2027-03
+
+  it('1か月でもかかる月があれば null', () => {
+    expect(emptyReason(employee('1990-05-15', '2026-11-01'), fy2026)).toBeNull();
+  });
+  it('どちらの保険にも加入していない', () => {
+    const e = employee('1990-05-15', '2024-04-01');
+    e.health.enrolled = false;
+    e.pension.enrolled = false;
+    expect(emptyReason(e, fy2026)).toEqual({ kind: 'notEnrolled' });
+  });
+  it('表の月より後に取得する（来年度に入社）', () => {
+    expect(emptyReason(employee('1990-05-15', '2027-04-01'), fy2026)).toEqual({
+      kind: 'beforeAcquire',
+      date: '2027-04-01',
+    });
+  });
+  it('表の月より前に喪失している（退職済み）', () => {
+    expect(emptyReason(employee('1990-05-15', '2020-04-01', '2026-03-21'), fy2026)).toEqual({
+      kind: 'afterLoss',
+      date: '2026-03-21',
+      age: null,
+    });
+  });
+  it('75歳の誕生日で喪失（厚年は70歳でもう喪失）', () => {
+    // 1951-03-10 生まれ：75歳の誕生日は 2026-03-10
+    expect(emptyReason(employee('1951-03-10', '2018-04-01'), fy2026)).toEqual({
+      kind: 'afterLoss',
+      date: '2026-03-10',
+      age: 75,
+    });
+  });
+  it('健保だけ加入していて、75歳で喪失', () => {
+    const e = employee('1951-03-10', '2018-04-01');
+    e.pension.enrolled = false;
+    expect(emptyReason(e, fy2026)?.kind).toBe('afterLoss');
+  });
+  it('表の途中に短い在籍（同月得喪）があれば null', () => {
+    expect(emptyReason(employee('1990-05-15', '2026-06-10', '2026-06-26'), fy2026)).toBeNull();
+  });
+  it('月がなければ null', () => {
+    expect(emptyReason(employee('1990-05-15', '2027-04-01'), [])).toBeNull();
+  });
 });

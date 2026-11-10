@@ -25,17 +25,17 @@ const B = emp('B', 'E-2', 'テスト二', '2024-04-01');
 const D = emp('D', '0040', 'テスト四', '2020-04-01', '2026-08-20');
 const EMPS = [A, B, D];
 
-const HEADER = '社員番号,氏名,支払った月,通貨の額,固定的賃金,支払基礎日数';
+const HEADER = '社員番号,氏名,支払った月,支払額,固定的賃金,支払基礎日数';
 
 describe('mapHeader', () => {
   it('日本語・英語・並び順は自由・知らない列は無視', () => {
-    const r = mapHeader(['Month paid', 'メモ', '社員番号', 'Cash pay', '固定的賃金', 'Payment basis days']);
+    const r = mapHeader(['Month paid', 'メモ', '社員番号', 'Paid in money', '固定的賃金', 'Payment basis days']);
     expect(r.missing).toEqual([]);
     expect(r.index.paidMonth).toBe(0);
     expect(r.index.employeeNumber).toBe(2);
   });
   it('必須の列がない', () => {
-    expect(mapHeader(['社員番号', '通貨の額']).missing).toEqual(['paidMonth', 'fixed', 'days']);
+    expect(mapHeader(['社員番号', '支払額']).missing).toEqual(['paidMonth', 'fixed', 'days']);
   });
 });
 
@@ -146,7 +146,7 @@ describe('readPayrollCsv', () => {
   });
 
   it('必須の列がなければ何も読まない', () => {
-    const r = readPayrollCsv(parseCsv('社員番号,通貨の額\n0012,1'), EMPS, S);
+    const r = readPayrollCsv(parseCsv('社員番号,支払額\n0012,1'), EMPS, S);
     expect(r.missingColumns).toEqual(['paidMonth', 'fixed', 'days']);
     expect(r.items).toEqual([]);
   });
@@ -192,7 +192,7 @@ describe('書き出し → 取り込み（往復）', () => {
   it('書き出しの形：期間に在籍していた人だけ、未入力は空欄', () => {
     const rows = buildPayrollCsv(EMPS, saved, monthsBetween('2026-09', '2026-10'), S, 'ja');
     expect(rows[0]).toEqual([
-      '社員番号', '氏名', '支払った月', '通貨の額', '固定的賃金', '支払基礎日数',
+      '社員番号', '氏名', '支払った月', '支払額', '固定的賃金', '支払基礎日数',
       '現物', '遡及支払額', '欠勤日数', '実労働時間', '日割り', '状態',
     ]);
     // 9月払い：一郎（入力済み）・二郎（空）・四郎（8月分に在籍）／10月払い：一郎・二郎

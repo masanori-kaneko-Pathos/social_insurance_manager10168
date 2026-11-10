@@ -1,5 +1,17 @@
 import { emptyPayrollInput, Payroll } from '../../../core/models/payroll';
-import { employedDuring, hasExtra, insuredDuring, latestPaidMonth, missingPayrolls, PayrollEmployee, payrollRows, periodOf, PaySchedule, suggestDays, validatePayroll } from './payroll-rows';
+import {
+  employedDuring,
+  hasExtra,
+  insuredDuring,
+  latestPaidMonth,
+  missingPayrolls,
+  PayrollEmployee,
+  payrollRows,
+  periodOf,
+  PaySchedule,
+  suggestDays,
+  validatePayroll,
+} from './payroll-rows';
 import { shiftMonth, daysInclusive } from '../../../shared/utils/date';
 
 // 伊藤テスト中商事：月末締め・翌月25日払い
@@ -102,7 +114,15 @@ describe('payrollRows / missingPayrolls', () => {
   const saved = new Map<string, Payroll>([
     [
       'A',
-      { ...emptyPayrollInput(), officeId: 'o', employeeId: 'A', paidMonth: '2026-09', cash: 320000, fixed: 320000, days: 31 },
+      {
+        ...emptyPayrollInput(),
+        officeId: 'o',
+        employeeId: 'A',
+        paidMonth: '2026-09',
+        cash: 320000,
+        fixed: 320000,
+        days: 31,
+      },
     ],
   ]);
   const p = periodOf('2026-09', MONTH_END_NEXT); // 8月分
@@ -128,12 +148,14 @@ describe('validatePayroll', () => {
   it('問題なし', () => {
     expect(validatePayroll(ok, 31)).toEqual([]);
   });
-  it('固定的賃金が通貨の額より大きい', () => {
+  it('固定的賃金が支払額より大きい', () => {
     expect(validatePayroll({ ...ok, fixed: 330001 }, 31)).toEqual(['fixedOverCash']);
   });
   it('遡及支払額は現物を含めた合計まで', () => {
     expect(validatePayroll({ ...ok, inKind: 10000, retro: 340000 }, 31)).toEqual([]);
-    expect(validatePayroll({ ...ok, inKind: 10000, retro: 340001 }, 31)).toEqual(['retroOverTotal']);
+    expect(validatePayroll({ ...ok, inKind: 10000, retro: 340001 }, 31)).toEqual([
+      'retroOverTotal',
+    ]);
   });
   it('日数は対象期間の日数まで', () => {
     expect(validatePayroll({ ...ok, days: 31 }, 30)).toEqual(['daysOutOfRange']);

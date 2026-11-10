@@ -10,6 +10,7 @@ import {
 } from '../../../../core/models/premium';
 import { RemunerationDoc } from '../../../../core/models/remuneration';
 import { todayLocal, toYearMonth, YearMonth } from '../../../../shared/utils/date';
+import { emptyReason } from '../../../employees/logic/coverage';
 import { RemunerationService } from '../../../employees/remuneration.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import {
@@ -26,7 +27,10 @@ import { splitContribution } from '../../logic/premium-core';
 import { formatMilli } from '../../logic/rounding';
 
 /** 保険料の計算に要る事業所の設定（事業所の文書そのものか、従業員向けに写したもの） */
-export type OfficeForPremium = Pick<Office, 'id' | 'prefecture' | 'healthInsurer' | 'insurerHistory' | 'premium'>;
+export type OfficeForPremium = Pick<
+  Office,
+  'id' | 'prefecture' | 'healthInsurer' | 'insurerHistory' | 'premium'
+>;
 
 /** 1か月分の行（計算でエラーが出た月は result を null にする） */
 interface MonthRow {
@@ -54,11 +58,15 @@ export class PremiumCard implements OnInit {
    * マイページでは、従業員に見せてよい分だけ写した文書（offices/{o}/shared/forEmployees）を渡す
    */
   readonly office = input<OfficeForPremium | null>(null);
-  private readonly officeNow = computed<OfficeForPremium | null>(() => this.office() ?? this.context.current());
+  private readonly officeNow = computed<OfficeForPremium | null>(
+    () => this.office() ?? this.context.current(),
+  );
   /** 表に並べる月（詳細画面の期間の切り替えと連動） */
   readonly months = input.required<YearMonth[]>();
 
   readonly thisMonth = toYearMonth(todayLocal());
+  /** 表の月がすべて空のときの理由（1か月でもかかる月があれば null） */
+  readonly empty = computed(() => emptyReason(this.employee(), this.months()));
   /** 保険料の計算方法（事業所の設定） */
   readonly options = computed<PremiumOptions>(() => {
     const office = this.officeNow();

@@ -156,7 +156,7 @@ export function missingPayrolls(
 export type PayrollError =
   | 'notInteger' // 整数でない・負の数
   | 'tooLarge' // 金額が大きすぎる
-  | 'fixedOverCash' // 固定的賃金が通貨の額より大きい
+  | 'fixedOverCash' // 固定的賃金が支払額より大きい
   | 'retroOverTotal' // 遡及支払額が合計より大きい
   | 'daysOutOfRange' // 支払基礎日数が 0〜対象期間の日数 の外
   | 'absentOutOfRange'

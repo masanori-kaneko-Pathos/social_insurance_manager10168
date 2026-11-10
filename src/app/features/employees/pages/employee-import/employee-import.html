@@ -1,4 +1,6 @@
-<a class="back" [routerLink]="['/o', context.current()?.id, 'employees']">← {{ 'employee.list.title' | transloco }}</a>
+<a class="back" [routerLink]="['/o', context.current()?.id, 'employees']"
+  >← {{ 'employee.list.title' | transloco }}</a
+>
 
 <h1>{{ 'employeeCsv.title' | transloco }}</h1>
 <p class="lead">{{ 'employeeCsv.lead' | transloco }}</p>
@@ -9,7 +11,9 @@
   <section class="card">
     <h2>{{ 'employeeCsv.step1' | transloco }}</h2>
     <p class="sub">{{ 'employeeCsv.templateHint' | transloco }}</p>
-    <button type="button" class="btn" (click)="downloadTemplate()">{{ 'employeeCsv.template' | transloco }}</button>
+    <button type="button" class="btn" (click)="downloadTemplate()">
+      {{ 'employeeCsv.template' | transloco }}
+    </button>
     <details class="columns">
       <summary>{{ 'employeeCsv.columnsTitle' | transloco }}</summary>
       <p class="sub">{{ 'employeeCsv.columnsHint' | transloco }}</p>
@@ -29,26 +33,37 @@
     @if (doneCount() !== null) {
       <div class="alert alert-success">
         {{ 'employeeCsv.done' | transloco: { n: doneCount() } }}
-        <a [routerLink]="['/o', context.current()?.id, 'employees']">{{ 'employeeCsv.toList' | transloco }}</a>
+        <a [routerLink]="['/o', context.current()?.id, 'employees']">{{
+          'employeeCsv.toList' | transloco
+        }}</a>
       </div>
     }
     @if (progress(); as p) {
-      <p class="muted">{{ 'employeeCsv.progress' | transloco: { done: p.done, total: p.total } }}</p>
+      <p class="muted">
+        {{ 'employeeCsv.progress' | transloco: { done: p.done, total: p.total } }}
+      </p>
       <progress [value]="p.done" [max]="p.total"></progress>
     }
 
     @if (preview(); as pv) {
-      <p class="file-name">{{ pv.fileName }} <span class="sub">（{{ 'payrollCsv.encoding.' + pv.encoding | transloco }}）</span></p>
+      <p class="file-name">
+        {{ pv.fileName }}
+        <span class="sub">（{{ 'payrollCsv.encoding.' + pv.encoding | transloco }}）</span>
+      </p>
 
       @if (pv.read.missingColumns.length > 0) {
         <div class="alert alert-danger">
           {{ 'employeeCsv.missingColumns' | transloco }}
-          @for (c of pv.read.missingColumns; track c) { <span class="tag">{{ columnLabel(c) }}</span> }
+          @for (c of pv.read.missingColumns; track c) {
+            <span class="tag">{{ columnLabel(c) }}</span>
+          }
         </div>
       }
 
       @if (rowErrors().length > 0) {
-        <div class="alert alert-danger">{{ 'employeeCsv.hasErrors' | transloco: { n: rowErrors().length } }}</div>
+        <div class="alert alert-danger">
+          {{ 'employeeCsv.hasErrors' | transloco: { n: rowErrors().length } }}
+        </div>
         <table class="table">
           <thead>
             <tr>
@@ -64,8 +79,15 @@
                   <td class="num">{{ r.line }}</td>
                   <td>{{ columnLabel(e.column) }}</td>
                   <td>
-                    {{ (e.code.startsWith('contract.') ? 'contract.error.' + e.code.slice(9) : 'employeeCsv.rowError.' + e.code) | transloco }}
-                    @if (cellOf(r, e); as v) { <span class="sub">（{{ v }}）</span> }
+                    {{
+                      (e.code.startsWith('contract.')
+                        ? 'contract.error.' + e.code.slice(9)
+                        : 'employeeCsv.rowError.' + e.code
+                      ) | transloco
+                    }}
+                    @if (cellOf(r, e); as v) {
+                      <span class="sub">（{{ v }}）</span>
+                    }
                   </td>
                 </tr>
               }
@@ -76,12 +98,20 @@
 
       @for (e of pv.plan.errors; track e.line) {
         <div class="alert alert-danger">
-          {{ 'employeeCsv.planError.' + e.code | transloco: { line: e.line, number: e.employeeNumber } }}
+          {{
+            'employeeCsv.planError.' + e.code
+              | transloco: { line: e.line, number: e.employeeNumber }
+          }}
         </div>
       }
 
       @if (pv.plan.items.length > 0) {
-        <h3>{{ 'employeeCsv.planTitle' | transloco: { n: pv.plan.items.length, insured: insuredCount() } }}</h3>
+        <h3>
+          {{
+            'employeeCsv.planTitle'
+              | transloco: { n: pv.plan.items.length, insured: insuredCount() }
+          }}
+        </h3>
         <div class="table-wrap">
           <table class="table">
             <thead>
@@ -105,28 +135,51 @@
                   <td>{{ name(it) }}</td>
                   <td class="mono">
                     {{ it.employee.hireDate }}
-                    @if (it.employee.retireDate) { <br />〜{{ it.employee.retireDate }} }
+                    @if (it.employee.retireDate) {
+                      <br />〜{{ it.employee.retireDate }}
+                    }
                   </td>
                   <td>
-                    {{ 'contract.employmentType.' + it.contract.employmentType | transloco }}・{{ 'contract.payType.' + it.contract.payType | transloco }}
+                    {{ 'contract.employmentType.' + it.contract.employmentType | transloco }}・{{
+                      'contract.payType.' + it.contract.payType | transloco
+                    }}
                     <br /><span class="mono">{{ hours(it) }}／{{ it.contract.monthlyDays }}日</span>
-                    @if (it.contract.periodEnd) { <br /><span class="sub">〜{{ it.contract.periodEnd }}</span> }
+                    @if (it.contract.periodEnd) {
+                      <br /><span class="sub">〜{{ it.contract.periodEnd }}</span>
+                    }
                   </td>
                   <td>
-                    <strong>{{ 'contract.category.' + it.classification.category | transloco }}</strong>
-                    <br /><span class="sub">{{ 'contract.reason.' + it.classification.reason | transloco }}</span>
+                    <strong>{{
+                      'contract.category.' + it.classification.category | transloco
+                    }}</strong>
+                    @let p = reasonParams(it.classification);
+                    <br /><span class="sub">
+                      @if (it.classification.below) {
+                        {{ 'contract.below.' + it.classification.below | transloco: p }}
+                      }
+                      {{ 'contract.reason.' + it.classification.reason | transloco: p }}
+                    </span>
                   </td>
                   <td>
-                    {{ 'employeeCsv.ins.health' | transloco }} {{ it.employee.health.enrolled ? '○' : '—' }}
-                    ／{{ 'employeeCsv.ins.pension' | transloco }} {{ it.employee.pension.enrolled ? '○' : '—' }}
-                    @for (w of it.warnings; track w) { <br /><span class="badge">{{ 'employeeCsv.warning.' + w | transloco }}</span> }
+                    {{ 'employeeCsv.ins.health' | transloco }}
+                    {{ it.employee.health.enrolled ? '○' : '—' }} ／{{
+                      'employeeCsv.ins.pension' | transloco
+                    }}
+                    {{ it.employee.pension.enrolled ? '○' : '—' }}
+                    @for (w of it.warnings; track w) {
+                      <br /><span class="badge">{{ 'employeeCsv.warning.' + w | transloco }}</span>
+                    }
                   </td>
                   <td class="mono">
                     @if (it.remuneration; as r) {
                       {{ r.from }}〜<br />
-                      {{ 'employeeCsv.ins.health' | transloco }} {{ r.health.grade }}級 {{ yen(r.health.standard) }}<br />
-                      {{ 'employeeCsv.ins.pension' | transloco }} {{ r.pension.grade }}級 {{ yen(r.pension.standard) }}
-                    } @else { — }
+                      {{ 'employeeCsv.ins.health' | transloco }} {{ r.health.grade }}級
+                      {{ yen(r.health.standard) }}<br />
+                      {{ 'employeeCsv.ins.pension' | transloco }} {{ r.pension.grade }}級
+                      {{ yen(r.pension.standard) }}
+                    } @else {
+                      —
+                    }
                   </td>
                   <td class="num">{{ it.leaves.length || '—' }}</td>
                 </tr>
@@ -137,8 +190,15 @@
       }
 
       <div class="actions">
-        <button type="button" class="btn" (click)="clear()" [disabled]="saving()">{{ 'common.cancel' | transloco }}</button>
-        <button type="button" class="btn btn-primary" (click)="importCsv()" [disabled]="!canImport()">
+        <button type="button" class="btn" (click)="clear()" [disabled]="saving()">
+          {{ 'common.cancel' | transloco }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="importCsv()"
+          [disabled]="!canImport()"
+        >
           {{ 'employeeCsv.import' | transloco: { n: pv.plan.items.length } }}
         </button>
       </div>

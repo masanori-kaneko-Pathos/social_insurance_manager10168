@@ -16,8 +16,15 @@
 import { Contract } from '../../../core/models/contract';
 import { CriteriaDoc } from '../../../core/models/master';
 import { DateStr, monthsPeriodEnd, toYearMonth } from '../../../shared/utils/date';
+import { formatHours, formatYen } from '../../../shared/utils/number';
 import { contractAt, isShortPeriod } from './contract-form-model';
-import { ageReachDate, criteriaAt, isSpecificApplied, threeQuartersOf, WorkSchedule } from './coverage';
+import {
+  ageReachDate,
+  criteriaAt,
+  isSpecificApplied,
+  threeQuartersOf,
+  WorkSchedule,
+} from './coverage';
 
 /** 判定に使う契約の項目（11/9 より前の契約は、雇い方などの項目がない） */
 export type ClassifyContract = Pick<
@@ -45,7 +52,10 @@ export interface ClassifyOffice {
   specificApplication?: { since: string | null };
 }
 
-export type ClassifyCriteria = Pick<CriteriaDoc, 'from' | 'weeklyMinutesMin' | 'wageMin' | 'reducedWageMin'>;
+export type ClassifyCriteria = Pick<
+  CriteriaDoc,
+  'from' | 'weeklyMinutesMin' | 'wageMin' | 'reducedWageMin'
+>;
 
 export type Category = 'regular' | 'shortTime' | 'reducedWage' | 'excluded' | 'unknown';
 
@@ -70,11 +80,30 @@ export type ClassifyReason =
   | 'noStandard' // 事業所の所定が空
   | 'noCriteria'; // 基準のマスタがない
 
+/** 4分の3に届かなかった側（届いていれば null） */
+export type Below = 'hours' | 'days' | 'both';
+
+/** 理由の文に入れる数字（判定に使った値。分・日・円） */
+export interface ClassifyNums {
+  weeklyMinutes: number;
+  monthlyDays: number;
+  scheduledWage: number;
+  /** 通常の労働者の所定（事業所の設定） */
+  stdWeeklyMinutes: number | null;
+  stdMonthlyDays: number | null;
+  /** その月の基準（masterCriteria） */
+  minWeeklyMinutes: number | null;
+  wageMin: number | null;
+  reducedWageMin: number | null;
+}
+
 export interface Classification {
   category: Category;
   reason: ClassifyReason;
   /** 判定に使った契約（その日に効いている契約）の始まる日 */
   contractFrom: DateStr | null;
+  below: Below | null;
+  nums: ClassifyNums | null;
 }
 
 export function isInsured(c: Pick<Classification, 'category'>): boolean {
@@ -97,22 +126,31 @@ function byWork(
   criteria: ClassifyCriteria[],
   date: DateStr,
 ): Omit<Classification, 'contractFrom'> {
-  const tq = threeQuartersOf(c, office.standardHours);
-  if (tq === 'unknown') return { category: 'unknown', reason: 'noStandard' };
-  if (tq === 'meets') return { category: 'regular', reason: 'threeQuarters' };
+  const std = office.standardHours;
+  const month = toYearMonth(date);
+  const k = criteriaAt(criteria, month);
+  const nums: ClassifyNums = {
+    weeklyMinutes: c.weeklyMinutes,
+    monthlyDays: c.monthlyDays,
+    scheduledWage: c.scheduledWage,
+    stdWeeklyMinutes: std?.weeklyMinutes ?? null,
+    stdMonthlyDays: std?.monthlyDays ?? null,
+    minWeeklyMinutes: k?.weeklyMinutesMin ?? null,
+    wageMin: k?.wageMin ?? null,
+    reducedWageMin: k?.reducedWageMin ?? null,
+  };
+  const tq = threeQuartersOf(c, std);
+  if (tq === 'unknown') return { category: 'unknown', reason: 'noStandard', below: null, nums };
+  if (tq === 'meets') return { category: 'regular', reason: 'threeQuarters', below: null, nums };
 
   // 4分の3未満 → 短時間労働者の要件
-  const month = toYearMonth(date);
-  if (!isSpecificApplied(office.specificApplication, month)) {
-    return { category: 'excluded', reason: 'notSpecific' };
-  }
-  const k = criteriaAt(criteria, month);
-  if (!k) return { category: 'unknown', reason: 'noCriteria' };
-  if (c.weeklyMinutes < k.weeklyMinutesMin) return { category: 'excluded', reason: 'under20h' };
-  if (c.student === 'daytime') return { category: 'excluded', reason: 'student' };
-  if (k.wageMin !== null && c.scheduledWage < k.wageMin) {
-    return { category: 'excluded', reason: 'lowWage' };
-  }
+  const below = belowSide(c, std!);
+  const r = (category: Category, reason: ClassifyReason) => ({ category, reason, below, nums });
+  if (!isSpecificApplied(office.specificApplication, month)) return r('excluded', 'notSpecific');
+  if (!k) return r('unknown', 'noCriteria');
+  if (c.weeklyMinutes < k.weeklyMinutesMin) return r('excluded', 'under20h');
+  if (c.student === 'daytime') return r('excluded', 'student');
+  if (k.wageMin !== null && c.scheduledWage < k.wageMin) return r('excluded', 'lowWage');
   // 特定減額特例対象者：70歳未満・最低賃金の減額の特例許可・所定内賃金が基準未満
   const reduced =
     k.reducedWageMin !== null &&
@@ -120,11 +158,16 @@ function byWork(
     c.scheduledWage < k.reducedWageMin &&
     date < ageReachDate(p.birthDate, 70);
   if (reduced) {
-    return optedInAt(p, date)
-      ? { category: 'reducedWage', reason: 'optedIn' }
-      : { category: 'excluded', reason: 'reducedWage' };
+    return optedInAt(p, date) ? r('reducedWage', 'optedIn') : r('excluded', 'reducedWage');
   }
-  return { category: 'shortTime', reason: 'shortTimeRequirements' };
+  return r('shortTime', 'shortTimeRequirements');
+}
+
+/** 4分の3に届かなかったのは、時間・日数・両方のどれか（threeQuartersOf が 'below' のときに呼ぶ） */
+function belowSide(work: WorkSchedule, std: WorkSchedule): Below {
+  const hours = work.weeklyMinutes * 4 < std.weeklyMinutes * 3;
+  const days = work.monthlyDays * 4 < std.monthlyDays * 3;
+  return hours && days ? 'both' : hours ? 'hours' : 'days';
 }
 
 // ===== 2. 雇い方と期間での判定 =====
@@ -150,7 +193,9 @@ function periodExclusion(chain: ClassifyContract[], date: DateStr): ClassifyReas
       return date <= monthsPeriodEnd(start, 1) ? 'daily' : null;
     case 'seasonal':
       // 続けて4か月を超える予定なら最初から加入。期間の定めがなければ予定は4か月を超える
-      return current.periodEnd && current.periodEnd <= monthsPeriodEnd(start, 4) ? 'seasonal' : null;
+      return current.periodEnd && current.periodEnd <= monthsPeriodEnd(start, 4)
+        ? 'seasonal'
+        : null;
     case 'temporaryBusiness':
       return current.periodEnd && current.periodEnd <= monthsPeriodEnd(start, 6)
         ? 'temporaryBusiness'
@@ -175,7 +220,15 @@ export function classify(
   date: DateStr,
 ): Classification {
   const current = contractAt(p.contracts, date);
-  if (!current) return { category: 'unknown', reason: 'noContract', contractFrom: null };
+  if (!current) {
+    return {
+      category: 'unknown',
+      reason: 'noContract',
+      contractFrom: null,
+      below: null,
+      nums: null,
+    };
+  }
 
   const work = byWork(current, p, office, criteria, date);
   if (!isInsured(work)) return { ...work, contractFrom: current.from };
@@ -190,6 +243,29 @@ export function classify(
 
   const excluded = periodExclusion(chain, date);
   return excluded
-    ? { category: 'excluded', reason: excluded, contractFrom: current.from }
+    ? { ...work, category: 'excluded', reason: excluded, contractFrom: current.from }
     : { ...work, contractFrom: current.from };
+}
+
+// ===== 4. 画面に出す数字 =====
+
+/**
+ * 理由の文（翻訳ファイルの {{ }}）に渡す値。時間は「40:00」、金額は「88,000」の形にする
+ * 例：「月の所定労働日数が、通常の労働者の4分の3未満です（{{stdDays}}日のうち {{days}}日）。」
+ */
+export function reasonParams(c: Pick<Classification, 'nums'>): Record<string, string | number> {
+  const n = c.nums;
+  if (!n) return {};
+  const hm = (v: number | null) => (v === null ? '' : formatHours(v));
+  const yen = (v: number | null) => (v === null ? '' : formatYen(v));
+  return {
+    work: hm(n.weeklyMinutes),
+    days: n.monthlyDays,
+    std: hm(n.stdWeeklyMinutes),
+    stdDays: n.stdMonthlyDays ?? '',
+    minHours: hm(n.minWeeklyMinutes),
+    wage: yen(n.scheduledWage),
+    wageMin: yen(n.wageMin),
+    reducedWageMin: yen(n.reducedWageMin),
+  };
 }

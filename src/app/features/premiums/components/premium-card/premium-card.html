@@ -13,6 +13,14 @@
   } @else if (errorKey()) {
     <div class="alert alert-danger">{{ errorKey()! | transloco }}</div>
   } @else {
+    @if (empty(); as r) {
+      <p class="muted">
+        {{
+          'employee.detail.emptyReason.' +
+            (r.kind === 'afterLoss' && r.age ? 'afterLossAge' : r.kind) | transloco: r
+        }}
+      </p>
+    }
     <div class="table-wrap">
       <table>
         <thead>

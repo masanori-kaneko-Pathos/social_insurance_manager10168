@@ -1,7 +1,9 @@
 <section class="card">
   <div class="head">
     <h2>{{ 'payroll.cardTitle' | transloco }}</h2>
-    <a [routerLink]="['/o', context.current()?.id, 'payrolls']">{{ 'payroll.toList' | transloco }}</a>
+    <a [routerLink]="['/o', context.current()?.id, 'payrolls']">{{
+      'payroll.toList' | transloco
+    }}</a>
   </div>
 
   @if (loading()) {
@@ -18,8 +20,9 @@
             <th>{{ 'payroll.col.paidMonth' | transloco }}</th>
             <th>{{ 'payroll.col.period' | transloco }}</th>
             <th class="num">{{ 'payroll.col.cash' | transloco }}</th>
-            <th class="num">{{ 'payroll.col.fixed' | transloco }}</th>
             <th class="num">{{ 'payroll.col.inKind' | transloco }}</th>
+            <th class="num">{{ 'payroll.col.total' | transloco }}</th>
+            <th class="num">{{ 'payroll.col.fixed' | transloco }}</th>
             <th class="num">{{ 'payroll.col.retro' | transloco }}</th>
             <th class="num">{{ 'payroll.col.days' | transloco }}</th>
             <th class="num">{{ 'payroll.col.hours' | transloco }}</th>
@@ -30,12 +33,15 @@
           @for (p of items(); track p.paidMonth) {
             <tr>
               <td class="mono">
-                <a [routerLink]="['/o', context.current()?.id, 'payrolls', p.paidMonth]">{{ p.paidMonth }}</a>
+                <a [routerLink]="['/o', context.current()?.id, 'payrolls', p.paidMonth]">{{
+                  p.paidMonth
+                }}</a>
               </td>
               <td class="mono">{{ periodText(p) }}</td>
               <td class="num">{{ yen(p.cash) }}</td>
-              <td class="num">{{ yen(p.fixed) }}</td>
               <td class="num">{{ p.inKind ? yen(p.inKind) : '—' }}</td>
+              <td class="num">{{ yen(p.cash + p.inKind) }}</td>
+              <td class="num">{{ yen(p.fixed) }}</td>
               <td class="num">{{ p.retro ? yen(p.retro) : '—' }}</td>
               <td class="num">{{ p.days }}</td>
               <td class="num">{{ hours(p.workMinutes) }}</td>

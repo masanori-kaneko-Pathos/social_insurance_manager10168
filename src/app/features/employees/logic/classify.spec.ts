@@ -1,6 +1,7 @@
 import { monthsPeriodEnd } from '../../../shared/utils/date';
 import {
   classify,
+  reasonParams,
   ClassifyContract,
   ClassifyCriteria,
   ClassifyOffice,
@@ -170,5 +171,58 @@ describe('classify：日雇い・季節的業務・臨時的事業', () => {
     const c = full({ from: '2026-04-01', specialEmployment: 'temporaryBusiness' });
     expect(at(person([{ ...c, periodEnd: '2026-09-30' }]), '2026-04-01')).toBe('excluded:temporaryBusiness');
     expect(at(person([{ ...c, periodEnd: '2026-10-01' }]), '2026-04-01')).toBe('regular:threeQuarters');
+  });
+});
+
+describe('classify：理由に出す数字（below・nums・reasonParams）', () => {
+  const run = (c: ClassifyContract, date = '2026-11-01') => classify(person([c]), OFFICE, CRITERIA, date);
+
+  it('4分の3以上なら below は null、数字は契約と事業所の所定', () => {
+    const r = run(full({ weeklyMinutes: 1920, monthlyDays: 16 }));
+    expect(r.reason).toBe('threeQuarters');
+    expect(r.below).toBeNull();
+    expect(reasonParams(r)).toEqual({
+      work: '32:00', days: 16, std: '40:00', stdDays: 20,
+      minHours: '20:00', wage: '250,000', wageMin: '', reducedWageMin: '88,000',
+    });
+  });
+  it('日数だけ足りない（週30時間・月14日）', () => {
+    const r = run(part({ weeklyMinutes: 1800, monthlyDays: 14 }));
+    expect(r.below).toBe('days');
+    expect(r.reason).toBe('shortTimeRequirements');
+  });
+  it('時間だけ足りない（週25時間・月20日）', () => {
+    expect(run(part({ weeklyMinutes: 1500, monthlyDays: 20 })).below).toBe('hours');
+  });
+  it('両方足りない（週20時間・月12日）', () => {
+    expect(run(part()).below).toBe('both');
+  });
+  it('週20時間未満：基準の時間も出す', () => {
+    const r = run(part({ weeklyMinutes: 1110 }));
+    expect(r.reason).toBe('under20h');
+    expect(reasonParams(r)['work']).toBe('18:30');
+    expect(reasonParams(r)['minHours']).toBe('20:00');
+  });
+  it('賃金要件（2026-09 まで）：所定内賃金と基準額', () => {
+    const r = run(part({ scheduledWage: 85000 }), '2026-09-01');
+    expect(r.reason).toBe('lowWage');
+    expect(reasonParams(r)['wage']).toBe('85,000');
+    expect(reasonParams(r)['wageMin']).toBe('88,000');
+  });
+  it('期間で外れても、働き方の below は残る', () => {
+    const r = run(part({ specialEmployment: 'daily' }), '2026-08-10');
+    expect(r.reason).toBe('daily');
+    expect(r.below).toBe('both');
+  });
+  it('事業所の所定が空：自分の数字だけ出す', () => {
+    const r = classify(person([part()]), { standardHours: null }, CRITERIA, '2026-11-01');
+    expect(r.reason).toBe('noStandard');
+    expect(r.below).toBeNull();
+    expect(reasonParams(r)['std']).toBe('');
+  });
+  it('契約がなければ数字もない', () => {
+    const r = classify(person([]), OFFICE, CRITERIA, '2026-11-01');
+    expect(r.nums).toBeNull();
+    expect(reasonParams(r)).toEqual({});
   });
 });

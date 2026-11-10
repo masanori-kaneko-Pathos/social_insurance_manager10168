@@ -50,7 +50,7 @@ export const PAYROLL_HEADERS: Record<CsvLang, Record<PayrollColumn, string>> = {
     employeeNumber: '社員番号',
     name: '氏名',
     paidMonth: '支払った月',
-    cash: '通貨の額',
+    cash: '支払額',
     fixed: '固定的賃金',
     days: '支払基礎日数',
     inKind: '現物',
@@ -64,7 +64,7 @@ export const PAYROLL_HEADERS: Record<CsvLang, Record<PayrollColumn, string>> = {
     employeeNumber: 'Employee number',
     name: 'Name',
     paidMonth: 'Month paid',
-    cash: 'Cash pay',
+    cash: 'Paid in money',
     fixed: 'Fixed wages',
     days: 'Payment basis days',
     inKind: 'In kind',
@@ -175,10 +175,16 @@ export function makeMatcher(employees: readonly CsvEmployee[]): (no: string) => 
   return (raw: string) => {
     const k = norm(raw);
     const a = exact.get(k);
-    if (a) return a.length === 1 ? { kind: 'ok', employee: a[0], zeroPadded: false } : { kind: 'ambiguous' };
+    if (a)
+      return a.length === 1
+        ? { kind: 'ok', employee: a[0], zeroPadded: false }
+        : { kind: 'ambiguous' };
     if (/^\d+$/.test(k)) {
       const b = loose.get(stripZeros(k));
-      if (b) return b.length === 1 ? { kind: 'ok', employee: b[0], zeroPadded: true } : { kind: 'ambiguous' };
+      if (b)
+        return b.length === 1
+          ? { kind: 'ok', employee: b[0], zeroPadded: true }
+          : { kind: 'ambiguous' };
     }
     return { kind: 'none' };
   };
@@ -323,7 +329,8 @@ export function readPayrollCsv(
     result.items.push({
       line,
       employeeId: employee.id,
-      employeeLabel: `${employee.employeeNumber ?? ''} ${employee.lastName} ${employee.firstName}`.trim(),
+      employeeLabel:
+        `${employee.employeeNumber ?? ''} ${employee.lastName} ${employee.firstName}`.trim(),
       paidMonth,
       input: r.input,
     });
@@ -390,7 +397,13 @@ export function buildPayrollCsv(
 }
 
 /** 給与の実績_伊藤テスト中商事_2026-04〜2026-06_20261106.csv */
-export function payrollFileName(officeName: string, from: string, to: string, today: string, lang: CsvLang): string {
+export function payrollFileName(
+  officeName: string,
+  from: string,
+  to: string,
+  today: string,
+  lang: CsvLang,
+): string {
   const title = lang === 'ja' ? '給与の実績' : 'payroll';
   const range = from === to ? from : `${from}〜${to}`;
   return `${title}_${officeName}_${range}_${today.replace(/-/g, '')}.csv`;

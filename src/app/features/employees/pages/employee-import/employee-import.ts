@@ -18,6 +18,7 @@ import {
   planImport,
   readEmployeeCsv,
 } from '../../logic/employee-csv';
+import { reasonParams } from '../../logic/classify';
 
 interface Preview {
   fileName: string;
@@ -51,7 +52,9 @@ export class EmployeeImport {
   readonly progress = signal<{ done: number; total: number } | null>(null);
   readonly doneCount = signal<number | null>(null);
 
-  readonly rowErrors = computed(() => this.preview()?.read.rows.filter((r) => r.errors.length > 0) ?? []);
+  readonly rowErrors = computed(
+    () => this.preview()?.read.rows.filter((r) => r.errors.length > 0) ?? [],
+  );
   readonly canImport = computed(() => {
     const p = this.preview();
     return (
@@ -64,8 +67,12 @@ export class EmployeeImport {
       p.plan.items.length > 0
     );
   });
+  readonly reasonParams = reasonParams;
   readonly insuredCount = computed(
-    () => this.preview()?.plan.items.filter((i) => i.employee.health.enrolled || i.employee.pension.enrolled).length ?? 0,
+    () =>
+      this.preview()?.plan.items.filter(
+        (i) => i.employee.health.enrolled || i.employee.pension.enrolled,
+      ).length ?? 0,
   );
 
   downloadTemplate(): void {
@@ -90,7 +97,10 @@ export class EmployeeImport {
       ]);
       const read = readEmployeeCsv(parseCsv(text));
       const plan = planImport(read.rows, {
-        office: { standardHours: office.standardHours ?? null, specificApplication: office.specificApplication },
+        office: {
+          standardHours: office.standardHours ?? null,
+          specificApplication: office.specificApplication,
+        },
         criteria,
         gradeTables,
         existingNumbers: new Set(existing.map((e) => e.employeeNumber ?? '').filter(Boolean)),
@@ -115,7 +125,9 @@ export class EmployeeImport {
     this.progress.set({ done: 0, total });
     this.errorKey.set(null);
     try {
-      const n = await this.api.importMany(office.id, p.plan.items, (done) => this.progress.set({ done, total }));
+      const n = await this.api.importMany(office.id, p.plan.items, (done) =>
+        this.progress.set({ done, total }),
+      );
       this.doneCount.set(n);
       this.preview.set(null);
     } catch (err) {

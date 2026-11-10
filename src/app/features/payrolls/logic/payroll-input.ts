@@ -48,7 +48,8 @@ export function textOf(p: PayrollInput | null): PayrollRowText {
   };
 }
 
-export type RowError = PayrollError | 'unreadable' | 'cashRequired' | 'fixedRequired' | 'daysRequired';
+export type RowError =
+  PayrollError | 'unreadable' | 'cashRequired' | 'fixedRequired' | 'daysRequired';
 
 export type RowResult =
   | { kind: 'blank' } // 何も入れていない行（保存しない。保存済みなら消す）
@@ -57,13 +58,15 @@ export type RowResult =
 
 function isBlank(t: PayrollRowText): boolean {
   return (
-    [t.cash, t.fixed, t.inKind, t.retro, t.days, t.absentDays, t.hours].every((s) => s.trim() === '') &&
+    [t.cash, t.fixed, t.inKind, t.retro, t.days, t.absentDays, t.hours].every(
+      (s) => s.trim() === '',
+    ) &&
     !t.prorated &&
     t.state === 'normal'
   );
 }
 
-/** 1行を読む。通貨の額・固定的賃金・日数は必須、現物・遡及は空欄なら 0、欠勤・時間は空欄なら null */
+/** 1行を読む。支払額・固定的賃金・日数は必須、現物・遡及は空欄なら 0、欠勤・時間は空欄なら null */
 export function readRow(t: PayrollRowText, periodDays: number): RowResult {
   if (isBlank(t)) return { kind: 'blank' };
 
@@ -121,4 +124,12 @@ export function sameInput(a: PayrollInput, b: PayrollInput): boolean {
 export function candidateDays(suggested: number, absentText: string): number {
   const absent = parseNat(absentText);
   return absent != null && absent <= suggested ? suggested - absent : suggested;
+}
+
+/** 「合計」の列：支払額＋現物（入力中の文字から）。支払額が空・読めない、現物が読めないなら null */
+export function totalOf(cash: string, inKind: string): number | null {
+  const c = parseNat(cash);
+  const k = parseNat(inKind);
+  if (c == null || k === undefined) return null;
+  return c + (k ?? 0);
 }
