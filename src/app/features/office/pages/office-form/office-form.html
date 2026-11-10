@@ -53,6 +53,12 @@
           }
         </div>
 
+        <div class="field full">
+          <label for="nameEn">{{ 'office.field.nameEn' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="nameEn" class="input" formControlName="nameEn" />
+          <span class="hint">{{ 'office.hint.nameEn' | transloco }}</span>
+        </div>
+
         <div class="field">
           <label for="corporateNumber">
             {{ 'office.field.corporateNumber' | transloco
@@ -654,7 +660,7 @@
     </section>
 
     @if (!readOnly) {
-      <div class="actions">
+      <div class="actions save-bar">
         @if (isEdit) {
           <a class="btn" [routerLink]="['/o', office()?.id]">{{ 'common.back' | transloco }}</a>
         } @else {

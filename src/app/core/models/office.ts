@@ -53,6 +53,8 @@ export interface InKindProvided {
 /** Firestore の offices/{officeId} に保存する中身 */
 export interface OfficeDoc {
   name: string;
+  /** 英語の表示に使う名前（任意。英語の画面で、あればこちらを出す。11/10 より前の文書にはない） */
+  nameEn?: string | null;
   corporateName: string | null;
   corporateNumber: string | null;
   ownerName: string;

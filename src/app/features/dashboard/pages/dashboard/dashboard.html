@@ -94,10 +94,10 @@
             }
             @switch (it.kind) {
               @case ('noContract') {
-                <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]">{{ 'dashboard.todo.toContract' | transloco }} →</a>
+                <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'employment' }">{{ 'dashboard.todo.toContract' | transloco }} →</a>
               }
               @case ('lose') {
-                <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]">{{ 'dashboard.todo.toContractCheck' | transloco }} →</a>
+                <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'employment' }">{{ 'dashboard.todo.toContractCheck' | transloco }} →</a>
               }
               @case ('office') {
                 @if (it.office === 'noStandard') {

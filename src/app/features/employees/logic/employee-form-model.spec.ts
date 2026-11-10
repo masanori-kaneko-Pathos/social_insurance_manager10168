@@ -1,4 +1,4 @@
-import { Employee, employeeExtras } from '../../../core/models/employee';
+import { EmployeeFull, employeeExtras } from '../../../core/models/employee';
 import {
   emptyEmployeeForm,
   EmployeeFormValue,
@@ -183,11 +183,11 @@ describe('toEmployeeForm と fromEmployeeForm は行き来できる', () => {
         certCovers: 'pensionAndHealth',
       },
     });
-    const e = { id: 'A', ...input, ...employeeExtras() } as Employee;
+    const e = { id: 'A', ...input, ...employeeExtras() } as unknown as EmployeeFull;
     expect(fromEmployeeForm(toEmployeeForm(e))).toEqual(input);
     // カナで並べる外国籍の人も戻る
     const kanaInput = { ...input, nameOrder: 'kana' as const };
-    const e2 = { id: 'B', ...kanaInput, ...employeeExtras() } as Employee;
+    const e2 = { id: 'B', ...kanaInput, ...employeeExtras() } as unknown as EmployeeFull;
     expect(fromEmployeeForm(toEmployeeForm(e2))).toEqual(kanaInput);
   });
 });

@@ -236,6 +236,7 @@ service cloud.firestore {
 
     function validOffice(d) {
       return str(d.name, 100)
+        && (!('nameEn' in d) || optStr(d.nameEn, 100)) // 英語の名前（任意。11/10 より前の文書にはない）
         && optStr(d.corporateName, 100)
         && (d.corporateNumber == null || (d.corporateNumber is string && d.corporateNumber.matches('^[0-9]{13}$')))
         && str(d.ownerName, 50)
@@ -268,7 +269,7 @@ service cloud.firestore {
       allow create: if signedIn()
         && myUser().role == 'admin'
         && exactKeys(request.resource.data, [
-             'name', 'corporateName', 'corporateNumber', 'ownerName', 'postalCode', 'prefecture',
+             'name', 'nameEn', 'corporateName', 'corporateNumber', 'ownerName', 'postalCode', 'prefecture',
              'address', 'healthInsurer', 'officeSymbol', 'officeNumber', 'industry', 'employeeCount',
              'insurerHistory', 'payroll', 'premium',
              'standardHours', 'specificApplication', 'pensionFund', 'inKind', 'bonusMonths',
@@ -322,7 +323,7 @@ service cloud.firestore {
       function validEmployee(d, old) {
         return d.keys().size() <= 33
           && d.keys().hasAll(['lastName', 'lastNameKana', 'birthDate', 'hireDate', 'health', 'pension',
-                              'contact', 'bankAccount', 'foreign', 'leaves', 'userUid', 'createdAt', 'updatedAt'])
+                              'foreign', 'leaves', 'userUid', 'createdAt', 'updatedAt'])
           // 氏名・番号
           && optStr(d.employeeNumber, 20)
           && str(d.lastName, 50) && str(d.lastNameKana, 50)
@@ -337,11 +338,7 @@ service cloud.firestore {
           // 加入：保険料に直接効くので、変わったときは形まで確かめる
           && (unchanged(d, old, 'health') || validEnrollment(d.health))
           && (unchanged(d, old, 'pension') || validEnrollment(d.pension))
-          // 連絡先・口座：番号の形だけ（郵便番号7桁・口座番号7桁）
-          && (unchanged(d, old, 'contact')
-              || (d.contact.postalCode == null || d.contact.postalCode.matches('^[0-9]{7}$')))
-          && (unchanged(d, old, 'bankAccount')
-              || (d.bankAccount.accountNumber == null || d.bankAccount.accountNumber.matches('^[0-9]{7}$')))
+          // 連絡先・通勤・口座は鍵付きの文書（details/private）へ移した（11/10）。移し替える前の古い項目は、ここでは見ない
           // 外国籍：国籍のコードと、社会保障協定の適用証明書（保険料に効く）
           && (unchanged(d, old, 'foreign') || d.foreign == null
               || (d.foreign is map && optCode(d.foreign.nationality) && d.foreign.nationality != null
@@ -367,6 +364,21 @@ service cloud.firestore {
           && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.employeeRef.employeeId == employeeId;
         // 削除：しない（退職は退職日で表す）
         allow delete: if false;
+
+        // ----- 鍵付きの文書（連絡先・通勤・口座）。読めるのは管理者と本人だけ（一般ユーザーには見せない） -----
+        match /details/{docId} {
+          function validPrivate(d) {
+            return exactKeys(d, ['contact', 'commute', 'bankAccount', 'updatedAt'])
+              && d.contact is map && d.commute is map && d.bankAccount is map
+              && (d.contact.postalCode == null || d.contact.postalCode.matches('^[0-9]{7}$'))
+              && (d.bankAccount.accountNumber == null || d.bankAccount.accountNumber.matches('^[0-9]{7}$'))
+              && d.updatedAt == request.time;
+          }
+
+          allow read: if isAdmin(officeId) || isEmployeeSelf(officeId, employeeId);
+          allow create, update: if isAdmin(officeId) && docId == 'private' && validPrivate(request.resource.data);
+          allow delete: if false;
+        }
 
         // ----- 標準報酬月額の履歴（ID ＝ 何月分から） -----
         match /remunerations/{remMonth} {
@@ -608,8 +620,9 @@ service cloud.firestore {
         }
 
         // ----- 変更履歴（足すだけ。直さない・消さない） -----
+        // 読めるのは管理者だけ（連絡先・口座の変更前・変更後の値も入るため。11/10 に一般ユーザーを外した）
         match /history/{historyId} {
-          allow read: if isMember(officeId);
+          allow read: if isAdmin(officeId);
           allow create: if isAdmin(officeId)
             && exactKeys(request.resource.data, ['target', 'field', 'before', 'after', 'changedBy', 'changedAt'])
             && str(request.resource.data.target, 100) && str(request.resource.data.field, 100)

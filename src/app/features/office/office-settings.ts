@@ -75,6 +75,11 @@ export function ratesForOffice(
 }
 
 /** 過去も含めて、組合健保だった時期があるか（組合の料率を読む必要があるか） */
+/** 画面に出す事業所の名前（英語の画面で、英語の名前があればそちら） */
+export function officeDisplayName(o: { name: string; nameEn?: string | null }, lang: string): string {
+  return lang === 'en' && o.nameEn ? o.nameEn : o.name;
+}
+
 export function everKumiai(office: OfficeLike): boolean {
   return insurerHistoryOf(office).some((p) => p.healthInsurer.type === 'kumiai');
 }

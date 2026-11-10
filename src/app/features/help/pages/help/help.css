@@ -1,0 +1,28 @@
+h1 {
+  margin: 0 0 var(--space-md);
+  font-size: var(--font-xl);
+}
+
+.search {
+  max-width: 480px;
+  margin-bottom: var(--space-lg);
+}
+
+.topic {
+  margin-bottom: var(--space-md);
+}
+
+.topic h2 {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-md);
+}
+
+.topic p {
+  margin: 0;
+  line-height: 1.8;
+  white-space: pre-line;
+}
+
+.muted {
+  color: var(--color-text-sub);
+}

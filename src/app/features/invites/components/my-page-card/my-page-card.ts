@@ -1,7 +1,7 @@
 import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { Employee } from '../../../../core/models/employee';
+import { EmployeeFull } from '../../../../core/models/employee';
 import { EmployeeRequest, Invite } from '../../../../core/models/office-records';
 import { OfficeContext } from '../../../office/office-context.service';
 import { sortRequests } from '../../../requests/logic/request-model';
@@ -28,7 +28,7 @@ export class MyPageCard implements OnInit {
   private readonly requestsApi = inject(RequestService);
   readonly context = inject(OfficeContext);
 
-  readonly employee = input.required<Employee>();
+  readonly employee = input.required<EmployeeFull>();
 
   readonly list = signal<Invite[]>([]);
   readonly requests = signal<EmployeeRequest[]>([]);

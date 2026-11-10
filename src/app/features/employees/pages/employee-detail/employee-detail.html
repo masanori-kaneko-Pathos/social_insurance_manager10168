@@ -10,272 +10,395 @@
   @if (employee(); as e) {
     <div class="page-head">
       <div>
-        <h1>{{ e.lastName }} {{ e.firstName }}</h1>
+        <h1>
+          @if (e.employeeNumber) {
+            <span class="emp-no">{{ e.employeeNumber }}</span>
+          }{{ e.lastName }} {{ e.firstName }}
+        </h1>
         <p class="kana">{{ e.lastNameKana }} {{ e.firstNameKana }}</p>
       </div>
       @if (context.isAdmin()) {
-        <a class="btn" [routerLink]="['edit']">{{ 'common.edit' | transloco }}</a>
+        <div class="head-actions">
+          <!-- ＋登録：中身がないカード（休業・介護保険料がかからない期間）は、ここから足す -->
+          <details #addMenu class="add-menu">
+            <summary class="btn">＋ {{ 'employee.detail.add' | transloco }}</summary>
+            <div class="menu">
+              <button type="button" (click)="add('leave', addMenu)">{{ 'leave.add' | transloco }}</button>
+              <button type="button" (click)="add('care', addMenu)">{{ 'careExemption.add' | transloco }}</button>
+            </div>
+          </details>
+          <a class="btn" [routerLink]="['edit']">{{ 'common.edit' | transloco }}</a>
+        </div>
       }
     </div>
 
-    <!-- 基本情報 -->
-    <section class="card">
-      <dl class="info">
-        <div>
-          <dt>{{ 'employee.field.employeeNumber' | transloco }}</dt>
-          <dd class="mono">{{ e.employeeNumber ?? '—' }}</dd>
-        </div>
-        <div>
-          <dt>{{ 'employee.field.birthDate' | transloco }}</dt>
-          <dd class="mono">
-            {{ e.birthDate }}（{{ 'employee.detail.age' | transloco: { age: age(e) } }}）
-          </dd>
-        </div>
-        <div>
-          <dt>{{ 'employee.field.hireDate' | transloco }}</dt>
-          <dd class="mono">{{ e.hireDate }}</dd>
-        </div>
-        <div>
-          <dt>{{ 'employee.field.retireDate' | transloco }}</dt>
-          <dd class="mono">{{ e.retireDate ?? '—' }}</dd>
-        </div>
-      </dl>
-      <!-- 標準報酬月額 -->
-      <app-remuneration-card [employee]="e" (changed)="premiumCard.reload(); historyCard.load()" />
-    </section>
-
-    <!-- 雇用契約の履歴 -->
-    <app-contract-card [employee]="e" (changed)="historyCard.load()" />
-
-    <!-- 扶養家族 -->
-    <app-dependent-card [employee]="e" (changed)="reloadEmployee()" />
-
-    <!-- そのほかの情報（見るだけ。直すときは「編集」から） -->
-    <section class="card">
-      <h2>{{ 'employee.section.more' | transloco }}</h2>
-      <dl class="info">
-        <div>
-          <dt>{{ 'employee.field.sex' | transloco }}</dt>
-          <dd>{{ e.sex ? ('employee.sex.' + e.sex | transloco) : '—' }}</dd>
-        </div>
-        @if (e.retireDate) {
-          <div>
-            <dt>{{ 'employee.field.retireReason' | transloco }}</dt>
-            <dd>
-              {{ e.retireReason ? ('employee.retireReason.' + e.retireReason | transloco) : '—' }}
-            </dd>
-          </div>
-        }
-        <div>
-          <dt>{{ 'employee.field.insuredNumber' | transloco }}</dt>
-          <dd class="mono">{{ e.insuredNumber ?? '—' }}</dd>
-        </div>
-        <div>
-          <dt>{{ 'employee.field.basicPensionNumber' | transloco }}</dt>
-          <dd class="mono">{{ pensionNumber(e) }}</dd>
-        </div>
-        <div>
-          <dt>{{ 'employee.field.acquisitionType' | transloco }}</dt>
-          <dd>{{ 'employee.acquisitionType.' + e.acquisitionType | transloco }}</dd>
-        </div>
-        <div>
-          <dt>{{ 'employee.field.collectionMethod' | transloco }}</dt>
-          <dd>
-            @if (e.collectionMethod) {
-              {{ 'employee.collectionMethod.' + e.collectionMethod | transloco }}
-            } @else {
-              {{
-                'employee.collectionMethod.office'
-                  | transloco
-                    : { method: ('employee.collectionMethod.' + officeMethod() | transloco) }
-              }}
-            }
-          </dd>
-        </div>
-        <div class="wide">
-          <dt>{{ 'employee.field.address' | transloco }}</dt>
-          <dd>{{ address(e) }}</dd>
-        </div>
-        <div>
-          <dt>{{ 'employee.field.phone' | transloco }}</dt>
-          <dd class="mono">{{ e.contact.phone ?? '—' }}</dd>
-        </div>
-        <div>
-          <dt>{{ 'employee.field.email' | transloco }}</dt>
-          <dd>{{ e.contact.email ?? '—' }}</dd>
-        </div>
-        <div class="wide">
-          <dt>{{ 'employee.section.commute' | transloco }}</dt>
-          <dd>{{ commute(e) }}</dd>
-        </div>
-        <div class="wide">
-          <dt>{{ 'employee.section.bank' | transloco }}</dt>
-          <dd>{{ bank(e) }}</dd>
-        </div>
-        @if (flags(e).length > 0) {
-          <div class="wide">
-            <dt>{{ 'employee.section.details' | transloco }}</dt>
-            <dd>
-              @for (f of flags(e); track f) {
-                <span class="badge">{{ 'employee.field.' + f | transloco }}</span>
-              }
-              @if (e.optInDate) {
-                <span class="badge"
-                  >{{ 'employee.field.optInDate' | transloco }} {{ e.optInDate }}</span
-                >
-              }
-              @if (e.optOutDate) {
-                <span class="badge"
-                  >{{ 'employee.field.optOutDate' | transloco }} {{ e.optOutDate }}</span
-                >
-              }
-            </dd>
-          </div>
-        }
-        @if (e.foreign; as f) {
-          <div class="wide">
-            <dt>{{ 'employee.section.foreign' | transloco }}</dt>
-            <dd>
-              @if (romanName(e); as r) {
-                {{ r }}
-              } @else {
-                {{ 'employee.noRomanReason.' + f.noRomanReason | transloco }}
-              }
-              （{{ f.nationality }}）
-              @if (f.kanjiName; as k) {
-                ・{{ 'employee.personName.kanjiName' | transloco }} {{ k.last }} {{ k.first }}
-              }
-              @if (f.alias; as a) {
-                ・{{ 'employee.personName.alias' | transloco }} {{ a.last }} {{ a.first }}
-              }
-              ・{{ 'employee.field.filingName' | transloco }}：{{
-                'employee.filingName.' + f.filingName | transloco
-              }}
-              @if (!f.residentRegistered) {
-                ・{{ 'employee.detail.notResidentRegistered' | transloco }}
-              }
-              @if (f.needsRomanNameFiling) {
-                <span class="badge">{{ 'employee.field.needsRomanNameFiling' | transloco }}</span>
-              }
-              @if (f.residenceStatus) {
-                ・{{ f.residenceStatus }}
-              }
-              @if (f.residenceExpiry) {
-                ・{{ 'employee.field.residenceExpiry' | transloco }} {{ f.residenceExpiry }}
-              }
-              @if (f.workPermit) {
-                ・{{ 'employee.field.workPermit' | transloco }}
-              }
-              @if (f.certificate; as c) {
-                ・{{ 'employee.field.hasCertificate' | transloco }}（{{ c.country }}
-                {{ c.from }}〜{{ c.to ?? '' }}）
-              }
-            </dd>
-          </div>
-        }
-      </dl>
-    </section>
-
-    <!-- 月ごとの加入状況 -->
-    <section class="card">
-      <div class="coverage-head">
-        <h2>{{ 'employee.detail.coverageTitle' | transloco }}</h2>
-        <div class="segmented" role="group">
-          @for (m of modes; track m) {
-            <button type="button" [class.active]="mode() === m" (click)="setMode(m)">
-              {{ 'employee.detail.mode.' + m | transloco }}
-            </button>
-          }
-        </div>
-      </div>
-
-      <div class="period">
-        @if (mode() === 'last12') {
-          <span class="period-label">{{ 'employee.detail.last12Label' | transloco }}</span>
-        } @else {
-          <button
-            type="button"
-            class="btn"
-            (click)="shift(-1)"
-            [attr.aria-label]="'employee.detail.prev' | transloco"
-          >
-            ‹
-          </button>
-          <span class="period-label">
-            {{ 'employee.detail.' + mode() + 'Label' | transloco: { year: year() } }}
-          </span>
-          <button
-            type="button"
-            class="btn"
-            (click)="shift(1)"
-            [attr.aria-label]="'employee.detail.next' | transloco"
-          >
-            ›
-          </button>
-        }
-      </div>
-      @if (empty(); as r) {
-        <p class="hint">
-          {{
-            'employee.detail.emptyReason.' +
-              (r.kind === 'afterLoss' && r.age ? 'afterLossAge' : r.kind) | transloco: r
-          }}
-        </p>
+    <!-- タブ（開いているタブは URL に持つ） -->
+    <nav class="tabs" [attr.aria-label]="'employee.tab.label' | transloco">
+      @for (t of tabs(); track t) {
+        <a
+          [routerLink]="[]"
+          [queryParams]="tabLink(t)"
+          queryParamsHandling="merge"
+          [class.active]="tab() === t"
+          [attr.aria-current]="tab() === t ? 'page' : null"
+          >{{ 'employee.tab.' + t | transloco }}</a
+        >
       }
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">
-                <span class="sr-only">{{ 'employee.detail.insurance' | transloco }}</span>
-              </th>
-              @for (r of rows(); track r.month; let i = $index) {
-                <th scope="col" class="month" [class.future]="isFuture(r.month)">
-                  @if (i === 0 || r.month.endsWith('-01')) {
-                    <span class="year">{{ r.month.slice(0, 4) }}</span>
-                  }
-                  {{ monthLabel(r.month) }}{{ 'employee.detail.monthSuffix' | transloco }}
-                </th>
-              }
-            </tr>
-          </thead>
-          <tbody>
-            @for (k of kinds; track k) {
-              <tr>
-                <th scope="row">{{ 'employee.badge.' + k | transloco }}</th>
-                @for (r of rows(); track r.month) {
-                  <td class="mark" [class.future]="isFuture(r.month)">
-                    @if (r[k]) {
-                      {{ isExempt(r.month) ? ('employee.detail.exemptMark' | transloco) : '○' }}
+    </nav>
+
+    @switch (tab()) {
+      @case ('overview') {
+        <!-- ===== 概要 ===== -->
+        <section class="card">
+          <dl class="info">
+            <div>
+              <dt>{{ 'employee.field.birthDate' | transloco }}</dt>
+              <dd class="mono">{{ e.birthDate }}（{{ 'employee.detail.age' | transloco: { age: age(e) } }}）</dd>
+            </div>
+            <div>
+              <dt>{{ 'employee.field.hireDate' | transloco }}</dt>
+              <dd class="mono">{{ e.hireDate }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'employee.field.retireDate' | transloco }}</dt>
+              <dd class="mono">{{ e.retireDate ?? '—' }}</dd>
+            </div>
+            <div class="wide">
+              <dt>{{ 'contract.category.today' | transloco }}</dt>
+              <dd>
+                @if (classification(); as c) {
+                  <strong>{{ 'contract.category.' + c.category | transloco }}</strong>
+                  @let p = reasonParams(c);
+                  <span class="sub">
+                    @if (c.below) {
+                      {{ 'contract.below.' + c.below | transloco: p }}
                     }
-                  </td>
+                    {{ 'contract.reason.' + c.reason | transloco: p }}
+                  </span>
+                } @else {
+                  —
                 }
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      <p class="hint">{{ 'employee.detail.futureHint' | transloco }}</p>
-      @if ((e.leaves ?? []).length > 0) {
-        <p class="hint">{{ 'employee.detail.exemptHint' | transloco }}</p>
-      }
-    </section>
+              </dd>
+            </div>
+            <div>
+              <dt>{{ 'remuneration.field.health' | transloco }}</dt>
+              <dd>
+                {{ (e.health.enrolled ? 'me.enrolledSince' : 'me.notEnrolled') | transloco: { date: e.health.acquiredDate } }}
+              </dd>
+            </div>
+            <div>
+              <dt>{{ 'remuneration.field.pension' | transloco }}</dt>
+              <dd>
+                {{ (e.pension.enrolled ? 'me.enrolledSince' : 'me.notEnrolled') | transloco: { date: e.pension.acquiredDate } }}
+              </dd>
+            </div>
+            <div>
+              <dt>{{ 'employee.overview.grade' | transloco }}</dt>
+              <dd class="mono">
+                @if (remunerationNow(); as r) {
+                  {{ 'employee.overview.gradeValue' | transloco: { health: r.health.grade, pension: r.pension.grade, standard: yen(r.health.standard) } }}
+                } @else {
+                  —
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>{{ 'employee.overview.premium' | transloco: { month: thisMonth } }}</dt>
+              <dd class="mono">
+                @switch (premiumNow()) {
+                  @case (null) {
+                    —
+                  }
+                  @case ('exempt') {
+                    {{ 'premium.exempt' | transloco }}
+                  }
+                  @default {
+                    {{ yen($any(premiumNow())) }}{{ 'employee.overview.yen' | transloco }}
+                  }
+                }
+              </dd>
+            </div>
+          </dl>
+        </section>
 
-    <!-- 保険料（期間の切り替えは加入状況の表と共通） -->
-    <app-premium-card #premiumCard [employee]="e" [months]="months()" />
-    <!-- 賞与（見るだけ。入力は賞与の画面で） -->
-    <app-bonus-card [employee]="e" />
-    <!-- 給与 -->
-    <app-payroll-card [employee]="e" />
-    <!-- 産休・育休 -->
-    <app-leave-card [employee]="e" (changed)="reloadEmployee()" />
-    <!-- 介護保険の適用除外（海外居住・施設入所など） -->
-    <app-care-exemption-card [employee]="e" (changed)="reloadEmployee()" />
-    <!-- マイページ（招待）と、依頼・申請 -->
-    <app-my-page-card [employee]="e" />
-    <!-- 遡及計算（訂正したときの差額。結果は別に保存） -->
-    <app-recalc-card [employee]="e" />
-    <!-- 変更履歴（足すだけの記録。いちばん下） -->
-    <app-history-card #historyCard [employee]="e" />
+        <!-- この人の To-do（片づけるのは To-do リストで） -->
+        <section class="card">
+          <h2>{{ 'employee.overview.todos' | transloco }}</h2>
+          @for (t of todos(); track t.kind + (t.date ?? '')) {
+            <p class="todo">
+              <span class="kind">{{ 'dashboard.todo.kind.' + t.kind | transloco }}</span>
+              @if (t.age !== null) {
+                {{ 'dashboard.todo.text.age' | transloco: { date: t.date, age: t.age } }}
+                {{ 'dashboard.ages.what.' + t.age | transloco }}
+              } @else if (t.todo; as td) {
+                {{
+                  'dashboard.todo.text.' + t.kind
+                    | transloco
+                      : {
+                          date: t.date,
+                          today: ('contract.category.' + td.today.category | transloco),
+                          next: td.next ? ('contract.category.' + td.next.category | transloco) : ''
+                        }
+                }}
+              }
+            </p>
+          } @empty {
+            <p class="muted">{{ 'employee.overview.noTodos' | transloco }}</p>
+          }
+          @if (todos().length > 0) {
+            <a [routerLink]="['/o', context.current()?.id]">{{ 'employee.overview.toTodos' | transloco }} →</a>
+          }
+        </section>
+
+        <!-- 足りない情報（届書や保険料の計算で困るもの） -->
+        @if (missing().length > 0) {
+          <section class="card">
+            <h2>{{ 'employee.overview.missing' | transloco }}</h2>
+            <ul class="missing">
+              @for (m of missing(); track m) {
+                <li>
+                  {{ 'employee.overview.missingItem.' + m | transloco }}
+                  <a [routerLink]="[]" [queryParams]="tabLink(missingTab[m])" queryParamsHandling="merge"
+                    >{{ 'employee.tab.' + missingTab[m] | transloco }} →</a
+                  >
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      }
+
+      @case ('employment') {
+        <!-- ===== 雇用・契約 ===== -->
+        <app-contract-card [employee]="e" (changed)="reloadEmployee()" />
+        @if (showLeave(e)) {
+          <app-leave-card [employee]="e" (changed)="reloadEmployee()" />
+        }
+        @if (showCare(e)) {
+          <app-care-exemption-card [employee]="e" (changed)="reloadEmployee()" />
+        }
+      }
+
+      @case ('insurance') {
+        <!-- ===== 加入と保険料 ===== -->
+        <section class="card">
+          <div class="coverage-head">
+            <h2>{{ 'employee.detail.coverageTitle' | transloco }}</h2>
+            <div class="segmented" role="group">
+              @for (m of modes; track m) {
+                <button type="button" [class.active]="mode() === m" (click)="setMode(m)">
+                  {{ 'employee.detail.mode.' + m | transloco }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="period">
+            @if (mode() === 'last12') {
+              <span class="period-label">{{ 'employee.detail.last12Label' | transloco }}</span>
+            } @else {
+              <button type="button" class="btn" (click)="shift(-1)" [attr.aria-label]="'employee.detail.prev' | transloco">‹</button>
+              <span class="period-label">
+                {{ 'employee.detail.' + mode() + 'Label' | transloco: { year: year() } }}
+              </span>
+              <button type="button" class="btn" (click)="shift(1)" [attr.aria-label]="'employee.detail.next' | transloco">›</button>
+            }
+          </div>
+          @if (empty(); as r) {
+            <p class="hint">
+              {{ 'employee.detail.emptyReason.' + (r.kind === 'afterLoss' && r.age ? 'afterLossAge' : r.kind) | transloco: r }}
+            </p>
+          }
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">
+                    <span class="sr-only">{{ 'employee.detail.insurance' | transloco }}</span>
+                  </th>
+                  @for (r of rows(); track r.month; let i = $index) {
+                    <th scope="col" class="month" [class.future]="isFuture(r.month)">
+                      @if (i === 0 || r.month.endsWith('-01')) {
+                        <span class="year">{{ r.month.slice(0, 4) }}</span>
+                      }
+                      {{ monthLabel(r.month) }}{{ 'employee.detail.monthSuffix' | transloco }}
+                    </th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (k of kinds; track k) {
+                  <tr>
+                    <th scope="row">{{ 'employee.badge.' + k | transloco }}</th>
+                    @for (r of rows(); track r.month) {
+                      <td class="mark" [class.future]="isFuture(r.month)">
+                        @if (r[k]) {
+                          {{ isExempt(r.month) ? ('employee.detail.exemptMark' | transloco) : '○' }}
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="hint">{{ 'employee.detail.futureHint' | transloco }}</p>
+          @if ((e.leaves ?? []).length > 0) {
+            <p class="hint">{{ 'employee.detail.exemptHint' | transloco }}</p>
+          }
+        </section>
+
+        <!-- 保険料（期間の切り替えは加入状況の表と共通） -->
+        <app-premium-card [employee]="e" [months]="months()" />
+        <app-bonus-card [employee]="e" />
+        <!-- 遡及計算（訂正したときの差額。結果は別に保存） -->
+        <app-recalc-card [employee]="e" />
+      }
+
+      @case ('pay') {
+        <!-- ===== 給与と標準報酬 ===== -->
+        <section class="card">
+          <app-remuneration-card [employee]="e" (changed)="loadOverview()" />
+        </section>
+        <app-payroll-card [employee]="e" />
+      }
+
+      @case ('person') {
+        <!-- ===== 本人の情報 ===== -->
+        <section class="card">
+          <h2>{{ 'employee.section.more' | transloco }}</h2>
+          <dl class="info">
+            <div>
+              <dt>{{ 'employee.field.sex' | transloco }}</dt>
+              <dd>{{ e.sex ? ('employee.sex.' + e.sex | transloco) : '—' }}</dd>
+            </div>
+            @if (e.retireDate) {
+              <div>
+                <dt>{{ 'employee.field.retireReason' | transloco }}</dt>
+                <dd>{{ e.retireReason ? ('employee.retireReason.' + e.retireReason | transloco) : '—' }}</dd>
+              </div>
+            }
+            <div>
+              <dt>{{ 'employee.field.insuredNumber' | transloco }}</dt>
+              <dd class="mono">{{ e.insuredNumber ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'employee.field.basicPensionNumber' | transloco }}</dt>
+              <dd class="mono">{{ pensionNumber(e) }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'employee.field.acquisitionType' | transloco }}</dt>
+              <dd>{{ 'employee.acquisitionType.' + e.acquisitionType | transloco }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'employee.field.collectionMethod' | transloco }}</dt>
+              <dd>
+                @if (e.collectionMethod) {
+                  {{ 'employee.collectionMethod.' + e.collectionMethod | transloco }}
+                } @else {
+                  {{
+                    'employee.collectionMethod.office'
+                      | transloco: { method: ('employee.collectionMethod.' + officeMethod() | transloco) }
+                  }}
+                }
+              </dd>
+            </div>
+            <!-- 連絡先・通勤・口座（鍵付きの文書。管理者と本人だけが見られる） -->
+            @if (context.isAdmin()) {
+              <div class="wide">
+                <dt>{{ 'employee.field.address' | transloco }}</dt>
+                <dd>{{ address(e) }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'employee.field.phone' | transloco }}</dt>
+                <dd class="mono">{{ e.contact.phone ?? '—' }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'employee.field.email' | transloco }}</dt>
+                <dd>{{ e.contact.email ?? '—' }}</dd>
+              </div>
+              <div class="wide">
+                <dt>{{ 'employee.section.commute' | transloco }}</dt>
+                <dd>{{ commute(e) }}</dd>
+              </div>
+              <div class="wide">
+                <dt>{{ 'employee.section.bank' | transloco }}</dt>
+                <dd>{{ bank(e) }}</dd>
+              </div>
+            } @else {
+              <div class="wide">
+                <dd class="muted">{{ 'employee.detail.privateHidden' | transloco }}</dd>
+              </div>
+            }
+            @if (flags(e).length > 0) {
+              <div class="wide">
+                <dt>{{ 'employee.section.details' | transloco }}</dt>
+                <dd>
+                  @for (f of flags(e); track f) {
+                    <span class="badge">{{ 'employee.field.' + f | transloco }}</span>
+                  }
+                  @if (e.optInDate) {
+                    <span class="badge">{{ 'employee.field.optInDate' | transloco }} {{ e.optInDate }}</span>
+                  }
+                  @if (e.optOutDate) {
+                    <span class="badge">{{ 'employee.field.optOutDate' | transloco }} {{ e.optOutDate }}</span>
+                  }
+                </dd>
+              </div>
+            }
+            @if (e.foreign; as f) {
+              <div class="wide">
+                <dt>{{ 'employee.section.foreign' | transloco }}</dt>
+                <dd>
+                  @if (romanName(e); as r) {
+                    {{ r }}
+                  } @else {
+                    {{ 'employee.noRomanReason.' + f.noRomanReason | transloco }}
+                  }
+                  （{{ f.nationality }}）
+                  @if (f.kanjiName; as k) {
+                    ・{{ 'employee.personName.kanjiName' | transloco }} {{ k.last }} {{ k.first }}
+                  }
+                  @if (f.alias; as a) {
+                    ・{{ 'employee.personName.alias' | transloco }} {{ a.last }} {{ a.first }}
+                  }
+                  ・{{ 'employee.field.filingName' | transloco }}：{{ 'employee.filingName.' + f.filingName | transloco }}
+                  @if (!f.residentRegistered) {
+                    ・{{ 'employee.detail.notResidentRegistered' | transloco }}
+                  }
+                  @if (f.needsRomanNameFiling) {
+                    <span class="badge">{{ 'employee.field.needsRomanNameFiling' | transloco }}</span>
+                  }
+                  @if (f.residenceStatus) {
+                    ・{{ f.residenceStatus }}
+                  }
+                  @if (f.residenceExpiry) {
+                    ・{{ 'employee.field.residenceExpiry' | transloco }} {{ f.residenceExpiry }}
+                  }
+                  @if (f.workPermit) {
+                    ・{{ 'employee.field.workPermit' | transloco }}
+                  }
+                  @if (f.certificate; as c) {
+                    ・{{ 'employee.field.hasCertificate' | transloco }}（{{ c.country }} {{ c.from }}〜{{ c.to ?? '' }}）
+                  }
+                </dd>
+              </div>
+            }
+          </dl>
+        </section>
+
+        <!-- 扶養家族 -->
+        <app-dependent-card [employee]="e" (changed)="reloadEmployee()" />
+        <!-- マイページ（招待）と、依頼・申請 -->
+        <app-my-page-card [employee]="e" />
+      }
+
+      @case ('history') {
+        <!-- ===== 履歴 ===== -->
+        @if (context.isAdmin()) {
+          <app-history-card [employee]="e" />
+        }
+      }
+    }
   }
 }

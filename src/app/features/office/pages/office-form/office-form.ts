@@ -41,6 +41,8 @@ import {
   withInsurerChange,
 } from '../../office-settings';
 import { RateDialog, RateDialogTarget } from '../../../rates/components/rate-dialog/rate-dialog';
+import { ToastService } from '../../../../shared/services/toast.service';
+
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { CriteriaDoc } from '../../../../core/models/master';
@@ -116,6 +118,7 @@ const emptyToNull = (v: string) => (v.trim() ? v.trim() : null);
   styleUrl: './office-form.css',
 })
 export class OfficeForm {
+  private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   private readonly profiles = inject(UserProfileService);
@@ -142,6 +145,7 @@ export class OfficeForm {
   readonly form = this.fb.nonNullable.group(
     {
       name: ['', [Validators.required, NOT_BLANK, Validators.maxLength(100)]],
+      nameEn: ['', [Validators.maxLength(100)]],
       corporateName: ['', [Validators.maxLength(100)]],
       corporateNumber: ['', [corporateNumberValidator]],
       ownerName: ['', [Validators.required, NOT_BLANK, Validators.maxLength(50)]],
@@ -300,6 +304,7 @@ export class OfficeForm {
     const premium = premiumOf(o);
     this.form.setValue({
       name: o.name,
+      nameEn: o.nameEn ?? '',
       corporateName: o.corporateName ?? '',
       corporateNumber: o.corporateNumber ?? '',
       ownerName: o.ownerName,
@@ -515,6 +520,7 @@ export class OfficeForm {
     const period = this.periodFromForm();
     const base = {
       name: v.name.trim(),
+      nameEn: emptyToNull(v.nameEn),
       corporateName: emptyToNull(v.corporateName),
       corporateNumber: emptyToNull(v.corporateNumber),
       ownerName: v.ownerName.trim(),
@@ -553,6 +559,7 @@ export class OfficeForm {
         await this.context.refresh(uid); // 切り替えの一覧の名前なども最新に
         this.form.markAsUntouched();
         this.saved.set(true);
+        this.toast.show('common.saved');
       } else {
         // 新規登録：履歴は「最初から今の値」の1行
         const input: OfficeInput = {

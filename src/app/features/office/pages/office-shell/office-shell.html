@@ -4,6 +4,29 @@
     <app-office-switcher />
   </div>
   <div class="header-right">
+    <!-- ベル（管理者）：To-do の件数と、確認待ちの依頼 -->
+    @if (context.isAdmin()) {
+      <app-bell [count]="bellCount()">
+        <a class="bell-item" [routerLink]="['/o', officeId()]">
+          {{ 'nav.dashboard' | transloco }}
+          @if (badge.todoCount(); as n) {
+            <strong>{{ 'bell.count' | transloco: { count: n } }}</strong>
+          } @else if (badge.todoCount() === 0) {
+            <span class="bell-sub">{{ 'bell.none' | transloco }}</span>
+          } @else {
+            <span class="bell-sub">{{ 'bell.notCounted' | transloco }}</span>
+          }
+        </a>
+        <a class="bell-item" [routerLink]="['/o', officeId(), 'requests']" [queryParams]="{ status: 'submitted' }">
+          {{ 'bell.requests' | transloco }}
+          @if (badge.requestCount() > 0) {
+            <strong>{{ 'bell.count' | transloco: { count: badge.requestCount() } }}</strong>
+          } @else {
+            <span class="bell-sub">{{ 'bell.none' | transloco }}</span>
+          }
+        </a>
+      </app-bell>
+    }
     <!-- 言語・ログインしている人・ログアウトは「設定」のメニューにまとめる -->
     <app-account-menu />
   </div>
@@ -51,9 +74,17 @@
     <a [routerLink]="['/o', officeId(), 'settings']" routerLinkActive="active">
       <app-icon name="settings" />{{ 'nav.settings' | transloco }}
     </a>
+    <a [routerLink]="['/o', officeId(), 'help']" routerLinkActive="active">
+      <app-icon name="help" />{{ 'nav.help' | transloco }}
+    </a>
   </nav>
 
   <main class="shell-main">
     <router-outlet />
   </main>
 </div>
+
+<!-- 短い知らせ（「保存しました」など。画面が移っても消えないように、外側の枠に置く） -->
+@if (toast.message(); as m) {
+  <div class="toast" role="status">{{ m | transloco }}</div>
+}

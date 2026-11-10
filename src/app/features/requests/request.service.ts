@@ -13,7 +13,7 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { auth, db } from '../../core/firebase';
-import { EmployeeDoc } from '../../core/models/employee';
+import { EmployeePrivate, emptyPrivate, legacyPrivate } from '../../core/models/employee';
 import {
   EmployeeRequest,
   InboxNotification,
@@ -127,20 +127,29 @@ export class RequestService {
    * 書き込む前に、従業員の今の値を読み直す（画面を開いたあとで変わっていても、正しい履歴になるように）
    */
   async approve(officeId: string, r: EmployeeRequest, comment: string | null, noticeTitle: string): Promise<void> {
+    // 書き込む先は鍵付きの文書（連絡先・通勤・口座）。まだなければ、従業員の文書に残っている古い項目から始める
     const empRef = doc(db, 'offices', officeId, 'employees', r.employeeId);
-    const snap = await getDoc(empRef);
-    if (!snap.exists()) throw new Error('employee not found');
-    const before = snap.data() as EmployeeDoc;
+    const privRef = doc(empRef, 'details', 'private');
+    const [empSnap, privSnap] = await Promise.all([getDoc(empRef), getDoc(privRef)]);
+    if (!empSnap.exists()) throw new Error('employee not found');
+    const before: EmployeePrivate = privSnap.exists()
+      ? (privSnap.data() as EmployeePrivate)
+      : (legacyPrivate(empSnap.data()) ?? emptyPrivate());
     const { patch } = planApply(before, r.questions, r.answers);
 
     const batch = writeBatch(db);
     if (Object.keys(patch).length > 0) {
-      batch.update(empRef, { ...patch, updatedAt: serverTimestamp() });
+      const after: EmployeePrivate = {
+        contact: patch.contact ?? before.contact,
+        commute: patch.commute ?? before.commute,
+        bankAccount: patch.bankAccount ?? before.bankAccount,
+      };
+      batch.set(privRef, { ...after, updatedAt: serverTimestamp() });
       const changes = changesOf(
-        before as unknown as Record<string, unknown>,
-        { ...before, ...patch } as unknown as Record<string, unknown>,
+        { contact: before.contact, commute: before.commute, bankAccount: before.bankAccount },
+        { ...after },
       );
-      this.history.addTo(batch, officeId, r.employeeId, 'employee', changes);
+      this.history.addTo(batch, officeId, r.employeeId, 'details/private', changes);
     }
     batch.update(doc(this.col(officeId), r.id), {
       status: 'approved',

@@ -1,9 +1,14 @@
 <section class="card">
   <div class="head">
     <h2>{{ 'payroll.cardTitle' | transloco }}</h2>
-    <a [routerLink]="['/o', context.current()?.id, 'payrolls']">{{
-      'payroll.toList' | transloco
-    }}</a>
+    <div class="head-links">
+      @if (items().length > 1) {
+        <button type="button" class="link-btn" (click)="newestFirst.set(!newestFirst())">
+          {{ (newestFirst() ? 'payroll.sortOldest' : 'payroll.sortNewest') | transloco }}
+        </button>
+      }
+      <a [routerLink]="['/o', context.current()?.id, 'payrolls']">{{ 'payroll.toList' | transloco }}</a>
+    </div>
   </div>
 
   @if (loading()) {
@@ -30,12 +35,10 @@
           </tr>
         </thead>
         <tbody>
-          @for (p of items(); track p.paidMonth) {
+          @for (p of shown(); track p.paidMonth) {
             <tr>
               <td class="mono">
-                <a [routerLink]="['/o', context.current()?.id, 'payrolls', p.paidMonth]">{{
-                  p.paidMonth
-                }}</a>
+                <a [routerLink]="['/o', context.current()?.id, 'payrolls', p.paidMonth]">{{ p.paidMonth }}</a>
               </td>
               <td class="mono">{{ periodText(p) }}</td>
               <td class="num">{{ yen(p.cash) }}</td>

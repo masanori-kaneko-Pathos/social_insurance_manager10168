@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
@@ -23,6 +23,9 @@ export class PayrollCard {
   readonly employee = input.required<Employee>();
 
   readonly items = signal<Payroll[]>([]);
+  /** 並び：新しい順（初期値）か古い順。画面の中だけ（保存しない） */
+  readonly newestFirst = signal(true);
+  readonly shown = computed(() => (this.newestFirst() ? this.items() : [...this.items()].reverse()));
   readonly loading = signal(true);
   readonly errorKey = signal<string | null>(null);
 

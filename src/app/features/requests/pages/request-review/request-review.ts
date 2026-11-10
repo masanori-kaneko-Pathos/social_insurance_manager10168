@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { Employee } from '../../../../core/models/employee';
+import { EmployeeFull } from '../../../../core/models/employee';
 import { EmployeeRequest } from '../../../../core/models/office-records';
 import { EmployeeService } from '../../../employees/employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
@@ -28,7 +28,7 @@ export class RequestReview {
   readonly context = inject(OfficeContext);
 
   readonly request = signal<EmployeeRequest | null>(null);
-  readonly employee = signal<Employee | null>(null);
+  readonly employee = signal<EmployeeFull | null>(null);
   readonly loading = signal(true);
   readonly working = signal(false);
   readonly errorKey = signal<string | null>(null);
@@ -66,7 +66,7 @@ export class RequestReview {
     try {
       const r = await this.api.get(officeId, id);
       this.request.set(r);
-      if (r) this.employee.set(await this.employeesApi.get(officeId, r.employeeId));
+      if (r) this.employee.set(await this.employeesApi.getFull(officeId, r.employeeId));
     } catch (err) {
       console.error(err);
       this.errorKey.set('request.error.load');
@@ -127,7 +127,7 @@ export class RequestReview {
     }
   }
 
-  nameOf(e: Employee): string {
+  nameOf(e: EmployeeFull): string {
     return `${e.lastName} ${e.firstName}`.trim();
   }
 }

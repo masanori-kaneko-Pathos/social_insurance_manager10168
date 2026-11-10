@@ -40,6 +40,8 @@ export class InKindCalculator {
   });
   /** 選び直した都道府県（null ＝ 事業所の都道府県のまま） */
   readonly chosenPrefecture = signal<string | null>(null);
+  /** 都道府県を選び直しているところか（「変更」を押したら選べる） */
+  readonly changingPrefecture = signal(false);
   readonly prefectureCode = computed(() => this.chosenPrefecture() ?? this.prefecture());
   readonly pref = computed(() => this.table()?.prefectures[this.prefectureCode()] ?? null);
   /** 選べる都道府県（コード順） */

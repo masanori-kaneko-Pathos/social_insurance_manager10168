@@ -8,7 +8,7 @@
 // 読み取りは画面と同じ部品（fromEmployeeForm・fromContractForm）を通す。画面で入れても CSV で入れても同じ結果になる
 
 import type { ContractInput } from '../../../core/models/contract';
-import type { Leave, LeaveKind, EmployeeBasicInput, RetireReason, Sex } from '../../../core/models/employee';
+import type { Leave, LeaveKind, EmployeeFormInput, RetireReason, Sex } from '../../../core/models/employee';
 import { emptyLeave } from '../../../core/models/employee';
 import type { GradeTableDoc } from '../../../core/models/rates';
 import type { RemunerationInput } from '../../../core/models/remuneration';
@@ -167,7 +167,7 @@ export interface EmployeeCsvRow {
   errors: CsvRowError[];
   /** エラーがなければ入る */
   parsed: {
-    employee: EmployeeBasicInput; // 加入は planImport で決める
+    employee: EmployeeFormInput; // 加入は planImport で決める
     contract: ContractInput;
     leaves: Leave[];
     healthOverride: boolean | null;
@@ -445,7 +445,7 @@ export type ImportWarning =
 
 export interface ImportItem {
   line: number;
-  employee: EmployeeBasicInput;
+  employee: EmployeeFormInput;
   contract: ContractInput;
   leaves: Leave[];
   remuneration: RemunerationInput | null;
@@ -502,7 +502,7 @@ export function planImport(rows: EmployeeCsvRow[], ctx: ImportContext): ImportPl
       lostDate: on ? dates.lostDate : null,
       lossReason: on && dates.lostDate ? ('retire' as const) : null,
     });
-    const employee: EmployeeBasicInput = { ...e, health: enrollment(health), pension: enrollment(pension) };
+    const employee: EmployeeFormInput = { ...e, health: enrollment(health), pension: enrollment(pension) };
 
     // 標準報酬（資格取得時決定）：加入する人だけ
     let remuneration: RemunerationInput | null = null;

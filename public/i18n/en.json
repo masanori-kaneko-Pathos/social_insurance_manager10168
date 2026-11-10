@@ -14,7 +14,8 @@
     "hint": {
       "postalCode": "7 digits (no hyphen needed)"
     },
-    "close": "Close"
+    "close": "Close",
+    "saved": "Saved"
   },
   "auth": {
     "password": {
@@ -175,7 +176,8 @@
       "revision": "Yearly / as needed",
       "setup": "Setup"
     },
-    "requests": "Requests"
+    "requests": "Requests",
+    "help": "Help"
   },
   "employee": {
     "list": {
@@ -217,7 +219,8 @@
     },
     "form": {
       "titleNew": "Add employee",
-      "titleEdit": "Edit employee"
+      "titleEdit": "Edit employee",
+      "created": "Employee registered"
     },
     "section": {
       "basic": "Basic information",
@@ -352,7 +355,8 @@
       "load": "Couldn't load.",
       "notFound": "Employee not found.",
       "notAdmin": "Only administrators of this office can add or edit employees.",
-      "invalid": "Please fix the fields marked in red."
+      "invalid": "Please fix the fields marked in red.",
+      "stepInvalid": "Please fix the highlighted fields in this step."
     },
     "detail": {
       "back": "Employees",
@@ -379,7 +383,9 @@
         "beforeAcquire": "Coverage starts on {{date}}. No premiums for earlier months.",
         "afterLoss": "Coverage ended on {{date}}, so no premiums.",
         "afterLossAge": "Coverage ended on {{date}} on reaching age {{age}}, so no premiums."
-      }
+      },
+      "add": "Add",
+      "privateHidden": "Contact, commute and bank details are visible only to administrators and the employee."
     },
     "sex": {
       "male": "Male",
@@ -487,6 +493,45 @@
         "noEnd": "A certificate states the assignment period. Enter the end date.",
         "expired": "The certificate has ended. The person joins Japanese insurance from the next day.",
         "expiringSoon": "The certificate ends soon. Extend it or prepare to join Japanese insurance."
+      },
+      "unlisted": "{{code}} (not in the agreement list)"
+    },
+    "step": {
+      "basic": "Basics",
+      "employment": "Employment & enrollment",
+      "private": "Contact & bank",
+      "foreign": "Foreign national",
+      "confirm": "Review",
+      "confirmLead": "Check what you entered and press Register. You can still make changes here.",
+      "back": "Back",
+      "next": "Next",
+      "register": "Register"
+    },
+    "tab": {
+      "label": "Employee page tabs",
+      "overview": "Overview",
+      "employment": "Employment",
+      "insurance": "Coverage & premiums",
+      "pay": "Pay & SMR",
+      "person": "Personal info",
+      "history": "History"
+    },
+    "overview": {
+      "grade": "Current Standard Monthly Remuneration (SMR)",
+      "gradeValue": "Health grade {{health}}, pension grade {{pension}} ({{standard}} yen)",
+      "premium": "Employee share for {{month}}",
+      "yen": " yen",
+      "todos": "To-dos for this employee",
+      "noTodos": "Nothing needs action now.",
+      "toTodos": "Handle in the to-do list",
+      "missing": "Missing information",
+      "missingItem": {
+        "noContract": "No employment contract (the category cannot be judged).",
+        "noRemuneration": "Enrolled but no current SMR (premiums cannot be calculated).",
+        "noSex": "Sex is not entered (needed on the Application to Enroll).",
+        "noBasicPensionNumber": "Basic pension number is not entered (Application to Enroll).",
+        "noInsuredNumber": "Insured person number is not entered (enter it when the notice arrives).",
+        "noAddress": "Address is not entered (Application to Enroll by basic pension number, My Page)."
       }
     }
   },
@@ -533,7 +578,8 @@
       "payMonth": "Pay month",
       "deduction": "Premium deduction",
       "method": "Employee share collected by",
-      "healthRounding": "Rounding of health, care and child care support"
+      "healthRounding": "Rounding of health, care and child care support",
+      "nameEn": "Office name in English"
     },
     "insurer": {
       "kyokai": "Japan Health Insurance Association (Kyokai Kenpo)",
@@ -547,7 +593,8 @@
       "changeFrom": "Premiums from this month use the new insurer and prefecture.",
       "switchToKumiai": "Until kumiai rates are registered, health premiums from the switch month show as 'No rate registered'.",
       "method": "Per-employee settings (e.g. cash for employees on leave) are coming later.",
-      "healthRounding": "There is no official guidance, so both are available. The method once published by the ministry is 'together'."
+      "healthRounding": "There is no official guidance, so both are available. The method once published by the ministry is 'together'.",
+      "nameEn": "Shown instead of the office name on English screens (if blank, the Japanese name is used)."
     },
     "postal": {
       "search": "Find address",
@@ -1070,7 +1117,9 @@
       "rows": "Some rows have problems. Fix them and save again (nothing was saved).",
       "badMonth": "The month is not valid."
     },
-    "toRevisions": "Revision candidates (irregular / after leave)"
+    "toRevisions": "Revision candidates (irregular / after leave)",
+    "sortOldest": "Oldest first",
+    "sortNewest": "Newest first"
   },
   "regular": {
     "title": "Annual SMR determination {{year}} (定時決定, teiji kettei)",
@@ -1784,7 +1833,8 @@
       "remunerations": "Standard remuneration (from {{key}})",
       "dependents": "Dependent",
       "payrolls": "Payroll (paid {{key}})",
-      "bonusPayments": "Bonus (paid {{key}})"
+      "bonusPayments": "Bonus (paid {{key}})",
+      "details": "Contact, commute and bank"
     },
     "bonus": {
       "amount": "Bonus amount",
@@ -1965,7 +2015,8 @@
     "officePrefecture": " (office)",
     "prefectureHint": "Table from {{from}}. Use the prefecture of the workplace (the office that manages personnel, labor and payroll), not where the housing is. If the head office and branches form one covered office, choose again.",
     "movedIn": "Move-in date",
-    "movedInHint": "Prorated: monthly value × days from move-in ÷ days in the month."
+    "movedInHint": "Prorated: monthly value × days from move-in ÷ days in the month.",
+    "changePrefecture": "Change"
   },
   "invite": {
     "accept": {
@@ -2281,6 +2332,74 @@
       "submittedOn": "Invalid date.",
       "load": "Could not load the grade tables or SMR.",
       "save": "Could not save. Please try again."
+    }
+  },
+  "bell": {
+    "label": "Notifications",
+    "count": "{{count}}",
+    "none": "None",
+    "notCounted": "Counted when opened",
+    "requests": "Requests to review",
+    "empty": "No notifications.",
+    "toInbox": "See the whole inbox"
+  },
+  "help": {
+    "title": "Help",
+    "search": "Search by keyword (e.g. in kind, enrollment)",
+    "empty": "Nothing matches \"{{q}}\".",
+    "topic": {
+      "todo": {
+        "title": "To-do list (start here every morning)",
+        "body": "Items that may need a filing are listed by urgency (now, coming up, missing information). Applications to Enroll (資格取得届), Coverage-end Reports (資格喪失届) and category changes can be handled from the to-do item in a small window. Saving records the enrollment and the filing and removes the item. Age milestones and similar items can be marked as checked and restored from \"Show checked\"."
+      },
+      "acquire": {
+        "title": "When someone joins (Application to Enroll, 資格取得届)",
+        "body": "Register the employee and add an employment contract to see their insured category (e.g. short-time worker). If they should be insured but are not, the to-do list shows an Application to Enroll. Enter the enrollment date, monthly remuneration and grades in the window. The Standard Monthly Remuneration (SMR) decided on enrollment is saved at the same time."
+      },
+      "loss": {
+        "title": "When someone leaves (Coverage-end Report, 資格喪失届)",
+        "body": "Entering a retirement date fills in the coverage-end date (the next day) and the reason. If a contract change means the person is no longer insured, open the Coverage-end Report window from \"Review enrollment\" in the to-do list. Reaching age 75 can also be filed from the age milestone item."
+      },
+      "payroll": {
+        "title": "Entering payroll records",
+        "body": "On the payroll screen, enter the amount paid in money, fixed wages and payment basis days for each month paid. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and retroactive pay columns."
+      },
+      "inKind": {
+        "title": "Remuneration provided in kind (housing, dormitories, meals)",
+        "body": "On the payroll month screen, press \"Also enter in-kind pay and details\" and open \"Calculate\" in the in-kind column. Values are converted to yen with the amounts set by the Minister of Health, Labour and Welfare for each prefecture. Meals are 0 yen if the employee pays two-thirds or more; housing is the value minus what the employee pays. Moving in mid-month is prorated. The prefecture of the workplace defaults to the office and can be changed."
+      },
+      "regular": {
+        "title": "Annual SMR determination (定時決定, Remuneration Report)",
+        "body": "For employees on July 1 each year, the SMR from September is set from the average pay in April, May and June. Months with fewer than 17 payment basis days (11 for short-time workers) are excluded. From June to August, a link appears under the to-do list."
+      },
+      "irregular": {
+        "title": "SMR revision after a pay change (随時改定, Remuneration Change Report)",
+        "body": "When fixed wages change and the average of the three months from that month moves the SMR by two grades or more (one grade at the upper or lower limit), the SMR is revised. Candidates appear on the revision candidates screen from payroll records, together with revisions after maternity or childcare leave."
+      },
+      "leave": {
+        "title": "Premium exemption for maternity and childcare leave",
+        "body": "Adding leave from \"+ Add\" on the employee page exempts both shares from the month the leave starts to the month before the month containing the day after it ends. Childcare leave that ends within the same month is exempt if it lasts 14 days or more."
+      },
+      "care": {
+        "title": "Periods without long-term care premiums (exemption)",
+        "body": "Even at ages 40 to 64, people who moved overseas (removed from the resident register) or entered an exempt facility do not pay long-term care premiums. Adding a period from \"+ Add\" on the employee page removes the care share from that month automatically. A training or business trip of about a month does not qualify unless the person is removed from the resident register."
+      },
+      "agreement": {
+        "title": "Social security agreements (foreign nationals)",
+        "body": "People sent from an agreement country who hold a certificate of coverage are not enrolled in the Japanese pension (and, for some countries, health insurance). Entering the certificate country and period in the employee edit screen adds agreement checks and certificate expiry items to the to-do list."
+      },
+      "csv": {
+        "title": "Importing by CSV",
+        "body": "Employees and payroll records can be imported by CSV. Columns are read by header name, so any order works. Exporting the template CSV and filling it in is the safest way. Shift_JIS CSV saved from Excel can also be read."
+      },
+      "myPage": {
+        "title": "Employee My Page and requests",
+        "body": "Create an invitation link from \"Personal info\" on the employee page and send it to the employee. On My Page, employees can see their premium breakdown, answer requests and apply for changes such as their address. Answers and applications are reviewed under \"Requests\"; approving writes them to the employee record (with change history)."
+      },
+      "roles": {
+        "title": "Roles (administrator, general user, employee)",
+        "body": "Administrators can register, edit and file. General users can only view, and cannot see contact, commute and bank details or change history. Employees can see only their own information on My Page."
+      }
     }
   }
 }

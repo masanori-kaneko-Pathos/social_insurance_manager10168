@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { AuthService } from '../../core/auth/auth.service';
 import { EmployeeRef } from '../../core/models/app-user';
-import { Employee } from '../../core/models/employee';
+import { EmployeeFull } from '../../core/models/employee';
 import { OfficeForEmployeesDoc } from '../../core/models/office';
 import { EmployeeService } from '../employees/employee.service';
 import { OfficeService } from '../office/office.service';
@@ -19,7 +19,7 @@ export class MeContext {
   private readonly offices = inject(OfficeService);
 
   readonly office = signal<MyOffice | null>(null);
-  readonly employee = signal<Employee | null>(null);
+  readonly employee = signal<EmployeeFull | null>(null);
   readonly loading = signal(false);
   readonly errorKey = signal<string | null>(null);
   private loadedFor: string | null = null;
@@ -38,7 +38,7 @@ export class MeContext {
     try {
       const [office, employee] = await Promise.all([
         this.offices.getForEmployees(ref.officeId),
-        this.employees.get(ref.officeId, ref.employeeId),
+        this.employees.getFull(ref.officeId, ref.employeeId),
       ]);
       this.office.set(office);
       this.employee.set(employee);

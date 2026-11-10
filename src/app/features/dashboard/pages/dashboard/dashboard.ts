@@ -30,6 +30,7 @@ import {
   visibleOf,
 } from '../../logic/todo-board';
 import { personTodos } from '../../logic/todos';
+import { TodoBadgeService } from '../../todo-badge.service';
 import { TodoService } from '../../todo.service';
 
 /** 開いている窓（どの To-do から開いたか） */
@@ -56,6 +57,7 @@ export class Dashboard {
   private readonly criteriaApi = inject(CriteriaService);
   private readonly requestsApi = inject(RequestService);
   private readonly api = inject(TodoService);
+  private readonly badge = inject(TodoBadgeService);
 
   readonly office = this.context.current;
   readonly isAdmin = this.context.isAdmin;
@@ -127,6 +129,13 @@ export class Dashboard {
       const office = this.context.current();
       if (office) void this.load(office.id);
     });
+    // ヘッダーのベルに件数を渡す（片づけるたびに減る）
+    effect(() => {
+      const id = this.office()?.id;
+      // 確認待ちの依頼はベルで別に数えるので、ここでは除く
+      const n = openCount(this.groups().filter((g) => g.kind !== 'requests'));
+      if (id && !this.loading()) this.badge.setTodoCount(id, n);
+    });
   }
 
   /** 材料をまとめて読む（契約は在籍している人の分だけ） */
@@ -154,7 +163,10 @@ export class Dashboard {
     if (this.context.isAdmin()) {
       this.requestsApi
         .countSubmitted(officeId)
-        .then((n) => this.submittedRequests.set(n))
+        .then((n) => {
+          this.submittedRequests.set(n);
+          this.badge.requestCount.set(n);
+        })
         .catch((err) => console.error(err));
     }
   }

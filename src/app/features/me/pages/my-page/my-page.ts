@@ -9,6 +9,7 @@ import { isAnswerable, sortRequests } from '../../../requests/logic/request-mode
 import { RequestService } from '../../../requests/request.service';
 import { MeHeader } from '../../components/me-header/me-header';
 import { MeContext } from '../../me-context.service';
+import { MeInboxService } from '../../me-inbox.service';
 
 /** 保険料を並べる月数（今月を含めて） */
 const PREMIUM_MONTHS = 6;
@@ -33,11 +34,13 @@ export class MyPage implements OnInit {
   readonly thisMonth = toYearMonth(todayLocal());
   readonly months = monthsBetween(shiftMonth(this.thisMonth, -(PREMIUM_MONTHS - 1)), this.thisMonth);
 
-  readonly inbox = signal<InboxNotification[]>([]);
+  /** 受信箱はヘッダーのベルと同じ見張り（ベルで既読にしたら、ここも変わる） */
+  private readonly inboxSvc = inject(MeInboxService);
+  readonly inbox = this.inboxSvc.list;
   readonly requests = signal<EmployeeRequest[]>([]);
   readonly listError = signal<string | null>(null);
 
-  readonly unread = computed(() => this.inbox().filter((n) => !n.readAt).length);
+  readonly unread = this.inboxSvc.unread;
   /** 自分への依頼（答えるものが上） */
   readonly toMe = computed(() =>
     sortRequests(
@@ -66,12 +69,7 @@ export class MyPage implements OnInit {
     const ref = this.me.ref();
     if (!ref) return;
     try {
-      const [inbox, requests] = await Promise.all([
-        this.requestsApi.inboxFor(ref.officeId, ref.employeeId),
-        this.requestsApi.listFor(ref.officeId, ref.employeeId),
-      ]);
-      this.inbox.set(inbox);
-      this.requests.set(requests);
+      this.requests.set(await this.requestsApi.listFor(ref.officeId, ref.employeeId));
     } catch (err) {
       console.error(err);
       this.listError.set('me.error.lists');
@@ -82,10 +80,7 @@ export class MyPage implements OnInit {
   async open(n: InboxNotification): Promise<void> {
     const ref = this.me.ref();
     if (!ref) return;
-    if (!n.readAt) {
-      this.requestsApi.markRead(ref.officeId, n.id).catch((err) => console.error(err));
-      this.inbox.update((list) => list.map((x) => (x.id === n.id ? { ...x, readAt: x.createdAt } : x)));
-    }
+    this.inboxSvc.markRead(n).catch((err) => console.error(err));
     if (n.link && this.requests().some((r) => r.id === n.link)) {
       await this.router.navigate(['/me', 'requests', n.link]);
     }

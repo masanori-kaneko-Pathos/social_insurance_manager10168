@@ -206,10 +206,7 @@ export interface EmployeeDoc {
   // 届出の番号
   insuredNumber: string | null; // 被保険者整理番号（年金事務所から通知される）
   basicPensionNumber: string | null; // 基礎年金番号（10桁）
-  // そのほか（カタログ「利用にあたって 4」）
-  contact: ContactDoc;
-  commute: CommuteDoc;
-  bankAccount: BankAccountDoc;
+  // そのほか（カタログ「利用にあたって 4」）。連絡先・通勤・口座は鍵付きの文書（EmployeePrivateDoc）
   collectionMethod: CollectionMethod | null; // null ＝ 事業所の設定のまま
   foreign: ForeignDoc | null;
   leaves: Leave[];
@@ -232,11 +229,32 @@ export interface Employee extends EmployeeDoc {
 
 export type EmployeeInput = Omit<EmployeeDoc, 'createdAt' | 'updatedAt'>;
 
-/** 登録・編集画面が扱う項目（休業はカード、マイページのアカウントは招待で保存する） */
+// ===== 鍵付きの文書 offices/{o}/employees/{e}/details/private =====
+// 連絡先・通勤・口座。読めるのは管理者と本人だけ（一般ユーザーには見せない）。
+// 一覧・To-do・保険料では使わないので、従業員の文書から分けても読み込みは増えない（詳細・編集・マイページで1回ずつ）
+
+export const PRIVATE_KEYS = ['contact', 'commute', 'bankAccount'] as const;
+
+export interface EmployeePrivateDoc {
+  contact: ContactDoc;
+  commute: CommuteDoc;
+  bankAccount: BankAccountDoc;
+  updatedAt: Timestamp;
+}
+
+export type EmployeePrivate = Omit<EmployeePrivateDoc, 'updatedAt'>;
+
+/** 従業員の文書＋鍵付きの文書（詳細・編集・マイページ・依頼の確認で使う） */
+export type EmployeeFull = Employee & EmployeePrivate;
+
+/** 登録・編集画面が扱う項目のうち、従業員の文書に入るもの（休業はカード、マイページのアカウントは招待で保存する） */
 export type EmployeeBasicInput = Omit<
   EmployeeInput,
   'leaves' | 'careExemptions' | 'userUid' | 'annualIncomeEstimate' | 'spouseAnnualIncome'
 >;
+
+/** 登録・編集画面の保存する形（従業員の文書＋鍵付きの文書。保存のときに分ける） */
+export type EmployeeFormInput = EmployeeBasicInput & EmployeePrivate;
 
 // ===== 初期値 =====
 
@@ -250,6 +268,39 @@ export function emptyContact(): ContactDoc {
 
 export function emptyBankAccount(): BankAccountDoc {
   return { bankName: null, branchName: null, accountType: null, accountNumber: null, holderKana: null };
+}
+
+export function emptyCommute(): CommuteDoc {
+  return { method: null, route: null };
+}
+
+export function emptyPrivate(): EmployeePrivate {
+  return { contact: emptyContact(), commute: emptyCommute(), bankAccount: emptyBankAccount() };
+}
+
+/** 鍵付きの文書の項目と、それ以外に分ける（渡された項目だけ） */
+export function splitPrivate<T extends Partial<EmployeePrivate>>(
+  input: T,
+): { main: Omit<T, keyof EmployeePrivate>; priv: Partial<EmployeePrivate> } {
+  const main: Record<string, unknown> = {};
+  const priv: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(input)) {
+    if ((PRIVATE_KEYS as readonly string[]).includes(k)) priv[k] = v;
+    else main[k] = v;
+  }
+  return { main: main as Omit<T, keyof EmployeePrivate>, priv: priv as Partial<EmployeePrivate> };
+}
+
+/** 古い文書（分ける前）に残っている連絡先などを、鍵付きの文書の形で取り出す（移し替えの前でも表示できるように） */
+export function legacyPrivate(e: object): EmployeePrivate | null {
+  const o = e as Partial<EmployeePrivate>;
+  if (!o.contact && !o.commute && !o.bankAccount) return null;
+  const empty = emptyPrivate();
+  return {
+    contact: o.contact ?? empty.contact,
+    commute: o.commute ?? empty.commute,
+    bankAccount: o.bankAccount ?? empty.bankAccount,
+  };
 }
 
 export function emptyLeave(kind: LeaveKind, start: string): Leave {

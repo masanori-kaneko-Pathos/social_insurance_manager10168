@@ -1,13 +1,13 @@
 /**
- * 従業員の登録・編集画面の値（文字とチェック）⇔ 保存する形（EmployeeBasicInput）
+ * 従業員の登録・編集画面の値（文字とチェック）⇔ 保存する形（EmployeeFormInput。保存のときに鍵付きの文書と分ける）
  * Angular・Firebase に依存しない純粋な関数。画面は文字で持ち、「保存する」で変換する
  */
 import {
   AccountType,
   AcquisitionType,
   AgreementCovers,
-  Employee,
-  EmployeeBasicInput,
+  EmployeeFormInput,
+  EmployeeFull,
   EnrollmentDoc,
   FilingName,
   ForeignDoc,
@@ -221,7 +221,7 @@ function enrollmentForm(e: EnrollmentDoc): EnrollmentForm {
   };
 }
 
-export function toEmployeeForm(e: Employee): EmployeeFormValue {
+export function toEmployeeForm(e: EmployeeFull): EmployeeFormValue {
   const f = e.foreign;
   const c = f?.certificate ?? null;
   return {
@@ -359,7 +359,7 @@ export function filingNameOf(
   return { lastName: kana.lastNameKana, firstName: kana.firstNameKana };
 }
 
-export function fromEmployeeForm(v: EmployeeFormValue): EmployeeBasicInput {
+export function fromEmployeeForm(v: EmployeeFormValue): EmployeeFormInput {
   const foreign = v.hasForeign ? foreignDoc(v.foreign) : null;
   const kana = { lastNameKana: v.lastNameKana.trim(), firstNameKana: v.firstNameKana.trim() };
   const name = foreign

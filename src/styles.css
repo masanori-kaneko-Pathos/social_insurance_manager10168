@@ -32,7 +32,7 @@
   --space-xl: 32px;
 
   /* 文字 */
-  --font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", Meiryo, system-ui, sans-serif;
+  --font-family: 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic UI', Meiryo, system-ui, sans-serif;
   --font-xs: 12px;
   --font-sm: 14px;
   --font-md: 16px;
@@ -160,7 +160,8 @@ input[type='password']::-ms-clear {
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background-color var(--dur-fast) var(--ease-out),
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
     transform var(--dur-fast) var(--ease-out);
 }
 
@@ -219,4 +220,146 @@ a:where(:link, :visited):hover {
   font-weight: 400;
   font-variant-numeric: tabular-nums;
   color: var(--color-text-sub);
+}
+
+/* ===== タブ（GitHub 風。従業員のページ） ===== */
+.tabs {
+  display: flex;
+  gap: var(--space-xs);
+  margin: 0 0 var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+}
+
+.tabs a {
+  padding: var(--space-sm) var(--space-md);
+  color: var(--color-text-sub);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tabs a:hover {
+  color: var(--color-text);
+}
+
+.tabs a.active {
+  color: var(--color-text);
+  font-weight: 600;
+  border-bottom-color: var(--color-primary);
+}
+
+/* ===== 小さなメニュー（<details> で開く。「＋登録」など） ===== */
+.add-menu {
+  position: relative;
+}
+
+.add-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.add-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.add-menu .menu {
+  position: absolute;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  margin-top: var(--space-xs);
+  padding: var(--space-xs);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popover);
+}
+
+.add-menu .menu button {
+  padding: var(--space-sm);
+  font: inherit;
+  text-align: left;
+  color: var(--color-text);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.add-menu .menu button:hover {
+  background: var(--color-bg);
+}
+
+/* ===== ベルの小窓の1行（管理者・マイページ共通） ===== */
+.bell-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-sm);
+  font: inherit;
+  text-align: left;
+  color: var(--color-text);
+  text-decoration: none;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.bell-item:hover {
+  background: var(--color-bg);
+}
+
+.bell-item.unread {
+  font-weight: 600;
+}
+
+.bell-sub {
+  flex: none;
+  font-size: var(--font-xs);
+  font-weight: 400;
+  color: var(--color-text-sub);
+}
+
+/* ===== 保存の帯（長いフォームの下に固定。スクロールしても保存ボタンが見える） ===== */
+.save-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  margin-top: var(--space-lg);
+  padding: var(--space-sm) 0;
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border);
+}
+
+/* ===== 短い知らせ（「保存しました」） ===== */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-lg);
+  z-index: 50;
+  padding: var(--space-sm) var(--space-lg);
+  color: var(--color-success-text);
+  background: var(--color-success-bg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popover);
+  transform: translateX(-50%);
+  animation: toast-in var(--dur-base) var(--ease-out);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%);
+  }
 }

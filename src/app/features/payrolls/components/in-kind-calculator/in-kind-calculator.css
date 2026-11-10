@@ -126,3 +126,14 @@ fieldset {
   background: var(--color-bg);
   border-radius: var(--radius-sm);
 }
+
+.pref-now {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.change-btn {
+  padding: 2px var(--space-sm);
+  font-size: var(--font-xs);
+}

@@ -24,6 +24,7 @@ import {
 import { addDays, todayLocal } from '../../../../shared/utils/date';
 import { toHalfWidth } from '../../../../shared/utils/text';
 import { OfficeContext } from '../../../office/office-context.service';
+import { ToastService } from '../../../../shared/services/toast.service';
 import { premiumOf } from '../../../office/office-settings';
 import { EmployeeService } from '../../employee.service';
 import { AgreementService } from '../../agreement.service';
@@ -40,6 +41,7 @@ import {
   PersonNameForm,
   toEmployeeForm,
 } from '../../logic/employee-form-model';
+import { EmployeeStep, nextStep, prevStep, stepBlocked, stepsFor, STEP_CONTROLS } from '../../logic/employee-steps';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 const NOT_BLANK = Validators.pattern(/\S/);
@@ -133,6 +135,7 @@ export class EmployeeForm {
   private readonly router = inject(Router);
   private readonly employees = inject(EmployeeService);
   private readonly agreementsApi = inject(AgreementService);
+  private readonly toast = inject(ToastService);
   readonly context = inject(OfficeContext);
   /** 社会保障協定のマスタ（読めなければ空のまま。照らし合わせが出ないだけ） */
   readonly agreements = signal<AgreementDoc[]>([]);
@@ -142,6 +145,17 @@ export class EmployeeForm {
     const c = this.cert();
     return c ? (this.agreements().find((a) => a.country === c.country) ?? null) : null;
   });
+  /** 適用証明書の国の選択肢：協定のある国（国名の順） */
+  readonly agreementOptions = computed(() =>
+    [...this.agreements()].sort((a, b) => a.name.localeCompare(b.name, 'ja')),
+  );
+
+  /** 前に打ち込んだ、協定の一覧にない国（選択肢に残して、消えないようにする） */
+  unlistedCountry(): string | null {
+    const c = this.form.controls.foreign.controls.certCountry.value.trim().toUpperCase();
+    return c && !this.agreements().some((a) => a.country === c) ? c : null;
+  }
+
   readonly certWarnings = computed(() =>
     this.agreements().length === 0 ? [] : certificateWarnings(this.cert(), this.agreements(), todayLocal()),
   );
@@ -267,6 +281,50 @@ export class EmployeeForm {
 
   readonly form = this.build(emptyEmployeeForm());
 
+  // ===== 段階式の登録（新規だけ。編集は1ページのまま） =====
+  /** 外国籍を選んでいるか（段の並びが変わる） */
+  private readonly foreignOn = signal(false);
+  readonly steps = computed(() => stepsFor(this.foreignOn()));
+  readonly step = signal<EmployeeStep>('basic');
+
+  /** そのまとまりを出すか：編集と確認の段では全部、ほかはその段のまとまりだけ */
+  show(s: EmployeeStep): boolean {
+    return this.isEdit || this.step() === 'confirm' || this.step() === s;
+  }
+
+  /** 次へ：この段の欄だけ確かめる（ほかの段の欄はまだ触っていないので、赤くしない） */
+  next(): void {
+    const s = this.step();
+    if (s !== 'confirm') {
+      for (const path of STEP_CONTROLS[s]) this.form.get(path)?.markAllAsTouched();
+    }
+    if (stepBlocked(s, errorPaths(this.form), Object.keys(this.form.errors ?? {}))) {
+      this.errorKey.set('employee.error.stepInvalid');
+      setTimeout(() =>
+        document.querySelector('.is-invalid, .field-error')?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+      );
+      return;
+    }
+    this.errorKey.set(null);
+    this.goTo(nextStep(this.steps(), s));
+  }
+
+  back(): void {
+    this.errorKey.set(null);
+    this.goTo(prevStep(this.steps(), this.step()));
+  }
+
+  /** 段を移る（上の段の印から戻るときも）。画面のいちばん上から見せる */
+  goTo(s: EmployeeStep): void {
+    this.step.set(s);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /** 段の印を押せるか（今より前の段だけ。先の段は「次へ」で確かめてから進む） */
+  canGoTo(s: EmployeeStep): boolean {
+    return this.steps().indexOf(s) < this.steps().indexOf(this.step());
+  }
+
   readonly loading = signal(this.isEdit);
   readonly submitting = signal(false);
   readonly errorKey = signal<string | null>(null);
@@ -284,6 +342,7 @@ export class EmployeeForm {
 
   constructor() {
     const c = this.form.controls;
+    c.hasForeign.valueChanges.subscribe((v) => this.foreignOn.set(v));
     c.hireDate.valueChanges.subscribe((hire) => this.syncAcquired(hire));
     c.retireDate.valueChanges.subscribe((retire) => this.syncLost(retire ? addDays(retire, 1) : ''));
     // 退職の理由が「死亡」なら、喪失の原因も「死亡」に（空か「退職等」のときだけ。手で選んだものは変えない）
@@ -350,7 +409,7 @@ export class EmployeeForm {
     const officeId = this.context.current()?.id;
     if (!officeId || !this.employeeId) return;
     try {
-      const e = await this.employees.get(officeId, this.employeeId);
+      const e = await this.employees.getFull(officeId, this.employeeId);
       if (!e) {
         this.errorKey.set('employee.error.notFound');
         return;
@@ -388,6 +447,11 @@ export class EmployeeForm {
   }
 
   async submit(): Promise<void> {
+    // 新規は確認の段でだけ保存する（途中の段で Enter を押したら「次へ」と同じ）
+    if (!this.isEdit && this.step() !== 'confirm') {
+      this.next();
+      return;
+    }
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       // 何も起きないように見えないよう、ボタンの横に知らせて、最初の赤い欄まで動かす
@@ -413,6 +477,7 @@ export class EmployeeForm {
       } else {
         id = await this.employees.create(officeId, input);
       }
+      this.toast.show(this.isEdit ? 'common.saved' : 'employee.form.created');
       await this.router.navigate(['/o', officeId, 'employees', id]);
     } catch (err) {
       console.error(err);
@@ -429,6 +494,17 @@ function invalidPaths(c: AbstractControl, path = ''): string[] {
   if (c.errors) out.push(`${path || '(全体)'}: ${Object.keys(c.errors).join(',')}`);
   if (c instanceof FormGroup) {
     for (const [k, child] of Object.entries(c.controls)) out.push(...invalidPaths(child, path ? `${path}.${k}` : k));
+  }
+  return out;
+}
+
+/** エラーのある欄の場所だけ（まとまり全体のエラーは除く。段の判断に使う） */
+function errorPaths(c: AbstractControl, path = ''): string[] {
+  const out: string[] = [];
+  if (c instanceof FormGroup) {
+    for (const [k, child] of Object.entries(c.controls)) out.push(...errorPaths(child, path ? `${path}.${k}` : k));
+  } else if (c.errors && path) {
+    out.push(path);
   }
   return out;
 }

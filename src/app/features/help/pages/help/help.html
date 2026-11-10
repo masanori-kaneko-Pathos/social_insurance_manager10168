@@ -1,0 +1,21 @@
+<h1>{{ 'help.title' | transloco }}</h1>
+
+<div class="search">
+  <input
+    class="input"
+    type="search"
+    [value]="query()"
+    (input)="search($any($event.target).value)"
+    [attr.aria-label]="'help.search' | transloco"
+    [placeholder]="'help.search' | transloco"
+  />
+</div>
+
+@for (t of topics(); track t) {
+  <section class="card topic">
+    <h2>{{ 'help.topic.' + t + '.title' | transloco }}</h2>
+    <p>{{ 'help.topic.' + t + '.body' | transloco }}</p>
+  </section>
+} @empty {
+  <p class="muted">{{ 'help.empty' | transloco: { q: query() } }}</p>
+}
