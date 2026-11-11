@@ -154,6 +154,12 @@
                           @case ('lumpSum') {
                             {{ 'dashboard.todo.text.lumpSum' | transloco: it.extra!.params }}
                           }
+                          @case ('myNumberCheck') {
+                            {{ 'dashboard.todo.text.myNumberCheck' | transloco }}
+                          }
+                          @case ('myNumberDispose') {
+                            {{ 'dashboard.todo.text.myNumberDispose' | transloco: it.extra!.params }}
+                          }
                           @case ('specificOffice') {
                             {{ 'dashboard.todo.text.specificOffice' | transloco: it.extra!.params }}
                             {{ 'dashboard.todo.text.specificOfficeHow.' + it.extra!.params['how'] | transloco }}
@@ -183,6 +189,12 @@
                       }
                       <p class="detail-links">
                         @switch (it.kind) {
+                          @case ('myNumberCheck') {
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'person' }">{{ 'dashboard.todo.toMyNumber' | transloco }} →</a>
+                          }
+                          @case ('myNumberDispose') {
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'person' }">{{ 'dashboard.todo.toMyNumber' | transloco }} →</a>
+                          }
                           @case ('noContract') {
                             <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'employment' }">{{ 'dashboard.todo.toContract' | transloco }} →</a>
                           }

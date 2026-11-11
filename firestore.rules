@@ -897,6 +897,18 @@ service cloud.firestore {
         allow delete: if isAdmin(officeId);
       }
 
+      // ----- マイナンバー（11/11）。書き込みは関数だけ（siMyNumber*）。暗号化した番号（myNumberVault）は match を書かない ＝ 誰も読めない -----
+      // 状態の一覧（people.{従業員ID}。番号は入っていない）
+      match /myNumberIndex/{docId} {
+        allow read: if isAdmin(officeId);
+        allow write: if false;
+      }
+      // アクセス記録（誰が・誰の・いつ・何をしたか）
+      match /myNumberLogs/{logId} {
+        allow read: if isAdmin(officeId);
+        allow write: if false;
+      }
+
       // ----- 「やること」の確認済み（ID ＝ カードの鍵） -----
       match /todoDismissals/{key} {
         allow read: if isMember(officeId);

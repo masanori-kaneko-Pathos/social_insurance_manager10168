@@ -35,7 +35,9 @@ import {
 } from '../../logic/todo-board';
 import { daysLeft, filterRows, kindsIn, RowView, TABLE_LIMIT, toRows } from '../../logic/todo-table';
 import { personTodos } from '../../logic/todos';
-import { lumpSumTodo, residenceTodo, specificOfficeTodo, workPermitTodo } from '../../logic/extra-todos';
+import { lumpSumTodo, myNumberTodos, residenceTodo, specificOfficeTodo, workPermitTodo } from '../../logic/extra-todos';
+import { MyNumberEntry } from '../../../../core/models/my-number';
+import { MyNumberService } from '../../../my-number/my-number.service';
 import { TodoBadgeService } from '../../todo-badge.service';
 import { TodoService } from '../../todo.service';
 
@@ -71,6 +73,7 @@ export class Dashboard {
   private readonly contractsApi = inject(ContractService);
   private readonly criteriaApi = inject(CriteriaService);
   private readonly requestsApi = inject(RequestService);
+  private readonly myNumbersApi = inject(MyNumberService);
   private readonly api = inject(TodoService);
   private readonly badge = inject(TodoBadgeService);
 
@@ -101,6 +104,9 @@ export class Dashboard {
   readonly openRow = signal<string | null>(null);
   readonly open = signal<OpenAction | null>(null);
   readonly busyKey = signal<string | null>(null);
+
+  /** マイナンバーの状態（管理者だけ。読めなければ空のまま） */
+  private readonly myNumberIndex = signal<ReadonlyMap<string, MyNumberEntry>>(new Map());
 
   private readonly byId = computed(() => new Map(this.employees().map((e) => [e.id, e])));
 
@@ -151,6 +157,7 @@ export class Dashboard {
     const items: BoardItem[] = [
       ...todos.map(todoItem),
       ...extras.map(extraItem),
+      ...myNumberTodos(this.employees(), this.myNumberIndex(), this.today).map(extraItem),
       ...(specific ? [extraItem(specific)] : []),
       ...ageItems(this.employees(), this.thisMonth, shiftMonth(this.thisMonth, 1), this.today),
       ...this.officeIssues().map(officeItem),
@@ -251,6 +258,11 @@ export class Dashboard {
       this.loading.set(false);
     }
     if (this.context.isAdmin()) {
+      // マイナンバーの状態（チェック待ち・廃棄の時期）。1回の読み取りで全員分
+      this.myNumbersApi
+        .index(officeId)
+        .then((m) => this.myNumberIndex.set(m))
+        .catch((err) => console.error(err));
       this.requestsApi
         .countSubmitted(officeId)
         .then((n) => {

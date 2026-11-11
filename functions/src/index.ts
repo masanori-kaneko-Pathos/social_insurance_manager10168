@@ -224,3 +224,6 @@ export const siDeleteAccount = onCall({ region: REGION }, async (req) => {
   await getAuth().deleteUser(uid);
   return { ok: true };
 });
+
+// マイナンバー（暗号化して保管。読み書きは mynumber.ts の関数だけ）
+export { siMyNumberAdmin, siMyNumberExport, siMyNumberImport, siMyNumberSubmit, siMyNumberView } from './mynumber.js';

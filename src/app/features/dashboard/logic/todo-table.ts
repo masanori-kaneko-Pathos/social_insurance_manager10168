@@ -45,7 +45,11 @@ export function deadlineOf(it: BoardItem): { deadline: DateStr | null; note: Dea
       return it.date ? { deadline: filingDeadline(it.date), note: null } : { deadline: null, note: 'asap' };
     case 'lose':
     case 'workPermit':
+    case 'myNumberCheck':
       return { deadline: null, note: 'asap' };
+    case 'myNumberDispose':
+      // 保存期間が過ぎた日（ここから「できるだけ速やかに」廃棄）
+      return { deadline: it.date, note: null };
     case 'residence':
       // 届の期限ではなく、在留期間の満了日（更新の申請は満了日まで）
       return { deadline: it.date, note: null };

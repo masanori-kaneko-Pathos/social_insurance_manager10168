@@ -44,6 +44,7 @@ export const BOARD_ORDER: readonly BoardKind[] = [
   'lose',
   'agreement',
   'workPermit',
+  'myNumberCheck',
   'requests',
   'upcoming',
   'categoryChange',
@@ -52,6 +53,7 @@ export const BOARD_ORDER: readonly BoardKind[] = [
   'age',
   'lumpSum',
   'specificOffice',
+  'myNumberDispose',
   'noContract',
   'office',
 ];
@@ -61,6 +63,7 @@ export const SECTION_OF: Record<BoardKind, Section> = {
   lose: 'now',
   agreement: 'now',
   workPermit: 'now',
+  myNumberCheck: 'now',
   requests: 'now',
   upcoming: 'soon',
   categoryChange: 'soon',
@@ -69,6 +72,7 @@ export const SECTION_OF: Record<BoardKind, Section> = {
   residence: 'soon',
   lumpSum: 'soon',
   specificOffice: 'soon',
+  myNumberDispose: 'soon',
   noContract: 'missing',
   office: 'missing',
 };
@@ -83,6 +87,7 @@ export const DISMISSABLE: ReadonlySet<BoardKind> = new Set<BoardKind>([
   'workPermit', // 長期休業期間（1日8時間まで）など、確かめたうえで続ける場合
   'lumpSum', // 本人に案内したら消す
   'specificOffice', // 事業所の設定を確かめたら消す
+  'myNumberDispose', // 「完結の日」を通知の日と考えて待つ場合など。廃棄すれば、そもそも出なくなる
 ]);
 
 /** 1つのまとまりで最初に出す件数 */

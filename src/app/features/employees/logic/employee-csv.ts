@@ -23,6 +23,7 @@ import {
   ValueKind,
 } from '../../../shared/import/column-map';
 import { toHalfWidth } from '../../../shared/utils/text';
+import { myNumberProblem, normalizeMyNumber } from '../../my-number/logic/my-number';
 import { gradeOf, pickGradeTable } from '../../rates/logic/grade';
 import { classify, Classification, ClassifyCriteria, ClassifyOffice, isInsured } from './classify';
 import { contractErrors, emptyContractForm, fromContractForm } from './contract-form-model';
@@ -41,6 +42,7 @@ export const EMPLOYEE_CSV_HEADERS = {
   sex: '性別',
   basicPensionNumber: '基礎年金番号',
   insuredNumber: '被保険者整理番号',
+  myNumber: 'マイナンバー',
   hireDate: '入社日',
   retireDate: '退職日',
   retireReason: '退職の理由',
@@ -191,6 +193,7 @@ export interface EmployeeCsvRow {
     pensionOverride: boolean | null;
     monthlyAmount: number | null;
     remunerationFrom: string | null;
+    myNumber: string | null;
   } | null;
 }
 
@@ -295,6 +298,8 @@ function readRow(line: number, v: Partial<Record<EmployeeColumn, string>>): Empl
   if (get('basicPensionNumber') && !PATTERNS.basicPensionNumber.test(toHalfWidth(get('basicPensionNumber')))) {
     err('basicPensionNumber', 'pensionNumber');
   }
+  // マイナンバー（任意）：12桁・チェックデジット。取り込んだあと関数で暗号化して保管（従業員の文書には書かない）
+  if (myNumberProblem(get('myNumber'))) err('myNumber', 'myNumber');
 
   const healthOverride = yesNo(get('healthEnrolled'));
   const pensionOverride = yesNo(get('pensionEnrolled'));
@@ -428,6 +433,7 @@ function readRow(line: number, v: Partial<Record<EmployeeColumn, string>>): Empl
       pensionOverride: pensionOverride ?? null,
       monthlyAmount: monthlyAmount ?? null,
       remunerationFrom: remunerationFrom || null,
+      myNumber: normalizeMyNumber(get('myNumber')) || null,
     },
   };
 }
@@ -474,6 +480,8 @@ export interface ImportItem {
   remuneration: RemunerationInput | null;
   classification: Classification;
   warnings: ImportWarning[];
+  /** マイナンバー（任意。従業員の文書には書かず、登録のあと関数へ渡す） */
+  myNumber: string | null;
 }
 
 export interface ImportPlan {
@@ -557,6 +565,7 @@ export function planImport(rows: EmployeeCsvRow[], ctx: ImportContext): ImportPl
       remuneration,
       classification,
       warnings,
+      myNumber: p.myNumber,
     });
   }
   return { items, errors };
@@ -600,6 +609,7 @@ const W: Partial<Record<EmployeeImportKey, readonly string[]>> = {
   birthDate: ['誕生日', 'date of birth', 'birth date', 'birthday'],
   sex: ['男女', '男女コード', '男女区分', '戸籍上の性別', '性別コード', 'gender', 'sex'],
   basicPensionNumber: ['basic pension number'],
+  myNumber: ['個人番号', 'マイナンバー（個人番号）', '個人番号（マイナンバー）', 'my number', 'individual number'],
   insuredNumber: ['健康保険の被保険者整理番号', '健康保険被保険者整理番号', '厚生年金保険の被保険者整理番号'],
   hireDate: ['入社年月日', '雇用開始日', '採用日', '入社年月', 'hire date'],
   retireDate: ['退職年月日', '退社日', '離職日', '退職年月'],
@@ -626,7 +636,7 @@ const KIND: Partial<Record<EmployeeImportKey, ValueKind>> = {
   birthDate: 'date', hireDate: 'date', retireDate: 'date', optInDate: 'date', optOutDate: 'date', periodEnd: 'date',
   leave1Start: 'date', leave1End: 'date', leave1Birth: 'date', leave2Start: 'date', leave2End: 'date', leave2Birth: 'date',
   remunerationFrom: 'month',
-  basicPensionNumber: 'digits', insuredNumber: 'digits',
+  basicPensionNumber: 'digits', insuredNumber: 'digits', myNumber: 'digits',
   monthlyAmount: 'number', hourlyWage: 'number', dailyWage: 'number', scheduledWage: 'number',
   expectedCash: 'number', expectedInKind: 'number', dailyMinutes: 'number',
   monthlyDays: 'days', weeklyDays: 'number',

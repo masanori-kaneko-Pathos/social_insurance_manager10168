@@ -1,0 +1,184 @@
+@if (context.isAdmin()) {
+  <section class="card">
+    <div class="head">
+      <h2>{{ 'myNumber.title' | transloco }}</h2>
+      @if (!loading()) {
+        <span class="status s-{{ status() ?? 'none' }}">{{ 'myNumber.status.' + (status() ?? 'none') | transloco }}</span>
+      }
+    </div>
+
+    @if (loading()) {
+      <p class="muted">{{ 'common.loading' | transloco }}</p>
+    } @else {
+      @if (entry(); as en) {
+        <dl class="info">
+          @if (en.docType) {
+            <div>
+              <dt>{{ 'myNumber.docType.label' | transloco }}</dt>
+              <dd>{{ 'myNumber.docType.' + en.docType | transloco }}</dd>
+            </div>
+          }
+          @if (en.note) {
+            <div>
+              <dt>{{ (en.status === 'refused' ? 'myNumber.note.refused' : 'myNumber.note.returned') | transloco }}</dt>
+              <dd>{{ en.note }}</dd>
+            </div>
+          }
+          @if (en.status === 'submitted') {
+            <div>
+              <dt></dt>
+              <dd class="muted">{{ 'myNumber.submittedHint' | transloco }}</dd>
+            </div>
+          }
+        </dl>
+      } @else {
+        <p class="muted">{{ 'myNumber.noneHint' | transloco }}</p>
+      }
+
+      @if (disposal(); as d) {
+        <p class="hint">{{ 'myNumber.disposalHint' | transloco: { date: d } }}</p>
+      }
+
+      @if (shown(); as n) {
+        <p class="shown">
+          <span class="mono">{{ format(n) }}</span>
+          <button type="button" class="btn" (click)="hide()">{{ 'myNumber.hide' | transloco }}</button>
+        </p>
+      }
+
+      <!-- 操作 -->
+      <p class="actions">
+        @for (a of actions(); track a) {
+          @switch (a) {
+            @case ('set') {
+              <button type="button" class="btn" [class.btn-primary]="!status()" [disabled]="busy()" (click)="open('set')">
+                {{ (canView() ? 'myNumber.action.change' : 'myNumber.action.set') | transloco }}
+              </button>
+            }
+            @case ('return') {
+              <button type="button" class="btn" [disabled]="busy()" (click)="open('return')">{{ 'myNumber.action.return' | transloco }}</button>
+            }
+            @case ('refuse') {
+              <button type="button" class="btn" [disabled]="busy()" (click)="open('refuse')">{{ 'myNumber.action.refuse' | transloco }}</button>
+            }
+            @case ('dispose') {
+              <button type="button" class="btn danger" [disabled]="busy()" (click)="open('dispose')">{{ 'myNumber.action.dispose' | transloco }}</button>
+            }
+            @case ('approve') {
+              <button type="button" class="btn btn-solid" [disabled]="busy() || !shown()" (click)="quick('approve')"
+                      [title]="'myNumber.approveHint' | transloco">
+                {{ 'myNumber.action.approve' | transloco }}
+              </button>
+            }
+            @default {
+              <button type="button" class="btn" [disabled]="busy()" (click)="quick(a)">{{ 'myNumber.action.' + a | transloco }}</button>
+            }
+          }
+        }
+        @if (canView() && !shown()) {
+          <button type="button" class="btn" [disabled]="busy()" (click)="open('view')">{{ 'myNumber.action.view' | transloco }}</button>
+        }
+        <button type="button" class="link" (click)="toggleLogs()">
+          {{ (logs() ? 'myNumber.logs.hide' : 'myNumber.logs.show') | transloco }}
+        </button>
+      </p>
+      @if (status() === 'submitted' && !shown()) {
+        <p class="hint">{{ 'myNumber.approveHint' | transloco }}</p>
+      }
+
+      @if (errorKey(); as e) {
+        <p class="field-error" role="alert">{{ e | transloco }}</p>
+      }
+      @if (doneKey(); as k) {
+        <p class="done" role="status">{{ k | transloco }}</p>
+      }
+
+      <!-- 入力 -->
+      @switch (mode()) {
+        @case ('set') {
+          <form class="box" (submit)="$event.preventDefault(); saveNumber()">
+            <div class="row">
+              <label class="field">
+                <span>{{ 'myNumber.field.number' | transloco }}</span>
+                <input class="input mono" inputmode="numeric" autocomplete="off" maxlength="16"
+                       [value]="numberText()" (input)="numberText.set(input($event))"
+                       [class.is-invalid]="numberProblem()" />
+                @if (numberProblem(); as p) {
+                  <span class="field-error">{{ 'myNumber.problem.' + p | transloco }}</span>
+                }
+              </label>
+              <label class="field">
+                <span>{{ 'myNumber.docType.label' | transloco }}</span>
+                <select class="input" [value]="docType()" (change)="docType.set($any(input($event)))">
+                  @for (t of docTypes; track t) {
+                    <option [value]="t" [selected]="docType() === t">{{ 'myNumber.docType.' + t | transloco }}</option>
+                  }
+                </select>
+              </label>
+            </div>
+            <p class="hint">{{ 'myNumber.docType.hint' | transloco }}</p>
+            <button type="submit" class="btn btn-solid" [disabled]="busy() || !numberText() || numberProblem()">
+              {{ 'common.save' | transloco }}
+            </button>
+            <button type="button" class="btn" (click)="open(null)">{{ 'common.cancel' | transloco }}</button>
+          </form>
+        }
+        @case ('return') {
+          <form class="box" (submit)="$event.preventDefault(); saveNote('return')">
+            <label class="field">
+              <span>{{ 'myNumber.note.returned' | transloco }}</span>
+              <input class="input" maxlength="200" [value]="note()" (input)="note.set(input($event))" />
+            </label>
+            <button type="submit" class="btn btn-solid" [disabled]="busy() || !note().trim()">{{ 'myNumber.action.return' | transloco }}</button>
+            <button type="button" class="btn" (click)="open(null)">{{ 'common.cancel' | transloco }}</button>
+          </form>
+        }
+        @case ('refuse') {
+          <form class="box" (submit)="$event.preventDefault(); saveNote('refuse')">
+            <label class="field">
+              <span>{{ 'myNumber.note.refused' | transloco }}</span>
+              <input class="input" maxlength="200" [value]="note()" (input)="note.set(input($event))" />
+            </label>
+            <p class="hint">{{ 'myNumber.refuseHint' | transloco }}</p>
+            <button type="submit" class="btn btn-solid" [disabled]="busy() || !note().trim()">{{ 'myNumber.action.refuse' | transloco }}</button>
+            <button type="button" class="btn" (click)="open(null)">{{ 'common.cancel' | transloco }}</button>
+          </form>
+        }
+        @case ('dispose') {
+          <div class="box">
+            <p>{{ 'myNumber.disposeConfirm' | transloco }}</p>
+            <button type="button" class="btn danger" [disabled]="busy()" (click)="dispose()">{{ 'myNumber.action.dispose' | transloco }}</button>
+            <button type="button" class="btn" (click)="open(null)">{{ 'common.cancel' | transloco }}</button>
+          </div>
+        }
+        @case ('view') {
+          <app-password-gate action="myNumber.action.view" (confirmed)="reveal()" (cancelled)="open(null)" />
+        }
+      }
+
+      <!-- アクセス記録 -->
+      @if (logs(); as list) {
+        <table class="logs">
+          <thead>
+            <tr>
+              <th>{{ 'myNumber.logs.at' | transloco }}</th>
+              <th>{{ 'myNumber.logs.action' | transloco }}</th>
+              <th>{{ 'myNumber.logs.by' | transloco }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of list; track l.id) {
+              <tr>
+                <td class="mono">{{ when(l.at) }}</td>
+                <td>{{ 'myNumber.log.' + l.action | transloco }}</td>
+                <td>{{ l.name || ('myNumber.logs.noName' | transloco) }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="3" class="muted">{{ 'myNumber.logs.empty' | transloco }}</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+  </section>
+}

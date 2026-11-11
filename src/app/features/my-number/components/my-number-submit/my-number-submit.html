@@ -1,0 +1,48 @@
+@if (entry(); as en) {
+  @if (en.status !== 'refused') {
+    <section class="card">
+      <div class="head">
+        <h2>{{ 'myNumber.title' | transloco }}</h2>
+        <span class="status s-{{ en.status }}">{{ 'myNumber.me.status.' + en.status | transloco }}</span>
+      </div>
+
+      @if (canSubmit()) {
+        <p>{{ 'myNumber.me.lead' | transloco }}</p>
+        @if (en.status === 'returned' && en.note) {
+          <p class="field-error">{{ 'myNumber.me.returned' | transloco: { note: en.note } }}</p>
+        }
+        <form class="box" (submit)="$event.preventDefault(); submit()">
+          <div class="row">
+            <label class="field">
+              <span>{{ 'myNumber.field.number' | transloco }}</span>
+              <input class="input mono" inputmode="numeric" autocomplete="off" maxlength="16"
+                     [value]="numberText()" (input)="numberText.set(input($event))" [class.is-invalid]="numberProblem()" />
+              @if (numberProblem(); as p) {
+                <span class="field-error">{{ 'myNumber.problem.' + p | transloco }}</span>
+              }
+            </label>
+            <label class="field">
+              <span>{{ 'myNumber.me.docType' | transloco }}</span>
+              <select class="input" (change)="docType.set($any(input($event)))">
+                @for (t of docTypes; track t) {
+                  <option [value]="t" [selected]="docType() === t">{{ 'myNumber.docType.' + t | transloco }}</option>
+                }
+              </select>
+            </label>
+          </div>
+          <p class="hint">{{ 'myNumber.me.docHint' | transloco }}</p>
+          <button type="submit" class="btn btn-solid" [disabled]="busy() || !numberText() || numberProblem()">
+            {{ 'myNumber.me.submit' | transloco }}
+          </button>
+          @if (errorKey(); as e) {
+            <p class="field-error" role="alert">{{ e | transloco }}</p>
+          }
+        </form>
+      } @else if (en.status === 'submitted') {
+        <p class="muted">{{ (done() ? 'myNumber.me.thanks' : 'myNumber.me.waiting') | transloco }}</p>
+      } @else {
+        <p class="muted">{{ 'myNumber.me.registered' | transloco }}</p>
+      }
+    </section>
+  }
+}

@@ -401,6 +401,8 @@
         <app-dependent-card [employee]="e" (changed)="reloadEmployee()" />
         <!-- マイページ（招待）と、依頼・申請 -->
         <app-my-page-card [employee]="e" />
+        <!-- マイナンバー（管理者だけ。番号は関数でだけ扱う） -->
+        <app-my-number-card [employee]="e" />
       }
 
       @case ('history') {

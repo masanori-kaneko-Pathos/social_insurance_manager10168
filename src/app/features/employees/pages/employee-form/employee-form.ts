@@ -58,6 +58,9 @@ import { LanguageService } from '../../../../core/i18n/language.service';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { EnterNext } from '../../../../shared/directives/enter-next';
+import { MY_NUMBER_DOC_TYPES, MyNumberDocType } from '../../../../core/models/my-number';
+import { myNumberProblem, normalizeMyNumber } from '../../../my-number/logic/my-number';
+import { MyNumberService } from '../../../my-number/my-number.service';
 const NOT_BLANK = Validators.pattern(/\S/);
 
 /** 全角を半角にしてから形式を見る（空欄は通す） */
@@ -152,6 +155,7 @@ export class EmployeeForm {
   private readonly employees = inject(EmployeeService);
   private readonly agreementsApi = inject(AgreementService);
   private readonly toast = inject(ToastService);
+  private readonly myNumbers = inject(MyNumberService);
   private readonly contractsApi = inject(ContractService);
   private readonly criteriaApi = inject(CriteriaService);
   readonly context = inject(OfficeContext);
@@ -330,6 +334,12 @@ export class EmployeeForm {
   readonly contractForm = this.fb.group(emptyContractForm(''));
   /** 「契約はあとで入れる」（役員・契約書がまだない人など） */
   readonly contractLater = signal(false);
+
+  // ===== マイナンバー（新規だけ・任意）。フォームには入れない（従業員の文書に書かないため）。登録のあと関数で暗号化して保管 =====
+  readonly myNumberDocTypes = MY_NUMBER_DOC_TYPES;
+  readonly myNumberText = signal('');
+  readonly myNumberDoc = signal<MyNumberDocType>('card');
+  readonly myNumberError = computed(() => myNumberProblem(this.myNumberText()));
   /** 「次へ」を押したあとだけ契約のエラーを見せる */
   readonly contractSubmitted = signal(false);
   private lastAutoContractFrom = '';
@@ -368,6 +378,10 @@ export class EmployeeForm {
     }
     if (s !== 'confirm') {
       for (const path of STEP_CONTROLS[s]) this.form.get(path)?.markAllAsTouched();
+    }
+    if (s === 'employment' && this.myNumberError()) {
+      this.errorKey.set('employee.error.stepInvalid');
+      return;
     }
     if (stepBlocked(s, errorPaths(this.form), Object.keys(this.form.errors ?? {}))) {
       this.errorKey.set('employee.error.stepInvalid');
@@ -621,6 +635,17 @@ export class EmployeeForm {
         id = await this.employees.create(officeId, input);
         // 最初の契約は、従業員を作ったあとに書く（ルールが1回に数える式を増やさないため、別の書き込み）
         // 失敗しても従業員は登録済み。詳細の契約のカードから入れ直してもらう
+        // マイナンバー（入れたときだけ）。失敗しても従業員は登録済み。詳細の「本人の情報」から入れ直してもらう
+        const myNumber = normalizeMyNumber(this.myNumberText());
+        if (myNumber && !this.myNumberError()) {
+          try {
+            await this.myNumbers.act(officeId, id, 'set', { number: myNumber, docType: this.myNumberDoc() });
+            this.myNumberText.set('');
+          } catch (err) {
+            console.error(err);
+            this.toast.show('myNumber.error.afterCreate');
+          }
+        }
         const contract = this.contractLater() ? null : fromContractForm(this.contractForm.getRawValue());
         if (contract) {
           try {

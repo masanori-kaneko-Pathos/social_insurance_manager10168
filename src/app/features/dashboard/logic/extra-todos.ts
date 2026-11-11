@@ -7,12 +7,16 @@
 //   （請求は本人が出国後2年以内に日本年金機構へ。会社の届ではないので「案内した」で消せる）
 // - specificOffice：特定適用事業所でないのに、今月の人数（厚生年金の被保険者の数え方）が基準以上
 //   （直近12か月のうち6か月以上で基準を超えると該当。ここでは今月の人数で知らせる）
+// - myNumberCheck：本人が提出したマイナンバーのチェック待ち（管理者だけ）
+// - myNumberDispose：資格喪失から2年たった人のマイナンバー（廃棄する。ガイドライン「保管制限と廃棄」）
 
 import { addDays, DateStr, monthsBetween, shiftMonth, toYearMonth, YearMonth } from '../../../shared/utils/date';
 import { contractAt } from '../../employees/logic/contract-form-model';
+import type { MyNumberEntry } from '../../../core/models/my-number';
+import { disposalDue, DisposalPerson } from '../../my-number/logic/my-number';
 import { countHeadcount, criteriaAt, HeadcountTarget, isSpecificApplied, WorkSchedule } from '../../employees/logic/coverage';
 
-export type ExtraKind = 'residence' | 'workPermit' | 'lumpSum' | 'specificOffice';
+export type ExtraKind = 'residence' | 'workPermit' | 'lumpSum' | 'specificOffice' | 'myNumberCheck' | 'myNumberDispose';
 
 export interface ExtraTodo {
   kind: ExtraKind;
@@ -109,4 +113,22 @@ export function specificOfficeTodo(
     date: null,
     params: { count, min: sizeMin, how: manual != null ? 'manual' : 'app' },
   };
+}
+
+/** マイナンバー：チェック待ち・廃棄の時期（状態の一覧は管理者だけが読める） */
+export function myNumberTodos(
+  people: readonly DisposalPerson[],
+  index: ReadonlyMap<string, MyNumberEntry>,
+  today: DateStr,
+): ExtraTodo[] {
+  const out: ExtraTodo[] = [];
+  for (const p of people) {
+    const e = index.get(p.id) ?? null;
+    if (e?.status === 'submitted') {
+      out.push({ kind: 'myNumberCheck', employeeId: p.id, date: e.updatedAt.slice(0, 10) || null, params: {} });
+    }
+    const due = disposalDue(p, e, today);
+    if (due) out.push({ kind: 'myNumberDispose', employeeId: p.id, date: due, params: { date: due } });
+  }
+  return out;
 }

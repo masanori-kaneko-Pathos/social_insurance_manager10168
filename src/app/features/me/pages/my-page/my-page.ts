@@ -7,6 +7,7 @@ import { formatPostalCode } from '../../../../shared/utils/text';
 import { PremiumCard } from '../../../premiums/components/premium-card/premium-card';
 import { isAnswerable, sortRequests } from '../../../requests/logic/request-model';
 import { RequestService } from '../../../requests/request.service';
+import { MyNumberSubmit } from '../../../my-number/components/my-number-submit/my-number-submit';
 import { MeHeader } from '../../components/me-header/me-header';
 import { MeContext } from '../../me-context.service';
 import { MeInboxService } from '../../me-inbox.service';
@@ -22,7 +23,7 @@ const PREMIUM_MONTHS = 6;
  */
 @Component({
   selector: 'app-my-page',
-  imports: [MeHeader, PremiumCard, RouterLink, TranslocoPipe],
+  imports: [MeHeader, MyNumberSubmit, PremiumCard, RouterLink, TranslocoPipe],
   templateUrl: './my-page.html',
   styleUrl: '../me.css',
 })

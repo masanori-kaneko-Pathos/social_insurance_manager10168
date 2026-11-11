@@ -540,6 +540,32 @@
               <span class="hint">{{ 'employee.hint.basicPensionNumber' | transloco }}</span>
             }
           </div>
+          <!-- マイナンバー（新規だけ・任意。登録のあと暗号化して保管。変更は詳細の「本人の情報」から） -->
+          @if (!isEdit) {
+            <div class="field">
+              <label for="myNumber">
+                {{ 'myNumber.field.number' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+              </label>
+              <input id="myNumber" class="input" inputmode="numeric" autocomplete="off" maxlength="16"
+                     [value]="myNumberText()" (input)="myNumberText.set($any($event.target).value)"
+                     [class.is-invalid]="myNumberError()" />
+              @if (myNumberError(); as p) {
+                <span class="field-error">{{ 'myNumber.problem.' + p | transloco }}</span>
+              } @else {
+                <span class="hint">{{ 'myNumber.field.formHint' | transloco }}</span>
+              }
+            </div>
+            @if (myNumberText()) {
+              <div class="field">
+                <label for="myNumberDoc">{{ 'myNumber.docType.label' | transloco }}</label>
+                <select id="myNumberDoc" class="input" (change)="myNumberDoc.set($any($event.target).value)">
+                  @for (t of myNumberDocTypes; track t) {
+                    <option [value]="t" [selected]="myNumberDoc() === t">{{ 'myNumber.docType.' + t | transloco }}</option>
+                  }
+                </select>
+              </div>
+            }
+          }
         </div>
       </section>
     }

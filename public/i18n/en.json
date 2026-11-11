@@ -127,7 +127,9 @@
         "residence": "Residence period",
         "workPermit": "Work permit hours",
         "lumpSum": "Lump-sum withdrawal",
-        "specificOffice": "Specified office"
+        "specificOffice": "Specified office",
+        "myNumberCheck": "My Number check",
+        "myNumberDispose": "Dispose of My Number"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. An Application to Enroll in EPI / EHI (資格取得届) is needed.",
@@ -146,7 +148,9 @@
         "specificOfficeHow": {
           "app": "(Counted from the contracts of employees registered in the app.)",
           "manual": "(Uses the company-wide count entered in the office settings.)"
-        }
+        },
+        "myNumberCheck": "The employee submitted a My Number. Show all digits, check them against the ID documents, then register or return it.",
+        "myNumberDispose": "Two years have passed since losing coverage ({{date}}). The retention period for health insurance and pension documents (two years from completion) has ended, so dispose of the My Number. If you count completion from the date of the pension service's notice, wait two years from that date and dismiss this with “Checked”."
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -175,7 +179,8 @@
       "toContractCheck": "Check the contract",
       "errorDismiss": "Could not save. Please try again.",
       "toForeign": "Edit employee (residence)",
-      "toFilings": "Open the acquisition filing list"
+      "toFilings": "Open the acquisition filing list",
+      "toMyNumber": "Go to My Number"
     }
   },
   "nav": {
@@ -1861,7 +1866,7 @@
     "templateHint": "It has a header row and 2 example rows. Edit it in Excel (UTF-8 or Shift_JIS).",
     "template": "Download template",
     "columnsTitle": "How to fill in the columns",
-    "columnsHint": "Required: employee number, last name kana, birth date, hire date, employment type, pay type, weekly hours, monthly days, scheduled wage (and last name for Japanese nationals). Dates as 2026-04-01; hours as 40:00. Values can be the Japanese words or codes (regular, part, hourly, etc.). Leave enrollment blank to decide by category. Basic pension number (10 digits) and insured person number can also be entered.",
+    "columnsHint": "Required: employee number, last name kana, birth date, hire date, employment type, pay type, weekly hours, monthly days, scheduled wage (and last name for Japanese nationals). Dates as 2026-04-01; hours as 40:00. Values can be the Japanese words or codes (regular, part, hourly, etc.). Leave enrollment blank to decide by category. Basic pension number (10 digits), insured person number and My Number (12 digits, stored encrypted) can also be entered.",
     "step2": "2. Choose a file and review",
     "choose": "Choose file",
     "missingColumns": "Required columns are missing:",
@@ -1908,7 +1913,8 @@
       "hireBeforeBirth": "Hire date is before the birth date.",
       "leaveKind": "Cannot read the leave type.",
       "endBeforeStart": "End date is before the start date.",
-      "pensionNumber": "Enter the basic pension number as 10 digits (hyphen optional)."
+      "pensionNumber": "Enter the basic pension number as 10 digits (hyphen optional).",
+      "myNumber": "Enter a 12-digit My Number whose last digit (check digit) matches."
     },
     "import": "Import {{n}}",
     "progress": "Importing… {{done}}/{{total}}",
@@ -2557,6 +2563,10 @@
       "payrollSoft": {
         "title": "Split with payroll software (export and cross-check)",
         "body": "Payroll software calculates the deductions; this app is the master record of grades, rates and filings. On the premium list, “CSV for payroll software” exports employee numbers, standard monthly remuneration, care insurance, the employee share and the pay month for the deduction, for import into the payroll software. “Check deductions” reads the deductions file the payroll software produced; after matching the columns it compares them with the app's employee shares and lists only the people with differences or who could not be matched. Health etc. is compared as health insurance plus care insurance."
+      },
+      "myNumber": {
+        "title": "My Number (register, request, dispose)",
+        "body": "Numbers are stored encrypted and never kept on screen or in Firestore. On the employee's Personal info tab, register the number yourself or ask the employee to provide it (they submit it from My Page; you show all digits, check them against the ID documents, then register or return it). Showing all digits and exporting require your password again, and views, registrations and disposals are logged. Two years after a departed employee loses coverage, a disposal to-do appears. For CSV, use the My Number column in the employee import, or “Import My Numbers (for registered employees)”."
       }
     }
   },
@@ -3008,6 +3018,147 @@
     },
     "error": {
       "read": "Could not read the file"
+    }
+  },
+  "myNumber": {
+    "title": "My Number",
+    "status": {
+      "none": "Not registered",
+      "requested": "Requested",
+      "submitted": "Awaiting check",
+      "returned": "Returned for correction",
+      "registered": "Registered",
+      "refused": "Not provided"
+    },
+    "noneHint": "Not registered yet. Register it yourself, or ask the employee to provide it.",
+    "submittedHint": "The employee has submitted it. Show all digits, check them against the ID documents, then register or return it.",
+    "approveHint": "“Register” becomes available after you show all digits and check them.",
+    "disposalHint": "This person has left. After two years from losing coverage ({{date}}), dispose of the My Number.",
+    "disposeConfirm": "The number is erased and the status returns to not registered. This cannot be undone (the disposal is logged).",
+    "refuseHint": "For example, when the employee declined. Records that it was requested but not received.",
+    "hide": "Hide",
+    "action": {
+      "set": "Register",
+      "change": "Change number",
+      "request": "Ask employee to provide",
+      "cancel": "Cancel request",
+      "approve": "Register",
+      "return": "Return",
+      "refuse": "Not provided",
+      "dispose": "Dispose",
+      "view": "Show all digits"
+    },
+    "done": {
+      "set": "Registered.",
+      "request": "Requested (it arrives in the employee's inbox).",
+      "cancel": "Request cancelled.",
+      "approve": "Registered.",
+      "return": "Returned (the employee is notified).",
+      "refuse": "Recorded.",
+      "dispose": "Disposed."
+    },
+    "field": {
+      "number": "My Number (12 digits)",
+      "formHint": "Optional. The number is stored encrypted."
+    },
+    "problem": {
+      "digits": "Enter 12 digits (hyphens and spaces are OK).",
+      "checkDigit": "The number is not valid (the last digit does not match)."
+    },
+    "docType": {
+      "label": "ID documents checked",
+      "hint": "Confirm both the number and the identity, and record the documents used.",
+      "card": "My Number Card",
+      "noticeCard": "Notification card + photo ID",
+      "residentRecord": "Resident record with number + photo ID",
+      "other": "Other"
+    },
+    "note": {
+      "returned": "Reason for returning",
+      "refused": "Reason not provided"
+    },
+    "gate": {
+      "label": "Your password",
+      "confirm": "Confirm",
+      "hint": "Before showing or exporting full numbers, we confirm it is you."
+    },
+    "logs": {
+      "show": "Access log",
+      "hide": "Close log",
+      "at": "When",
+      "action": "Action",
+      "by": "By",
+      "empty": "No records yet.",
+      "noName": "(no name)"
+    },
+    "log": {
+      "set": "Registered/changed",
+      "request": "Requested",
+      "cancel": "Request cancelled",
+      "approve": "Registered (checked)",
+      "return": "Returned",
+      "refuse": "Recorded as not provided",
+      "dispose": "Disposed",
+      "submit": "Submitted by employee",
+      "view": "Showed all digits",
+      "export": "Exported",
+      "import": "Imported"
+    },
+    "reason": {
+      "signIn": "Please sign in again.",
+      "badArgument": "Please check your input.",
+      "badNumber": "The number is not valid.",
+      "badDocType": "Choose the ID documents.",
+      "badNote": "Enter a reason (up to 200 characters).",
+      "reauth": "Enter your password again (confirmation expires after 5 minutes).",
+      "notFound": "Not found.",
+      "notAdmin": "Only admins can do this.",
+      "badStatus": "The status has changed. Reload the page.",
+      "notEmployee": "Sign in with an employee account.",
+      "unknown": "Something went wrong. Please try again later."
+    },
+    "error": {
+      "load": "Could not load the My Number status.",
+      "logs": "Could not load the log.",
+      "afterCreate": "The employee was registered, but the My Number could not be stored. Enter it again from Personal info on the employee page.",
+      "importFailed": "Employees were registered, but My Numbers for {{n}} people could not be stored. Import them again below."
+    },
+    "importNote": "{{n}} rows include a My Number. They are stored encrypted after import.",
+    "import": {
+      "title": "Import My Numbers (for registered employees)",
+      "lead": "Reads a file with employee number and My Number columns. Rows without a number are skipped.",
+      "summary": "“{{file}}”: {{n}} can be registered, {{bad}} to fix",
+      "button": "Register {{n}}",
+      "done": "Registered My Numbers for {{n}} people.",
+      "missing": "Could not find the employee number and My Number columns.",
+      "error": {
+        "notFound": "Line {{line}}: no employee with number {{no}}",
+        "invalid": "Line {{line}}: the number for {{no}} is not valid",
+        "duplicate": "Line {{line}}: employee {{no}} appears twice"
+      }
+    },
+    "export": {
+      "title": "My Number",
+      "subtitle": "Export My Numbers",
+      "lead": "Exports registered numbers as CSV. Your password is confirmed first, and the export is logged.",
+      "button": "Export",
+      "done": "Exported {{n}}."
+    },
+    "me": {
+      "status": {
+        "requested": "Please submit",
+        "submitted": "Being checked",
+        "returned": "Please resubmit",
+        "registered": "Submitted"
+      },
+      "lead": "Your employer asks for your My Number for social insurance filings.",
+      "returned": "Returned (reason: {{note}}). Please enter it again.",
+      "docType": "Documents you have",
+      "docHint": "Your employer uses them to confirm the number and your identity. Show the originals as your employer instructs.",
+      "submit": "Submit",
+      "waiting": "Your employer is checking it.",
+      "thanks": "Submitted. Your employer will check it.",
+      "registered": "Registered with your employer."
     }
   }
 }

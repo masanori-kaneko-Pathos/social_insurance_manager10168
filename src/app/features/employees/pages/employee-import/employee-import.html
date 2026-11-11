@@ -39,6 +39,9 @@
         }}</a>
       </div>
     }
+    @if (myNumberFailed() > 0) {
+      <div class="alert alert-danger">{{ 'myNumber.error.importFailed' | transloco: { n: myNumberFailed() } }}</div>
+    }
     @if (progress(); as p) {
       <p class="muted">
         {{ 'employeeCsv.progress' | transloco: { done: p.done, total: p.total } }}
@@ -130,6 +133,9 @@
               | transloco: { n: pv.plan.items.length, insured: insuredCount() }
           }}
         </h3>
+        @if (myNumberCount() > 0) {
+          <p class="sub">{{ 'myNumber.importNote' | transloco: { n: myNumberCount() } }}</p>
+        }
         <div class="table-wrap">
           <table class="table">
             <thead>
@@ -220,6 +226,60 @@
           {{ 'employeeCsv.import' | transloco: { n: pv.plan.items.length } }}
         </button>
       </div>
+    }
+  </section>
+
+  <!-- マイナンバーの書き出し（登録済みの人。パスワードで確かめ直してから。書き出したことは記録に残る） -->
+  <section class="card">
+    <h2>{{ 'myNumber.export.title' | transloco }}</h2>
+
+    <!-- 取り込み：登録済みの従業員へ（社員番号とマイナンバーの列） -->
+    <h3>{{ 'myNumber.import.title' | transloco }}</h3>
+    <p class="sub">{{ 'myNumber.import.lead' | transloco }}</p>
+    <label class="btn file">
+      {{ 'employeeCsv.choose' | transloco }}
+      <input type="file" [accept]="accept" (change)="onNumberFile($event)" [disabled]="numberSaving()" />
+    </label>
+    @if (numberError(); as e) {
+      <div class="alert alert-danger">{{ e | transloco }}</div>
+    }
+    @if (numberDone() !== null) {
+      <div class="alert alert-success">{{ 'myNumber.import.done' | transloco: { n: numberDone() } }}</div>
+    }
+    @if (numberRead(); as r) {
+      @if (r.missing.length > 0) {
+        <div class="alert alert-danger">{{ 'myNumber.import.missing' | transloco }}</div>
+      } @else {
+        <p>{{ 'myNumber.import.summary' | transloco: { file: r.fileName, n: r.items.length, bad: r.errors.length } }}</p>
+        @if (r.errors.length > 0) {
+          <ul class="sub">
+            @for (e of r.errors; track e.line) {
+              <li>{{ 'myNumber.import.error.' + e.code | transloco: { line: e.line, no: e.label } }}</li>
+            }
+          </ul>
+        }
+        <button type="button" class="btn btn-solid" [disabled]="numberSaving() || r.items.length === 0" (click)="saveNumbers()">
+          {{ 'myNumber.import.button' | transloco: { n: r.items.length } }}
+        </button>
+        <button type="button" class="btn" (click)="numberRead.set(null)">{{ 'common.cancel' | transloco }}</button>
+      }
+    }
+
+    <!-- 書き出し -->
+    <h3>{{ 'myNumber.export.subtitle' | transloco }}</h3>
+    <p class="sub">{{ 'myNumber.export.lead' | transloco }}</p>
+    @if (exportOpen()) {
+      <app-password-gate action="myNumber.export.button" (confirmed)="exportMyNumbers()" (cancelled)="exportOpen.set(false)" />
+    } @else {
+      <button type="button" class="btn" [disabled]="exporting()" (click)="exportOpen.set(true)">
+        {{ 'myNumber.export.button' | transloco }}
+      </button>
+    }
+    @if (exportError(); as e) {
+      <div class="alert alert-danger">{{ e | transloco }}</div>
+    }
+    @if (exportDone() !== null) {
+      <p class="sub" role="status">{{ 'myNumber.export.done' | transloco: { n: exportDone() } }}</p>
     }
   </section>
 }

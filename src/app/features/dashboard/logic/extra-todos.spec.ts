@@ -1,3 +1,4 @@
+import { myNumberTodos } from './extra-todos';
 import {
   ExtraPerson,
   lumpSumTodo,
@@ -83,5 +84,22 @@ describe('specificOfficeTodo：特定適用事業所の人数', () => {
   });
   it('規模の要件がない基準なら出さない', () => {
     expect(specificOfficeTodo({ standardHours: std, specificApplication: { since: null } }, people(60), [{ from: '2024-10', sizeMin: null }], '2026-11')).toBeNull();
+  });
+});
+
+describe('myNumberTodos：マイナンバー', () => {
+  const p = {
+    id: 'e1',
+    retireDate: '2024-03-31',
+    health: { enrolled: true, lostDate: '2024-04-01' },
+    pension: { enrolled: true, lostDate: '2024-04-01' },
+  };
+  const entry = (status: 'submitted' | 'registered') => ({ status, docType: null, note: null, by: 'admin' as const, updatedAt: '2026-11-10T00:00:00Z' });
+  it('チェック待ち・喪失から2年', () => {
+    const t = myNumberTodos([p], new Map([['e1', entry('registered')]]), '2026-11-11');
+    expect(t.map((x) => x.kind)).toEqual(['myNumberDispose']);
+    expect(t[0].date).toBe('2026-04-01');
+    expect(myNumberTodos([{ ...p, retireDate: null }], new Map([['e1', entry('submitted')]]), '2026-11-11')[0].kind).toBe('myNumberCheck');
+    expect(myNumberTodos([p], new Map(), '2026-11-11')).toEqual([]);
   });
 });

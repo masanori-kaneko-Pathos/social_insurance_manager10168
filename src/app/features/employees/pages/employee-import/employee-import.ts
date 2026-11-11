@@ -10,6 +10,10 @@ import { OfficeContext } from '../../../office/office-context.service';
 import { RateService } from '../../../rates/rate.service';
 import { EmployeeService } from '../../employee.service';
 import { EmployeeImportService } from '../../employee-import.service';
+import { PasswordGate } from '../../../my-number/components/password-gate/password-gate';
+import { myNumberReason, MyNumberService } from '../../../my-number/my-number.service';
+import { MyNumberImportRead, myNumberCsv, readMyNumberTable } from '../../../my-number/logic/my-number-csv';
+import { todayLocal } from '../../../../shared/utils/date';
 import {
   CsvRowError,
   EMPLOYEE_CSV_HEADERS,
@@ -39,7 +43,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-employee-import',
-  imports: [ColumnMapper, RouterLink, TranslocoPipe],
+  imports: [ColumnMapper, PasswordGate, RouterLink, TranslocoPipe],
   templateUrl: './employee-import.html',
   styleUrl: './employee-import.css',
 })
@@ -49,6 +53,7 @@ export class EmployeeImport {
   private readonly rates = inject(RateService);
   private readonly api = inject(EmployeeImportService);
   readonly context = inject(OfficeContext);
+  private readonly myNumbers = inject(MyNumberService);
 
   readonly headers = EMPLOYEE_CSV_HEADERS;
   readonly accept = IMPORT_ACCEPT;
@@ -61,6 +66,21 @@ export class EmployeeImport {
   readonly saving = signal(false);
   readonly progress = signal<{ done: number; total: number } | null>(null);
   readonly doneCount = signal<number | null>(null);
+  /** 従業員は登録できたが、マイナンバーを保管できなかった人数 */
+  readonly myNumberFailed = signal(0);
+  /** 確認画面：マイナンバーが入っている人数 */
+  readonly myNumberCount = computed(() => this.preview()?.plan.items.filter((it) => it.myNumber).length ?? 0);
+
+  // ===== マイナンバーの書き出し（パスワードで確かめ直してから。関数が記録を残す） =====
+  readonly exportOpen = signal(false);
+  readonly exporting = signal(false);
+  readonly exportError = signal<string | null>(null);
+  readonly exportDone = signal<number | null>(null);
+  /** 登録済みの従業員へのマイナンバーの取り込み */
+  readonly numberRead = signal<(MyNumberImportRead & { fileName: string }) | null>(null);
+  readonly numberSaving = signal(false);
+  readonly numberError = signal<string | null>(null);
+  readonly numberDone = signal<number | null>(null);
 
   readonly rowErrors = computed(
     () => this.preview()?.read.rows.filter((r) => r.errors.length > 0) ?? [],
@@ -174,11 +194,28 @@ export class EmployeeImport {
     this.progress.set({ done: 0, total });
     this.errorKey.set(null);
     try {
-      const n = await this.api.importMany(office.id, p.plan.items, (done) =>
-        this.progress.set({ done, total }),
+      const withNumber: { employeeId: string; number: string }[] = [];
+      let numberFailed = 0;
+      const n = await this.api.importMany(
+        office.id,
+        p.plan.items,
+        (done) => this.progress.set({ done, total }),
+        (it, employeeId) => {
+          if (it.myNumber) withNumber.push({ employeeId, number: it.myNumber });
+        },
       );
+      // マイナンバー：従業員を作ったあと、関数でまとめて暗号化して保管（失敗しても従業員は登録済み）
+      if (withNumber.length > 0) {
+        try {
+          await this.myNumbers.importMany(office.id, withNumber);
+        } catch (err) {
+          console.error(err);
+          numberFailed = withNumber.length;
+        }
+      }
       this.reset();
       this.doneCount.set(n);
+      this.myNumberFailed.set(numberFailed);
     } catch (err) {
       console.error(err);
       const done = this.progress()?.done ?? 0;
@@ -186,6 +223,66 @@ export class EmployeeImport {
     } finally {
       this.saving.set(false);
       this.progress.set(null);
+    }
+  }
+
+  /** 社員番号とマイナンバーのファイルを読む（登録済みの従業員に入れる） */
+  async onNumberFile(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    const office = this.context.current();
+    if (!file || !office) return;
+    this.numberRead.set(null);
+    this.numberError.set(null);
+    this.numberDone.set(null);
+    try {
+      const [{ tables }, employees] = await Promise.all([readTables(file), this.employeesApi.list(office.id)]);
+      this.numberRead.set({ fileName: file.name, ...readMyNumberTable(tables[0]?.rows ?? [], employees) });
+    } catch (err) {
+      console.error(err);
+      this.numberError.set(err instanceof ImportFileError ? `importMap.error.${err.code}` : 'employeeCsv.error.read');
+    }
+  }
+
+  async saveNumbers(): Promise<void> {
+    const office = this.context.current();
+    const r = this.numberRead();
+    if (!office || !r || r.items.length === 0 || this.numberSaving()) return;
+    this.numberSaving.set(true);
+    this.numberError.set(null);
+    try {
+      const n = await this.myNumbers.importMany(
+        office.id,
+        r.items.map(({ employeeId, number }) => ({ employeeId, number })),
+      );
+      this.numberRead.set(null);
+      this.numberDone.set(n);
+    } catch (err) {
+      console.error(err);
+      this.numberError.set(`myNumber.reason.${myNumberReason(err)}`);
+    } finally {
+      this.numberSaving.set(false);
+    }
+  }
+
+  /** 登録済みの人の番号を CSV で（社員番号・氏名・マイナンバー） */
+  async exportMyNumbers(): Promise<void> {
+    const office = this.context.current();
+    if (!office || this.exporting()) return;
+    this.exporting.set(true);
+    this.exportError.set(null);
+    this.exportDone.set(null);
+    try {
+      const [rows, employees] = await Promise.all([this.myNumbers.exportAll(office.id), this.employeesApi.list(office.id)]);
+      downloadCsv(`my-numbers-${todayLocal()}.csv`, myNumberCsv(rows, employees));
+      this.exportDone.set(rows.length);
+      this.exportOpen.set(false);
+    } catch (err) {
+      console.error(err);
+      this.exportError.set(`myNumber.reason.${myNumberReason(err)}`);
+    } finally {
+      this.exporting.set(false);
     }
   }
 

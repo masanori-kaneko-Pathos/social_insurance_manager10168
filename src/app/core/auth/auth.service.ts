@@ -183,6 +183,12 @@ export class AuthService {
     return user;
   }
 
+  /** 大事な情報（マイナンバーの全桁など）を見る前に、パスワードで本人を確かめ直す（ID トークンの auth_time が新しくなる） */
+  async confirmPassword(currentPassword: string): Promise<void> {
+    const user = await this.reauth(currentPassword);
+    await user.getIdToken(true);
+  }
+
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
     const user = await this.reauth(currentPassword);
     await updatePassword(user, newPassword);

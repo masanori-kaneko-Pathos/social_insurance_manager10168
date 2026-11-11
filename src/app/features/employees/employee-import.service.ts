@@ -21,10 +21,13 @@ export class EmployeeImportService {
     officeId: string,
     items: readonly ImportItem[],
     onProgress: (done: number) => void = () => undefined,
+    /** 作った従業員（マイナンバーを関数へ渡すため） */
+    onCreated: (item: ImportItem, employeeId: string) => void = () => undefined,
   ): Promise<number> {
     let done = 0;
     for (let i = 0; i < items.length; i += PER_BATCH) {
       const batch = writeBatch(db);
+      const created: [ImportItem, string][] = [];
       for (const it of items.slice(i, i + PER_BATCH)) {
         const ref = doc(collection(db, 'offices', officeId, 'employees'));
         const stamps = { createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
@@ -39,8 +42,10 @@ export class EmployeeImportService {
         // 「CSV で登録した」ことを1件だけ残す（中身は登録した従業員の文書）
         this.history.addTo(batch, officeId, ref.id, 'employee', changesOf(null, { ...main, source: 'csv' }));
         this.history.addTo(batch, officeId, ref.id, 'details/private', changesOf(null, { ...priv }));
+        created.push([it, ref.id]);
       }
       await batch.commit();
+      for (const [it, id] of created) onCreated(it, id);
       done = Math.min(items.length, i + PER_BATCH);
       onProgress(done);
     }
