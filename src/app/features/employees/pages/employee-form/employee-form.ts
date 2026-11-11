@@ -27,6 +27,12 @@ import { OfficeContext } from '../../../office/office-context.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { premiumOf } from '../../../office/office-settings';
 import { EmployeeService } from '../../employee.service';
+import { ContractService } from '../../contract.service';
+import { CriteriaService } from '../../../office/criteria.service';
+import { CriteriaDoc } from '../../../../core/models/master';
+import { ContractFields } from '../../components/contract-fields/contract-fields';
+import { emptyContractForm, fromContractForm } from '../../logic/contract-form-model';
+import { classify, Classification, isInsured, reasonParams } from '../../logic/classify';
 import { AgreementService } from '../../agreement.service';
 import { AgreementDoc } from '../../../../core/models/master';
 import { CertificateLike, certificateWarnings, defaultCovers } from '../../logic/agreement';
@@ -132,7 +138,7 @@ const PATTERN_KEYS: Record<string, string> = {
 
 @Component({
   selector: 'app-employee-form',
-  imports: [HalfWidthDigits, ReactiveFormsModule, RouterLink, TranslocoPipe],
+  imports: [ContractFields, HalfWidthDigits, ReactiveFormsModule, RouterLink, TranslocoPipe],
   templateUrl: './employee-form.html',
   styleUrl: './employee-form.css',
 })
@@ -143,6 +149,8 @@ export class EmployeeForm {
   private readonly employees = inject(EmployeeService);
   private readonly agreementsApi = inject(AgreementService);
   private readonly toast = inject(ToastService);
+  private readonly contractsApi = inject(ContractService);
+  private readonly criteriaApi = inject(CriteriaService);
   readonly context = inject(OfficeContext);
   /** 社会保障協定のマスタ（読めなければ空のまま。照らし合わせが出ないだけ） */
   readonly agreements = signal<AgreementDoc[]>([]);
@@ -309,6 +317,23 @@ export class EmployeeForm {
 
   readonly form = this.build(emptyEmployeeForm());
 
+  // ===== 雇用契約の段（新規だけ。入力欄は契約のカードと同じ ContractFields） =====
+  /** 最初の契約（始まる日は入社日に合わせる） */
+  readonly contractForm = this.fb.group(emptyContractForm(''));
+  /** 「契約はあとで入れる」（役員・契約書がまだない人など） */
+  readonly contractLater = signal(false);
+  /** 「次へ」を押したあとだけ契約のエラーを見せる */
+  readonly contractSubmitted = signal(false);
+  private lastAutoContractFrom = '';
+  /** 加入の基準（区分の判定に使う。新規のときだけ読む） */
+  private readonly criteria = signal<CriteriaDoc[]>([]);
+  /** 確認の段で見せる区分（確認の段に移るときに計算する） */
+  readonly preview = signal<Classification | null>(null);
+  readonly insured = isInsured;
+  readonly reasonParams = reasonParams;
+  /** 区分と「雇用・加入」の段の加入が合わない（確認の段で注意する） */
+  readonly mismatch = signal<'shouldEnroll' | 'shouldNotEnroll' | null>(null);
+
   // ===== 段階式の登録（新規だけ。編集は1ページのまま） =====
   /** 外国籍を選んでいるか（段の並びが変わる） */
   private readonly foreignOn = signal(false);
@@ -323,6 +348,16 @@ export class EmployeeForm {
   /** 次へ：この段の欄だけ確かめる（ほかの段の欄はまだ触っていないので、赤くしない） */
   next(): void {
     const s = this.step();
+    if (s === 'contract' && !this.contractLater()) {
+      this.contractSubmitted.set(true);
+      if (!fromContractForm(this.contractForm.getRawValue())) {
+        this.errorKey.set('employee.error.stepInvalid');
+        setTimeout(() =>
+          document.querySelector('.is-invalid, .field-error')?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+        );
+        return;
+      }
+    }
     if (s !== 'confirm') {
       for (const path of STEP_CONTROLS[s]) this.form.get(path)?.markAllAsTouched();
     }
@@ -344,6 +379,7 @@ export class EmployeeForm {
 
   /** 段を移る（上の段の印から戻るときも）。画面のいちばん上から見せる */
   goTo(s: EmployeeStep): void {
+    if (s === 'confirm') this.updatePreview();
     this.step.set(s);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -351,6 +387,31 @@ export class EmployeeForm {
   /** 段の印を押せるか（今より前の段だけ。先の段は「次へ」で確かめてから進む） */
   canGoTo(s: EmployeeStep): boolean {
     return this.steps().indexOf(s) < this.steps().indexOf(this.step());
+  }
+
+  /** 確認の段の区分：入社日（未来なら）か今日の時点で、入れた契約から判定する */
+  private updatePreview(): void {
+    const office = this.context.current();
+    const v = this.form.getRawValue();
+    const contract = this.contractLater() ? null : fromContractForm(this.contractForm.getRawValue());
+    if (!office || !contract || !v.birthDate) {
+      this.preview.set(null);
+      this.mismatch.set(null);
+      return;
+    }
+    const today = todayLocal();
+    const date = v.hireDate && v.hireDate > today ? v.hireDate : today;
+    const c = classify(
+      { birthDate: v.birthDate, optInDate: v.optInDate || null, optOutDate: v.optOutDate || null, contracts: [contract] },
+      { standardHours: office.standardHours ?? null, specificApplication: office.specificApplication },
+      this.criteria(),
+      date,
+    );
+    this.preview.set(c);
+    const enrolled = v.health.enrolled || v.pension.enrolled;
+    this.mismatch.set(
+      c.category === 'unknown' ? null : isInsured(c) && !enrolled ? 'shouldEnroll' : !isInsured(c) && enrolled ? 'shouldNotEnroll' : null,
+    );
   }
 
   readonly loading = signal(this.isEdit);
@@ -371,7 +432,13 @@ export class EmployeeForm {
   constructor() {
     const c = this.form.controls;
     c.hasForeign.valueChanges.subscribe((v) => this.foreignOn.set(v));
-    c.hireDate.valueChanges.subscribe((hire) => this.syncAcquired(hire));
+    c.hireDate.valueChanges.subscribe((hire) => {
+      this.syncAcquired(hire);
+      // 最初の契約の始まる日も入社日に合わせる（手で直していなければ）
+      const from = this.contractForm.controls.from;
+      if (!from.value || from.value === this.lastAutoContractFrom) from.setValue(hire);
+      this.lastAutoContractFrom = hire;
+    });
     c.retireDate.valueChanges.subscribe((retire) => this.syncLost(retire ? addDays(retire, 1) : ''));
     // 退職の理由が「死亡」なら、喪失の原因も「死亡」に（空か「退職等」のときだけ。手で選んだものは変えない）
     c.retireReason.valueChanges.subscribe((reason) => {
@@ -401,6 +468,12 @@ export class EmployeeForm {
       (err) => console.error(err),
     );
     if (this.isEdit) this.loadForEdit();
+    else {
+      this.criteriaApi.list().then(
+        (rows) => this.criteria.set(rows),
+        (err) => console.error(err),
+      );
+    }
   }
 
   private syncCert(): void {
@@ -511,6 +584,19 @@ export class EmployeeForm {
         id = this.employeeId;
       } else {
         id = await this.employees.create(officeId, input);
+        // 最初の契約は、従業員を作ったあとに書く（ルールが1回に数える式を増やさないため、別の書き込み）
+        // 失敗しても従業員は登録済み。詳細の契約のカードから入れ直してもらう
+        const contract = this.contractLater() ? null : fromContractForm(this.contractForm.getRawValue());
+        if (contract) {
+          try {
+            await this.contractsApi.create(officeId, id, contract);
+          } catch (err) {
+            console.error(err);
+            this.toast.show('employee.form.contractFailed');
+            await this.router.navigate(['/o', officeId, 'employees', id]);
+            return;
+          }
+        }
       }
       this.toast.show(this.isEdit ? 'common.saved' : 'employee.form.created');
       await this.router.navigate(['/o', officeId, 'employees', id]);

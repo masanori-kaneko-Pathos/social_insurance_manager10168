@@ -540,6 +540,46 @@
       </section>
     }
 
+    <!-- 雇用契約（新規だけ。入力欄は契約のカードと同じ部品。編集は詳細の契約のカードで） -->
+    @if (!isEdit && (step() === 'contract' || step() === 'confirm')) {
+      <section class="card">
+        <h2>{{ 'contract.title' | transloco }}</h2>
+        @if (step() === 'confirm') {
+          @if (preview(); as c) {
+            <div class="category" [class.out]="!insured(c)" [class.unknown]="c.category === 'unknown'">
+              <span class="label">{{ 'employee.contractStep.category' | transloco }}</span>
+              <strong>{{ 'contract.category.' + c.category | transloco }}</strong>
+              @let p = reasonParams(c);
+              <span class="reason">
+                @if (c.below) {
+                  {{ 'contract.below.' + c.below | transloco: p }}
+                }
+                {{ 'contract.reason.' + c.reason | transloco: p }}
+              </span>
+            </div>
+            @if (mismatch(); as m) {
+              <div class="alert alert-warning">{{ 'employee.contractStep.mismatch.' + m | transloco }}</div>
+            }
+          } @else if (contractLater()) {
+            <p class="hint">{{ 'employee.contractStep.laterNote' | transloco }}</p>
+          }
+        } @else {
+          <p class="hint">{{ 'employee.contractStep.lead' | transloco }}</p>
+        }
+        <label class="check later">
+          <input type="checkbox" [checked]="contractLater()" (change)="contractLater.set($any($event.target).checked)" />
+          {{ 'employee.contractStep.later' | transloco }}
+        </label>
+        @if (!contractLater()) {
+          <app-contract-fields
+            [form]="contractForm"
+            [submitted]="contractSubmitted()"
+            [hireDate]="form.controls.hireDate.value"
+          />
+        }
+      </section>
+    }
+
     @if (show('private')) {
       <!-- 連絡先 -->
       <section class="card" formGroupName="contact">

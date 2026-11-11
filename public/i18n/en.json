@@ -222,7 +222,8 @@
     "form": {
       "titleNew": "Add employee",
       "titleEdit": "Edit employee",
-      "created": "Employee registered"
+      "created": "Employee registered",
+      "contractFailed": "The employee was registered, but the contract could not be saved. Please add it again from the Contract card."
     },
     "section": {
       "basic": "Basic information",
@@ -507,7 +508,8 @@
       "confirmLead": "Check what you entered and press Register. You can still make changes here.",
       "back": "Back",
       "next": "Next",
-      "register": "Register"
+      "register": "Register",
+      "contract": "Contract"
     },
     "tab": {
       "label": "Employee page tabs",
@@ -545,6 +547,16 @@
     "fold": {
       "personName": "Enter the kanji name / alias on the residence record",
       "optIn": "Enter request dates for the special reduced-wage rule"
+    },
+    "contractStep": {
+      "lead": "Enter the terms from the employment contract or working conditions notice. The app uses this contract to decide whether the person is insured (regular, short-time, or not insured) and shows the result on the confirm step. When the contract changes later, add it in the Contract card on the employee page.",
+      "later": "Enter the contract later (officers, no contract yet, etc.)",
+      "laterNote": "You will enter the contract later. After registering, add it in the Contract card on the employee page (the classification cannot be decided until then).",
+      "category": "Classification under this contract",
+      "mismatch": {
+        "shouldEnroll": "Under this contract the person should be insured, but health insurance and pension are set to \"not enrolled\" in the Employment step. Please check.",
+        "shouldNotEnroll": "Under this contract the person is not insured, but enrollment is set in the Employment step. Please check (leave it if the person enrolls voluntarily)."
+      }
     }
   },
   "office": {

@@ -178,3 +178,50 @@ h3 {
   border: none;
   cursor: pointer;
 }
+
+/* ===== 雇用契約の段：確認の段の区分（契約のカードと同じ見た目） ===== */
+.category {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-xs) var(--space-sm);
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.category.out {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.category.unknown {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.category .label {
+  font-size: var(--font-sm);
+}
+
+.category .reason {
+  flex-basis: 100%;
+  font-size: var(--font-sm);
+}
+
+.check.later {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+  font-size: var(--font-sm);
+}
+
+.alert-warning {
+  margin-bottom: var(--space-md);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
+}

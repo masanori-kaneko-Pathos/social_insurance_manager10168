@@ -2,10 +2,10 @@ import { nextStep, prevStep, stepBlocked, stepsFor } from './employee-steps';
 
 describe('stepsFor：段の並び', () => {
   it('日本国籍は外国籍の段がない', () => {
-    expect(stepsFor(false)).toEqual(['basic', 'employment', 'private', 'confirm']);
+    expect(stepsFor(false)).toEqual(['basic', 'employment', 'contract', 'private', 'confirm']);
   });
   it('外国籍は連絡先・口座のあとに外国籍の段', () => {
-    expect(stepsFor(true)).toEqual(['basic', 'employment', 'private', 'foreign', 'confirm']);
+    expect(stepsFor(true)).toEqual(['basic', 'employment', 'contract', 'private', 'foreign', 'confirm']);
   });
 });
 
@@ -25,6 +25,9 @@ describe('stepBlocked：その段の欄だけで判断する', () => {
   });
   it('連絡先・口座の段：口座の半端', () => {
     expect(stepBlocked('private', [], ['bankIncomplete'])).toBeTrue();
+  });
+  it('雇用契約の段：従業員のフォームのエラーでは止まらない（契約のフォームで確かめる）', () => {
+    expect(stepBlocked('contract', ['lastNameKana'], ['bankIncomplete'])).toBeFalse();
   });
   it('確認の段：どこか1つでもエラーなら止まる', () => {
     expect(stepBlocked('confirm', [], ['certificateOrder'])).toBeTrue();

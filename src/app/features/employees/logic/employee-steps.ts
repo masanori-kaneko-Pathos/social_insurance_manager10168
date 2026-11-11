@@ -5,13 +5,16 @@
  * 保存は最後の「登録する」の1回だけ（下書きは作らない。下書きの人が To-do・保険料・給与に紛れ込まないように）
  */
 
-export type EmployeeStep = 'basic' | 'employment' | 'private' | 'foreign' | 'confirm';
+export type EmployeeStep = 'basic' | 'employment' | 'contract' | 'private' | 'foreign' | 'confirm';
 
-/** 段の並び（外国籍の段は外国籍の人だけ） */
+/**
+ * 段の並び（外国籍の段は外国籍の人だけ）
+ * 雇用契約の段は「雇用・加入」のすぐあと（区分の判定に使う。入力欄は契約のカードと同じ部品で、フォームは別に持つ）
+ */
 export function stepsFor(foreign: boolean): EmployeeStep[] {
   return foreign
-    ? ['basic', 'employment', 'private', 'foreign', 'confirm']
-    : ['basic', 'employment', 'private', 'confirm'];
+    ? ['basic', 'employment', 'contract', 'private', 'foreign', 'confirm']
+    : ['basic', 'employment', 'contract', 'private', 'confirm'];
 }
 
 /** 段ごとに確かめる欄（フォームの中の場所。まとまりなら中の欄を全部） */
@@ -42,6 +45,7 @@ export const STEP_CONTROLS: Record<Exclude<EmployeeStep, 'confirm'>, readonly st
     'basicPensionNumber',
     'collectionMethod',
   ],
+  contract: [], // 契約は従業員のフォームの外（契約のフォームで確かめる）
   private: ['contact', 'commute', 'bankAccount'],
   foreign: [
     'foreign.nationality',
@@ -76,6 +80,7 @@ export const STEP_ERRORS: Record<Exclude<EmployeeStep, 'confirm'>, readonly stri
     'pensionAcquiredRequired',
     'pensionLostBeforeAcquired',
   ],
+  contract: [],
   private: ['bankIncomplete'],
   foreign: ['nationalityRequired', 'certificateRequired', 'certificateOrder'],
 };

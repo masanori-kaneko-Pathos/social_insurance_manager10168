@@ -4,36 +4,21 @@ import { CriteriaService } from '../../../office/criteria.service';
 import { classify, isInsured, reasonParams } from '../../logic/classify';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
-import {
-  ContractDoc,
-  DISPATCH_TYPES,
-  EMPLOYMENT_TYPES,
-  PAY_TYPES,
-  RENEWAL_TYPES,
-  SPECIAL_EMPLOYMENTS,
-  STUDENT_TYPES,
-} from '../../../../core/models/contract';
+import { ContractDoc } from '../../../../core/models/contract';
 import { Employee } from '../../../../core/models/employee';
-import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { todayLocal } from '../../../../shared/utils/date';
 import { formatHours, formatYen } from '../../../../shared/utils/number';
 import { OfficeContext } from '../../../office/office-context.service';
 import { ContractService } from '../../contract.service';
 import {
   contractAt,
-  contractErrors,
   ContractFormValue,
-  contractWarnings,
   emptyContractForm,
   fromContractForm,
-  HOURS_UNITS,
-  isShortPeriod,
   nextContractForm,
-  scheduledWageCandidate,
   toContractForm,
-  wageFieldOf,
-  weeklyMinutesOf,
 } from '../../logic/contract-form-model';
+import { ContractFields } from '../contract-fields/contract-fields';
 
 /**
  * 雇用契約の履歴（契約書の束：変わるたびに上に重ねる）
@@ -41,7 +26,7 @@ import {
  */
 @Component({
   selector: 'app-contract-card',
-  imports: [HalfWidthDigits, ReactiveFormsModule, TranslocoPipe],
+  imports: [ContractFields, ReactiveFormsModule, TranslocoPipe],
   templateUrl: './contract-card.html',
   styleUrl: './contract-card.css',
 })
@@ -55,20 +40,6 @@ export class ContractCard implements OnInit {
   /** 保存・削除したことを知らせる */
   readonly changed = output<void>();
 
-  // ===== 選択肢 =====
-  readonly employmentTypes = EMPLOYMENT_TYPES;
-  readonly payTypes = PAY_TYPES;
-  readonly hoursUnits = HOURS_UNITS;
-  readonly renewalTypes = RENEWAL_TYPES;
-  readonly studentTypes = STUDENT_TYPES;
-  readonly dispatchTypes = DISPATCH_TYPES;
-  readonly specialEmployments = SPECIAL_EMPLOYMENTS;
-
-  /** 2か月以内の契約か（更新の実績・労使の合意の欄を出す） */
-  shortPeriod(): boolean {
-    const v = this.form.getRawValue();
-    return isShortPeriod(v.from ?? '', v.periodEnd || null);
-  }
   readonly yen = formatYen;
   readonly hoursText = formatHours;
   readonly today = todayLocal();
@@ -85,24 +56,9 @@ export class ContractCard implements OnInit {
   readonly saving = signal(false);
   /** 「保存」を押したあとだけエラーを見せる */
   readonly submitted = signal(false);
-  /** 学生・最低賃金の減額特例・派遣請負・メモを開いているか */
-  readonly showMore = signal(false);
 
+  /** 入力欄は ContractFields（登録の段と同じ部品）。フォームはここで持つ */
   readonly form = this.fb.group(emptyContractForm(''));
-  /** フォームの今の値（候補・エラーの計算に使う） */
-  private readonly value = signal<ContractFormValue>(this.form.getRawValue());
-
-  readonly errors = computed(() => contractErrors(this.value()));
-  readonly warnings = computed(() => contractWarnings(this.value(), this.employee().hireDate));
-  readonly wageField = computed(() => wageFieldOf(this.value().payType));
-  readonly candidate = computed(() => scheduledWageCandidate(this.value()));
-  /** 週以外で入れたとき、週に直した時間を見せる */
-  readonly weeklyPreview = computed(() => {
-    const v = this.value();
-    if (v.hoursUnit === 'week') return null;
-    const m = weeklyMinutesOf(v.hoursUnit, v.hours, v.cycleWeeks);
-    return m == null ? null : formatHours(m);
-  });
   /** 加入の基準（masterCriteria。null ＝ 読み込み中） */
   readonly criteriaRows = signal<CriteriaDoc[] | null>(null);
 
@@ -134,17 +90,7 @@ export class ContractCard implements OnInit {
   /** 今日に効いている契約（一覧で目立たせる） */
   readonly currentFrom = computed(() => contractAt(this.rows(), this.today)?.from ?? null);
 
-  /** 直前に所定内賃金から写した見込みの報酬月額（手で直したかの判定に使う） */
-  private lastAutoCash = '';
-
   constructor() {
-    this.form.valueChanges.subscribe(() => this.value.set(this.form.getRawValue()));
-    // 見込みの報酬月額は、空なら所定内賃金を写す（残業の見込み・通勤手当は担当者が足す）
-    this.form.controls.scheduledWage.valueChanges.subscribe((v) => {
-      const cash = this.form.controls.expectedCash;
-      if (!cash.value || cash.value === this.lastAutoCash) cash.setValue(v);
-      this.lastAutoCash = v;
-    });
     // 始まる日を変えたら、上書きの確認はやり直し
     this.form.controls.from.valueChanges.subscribe(() => this.confirmingOverwrite.set(false));
   }
@@ -180,12 +126,6 @@ export class ContractCard implements OnInit {
 
   // ===== 表示の道具 =====
 
-  /** 欄のエラーの文言（「保存」を押す前は出さない） */
-  errorOf(field: keyof ContractFormValue): string | null {
-    const e = this.errors()[field];
-    return this.submitted() && e ? `contract.error.${e}` : null;
-  }
-
   /** 一覧の「時給・日給」の列 */
   unitWage(r: ContractDoc): string {
     if (r.hourlyWage != null) return `${formatYen(r.hourlyWage)}／h`;
@@ -196,12 +136,8 @@ export class ContractCard implements OnInit {
   // ===== 追加・編集・削除 =====
 
   private open(v: ContractFormValue, key: 'new' | string): void {
+    // 入力欄（ContractFields）は editing を開くたびに作り直すので、ここで値を入れておけば候補・開閉もそろう
     this.form.setValue(v, { emitEvent: false });
-    this.value.set(v);
-    this.lastAutoCash = v.expectedCash === v.scheduledWage ? v.scheduledWage : '';
-    this.showMore.set(
-      v.student !== 'none' || v.minimumWageReduction || v.dispatch !== 'none' || v.note !== '',
-    );
     this.submitted.set(false);
     this.confirmingOverwrite.set(false);
     this.errorKey.set(null);
@@ -225,12 +161,6 @@ export class ContractCard implements OnInit {
 
   cancel(): void {
     this.editing.set(null);
-  }
-
-  /** 所定内賃金の候補を入れる */
-  useCandidate(): void {
-    const c = this.candidate();
-    if (c !== null) this.form.controls.scheduledWage.setValue(formatYen(c));
   }
 
   async save(): Promise<void> {
