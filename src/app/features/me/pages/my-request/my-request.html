@@ -30,7 +30,7 @@
         <p class="hint">{{ 'me.answerLead' | transloco }}</p>
         <app-answer-form [questions]="r.questions" [(answers)]="answers" [showErrors]="submitted()" [current]="current()" />
         <div class="actions">
-          <button type="button" class="btn btn-primary" [disabled]="sending()" (click)="send()">
+          <button type="button" class="btn btn-solid" [disabled]="sending()" (click)="send()">
             {{ (sending() ? 'me.sending' : 'me.send') | transloco }}
           </button>
         </div>

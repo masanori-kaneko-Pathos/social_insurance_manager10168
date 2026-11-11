@@ -58,7 +58,7 @@
         </div>
         <div class="actions">
           <button type="button" class="btn" (click)="editingHousehold.set(false)">{{ 'common.cancel' | transloco }}</button>
-          <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ 'common.save' | transloco }}</button>
+          <button type="submit" class="btn btn-solid" [disabled]="saving()">{{ 'common.save' | transloco }}</button>
         </div>
       </form>
     }
@@ -434,7 +434,7 @@
 
       <div class="actions">
         <button type="button" class="btn" (click)="cancel()">{{ 'common.cancel' | transloco }}</button>
-        <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ 'common.save' | transloco }}</button>
+        <button type="submit" class="btn btn-solid" [disabled]="saving()">{{ 'common.save' | transloco }}</button>
       </div>
     </form>
   }

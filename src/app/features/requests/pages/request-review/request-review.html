@@ -56,7 +56,7 @@
       </div>
       <div class="actions">
         <button type="button" class="btn" [disabled]="working()" (click)="reject()">{{ 'request.reject' | transloco }}</button>
-        <button type="button" class="btn btn-primary" [disabled]="working()" (click)="approve()">
+        <button type="button" class="btn btn-solid" [disabled]="working()" (click)="approve()">
           {{ (changes().length > 0 ? 'request.approveAndWrite' : 'request.approve') | transloco }}
         </button>
       </div>

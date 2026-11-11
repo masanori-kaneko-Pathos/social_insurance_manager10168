@@ -43,7 +43,7 @@
       }
       <div class="actions">
         <button type="button" class="btn" (click)="cancel()">{{ 'common.cancel' | transloco }}</button>
-        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+        <button type="submit" class="btn btn-solid" [disabled]="saving()">
           {{ (confirmingOverwrite() ? 'contract.overwriteButton' : 'common.save') | transloco }}
         </button>
       </div>

@@ -46,7 +46,8 @@ h1 {
 /* ===== 2列（左が To-do、右が箱）。狭い画面では1列 ===== */
 .home-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 260px;
+  /* 右の列（確認待ちの依頼・年1回・設定）は細めにして、To-do の表の改行を減らす（11/11） */
+  grid-template-columns: minmax(0, 1fr) 220px;
   gap: var(--space-md);
   align-items: start;
 }

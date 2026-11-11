@@ -189,7 +189,7 @@
             <button type="button" class="btn" (click)="clear()" [disabled]="saving()">
               {{ 'common.cancel' | transloco }}
             </button>
-            <button type="button" class="btn btn-primary" (click)="importCsv()" [disabled]="!canImport()">
+            <button type="button" class="btn btn-solid" (click)="importCsv()" [disabled]="!canImport()">
               {{ 'payrollCsv.import.button' | transloco: { c: pv.created.length, u: pv.updated.length } }}
             </button>
           </div>

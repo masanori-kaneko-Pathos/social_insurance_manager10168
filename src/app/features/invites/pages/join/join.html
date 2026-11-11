@@ -28,7 +28,7 @@
             <li>{{ 'join.step1' | transloco }}</li>
             <li>{{ 'join.step2' | transloco }}</li>
           </ol>
-          <button type="button" class="btn btn-primary btn-block" [disabled]="busy()" (click)="checkAndJoin()">
+          <button type="button" class="btn btn-solid btn-block" [disabled]="busy()" (click)="checkAndJoin()">
             {{ 'join.checkAndJoin' | transloco }}
           </button>
           <p class="auth-switch">
@@ -40,7 +40,7 @@
 
         @case ('ready') {
           <p class="lead">{{ 'join.ready' | transloco: { email: auth.user()?.email } }}</p>
-          <button type="button" class="btn btn-primary btn-block" [disabled]="busy()" (click)="joinNow()">
+          <button type="button" class="btn btn-solid btn-block" [disabled]="busy()" (click)="joinNow()">
             {{ (busy() ? 'join.joining' : 'join.join') | transloco }}
           </button>
           <p class="auth-switch">
@@ -99,7 +99,7 @@
                   <span class="field-error">{{ 'auth.validation.passwordMismatch' | transloco }}</span>
                 }
               </div>
-              <button class="btn btn-primary btn-block" type="submit" [disabled]="busy()">
+              <button class="btn btn-solid btn-block" type="submit" [disabled]="busy()">
                 {{ 'join.signup' | transloco }}
               </button>
             </form>
@@ -117,7 +117,7 @@
                          [class.is-invalid]="showError('login', 'password')" />
                 </app-password-field>
               </div>
-              <button class="btn btn-primary btn-block" type="submit" [disabled]="busy()">
+              <button class="btn btn-solid btn-block" type="submit" [disabled]="busy()">
                 {{ 'auth.login.submit' | transloco }}
               </button>
             </form>

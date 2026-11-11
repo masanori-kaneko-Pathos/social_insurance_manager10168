@@ -159,6 +159,12 @@
     min-width: 0;
     max-width: 1080px;
     padding: var(--space-xl) var(--space-lg);
+    transition: max-width var(--dur-base) var(--ease-out);
+  }
+
+  /* サイドバーをしまったら、空いた幅（200px → 60px の差）だけ本文を広げる（左に詰めるだけにしない） */
+  .shell-body.nav-collapsed .shell-main {
+    max-width: calc(1080px + 140px);
   }
   
   @media (max-width: 720px) {

@@ -116,7 +116,7 @@
       }
       <div class="actions">
         <button type="button" class="btn" (click)="close()">{{ 'common.cancel' | transloco }}</button>
-        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+        <button type="submit" class="btn btn-solid" [disabled]="saving()">
           {{ (saving() ? 'common.saving' : 'common.save') | transloco }}
         </button>
       </div>

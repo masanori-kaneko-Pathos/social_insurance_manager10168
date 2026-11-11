@@ -247,7 +247,7 @@
       <a class="btn" [routerLink]="['/o', context.current()?.id, 'bonuses']">
         {{ 'common.cancel' | transloco }}
       </a>
-      <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">
+      <button type="button" class="btn btn-solid" [disabled]="saving()" (click)="save()">
         {{ (saving() ? 'common.saving' : 'common.save') | transloco }}
       </button>
     </div>

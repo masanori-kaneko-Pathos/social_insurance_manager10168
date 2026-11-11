@@ -203,7 +203,7 @@
     @if (context.isAdmin() && reflectable().length > 0) {
       <div class="actions">
         <span class="sub">{{ 'regular.reflectAllHint' | transloco }}</span>
-        <button type="button" class="btn btn-primary" (click)="reflectAll()" [disabled]="saving()">
+        <button type="button" class="btn btn-solid" (click)="reflectAll()" [disabled]="saving()">
           {{ 'regular.reflectAll' | transloco: { n: reflectable().length } }}
         </button>
       </div>

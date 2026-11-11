@@ -43,7 +43,7 @@
   </div>
 </header>
 
-<div class="shell-body">
+<div class="shell-body" [class.nav-collapsed]="navCollapsed()">
   <nav class="side-nav" [class.collapsed]="navCollapsed()" [attr.aria-label]="'nav.label' | transloco">
     <!-- 見出しは置かず、細い線で区切る：ホーム → 毎月の作業 → 人 → 年1回・随時 → 設定 -->
     <a

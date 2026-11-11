@@ -104,7 +104,7 @@
       <p class="hint">{{ 'payroll.hint.blank' | transloco }}</p>
 
       <div class="entry-actions">
-        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+        <button type="submit" class="btn btn-solid" [disabled]="saving()">
           {{ (saving() ? 'payroll.saving' : 'payroll.save') | transloco }}
         </button>
         <button type="button" class="btn" (click)="close()">{{ 'common.cancel' | transloco }}</button>

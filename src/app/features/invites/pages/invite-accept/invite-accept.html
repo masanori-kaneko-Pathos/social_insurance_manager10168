@@ -27,7 +27,7 @@
         <li>{{ 'join.step1' | transloco }}</li>
         <li>{{ 'join.step2' | transloco }}</li>
       </ol>
-      <button type="button" class="btn btn-primary btn-block" [disabled]="submitting()" (click)="checkAndFinish()">
+      <button type="button" class="btn btn-solid btn-block" [disabled]="submitting()" (click)="checkAndFinish()">
         {{ 'invite.accept.checkAndFinish' | transloco }}
       </button>
       <p class="auth-switch">
@@ -37,7 +37,7 @@
       </p>
     } @else if (state() === 'ready') {
       <p class="lead">{{ 'invite.accept.ready' | transloco: { email: auth.user()?.email } }}</p>
-      <button type="button" class="btn btn-primary btn-block" [disabled]="submitting()" (click)="finishNow()">
+      <button type="button" class="btn btn-solid btn-block" [disabled]="submitting()" (click)="finishNow()">
         {{ (submitting() ? 'invite.accept.submitting' : 'invite.accept.finish') | transloco }}
       </button>
       <p class="auth-switch">
@@ -95,7 +95,7 @@
           }
         </div>
 
-        <button class="btn btn-primary btn-block" type="submit" [disabled]="submitting()">
+        <button class="btn btn-solid btn-block" type="submit" [disabled]="submitting()">
           {{ (submitting() ? 'invite.accept.submitting' : 'invite.accept.submit') | transloco }}
         </button>
       </form>

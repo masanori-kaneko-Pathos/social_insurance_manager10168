@@ -27,7 +27,7 @@
       <app-answer-form [questions]="questions()" [(answers)]="answers" [showErrors]="submitted()" [current]="current()" />
       <div class="actions">
         <a class="btn" routerLink="/me">{{ 'common.cancel' | transloco }}</a>
-        <button type="button" class="btn btn-primary" [disabled]="sending()" (click)="send()">
+        <button type="button" class="btn btn-solid" [disabled]="sending()" (click)="send()">
           {{ (sending() ? 'me.sending' : 'me.sendChange') | transloco }}
         </button>
       </div>

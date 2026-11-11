@@ -51,7 +51,7 @@
           <a routerLink="/forgot-password">{{ 'auth.login.forgot' | transloco }}</a>
         </p>
 
-        <button class="btn btn-primary btn-block" type="submit" [disabled]="submitting()">
+        <button class="btn btn-solid btn-block" type="submit" [disabled]="submitting()">
           {{ (submitting() ? 'auth.login.submitting' : 'auth.login.submit') | transloco }}
         </button>
       </form>

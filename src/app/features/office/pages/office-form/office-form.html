@@ -667,7 +667,7 @@
         } @else {
           <a class="btn" routerLink="/">{{ 'common.back' | transloco }}</a>
         }
-        <button class="btn btn-primary" type="submit" [disabled]="submitting()">
+        <button class="btn btn-solid" type="submit" [disabled]="submitting()">
           @if (isEdit) {
             {{ (submitting() ? 'office.form.saving' : 'office.form.save') | transloco }}
           } @else {

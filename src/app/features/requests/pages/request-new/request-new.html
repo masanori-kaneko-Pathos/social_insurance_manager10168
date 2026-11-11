@@ -139,7 +139,7 @@
 }
 <div class="actions">
   <a class="btn" [routerLink]="['/o', context.current()?.id, 'requests']">{{ 'common.cancel' | transloco }}</a>
-  <button type="button" class="btn btn-primary" [disabled]="sending()" (click)="send()">
+  <button type="button" class="btn btn-solid" [disabled]="sending()" (click)="send()">
     {{ (sending() ? 'request.sending' : 'request.send') | transloco: { count: selected().size } }}
   </button>
 </div>

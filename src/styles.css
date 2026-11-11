@@ -132,12 +132,23 @@
   transform: none;
 }
 
-:root[data-theme='dark'] .btn-primary {
+:root[data-theme='dark'] .btn.btn-solid {
   background: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
-:root[data-theme='dark'] .btn-primary:hover:not(:disabled) {
+:root[data-theme='dark'] .btn.btn-solid:hover:not(:disabled) {
   background: var(--color-primary-hover);
+}
+
+/* 準主役：枠と文字がオレンジ、中はオレンジをうっすら透かす */
+:root[data-theme='dark'] .btn.btn-primary {
+  background: rgb(255 107 0 / 8%);
+  border-color: var(--color-primary);
+}
+
+:root[data-theme='dark'] .btn.btn-primary:hover:not(:disabled) {
+  background: rgb(255 107 0 / 16%);
 }
 
 /* 入力欄：縁なしの焦げ茶の地。選んだときだけオレンジの縁 */
@@ -279,7 +290,7 @@ input[type='password']::-ms-clear {
   align-items: center;
   justify-content: center;
   gap: var(--space-xs);
-  height: 40px;
+  height: 36px; /* 11/11：40px から少しだけ低く */
   padding: 0 var(--space-md);
   font: inherit;
   font-size: var(--font-sm);
@@ -318,22 +329,37 @@ input[type='password']::-ms-clear {
   box-shadow: none;
 }
 
+/* ===== ボタンの3段（11/11）：目が落ち着くよう、オレンジの塗りは1画面に1つまで =====
+   - 主役 .btn-solid：その画面の「決める」操作（保存する・登録する・ログイン・まとめて反映）。オレンジの塗り
+   - 準主役 .btn-primary：途中の操作（追加・依頼を出す・招待・書き出し・1件ずつの反映）。枠と文字がオレンジ
+   - ふつう .btn：キャンセル・戻る など */
 .btn-primary {
+  color: var(--color-tab-active);
+  background-color: var(--color-surface);
+  border-color: var(--color-primary);
+  font-weight: 600;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--color-highlight-soft);
+}
+
+.btn-solid {
   color: var(--color-on-primary);
   background-color: var(--color-primary);
-  /* グラデーションは使わず、上の縁の光と影で厚みを出す（11/11） */
+  /* グラデーションは使わず、上の縁の光と影で厚みを出す */
   border-color: var(--color-primary);
   font-weight: 600;
   letter-spacing: 0.02em;
   box-shadow: var(--btn-primary-edge), var(--shadow-btn);
 }
 
-.btn-primary:hover:not(:disabled) {
+.btn-solid:hover:not(:disabled) {
   background-color: var(--color-primary-hover);
   box-shadow: var(--btn-primary-edge), var(--shadow-btn-hover), var(--glow-primary);
 }
 
-.btn-primary:active:not(:disabled) {
+.btn-solid:active:not(:disabled) {
   box-shadow: inset 0 1px 3px rgb(0 0 0 / 25%);
 }
 

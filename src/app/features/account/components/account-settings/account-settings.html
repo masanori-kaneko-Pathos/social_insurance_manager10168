@@ -16,7 +16,7 @@
     @if (done() === 'name') {
       <p class="ok" role="status">{{ 'common.saved' | transloco }}</p>
     }
-    <button class="btn btn-primary" type="submit" [disabled]="busy() !== null">{{ 'common.save' | transloco }}</button>
+    <button class="btn btn-solid" type="submit" [disabled]="busy() !== null">{{ 'common.save' | transloco }}</button>
   </form>
 </section>
 
@@ -69,7 +69,7 @@
           {{ 'common.cancel' | transloco }}
         </button>
         <!-- 3つとも正しく入っている（今のパスワードあり・新しいパスワードが決まりどおり・確認と同じ）ときだけ押せる -->
-        <button class="btn btn-primary" type="submit" [disabled]="passwordForm.invalid || busy() !== null">
+        <button class="btn btn-solid" type="submit" [disabled]="passwordForm.invalid || busy() !== null">
           {{ 'accountPage.passwordSave' | transloco }}
         </button>
       </div>
@@ -118,7 +118,7 @@
         <button type="button" class="btn" [disabled]="busy() !== null" (click)="cancel('email')">
           {{ 'common.cancel' | transloco }}
         </button>
-        <button class="btn btn-primary" type="submit" [disabled]="emailForm.invalid || busy() !== null">
+        <button class="btn btn-solid" type="submit" [disabled]="emailForm.invalid || busy() !== null">
           {{ 'accountPage.emailSend' | transloco }}
         </button>
       </div>
