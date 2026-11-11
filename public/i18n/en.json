@@ -194,7 +194,9 @@
     "help": "Help",
     "home": "Home",
     "members": "Administrators",
-    "filings": "Filing lists"
+    "filings": "Filing lists",
+    "collapse": "Collapse menu",
+    "expand": "Expand menu"
   },
   "employee": {
     "list": {

@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { OfficeSwitcher } from '../../components/office-switcher/office-switcher';
@@ -13,6 +13,16 @@ import { Bell } from '../../../../shared/components/bell/bell';
 import { TodoBadgeService } from '../../../dashboard/todo-badge.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 
+const NAV_KEY = 'shaho.navCollapsed';
+
+function readCollapsed(): boolean {
+  try {
+    return localStorage.getItem(NAV_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
 @Component({
   selector: 'app-office-shell',
   imports: [RouterOutlet, TranslocoPipe, OfficeSwitcher, AccountMenu, RouterLink, RouterLinkActive, Icon, Bell],
@@ -23,6 +33,18 @@ export class OfficeShell {
   readonly context = inject(OfficeContext);
   readonly badge = inject(TodoBadgeService);
   readonly toast = inject(ToastService);
+
+  /** サイドバーをしまっているか（ブラウザに覚えさせる。しまうとアイコンだけ） */
+  readonly navCollapsed = signal(readCollapsed());
+
+  toggleNav(): void {
+    this.navCollapsed.update((v) => !v);
+    try {
+      localStorage.setItem(NAV_KEY, this.navCollapsed() ? '1' : '0');
+    } catch {
+      // 保存できない環境では、この画面の間だけ
+    }
+  }
 
   /** ベルの数：To-do（数えていれば）＋確認待ちの依頼 */
   readonly bellCount = computed(() => (this.badge.todoCount() ?? 0) + this.badge.requestCount());

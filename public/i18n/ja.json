@@ -194,7 +194,9 @@
     "help": "使い方",
     "home": "ホーム",
     "members": "管理者の設定",
-    "filings": "届書の一覧"
+    "filings": "届書の一覧",
+    "collapse": "メニューをしまう",
+    "expand": "メニューを出す"
   },
   "employee": {
     "list": {

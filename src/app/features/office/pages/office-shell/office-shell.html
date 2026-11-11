@@ -1,6 +1,17 @@
 <header class="app-header">
   <div class="header-left">
-    <span class="app-name">{{ 'common.appName' | transloco }}</span>
+    <!-- 左上の□を押すと、サイドバーをしまう・出す（しまうとアイコンだけ） -->
+    <span class="app-name">
+      <button
+        type="button"
+        class="nav-toggle"
+        [attr.aria-expanded]="!navCollapsed()"
+        [attr.aria-label]="(navCollapsed() ? 'nav.expand' : 'nav.collapse') | transloco"
+        [title]="(navCollapsed() ? 'nav.expand' : 'nav.collapse') | transloco"
+        (click)="toggleNav()"
+      ></button>
+      {{ 'common.appName' | transloco }}
+    </span>
     <app-office-switcher />
   </div>
   <div class="header-right">
@@ -33,55 +44,78 @@
 </header>
 
 <div class="shell-body">
-  <nav class="side-nav" [attr.aria-label]="'nav.label' | transloco">
+  <nav class="side-nav" [class.collapsed]="navCollapsed()" [attr.aria-label]="'nav.label' | transloco">
     <!-- 見出しは置かず、細い線で区切る：ホーム → 毎月の作業 → 人 → 年1回・随時 → 設定 -->
     <a
       [routerLink]="['/o', officeId()]"
       routerLinkActive="active"
       [routerLinkActiveOptions]="{ exact: true }"
+      [attr.title]="navCollapsed() ? ('nav.home' | transloco) : null"
     >
-      <app-icon name="home" />{{ 'nav.home' | transloco }}
+      <app-icon name="home" /><span class="label">{{ 'nav.home' | transloco }}</span>
     </a>
 
     <span class="nav-sep" aria-hidden="true"></span>
-    <a [routerLink]="['/o', officeId(), 'payrolls']" routerLinkActive="active">
-      <app-icon name="payroll" />{{ 'payroll.listTitle' | transloco }}
+    <a [routerLink]="['/o', officeId(), 'payrolls']" routerLinkActive="active"
+      [attr.title]="navCollapsed() ? ('payroll.listTitle' | transloco) : null"
+    >
+      <app-icon name="payroll" /><span class="label">{{ 'payroll.listTitle' | transloco }}</span>
     </a>
-    <a [routerLink]="['/o', officeId(), 'bonuses']" routerLinkActive="active">
-      <app-icon name="bonus" />{{ 'nav.bonuses' | transloco }}
+    <a [routerLink]="['/o', officeId(), 'bonuses']" routerLinkActive="active"
+      [attr.title]="navCollapsed() ? ('nav.bonuses' | transloco) : null"
+    >
+      <app-icon name="bonus" /><span class="label">{{ 'nav.bonuses' | transloco }}</span>
     </a>
-    <a [routerLink]="['/o', officeId(), 'premiums']" routerLinkActive="active">
-      <app-icon name="premium" />{{ 'nav.premiums' | transloco }}
-    </a>
-
-    <span class="nav-sep" aria-hidden="true"></span>
-    <a [routerLink]="['/o', officeId(), 'employees']" routerLinkActive="active">
-      <app-icon name="people" />{{ 'nav.employees' | transloco }}
-    </a>
-    <a [routerLink]="['/o', officeId(), 'requests']" routerLinkActive="active">
-      <app-icon name="inbox" />{{ 'nav.requests' | transloco }}
+    <a [routerLink]="['/o', officeId(), 'premiums']" routerLinkActive="active"
+      [attr.title]="navCollapsed() ? ('nav.premiums' | transloco) : null"
+    >
+      <app-icon name="premium" /><span class="label">{{ 'nav.premiums' | transloco }}</span>
     </a>
 
     <span class="nav-sep" aria-hidden="true"></span>
-    <a [routerLink]="['/o', officeId(), 'regular', regularYear()]" routerLinkActive="active">
-      <app-icon name="regular" />{{ 'nav.regular' | transloco }}
+    <a [routerLink]="['/o', officeId(), 'employees']" routerLinkActive="active"
+      [attr.title]="navCollapsed() ? ('nav.employees' | transloco) : null"
+    >
+      <app-icon name="people" /><span class="label">{{ 'nav.employees' | transloco }}</span>
     </a>
-    <a [routerLink]="['/o', officeId(), 'revisions']" routerLinkActive="active">
-      <app-icon name="revision" />{{ 'nav.revisions' | transloco }}
-    </a>
-    <a [routerLink]="['/o', officeId(), 'filings']" routerLinkActive="active">
-      <app-icon name="filing" />{{ 'nav.filings' | transloco }}
+    <a [routerLink]="['/o', officeId(), 'requests']" routerLinkActive="active"
+      [attr.title]="navCollapsed() ? ('nav.requests' | transloco) : null"
+    >
+      <app-icon name="inbox" /><span class="label">{{ 'nav.requests' | transloco }}</span>
     </a>
 
     <span class="nav-sep" aria-hidden="true"></span>
-    <a [routerLink]="['/o', officeId(), 'settings']" routerLinkActive="active">
-      <app-icon name="settings" />{{ 'nav.settings' | transloco }}
+    <a [routerLink]="['/o', officeId(), 'regular', regularYear()]" routerLinkActive="active"
+      [attr.title]="navCollapsed() ? ('nav.regular' | transloco) : null"
+    >
+      <app-icon name="regular" /><span class="label">{{ 'nav.regular' | transloco }}</span>
     </a>
-    <a [routerLink]="['/o', officeId(), 'members']" routerLinkActive="active">
-      <app-icon name="people" />{{ 'nav.members' | transloco }}
+    <a [routerLink]="['/o', officeId(), 'revisions']" routerLinkActive="active"
+      [attr.title]="navCollapsed() ? ('nav.revisions' | transloco) : null"
+    >
+      <app-icon name="revision" /><span class="label">{{ 'nav.revisions' | transloco }}</span>
     </a>
-    <a [routerLink]="['/o', officeId(), 'help']" routerLinkActive="active">
-      <app-icon name="help" />{{ 'nav.help' | transloco }}
+    <a [routerLink]="['/o', officeId(), 'filings']" routerLinkActive="active"
+      [attr.title]="navCollapsed() ? ('nav.filings' | transloco) : null"
+    >
+      <app-icon name="filing" /><span class="label">{{ 'nav.filings' | transloco }}</span>
+    </a>
+
+    <span class="nav-sep" aria-hidden="true"></span>
+    <a [routerLink]="['/o', officeId(), 'settings']" routerLinkActive="active"
+      [attr.title]="navCollapsed() ? ('nav.settings' | transloco) : null"
+    >
+      <app-icon name="settings" /><span class="label">{{ 'nav.settings' | transloco }}</span>
+    </a>
+    <a [routerLink]="['/o', officeId(), 'members']" routerLinkActive="active"
+      [attr.title]="navCollapsed() ? ('nav.members' | transloco) : null"
+    >
+      <app-icon name="people" /><span class="label">{{ 'nav.members' | transloco }}</span>
+    </a>
+    <a [routerLink]="['/o', officeId(), 'help']" routerLinkActive="active"
+      [attr.title]="navCollapsed() ? ('nav.help' | transloco) : null"
+    >
+      <app-icon name="help" /><span class="label">{{ 'nav.help' | transloco }}</span>
     </a>
   </nav>
 

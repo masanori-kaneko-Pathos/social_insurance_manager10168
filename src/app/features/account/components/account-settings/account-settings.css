@@ -45,6 +45,11 @@ h2 {
   color: var(--color-on-danger);
 }
 
+.btn-danger:hover:not(:disabled) {
+  background: var(--color-danger-text);
+  filter: brightness(1.08);
+}
+
 .btn-danger:disabled {
   opacity: 0.5;
 }
