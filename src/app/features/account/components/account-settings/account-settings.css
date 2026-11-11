@@ -19,3 +19,13 @@ h2 {
   font-size: var(--font-sm);
   color: var(--color-success-text, #2e6b3f);
 }
+
+.actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.hint {
+  font-size: var(--font-xs, 12px);
+  color: var(--color-text-sub);
+}

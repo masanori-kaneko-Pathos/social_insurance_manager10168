@@ -37,6 +37,8 @@ export class AccountSettings {
   readonly done = signal<Section | null>(null);
   readonly errors = signal<Partial<Record<Section, string>>>({});
   readonly sentTo = signal<string | null>(null);
+  /** パスワード・メールアドレスの変更は、ボタンを押したときだけ開く（ふだんは閉じておく） */
+  readonly opened = signal<'password' | 'email' | null>(null);
 
   readonly nameForm = this.fb.nonNullable.group({
     displayName: [this.auth.profile()?.displayName ?? '', [Validators.required, Validators.pattern(/\S/), Validators.maxLength(50)]],
@@ -66,6 +68,20 @@ export class AccountSettings {
     return c.touched && (c.invalid || this.passwordForm.hasError('passwordMismatch'));
   }
 
+  /** 開く（もう一方は閉じる。前の結果・エラーは消す） */
+  openSection(section: 'password' | 'email'): void {
+    this.opened.set(section);
+    this.done.set(null);
+    this.errors.update((e) => ({ ...e, [section]: undefined }));
+  }
+
+  /** キャンセル：入れかけた内容を消して閉じる */
+  cancel(section: 'password' | 'email'): void {
+    (section === 'password' ? this.passwordForm : this.emailForm).reset();
+    this.errors.update((e) => ({ ...e, [section]: undefined }));
+    this.opened.set(null);
+  }
+
   async saveName(): Promise<void> {
     if (this.nameForm.invalid) return this.nameForm.markAllAsTouched();
     await this.run('name', () => this.auth.changeDisplayName(this.nameForm.getRawValue().displayName.trim()));
@@ -77,6 +93,7 @@ export class AccountSettings {
     await this.run('password', async () => {
       await this.auth.changePassword(current, next);
       this.passwordForm.reset();
+      this.opened.set(null);
     });
   }
 
@@ -92,6 +109,7 @@ export class AccountSettings {
       await this.auth.changeEmail(current, next);
       this.sentTo.set(next);
       this.emailForm.reset();
+      this.opened.set(null);
     });
   }
 

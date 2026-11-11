@@ -2583,6 +2583,8 @@
     "emailNew": "New email address",
     "emailSend": "Send verification email",
     "emailSent": "We sent a verification email to {{email}}. Click the link in it to change the address.",
-    "sameEmail": "This is the same as the current address."
+    "sameEmail": "This is the same as the current address.",
+    "openPassword": "Change password",
+    "openEmail": "Change email address"
   }
 }
