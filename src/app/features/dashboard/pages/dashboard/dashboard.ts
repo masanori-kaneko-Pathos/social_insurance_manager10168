@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal, WritableSignal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { ContractDoc } from '../../../../core/models/contract';
@@ -10,6 +10,9 @@ import { ContractService } from '../../../employees/contract.service';
 import { EmployeeService } from '../../../employees/employee.service';
 import { reasonParams } from '../../../employees/logic/classify';
 import { CriteriaService } from '../../../office/criteria.service';
+import { payrollOf } from '../../../office/office-settings';
+import { latestPaidMonth } from '../../../payrolls/logic/payroll-rows';
+import { IconName, Icon } from '../../../../shared/components/icon/icon';
 import { OfficeContext } from '../../../office/office-context.service';
 import { RequestService } from '../../../requests/request.service';
 import { TodoDialog } from '../../components/todo-dialog/todo-dialog';
@@ -17,6 +20,7 @@ import { ActionPerson, actionFor, ActionRequest } from '../../logic/todo-actions
 import {
   activeDismissals,
   ageItems,
+  BOARD_ORDER,
   BoardGroup,
   BoardItem,
   BoardKind,
@@ -27,11 +31,19 @@ import {
   openCount,
   requestsItem,
   todoItem,
-  visibleOf,
 } from '../../logic/todo-board';
+import { daysLeft, filterRows, kindsIn, RowView, TABLE_LIMIT, toRows } from '../../logic/todo-table';
 import { personTodos } from '../../logic/todos';
 import { TodoBadgeService } from '../../todo-badge.service';
 import { TodoService } from '../../todo.service';
+
+/** よく使うメニューの1つ */
+interface MenuTile {
+  key: string; // home.menu.〇〇
+  icon: IconName;
+  link: (string | number)[];
+  params?: Record<string, string>;
+}
 
 /** 開いている窓（どの To-do から開いたか） */
 interface OpenAction {
@@ -41,12 +53,13 @@ interface OpenAction {
 }
 
 /**
- * To-do リスト（受信箱）：手続きが要りそうなことを種類ごとに出し、その場で片づける
- * 材料は「従業員・契約・加入の基準・確認済み・確認待ちの依頼の数」。開くたびに計算し、結果は保存しない
+ * ホーム：よく使うメニュー・To-do の表（1行1件、届出の期限の近い順）・右の箱（依頼・年1回・設定）
+ * To-do の材料は「従業員・契約・加入の基準・確認済み・確認待ちの依頼の数」。開くたびに計算し、結果は保存しない
+ * 表にする決まり（期限・急ぎ・並べ方）は logic/todo-table.ts（spec あり）
  */
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, TranslocoPipe, TodoDialog],
+  imports: [Icon, RouterLink, TranslocoPipe, TodoDialog],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -76,10 +89,14 @@ export class Dashboard {
   readonly errorKey = signal<string | null>(null);
 
   // ===== 画面の中だけの状態（共有する場面がないので URL には持たない） =====
-  /** 「あと○件を表示」で開いたまとまり */
-  readonly expanded = signal<ReadonlySet<BoardKind>>(new Set());
-  /** 「確認済みを表示」で開いたまとまり */
-  readonly showDismissed = signal<ReadonlySet<BoardKind>>(new Set());
+  /** 未対応／確認済み */
+  readonly view = signal<RowView>('open');
+  /** 種類で絞る */
+  readonly kindFilter = signal<BoardKind | 'all'>('all');
+  /** 「すべて表示」を押した */
+  readonly showAll = signal(false);
+  /** 理由の文を開いている行 */
+  readonly openRow = signal<string | null>(null);
   readonly open = signal<OpenAction | null>(null);
   readonly busyKey = signal<string | null>(null);
 
@@ -122,6 +139,58 @@ export class Dashboard {
   });
 
   readonly total = computed(() => openCount(this.groups()));
+
+  // ===== 表 =====
+  readonly rows = computed(() => toRows(this.groups(), this.today));
+  readonly filtered = computed(() => filterRows(this.rows(), this.view(), this.kindFilter()));
+  readonly shownRows = computed(() => (this.showAll() ? this.filtered() : this.filtered().slice(0, TABLE_LIMIT)));
+  readonly hiddenCount = computed(() => this.filtered().length - this.shownRows().length);
+  readonly kinds = computed(() => kindsIn(this.rows(), BOARD_ORDER));
+  readonly dismissedCount = computed(() => this.rows().filter((r) => r.dismissed).length);
+  readonly daysLeft = (deadline: string) => daysLeft(deadline, this.today);
+
+  // ===== よく使うメニュー（一般のユーザーには、見るだけのものだけ） =====
+  readonly payMonth = computed(() => {
+    const o = this.office();
+    return o ? latestPaidMonth(this.today, payrollOf(o)) : this.thisMonth;
+  });
+  readonly menu = computed<MenuTile[]>(() => {
+    const id = this.office()?.id ?? '';
+    const o = ['/o', id];
+    if (!this.isAdmin()) {
+      return [
+        { key: 'premiums', icon: 'premium', link: [...o, 'premiums'] },
+        { key: 'employees', icon: 'people', link: [...o, 'employees'] },
+        { key: 'payrollsView', icon: 'payroll', link: [...o, 'payrolls'] },
+      ];
+    }
+    return [
+      { key: 'payroll', icon: 'payroll', link: [...o, 'payrolls', this.payMonth()] },
+      { key: 'premiums', icon: 'premium', link: [...o, 'premiums'] },
+      { key: 'addEmployee', icon: 'people', link: [...o, 'employees', 'new'] },
+      { key: 'import', icon: 'inbox', link: [...o, 'employees', 'import'] },
+      { key: 'request', icon: 'todo', link: [...o, 'requests', 'new'] },
+      { key: 'bonus', icon: 'bonus', link: [...o, 'bonuses', 'new'] },
+    ];
+  });
+
+  setView(v: string): void {
+    this.view.set(v === 'dismissed' ? 'dismissed' : 'open');
+    this.showAll.set(false);
+  }
+
+  setKind(k: string): void {
+    this.kindFilter.set(k === 'all' ? 'all' : (k as BoardKind));
+    this.showAll.set(false);
+  }
+
+  toggleRow(key: string): void {
+    this.openRow.update((k) => (k === key ? null : key));
+  }
+
+  monthParts(ym: string): { y: string; m: number } {
+    return { y: ym.slice(0, 4), m: Number(ym.slice(5)) };
+  }
 
   constructor() {
     // 事業所が切り替わったら読み直す
@@ -169,29 +238,6 @@ export class Dashboard {
         })
         .catch((err) => console.error(err));
     }
-  }
-
-  // ===== まとまりの開け閉め =====
-
-  visible(g: BoardGroup) {
-    return visibleOf(g, this.expanded().has(g.kind));
-  }
-
-  private toggleIn(set: WritableSignal<ReadonlySet<BoardKind>>, kind: BoardKind): void {
-    set.update((s) => {
-      const next = new Set(s);
-      if (next.has(kind)) next.delete(kind);
-      else next.add(kind);
-      return next;
-    });
-  }
-
-  toggleExpanded(kind: BoardKind): void {
-    this.toggleIn(this.expanded, kind);
-  }
-
-  toggleDismissed(kind: BoardKind): void {
-    this.toggleIn(this.showDismissed, kind);
   }
 
   // ===== その場で片づける =====
@@ -280,10 +326,4 @@ export class Dashboard {
     const m = Number(this.thisMonth.slice(5));
     return m >= 6 && m <= 8 ? Number(this.thisMonth.slice(0, 4)) : null;
   });
-
-  /** まとまりの見出しの前に、区切り（今すぐ／期限が近い／材料不足）を出すか */
-  sectionStarts(i: number): boolean {
-    const g = this.groups();
-    return i === 0 || g[i - 1].section !== g[i].section;
-  }
 }

@@ -2586,5 +2586,54 @@
     "sameEmail": "今と同じアドレスです。",
     "openPassword": "パスワードを変更する",
     "openEmail": "メールアドレスを変更する"
+  },
+  "home": {
+    "menuTitle": "よく使うメニュー",
+    "menu": {
+      "payroll": "{{m}}月払いの給与を入れる",
+      "premiums": "保険料一覧",
+      "employees": "従業員",
+      "payrollsView": "給与の実績",
+      "addEmployee": "従業員を登録",
+      "import": "ファイルから取り込む",
+      "request": "依頼を出す",
+      "bonus": "賞与を登録"
+    },
+    "filterKind": "種類で絞る",
+    "filterView": "未対応・確認済み",
+    "allKinds": "すべての種類",
+    "viewOpen": "未対応",
+    "viewDismissed": "確認済み（{{count}}件）",
+    "noDismissed": "確認済みのものはありません。",
+    "col": {
+      "urgency": "急ぎ",
+      "kind": "手続き",
+      "who": "従業員",
+      "date": "日",
+      "deadline": "届出の期限",
+      "actions": "操作"
+    },
+    "urgency": {
+      "overdue": "期限切れ",
+      "now": "今すぐ",
+      "soon": "期限が近い",
+      "missing": "材料不足",
+      "info": "確認"
+    },
+    "ageOn": "{{age}}歳・{{date}}",
+    "overBy": "{{n}}日過ぎています",
+    "today": "今日まで",
+    "daysLeft": "あと{{n}}日",
+    "asap": "速やかに",
+    "onlyIfPayChanges": "報酬が変わるときだけ",
+    "details": "くわしく見る",
+    "showAll": "すべて表示（{{count}}件）",
+    "hint": "届出の期限は、事実が起きた日を1日目として数えた5日目です（資格取得届・資格喪失届・区分変更届・70歳到達届・75歳の喪失届）。行を押すと理由が開きます。届書の窓で保存すると、加入の状態と届出の記録が残り、ここから消えます。",
+    "box": {
+      "requests": "確認待ちの依頼",
+      "noRequests": "確認待ちはありません。",
+      "yearly": "年1回・随時",
+      "season": "今の時期"
+    }
   }
 }

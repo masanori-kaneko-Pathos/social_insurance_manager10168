@@ -1,7 +1,4 @@
 .page-head {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-md);
   margin-bottom: var(--space-md);
 }
 
@@ -10,73 +7,207 @@ h1 {
   font-size: var(--font-xl);
 }
 
-.total {
-  color: var(--color-text-sub);
+/* ===== よく使うメニュー ===== */
+.menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
 }
 
-/* 区切り：今すぐ／期限が近い／材料不足 */
-.section {
-  margin: var(--space-lg) 0 var(--space-sm);
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-height: 88px;
+  padding: var(--space-md) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
   font-size: var(--font-sm);
   font-weight: 600;
-  color: var(--color-text-sub);
+  text-align: center;
+  text-decoration: none;
+  transition: background var(--dur-fast), border-color var(--dur-fast);
 }
 
-/* まとまり（種類ごとの1枚） */
-.group {
-  margin-bottom: var(--space-md);
+.tile:hover {
+  border-color: var(--color-primary);
+  background: var(--color-highlight-soft, #fbf3e8);
 }
 
-.group-head {
+.tile app-icon {
+  transform: scale(1.6);
+}
+
+/* ===== 2列（左が To-do、右が箱）。狭い画面では1列 ===== */
+.home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: var(--space-md);
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .home-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.card h2 {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-md);
+}
+
+/* ===== To-do の表 ===== */
+.todo-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
-  font-size: var(--font-sm);
+  margin-bottom: var(--space-sm);
 }
 
-.group-head h3 {
+.todo-head h2 {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
   margin: 0;
-  font-size: var(--font-md);
 }
 
-.count {
-  font-weight: 400;
-  color: var(--color-text-sub);
+.total {
+  min-width: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--color-text);
+  color: var(--color-surface);
+  font-size: var(--font-xs);
+  line-height: 22px;
+  text-align: center;
 }
 
-.todo-item {
+.filters {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--space-xs) var(--space-sm);
-  padding: var(--space-sm) 0;
-  border-bottom: 1px solid var(--color-border);
+  gap: var(--space-xs);
 }
 
-.todo-item .who {
+.filters .input {
+  width: auto;
+  padding-block: 4px;
+  font-size: var(--font-sm);
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+.table th {
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.row {
+  cursor: pointer;
+}
+
+.row:hover td {
+  background: var(--color-highlight-soft, #fbf3e8);
+}
+
+.row.is-open td {
+  border-bottom-color: transparent;
+}
+
+.kind-cell {
+  white-space: nowrap;
+}
+
+.who {
   font-weight: 600;
 }
 
-.todo-item .why {
-  flex-basis: 100%;
-  font-size: var(--font-sm);
+.mono {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* 急ぎのバッジ */
+.urgency {
+  display: inline-block;
+  min-width: 4.5em;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.u-overdue {
+  background: var(--color-danger-text);
+  color: #fff;
+}
+
+.u-now {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+
+.u-soon {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.u-missing,
+.u-info {
+  background: var(--color-bg);
   color: var(--color-text-sub);
 }
 
-.todo-item.dismissed {
+.deadline .left {
+  display: block;
+  font-size: var(--font-xs);
   color: var(--color-text-sub);
 }
 
-.item-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm);
-  flex-basis: 100%;
+.deadline .left.over {
+  color: var(--color-danger-text);
+  font-weight: 600;
+}
+
+.deadline .note {
+  display: block;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.actions .btn + .btn {
+  margin-left: var(--space-xs);
 }
 
 .btn-small {
@@ -84,10 +215,37 @@ h1 {
   font-size: var(--font-sm);
 }
 
-.group-foot {
-  display: flex;
-  gap: var(--space-md);
-  margin-top: var(--space-sm);
+.chev {
+  margin-left: var(--space-xs);
+  padding: 2px 6px;
+  border: 0;
+  background: none;
+  color: var(--color-text-sub);
+  cursor: pointer;
+  transition: transform var(--dur-fast);
+}
+
+.chev[aria-expanded='true'] {
+  transform: rotate(90deg);
+}
+
+/* 行を押すと開く理由の文 */
+.detail td {
+  padding-top: 0;
+  background: var(--color-highlight-soft, #fbf3e8);
+}
+
+.detail p {
+  margin: var(--space-xs) 0;
+}
+
+.detail .why {
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.detail-links:empty {
+  display: none;
 }
 
 .link-btn {
@@ -103,35 +261,35 @@ h1 {
   cursor: pointer;
 }
 
-.kind {
-  display: inline-block;
-  padding: 1px 8px;
-  border-radius: 999px;
-  font-size: var(--font-xs);
+.more {
+  margin-top: var(--space-sm);
+}
+
+/* ===== 右の箱 ===== */
+.side {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.box {
+  display: grid;
+  gap: var(--space-xs);
+  font-size: var(--font-sm);
+}
+
+.box .big {
+  margin: 0;
+  font-size: var(--font-lg);
   font-weight: 600;
-  background: var(--color-highlight);
 }
 
-.kind-acquire,
-.kind-lose,
-.kind-agreement,
-.kind-office {
-  background: var(--color-danger-bg);
-  color: var(--color-danger-text);
-}
-
-.kind-upcoming,
-.kind-certificateEnd,
-.kind-categoryChange {
+.season {
+  margin-left: var(--space-xs);
+  padding: 0 6px;
+  border-radius: 999px;
   background: var(--color-warning-bg);
   color: var(--color-warning-text);
-}
-
-.todo-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-md);
-  margin-top: var(--space-md);
+  font-size: var(--font-xs);
 }
 
 .muted,
@@ -139,4 +297,12 @@ h1 {
   margin: var(--space-sm) 0 0;
   font-size: var(--font-sm);
   color: var(--color-text-sub);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
 }

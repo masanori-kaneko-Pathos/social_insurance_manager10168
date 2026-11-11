@@ -1,156 +1,246 @@
 <div class="page-head">
-  <h1>{{ 'dashboard.todo.title' | transloco }}</h1>
-  @if (!loading() && total() > 0) {
-    <span class="total">{{ 'dashboard.todo.total' | transloco: { count: total() } }}</span>
-  }
+  <h1>{{ 'nav.home' | transloco }}</h1>
 </div>
 
-@if (loading()) {
-  <p class="muted">{{ 'common.loading' | transloco }}</p>
-} @else {
-  @if (errorKey(); as k) {
-    <div class="alert alert-danger">{{ k | transloco }}</div>
+<!-- よく使うメニュー：毎月の作業の入口（サイドバーを探さずに押せる） -->
+<nav class="menu" [attr.aria-label]="'home.menuTitle' | transloco">
+  @for (t of menu(); track t.key) {
+    <a class="tile" [routerLink]="t.link">
+      <app-icon [name]="t.icon" />
+      <span>{{ 'home.menu.' + t.key | transloco: monthParts(payMonth()) }}</span>
+    </a>
   }
-  @if (groups().length === 0) {
-    <section class="card">
-      <p class="muted">{{ 'dashboard.todo.empty' | transloco }}</p>
-    </section>
-  }
+</nav>
 
-  @for (g of groups(); track g.kind; let i = $index) {
-    @if (sectionStarts(i)) {
-      <h2 class="section">{{ 'dashboard.todo.section.' + g.section | transloco }}</h2>
-    }
-    <section class="card group">
-      <div class="group-head">
-        <h3>
-          <span class="kind kind-{{ g.kind }}">{{ 'dashboard.todo.kind.' + g.kind | transloco }}</span>
-          @if (g.kind !== 'office' && g.kind !== 'requests') {
-            <span class="count">{{ 'dashboard.todo.count' | transloco: { count: g.items.length } }}</span>
-          }
-        </h3>
-        @if (g.kind === 'age') {
-          <a [routerLink]="['/o', office()?.id, 'ages']">{{ 'dashboard.todo.toAges' | transloco }} →</a>
+<div class="home-grid">
+  <!-- ===== To-do の表（1行1件。届出の期限の近い順） ===== -->
+  <section class="card todo">
+    <div class="todo-head">
+      <h2>
+        {{ 'dashboard.todo.title' | transloco }}
+        @if (!loading() && total() > 0) {
+          <span class="total">{{ total() }}</span>
         }
-      </div>
-
-      @let v = visible(g);
-      @for (it of v.shown; track it.key) {
-        @let e = employeeOf(it);
-        <div class="todo-item">
-          @if (e) {
-            <a class="who" [routerLink]="['/o', office()?.id, 'employees', e.id]">
-              @if (e.employeeNumber) {
-                <span class="emp-no">{{ e.employeeNumber }}</span>
-              }{{ employeeName(e) }}
-            </a>
-          }
-          <span class="what">
-            @switch (it.kind) {
-              @case ('age') {
-                {{ 'dashboard.todo.text.age' | transloco: { date: it.date, age: it.age!.age } }}
-                {{ 'dashboard.ages.what.' + it.age!.age | transloco }}
-              }
-              @case ('office') {
-                {{ 'dashboard.todo.office.' + it.office | transloco }}
-              }
-              @case ('requests') {
-                {{ 'dashboard.todo.text.requests' | transloco: { count: submittedRequests() } }}
-              }
-              @default {
-                {{
-                  'dashboard.todo.text.' + it.kind
-                    | transloco
-                      : {
-                          date: it.date,
-                          today: ('contract.category.' + it.todo!.today.category | transloco),
-                          next: it.todo!.next ? ('contract.category.' + it.todo!.next.category | transloco) : ''
-                        }
-                }}
-              }
+      </h2>
+      @if (!loading() && rows().length > 0) {
+        <div class="filters">
+          <select class="input" [attr.aria-label]="'home.filterKind' | transloco" (change)="setKind($any($event.target).value)">
+            <option value="all" [selected]="kindFilter() === 'all'">{{ 'home.allKinds' | transloco }}</option>
+            @for (k of kinds(); track k) {
+              <option [value]="k" [selected]="kindFilter() === k">{{ 'dashboard.todo.kind.' + k | transloco }}</option>
             }
-          </span>
-          @if (it.todo; as t) {
-            @let c = t.next ?? t.today;
-            @let p = reasonParams(c);
-            <span class="why">
-              @if (c.below) {
-                {{ 'contract.below.' + c.below | transloco: p }}
-              }
-              {{ 'contract.reason.' + c.reason | transloco: p }}
-            </span>
-          }
-
-          <div class="item-actions">
-            @if (requestOf(it); as r) {
-              <button type="button" class="btn btn-small btn-primary" (click)="openAction(it)">
-                {{ 'todoAction.button.' + (it.kind === 'upcoming' ? 'early' : r.mode) | transloco }}
-              </button>
-            }
-            @if (canDismiss(it)) {
-              <button type="button" class="btn btn-small" [disabled]="busyKey() === it.key" (click)="dismiss(it)">
-                {{ 'dashboard.todo.dismiss' | transloco }}
-              </button>
-            }
-            @switch (it.kind) {
-              @case ('noContract') {
-                <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'employment' }">{{ 'dashboard.todo.toContract' | transloco }} →</a>
-              }
-              @case ('lose') {
-                <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'employment' }">{{ 'dashboard.todo.toContractCheck' | transloco }} →</a>
-              }
-              @case ('office') {
-                @if (it.office === 'noStandard') {
-                  <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>
-                }
-              }
-              @case ('requests') {
-                <a [routerLink]="['/o', office()?.id, 'requests']" [queryParams]="{ status: 'submitted' }">{{ 'dashboard.todo.toRequests' | transloco }} →</a>
-              }
-            }
-          </div>
+          </select>
+          <select class="input" [attr.aria-label]="'home.filterView' | transloco" (change)="setView($any($event.target).value)">
+            <option value="open" [selected]="view() === 'open'">{{ 'home.viewOpen' | transloco }}</option>
+            <option value="dismissed" [selected]="view() === 'dismissed'">
+              {{ 'home.viewDismissed' | transloco: { count: dismissedCount() } }}
+            </option>
+          </select>
         </div>
       }
+    </div>
 
-      <div class="group-foot">
-        @if (v.rest > 0 || expanded().has(g.kind)) {
-          <button type="button" class="link-btn" (click)="toggleExpanded(g.kind)">
-            {{ (expanded().has(g.kind) ? 'dashboard.todo.showLess' : 'dashboard.todo.showMore') | transloco: { count: v.rest } }}
+    @if (loading()) {
+      <p class="muted">{{ 'common.loading' | transloco }}</p>
+    } @else {
+      @if (errorKey(); as k) {
+        <div class="alert alert-danger">{{ k | transloco }}</div>
+      }
+      @if (filtered().length === 0) {
+        <p class="muted">{{ (view() === 'open' ? 'dashboard.todo.empty' : 'home.noDismissed') | transloco }}</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>{{ 'home.col.urgency' | transloco }}</th>
+                <th>{{ 'home.col.kind' | transloco }}</th>
+                <th>{{ 'home.col.who' | transloco }}</th>
+                <th>{{ 'home.col.date' | transloco }}</th>
+                <th>{{ 'home.col.deadline' | transloco }}</th>
+                <th><span class="sr-only">{{ 'home.col.actions' | transloco }}</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of shownRows(); track r.item.key) {
+                @let it = r.item;
+                @let e = employeeOf(it);
+                <tr class="row" [class.is-open]="openRow() === it.key" (click)="toggleRow(it.key)">
+                  <td><span class="urgency u-{{ r.urgency }}">{{ 'home.urgency.' + r.urgency | transloco }}</span></td>
+                  <td class="kind-cell">{{ 'dashboard.todo.kind.' + it.kind | transloco }}</td>
+                  <td>
+                    @if (e) {
+                      <a class="who" [routerLink]="['/o', office()?.id, 'employees', e.id]" (click)="$event.stopPropagation()">
+                        @if (e.employeeNumber) {
+                          <span class="emp-no">{{ e.employeeNumber }}</span>
+                        }{{ employeeName(e) }}
+                      </a>
+                    } @else {
+                      —
+                    }
+                  </td>
+                  <td class="mono">
+                    @if (it.kind === 'age') {
+                      {{ 'home.ageOn' | transloco: { age: it.age!.age, date: it.date } }}
+                    } @else {
+                      {{ it.date ?? '—' }}
+                    }
+                  </td>
+                  <td class="deadline">
+                    @if (r.deadline; as d) {
+                      <span class="mono">{{ d }}</span>
+                      @let left = daysLeft(d);
+                      <span class="left" [class.over]="left < 0">
+                        {{ (left < 0 ? 'home.overBy' : left === 0 ? 'home.today' : 'home.daysLeft') | transloco: { n: left < 0 ? -left : left } }}
+                      </span>
+                    } @else if (r.note === 'asap') {
+                      {{ 'home.asap' | transloco }}
+                    } @else {
+                      —
+                    }
+                    @if (r.note === 'onlyIfPayChanges') {
+                      <span class="note">{{ 'home.onlyIfPayChanges' | transloco }}</span>
+                    }
+                  </td>
+                  <td class="actions" (click)="$event.stopPropagation()">
+                    @if (!r.dismissed) {
+                      @if (requestOf(it); as req) {
+                        <button type="button" class="btn btn-small btn-primary" (click)="openAction(it)">
+                          {{ 'todoAction.button.' + (it.kind === 'upcoming' ? 'early' : req.mode) | transloco }}
+                        </button>
+                      }
+                      @if (canDismiss(it)) {
+                        <button type="button" class="btn btn-small" [disabled]="busyKey() === it.key" (click)="dismiss(it)">
+                          {{ 'dashboard.todo.dismiss' | transloco }}
+                        </button>
+                      }
+                    } @else if (isAdmin()) {
+                      <button type="button" class="btn btn-small" [disabled]="busyKey() === it.key" (click)="undismiss(it)">
+                        {{ 'dashboard.todo.undismiss' | transloco }}
+                      </button>
+                    }
+                    <button
+                      type="button"
+                      class="chev"
+                      [attr.aria-expanded]="openRow() === it.key"
+                      [attr.aria-label]="'home.details' | transloco"
+                      (click)="toggleRow(it.key)"
+                    >
+                      ▸
+                    </button>
+                  </td>
+                </tr>
+                @if (openRow() === it.key) {
+                  <tr class="detail">
+                    <td colspan="6">
+                      <p class="what">
+                        @switch (it.kind) {
+                          @case ('age') {
+                            {{ 'dashboard.todo.text.age' | transloco: { date: it.date, age: it.age!.age } }}
+                            {{ 'dashboard.ages.what.' + it.age!.age | transloco }}
+                          }
+                          @case ('office') {
+                            {{ 'dashboard.todo.office.' + it.office | transloco }}
+                          }
+                          @case ('requests') {
+                            {{ 'dashboard.todo.text.requests' | transloco: { count: submittedRequests() } }}
+                          }
+                          @default {
+                            {{
+                              'dashboard.todo.text.' + it.kind
+                                | transloco
+                                  : {
+                                      date: it.date,
+                                      today: ('contract.category.' + it.todo!.today.category | transloco),
+                                      next: it.todo!.next ? ('contract.category.' + it.todo!.next.category | transloco) : ''
+                                    }
+                            }}
+                          }
+                        }
+                      </p>
+                      @if (it.todo; as t) {
+                        @let c = t.next ?? t.today;
+                        @let p = reasonParams(c);
+                        <p class="why">
+                          @if (c.below) {
+                            {{ 'contract.below.' + c.below | transloco: p }}
+                          }
+                          {{ 'contract.reason.' + c.reason | transloco: p }}
+                        </p>
+                      }
+                      <p class="detail-links">
+                        @switch (it.kind) {
+                          @case ('noContract') {
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'employment' }">{{ 'dashboard.todo.toContract' | transloco }} →</a>
+                          }
+                          @case ('lose') {
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'employment' }">{{ 'dashboard.todo.toContractCheck' | transloco }} →</a>
+                          }
+                          @case ('office') {
+                            @if (it.office === 'noStandard') {
+                              <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>
+                            }
+                          }
+                          @case ('requests') {
+                            <a [routerLink]="['/o', office()?.id, 'requests']" [queryParams]="{ status: 'submitted' }">{{ 'dashboard.todo.toRequests' | transloco }} →</a>
+                          }
+                          @case ('age') {
+                            <a [routerLink]="['/o', office()?.id, 'ages']">{{ 'dashboard.todo.toAges' | transloco }} →</a>
+                          }
+                        }
+                      </p>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (hiddenCount() > 0 || showAll()) {
+          <button type="button" class="link-btn more" (click)="showAll.set(!showAll())">
+            {{ (showAll() ? 'dashboard.todo.showLess' : 'home.showAll') | transloco: { count: filtered().length } }}
           </button>
-        }
-        @if (g.dismissed.length > 0) {
-          <button type="button" class="link-btn" (click)="toggleDismissed(g.kind)">
-            {{ (showDismissed().has(g.kind) ? 'dashboard.todo.hideDismissed' : 'dashboard.todo.showDismissed') | transloco: { count: g.dismissed.length } }}
-          </button>
-        }
-      </div>
-      @if (showDismissed().has(g.kind)) {
-        @for (it of g.dismissed; track it.key) {
-          @let e = employeeOf(it);
-          <div class="todo-item dismissed">
-            @if (e) {
-              <span class="who">{{ employeeName(e) }}</span>
-            }
-            <span class="what">{{ it.date }}</span>
-            @if (isAdmin()) {
-              <button type="button" class="btn btn-small" [disabled]="busyKey() === it.key" (click)="undismiss(it)">
-                {{ 'dashboard.todo.undismiss' | transloco }}
-              </button>
-            }
-          </div>
         }
       }
-    </section>
-  }
-
-  <div class="todo-links">
-    <a [routerLink]="['/o', office()?.id, 'revisions']">{{ 'dashboard.todo.toRevisions' | transloco }} →</a>
-    @if (regularSeason(); as y) {
-      <a [routerLink]="['/o', office()?.id, 'regular', y]">{{ 'payroll.toRegular' | transloco: { year: y } }} →</a>
+      <p class="hint">{{ 'home.hint' | transloco }}</p>
     }
-  </div>
-  <p class="hint">{{ 'dashboard.todo.hint' | transloco }}</p>
-}
+  </section>
+
+  <!-- ===== 右の箱：確認待ちの依頼・年1回・随時・設定 ===== -->
+  <aside class="side">
+    @if (isAdmin()) {
+      <section class="card box">
+        <h2>{{ 'home.box.requests' | transloco }}</h2>
+        @if (submittedRequests() > 0) {
+          <p class="big">{{ 'dashboard.todo.count' | transloco: { count: submittedRequests() } }}</p>
+          <a [routerLink]="['/o', office()?.id, 'requests']" [queryParams]="{ status: 'submitted' }">{{ 'dashboard.todo.toRequests' | transloco }} →</a>
+        } @else {
+          <p class="muted">{{ 'home.box.noRequests' | transloco }}</p>
+        }
+        <a [routerLink]="['/o', office()?.id, 'requests', 'new']">{{ 'request.new' | transloco }} →</a>
+      </section>
+    }
+
+    <section class="card box">
+      <h2>{{ 'home.box.yearly' | transloco }}</h2>
+      <a [routerLink]="['/o', office()?.id, 'revisions']">{{ 'nav.revisions' | transloco }} →</a>
+      <a [routerLink]="['/o', office()?.id, 'regular', regularSeason() ?? thisMonth.slice(0, 4)]">
+        {{ 'nav.regular' | transloco }} →
+        @if (regularSeason()) {
+          <span class="season">{{ 'home.box.season' | transloco }}</span>
+        }
+      </a>
+      <a [routerLink]="['/o', office()?.id, 'ages']">{{ 'dashboard.ages.title' | transloco }} →</a>
+    </section>
+
+    <section class="card box">
+      <h2>{{ 'nav.group.setup' | transloco }}</h2>
+      <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'nav.settings' | transloco }} →</a>
+      <a [routerLink]="['/o', office()?.id, 'members']">{{ 'nav.members' | transloco }} →</a>
+      <a [routerLink]="['/o', office()?.id, 'help']">{{ 'nav.help' | transloco }} →</a>
+    </section>
+  </aside>
+</div>
 
 @if (open(); as o) {
   <app-todo-dialog

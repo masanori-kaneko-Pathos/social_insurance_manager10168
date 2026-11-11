@@ -2586,5 +2586,54 @@
     "sameEmail": "This is the same as the current address.",
     "openPassword": "Change password",
     "openEmail": "Change email address"
+  },
+  "home": {
+    "menuTitle": "Frequently used",
+    "menu": {
+      "payroll": "Enter pay paid in month {{m}}",
+      "premiums": "Premiums",
+      "employees": "Employees",
+      "payrollsView": "Payroll records",
+      "addEmployee": "Add employee",
+      "import": "Import from file",
+      "request": "Send a request",
+      "bonus": "Add bonus"
+    },
+    "filterKind": "Filter by type",
+    "filterView": "Open or checked",
+    "allKinds": "All types",
+    "viewOpen": "Open",
+    "viewDismissed": "Checked ({{count}})",
+    "noDismissed": "Nothing has been checked.",
+    "col": {
+      "urgency": "Urgency",
+      "kind": "Procedure",
+      "who": "Employee",
+      "date": "Date",
+      "deadline": "Filing due",
+      "actions": "Actions"
+    },
+    "urgency": {
+      "overdue": "Overdue",
+      "now": "Now",
+      "soon": "Coming up",
+      "missing": "Missing info",
+      "info": "Check"
+    },
+    "ageOn": "Age {{age}}, {{date}}",
+    "overBy": "{{n}} day(s) overdue",
+    "today": "Due today",
+    "daysLeft": "{{n}} day(s) left",
+    "asap": "As soon as possible",
+    "onlyIfPayChanges": "Only if pay changes",
+    "details": "Show details",
+    "showAll": "Show all ({{count}})",
+    "hint": "Filing is due on the 5th day, counting the day of the event as day 1 (enrollment, coverage-end, category change, age-70 and age-75 reports). Click a row to see why. Saving in a form window records the enrollment and the filing and removes the item.",
+    "box": {
+      "requests": "Requests to review",
+      "noRequests": "Nothing to review.",
+      "yearly": "Yearly / as needed",
+      "season": "Now"
+    }
   }
 }
