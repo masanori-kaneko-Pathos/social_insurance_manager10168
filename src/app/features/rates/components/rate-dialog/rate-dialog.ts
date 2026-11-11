@@ -11,6 +11,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { ImportFileError, MAX_FILE_BYTES } from '../../../../shared/import/parse';
+import { findRates, guessFill, RateCandidate } from '../../logic/rate-pdf';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { HealthInsurer } from '../../../../core/models/office';
 import {
@@ -120,6 +122,16 @@ export class RateDialog implements OnInit {
   readonly saving = signal(false);
   readonly saveError = signal(false);
   readonly confirmDelete = signal<string | null>(null);
+
+  // ===== PDF から読み取る（組合のお知らせ） =====
+  /** 拾った料率の候補（行の文字つき） */
+  readonly pdfCandidates = signal<RateCandidate[]>([]);
+  readonly pdfReading = signal(false);
+  readonly pdfError = signal<string | null>(null);
+  /** 推して入れた欄の数（「○つの欄に入れました」） */
+  readonly pdfFilled = signal<number | null>(null);
+  /** 最後に選んだ欄（候補を押すと、ここに入る） */
+  readonly targetField = signal<{ kind: Kind; field: (typeof FIELDS)[number] } | null>(null);
 
   readonly form = this.fb.nonNullable.group({
     from: [''],
@@ -232,6 +244,10 @@ export class RateDialog implements OnInit {
   }
 
   private openEdit(mode: string): void {
+    this.pdfCandidates.set([]);
+    this.pdfError.set(null);
+    this.pdfFilled.set(null);
+    this.targetField.set(null);
     this.errors.set({});
     this.saveError.set(false);
     this.confirmDelete.set(null);
@@ -250,6 +266,54 @@ export class RateDialog implements OnInit {
       employee: formatRateInput(s.employee, u),
       employer: formatRateInput(s.employer, u),
     };
+  }
+
+  /** PDF を読み、推した値を空の欄にだけ入れ、拾った数字を全部候補に並べる */
+  async readPdf(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // 同じファイルを選び直しても反応するように
+    if (!file) return;
+    this.pdfReading.set(true);
+    this.pdfError.set(null);
+    this.pdfFilled.set(null);
+    try {
+      if (file.size > MAX_FILE_BYTES) throw new ImportFileError('tooBig');
+      const { readPdfLines } = await import('../../../../shared/import/pdf');
+      const cands = findRates(await readPdfLines(await file.arrayBuffer()));
+      this.pdfCandidates.set(cands);
+      if (!cands.length) {
+        this.pdfError.set('rateDialog.pdf.none');
+        return;
+      }
+      let filled = 0;
+      for (const [key, rate] of Object.entries(guessFill(cands))) {
+        const [kind, field] = key.split('.') as [Kind, (typeof FIELDS)[number]];
+        const control = this.form.controls[kind].controls[field];
+        if (control.value.trim() === '' && rate !== undefined) {
+          control.setValue(formatRateInput(rate, this.unit()));
+          filled++;
+        }
+      }
+      this.pdfFilled.set(filled);
+    } catch (err) {
+      console.error(err);
+      this.pdfError.set(err instanceof ImportFileError ? `importMap.error.${err.code}` : 'rateDialog.pdf.failed');
+    } finally {
+      this.pdfReading.set(false);
+    }
+  }
+
+  /** 候補を押す：最後に選んだ欄に入れる */
+  useCandidate(c: RateCandidate): void {
+    const t = this.targetField();
+    if (!t) return;
+    this.form.controls[t.kind].controls[t.field].setValue(formatRateInput(c.rate, this.unit()));
+  }
+
+  isTarget(kind: Kind, field: string): boolean {
+    const t = this.targetField();
+    return !!t && t.kind === kind && t.field === field;
   }
 
   async save(): Promise<void> {

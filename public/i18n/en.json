@@ -914,6 +914,16 @@
       "tooHigh": "Rates above 30% can't be entered.",
       "load": "Couldn't load rates.",
       "save": "Couldn't save. Try again later."
+    },
+    "pdf": {
+      "choose": "Read from PDF",
+      "reading": "Reading…",
+      "hint": "The rate notice PDF from your society. Only empty fields are filled (scanned PDFs cannot be read).",
+      "none": "No rate-like numbers (%, ‰, per 1000) were found in the PDF. Please enter them manually.",
+      "failed": "Could not read the PDF. Please enter the rates manually.",
+      "filled": "Filled {{n}} field(s). Check the values, then press Save.",
+      "pickHint": "Numbers found in the PDF. Click one to put it in the highlighted field.",
+      "selectFirst": "Numbers found in the PDF. Click the field first, then click a number."
     }
   },
   "bonus": {

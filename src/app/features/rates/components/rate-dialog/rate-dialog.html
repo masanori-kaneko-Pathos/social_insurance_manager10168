@@ -210,6 +210,21 @@
             }
           </div>
 
+          <!-- 組合のお知らせの PDF から読み取る（推した値は空の欄にだけ入れる。拾った数字は全部、下に候補として並べる） -->
+          <div class="pdf-read">
+            <label class="btn file" [class.disabled]="pdfReading()">
+              {{ (pdfReading() ? 'rateDialog.pdf.reading' : 'rateDialog.pdf.choose') | transloco }}
+              <input type="file" accept=".pdf,application/pdf" (change)="readPdf($event)" [disabled]="pdfReading()" />
+            </label>
+            <span class="hint">{{ 'rateDialog.pdf.hint' | transloco }}</span>
+          </div>
+          @if (pdfError(); as e) {
+            <div class="alert alert-warning">{{ e | transloco }}</div>
+          }
+          @if (pdfFilled() !== null) {
+            <p class="hint">{{ 'rateDialog.pdf.filled' | transloco: { n: pdfFilled() } }}</p>
+          }
+
           <table class="split-input">
             <thead>
               <tr>
@@ -232,6 +247,8 @@
                           autocomplete="off"
                           [formControlName]="f"
                           [class.is-invalid]="errors()[kind]"
+                          [class.is-target]="isTarget(kind, f)"
+                          (focus)="targetField.set({ kind: kind, field: f })"
                           [attr.aria-label]="
                             ('premium.part.' + kind | transloco) +
                             ' ' +
@@ -252,6 +269,26 @@
               }
             </tbody>
           </table>
+          @if (pdfCandidates().length > 0) {
+            <div class="candidates">
+              <p class="hint">
+                {{ (targetField() ? 'rateDialog.pdf.pickHint' : 'rateDialog.pdf.selectFirst') | transloco }}
+              </p>
+              <ul>
+                @for (c of pdfCandidates(); track $index) {
+                  <li>
+                    <button type="button" class="cand" [disabled]="!targetField()" (click)="useCandidate(c)">
+                      {{ c.shown }}
+                    </button>
+                    <span class="cand-guess">
+                      {{ 'premium.part.' + c.kind | transloco }}・{{ 'rateDialog.' + c.field | transloco }}
+                    </span>
+                    <span class="cand-line">{{ c.line }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
           <p class="hint">{{ 'rateDialog.childSupportHint' | transloco }}</p>
           <p class="hint">{{ 'rateDialog.saveHint' | transloco }}</p>
 

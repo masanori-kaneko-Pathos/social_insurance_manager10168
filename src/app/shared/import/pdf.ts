@@ -49,6 +49,48 @@ export async function readPdf(buf: ArrayBuffer): Promise<string[][]> {
 }
 
 /**
+ * PDF の文字を、行ごとの文字にする（表には組み立てない）。組合の料率のお知らせなど、書式が決まっていない PDF 用。
+ * 同じ行のかけらは、すき間があれば空白を挟んでつなぐ
+ */
+export async function readPdfLines(buf: ArrayBuffer): Promise<string[]> {
+    const pdfjs = await import('pdfjs-dist');
+    pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+    const task = pdfjs.getDocument({
+        data: new Uint8Array(buf),
+        cMapUrl: '/cmaps/',
+        cMapPacked: true,
+        standardFontDataUrl: '/standard_fonts/',
+    });
+    const doc = await task.promise;
+    try {
+        if (doc.numPages > MAX_PDF_PAGES) throw new ImportFileError('tooManyPages');
+        const out: string[] = [];
+        for (let p = 1; p <= doc.numPages; p++) {
+            const content = await (await doc.getPage(p)).getTextContent();
+            const pieces = (content.items as { str?: string; transform?: number[]; width?: number; height?: number }[])
+                .filter((it) => it.str?.trim() && it.transform)
+                .map((it) => ({
+                    s: it.str!, x: it.transform![4], y: it.transform![5], w: it.width ?? 0,
+                    h: it.height || Math.abs(it.transform![3]) || 10,
+                }));
+            for (const line of toLines(pieces)) {
+                let text = '';
+                let end = -Infinity;
+                for (const piece of line) {
+                    text += (text && piece.x - end > piece.h * 0.15 ? ' ' : '') + piece.s;
+                    end = piece.x + piece.w;
+                }
+                if (text.trim()) out.push(text.trim());
+            }
+        }
+        if (!out.length) throw new ImportFileError('noText');
+        return out;
+    } finally {
+        await task.destroy();
+    }
+}
+
+/**
  * ② 1ページの文字のかけらを、上から順に行にまとめる。
  * かけらどうしは、ここではつながない（スプレッドシートの PDF は、マスのすき間がとても狭く、
  * つなぐと隣の列の文字までくっつくため。つなぐのは、列に振り分けたあと、同じ列の中だけ）
