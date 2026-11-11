@@ -4,7 +4,10 @@ import { TranslocoService } from '@jsverse/transloco';
 import { auth } from '../firebase';
 import { UserProfileService } from '../auth/user-profile.service';
 
-export type Lang = 'ja' | 'en';
+import { isLang, Lang, LANGUAGES } from './languages';
+
+// 言語の一覧は languages.ts（ここでは Lang を今までどおり使えるよう、そのまま渡す）
+export type { Lang };
 const STORAGE_KEY = 'shaho.lang';
 
 @Injectable({ providedIn: 'root' })
@@ -16,6 +19,9 @@ export class LanguageService {
   readonly lang = toSignal(this.transloco.langChanges$, {
     initialValue: this.transloco.getActiveLang(),
   });
+
+  /** 使える言語（切り替えのボタンに並べる） */
+  readonly languages = LANGUAGES;
 
   /** 起動時に1回だけ呼ぶ：保存された言語があれば戻す */
   init(): void {
@@ -51,7 +57,7 @@ export class LanguageService {
   private read(): Lang | null {
     try {
       const v = localStorage.getItem(STORAGE_KEY);
-      return v === 'ja' || v === 'en' ? v : null;
+      return isLang(v) ? v : null;
     } catch {
       return null;
     }

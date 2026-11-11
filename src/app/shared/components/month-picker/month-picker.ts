@@ -1,6 +1,7 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LanguageService } from '../../../core/i18n/language.service';
+import { localeOf } from '../../../core/i18n/languages';
 import { YearMonth } from '../../utils/date';
 
 /**
@@ -84,7 +85,7 @@ export class MonthPicker {
   readonly open = signal(false);
   /** 選び窓で見ている年（開くたびに、今見ている年に戻す） */
   readonly year = signal(2026);
-  private readonly locale = computed(() => (this.language.lang() === 'en' ? 'en-US' : 'ja-JP'));
+  private readonly locale = computed(() => localeOf(this.language.lang()));
 
   /** 1月〜12月の名前（日本語なら「1月」、英語なら「Jan」） */
   readonly monthNames = computed(() => {

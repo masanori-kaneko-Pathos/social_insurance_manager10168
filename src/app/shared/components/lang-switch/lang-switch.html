@@ -1,4 +1,5 @@
 <div class="lang-switch" role="group" aria-label="Language">
-    <button type="button" [class.active]="language.lang() === 'ja'" (click)="language.set('ja')">日本語</button>
-    <button type="button" [class.active]="language.lang() === 'en'" (click)="language.set('en')">English</button>
+    @for (l of language.languages; track l.code) {
+      <button type="button" [class.active]="language.lang() === l.code" (click)="language.set(l.code)">{{ l.label }}</button>
+    }
   </div>

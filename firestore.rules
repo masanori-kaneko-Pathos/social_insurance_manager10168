@@ -47,6 +47,11 @@ service cloud.firestore {
 
     // ----- 形 -----
     // 項目がちょうど keys だけ：全部あって、数が同じ（hasOnly と hasAll を両方使うより、評価の数が少ない）
+    // 使える言語（src/app/core/i18n/languages.ts の一覧とそろえる。言語を足したら、ここにも足してデプロイ）
+    function langs() {
+      return ['ja', 'en'];
+    }
+
     function exactKeys(d, keys) {
       return d.keys().hasAll(keys) && d.keys().size() == keys.size();
     }
@@ -134,7 +139,7 @@ service cloud.firestore {
              ['email', 'displayName', 'role', 'currentOfficeId', 'lang', 'employeeRef', 'createdAt', 'updatedAt'])
         && request.resource.data.email == request.auth.token.email
         && str(request.resource.data.displayName, 50)
-        && request.resource.data.lang in ['ja', 'en']
+        && request.resource.data.lang in langs()
         && created(request.resource.data)
         && ((request.resource.data.role == 'admin'
               && request.resource.data.currentOfficeId == null
@@ -149,7 +154,7 @@ service cloud.firestore {
         && (request.resource.data.email == resource.data.email
             || request.resource.data.email == request.auth.token.email)
         && str(request.resource.data.displayName, 50)
-        && request.resource.data.lang in ['ja', 'en']
+        && request.resource.data.lang in langs()
         && (request.resource.data.currentOfficeId == null
             || request.auth.uid in getAfter(
                  /databases/$(database)/documents/offices/$(request.resource.data.currentOfficeId)

@@ -2498,7 +2498,7 @@
       },
       "payroll": {
         "title": "Entering payroll records",
-        "body": "On the payroll screen, enter the amount paid in money, fixed wages and payment basis days for each month paid. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and retroactive pay columns."
+        "body": "On the payroll screen, enter the amount paid in money, fixed wages and payment basis days for each month paid. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and retroactive pay columns. For one person and one month, you can also use \"Enter a month\" on the employee page."
       },
       "inKind": {
         "title": "Remuneration provided in kind (housing, dormitories, meals)",
@@ -2530,11 +2530,27 @@
       },
       "myPage": {
         "title": "Employee My Page and requests",
-        "body": "Create an invitation link from \"Personal info\" on the employee page and send it to the employee. On My Page, employees can see their premium breakdown, answer requests and apply for changes such as their address. Answers and applications are reviewed under \"Requests\"; approving writes them to the employee record (with change history)."
+        "body": "Create an invitation link from \"Personal info\" on the employee page and send it to the employee. On My Page, employees can see their premium breakdown, answer requests and apply for changes such as their address. Answers and applications are reviewed under \"Requests\"; approving writes them to the employee record (with change history). To invite several people at once, select them in My Pages > Invites and accounts, press \"Invite\", and export the links as CSV (only people with a contact email; no email is sent automatically)."
       },
       "roles": {
         "title": "Roles (administrator, general, employee) and the representative",
-        "body": "Administrators can register, edit, file and invite. General users can only view, and cannot see contact, commute and bank details or change history. Employees see only their own information on My Page. One administrator is the representative; only the representative can make other administrators general or remove them (so administrators cannot remove each other). Staff invitations are created under Members, and only someone who verifies the invited address can join."
+        "body": "Administrators can register, edit, file and invite. General users can only view, and cannot see contact, commute and bank details or change history. Employees see only their own information on My Page. One administrator is the representative; only the representative can make other administrators general or remove them (so administrators cannot remove each other). Staff invitations are created under Members, and only someone who verifies the invited address can join. Administrators and general users can delete their own account at the bottom of Account settings (this cannot be undone). Owners must transfer the owner role first."
+      },
+      "annual": {
+        "title": "Annual average (insurer calculation)",
+        "body": "If overtime and similar pay rise (or fall) at the same time every year because of the nature of the business or department, the standard monthly remuneration can be set by the annual average with the employee's consent. The app compares the regular average with the annual one (July to June for the annual determination; for monthly changes, the 3-month fixed-wage average plus the 12-month non-fixed average) and shows a candidate when they differ by 2 or more grades (1 grade near the upper or lower limit). Check \"seasonal\" and \"consent\" on the annual determination or revision page to apply it. One-off raises, a temporarily busy period, commuting allowance changes and the end of maternity or childcare leave are not eligible. Write \"年間平均\" in the remarks and attach the statement and consent form (every time)."
+      },
+      "filings": {
+        "title": "Filing lists (CSV for copying)",
+        "body": "In \"Filing lists\", choose a form (acquisition, loss, annual determination, monthly change, bonus payment) and a period, then press \"Show\" to list one person per row in the order of the form's numbered fields. Dates are in the Japanese era. You can also export CSV. My Number and address are not included. Remarks only include what the app records, so add anything missing. This is not the electronic submission format."
+      },
+      "premiumList": {
+        "title": "Premium list marks (advance, 2+ offices)",
+        "body": "\"Check advances\" reads the pay for the deduction month and marks employees whose pay (cash) is less than their share with \"Advance\" and an estimated amount. The company pays it in advance and collects it later (the app does not record collection). \"2+ offices\" marks employees working at two or more offices; their premiums are split by the pension office, so the amounts are estimates. Check the notice."
+      },
+      "display": {
+        "title": "Display (colors, menu, input)",
+        "body": "Choose Light, Dark or Auto (follow the computer) in Settings > Appearance at the top right. Press the orange square at the top left to collapse the left menu to icons and widen the content. Both are remembered by the browser. In the payroll month and bonus tables, Enter and arrow keys move between cells (Enter moves to the next field in the employee form)."
       }
     }
   },

@@ -18,6 +18,10 @@ export const HELP_TOPICS = [
   'csv',
   'myPage',
   'roles',
+  'annual',
+  'filings',
+  'premiumList',
+  'display',
 ] as const;
 export type HelpTopic = (typeof HELP_TOPICS)[number];
 

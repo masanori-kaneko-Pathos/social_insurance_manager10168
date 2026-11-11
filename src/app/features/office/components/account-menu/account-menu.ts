@@ -2,7 +2,7 @@ import { Component, ElementRef, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../../core/auth/auth.service';
-import { LanguageService } from '../../../../core/i18n/language.service';
+import { Lang, LanguageService } from '../../../../core/i18n/language.service';
 import { THEME_PREFS, ThemeService } from '../../../../core/theme/theme.service';
 import { OfficeContext } from '../../office-context.service';
 
@@ -46,7 +46,7 @@ export class AccountMenu {
     if (!this.host.nativeElement.contains(event.target as Node)) this.close();
   }
 
-  setLang(lang: 'ja' | 'en'): void {
+  setLang(lang: Lang): void {
     this.language.set(lang);
   }
 

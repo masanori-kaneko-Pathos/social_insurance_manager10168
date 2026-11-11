@@ -29,24 +29,17 @@
     <div class="section">
       <span class="label">{{ 'account.language' | transloco }}</span>
       <div class="lang" role="group" aria-label="Language">
-        <button
-          type="button"
-          role="menuitemradio"
-          [attr.aria-checked]="language.lang() === 'ja'"
-          [class.active]="language.lang() === 'ja'"
-          (click)="setLang('ja')"
-        >
-          日本語
-        </button>
-        <button
-          type="button"
-          role="menuitemradio"
-          [attr.aria-checked]="language.lang() === 'en'"
-          [class.active]="language.lang() === 'en'"
-          (click)="setLang('en')"
-        >
-          English
-        </button>
+        @for (l of language.languages; track l.code) {
+          <button
+            type="button"
+            role="menuitemradio"
+            [attr.aria-checked]="language.lang() === l.code"
+            [class.active]="language.lang() === l.code"
+            (click)="setLang(l.code)"
+          >
+            {{ l.label }}
+          </button>
+        }
       </div>
     </div>
 
