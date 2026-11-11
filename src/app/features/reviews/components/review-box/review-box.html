@@ -1,0 +1,42 @@
+@if (review() !== undefined) {
+  <div class="review s-{{ state() }}">
+    <span class="label">{{ 'review.title' | transloco }}</span>
+    @switch (state()) {
+      @case ('none') {
+        <span class="text">{{ 'review.none' | transloco }}</span>
+        @if (canRequest()) {
+          <button type="button" class="btn btn-small" [disabled]="busy()" (click)="request()">{{ 'review.request' | transloco }}</button>
+        }
+      }
+      @case ('requested') {
+        @if (review(); as r) {
+          <span class="text">{{ 'review.requested' | transloco: { name: r.requestedByName || '—', at: when(r, 'requestedAt') } }}</span>
+          @if (canCheck()) {
+            <input class="input comment" maxlength="200" [placeholder]="'review.commentPlaceholder' | transloco"
+                   [value]="comment()" (input)="comment.set($any($event.target).value)" />
+            <button type="button" class="btn btn-small btn-primary" [disabled]="busy()" (click)="check()">{{ 'review.check' | transloco }}</button>
+          } @else if (isRequester()) {
+            <span class="sub">{{ 'review.selfNote' | transloco }}</span>
+          }
+          @if (context.isAdmin()) {
+            <button type="button" class="link-btn" [disabled]="busy()" (click)="reset()">{{ 'review.cancel' | transloco }}</button>
+          }
+        }
+      }
+      @case ('checked') {
+        @if (review(); as r) {
+          <span class="text">
+            {{ 'review.checked' | transloco: { name: r.checkedByName || '—', at: when(r, 'checkedAt'), by: r.requestedByName || '—' } }}
+            @if (r.comment) { <span class="sub">「{{ r.comment }}」</span> }
+          </span>
+          @if (context.isAdmin()) {
+            <button type="button" class="link-btn" [disabled]="busy()" (click)="reset()">{{ 'review.redo' | transloco }}</button>
+          }
+        }
+      }
+    }
+    @if (errorKey(); as k) {
+      <span class="err">{{ k | transloco }}</span>
+    }
+  </div>
+}

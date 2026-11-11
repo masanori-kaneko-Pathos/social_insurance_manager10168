@@ -384,3 +384,7 @@ td.calc a {
   font-size: var(--font-sm);
   color: var(--color-success-text);
 }
+
+.notice .review {
+  margin-top: var(--space-md);
+}

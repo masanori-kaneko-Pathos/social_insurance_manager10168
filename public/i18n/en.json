@@ -2959,5 +2959,18 @@
       "yearEndForms": "Hand out year-end adjustment forms",
       "yearEnd": "Year-end adjustment"
     }
+  },
+  "review": {
+    "title": "Double check",
+    "none": "No check requested yet",
+    "request": "Request a check",
+    "requested": "{{name}} requested a check ({{at}})",
+    "check": "Checked",
+    "commentPlaceholder": "Comment (optional)",
+    "selfNote": "The requester cannot check their own work. Ask someone else.",
+    "cancel": "Withdraw",
+    "checked": "Checked by {{name}} ({{at}}; requested by {{by}})",
+    "redo": "Request again after changes",
+    "error": "Could not save."
   }
 }

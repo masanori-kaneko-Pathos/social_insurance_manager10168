@@ -392,6 +392,10 @@
         </div>
       }
       <p class="hint">{{ 'premiumNotice.hint' | transloco }}</p>
+      <!-- 納める前に、作った人とは別の人が確かめる -->
+      @if (nc.status !== 'notEntered') {
+        <app-review-box class="review" [target]="noticeReviewId(month())" />
+      }
     </section>
   }
 }

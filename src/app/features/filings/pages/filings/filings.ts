@@ -5,6 +5,8 @@ import { Employee } from '../../../../core/models/employee';
 import { Payroll } from '../../../../core/models/payroll';
 import { downloadCsv, safeFileName } from '../../../../shared/csv/csv';
 import { MonthPicker } from '../../../../shared/components/month-picker/month-picker';
+import { ReviewBox } from '../../../reviews/components/review-box/review-box';
+import { filingReviewId } from '../../../reviews/logic/review';
 import { daysInMonth, shiftMonth, todayLocal, toYearMonth, YearMonth } from '../../../../shared/utils/date';
 import { ContractService } from '../../../employees/contract.service';
 import { DependentService } from '../../../employees/dependent.service';
@@ -49,7 +51,7 @@ import {
  */
 @Component({
   selector: 'app-filings',
-  imports: [MonthPicker, RouterLink, TranslocoPipe],
+  imports: [MonthPicker, ReviewBox, RouterLink, TranslocoPipe],
   templateUrl: './filings.html',
   styleUrl: './filings.css',
 })
@@ -298,6 +300,8 @@ export class FilingsPage {
           ),
       );
   }
+
+  readonly reviewId = filingReviewId;
 
   // ===== 書き出し =====
 

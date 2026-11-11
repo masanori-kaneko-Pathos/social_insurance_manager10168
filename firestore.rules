@@ -870,6 +870,33 @@ service cloud.firestore {
         allow delete: if false;
       }
 
+      // ----- 担当者のダブルチェック（ID ＝ 対象の鍵：filing_様式_期間・notice_月） -----
+      // 管理者が「確認を頼む」→ 頼んだ人とは別のメンバー（一般でもよい）が「確認した」。頼んだ本人は確認できない
+      match /reviews/{reviewId} {
+        allow read: if isMember(officeId);
+        allow create: if isAdmin(officeId)
+          && exactKeys(request.resource.data, ['target', 'requestedBy', 'requestedByName', 'requestedAt', 'checkedBy',
+                                               'checkedByName', 'checkedAt', 'comment', 'updatedAt'])
+          && request.resource.data.target == reviewId && reviewId.size() <= 120
+          && request.resource.data.requestedBy == request.auth.uid
+          && str(request.resource.data.requestedByName, 50)
+          && request.resource.data.requestedAt == request.time
+          && request.resource.data.checkedBy == null && request.resource.data.checkedByName == null
+          && request.resource.data.checkedAt == null && request.resource.data.comment == null
+          && request.resource.data.updatedAt == request.time;
+        allow update: if isMember(officeId)
+          && resource.data.checkedBy == null
+          && resource.data.requestedBy != request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['checkedBy', 'checkedByName', 'checkedAt', 'comment', 'updatedAt'])
+          && request.resource.data.checkedBy == request.auth.uid
+          && str(request.resource.data.checkedByName, 50)
+          && request.resource.data.checkedAt == request.time
+          && optStr(request.resource.data.comment, 200)
+          && request.resource.data.updatedAt == request.time;
+        allow delete: if isAdmin(officeId);
+      }
+
       // ----- 「やること」の確認済み（ID ＝ カードの鍵） -----
       match /todoDismissals/{key} {
         allow read: if isMember(officeId);

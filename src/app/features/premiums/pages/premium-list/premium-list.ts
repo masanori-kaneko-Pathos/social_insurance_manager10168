@@ -37,6 +37,8 @@ import { PayrollService } from '../../../payrolls/payroll.service';
 import { advanceAmount, advanceState } from '../../logic/advance';
 import { checkNotice, DIFF_REASONS, DiffReason, dueDateOf, NOTICE_CATEGORIES, NoticeCategory, noticeArrivalOf } from '../../logic/notice-check';
 import { PremiumNoticeService } from '../../premium-notice.service';
+import { ReviewBox } from '../../../reviews/components/review-box/review-box';
+import { noticeReviewId } from '../../../reviews/logic/review';
 import { PremiumNotice } from '../../../../core/models/premium-notice';
 import { parseNat } from '../../../../shared/utils/number';
 import { buildPremiumCsv, PremiumCsvRow, premiumFileName } from '../../logic/premium-csv';
@@ -58,7 +60,7 @@ interface ListItem extends PremiumRow {
 
 @Component({
   selector: 'app-premium-list',
-  imports: [MonthPicker, RouterLink, TranslocoPipe],
+  imports: [MonthPicker, ReviewBox, RouterLink, TranslocoPipe],
   templateUrl: './premium-list.html',
   styleUrl: './premium-list.css',
 })
@@ -244,6 +246,7 @@ export class PremiumList {
   // ===== 毎月の納付額の突き合わせ（年金事務所の告知額 ↔ アプリの合計） =====
 
   readonly noticeCategories = NOTICE_CATEGORIES;
+  readonly noticeReviewId = noticeReviewId;
   readonly diffReasons = DIFF_REASONS;
   /** 保存済みの記録（なければ null）。読み込み中は undefined */
   private readonly savedNotice = signal<PremiumNotice | null | undefined>(undefined);

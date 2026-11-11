@@ -50,6 +50,10 @@
     <h2>{{ 'filing.kind.' + r.kind | transloco }} <span class="sub">{{ 'filing.count' | transloco: { n: r.rows.length } }}</span></h2>
     <button type="button" class="btn" [disabled]="r.rows.length === 0" (click)="exportCsv()">{{ 'filing.csv' | transloco }}</button>
   </div>
+  <!-- 届を出す前に、作った人とは別の人が確かめる -->
+  @if (r.rows.length > 0) {
+    <app-review-box class="review" [target]="reviewId(r.kind, r.period)" />
+  }
   @if (r.rows.length === 0) {
     <p class="muted">{{ 'filing.empty' | transloco }}</p>
   } @else {

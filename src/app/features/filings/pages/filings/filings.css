@@ -102,3 +102,7 @@ td.wrap {
   min-width: 16em;
   white-space: normal;
 }
+
+.review {
+  margin-bottom: var(--space-sm);
+}
