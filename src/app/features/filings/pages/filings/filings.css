@@ -1,0 +1,104 @@
+:host {
+  display: block;
+}
+
+.page-head {
+  margin-bottom: var(--space-md);
+}
+
+h1 {
+  margin: 0;
+  font-size: var(--font-xl);
+}
+
+h2 {
+  margin: 0;
+  font-size: var(--font-lg);
+}
+
+.lead,
+.hint {
+  margin: var(--space-xs) 0 var(--space-md);
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.hint {
+  font-size: var(--font-xs);
+}
+
+.muted {
+  color: var(--color-text-sub);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+
+.controls .field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+  font-size: var(--font-sm);
+}
+
+.range,
+.year {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.year .btn {
+  width: 40px;
+  padding: 0;
+}
+
+.result-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin: var(--space-md) 0 var(--space-sm);
+}
+
+.sub {
+  font-size: var(--font-sm);
+  font-weight: 400;
+  color: var(--color-text-sub);
+}
+
+.table-wrap {
+  padding: 0;
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  font-size: var(--font-xs);
+}
+
+th,
+td {
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+thead th {
+  font-weight: 400;
+  color: var(--color-text-sub);
+}
+
+td.wrap {
+  min-width: 16em;
+  white-space: normal;
+}

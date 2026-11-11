@@ -11,6 +11,7 @@ export type IconName =
   | 'regular'
   | 'settings'
   | 'inbox'
+  | 'filing'
   | 'help';
 
 /**
@@ -78,6 +79,10 @@ export type IconName =
         @case ('inbox') {
           <path d="M2 9.5l2-6.5h8l2 6.5v4H2z" />
           <path d="M2 9.5h3.5l1 1.5h3l1-1.5H14" />
+        }
+        @case ('filing') {
+          <path d="M4 1.5h5.5L12.5 4.5v10h-8.5z" />
+          <path d="M9.5 1.5v3h3M6 7.5h4.5M6 10h4.5M6 12.5h3" />
         }
         @case ('help') {
           <circle cx="8" cy="8" r="6.25" />

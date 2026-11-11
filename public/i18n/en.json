@@ -140,8 +140,8 @@
         "requests": "{{count}} answered requests or change applications from employees are waiting for review.",
         "age": "Turns {{age}} on {{date}}.",
         "residence": "The residence period expires on {{date}} (it may already have passed). Check the residence card for the renewal and enter the new expiry date when editing the employee.",
-        "workPermit": "The weekly hours of the current contract ({{hours}} h) exceed the hours allowed by the work permit ({{limit}} h per week). Review the contract (if an exception applies, such as a student's long school holidays, mark it as checked).",
-        "lumpSum": "A foreign employee who was in the employees' pension for {{months}} months is leaving. Tell them they can claim the lump-sum withdrawal payment from the Japan Pension Service within 2 years after leaving Japan (this is not a company filing; mark it as checked after you tell them).",
+        "workPermit": "The weekly hours of the current contract ({{hours}} h) exceed the hours allowed by the work permit ({{limit}} h per week). Review the contract. The limit applies to the total of all jobs in any 7 consecutive days (if an exception applies, such as a student's long school holidays, mark it as checked).",
+        "lumpSum": "A foreign employee who was in the employees' pension for {{months}} months is leaving. Tell them they can claim the lump-sum withdrawal payment from the Japan Pension Service within 2 years after they no longer have an address in Japan (this is not a company filing; mark it as checked after you tell them).",
         "specificOffice": "This office is not a specified applicable office, but this month's headcount (counted the way employees' pension members are counted) is {{count}}, which reaches the threshold ({{min}} or more). If the threshold is exceeded in 6 or more of the last 12 months, the office becomes a specified applicable office and short-time workers are covered too. Please check the office settings.",
         "specificOfficeHow": {
           "app": "(Counted from the contracts of employees registered in the app.)",
@@ -174,7 +174,8 @@
       "toContract": "Add a contract",
       "toContractCheck": "Check the contract",
       "errorDismiss": "Could not save. Please try again.",
-      "toForeign": "Edit employee (residence)"
+      "toForeign": "Edit employee (residence)",
+      "toFilings": "Open the acquisition filing list"
     }
   },
   "nav": {
@@ -192,7 +193,8 @@
     "requests": "Employee My Pages",
     "help": "Help",
     "home": "Home",
-    "members": "Administrators"
+    "members": "Administrators",
+    "filings": "Filing lists"
   },
   "employee": {
     "list": {
@@ -2741,5 +2743,90 @@
     "notEmployed": "This employee was not employed during this pay period. Check the month.",
     "more": "In kind, retroactive pay, absences, hours, status",
     "inKindHint": "To calculate housing or meal amounts, use \"Calculate\" on the month page."
+  },
+  "filing": {
+    "title": "Filing lists",
+    "lead": "Lists for copying onto the filing forms. Choose a form and period and press \"Show\" to list one person per row in the order of the form's fields. You can also export them as CSV.",
+    "kindLabel": "Form",
+    "kind": {
+      "acquire": "Acquisition",
+      "loss": "Loss",
+      "regular": "Annual determination",
+      "irregular": "Monthly change",
+      "bonus": "Bonus payment"
+    },
+    "period": {
+      "acquire": "Acquisition date",
+      "loss": "Loss date",
+      "irregular": "Revision month",
+      "bonus": "Payment date"
+    },
+    "year": "Year",
+    "yearLabel": "{{year}}",
+    "show": "Show",
+    "csv": "Export CSV",
+    "count": "{{n}}",
+    "empty": "No one in this period.",
+    "hint": {
+      "acquire": "People whose acquisition date (the earlier of health and pension) is in the period. The monthly remuneration is the expected amount in the contract on that date.",
+      "loss": "People whose loss date is in the period (two rows if health and pension differ). Reaching 70 while employed uses a different form.",
+      "regular": "People whose annual determination was applied (those who keep the previous amount are not listed).",
+      "irregular": "Monthly changes applied from the revision candidates.",
+      "bonus": "People insured on the payment date.",
+      "blank": "Dates are in the Japanese era. My Number and address fields are not included. Remarks only include what the app knows. This is not the electronic submission format."
+    },
+    "col": {
+      "insuredNumber": "Insured number",
+      "name": "Name",
+      "kana": "Name (kana)",
+      "birthDate": "Date of birth",
+      "kind": "Type",
+      "acquisitionType": "Acquisition type",
+      "basicPensionNumber": "Basic pension number",
+      "acquiredDate": "Acquisition date",
+      "dependents": "Dependents",
+      "cash": "Cash",
+      "inKind": "In kind",
+      "total": "Total",
+      "remarks": "Remarks",
+      "confirmationCard": "Eligibility certificate",
+      "employeeNumber": "(Employee number)",
+      "birthDateIso": "(Date of birth, ISO)",
+      "dateIso": "(Date, ISO)",
+      "lostDate": "Loss date",
+      "lossReason": "Reason for loss",
+      "over70NotApplicable": "Date no longer an employee aged 70+",
+      "applyMonth": "Applies from",
+      "revisedMonth": "Revised from",
+      "prevHealth": "Previous standard (health, thousand yen)",
+      "prevPension": "Previous standard (pension, thousand yen)",
+      "prevFrom": "Previous revision month",
+      "raise": "Raise / cut",
+      "retro": "Retroactive pay",
+      "sum": "Total",
+      "average": "Average",
+      "corrected": "Adjusted average",
+      "basicPensionNumber70": "Basic pension number (70+ only)",
+      "paidDate": "Bonus payment date",
+      "total1000": "Bonus amount (rounded down to 1,000 yen)",
+      "m1Month": "Pay month 1",
+      "m1Days": "Days 1",
+      "m1Cash": "Cash 1",
+      "m1InKind": "In kind 1",
+      "m1Total": "Total 1",
+      "m2Month": "Pay month 2",
+      "m2Days": "Days 2",
+      "m2Cash": "Cash 2",
+      "m2InKind": "In kind 2",
+      "m2Total": "Total 2",
+      "m3Month": "Pay month 3",
+      "m3Days": "Days 3",
+      "m3Cash": "Cash 3",
+      "m3InKind": "In kind 3",
+      "m3Total": "Total 3"
+    },
+    "error": {
+      "load": "Could not load the data for the filing list."
+    }
   }
 }

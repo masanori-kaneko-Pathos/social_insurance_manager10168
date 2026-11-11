@@ -189,6 +189,9 @@
                           @case ('lose') {
                             <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'employment' }">{{ 'dashboard.todo.toContractCheck' | transloco }} →</a>
                           }
+                          @case ('acquire') {
+                            <a [routerLink]="['/o', office()?.id, 'filings']" [queryParams]="{ kind: 'acquire', from: it.date?.slice(0, 7) }">{{ 'dashboard.todo.toFilings' | transloco }} →</a>
+                          }
                           @case ('office') {
                             @if (it.office === 'noStandard') {
                               <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>

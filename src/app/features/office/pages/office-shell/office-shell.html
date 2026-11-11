@@ -69,6 +69,9 @@
     <a [routerLink]="['/o', officeId(), 'revisions']" routerLinkActive="active">
       <app-icon name="revision" />{{ 'nav.revisions' | transloco }}
     </a>
+    <a [routerLink]="['/o', officeId(), 'filings']" routerLinkActive="active">
+      <app-icon name="filing" />{{ 'nav.filings' | transloco }}
+    </a>
 
     <span class="nav-sep" aria-hidden="true"></span>
     <a [routerLink]="['/o', officeId(), 'settings']" routerLinkActive="active">

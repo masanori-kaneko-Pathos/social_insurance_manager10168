@@ -1,0 +1,78 @@
+<div class="page-head">
+  <div>
+    <h1>{{ 'filing.title' | transloco }}</h1>
+    <p class="lead">{{ 'filing.lead' | transloco }}</p>
+  </div>
+</div>
+
+<section class="card controls">
+  <div class="field">
+    <label for="filing-kind">{{ 'filing.kindLabel' | transloco }}</label>
+    <select id="filing-kind" class="input" [value]="kind()" (change)="setKind($any($event.target).value)">
+      @for (k of kinds; track k) {
+        <option [value]="k" [selected]="k === kind()">{{ 'filing.kind.' + k | transloco }}</option>
+      }
+    </select>
+  </div>
+
+  @if (kind() === 'regular') {
+    <div class="field">
+      <span class="label">{{ 'filing.year' | transloco }}</span>
+      <div class="year">
+        <button type="button" class="btn" (click)="setYear(-1)" [attr.aria-label]="'monthPicker.prevYear' | transloco">‹</button>
+        <strong>{{ 'filing.yearLabel' | transloco: { year: year() } }}</strong>
+        <button type="button" class="btn" (click)="setYear(1)" [attr.aria-label]="'monthPicker.nextYear' | transloco">›</button>
+      </div>
+    </div>
+  } @else {
+    <div class="field">
+      <span class="label">{{ 'filing.period.' + kind() | transloco }}</span>
+      <div class="range">
+        <app-month-picker [value]="from()" [today]="thisMonth" (picked)="setFrom($event)">{{ from() }}</app-month-picker>
+        <span>〜</span>
+        <app-month-picker [value]="to()" [today]="thisMonth" (picked)="setTo($event)">{{ to() }}</app-month-picker>
+      </div>
+    </div>
+  }
+
+  <button type="button" class="btn btn-primary" [disabled]="loading()" (click)="show()">
+    {{ (loading() ? 'common.loading' : 'filing.show') | transloco }}
+  </button>
+</section>
+<p class="hint">{{ 'filing.hint.' + kind() | transloco }}</p>
+
+@if (errorKey(); as key) {
+  <div class="alert alert-danger">{{ key | transloco }}</div>
+}
+
+@if (result(); as r) {
+  <div class="result-head">
+    <h2>{{ 'filing.kind.' + r.kind | transloco }} <span class="sub">{{ 'filing.count' | transloco: { n: r.rows.length } }}</span></h2>
+    <button type="button" class="btn" [disabled]="r.rows.length === 0" (click)="exportCsv()">{{ 'filing.csv' | transloco }}</button>
+  </div>
+  @if (r.rows.length === 0) {
+    <p class="muted">{{ 'filing.empty' | transloco }}</p>
+  } @else {
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr>
+            @for (c of columns(); track c) {
+              <th>{{ 'filing.col.' + c | transloco }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of r.rows; track $index) {
+            <tr>
+              @for (c of columns(); track c) {
+                <td [class.wrap]="c === 'remarks' || c === 'lossReason'">{{ row[c] }}</td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">{{ 'filing.hint.blank' | transloco }}</p>
+  }
+}

@@ -170,6 +170,11 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'filings',
+            loadComponent: () =>
+              import('./features/filings/pages/filings/filings').then((m) => m.FilingsPage),
+          },
+          {
             path: 'regular/:year',
             loadComponent: () =>
               import('./features/payrolls/pages/regular/regular').then((m) => m.RegularPage),
