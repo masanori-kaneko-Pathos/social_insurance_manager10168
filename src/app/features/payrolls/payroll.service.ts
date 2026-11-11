@@ -1,10 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import {
   collection,
+  collectionGroup,
   doc,
-  getDoc,
   getDocs,
+  query,
   serverTimestamp,
+  where,
   writeBatch,
 } from 'firebase/firestore';
 import { db } from '../../core/firebase';
@@ -53,8 +55,7 @@ export class PartialSaveError extends Error {
 
 /**
  * 給与の実績（従業員の下。1人 × 1か月 ＝ 1件。ドキュメントIDは支払った月）
- * 月の全員分は、今は1人ずつ読む（人数分の読み込み）。人数が多くなったら collectionGroup に切り替える
- * （そのために officeId・employeeId を文書に入れている）
+ * 事業所の全員分は collectionGroup で読む（そのために officeId・employeeId・paidMonth を文書に入れている）
  */
 @Injectable({ providedIn: 'root' })
 export class PayrollService {
@@ -78,25 +79,35 @@ export class PayrollService {
       .sort((a, b) => b.paidMonth.localeCompare(a.paidMonth));
   }
 
-  /** 事業所の全員の全部（月の一覧で使う） */
+  /**
+   * 事業所の全員の全部（月の一覧・定時決定で使う）
+   * collectionGroup の問い合わせ1回で読む（文書に officeId を入れてある。11/11 に人数分の読み込みから切り替え）
+   * 渡した人の分だけ返す（退職者を除くなど、呼ぶ側の絞り込みはそのまま）
+   */
   async listOfOffice(officeId: string, employeeIds: readonly string[]): Promise<Payroll[]> {
-    const lists = await Promise.all(employeeIds.map((id) => this.listOfEmployee(officeId, id)));
-    return lists.flat();
+    const ids = new Set(employeeIds);
+    const snap = await getDocs(query(collectionGroup(db, 'payrolls'), where('officeId', '==', officeId)));
+    return snap.docs.map((d) => this.strip(d.data())).filter((p) => ids.has(p.employeeId));
   }
 
-  /** ある月の全員分（従業員ID → 実績） */
+  /**
+   * ある月の全員分（従業員ID → 実績）
+   * collectionGroup の問い合わせ1回。読み込みは「その月に実績がある人の数」だけ（前は人数分を1件ずつ）
+   */
   async month(
     officeId: string,
     employeeIds: readonly string[],
     paidMonth: string,
   ): Promise<Map<string, Payroll>> {
-    const snaps = await Promise.all(
-      employeeIds.map((id) => getDoc(doc(this.col(officeId, id), paidMonth))),
+    const ids = new Set(employeeIds);
+    const snap = await getDocs(
+      query(collectionGroup(db, 'payrolls'), where('officeId', '==', officeId), where('paidMonth', '==', paidMonth)),
     );
     const map = new Map<string, Payroll>();
-    snaps.forEach((s, i) => {
-      if (s.exists()) map.set(employeeIds[i], this.strip(s.data()));
-    });
+    for (const d of snap.docs) {
+      const p = this.strip(d.data());
+      if (ids.has(p.employeeId)) map.set(p.employeeId, p);
+    }
     return map;
   }
 

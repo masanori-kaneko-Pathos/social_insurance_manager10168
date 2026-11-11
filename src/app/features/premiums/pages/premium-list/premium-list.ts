@@ -31,6 +31,7 @@ import { BonusPayment } from '../../../../core/models/bonus';
 import { BonusService } from '../../bonus.service';
 import { addTotals, collectBonusResults } from '../../logic/bonus-rows';
 import { downloadCsv, safeFileName } from '../../../../shared/csv/csv';
+import { downloadXlsx } from '../../../../shared/xlsx/download-xlsx';
 import { Payroll } from '../../../../core/models/payroll';
 import { PayrollService } from '../../../payrolls/payroll.service';
 import { advanceAmount, advanceState } from '../../logic/advance';
@@ -275,12 +276,12 @@ export class PremiumList {
     });
   }
 
-  // ===== 書き出し（CSV） =====
+  // ===== 書き出し（CSV・Excel） =====
 
-  /** 今見ている月の一覧を CSV にする（画面に出ている人だけ。賞与は含まない） */
-  exportCsv(): void {
+  /** 今見ている月の一覧の表（CSV と xlsx で同じ中身。画面に出ている人だけ。賞与は含まない） */
+  private exportTable(): { name: string; rows: string[][] } | null {
     const office = this.context.current();
-    if (!office || !this.context.isAdmin()) return;
+    if (!office || !this.context.isAdmin()) return null;
     const t = (key: string) => this.transloco.translate(key);
     const lang = this.transloco.getActiveLang() === 'en' ? 'en' : 'ja';
     const rows: PremiumCsvRow[] = this.rows().map((r) => ({
@@ -305,10 +306,26 @@ export class PremiumList {
       employeeYen: x.employeeYen,
       employerYen: x.employerYen,
     }));
-    downloadCsv(
-      safeFileName(premiumFileName(office.name, this.month(), todayLocal(), lang)),
-      buildPremiumCsv(rows, totals, lang),
-    );
+    return {
+      name: safeFileName(premiumFileName(office.name, this.month(), todayLocal(), lang)),
+      rows: buildPremiumCsv(rows, totals, lang),
+    };
+  }
+
+  exportCsv(): void {
+    const x = this.exportTable();
+    if (x) downloadCsv(x.name, x.rows);
+  }
+
+  /** Excel（xlsx）：数字は数値のセル（そのまま足し算・並べ替えができる） */
+  async exportXlsx(): Promise<void> {
+    const x = this.exportTable();
+    if (!x) return;
+    try {
+      await downloadXlsx(x.name.replace(/\.csv$/, '.xlsx'), this.month(), x.rows);
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   // ===== 表示の小道具 =====

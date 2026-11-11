@@ -12,6 +12,7 @@ import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
 import { TranslocoHttpLoader } from './transloco-loader';
 import { provideTransloco } from '@jsverse/transloco';
+import { LANG_CODES } from './core/i18n/languages';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -22,7 +23,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     provideTransloco({
       config: {
-        availableLangs: ['ja', 'en'],
+        availableLangs: [...LANG_CODES],
         defaultLang: 'ja',
         // Remove this option if your application doesn't support changing language in runtime.
         reRenderOnLangChange: true,

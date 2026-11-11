@@ -1,0 +1,22 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "payrolls",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "officeId", "order": "ASCENDING" },
+        { "fieldPath": "paidMonth", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": [
+    {
+      "collectionGroup": "payrolls",
+      "fieldPath": "officeId",
+      "indexes": [
+        { "order": "ASCENDING", "queryScope": "COLLECTION" },
+        { "order": "ASCENDING", "queryScope": "COLLECTION_GROUP" }
+      ]
+    }
+  ]
+}

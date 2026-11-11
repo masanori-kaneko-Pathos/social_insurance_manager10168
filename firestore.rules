@@ -861,5 +861,12 @@ service cloud.firestore {
         allow delete: if isAdmin(officeId);
       }
     }
+  
+    // ----- 給与の実績を、事業所の全員分まとめて読む（collectionGroup。11/11） -----
+    // 文書に入れてある officeId で「その事業所のメンバーか」を確かめる（officeId はパスと一致させて書いている）
+    // 書き込みは今までどおり、従業員の下のパスのルールで確かめる
+    match /{path=**}/payrolls/{paidMonth} {
+      allow read: if isMember(resource.data.officeId);
+    }
   }
 }

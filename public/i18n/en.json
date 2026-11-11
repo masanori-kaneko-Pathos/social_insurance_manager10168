@@ -929,7 +929,8 @@
       "unknown": "(No payroll record to judge: {{count}})",
       "badge": "Advance {{amount}} yen",
       "note": "\"Advance\" means the pay (cash) in the deduction month is less than the employee's share, so it cannot be fully deducted. The company pays it in advance and collects it from the employee later. The amount is an estimate: share minus pay."
-    }
+    },
+    "exportXlsx": "Export Excel"
   },
   "rateDialog": {
     "title": "Health insurance rates",
