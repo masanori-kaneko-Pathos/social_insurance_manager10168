@@ -311,14 +311,15 @@
               </div>
               <div>
                 <dt>{{ 'employee.field.phone' | transloco }}</dt>
-                <dd class="mono">{{ e.contact.phone ?? '—' }}</dd>
+                <dd>
+                  <span class="mono">{{ e.contact.phone ?? '—' }}</span>
+                  @if (e.contact.phoneNote) { <span class="muted">（{{ e.contact.phoneNote }}）</span> }
+                  @for (p of e.contact.otherPhones ?? []; track $index) {
+                    <br /><span class="mono">{{ p.number }}</span>
+                    @if (p.note) { <span class="muted">（{{ p.note }}）</span> }
+                  }
+                </dd>
               </div>
-              @if (e.contact.phone2) {
-                <div>
-                  <dt>{{ 'employee.field.phone2' | transloco }}</dt>
-                  <dd class="mono">{{ e.contact.phone2 }}</dd>
-                </div>
-              }
               <div>
                 <dt>{{ 'employee.field.email' | transloco }}</dt>
                 <dd>{{ e.contact.email ?? '—' }}</dd>

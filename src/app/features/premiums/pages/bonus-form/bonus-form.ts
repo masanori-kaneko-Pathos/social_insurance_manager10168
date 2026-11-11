@@ -28,6 +28,7 @@ import { officeTotals } from '../../logic/premium-core';
 import { formatMilli } from '../../logic/rounding';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
+import { EnterNext } from '../../../../shared/directives/enter-next';
 const DATE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 /** 新規の支給を計算の中で区別するための仮の ID */
 const NEW_ID = '__new__';
@@ -40,7 +41,7 @@ interface FormRow extends BonusRow {
 
 @Component({
   selector: 'app-bonus-form',
-  imports: [HalfWidthDigits, RouterLink, TranslocoPipe],
+  imports: [EnterNext, HalfWidthDigits, RouterLink, TranslocoPipe],
   templateUrl: './bonus-form.html',
   styleUrl: './bonus-form.css',
 })

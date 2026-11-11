@@ -57,6 +57,7 @@ import {
 import { LanguageService } from '../../../../core/i18n/language.service';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
+import { EnterNext } from '../../../../shared/directives/enter-next';
 const NOT_BLANK = Validators.pattern(/\S/);
 
 /** 全角を半角にしてから形式を見る（空欄は通す） */
@@ -126,6 +127,7 @@ const PATTERN_KEYS: Record<string, string> = {
   romanMiddleName: 'employee.validation.roman',
   phone: 'employee.validation.phone',
   phone2: 'employee.validation.phone',
+  phone3: 'employee.validation.phone',
   postalCode: 'employee.validation.postalCode',
   basicPensionNumber: 'employee.validation.basicPensionNumber',
   accountNumber: 'employee.validation.accountNumber',
@@ -139,7 +141,7 @@ const PATTERN_KEYS: Record<string, string> = {
 
 @Component({
   selector: 'app-employee-form',
-  imports: [ContractFields, HalfWidthDigits, ReactiveFormsModule, RouterLink, TranslocoPipe],
+  imports: [EnterNext, ContractFields, HalfWidthDigits, ReactiveFormsModule, RouterLink, TranslocoPipe],
   templateUrl: './employee-form.html',
   styleUrl: './employee-form.css',
 })
@@ -273,7 +275,11 @@ export class EmployeeForm {
           postalCode: [v.contact.postalCode, [halfPattern(PATTERNS.postalCode)]],
           address: [v.contact.address, [Validators.maxLength(200)]],
           phone: [v.contact.phone, [halfPattern(PATTERNS.phone)]],
+          phoneNote: [v.contact.phoneNote, [Validators.maxLength(20)]],
           phone2: [v.contact.phone2, [halfPattern(PATTERNS.phone)]],
+          phone2Note: [v.contact.phone2Note, [Validators.maxLength(20)]],
+          phone3: [v.contact.phone3, [halfPattern(PATTERNS.phone)]],
+          phone3Note: [v.contact.phone3Note, [Validators.maxLength(20)]],
           email: [v.contact.email, [halfPattern(PATTERNS.email), Validators.maxLength(254)]],
         }),
         commute: this.fb.group({
@@ -416,6 +422,32 @@ export class EmployeeForm {
     );
   }
 
+  // ===== 電話（ふだんは1つ。「電話番号を追加」で2つ目・3つ目の欄を出す） =====
+  /** 出している追加の欄の数（0〜2） */
+  readonly extraPhones = signal(0);
+  /** 備考の候補（自由に書ける。候補は入力の手間を省くだけ） */
+  readonly phoneNoteChoices = ['ownMobile', 'home', 'companyMobile', 'work', 'emergency'];
+
+  addPhone(): void {
+    this.extraPhones.update((n) => Math.min(n + 1, 2));
+  }
+
+  /** 追加の欄を消す（2つ目を消したら、3つ目を2つ目に詰める） */
+  removePhone(n: 2 | 3): void {
+    const c = this.form.controls.contact.controls;
+    if (n === 2) {
+      c.phone2.setValue(c.phone3.value);
+      c.phone2Note.setValue(c.phone3Note.value);
+    }
+    c.phone3.setValue('');
+    c.phone3Note.setValue('');
+    if (this.extraPhones() === 1) {
+      c.phone2.setValue('');
+      c.phone2Note.setValue('');
+    }
+    this.extraPhones.update((k) => Math.max(k - 1, 0));
+  }
+
   readonly loading = signal(this.isEdit);
   readonly submitting = signal(false);
   readonly errorKey = signal<string | null>(null);
@@ -522,6 +554,7 @@ export class EmployeeForm {
       this.lastAutoLost = e.retireDate ? addDays(e.retireDate, 1) : '';
       // 読み込みで自動入力が走らないように
       this.form.setValue(toEmployeeForm(e), { emitEvent: false });
+      this.extraPhones.set(e.contact.otherPhones?.length ?? 0);
       this.syncCert();
     } catch (err) {
       console.error(err);

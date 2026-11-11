@@ -32,6 +32,7 @@ import { PayrollChange, PayrollService } from '../../payroll.service';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { InKindCalculator } from '../../components/in-kind-calculator/in-kind-calculator';
+import { EnterNext } from '../../../../shared/directives/enter-next';
 type RowForm = FormGroup<{
   cash: FormControl<string>;
   fixed: FormControl<string>;
@@ -54,7 +55,7 @@ const MONTH_RE = /^[0-9]{4}-(0[1-9]|1[0-2])$/;
 
 @Component({
   selector: 'app-payroll-month',
-  imports: [HalfWidthDigits, InKindCalculator, MonthPicker, RouterLink, TranslocoPipe, ReactiveFormsModule],
+  imports: [EnterNext, HalfWidthDigits, InKindCalculator, MonthPicker, RouterLink, TranslocoPipe, ReactiveFormsModule],
   templateUrl: './payroll-month.html',
   styleUrl: './payroll-month.css',
 })

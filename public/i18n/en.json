@@ -238,7 +238,9 @@
       "titleNew": "Add employee",
       "titleEdit": "Edit employee",
       "created": "Employee registered",
-      "contractFailed": "The employee was registered, but the contract could not be saved. Please add it again from the Contract card."
+      "contractFailed": "The employee was registered, but the contract could not be saved. Please add it again from the Contract card.",
+      "addPhone": "Add phone number",
+      "removePhone": "Remove"
     },
     "section": {
       "basic": "Basic information",
@@ -312,7 +314,9 @@
       "residentRegistered": "Has resident registration in Japan",
       "needsRomanNameFiling": "File the Report of Insured Worker's Name in English Alphabet (ローマ字氏名届)",
       "optOutDate": "Date of request to withdraw",
-      "phone2": "Second phone"
+      "phoneNote": "Note",
+      "phoneN": "Phone {{n}}",
+      "otherPhones": "Other phones"
     },
     "insurance": {
       "health": "Enrolled in health insurance",
@@ -574,6 +578,13 @@
         "shouldEnroll": "Under this contract the person should be insured, but health insurance and pension are set to \"not enrolled\" in the Employment step. Please check.",
         "shouldNotEnroll": "Under this contract the person is not insured, but enrollment is set in the Employment step. Please check (leave it if the person enrolls voluntarily)."
       }
+    },
+    "phoneNoteChoice": {
+      "ownMobile": "Personal mobile",
+      "home": "Home",
+      "companyMobile": "Company mobile",
+      "work": "Work",
+      "emergency": "Emergency contact"
     }
   },
   "office": {

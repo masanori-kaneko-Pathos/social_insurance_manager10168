@@ -238,7 +238,9 @@
       "titleNew": "従業員の登録",
       "titleEdit": "従業員の編集",
       "created": "従業員を登録しました",
-      "contractFailed": "従業員は登録しましたが、雇用契約を保存できませんでした。「雇用契約」のカードから入れ直してください。"
+      "contractFailed": "従業員は登録しましたが、雇用契約を保存できませんでした。「雇用契約」のカードから入れ直してください。",
+      "addPhone": "電話番号を追加",
+      "removePhone": "消す"
     },
     "section": {
       "basic": "基本情報",
@@ -312,7 +314,9 @@
       "residentRegistered": "日本で住民登録をしている（住民票がある）",
       "needsRomanNameFiling": "ローマ字氏名届を出す",
       "optOutDate": "社会保険の資格喪失を申し出た日",
-      "phone2": "電話番号（2つ目）"
+      "phoneNote": "備考",
+      "phoneN": "電話番号（{{n}}つ目）",
+      "otherPhones": "電話番号（2つ目から）"
     },
     "insurance": {
       "health": "健康保険に加入する",
@@ -574,6 +578,13 @@
         "shouldEnroll": "この契約では社会保険に入る人ですが、「雇用・加入」の段で健康保険・厚生年金が「加入しない」になっています。合っているか確かめてください。",
         "shouldNotEnroll": "この契約では社会保険に入らない人ですが、「雇用・加入」の段で加入になっています。合っているか確かめてください（任意で加入する場合などはそのままで構いません）。"
       }
+    },
+    "phoneNoteChoice": {
+      "ownMobile": "本人携帯",
+      "home": "自宅",
+      "companyMobile": "会社支給携帯",
+      "work": "勤務先",
+      "emergency": "緊急連絡先"
     }
   },
   "office": {

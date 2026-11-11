@@ -23,11 +23,21 @@ function filledForm(): EmployeeFormValue {
     health: { enrolled: true, acquiredDate: '2024-04-01', lostDate: '', lossReason: '' },
     pension: { enrolled: true, acquiredDate: '2024-04-01', lostDate: '', lossReason: '' },
     basicPensionNumber: '１２３４-５６７８９０',
-    contact: { postalCode: '100-0001', address: '東京都千代田区', phone: '03-1234-5678', email: '' },
+    contact: { ...v.contact, postalCode: '100-0001', address: '東京都千代田区', phone: '03-1234-5678', email: '' },
   };
 }
 
 describe('fromEmployeeForm', () => {
+  it('電話：備考と、追加の電話（番号のない欄は捨てる）', () => {
+    const v = filledForm();
+    const r = fromEmployeeForm({
+      ...v,
+      contact: { ...v.contact, phoneNote: ' 本人携帯 ', phone2: '', phone2Note: '自宅', phone3: '090-1111-2222', phone3Note: '会社支給携帯' },
+    });
+    expect(r.contact.phoneNote).toBe('本人携帯');
+    expect(r.contact.otherPhones).toEqual([{ number: '09011112222', note: '会社支給携帯' }]);
+  });
+
   it('空欄は null、前後の空白は取る、番号はハイフン・全角を取って数字だけ', () => {
     const r = fromEmployeeForm(filledForm());
     expect(r.lastName).toBe('テスト');

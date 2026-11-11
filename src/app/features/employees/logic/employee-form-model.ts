@@ -87,7 +87,18 @@ export interface EmployeeFormValue {
   optOutDate: string;
   insuredNumber: string;
   basicPensionNumber: string;
-  contact: { postalCode: string; address: string; phone: string; phone2: string; email: string };
+  contact: {
+    postalCode: string;
+    address: string;
+    phone: string;
+    phoneNote: string;
+    /** 2つ目・3つ目の電話（「電話番号を追加」で出す欄） */
+    phone2: string;
+    phone2Note: string;
+    phone3: string;
+    phone3Note: string;
+    email: string;
+  };
   commute: { method: string; route: string };
   bankAccount: {
     bankName: string;
@@ -115,6 +126,16 @@ const upperOrNull = (v: string): string | null => {
 };
 const orNull = <T extends string>(v: T | ''): T | null => (v === '' ? null : v);
 /** 電話番号：数字と先頭の + だけ残す（ハイフン・空白・かっこを取る） */
+/** 2つ目・3つ目の電話（番号のない欄は捨てる。備考だけ入っていても残さない） */
+function otherPhonesOf(c: Partial<EmployeeFormValue['contact']>): { number: string; note: string | null }[] {
+  return [
+    [c.phone2, c.phone2Note],
+    [c.phone3, c.phone3Note],
+  ]
+    .map(([n, note]) => ({ number: phoneOrNull(n ?? ''), note: toNull(note ?? '') }))
+    .filter((p): p is { number: string; note: string | null } => p.number !== null);
+}
+
 const phoneOrNull = (v: string): string | null => {
   const t = toHalfWidth(v).replace(/[^\d+]/g, '');
   return t ? t : null;
@@ -201,7 +222,7 @@ export function emptyEmployeeForm(): EmployeeFormValue {
     optOutDate: '',
     insuredNumber: '',
     basicPensionNumber: '',
-    contact: { postalCode: '', address: '', phone: '', phone2: '', email: '' },
+    contact: { postalCode: '', address: '', phone: '', phoneNote: '', phone2: '', phone2Note: '', phone3: '', phone3Note: '', email: '' },
     commute: { method: '', route: '' },
     bankAccount: { bankName: '', branchName: '', accountType: '', accountNumber: '', holderKana: '' },
     collectionMethod: '',
@@ -250,7 +271,11 @@ export function toEmployeeForm(e: EmployeeFull): EmployeeFormValue {
       postalCode: e.contact.postalCode ?? '',
       address: e.contact.address ?? '',
       phone: e.contact.phone ?? '',
-      phone2: e.contact.phone2 ?? '',
+      phoneNote: e.contact.phoneNote ?? '',
+      phone2: e.contact.otherPhones?.[0]?.number ?? '',
+      phone2Note: e.contact.otherPhones?.[0]?.note ?? '',
+      phone3: e.contact.otherPhones?.[1]?.number ?? '',
+      phone3Note: e.contact.otherPhones?.[1]?.note ?? '',
       email: e.contact.email ?? '',
     },
     commute: { method: e.commute.method ?? '', route: e.commute.route ?? '' },
@@ -391,7 +416,8 @@ export function fromEmployeeForm(v: EmployeeFormValue): EmployeeFormInput {
       postalCode: digitsOrNull(v.contact.postalCode),
       address: toNull(v.contact.address),
       phone: phoneOrNull(v.contact.phone),
-      phone2: phoneOrNull(v.contact.phone2 ?? ''),
+      phoneNote: toNull(v.contact.phoneNote ?? ''),
+      otherPhones: otherPhonesOf(v.contact),
       email: toNull(toHalfWidth(v.contact.email)),
     },
     commute: { method: toNull(v.commute.method), route: toNull(v.commute.route) },

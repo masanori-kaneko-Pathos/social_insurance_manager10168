@@ -10,7 +10,8 @@
 } @else if (loading()) {
   <p class="muted">{{ 'common.loading' | transloco }}</p>
 } @else {
-  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <!-- Enter で次の欄へ（途中で Enter を押しても、登録・次の段には進まない） -->
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate appEnterNext>
     <!-- 段の印（新規だけ。前の段は押して戻れる） -->
     @if (!isEdit) {
       <ol class="stepper">
@@ -613,12 +614,40 @@
             }
           </div>
           <div class="field">
-            <label for="phone2">{{ 'employee.field.phone2' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
-            <input id="phone2" class="input" formControlName="phone2" inputmode="tel" [class.is-invalid]="errorOf('contact.phone2')" />
-            @if (errorOf('contact.phone2'); as e) {
-              <span class="field-error">{{ e | transloco }}</span>
-            }
+            <label for="phoneNote">{{ 'employee.field.phoneNote' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+            <input id="phoneNote" class="input" formControlName="phoneNote" list="phone-note-choices" maxlength="20" />
           </div>
+          <!-- 2つ目・3つ目の電話（「電話番号を追加」で出す） -->
+          @for (n of [2, 3]; track n) {
+            @if (extraPhones() >= n - 1) {
+              <div class="field">
+                <label [for]="'phone' + n">{{ 'employee.field.phoneN' | transloco: { n: n } }}</label>
+                <input [id]="'phone' + n" class="input" [formControlName]="'phone' + n" inputmode="tel"
+                       [class.is-invalid]="errorOf('contact.phone' + n)" />
+                @if (errorOf('contact.phone' + n); as e) {
+                  <span class="field-error">{{ e | transloco }}</span>
+                }
+              </div>
+              <div class="field">
+                <label [for]="'phone' + n + 'Note'">{{ 'employee.field.phoneNote' | transloco }}</label>
+                <span class="with-remove">
+                  <input [id]="'phone' + n + 'Note'" class="input" [formControlName]="'phone' + n + 'Note'"
+                         list="phone-note-choices" maxlength="20" />
+                  <button type="button" class="link-btn" (click)="removePhone($any(n))">{{ 'employee.form.removePhone' | transloco }}</button>
+                </span>
+              </div>
+            }
+          }
+          @if (extraPhones() < 2) {
+            <div class="field wide">
+              <button type="button" class="link-btn add-phone" (click)="addPhone()">＋ {{ 'employee.form.addPhone' | transloco }}</button>
+            </div>
+          }
+          <datalist id="phone-note-choices">
+            @for (c of phoneNoteChoices; track c) {
+              <option [value]="'employee.phoneNoteChoice.' + c | transloco"></option>
+            }
+          </datalist>
           <div class="field">
             <label for="email">{{ 'employee.field.email' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
             <input id="email" class="input" formControlName="email" inputmode="email" [class.is-invalid]="errorOf('contact.email')" />
