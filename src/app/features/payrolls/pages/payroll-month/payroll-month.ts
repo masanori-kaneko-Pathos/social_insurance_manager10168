@@ -1,7 +1,7 @@
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { map } from 'rxjs';
 import { Employee } from '../../../../core/models/employee';
@@ -26,7 +26,8 @@ import {
   periodOf,
 } from '../../logic/payroll-rows';
 import { payrollOf } from '../../../office/office-settings';
-import { shiftMonth, daysInclusive, todayLocal } from '../../../../shared/utils/date';
+import { MonthPicker } from '../../../../shared/components/month-picker/month-picker';
+import { shiftMonth, daysInclusive, todayLocal, toYearMonth } from '../../../../shared/utils/date';
 import { PayrollChange, PayrollService } from '../../payroll.service';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
@@ -53,7 +54,7 @@ const MONTH_RE = /^[0-9]{4}-(0[1-9]|1[0-2])$/;
 
 @Component({
   selector: 'app-payroll-month',
-  imports: [HalfWidthDigits, InKindCalculator, RouterLink, TranslocoPipe, ReactiveFormsModule],
+  imports: [HalfWidthDigits, InKindCalculator, MonthPicker, RouterLink, TranslocoPipe, ReactiveFormsModule],
   templateUrl: './payroll-month.html',
   styleUrl: './payroll-month.css',
 })
@@ -62,6 +63,7 @@ export class PayrollMonth {
   private readonly employeesApi = inject(EmployeeService);
   private readonly payrollApi = inject(PayrollService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   readonly context = inject(OfficeContext);
 
   readonly states = PAYROLL_STATES;
@@ -85,6 +87,16 @@ export class PayrollMonth {
     const p = this.period();
     return p ? daysInclusive(p.start, p.end) : 0;
   });
+  readonly thisMonth = toYearMonth(todayLocal());
+
+  /** 選び窓で選んだ月へ（前後の月のボタンと同じく、?all= などはそのまま） */
+  goMonth(month: string): void {
+    const officeId = this.context.current()?.id;
+    if (officeId && month !== this.month()) {
+      this.router.navigate(['/o', officeId, 'payrolls', month], { queryParamsHandling: 'preserve' });
+    }
+  }
+
   readonly prevMonth = computed(() => (this.month() ? shiftMonth(this.month(), -1) : ''));
   readonly nextMonth = computed(() => (this.month() ? shiftMonth(this.month(), 1) : ''));
   readonly isFuture = computed(() => {

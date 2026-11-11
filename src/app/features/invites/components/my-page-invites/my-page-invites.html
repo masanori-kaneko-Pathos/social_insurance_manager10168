@@ -1,0 +1,96 @@
+<p class="lead">{{ 'myPages.lead' | transloco }}</p>
+
+@if (loading()) {
+  <p class="muted">{{ 'common.loading' | transloco }}</p>
+} @else {
+  <div class="summary">
+    @for (s of statuses; track s) {
+      <span class="st st-{{ s }}">{{ 'myPages.status.' + s | transloco }} {{ counts()[s] }}</span>
+    }
+  </div>
+
+  <div class="actions">
+    <button
+      type="button"
+      class="btn btn-primary"
+      [disabled]="selected().size === 0 || working()"
+      (click)="inviteSelected()"
+    >
+      {{ 'myPages.inviteSelected' | transloco: { count: selected().size } }}
+    </button>
+    <button type="button" class="btn" [disabled]="invitedRows().length === 0" (click)="exportCsv()">
+      {{ 'myPages.exportCsv' | transloco: { count: invitedRows().length } }}
+    </button>
+  </div>
+  <p class="hint">{{ 'myPages.hint' | transloco }}</p>
+
+  @if (errorKey(); as key) {
+    <div class="alert alert-danger">{{ key | transloco }}</div>
+  }
+  @if (result(); as r) {
+    <div class="alert alert-info" role="status">
+      {{ 'myPages.made' | transloco: { count: r.made } }}
+      @if (r.noEmail.length > 0) {
+        <br />{{ 'myPages.noEmail' | transloco: { count: r.noEmail.length, names: r.noEmail.join('、') } }}
+      }
+    </div>
+  }
+
+  <div class="card table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="check">
+            <input
+              type="checkbox"
+              [checked]="allSelected()"
+              [disabled]="selectableIds().length === 0"
+              (change)="toggleAll()"
+              [attr.aria-label]="'myPages.selectAll' | transloco"
+            />
+          </th>
+          <th>{{ 'myPages.col.employee' | transloco }}</th>
+          <th>{{ 'myPages.col.status' | transloco }}</th>
+          <th>{{ 'myPages.col.detail' | transloco }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of rows(); track r.employee.id) {
+          <tr>
+            <td class="check">
+              @if (r.selectable) {
+                <input
+                  type="checkbox"
+                  [checked]="selected().has(r.employee.id)"
+                  (change)="toggle(r.employee.id)"
+                  [attr.aria-label]="nameOf(r.employee)"
+                />
+              }
+            </td>
+            <td>
+              <a [routerLink]="['/o', context.current()?.id, 'employees', r.employee.id]">
+                @if (r.employee.employeeNumber; as no) { <span class="emp-no">{{ no }}</span> }{{ nameOf(r.employee) }}
+              </a>
+            </td>
+            <td><span class="st st-{{ r.status }}">{{ 'myPages.status.' + r.status | transloco }}</span></td>
+            <td class="sub">
+              @if (r.invite; as i) {
+                {{ i.email ?? ('myPages.anyone' | transloco) }} ・ {{ 'myPageCard.expires' | transloco: { date: dateOf(i.expiresMs) } }}
+              }
+            </td>
+            <td class="row-actions">
+              @if (r.invite) {
+                <button type="button" class="btn btn-small" (click)="copy(r)">
+                  {{ (copiedId() === r.employee.id ? 'myPageCard.copied' : 'myPageCard.copy') | transloco }}
+                </button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="5" class="muted">{{ 'myPages.empty' | transloco }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

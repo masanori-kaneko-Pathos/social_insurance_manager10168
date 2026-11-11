@@ -569,13 +569,18 @@ service cloud.firestore {
         // ----- 随時改定の記録（ID ＝ 起算月） -----
         match /irregularDecisions/{startMonth} {
           function validIrregular(d) {
+            // method・annualAverage・seasonal・consent は年間平均（保険者算定）を足したときに増えた（前の記録にはない）
             return exactKeys(d, ['officeId', 'employeeId', 'startMonth', 'revisedFrom', 'direction', 'usedMonths',
                                  'total', 'average', 'corrected', 'retro', 'monthlyAmount', 'special', 'reasonNote',
+                                 'method', 'annualAverage', 'seasonal', 'consent',
                                  'health', 'pension', 'createdAt', 'updatedAt'])
               && d.officeId == officeId && d.employeeId == employeeId
               && d.startMonth == startMonth && isMonth(startMonth) && isMonth(d.revisedFrom)
               && d.direction in ['up', 'down']
-              && d.usedMonths is list && d.usedMonths.size() <= 3
+              && d.method in ['normal', 'annual'] && optIntIn(d.annualAverage, 0, 99999999)
+              && d.seasonal is bool && d.consent is bool
+              && (d.method == 'normal' || (d.seasonal && d.consent && d.annualAverage is int))
+              && d.usedMonths is list && d.usedMonths.size() <= 12
               && d.total is int && d.total >= 0 && yen(d.average)
               && optIntIn(d.corrected, 0, 99999999) && yen(d.retro) && yen(d.monthlyAmount)
               && d.special is bool && optStr(d.reasonNote, 200)

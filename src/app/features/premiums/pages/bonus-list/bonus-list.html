@@ -24,11 +24,12 @@
           <th>{{ 'bonus.col.title' | transloco }}</th>
           <th class="num">{{ 'bonus.col.people' | transloco }}</th>
           <th class="num">{{ 'bonus.col.payment' | transloco }}</th>
+          <th class="toggle-col"></th>
         </tr>
       </thead>
       <tbody>
         @for (r of rows(); track r.payment.id) {
-          <tr>
+          <tr [class.is-open]="openId() === r.payment.id">
             <td class="mono">
               <a
                 class="name"
@@ -45,7 +46,71 @@
                 <span class="badge badge-warn">{{ 'bonus.hasProblems' | transloco }}</span>
               }
             </td>
+            <td class="toggle-col">
+              <button
+                type="button"
+                class="btn btn-small"
+                [attr.aria-expanded]="openId() === r.payment.id"
+                (click)="toggle(r.payment.id)"
+              >
+                {{ (openId() === r.payment.id ? 'bonus.closePeople' : 'bonus.openPeople') | transloco }}
+              </button>
+            </td>
           </tr>
+          @if (openId() === r.payment.id) {
+            <tr class="detail">
+              <td colspan="5">
+                <table class="people">
+                  <thead>
+                    <tr>
+                      <th>{{ 'bonus.col.employee' | transloco }}</th>
+                      <th class="num">{{ 'bonus.col.amount' | transloco }}</th>
+                      <th class="num">{{ 'bonus.col.standard' | transloco }}</th>
+                      <th class="num">{{ 'premium.col.employee' | transloco }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (p of people(); track p.employee.id) {
+                      <tr>
+                        <td>
+                          <a [routerLink]="['/o', context.current()?.id, 'employees', p.employee.id]">
+                            {{ nameOf(p.employee) }}
+                          </a>
+                          <span class="sub">{{ p.employee.employeeNumber }}</span>
+                        </td>
+                        <td class="num">{{ yen(p.amount) }}</td>
+                        @switch (p.row.state) {
+                          @case ('ok') {
+                            <td class="num">
+                              {{ yen(p.row.result!.standardBonus) }}
+                              @if (p.row.capped) {
+                                <span class="badge">{{ 'bonus.capped' | transloco }}</span>
+                              }
+                            </td>
+                            <td class="num strong">{{ yen(p.row.result!.employeeYen) }}</td>
+                          }
+                          @case ('counted') {
+                            <td class="num">{{ yen(p.row.result!.standardBonus) }}</td>
+                            <td class="muted wrap">{{ 'bonus.state.counted' | transloco }}</td>
+                          }
+                          @case ('exempt') {
+                            <td class="num">{{ yen(p.row.result!.standardBonus) }}</td>
+                            <td class="muted wrap">{{ 'bonus.state.exempt' | transloco }}</td>
+                          }
+                          @case ('none') {
+                            <td class="muted wrap" colspan="2">{{ 'bonus.state.none' | transloco }}</td>
+                          }
+                          @default {
+                            <td class="warn" colspan="2">{{ 'premium.error.calc' | transloco }}</td>
+                          }
+                        }
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          }
         }
       </tbody>
     </table>

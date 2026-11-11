@@ -22,6 +22,10 @@
     >
       ← {{ prevMonth() }}
     </a>
+    <!-- 押すと、年と12か月の選び窓 -->
+    <app-month-picker [value]="month()" [today]="thisMonth" (picked)="goMonth($event)">
+      {{ 'monthPicker.pick' | transloco }}
+    </app-month-picker>
     <a
       class="btn"
       [routerLink]="['/o', context.current()?.id, 'payrolls', nextMonth()]"

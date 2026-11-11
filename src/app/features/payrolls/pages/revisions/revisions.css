@@ -139,3 +139,41 @@ h2 {
   color: var(--color-text);
   cursor: pointer;
 }
+
+/* ===== 年間平均（保険者算定） ===== */
+.badge-info {
+  background: var(--color-highlight);
+  color: var(--color-text);
+}
+
+.toggle.annual-toggle {
+  margin-top: var(--space-sm);
+  font-size: var(--font-sm);
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent-sub);
+}
+
+.annual {
+  margin-top: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
+.months-table tr.three td:first-child {
+  font-weight: 600;
+}
+
+.annual .check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: var(--space-xs) 0;
+  font-size: var(--font-sm);
+}
+
+.warn {
+  margin: var(--space-xs) 0;
+  font-size: var(--font-sm);
+  color: var(--color-warning-text);
+}

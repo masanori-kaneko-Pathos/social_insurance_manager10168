@@ -23,6 +23,9 @@
       </span>
       @if (v.item.type === 'irregular') {
         <span class="sub">{{ 'revision.source.' + v.item.result.start.source | transloco }}・{{ 'revision.direction.' + v.item.result.start.direction | transloco }}</span>
+        @if (v.group === 'candidate' && v.item.result.annual?.candidate) {
+          <span class="badge badge-info">{{ 'revision.annual.badge' | transloco }}</span>
+        }
       } @else {
         <span class="sub">{{ 'revision.leaveEnd' | transloco: { date: v.item.result.leaveEnd } }}</span>
       }
@@ -84,6 +87,88 @@
           }
         }
       </div>
+    }
+
+    <!-- 年間平均（保険者算定）：ふつうの候補のうち、A と B に2等級以上の差がある人 -->
+    @if (v.group === 'candidate' && annualOf(v); as a) {
+      @if (a.candidate) {
+        <button type="button" class="toggle annual-toggle" [attr.aria-expanded]="openAnnual() === v.key" (click)="toggleAnnual(v)">
+          {{ 'revision.annual.open' | transloco }} {{ openAnnual() === v.key ? '▲' : '▼' }}
+        </button>
+        @if (openAnnual() === v.key) {
+          <div class="annual">
+            <table class="months-table">
+              <thead>
+                <tr>
+                  <th>{{ 'revision.col.month' | transloco }}</th>
+                  <th class="num">{{ 'revision.col.days' | transloco }}</th>
+                  <th class="num">{{ 'revision.annual.col.fixed' | transloco }}</th>
+                  <th class="num">{{ 'revision.annual.col.nonFixed' | transloco }}</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (m of a.months; track m.month) {
+                  <tr [class.unused]="!m.used" [class.three]="m.inThree">
+                    <td class="mono">{{ m.month }}</td>
+                    @if (m.payroll; as p) {
+                      <td class="num mono">{{ p.days }}</td>
+                      <td class="num mono">{{ m.inThree ? yen(p.fixed + p.inKind) : '—' }}</td>
+                      <td class="num mono">{{ yen(m.nonFixed) }}</td>
+                      <td class="sub">
+                        @if (m.skip) { {{ 'revision.annual.skip.' + m.skip | transloco }} }
+                        @else if (m.inThree) { {{ 'revision.annual.three' | transloco }} }
+                      </td>
+                    } @else {
+                      <td colspan="4" class="sub">{{ 'revision.noRecord' | transloco }}</td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+            <p class="avg">
+              {{ 'revision.annual.formula' | transloco: {
+                fixed: yen(a.fixedAverage), nonFixed: yen(a.nonFixedAverage), b: yen(a.average),
+                a: yen(v.item.result.average?.corrected ?? 0), n: a.usedCount
+              } }}
+            </p>
+            <div class="judge">
+              @for (j of [{ key: 'health', x: a.health }, { key: 'pension', x: a.pension }]; track j.key) {
+                @if (j.x; as x) {
+                  <span class="ins" [class.revise]="x.revise">
+                    {{ 'revision.ins.' + j.key | transloco }}：
+                    <span class="mono">{{ x.b.grade }}級 {{ yen(x.b.standard) }}</span>
+                    （{{ 'revision.annual.diffAB' | transloco: { d: diffLabel(x.diffAB) } }}）
+                    @if (x.exception) { <span class="badge">{{ 'revision.special' | transloco }}</span> }
+                    {{ (x.revise ? 'revision.revise' : 'revision.keep') | transloco }}
+                  </span>
+                }
+              }
+            </div>
+            @if (annualKeepsAll(v)) {
+              <p class="warn">{{ 'revision.annual.keepsAll' | transloco }}</p>
+            }
+            @if (a.incomplete) {
+              <p class="warn">{{ 'revision.annual.incomplete' | transloco }}</p>
+            }
+            <p class="hint">{{ 'revision.annual.seasonalHint' | transloco }}</p>
+            @if (context.isAdmin()) {
+              <label class="check">
+                <input type="checkbox" [checked]="checksOf(v).seasonal" (change)="setCheck(v, 'seasonal', $any($event.target).checked)" />
+                {{ 'revision.annual.seasonal' | transloco }}
+              </label>
+              <label class="check">
+                <input type="checkbox" [checked]="checksOf(v).consent" (change)="setCheck(v, 'consent', $any($event.target).checked)" />
+                {{ 'revision.annual.consent' | transloco }}
+              </label>
+              <button type="button" class="btn" [disabled]="!canReflectAnnual(v)" (click)="reflect(v, true)">
+                {{ 'revision.annual.reflect' | transloco }}
+              </button>
+            }
+            <p class="hint">{{ 'revision.annual.hint' | transloco }}</p>
+          </div>
+        }
+      }
     }
 
     @if (v.group === 'other') {

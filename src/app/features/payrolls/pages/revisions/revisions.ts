@@ -14,6 +14,7 @@ import { CriteriaService } from '../../../office/criteria.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import { payrollOf } from '../../../office/office-settings';
 import { RateService } from '../../../rates/rate.service';
+import { AnnualJudgement, IrregularAnnual } from '../../logic/irregular';
 import { InsuranceJudgement, standardAt } from '../../logic/revision-base';
 import {
   groupOf,
@@ -63,6 +64,10 @@ export class RevisionsPage {
   readonly errorKey = signal<string | null>(null);
   readonly savedKey = signal<string | null>(null);
   readonly showOther = signal(false);
+  /** 年間平均の材料を開いている行 */
+  readonly openAnnual = signal<string | null>(null);
+  /** 年間平均：季節的な差か・本人の同意（行ごと） */
+  readonly checks = signal<Record<string, { seasonal: boolean; consent: boolean }>>({});
   /** 休業終了時改定：本人から申出を受けた日（行ごと。初期値は今日） */
   readonly requested = signal<Record<string, string>>({});
 
@@ -163,24 +168,61 @@ export class RevisionsPage {
   }
 
   /** 改定後の標準報酬（改定しない保険は今のまま。厚年の資格がない人は今の値を持っておく） */
-  private after(v: View): { health: StandardRemuneration; pension: StandardRemuneration } {
+  private after(v: View, annual: boolean): { health: StandardRemuneration; pension: StandardRemuneration } {
     const r = v.item.result;
     const cur = standardAt(v.remunerations, shiftMonth(r.revisedFrom, -1))!;
+    if (annual && v.item.type === 'irregular' && v.item.result.annual) {
+      const a = v.item.result.annual;
+      const pickA = (j: AnnualJudgement | null, fallback: StandardRemuneration) => (j && j.revise ? j.b : fallback);
+      return { health: pickA(a.health, cur.health), pension: pickA(a.pension, cur.pension) };
+    }
     const pick = (j: InsuranceJudgement | null, fallback: StandardRemuneration) =>
       j && j.revise ? j.after : fallback;
     return { health: pick(r.health, cur.health), pension: pick(r.pension, cur.pension) };
   }
 
-  async reflect(v: View): Promise<void> {
+  // ===== 年間平均（随時改定の保険者算定） =====
+
+  annualOf(v: View): IrregularAnnual | null {
+    return v.item.type === 'irregular' ? v.item.result.annual : null;
+  }
+
+  toggleAnnual(v: View): void {
+    this.openAnnual.update((k) => (k === v.key ? null : v.key));
+  }
+
+  checksOf(v: View): { seasonal: boolean; consent: boolean } {
+    return this.checks()[v.key] ?? { seasonal: false, consent: false };
+  }
+
+  setCheck(v: View, key: 'seasonal' | 'consent', value: boolean): void {
+    this.checks.update((c) => ({ ...c, [v.key]: { ...this.checksOf(v), [key]: value } }));
+  }
+
+  /** 年間平均で決めると、どちらの保険も今のまま（Q16）か */
+  annualKeepsAll(v: View): boolean {
+    const a = this.annualOf(v);
+    return !!a && !a.health.revise && !a.pension?.revise;
+  }
+
+  canReflectAnnual(v: View): boolean {
+    const c = this.checksOf(v);
+    return this.canReflect(v) && !!this.annualOf(v)?.candidate && c.seasonal && c.consent && !this.annualKeepsAll(v);
+  }
+
+  async reflect(v: View, annual = false): Promise<void> {
     if (!this.canReflect(v)) return;
+    if (annual && !this.canReflectAnnual(v)) return;
     const office = this.context.current()!;
     const r = v.item.result;
     const avg = r.average!;
-    const { health, pension } = this.after(v);
+    const a = annual ? this.annualOf(v)! : null;
+    const { health, pension } = this.after(v, annual);
+    const monthlyAmount = a ? a.average : avg.corrected;
     const remuneration: RemunerationInput = {
       from: r.revisedFrom,
       reason: v.item.type === 'irregular' ? 'irregular' : 'leaveEnd',
-      monthlyAmount: avg.corrected,
+      monthlyAmount,
       health,
       pension,
     };
@@ -188,10 +230,12 @@ export class RevisionsPage {
       officeId: office.id,
       employeeId: v.employee.id,
       revisedFrom: r.revisedFrom,
-      usedMonths: r.months.filter((m) => m.used).map((m) => m.month),
+      usedMonths: a
+        ? a.months.filter((m) => m.used).map((m) => m.month)
+        : r.months.filter((m) => m.used).map((m) => m.month),
       total: avg.total,
       average: avg.average,
-      monthlyAmount: avg.corrected,
+      monthlyAmount,
       health,
       pension,
     };
@@ -211,6 +255,10 @@ export class RevisionsPage {
           retro: avg.retro,
           special: !!(ir.health?.revise && ir.health.special) || !!(ir.pension?.revise && ir.pension.special),
           reasonNote: null,
+          method: a ? 'annual' : 'normal',
+          annualAverage: ir.annual?.candidate ? ir.annual.average : null,
+          seasonal: !!a,
+          consent: !!a,
         };
         await this.api.reflectIrregular(decision, remuneration);
       } else {

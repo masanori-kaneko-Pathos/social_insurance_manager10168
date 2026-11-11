@@ -9,8 +9,15 @@ import { everKumiai, premiumOf, ratesForOffice } from '../../../office/office-se
 import { RateTables } from '../../../rates/logic/pick-rates';
 import { RateService } from '../../../rates/rate.service';
 import { BonusService } from '../../bonus.service';
-import { collectBonusResults } from '../../logic/bonus-rows';
+import { BonusRow, buildBonusRow, collectBonusResults } from '../../logic/bonus-rows';
 import { officeTotals } from '../../logic/premium-core';
+
+/** 開いた支給の、1人ずつの行 */
+interface PersonRow {
+  employee: Employee;
+  amount: number;
+  row: BonusRow;
+}
 
 interface ListRow {
   payment: BonusPayment;
@@ -59,6 +66,36 @@ export class BonusList {
       };
     });
   });
+
+  /** 1人ずつの額を開いている支給（1つだけ開く） */
+  readonly openId = signal<string | null>(null);
+
+  /** 開いた支給の1人ずつの行（開いたときだけ計算する。社員番号の順） */
+  readonly people = computed<PersonRow[]>(() => {
+    const id = this.openId();
+    const tables = this.tables();
+    const office = this.context.current();
+    const payments = this.payments();
+    const payment = payments.find((p) => p.id === id);
+    if (!payment || !tables || !office) return [];
+    const ctx = { ratesFor: ratesForOffice(office, tables), options: premiumOf(office) };
+    return this.employees()
+      .filter((e) => (payment.amounts[e.id] ?? 0) > 0)
+      .sort((a, b) => (a.employeeNumber ?? '').localeCompare(b.employeeNumber ?? '', 'ja', { numeric: true }))
+      .map((employee) => ({
+        employee,
+        amount: payment.amounts[employee.id],
+        row: buildBonusRow(employee, payments, payment.paidDate, ctx),
+      }));
+  });
+
+  toggle(id: string): void {
+    this.openId.update((cur) => (cur === id ? null : id));
+  }
+
+  nameOf(e: Employee): string {
+    return `${e.lastName} ${e.firstName}`.trim();
+  }
 
   constructor() {
     this.load();

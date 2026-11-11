@@ -9,10 +9,22 @@
 //      上限・下限をまたぐときは1等級差でも（oneGradeException。R3 の表と一致）
 // 固定的賃金が上がったのに平均の等級が下がった（逆も）なら改定しない
 // 健康保険と厚生年金は、それぞれ別に判定する（健保法43条・厚年法23条。○ 条文の作りからの読み）
+//
+// 年間平均による保険者算定（annual。平成30年3月1日 事務連絡「随時改定の場合に行う保険者算定の基準の見直しに関するQ＆A」）
+//   A：ふだんの3か月の平均（修正平均）。今の等級と2等級以上の差（＝ ふつうの候補）であることが前提
+//   B：起算月から3か月の固定的賃金の平均 ＋ 起算月前の9か月と起算月から3か月の非固定的賃金の平均（Q1・Q7）
+//   A と B に2等級以上の差（上限・下限の近くは1等級差でも。Q15）があれば候補
+//   数える月：支払基礎日数が基準以上（17日・短時間11日）で、休職・一時帰休でない月（Q8）。3か月のほかに1か月以上（Q11）
+//   B の等級が、昇給なのに今の等級以下（降給なのに以上）なら改定しない（Q16）。今の等級と B は1等級差でもよい（Q15）
+//   「業務の性質上、例年発生する」かと本人の同意は、アプリでは決めない（人が確かめて記録する。Q2・Q18）
+// ※ アプリの読み：現物は固定的なもの（社宅・食事）として固定的賃金の側に入れる。非固定 ＝ 支払額 − 固定的賃金 − 遡及支払額
+// ※ 月の途中の資格取得の月（Q8）は、まだ除いていない（入社月の実績は支払基礎日数で外れることが多い）
 
 import type { Payroll } from '../../../core/models/payroll';
 import type { WageChange } from '../../../core/models/revision';
+import type { StandardRemuneration } from '../../../core/models/remuneration';
 import { shiftMonth } from '../../../shared/utils/date';
+import { gradeOf } from '../../rates/logic/grade';
 import { oneGradeException, GradeRows, Remuneration } from './regular';
 import {
   averageOfMonths,
@@ -96,6 +108,115 @@ export interface IrregularResult {
   beforeAmount: number | null;
   health: InsuranceJudgement | null;
   pension: InsuranceJudgement | null;
+  /** 年間平均の材料と判定（ふつうの候補のときだけ。そうでなければ null） */
+  annual: IrregularAnnual | null;
+}
+
+// ===== 年間平均（保険者算定） =====
+
+export type AnnualSkip = 'noRecord' | 'shortDays' | 'suspended';
+
+export interface AnnualMonth {
+  month: string;
+  payroll: Payroll | null;
+  used: boolean;
+  skip: AnnualSkip | null;
+  /** 3か月のほう（起算月から）か */
+  inThree: boolean;
+  /** 非固定的賃金（支払額 − 固定的賃金 − 遡及支払額。マイナスは0） */
+  nonFixed: number;
+}
+
+export interface AnnualJudgement {
+  /** 年間平均（B）の標準報酬 */
+  b: StandardRemuneration;
+  /** A の等級 − B の等級 */
+  diffAB: number;
+  /** 1等級差の例外（上限・下限の近く）で A と B の差を認めた */
+  exception: boolean;
+  /** 年間平均で決めたときに改定するか（B が今の等級から、変動の向きに動く） */
+  revise: boolean;
+}
+
+export interface IrregularAnnual {
+  months: AnnualMonth[]; // 起算月の9か月前〜起算月から3か月（12か月）
+  usedCount: number;
+  /** 3か月のほかに数えられた月の数（1以上が要る） */
+  outsideCount: number;
+  fixedAverage: number; // 3か月の固定的賃金（＋現物）の平均
+  nonFixedAverage: number; // 数えた月の非固定的賃金の平均
+  average: number; // B
+  health: AnnualJudgement;
+  pension: AnnualJudgement | null;
+  /** 年間平均の候補（健保か厚年で、A と B に2等級以上の差か例外） */
+  candidate: boolean;
+  /** 9か月のうち、実績が入っていない月がある */
+  incomplete: boolean;
+}
+
+function annualMonthOf(month: string, payroll: Payroll | null, minDays: number, inThree: boolean): AnnualMonth {
+  if (!payroll) return { month, payroll: null, used: false, skip: 'noRecord', inThree, nonFixed: 0 };
+  const nonFixed = Math.max(0, payroll.cash - payroll.fixed - payroll.retro);
+  const skip: AnnualSkip | null =
+    payroll.state !== 'normal' ? 'suspended' : payroll.days < minDays ? 'shortDays' : null;
+  return { month, payroll, used: skip === null, skip, inThree, nonFixed };
+}
+
+/**
+ * 年間平均の判定（ふつうの随時改定の候補になったときに呼ぶ）
+ * a：ふつうの平均（修正平均）、current：今の標準報酬、direction：固定的賃金の変わった向き
+ */
+export function judgeAnnualIrregular(x: {
+  startMonth: string;
+  direction: Direction;
+  payrolls: ReadonlyMap<string, Payroll>;
+  minDaysAt: (paidMonth: string) => number;
+  rows: GradeRows;
+  a: number;
+  current: { health: StandardRemuneration; pension: StandardRemuneration };
+  withPension: boolean;
+}): IrregularAnnual | null {
+  const months = Array.from({ length: 12 }, (_, i) => {
+    const month = shiftMonth(x.startMonth, i - 9);
+    return annualMonthOf(month, x.payrolls.get(month) ?? null, x.minDaysAt(month), i >= 9);
+  });
+  const three = months.filter((m) => m.inThree);
+  if (three.some((m) => !m.payroll)) return null;
+  const used = months.filter((m) => m.used);
+  const outsideCount = used.filter((m) => !m.inThree).length;
+  if (used.length === 0) return null;
+
+  const fixedAverage = Math.floor(three.reduce((s, m) => s + m.payroll!.fixed + m.payroll!.inKind, 0) / 3);
+  const nonFixedAverage = Math.floor(used.reduce((s, m) => s + m.nonFixed, 0) / used.length);
+  const average = fixedAverage + nonFixedAverage;
+
+  const judge = (kind: 'health' | 'pension'): AnnualJudgement => {
+    const rows = x.rows[kind];
+    const gA = gradeOf(rows, x.a).grade;
+    const b = gradeOf(rows, average);
+    const diffAB = gA - b.grade;
+    const exception = Math.abs(diffAB) === 1 && oneGradeException(rows, x.a, average);
+    const moved = b.grade - x.current[kind].grade;
+    // Q16：昇給なのに B が今の等級以下（降給なのに以上）なら改定しない
+    const revise = moved !== 0 && sameDirection(x.direction, moved);
+    return { b, diffAB, exception, revise };
+  };
+  const health = judge('health');
+  const pension = x.withPension ? judge('pension') : null;
+  const meets = (j: AnnualJudgement | null) => !!j && (Math.abs(j.diffAB) >= 2 || j.exception);
+
+  return {
+    months,
+    usedCount: used.length,
+    outsideCount,
+    fixedAverage,
+    nonFixedAverage,
+    average,
+    health,
+    pension,
+    candidate: outsideCount >= 1 && (meets(health) || meets(pension)),
+    incomplete: months.some((m) => !m.inThree && m.skip === 'noRecord'),
+  };
 }
 
 /** 向きが合っているか（unclear は人が確かめる前提で通す） */
@@ -128,6 +249,7 @@ export function judgeIrregular(x: IrregularInput): IrregularResult {
     beforeAmount: null,
     health: null,
     pension: null,
+    annual: null,
   };
 
   if (months.some((m) => !m.payroll)) return base;
@@ -155,5 +277,18 @@ export function judgeIrregular(x: IrregularInput): IrregularResult {
     : judged.some((j) => Math.abs(j.diff) >= 2 || j.special)
       ? 'opposite'
       : 'noGradeDiff';
-  return { ...base, status, average, beforeAmount: current.monthlyAmount, health, pension };
+  const annual =
+    status === 'candidate'
+      ? judgeAnnualIrregular({
+          startMonth: s,
+          direction: x.start.direction,
+          payrolls: x.payrolls,
+          minDaysAt: x.minDaysAt,
+          rows,
+          a: amount,
+          current: { health: current.health, pension: current.pension },
+          withPension: pension !== null,
+        })
+      : null;
+  return { ...base, status, average, beforeAmount: current.monthlyAmount, health, pension, annual };
 }

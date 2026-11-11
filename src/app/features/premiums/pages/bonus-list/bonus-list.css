@@ -83,3 +83,49 @@ td.num {
   font-size: var(--font-xs);
   color: var(--color-text-sub);
 }
+
+.toggle-col {
+  width: 1%;
+  text-align: right;
+}
+
+tr.is-open > td {
+  border-bottom-color: transparent;
+}
+
+.detail > td {
+  padding: 0 var(--space-md) var(--space-md);
+  background: var(--color-bg);
+}
+
+.people {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.people a {
+  color: var(--color-text);
+}
+
+.sub {
+  margin-left: var(--space-xs);
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.strong {
+  font-weight: 600;
+}
+
+.warn {
+  color: var(--color-warning-text);
+}
+
+td.wrap {
+  white-space: normal;
+}
+
+.btn-small {
+  padding: 2px var(--space-sm);
+  font-size: var(--font-sm);
+}

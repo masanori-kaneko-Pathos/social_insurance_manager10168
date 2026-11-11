@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { MonthPicker } from '../../../../shared/components/month-picker/month-picker';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { map } from 'rxjs';
 import { Employee } from '../../../../core/models/employee';
@@ -49,7 +50,7 @@ interface ListItem extends PremiumRow {
 
 @Component({
   selector: 'app-premium-list',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [MonthPicker, RouterLink, TranslocoPipe],
   templateUrl: './premium-list.html',
   styleUrl: './premium-list.css',
 })

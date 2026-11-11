@@ -7,6 +7,7 @@ import { Employee } from '../../../../core/models/employee';
 import { EmployeeRequest, REQUEST_STATUSES, RequestStatus } from '../../../../core/models/office-records';
 import { EmployeeService } from '../../../employees/employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
+import { MyPageInvites } from '../../../invites/components/my-page-invites/my-page-invites';
 import { sortRequests } from '../../logic/request-model';
 import { RequestService } from '../../request.service';
 
@@ -15,7 +16,7 @@ type Filter = RequestStatus | 'all';
 /** 依頼と申請の一覧（確認待ちが上）。状態の絞り込みは URL（?status=）に持つ */
 @Component({
   selector: 'app-request-list',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [MyPageInvites, RouterLink, TranslocoPipe],
   templateUrl: './request-list.html',
   styleUrl: '../requests.css',
 })
@@ -31,8 +32,15 @@ export class RequestList {
     { initialValue: 'all' as Filter },
   );
 
+  /** 依頼と申請／マイページの招待（?view=invites。招待は管理者だけ） */
+  readonly view = toSignal(
+    this.route.queryParamMap.pipe(map((q) => (q.get('view') === 'invites' ? 'invites' : 'requests'))),
+    { initialValue: 'requests' as 'requests' | 'invites' },
+  );
+
   readonly requests = signal<EmployeeRequest[]>([]);
   private readonly employees = signal<Map<string, Employee>>(new Map());
+  readonly employeeList = computed(() => [...this.employees().values()]);
   readonly loading = signal(true);
   readonly errorKey = signal<string | null>(null);
 

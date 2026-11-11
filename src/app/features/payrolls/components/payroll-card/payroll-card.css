@@ -76,3 +76,90 @@ td.num {
   border: none;
   cursor: pointer;
 }
+
+.btn-small {
+  padding: 2px var(--space-sm);
+  font-size: var(--font-sm);
+}
+
+/* ===== 1か月分の入力 ===== */
+.entry {
+  margin: var(--space-sm) 0 var(--space-md);
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
+.entry-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+
+.entry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11em, 1fr));
+  gap: var(--space-sm) var(--space-md);
+  align-items: end;
+}
+
+.entry .field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+  font-size: var(--font-sm);
+}
+
+.entry .input.num {
+  text-align: right;
+}
+
+.with-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.with-btn .days {
+  width: 5em;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-sm);
+}
+
+.total {
+  margin: var(--space-sm) 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.errors {
+  margin: var(--space-sm) 0;
+  padding-left: 1.5em;
+}
+
+.hint {
+  margin: var(--space-xs) 0;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.entry-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.alert-warning {
+  margin-bottom: var(--space-sm);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
+}

@@ -262,3 +262,7 @@ textarea.input {
   min-height: 72px;
   padding: var(--space-xs) var(--space-sm);
 }
+
+.list-lead {
+  margin: 0 0 var(--space-md);
+}

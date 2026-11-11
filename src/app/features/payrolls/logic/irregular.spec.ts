@@ -165,3 +165,64 @@ describe('judgeIrregular：上限・下限の特例と、健保・厚年を別�
     expect(r.status).toBe('candidate');
   });
 });
+
+describe('judgeIrregular：年間平均（保険者算定。平成30年 Q&A）', () => {
+  /** 前年7月〜3月：固定 240,000・残業 20,000。4月に昇給し、4〜6月は繁忙期で残業 80,000 */
+  function busySeason(fixedAfter = 250000): [string, Payroll][] {
+    const before = Array.from({ length: 9 }, (_, i) => {
+      const m = `${i < 6 ? 2025 : 2026}-${String(((i + 6) % 12) + 1).padStart(2, '0')}`;
+      return pay(m, 260000, 240000);
+    });
+    const after = ['2026-04', '2026-05', '2026-06'].map((m) => pay(m, fixedAfter + 80000, fixedAfter));
+    return [...before, ...after];
+  }
+
+  it('A（3か月）と B（固定の3か月平均 ＋ 非固定の12か月平均）に2等級以上の差 → 候補', () => {
+    const r = judgeIrregular(input(up('2026-04'), busySeason(), [rem('2025-09', 260)]));
+    expect(r.status).toBe('candidate');
+    const a = r.annual!;
+    expect(a.months.length).toBe(12);
+    expect(a.months[0].month).toBe('2025-07');
+    expect(a.outsideCount).toBe(9);
+    expect(a.fixedAverage).toBe(250000);
+    expect(a.nonFixedAverage).toBe(35000); // (20,000 × 9 ＋ 80,000 × 3) ÷ 12
+    expect(a.average).toBe(285000);
+    expect(a.health.b.standard).toBe(280000);
+    expect(a.health.diffAB).toBeGreaterThanOrEqual(2);
+    expect(a.candidate).toBeTrue();
+    expect(a.health.revise).toBeTrue(); // 260 → 280 は昇給の向き（1等級差でもよい。Q15）
+  });
+
+  it('B が今の等級と同じ（昇給なのに上がらない）なら、年間平均では改定しない（Q16）', () => {
+    const r = judgeIrregular(input(up('2026-04'), busySeason(245000), [rem('2025-09', 280)]));
+    expect(r.status).toBe('candidate');
+    expect(r.annual!.average).toBe(280000);
+    expect(r.annual!.candidate).toBeTrue();
+    expect(r.annual!.health.revise).toBeFalse();
+  });
+
+  it('3か月のほかに数えられる月がなければ候補にしない（Q11）', () => {
+    const only = busySeason().slice(9);
+    const r = judgeIrregular(input(up('2026-04'), only, [rem('2025-09', 260)]));
+    expect(r.annual!.outsideCount).toBe(0);
+    expect(r.annual!.candidate).toBeFalse();
+    expect(r.annual!.incomplete).toBeTrue();
+  });
+
+  it('休職の月・基準日数に届かない月は数えない（Q8）', () => {
+    const list = busySeason();
+    list[0] = [list[0][0], { ...list[0][1], state: 'suspended' }];
+    list[1] = [list[1][0], { ...list[1][1], days: 10 }];
+    const r = judgeIrregular(input(up('2026-04'), list, [rem('2025-09', 260)]));
+    expect(r.annual!.outsideCount).toBe(7);
+    expect(r.annual!.months[0].skip).toBe('suspended');
+    expect(r.annual!.months[1].skip).toBe('shortDays');
+    expect(r.annual!.nonFixedAverage).toBe(Math.floor((20000 * 7 + 80000 * 3) / 10));
+  });
+
+  it('ふつうの候補でなければ年間平均は出さない', () => {
+    const r = judgeIrregular(input(up('2026-04'), busySeason().slice(0, 10), [rem('2025-09', 260)]));
+    expect(r.status).toBe('waiting');
+    expect(r.annual).toBeNull();
+  });
+});

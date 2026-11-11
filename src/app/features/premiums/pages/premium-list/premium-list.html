@@ -9,12 +9,13 @@
     >
       ‹
     </button>
-    <span class="period-label">
+    <!-- 真ん中を押すと、年と12か月の選び窓 -->
+    <app-month-picker class="period-label" [value]="month()" [today]="thisMonth" (picked)="goTo($event)">
       {{ 'premium.monthLabel' | transloco: monthParts(month()) }}
       <small class="pay-month">{{
         'premiumList.payMonth' | transloco: monthParts(payMonth())
       }}</small>
-    </span>
+    </app-month-picker>
     <button
       type="button"
       class="btn"

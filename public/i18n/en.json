@@ -174,15 +174,12 @@
     "revisions": "Revisions",
     "regular": "Annual determination",
     "group": {
-      "people": "People",
-      "monthly": "Monthly",
-      "revision": "Yearly / as needed",
       "setup": "Setup"
     },
-    "requests": "Requests",
+    "requests": "Employee My Pages",
     "help": "Help",
     "home": "Home",
-    "members": "Members"
+    "members": "Administrators"
   },
   "employee": {
     "list": {
@@ -945,7 +942,8 @@
       "people": "People",
       "payment": "Payment",
       "amount": "Bonus amount",
-      "standard": "Standard Bonus Amount (SBA) (標準賞与額)"
+      "standard": "Standard Bonus Amount (SBA) (標準賞与額)",
+      "employee": "Employee"
     },
     "peopleCount": "{{count}}",
     "hasProblems": "Some can't be calculated",
@@ -979,7 +977,9 @@
       "amount": "Enter a number.",
       "noAmount": "Enter a bonus amount for at least one employee.",
       "save": "Couldn't save. Try again later."
-    }
+    },
+    "openPeople": "By person",
+    "closePeople": "Close"
   },
   "leave": {
     "title": "Leave",
@@ -1775,6 +1775,29 @@
     "error": {
       "load": "Could not load data for revision candidates.",
       "save": "Could not apply. Please try again later."
+    },
+    "annual": {
+      "badge": "Annual average candidate",
+      "open": "See the annual-average method (insurer calculation)",
+      "col": {
+        "fixed": "Fixed wages (+ in kind)",
+        "nonFixed": "Non-fixed wages"
+      },
+      "three": "3 months from the start month",
+      "skip": {
+        "noRecord": "No record",
+        "shortDays": "Below the minimum days",
+        "suspended": "Leave / temporary layoff"
+      },
+      "formula": "Annual average {{b}} yen = average fixed wages of the 3 months {{fixed}} yen + average non-fixed wages {{nonFixed}} yen ({{n}} months). The regular average is {{a}} yen.",
+      "diffAB": "{{d}} grade(s) from the regular average",
+      "keepsAll": "With the annual average, neither insurance moves from the current grade in the direction of the change, so there is no revision (no filing; the current grade stays).",
+      "incomplete": "Some of the previous 9 months have no record (only the entered months are used).",
+      "seasonalHint": "Use this only when overtime etc. rises (or falls) at the same time every year because of the nature of the business or department (e.g. accounting at year-end, seasonal industries). One-off special raises, a temporarily busy period, commuting allowance changes after moving, and revisions after maternity or childcare leave are not eligible.",
+      "seasonal": "This difference occurs every year because of the nature of the work (busy or quiet season)",
+      "consent": "The employee agreed to use the annual average (get a consent form every time)",
+      "reflect": "Apply with the annual average",
+      "hint": "Write \"年間平均\" in the remarks of the monthly change notification and attach the statement (form example 1) and the consent form (form example 2). For employees who do not consent, use the normal \"Apply\"."
     }
   },
   "employeeCsv": {
@@ -2645,5 +2668,53 @@
       "yearly": "Yearly / as needed",
       "season": "Now"
     }
+  },
+  "myPages": {
+    "tabs": "Switch view",
+    "tab": "Invites and accounts",
+    "lead": "My Page status of current employees. Select people and press \"Invite\" to create invites that only work with the email in each employee's contact details. No email is sent automatically: export the links as CSV and send them yourself (for example with a mail merge).",
+    "status": {
+      "linked": "Has account",
+      "invited": "Invited",
+      "expired": "Expired",
+      "none": "Not invited"
+    },
+    "inviteSelected": "Invite selected ({{count}})",
+    "exportCsv": "Export invite links as CSV ({{count}})",
+    "hint": "You can select people with no account and no usable invite. Invites expire after 14 days and can only be used by the person who clicks the link in the confirmation email.",
+    "made": "Created {{count}} invite(s).",
+    "noEmail": "Skipped {{count}} without a contact email ({{names}}). Add the email on the employee page and select them again.",
+    "selectAll": "Select everyone selectable",
+    "anyone": "Any address",
+    "empty": "No current employees.",
+    "col": {
+      "employee": "Employee",
+      "status": "My Page",
+      "detail": "Invite"
+    },
+    "csv": {
+      "number": "Employee number",
+      "name": "Name",
+      "email": "Email",
+      "link": "Invite link",
+      "expires": "Expires"
+    },
+    "error": {
+      "load": "Could not load invites.",
+      "create": "Could not create invites. Please try again later."
+    }
+  },
+  "monthPicker": {
+    "pick": "Pick a month",
+    "prevYear": "Previous year",
+    "nextYear": "Next year"
+  },
+  "payrollEntry": {
+    "open": "Enter a month",
+    "new": "No record for this month yet",
+    "editing": "Already entered (saving overwrites it)",
+    "notEmployed": "This employee was not employed during this pay period. Check the month.",
+    "more": "In kind, retroactive pay, absences, hours, status",
+    "inKindHint": "To calculate housing or meal amounts, use \"Calculate\" on the month page."
   }
 }

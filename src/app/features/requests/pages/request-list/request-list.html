@@ -1,12 +1,30 @@
 <div class="page-head">
-  <div>
-    <h1>{{ 'request.listTitle' | transloco }}</h1>
-    <p class="lead">{{ 'request.listLead' | transloco }}</p>
-  </div>
-  @if (context.isAdmin()) {
+  <h1>{{ 'nav.requests' | transloco }}</h1>
+  @if (context.isAdmin() && view() === 'requests') {
     <a class="btn btn-primary" [routerLink]="['/o', context.current()?.id, 'requests', 'new']">{{ 'request.new' | transloco }}</a>
   }
 </div>
+
+<!-- 依頼と申請／マイページの招待（招待の一覧を読めるのは管理者だけ） -->
+@if (context.isAdmin()) {
+  <nav class="page-tabs" [attr.aria-label]="'myPages.tabs' | transloco">
+    <a [routerLink]="[]" [queryParams]="{ view: null, status: null }" [class.active]="view() === 'requests'">
+      {{ 'request.listTitle' | transloco }}
+    </a>
+    <a [routerLink]="[]" [queryParams]="{ view: 'invites', status: null }" [class.active]="view() === 'invites'">
+      {{ 'myPages.tab' | transloco }}
+    </a>
+  </nav>
+}
+
+@if (view() === 'invites' && context.isAdmin()) {
+  @if (loading()) {
+    <p class="muted">{{ 'common.loading' | transloco }}</p>
+  } @else {
+    <app-my-page-invites [employees]="employeeList()" />
+  }
+} @else {
+<p class="lead list-lead">{{ 'request.listLead' | transloco }}</p>
 
 <nav class="tabs" [attr.aria-label]="'request.filter' | transloco">
   <a [routerLink]="[]" [queryParams]="{ status: null }" [class.active]="filter() === 'all'">
@@ -64,3 +82,4 @@
     </div>
   }
 </section>
+}

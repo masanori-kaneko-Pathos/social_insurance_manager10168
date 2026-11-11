@@ -78,11 +78,11 @@
   }
 
   /* まとまりの見出し（小さく・薄く） */
-  .nav-group {
-    margin: var(--space-md) var(--space-md) 0;
-    font-size: var(--font-xs, 12px);
-    color: var(--color-text-sub);
-    letter-spacing: 0.04em;
+  .nav-sep {
+    display: block;
+    height: 1px;
+    margin: var(--space-sm) var(--space-md);
+    background: var(--color-border);
   }
 
   .side-nav a:hover {
@@ -119,7 +119,7 @@
     }
 
     /* 横に並べるときは、まとまりの見出しを出さない */
-    .nav-group {
+    .nav-sep {
       display: none;
     }
 

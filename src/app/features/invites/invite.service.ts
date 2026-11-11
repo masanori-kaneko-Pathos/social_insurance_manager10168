@@ -62,6 +62,44 @@ export class InviteService {
     return { ...data, createdAt: Timestamp.now() };
   }
 
+  /**
+   * 管理者：まとめて招待を作る（従業員ごとに、決めたアドレスでしか使えない招待）
+   * 従業員向けの写しは最初に1回だけ作り、招待は batch（500件まで）でまとめて書く
+   */
+  async createMany(officeId: string, list: { employeeId: string; email: string }[]): Promise<Invite[]> {
+    const uid = auth.currentUser?.uid;
+    if (!uid) throw new Error('not signed in');
+    if (list.length === 0) return [];
+    await this.offices.publishForEmployees(officeId);
+    const expiresAt = Timestamp.fromMillis(Date.now() + INVITE_DAYS * 86_400_000);
+    const made: Invite[] = list.map(({ employeeId, email }) => ({
+      code: makeInviteCode((n) => crypto.getRandomValues(new Uint8Array(n))),
+      kind: 'employee' as const,
+      employeeId,
+      role: null,
+      email: email.trim().toLowerCase(),
+      expiresAt,
+      usedBy: null,
+      usedAt: null,
+      createdBy: uid,
+      createdAt: Timestamp.now(),
+    }));
+    for (let i = 0; i < made.length; i += 500) {
+      const batch = writeBatch(db);
+      for (const inv of made.slice(i, i + 500)) {
+        batch.set(doc(this.col(officeId), inv.code), { ...inv, createdAt: serverTimestamp() });
+      }
+      await batch.commit();
+    }
+    return made;
+  }
+
+  /** 管理者：従業員への招待を全部（一覧で状態を出すため。1回の問い合わせ） */
+  async listEmployeeInvites(officeId: string): Promise<Invite[]> {
+    const snap = await getDocs(query(this.col(officeId), where('kind', '==', 'employee')));
+    return snap.docs.map((d) => d.data() as InviteDoc);
+  }
+
   /** 管理者：その従業員への招待（新しい順） */
   async listFor(officeId: string, employeeId: string): Promise<Invite[]> {
     const snap = await getDocs(

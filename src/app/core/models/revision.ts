@@ -82,7 +82,7 @@ export interface IrregularDecisionDoc {
   startMonth: string; // 起算月（＝ ドキュメントID）
   revisedFrom: string; // 改定月（起算月から4か月目）
   direction: 'up' | 'down'; // ⑦昇給・降給
-  usedMonths: string[];
+  usedMonths: string[]; // 通常は3か月、年間平均は数えた月（12か月まで）
   total: number;
   average: number;
   corrected: number | null;
@@ -90,6 +90,11 @@ export interface IrregularDecisionDoc {
   monthlyAmount: number;
   special: boolean; // 上限・下限の特例（1等級差）で改定した
   reasonNote: string | null; // 備考「昇給・降給の理由」
+  /** 決め方：通常（3か月の平均）／年間平均（保険者算定。届の備考に「年間平均」）。前の記録にはない（＝ 通常） */
+  method?: 'normal' | 'annual';
+  annualAverage?: number | null; // 年間平均（B。候補だったときだけ）
+  seasonal?: boolean; // 年間平均：業務の性質上、例年発生する（担当者が確かめた）
+  consent?: boolean; // 年間平均：被保険者が同意した（同意書は毎回）
   health: StandardRemuneration;
   pension: StandardRemuneration;
   createdAt: Timestamp;
