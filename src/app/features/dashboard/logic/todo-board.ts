@@ -8,9 +8,10 @@
 
 import { DateStr, YearMonth } from '../../../shared/utils/date';
 import { AgeEvent, ageEventsIn, AgeTarget, compareAgeEvents, isActive } from '../../employees/logic/age-events';
+import { ExtraKind, ExtraTodo } from './extra-todos';
 import { Todo, TodoKind } from './todos';
 
-export type BoardKind = TodoKind | 'age' | 'requests' | 'office';
+export type BoardKind = TodoKind | ExtraKind | 'age' | 'requests' | 'office';
 export type Section = 'now' | 'soon' | 'missing';
 export type OfficeIssue = 'noStandard' | 'noCriteria';
 
@@ -25,6 +26,8 @@ export interface BoardItem {
   todo: Todo | null;
   age: AgeEvent | null;
   office: OfficeIssue | null;
+  /** 在留・資格外活動・脱退一時金・特定適用事業所（extra-todos.ts） */
+  extra?: ExtraTodo | null;
 }
 
 export interface BoardGroup {
@@ -40,11 +43,15 @@ export const BOARD_ORDER: readonly BoardKind[] = [
   'acquire',
   'lose',
   'agreement',
+  'workPermit',
   'requests',
   'upcoming',
   'categoryChange',
   'certificateEnd',
+  'residence',
   'age',
+  'lumpSum',
+  'specificOffice',
   'noContract',
   'office',
 ];
@@ -53,11 +60,15 @@ export const SECTION_OF: Record<BoardKind, Section> = {
   acquire: 'now',
   lose: 'now',
   agreement: 'now',
+  workPermit: 'now',
   requests: 'now',
   upcoming: 'soon',
   categoryChange: 'soon',
   certificateEnd: 'soon',
   age: 'soon',
+  residence: 'soon',
+  lumpSum: 'soon',
+  specificOffice: 'soon',
   noContract: 'missing',
   office: 'missing',
 };
@@ -68,6 +79,10 @@ export const DISMISSABLE: ReadonlySet<BoardKind> = new Set<BoardKind>([
   'categoryChange',
   'certificateEnd',
   'age',
+  'residence', // 更新の許可を確かめたら消す（新しい満了日を入れれば、そもそも出なくなる）
+  'workPermit', // 長期休業期間（1日8時間まで）など、確かめたうえで続ける場合
+  'lumpSum', // 本人に案内したら消す
+  'specificOffice', // 事業所の設定を確かめたら消す
 ]);
 
 /** 1つのまとまりで最初に出す件数 */
@@ -110,6 +125,20 @@ export function ageItems(
       age: ev,
       office: null,
     }));
+}
+
+/** 追加分の1件（鍵は種類・人・日付。日付が変われば、また出る） */
+export function extraItem(t: ExtraTodo): BoardItem {
+  return {
+    key: `${t.kind}:${t.employeeId ?? '-'}:${t.date ?? '-'}`,
+    kind: t.kind,
+    employeeId: t.employeeId,
+    date: t.date,
+    todo: null,
+    age: null,
+    office: null,
+    extra: t,
+  };
 }
 
 export function officeItem(issue: OfficeIssue): BoardItem {

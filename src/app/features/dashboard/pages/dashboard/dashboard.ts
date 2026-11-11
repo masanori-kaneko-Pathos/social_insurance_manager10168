@@ -26,6 +26,7 @@ import {
   BoardKind,
   DISMISSABLE,
   groupBoard,
+  extraItem,
   officeItem,
   OfficeIssue,
   openCount,
@@ -34,6 +35,7 @@ import {
 } from '../../logic/todo-board';
 import { daysLeft, filterRows, kindsIn, RowView, TABLE_LIMIT, toRows } from '../../logic/todo-table';
 import { personTodos } from '../../logic/todos';
+import { lumpSumTodo, residenceTodo, specificOfficeTodo, workPermitTodo } from '../../logic/extra-todos';
 import { TodoBadgeService } from '../../todo-badge.service';
 import { TodoService } from '../../todo.service';
 
@@ -129,8 +131,27 @@ export class Dashboard {
         this.today,
       ),
     );
+    // 在留・資格外活動・脱退一時金（外国籍の人）と、特定適用事業所の人数
+    const contracts = this.contracts();
+    const extras = this.employees().flatMap((e) =>
+      [
+        residenceTodo(e, this.today),
+        workPermitTodo(e, contracts.get(e.id) ?? [], this.today),
+        lumpSumTodo(e, this.today),
+      ].filter((t) => t !== null),
+    );
+    const specific = specificOfficeTodo(
+      office,
+      this.employees()
+        .filter((e) => contracts.has(e.id))
+        .map((e) => ({ ...e, contracts: contracts.get(e.id) ?? [] })),
+      criteria,
+      this.thisMonth,
+    );
     const items: BoardItem[] = [
       ...todos.map(todoItem),
+      ...extras.map(extraItem),
+      ...(specific ? [extraItem(specific)] : []),
       ...ageItems(this.employees(), this.thisMonth, shiftMonth(this.thisMonth, 1), this.today),
       ...this.officeIssues().map(officeItem),
       ...(this.submittedRequests() > 0 ? [requestsItem()] : []),

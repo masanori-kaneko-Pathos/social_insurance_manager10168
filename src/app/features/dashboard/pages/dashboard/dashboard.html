@@ -145,6 +145,19 @@
                           @case ('requests') {
                             {{ 'dashboard.todo.text.requests' | transloco: { count: submittedRequests() } }}
                           }
+                          @case ('residence') {
+                            {{ 'dashboard.todo.text.residence' | transloco: it.extra!.params }}
+                          }
+                          @case ('workPermit') {
+                            {{ 'dashboard.todo.text.workPermit' | transloco: it.extra!.params }}
+                          }
+                          @case ('lumpSum') {
+                            {{ 'dashboard.todo.text.lumpSum' | transloco: it.extra!.params }}
+                          }
+                          @case ('specificOffice') {
+                            {{ 'dashboard.todo.text.specificOffice' | transloco: it.extra!.params }}
+                            {{ 'dashboard.todo.text.specificOfficeHow.' + it.extra!.params['how'] | transloco }}
+                          }
                           @default {
                             {{
                               'dashboard.todo.text.' + it.kind
@@ -186,6 +199,15 @@
                           }
                           @case ('age') {
                             <a [routerLink]="['/o', office()?.id, 'ages']">{{ 'dashboard.todo.toAges' | transloco }} →</a>
+                          }
+                          @case ('residence') {
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId, 'edit']">{{ 'dashboard.todo.toForeign' | transloco }} →</a>
+                          }
+                          @case ('workPermit') {
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'employment' }">{{ 'dashboard.todo.toContractCheck' | transloco }} →</a>
+                          }
+                          @case ('specificOffice') {
+                            <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>
                           }
                         }
                       </p>

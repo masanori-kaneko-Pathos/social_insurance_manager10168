@@ -123,7 +123,11 @@
         "agreement": "Agreement check",
         "certificateEnd": "Certificate ending",
         "requests": "To review",
-        "age": "Age milestones"
+        "age": "Age milestones",
+        "residence": "Residence period",
+        "workPermit": "Work permit hours",
+        "lumpSum": "Lump-sum withdrawal",
+        "specificOffice": "Specified office"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. An Application to Enroll in EPI / EHI (資格取得届) is needed.",
@@ -134,7 +138,15 @@
         "agreement": "A certificate of coverage under a social security agreement (from {{date}}) is valid, but the person is enrolled in an exempt insurance. Check whether a loss notice (reason: social security agreement) is needed.",
         "certificateEnd": "The certificate of coverage ends, so the person joins Japanese social insurance from {{date}}. Prepare the Application to Enroll in EPI / EHI (資格取得届) (if the assignment is extended, check the extended certificate).",
         "requests": "{{count}} answered requests or change applications from employees are waiting for review.",
-        "age": "Turns {{age}} on {{date}}."
+        "age": "Turns {{age}} on {{date}}.",
+        "residence": "The residence period expires on {{date}} (it may already have passed). Check the residence card for the renewal and enter the new expiry date when editing the employee.",
+        "workPermit": "The weekly hours of the current contract ({{hours}} h) exceed the hours allowed by the work permit ({{limit}} h per week). Review the contract (if an exception applies, such as a student's long school holidays, mark it as checked).",
+        "lumpSum": "A foreign employee who was in the employees' pension for {{months}} months is leaving. Tell them they can claim the lump-sum withdrawal payment from the Japan Pension Service within 2 years after leaving Japan (this is not a company filing; mark it as checked after you tell them).",
+        "specificOffice": "This office is not a specified applicable office, but this month's headcount (counted the way employees' pension members are counted) is {{count}}, which reaches the threshold ({{min}} or more). If the threshold is exceeded in 6 or more of the last 12 months, the office becomes a specified applicable office and short-time workers are covered too. Please check the office settings.",
+        "specificOfficeHow": {
+          "app": "(Counted from the contracts of employees registered in the app.)",
+          "manual": "(Uses the company-wide count entered in the office settings.)"
+        }
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -161,7 +173,8 @@
       "toAges": "See up to one year ahead",
       "toContract": "Add a contract",
       "toContractCheck": "Check the contract",
-      "errorDismiss": "Could not save. Please try again."
+      "errorDismiss": "Could not save. Please try again.",
+      "toForeign": "Edit employee (residence)"
     }
   },
   "nav": {

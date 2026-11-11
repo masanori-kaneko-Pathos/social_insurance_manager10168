@@ -44,7 +44,11 @@ export function deadlineOf(it: BoardItem): { deadline: DateStr | null; note: Dea
     case 'categoryChange':
       return it.date ? { deadline: filingDeadline(it.date), note: null } : { deadline: null, note: 'asap' };
     case 'lose':
+    case 'workPermit':
       return { deadline: null, note: 'asap' };
+    case 'residence':
+      // 届の期限ではなく、在留期間の満了日（更新の申請は満了日まで）
+      return { deadline: it.date, note: null };
     case 'age': {
       const ev = it.age;
       if (ev?.age === 70) return { deadline: filingDeadline(ev.reachDate), note: 'onlyIfPayChanges' };
