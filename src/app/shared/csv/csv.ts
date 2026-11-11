@@ -23,8 +23,8 @@ function stripBom(s: string): string {
   return s.charCodeAt(0) === 0xfeff ? s.slice(1) : s;
 }
 
-/** CSV の文字 → 行の配列（1行 ＝ 列の配列）。最後の空行は捨てる */
-export function parseCsv(input: string): string[][] {
+/** CSV の文字 → 行の配列（1行 ＝ 列の配列）。最後の空行は捨てる。sep はタブ区切り（TSV）のときに '\t' */
+export function parseCsv(input: string, sep = ','): string[][] {
   const s = stripBom(input);
   const rows: string[][] = [];
   let row: string[] = [];
@@ -51,7 +51,7 @@ export function parseCsv(input: string): string[][] {
     if (c === '"' && cell === '') {
       quoted = true;
       i++;
-    } else if (c === ',') {
+    } else if (c === sep) {
       row.push(cell);
       cell = '';
       i++;

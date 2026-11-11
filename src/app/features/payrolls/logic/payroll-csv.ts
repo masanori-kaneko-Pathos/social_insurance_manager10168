@@ -8,6 +8,7 @@ import { PayrollRowText, readRow, RowError, sameInput } from './payroll-input';
 import { formatHours } from '../../../shared/utils/number';
 import { employedDuring, PayrollEmployee, PaySchedule, periodOf } from './payroll-rows';
 import { daysInclusive } from '../../../shared/utils/date';
+import { ImportField, OurTableSpec, ValueKind } from '../../../shared/import/column-map';
 
 // ===== 列 =====
 
@@ -41,7 +42,7 @@ export const PAYROLL_COLUMNS: readonly PayrollColumn[] = [
   'state',
 ];
 
-const REQUIRED: readonly PayrollColumn[] = ['employeeNumber', 'paidMonth', 'cash', 'fixed', 'days'];
+export const PAYROLL_REQUIRED: readonly PayrollColumn[] = ['employeeNumber', 'paidMonth', 'cash', 'fixed', 'days'];
 
 export type CsvLang = 'ja' | 'en';
 
@@ -102,7 +103,7 @@ export function mapHeader(header: readonly string[]): {
     const col = lookup.get(headerKey(h));
     if (col && index[col] === undefined) index[col] = i;
   });
-  return { index, missing: REQUIRED.filter((c) => index[c] === undefined) };
+  return { index, missing: PAYROLL_REQUIRED.filter((c) => index[c] === undefined) };
 }
 
 // ===== 値の読み分け（Excel で変わってしまう形も読む） =====
@@ -190,6 +191,26 @@ export function makeMatcher(employees: readonly CsvEmployee[]): (no: string) => 
   };
 }
 
+/** 氏名を比べるためにそろえる（全角半角・空白の違いを無視） */
+const nameKey = (s: string) => s.normalize('NFKC').replace(/\s+/g, '');
+
+/**
+ * 氏名で照合する（社員番号は任意の項目なので、番号のない人のため）。
+ * 同じ氏名が2人以上なら ambiguous（社員番号を入れてもらう）
+ */
+export function makeNameMatcher(employees: readonly CsvEmployee[]): (name: string) => Match {
+  const byName = new Map<string, CsvEmployee[]>();
+  for (const e of employees) {
+    const k = nameKey(`${e.lastName}${e.firstName}`);
+    if (k) byName.set(k, [...(byName.get(k) ?? []), e]);
+  }
+  return (raw: string) => {
+    const a = byName.get(nameKey(raw));
+    if (!a) return { kind: 'none' };
+    return a.length === 1 ? { kind: 'ok', employee: a[0], zeroPadded: false } : { kind: 'ambiguous' };
+  };
+}
+
 // ===== 取り込み =====
 
 export type ImportErrorCode =
@@ -197,6 +218,8 @@ export type ImportErrorCode =
   | 'noEmployeeNumber'
   | 'unknownEmployee'
   | 'ambiguousEmployee'
+  | 'unknownName'
+  | 'ambiguousName'
   | 'badMonth'
   | 'notEmployed'
   | 'duplicate'
@@ -242,7 +265,7 @@ export function readPayrollCsv(
     unfilledLines: 0,
   };
   if (rows.length === 0) {
-    result.missingColumns = [...REQUIRED];
+    result.missingColumns = [...PAYROLL_REQUIRED];
     return result;
   }
   const { index, missing } = mapHeader(rows[0]);
@@ -255,6 +278,7 @@ export function readPayrollCsv(
     return i === undefined ? '' : (row[i] ?? '');
   };
   const match = makeMatcher(employees);
+  const matchName = makeNameMatcher(employees);
   const seen = new Map<string, number>(); // 'employeeId|month' → 行番号
 
   rows.slice(1).forEach((row, i) => {
@@ -265,11 +289,18 @@ export function readPayrollCsv(
     }
     const codes: ImportErrorCode[] = [];
 
-    // 人
+    // 人：社員番号で探す。番号が空なら氏名で探す（社員番号は任意の項目のため）
     const no = cell(row, 'employeeNumber');
+    const name = cell(row, 'name');
     let employee: CsvEmployee | null = null;
     if (norm(no) === '') {
-      codes.push('noEmployeeNumber');
+      if (nameKey(name) === '') codes.push('noEmployeeNumber');
+      else {
+        const m = matchName(name);
+        if (m.kind === 'none') codes.push('unknownName');
+        else if (m.kind === 'ambiguous') codes.push('ambiguousName');
+        else employee = m.employee;
+      }
     } else {
       const m = match(no);
       if (m.kind === 'none') codes.push('unknownEmployee');
@@ -313,8 +344,11 @@ export function readPayrollCsv(
     };
     const r = readRow(text, periodDays);
     if (r.kind === 'blank') {
-      // ひな形の未記入の行：人や月が読めていれば読み飛ばす（ほかのエラーがあればエラー）
-      if (codes.length === 0) {
+      // ひな形の未記入の行：人や月が読めていれば読み飛ばす（ほかのエラーがあればエラー）。
+      // 番号が空で氏名でも決まらない行も、保存するものがないので読み飛ばす
+      // （番号が入っていて未登録の行は、打ち間違いを見逃さないようエラーのまま）
+      const noOneToSave = codes.every((c) => c === 'noEmployeeNumber' || c === 'unknownName' || c === 'ambiguousName');
+      if (codes.length === 0 || noOneToSave) {
         result.unfilledLines++;
         return;
       }
@@ -408,3 +442,42 @@ export function payrollFileName(
   const range = from === to ? from : `${from}〜${to}`;
   return `${title}_${officeName}_${range}_${today.replace(/-/g, '')}.csv`;
 }
+
+// ===== よそのファイルからの取り込み（列を合わせる画面で使う） =====
+// 給与ソフトの書き出しの、よくある見出しの言い方
+
+const WORDS: Record<PayrollColumn, readonly string[]> = {
+  employeeNumber: ['従業員番号', '従業員コード', '社員コード', '社員No', '職員番号'],
+  name: ['従業員名', '社員名', '姓名'],
+  paidMonth: ['支給年月', '支給月', '支払年月', '支払月', '支給日', '支払日', '給与支給日', '対象年月'],
+  cash: ['総支給額', '総支給金額', '支給合計', '社保対象額', '社会保険対象額', '社会保険の報酬', '報酬額'],
+  fixed: ['固定給', '固定的賃金計', '固定的賃金の合計'],
+  days: ['基礎日数', '出勤日数', '支払日数'],
+  inKind: ['現物給与', '現物支給額', '現物給与額'],
+  retro: ['遡及額', '遡及分'],
+  absentDays: ['欠勤'],
+  hours: ['労働時間', '総労働時間', '勤務時間'],
+  prorated: [],
+  state: [],
+};
+
+const KINDS: Partial<Record<PayrollColumn, ValueKind>> = {
+  paidMonth: 'month', cash: 'number', fixed: 'number', inKind: 'number', retro: 'number',
+  days: 'days', absentDays: 'days',
+};
+
+export const PAYROLL_IMPORT_FIELDS: readonly ImportField<PayrollColumn>[] = PAYROLL_COLUMNS.map((key) => ({
+  key,
+  header: PAYROLL_HEADERS.ja[key],
+  words: [PAYROLL_HEADERS.en[key], ...WORDS[key]],
+  kind: KINDS[key],
+  required: PAYROLL_REQUIRED.includes(key),
+  // 社員番号の列がないファイルでも、氏名の列があれば氏名で照合する（うちの表には空の社員番号の列が出る）
+  orFrom: key === 'employeeNumber' ? (['name'] as const) : undefined,
+}));
+
+export const PAYROLL_TABLE_SPEC: OurTableSpec<PayrollColumn, PayrollColumn> = {
+  fields: PAYROLL_IMPORT_FIELDS,
+  out: PAYROLL_COLUMNS,
+  outHeader: (c) => PAYROLL_HEADERS.ja[c],
+};

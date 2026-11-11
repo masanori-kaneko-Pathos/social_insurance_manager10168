@@ -24,8 +24,9 @@
     <h2>{{ 'employeeCsv.step2' | transloco }}</h2>
     <label class="btn file">
       {{ 'employeeCsv.choose' | transloco }}
-      <input type="file" accept=".csv,text/csv" (change)="onFile($event)" [disabled]="saving()" />
+      <input type="file" [accept]="accept" (change)="onFile($event)" [disabled]="saving()" />
     </label>
+    <p class="sub">{{ 'importMap.fileHint' | transloco }}</p>
 
     @if (errorKey(); as key) {
       <div class="alert alert-danger">{{ key | transloco }}</div>
@@ -45,10 +46,27 @@
       <progress [value]="p.done" [max]="p.total"></progress>
     }
 
+    <!-- 見出しがうちと違うファイル：列を合わせる（確認画面から戻ったときに選んだ値が残るよう、隠すだけにする） -->
+    @if (loaded(); as f) {
+      <app-column-mapper
+        [hidden]="!mapping()"
+        [tables]="f.tables"
+        [spec]="tableSpec"
+        noteKey="importMap.employeeNote"
+        (confirmed)="onMapped($event)"
+        (cancelled)="clear()"
+      />
+    }
+
     @if (preview(); as pv) {
       <p class="file-name">
         {{ pv.fileName }}
-        <span class="sub">（{{ 'payrollCsv.encoding.' + pv.encoding | transloco }}）</span>
+        @if (pv.encoding) {
+          <span class="sub">（{{ 'payrollCsv.encoding.' + pv.encoding | transloco }}）</span>
+        }
+        <button type="button" class="btn redo" (click)="remap()" [disabled]="saving()">
+          {{ 'importMap.redo' | transloco }}
+        </button>
       </p>
 
       @if (pv.read.missingColumns.length > 0) {

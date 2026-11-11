@@ -109,3 +109,11 @@ h3 {
 progress {
   width: 100%;
 }
+
+/* 列の対応をやり直す（ファイル名の横の小さなボタン） */
+.redo {
+  margin-left: var(--space-sm);
+  padding: 2px 10px;
+  font-size: var(--font-xs, 12px);
+  font-weight: 400;
+}

@@ -1,0 +1,122 @@
+<div class="mapper">
+  <h3>{{ 'importMap.title' | transloco }}</h3>
+  <p class="sub">{{ 'importMap.lead' | transloco }}</p>
+
+  @if (tables().length > 1) {
+    <label class="sheet">
+      {{ 'importMap.sheet' | transloco }}
+      <select class="input" (change)="pickSheet($any($event.target).value)">
+        @for (t of tables(); track $index) {
+          <option [value]="'' + $index" [selected]="$index === sheet()">{{ t.name }}</option>
+        }
+      </select>
+    </label>
+  }
+
+  @if (pdf()) {
+    <div class="alert alert-warning">{{ 'importMap.pdfNote' | transloco }}</div>
+  }
+  @if (noteKey(); as k) {
+    <p class="sub note">{{ k | transloco }}</p>
+  }
+
+  <ng-template #fieldRow let-f>
+    <tr>
+      <th scope="row">
+        {{ f.header }}
+        @if (f.required) {
+          <span class="req" aria-hidden="true">※</span>
+        }
+        @if (f.orFrom?.length) {
+          <span class="or-from">{{ 'importMap.orFrom' | transloco: { fields: orFromText(f) } }}</span>
+        }
+      </th>
+      <td class="source">
+        <select
+          class="input"
+          (change)="onSource(f.key, $any($event.target).value)"
+          [attr.aria-label]="f.header"
+        >
+          <!-- select の [value] は option より先に効いて外れることがあるので、option の側で選ぶ -->
+          <option value="" [selected]="sourceValue(f.key) === ''">{{ 'importMap.source.none' | transloco }}</option>
+          <option value="fixed" [selected]="sourceValue(f.key) === 'fixed'">{{ 'importMap.source.fixed' | transloco }}</option>
+          @for (h of headers(); track $index) {
+            <option [value]="'c:' + $index" [selected]="sourceValue(f.key) === 'c:' + $index">{{ columnName($index) }}</option>
+          }
+        </select>
+        @if (sourceValue(f.key) === 'fixed') {
+          <input
+            class="input fixed"
+            [value]="fixedOf(f.key)"
+            (input)="onFixed(f.key, $any($event.target).value)"
+            [attr.aria-label]="('importMap.source.fixed' | transloco) + '：' + f.header"
+          />
+        }
+      </td>
+      @for (s of samples(); track $index) {
+        <td class="example">{{ example(f.key, $index) }}</td>
+      }
+    </tr>
+  </ng-template>
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>{{ 'importMap.col.field' | transloco }}</th>
+          <th>{{ 'importMap.col.source' | transloco }}</th>
+          @for (s of samples(); track $index) {
+            <th>{{ 'importMap.col.example' | transloco: { n: $index + 1 } }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (f of mainFields(); track f.key) {
+          <ng-container *ngTemplateOutlet="fieldRow; context: { $implicit: f }" />
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (moreFields().length > 0) {
+    <details class="fold">
+      <summary>{{ 'importMap.more' | transloco: { n: moreFields().length } }}</summary>
+      <div class="table-wrap">
+        <table class="table">
+          <tbody>
+            @for (f of moreFields(); track f.key) {
+              <ng-container *ngTemplateOutlet="fieldRow; context: { $implicit: f }" />
+            }
+          </tbody>
+        </table>
+      </div>
+    </details>
+  }
+
+  @if (unused().length > 0) {
+    <p class="sub unused">
+      {{ 'importMap.unused' | transloco }}
+      @for (i of unused(); track i) {
+        <span class="tag">{{ columnName(i) }}</span>
+      }
+    </p>
+  }
+
+  @if (missing().length > 0) {
+    <div class="alert alert-danger" role="alert">
+      {{ 'importMap.missing' | transloco }}
+      @for (k of missing(); track k) {
+        <span class="tag">{{ headerOf(k) }}</span>
+      }
+    </div>
+  }
+
+  <div class="actions">
+    <button type="button" class="btn" (click)="cancelled.emit()">
+      {{ 'common.cancel' | transloco }}
+    </button>
+    <button type="button" class="btn btn-primary" (click)="confirm()" [disabled]="missing().length > 0">
+      {{ 'importMap.next' | transloco }}
+    </button>
+  </div>
+</div>

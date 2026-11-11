@@ -1246,7 +1246,7 @@
     "import": {
       "title": "2. Import",
       "lead": "After you choose a file, a review screen appears. Nothing is saved until you press Import.",
-      "choose": "Choose CSV file",
+      "choose": "Choose file",
       "done": "Imported {{n}} records.",
       "toList": "Go to payroll records",
       "partial": "Saving failed partway. {{done}} of {{total}} records were saved. Import the same file again to add only the rest (saved records show as unchanged).",
@@ -1289,17 +1289,19 @@
     "problem": "Problem",
     "overwrite": "Overwrite",
     "rowError": {
-      "noEmployeeNumber": "Employee number is empty",
+      "noEmployeeNumber": "Both employee number and name are empty",
       "unknownEmployee": "No employee has this number",
       "ambiguousEmployee": "More than one employee matches this number",
       "badMonth": "Month paid cannot be read (e.g. 2026-10)",
       "notEmployed": "Not employed during this pay period",
       "duplicate": "The same employee and month appear in an earlier row",
       "badProrated": "Enter 1 or leave Prorated blank",
-      "badState": "Status must be Normal, Leave of absence or Temporary layoff"
+      "badState": "Status must be Normal, Leave of absence or Temporary layoff",
+      "unknownName": "No employee has this name (entering the employee number is more reliable)",
+      "ambiguousName": "More than one employee has this name. Enter the employee number"
     },
     "hint": {
-      "columns": "Columns are read by header name (any order; unknown columns are ignored). Required: employee number, month paid, paid in money, fixed wages, payment basis days.",
+      "columns": "Columns are read by header name (any order; unknown columns are ignored). Required: employee number, month paid, paid in money, fixed wages, payment basis days. Rows without an employee number are matched by name.",
       "excel": "CSV files saved by Excel (Shift_JIS) can be read as is, including months Excel turned into dates like 2026/10/1 and employee numbers that lost leading zeros.",
       "allOrNothing": "If any row has a problem, nothing is saved. Records are saved in groups of 500."
     },
@@ -1770,9 +1772,9 @@
     "templateHint": "It has a header row and 2 example rows. Edit it in Excel (UTF-8 or Shift_JIS).",
     "template": "Download template",
     "columnsTitle": "How to fill in the columns",
-    "columnsHint": "Required: employee number, last name kana, birth date, hire date, employment type, pay type, weekly hours, monthly days, scheduled wage (and last name for Japanese nationals). Dates as 2026-04-01; hours as 40:00. Values can be the Japanese words or codes (regular, part, hourly, etc.). Leave enrollment blank to decide by category.",
+    "columnsHint": "Required: employee number, last name kana, birth date, hire date, employment type, pay type, weekly hours, monthly days, scheduled wage (and last name for Japanese nationals). Dates as 2026-04-01; hours as 40:00. Values can be the Japanese words or codes (regular, part, hourly, etc.). Leave enrollment blank to decide by category. Basic pension number (10 digits) and insured person number can also be entered.",
     "step2": "2. Choose a file and review",
-    "choose": "Choose CSV file",
+    "choose": "Choose file",
     "missingColumns": "Required columns are missing:",
     "hasErrors": "{{n}} row(s) have errors. Fix them and choose the file again (nothing is imported while errors remain).",
     "planTitle": "To import: {{n}} ({{insured}} insured)",
@@ -1816,7 +1818,8 @@
       "retireBeforeHire": "Retirement date is before the hire date.",
       "hireBeforeBirth": "Hire date is before the birth date.",
       "leaveKind": "Cannot read the leave type.",
-      "endBeforeStart": "End date is before the start date."
+      "endBeforeStart": "End date is before the start date.",
+      "pensionNumber": "Enter the basic pension number as 10 digits (hyphen optional)."
     },
     "import": "Import {{n}}",
     "progress": "Importing… {{done}}/{{total}}",
@@ -2423,8 +2426,8 @@
         "body": "People sent from an agreement country who hold a certificate of coverage are not enrolled in the Japanese pension (and, for some countries, health insurance). Entering the certificate country and period in the employee edit screen adds agreement checks and certificate expiry items to the to-do list."
       },
       "csv": {
-        "title": "Importing by CSV",
-        "body": "Employees and payroll records can be imported by CSV. Columns are read by header name, so any order works. Exporting the template CSV and filling it in is the safest way. Shift_JIS CSV saved from Excel can also be read."
+        "title": "Importing CSV, Excel and PDF files",
+        "body": "Employees and payroll records can be imported from CSV, Excel or PDF files. This app's template CSV goes straight to the review screen. Files with different headers, such as files exported from payroll or HR software, go through the \"Match columns\" screen, where you check which column goes to which field. Fields missing from the file can be filled with \"Same value for everyone\". Japanese era dates (R8.4.1) and Excel dates are read, and half-width katakana is converted to full width. Shift_JIS CSV saved from Excel can also be read."
       },
       "myPage": {
         "title": "Employee My Page and requests",
@@ -2434,6 +2437,36 @@
         "title": "Roles (administrator, general user, employee)",
         "body": "Administrators can register, edit and file. General users can only view, and cannot see contact, commute and bank details or change history. Employees can see only their own information on My Page."
       }
+    }
+  },
+  "importMap": {
+    "title": "Match columns",
+    "lead": "The file's headers differ from this app's fields. Columns were matched automatically; check which column goes to which field. Fields missing from the file can be filled with \"Same value for everyone\" (you can fix individuals later).",
+    "fileHint": "You can choose CSV, Excel (xlsx, xls) or PDF. Files with different headers, such as exports from payroll or HR software, are matched on the next screen.",
+    "sheet": "Sheet",
+    "pdfNote": "PDF tables are rebuilt from the positions of the text. Check in the examples that each value is in the right field.",
+    "employeeNote": "If \"Daily scheduled minutes\" and \"Scheduled days per week\" are given, weekly hours (daily × days per week) and monthly days (days per week × 52 ÷ 12, rounded down) are calculated. Monthly days depend on the company's holidays, so correct them later if they differ from the contract.",
+    "orFrom": "or calculated from {{fields}}",
+    "col": {
+      "field": "Field in this app",
+      "source": "Take from",
+      "example": "Example {{n}}"
+    },
+    "source": {
+      "none": "Don't use",
+      "fixed": "Same value for everyone"
+    },
+    "more": "Other fields ({{n}})",
+    "unused": "Unused columns:",
+    "missing": "Required fields are not set:",
+    "next": "Review with these columns",
+    "redo": "Match columns again",
+    "error": {
+      "tooBig": "The file is too large (up to 5 MB).",
+      "badType": "This file type cannot be read. Choose a CSV, Excel or PDF file.",
+      "empty": "The file has no header row with at least one data row.",
+      "noText": "No text could be read from the PDF (scanned PDFs cannot be read).",
+      "tooManyPages": "The PDF has too many pages (up to 20)."
     }
   }
 }

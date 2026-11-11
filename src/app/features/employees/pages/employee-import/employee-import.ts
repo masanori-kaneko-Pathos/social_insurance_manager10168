@@ -1,7 +1,10 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { CsvEncoding, decodeCsv, downloadCsv, parseCsv } from '../../../../shared/csv/csv';
+import { ColumnMapper } from '../../../../shared/components/column-mapper/column-mapper';
+import { CsvEncoding, downloadCsv } from '../../../../shared/csv/csv';
+import { isOurFormat } from '../../../../shared/import/column-map';
+import { IMPORT_ACCEPT, ImportFileError, readTables, SheetTable } from '../../../../shared/import/parse';
 import { CriteriaService } from '../../../office/criteria.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import { RateService } from '../../../rates/rate.service';
@@ -10,6 +13,8 @@ import { EmployeeImportService } from '../../employee-import.service';
 import {
   CsvRowError,
   EMPLOYEE_CSV_HEADERS,
+  EMPLOYEE_IMPORT_FIELDS,
+  EMPLOYEE_TABLE_SPEC,
   EmployeeCsvRow,
   employeeCsvTemplate,
   EmployeeCsvRead,
@@ -22,7 +27,7 @@ import { reasonParams } from '../../logic/classify';
 
 interface Preview {
   fileName: string;
-  encoding: CsvEncoding;
+  encoding: CsvEncoding | null; // Excel・PDF は null
   read: EmployeeCsvRead;
   plan: ImportPlan;
 }
@@ -34,7 +39,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-employee-import',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [ColumnMapper, RouterLink, TranslocoPipe],
   templateUrl: './employee-import.html',
   styleUrl: './employee-import.css',
 })
@@ -46,6 +51,11 @@ export class EmployeeImport {
   readonly context = inject(OfficeContext);
 
   readonly headers = EMPLOYEE_CSV_HEADERS;
+  readonly accept = IMPORT_ACCEPT;
+  readonly tableSpec = EMPLOYEE_TABLE_SPEC;
+  /** 読んだファイル。見出しがうちと違えば「列を合わせる」画面を出す（mapping が true の間） */
+  readonly loaded = signal<{ fileName: string; encoding: CsvEncoding | null; tables: SheetTable[] } | null>(null);
+  readonly mapping = signal(false);
   readonly preview = signal<Preview | null>(null);
   readonly errorKey = signal<string | null>(null);
   readonly saving = signal(false);
@@ -80,22 +90,61 @@ export class EmployeeImport {
   }
 
   async onFile(event: Event): Promise<void> {
-    const office = this.context.current();
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     input.value = ''; // 同じファイルを選び直しても反応するように
-    if (!office || !file) return;
+    if (!file) return;
+    this.reset();
+    try {
+      const { tables, encoding } = await readTables(file);
+      this.loaded.set({ fileName: file.name, encoding, tables });
+      const [first] = tables;
+      // うちのひな形のままなら、今までどおり確認画面へ。PDF は読み取りを確かめるため、いつも列を合わせる画面を通す
+      if (tables.length === 1 && !first.pdf && isOurFormat(first.rows[0], EMPLOYEE_IMPORT_FIELDS)) {
+        await this.showPreview(first.rows);
+      } else {
+        this.mapping.set(true);
+      }
+    } catch (err) {
+      console.error(err);
+      this.errorKey.set(
+        err instanceof ImportFileError ? `importMap.error.${err.code}` : 'employeeCsv.error.read',
+      );
+    }
+  }
+
+  /** 列を合わせ終わった（うちの見出しの表になった） */
+  async onMapped(table: string[][]): Promise<void> {
+    this.mapping.set(false);
+    await this.showPreview(table);
+  }
+
+  /** 列の対応をやり直す（確認画面から戻る） */
+  remap(): void {
+    this.preview.set(null);
+    this.mapping.set(true);
+  }
+
+  private reset(): void {
+    this.loaded.set(null);
+    this.mapping.set(false);
     this.preview.set(null);
     this.doneCount.set(null);
     this.errorKey.set(null);
+  }
+
+  /** うちの見出しの表 → 読み取り・取り込みの計画（今までの確認画面） */
+  private async showPreview(table: string[][]): Promise<void> {
+    const office = this.context.current();
+    const file = this.loaded();
+    if (!office || !file) return;
     try {
-      const [{ text, encoding }, existing, criteria, gradeTables] = await Promise.all([
-        file.arrayBuffer().then(decodeCsv),
+      const [existing, criteria, gradeTables] = await Promise.all([
         this.employeesApi.list(office.id),
         this.criteriaApi.list(),
         this.rates.grades(),
       ]);
-      const read = readEmployeeCsv(parseCsv(text));
+      const read = readEmployeeCsv(table);
       const plan = planImport(read.rows, {
         office: {
           standardHours: office.standardHours ?? null,
@@ -105,7 +154,7 @@ export class EmployeeImport {
         gradeTables,
         existingNumbers: new Set(existing.map((e) => e.employeeNumber ?? '').filter(Boolean)),
       });
-      this.preview.set({ fileName: file.name, encoding, read, plan });
+      this.preview.set({ fileName: file.fileName, encoding: file.encoding, read, plan });
     } catch (err) {
       console.error(err);
       this.errorKey.set('employeeCsv.error.read');
@@ -113,7 +162,7 @@ export class EmployeeImport {
   }
 
   clear(): void {
-    this.preview.set(null);
+    this.reset();
   }
 
   async importCsv(): Promise<void> {
@@ -128,8 +177,8 @@ export class EmployeeImport {
       const n = await this.api.importMany(office.id, p.plan.items, (done) =>
         this.progress.set({ done, total }),
       );
+      this.reset();
       this.doneCount.set(n);
-      this.preview.set(null);
     } catch (err) {
       console.error(err);
       const done = this.progress()?.done ?? 0;

@@ -1,0 +1,87 @@
+.mapper {
+  margin-top: var(--space-md);
+}
+
+h3 {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-md, 16px);
+}
+
+.sub {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.sheet {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-sm);
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+.table th,
+.table td {
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+/* 項目の名前の列は幅をそろえる（畳んだ表と上の表で、列の位置が合うように） */
+.table tbody th {
+  width: 14em;
+  font-weight: 600;
+}
+
+.source {
+  width: 16em;
+}
+
+.source .input {
+  width: 100%;
+}
+
+.source .fixed {
+  margin-top: var(--space-xs);
+}
+
+.or-from {
+  display: block;
+  font-size: var(--font-xs, 12px);
+  font-weight: 400;
+  color: var(--color-text-sub);
+}
+
+.example {
+  max-width: 12em;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.tag {
+  display: inline-block;
+  margin: 2px 2px 0 0;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--color-highlight, #f2d6b3);
+  font-size: var(--font-xs, 12px);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}

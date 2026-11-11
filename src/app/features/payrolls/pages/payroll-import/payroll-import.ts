@@ -4,10 +4,24 @@ import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
 import { Payroll } from '../../../../core/models/payroll';
-import { CsvEncoding, decodeCsv, downloadCsv, parseCsv, safeFileName } from '../../../../shared/csv/csv';
+import { ColumnMapper } from '../../../../shared/components/column-mapper/column-mapper';
+import { CsvEncoding, downloadCsv, safeFileName } from '../../../../shared/csv/csv';
+import { isOurFormat } from '../../../../shared/import/column-map';
+import { IMPORT_ACCEPT, ImportFileError, readTables, SheetTable } from '../../../../shared/import/parse';
 import { EmployeeService } from '../../../employees/employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
-import { buildPayrollCsv, classifyImport, CsvLang, ImportItem, ImportRead, PAYROLL_HEADERS, payrollFileName, readPayrollCsv } from '../../logic/payroll-csv';
+import {
+  buildPayrollCsv,
+  classifyImport,
+  CsvLang,
+  ImportItem,
+  ImportRead,
+  PAYROLL_HEADERS,
+  PAYROLL_IMPORT_FIELDS,
+  PAYROLL_TABLE_SPEC,
+  payrollFileName,
+  readPayrollCsv,
+} from '../../logic/payroll-csv';
 import { monthsBetween, shiftMonth, todayLocal } from '../../../../shared/utils/date';
 import { latestPaidMonth } from '../../logic/payroll-rows';
 import { payrollOf } from '../../../office/office-settings';
@@ -25,6 +39,8 @@ const CSV_ERRORS = new Set([
   'noEmployeeNumber',
   'unknownEmployee',
   'ambiguousEmployee',
+  'unknownName',
+  'ambiguousName',
   'badMonth',
   'notEmployed',
   'duplicate',
@@ -34,7 +50,7 @@ const CSV_ERRORS = new Set([
 
 interface Preview {
   fileName: string;
-  encoding: CsvEncoding;
+  encoding: CsvEncoding | null; // Excel・PDF は null
   read: ImportRead;
   created: ImportItem[];
   updated: ImportItem[];
@@ -43,7 +59,7 @@ interface Preview {
 
 @Component({
   selector: 'app-payroll-import',
-  imports: [HalfWidthDigits, RouterLink, TranslocoPipe, FormsModule],
+  imports: [ColumnMapper, HalfWidthDigits, RouterLink, TranslocoPipe, FormsModule],
   templateUrl: './payroll-import.html',
   styleUrl: './payroll-import.css',
 })
@@ -73,6 +89,11 @@ export class PayrollImport {
 
   // ----- 取り込み -----
   readonly preview = signal<Preview | null>(null);
+  readonly accept = IMPORT_ACCEPT;
+  readonly tableSpec = PAYROLL_TABLE_SPEC;
+  /** 読んだファイル。見出しがうちと違えば「列を合わせる」画面を出す（mapping が true の間） */
+  readonly loaded = signal<{ fileName: string; encoding: CsvEncoding | null; tables: SheetTable[] } | null>(null);
+  readonly mapping = signal(false);
   readonly saving = signal(false);
   readonly progress = signal<{ done: number; total: number } | null>(null);
   readonly doneCount = signal<number | null>(null);
@@ -153,19 +174,59 @@ export class PayrollImport {
   // ===== 取り込み =====
 
   async onFile(event: Event): Promise<void> {
-    const office = this.context.current();
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     input.value = ''; // 同じファイルを選び直しても反応するように
-    if (!office || !file) return;
+    if (!file) return;
+    this.reset();
+    try {
+      const { tables, encoding } = await readTables(file);
+      this.loaded.set({ fileName: file.name, encoding, tables });
+      const [first] = tables;
+      // うちの書き出しのままなら、今までどおり確認画面へ（見出しは日本語・英語のどちらでも）。PDF はいつも列を合わせる
+      const ours = isOurFormat(first.rows[0], PAYROLL_IMPORT_FIELDS, (f) => [
+        PAYROLL_HEADERS.ja[f.key],
+        PAYROLL_HEADERS.en[f.key],
+      ]);
+      if (tables.length === 1 && !first.pdf && ours) this.showPreview(first.rows);
+      else this.mapping.set(true);
+    } catch (err) {
+      console.error(err);
+      this.errorKey.set(
+        err instanceof ImportFileError ? `importMap.error.${err.code}` : 'payrollCsv.error.read',
+      );
+    }
+  }
+
+  /** 列を合わせ終わった（うちの見出しの表になった） */
+  onMapped(table: string[][]): void {
+    this.mapping.set(false);
+    this.showPreview(table);
+  }
+
+  /** 列の対応をやり直す（確認画面から戻る） */
+  remap(): void {
+    this.preview.set(null);
+    this.mapping.set(true);
+  }
+
+  private reset(): void {
+    this.loaded.set(null);
+    this.mapping.set(false);
     this.preview.set(null);
     this.doneCount.set(null);
     this.partial.set(null);
     this.errorKey.set(null);
+  }
+
+  /** うちの見出しの表 → 読み取り（今までの確認画面） */
+  private showPreview(table: string[][]): void {
+    const office = this.context.current();
+    const file = this.loaded();
+    if (!office || !file) return;
     try {
-      const { text, encoding } = decodeCsv(await file.arrayBuffer());
-      const read = readPayrollCsv(parseCsv(text), this.employees, payrollOf(office));
-      this.preview.set({ fileName: file.name, encoding, read, ...classifyImport(read.items, this.saved) });
+      const read = readPayrollCsv(table, this.employees, payrollOf(office));
+      this.preview.set({ fileName: file.fileName, encoding: file.encoding, read, ...classifyImport(read.items, this.saved) });
     } catch (err) {
       console.error(err);
       this.errorKey.set('payrollCsv.error.read');
@@ -173,7 +234,7 @@ export class PayrollImport {
   }
 
   clear(): void {
-    this.preview.set(null);
+    this.reset();
   }
 
   async importCsv(): Promise<void> {
@@ -192,8 +253,8 @@ export class PayrollImport {
       await this.payrollApi.saveMany(office.id, writes, (done) =>
         this.progress.set({ done, total: writes.length }),
       );
+      this.reset();
       this.doneCount.set(writes.length);
-      this.preview.set(null);
     } catch (err) {
       console.error(err);
       if (err instanceof PartialSaveError && err.done > 0) {

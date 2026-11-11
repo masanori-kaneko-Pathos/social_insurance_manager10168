@@ -14,7 +14,14 @@ import type { GradeTableDoc } from '../../../core/models/rates';
 import type { RemunerationInput } from '../../../core/models/remuneration';
 import { isBlankRow } from '../../../shared/csv/csv';
 import { DATE_RE, toYearMonth, YEAR_MONTH_RE } from '../../../shared/utils/date';
-import { parseNat } from '../../../shared/utils/number';
+import { formatHours, parseNat } from '../../../shared/utils/number';
+import {
+  ImportField,
+  OurTableSpec,
+  RowValues,
+  splitName,
+  ValueKind,
+} from '../../../shared/import/column-map';
 import { toHalfWidth } from '../../../shared/utils/text';
 import { gradeOf, pickGradeTable } from '../../rates/logic/grade';
 import { classify, Classification, ClassifyCriteria, ClassifyOffice, isInsured } from './classify';
@@ -32,6 +39,8 @@ export const EMPLOYEE_CSV_HEADERS = {
   firstNameKana: 'メイ',
   birthDate: '生年月日',
   sex: '性別',
+  basicPensionNumber: '基礎年金番号',
+  insuredNumber: '被保険者整理番号',
   hireDate: '入社日',
   retireDate: '退職日',
   retireReason: '退職の理由',
@@ -74,7 +83,7 @@ export const EMPLOYEE_CSV_HEADERS = {
 export type EmployeeColumn = keyof typeof EMPLOYEE_CSV_HEADERS;
 export const EMPLOYEE_COLUMNS = Object.keys(EMPLOYEE_CSV_HEADERS) as EmployeeColumn[];
 
-const REQUIRED: readonly EmployeeColumn[] = [
+export const EMPLOYEE_REQUIRED: readonly EmployeeColumn[] = [
   'employeeNumber',
   'lastNameKana',
   'birthDate',
@@ -90,11 +99,18 @@ const REQUIRED: readonly EmployeeColumn[] = [
 
 type Dict<T extends string> = Record<string, T>;
 
-const SEX: Dict<Sex> = { 男: 'male', 男性: 'male', male: 'male', 女: 'female', 女性: 'female', female: 'female' };
+// 1・2 は性別のコードとしてよく使われる決まり（労務ソフトの書き出しで「男女コード」として出ることがある）
+const SEX: Dict<Sex> = {
+  男: 'male', 男性: 'male', male: 'male', m: 'male', '1': 'male',
+  女: 'female', 女性: 'female', female: 'female', f: 'female', '2': 'female',
+};
 const RETIRE: Dict<RetireReason> = { 退職: 'resign', resign: 'resign', 死亡: 'death', death: 'death', 転勤: 'transfer', transfer: 'transfer', その他: 'other', other: 'other' };
 const EMPLOYMENT: Dict<ContractInput['employmentType']> = {
-  正社員: 'regular', regular: 'regular', 契約社員: 'contract', contract: 'contract', パート: 'part', part: 'part',
-  アルバイト: 'arbeit', arbeit: 'arbeit', 嘱託: 'shokutaku', shokutaku: 'shokutaku', その他: 'other', other: 'other',
+  正社員: 'regular', 正規社員: 'regular', 正規雇用: 'regular', regular: 'regular',
+  契約社員: 'contract', 契約: 'contract', contract: 'contract',
+  パート: 'part', 'パート・アルバイト': 'part', パートアルバイト: 'part', part: 'part',
+  アルバイト: 'arbeit', arbeit: 'arbeit', 嘱託: 'shokutaku', 嘱託社員: 'shokutaku', shokutaku: 'shokutaku',
+  その他: 'other', other: 'other',
 };
 const PAY: Dict<ContractInput['payType']> = {
   月給: 'monthly', monthly: 'monthly', 日給月給: 'dailyMonthly', dailyMonthly: 'dailyMonthly',
@@ -120,8 +136,9 @@ const LEAVE: Dict<LeaveKind> = {
   出生時育休: 'paternity', 産後パパ育休: 'paternity', paternity: 'paternity',
   介護休業: 'care', care: 'care', 休職: 'suspension', suspension: 'suspension',
 };
-const YES = new Set(['はい', 'あり', '○', '〇', '1', 'true', 'yes', 'y']);
-const NO = new Set(['いいえ', 'なし', '×', '0', 'false', 'no', 'n']);
+// 「加入している」などは、労務ソフトの書き出しでよくある言い方（「健康保険に加入しているか」の列など）
+const YES = new Set(['はい', 'あり', '○', '〇', '1', 'true', 'yes', 'y', '加入', '加入している', 'している', '対象']);
+const NO = new Set(['いいえ', 'なし', '×', '0', 'false', 'no', 'n', '未加入', '加入していない', 'していない', '対象外']);
 
 /** はい／いいえ（空は null） */
 function yesNo(s: string): boolean | null | undefined {
@@ -239,7 +256,7 @@ function readRow(line: number, v: Partial<Record<EmployeeColumn, string>>): Empl
   const err = (column: EmployeeColumn, code: string) => errors.push({ column, code });
   const get = (c: EmployeeColumn) => (v[c] ?? '').trim();
 
-  for (const c of REQUIRED) if (!get(c)) err(c, 'required');
+  for (const c of EMPLOYEE_REQUIRED) if (!get(c)) err(c, 'required');
 
   // --- 従業員 ---
   const birthDate = readDate(get('birthDate'));
@@ -274,6 +291,10 @@ function readRow(line: number, v: Partial<Record<EmployeeColumn, string>>): Empl
   const romanOk = (s: string) => s === '' || PATTERNS.roman.test(toHalfWidth(s));
   if (!romanOk(get('romanLastName'))) err('romanLastName', 'roman');
   if (!romanOk(get('romanFirstName'))) err('romanFirstName', 'roman');
+
+  if (get('basicPensionNumber') && !PATTERNS.basicPensionNumber.test(toHalfWidth(get('basicPensionNumber')))) {
+    err('basicPensionNumber', 'pensionNumber');
+  }
 
   const healthOverride = yesNo(get('healthEnrolled'));
   const pensionOverride = yesNo(get('pensionEnrolled'));
@@ -363,6 +384,8 @@ function readRow(line: number, v: Partial<Record<EmployeeColumn, string>>): Empl
   form.firstNameKana = get('firstNameKana');
   form.birthDate = birthDate!;
   form.sex = sex ?? '';
+  form.basicPensionNumber = get('basicPensionNumber');
+  form.insuredNumber = get('insuredNumber');
   form.hireDate = hireDate!;
   form.retireDate = retireDate ?? '';
   form.retireReason = retireDate ? (retireReason ?? 'resign') : '';
@@ -413,7 +436,7 @@ function readRow(line: number, v: Partial<Record<EmployeeColumn, string>>): Empl
 export function readEmployeeCsv(table: string[][]): EmployeeCsvRead {
   const [header = [], ...body] = table;
   const cols = header.map(columnOf);
-  const missingColumns = REQUIRED.filter((c) => !cols.includes(c));
+  const missingColumns = EMPLOYEE_REQUIRED.filter((c) => !cols.includes(c));
   if (missingColumns.length > 0) return { missingColumns, rows: [] };
   const rows: EmployeeCsvRow[] = [];
   body.forEach((cells, i) => {
@@ -559,3 +582,110 @@ export function employeeCsvTemplate(): string[][] {
     }),
   ];
 }
+
+// ===== よそのファイルからの取り込み（列を合わせる画面で使う） =====
+// 言い換えの表は、労務ソフト・給与ソフトの書き出しによくある見出しを入れてある（11/11 に各社のヘルプで調べた）
+
+/** うちの列に加えて、計算に使うだけの項目（うちの表には出さない） */
+export type EmployeeImportKey = EmployeeColumn | 'fullName' | 'fullNameKana' | 'dailyMinutes' | 'weeklyDays';
+
+const W: Partial<Record<EmployeeImportKey, readonly string[]>> = {
+  employeeNumber: ['従業員番号', '従業員コード', '社員コード', '社員No', '社員ID', '職員番号', 'employee number', 'employee id', 'employee code'],
+  lastName: ['氏', '苗字', 'last name', 'family name', 'surname'],
+  firstName: ['first name', 'given name'],
+  lastNameKana: ['姓カナ', '姓フリガナ', '姓ヨミガナ', '姓（ヨミガナ）', 'セイカナ', 'フリガナ姓', 'カナ姓', '氏フリガナ'],
+  firstNameKana: ['名カナ', '名フリガナ', '名ヨミガナ', '名（ヨミガナ）', 'メイカナ', 'フリガナ名', 'カナ名'],
+  fullName: ['氏名', '姓名', '名前', '姓＋名', '社員名', '従業員名', 'name', 'full name'],
+  fullNameKana: ['フリガナ', '氏名カナ', '氏名フリガナ', 'ヨミガナ', 'カナ氏名', '姓＋名（ヨミガナ）'],
+  birthDate: ['誕生日', 'date of birth', 'birth date', 'birthday'],
+  sex: ['男女', '男女コード', '男女区分', '戸籍上の性別', '性別コード', 'gender', 'sex'],
+  basicPensionNumber: ['basic pension number'],
+  insuredNumber: ['健康保険の被保険者整理番号', '健康保険被保険者整理番号', '厚生年金保険の被保険者整理番号'],
+  hireDate: ['入社年月日', '雇用開始日', '採用日', '入社年月', 'hire date'],
+  retireDate: ['退職年月日', '退社日', '離職日', '退職年月'],
+  retireReason: ['退職理由', '退職事由'],
+  healthEnrolled: ['健康保険に加入しているか', '健康保険の加入', '健康保険加入', '健保加入'],
+  pensionEnrolled: ['厚生年金保険に加入しているか', '厚生年金保険の加入', '厚生年金加入', '厚年加入'],
+  monthlyAmount: ['報酬月額', '標準報酬月額', '健康保険標準報酬月額', '健康保険の標準報酬月額'],
+  employmentType: ['雇用区分', '社員区分', 'employment type'],
+  payType: ['給与方式', '給与支給形態', '給与形態', '賃金形態', '支給形態', 'pay type'],
+  weeklyHours: ['週所定労働時間', '週の労働時間', '所定労働時間（週）'],
+  monthlyDays: ['月所定労働日数', '一ヶ月の平均所定労働日数', '1か月の平均所定労働日数', '月平均所定労働日数', '月の労働日数'],
+  dailyMinutes: ['日の契約労働時間', '1日の所定労働時間（分）', '1日の所定労働時間分'],
+  weeklyDays: ['週の契約労働日数', '週所定労働日数', '週の労働日数'],
+  hourlyWage: ['時間給', '基本時給'],
+  dailyWage: ['日額'],
+  periodEnd: ['契約終了日', '雇用期間終了日', '契約満了日', '契約期間の終わり'],
+  renewal: ['契約更新の有無', '更新の有無'],
+  nationality: ['国籍・地域', 'nationality'],
+  note: ['備考'],
+};
+
+const KIND: Partial<Record<EmployeeImportKey, ValueKind>> = {
+  lastNameKana: 'kana', firstNameKana: 'kana', fullNameKana: 'kana',
+  birthDate: 'date', hireDate: 'date', retireDate: 'date', optInDate: 'date', optOutDate: 'date', periodEnd: 'date',
+  leave1Start: 'date', leave1End: 'date', leave1Birth: 'date', leave2Start: 'date', leave2End: 'date', leave2Birth: 'date',
+  remunerationFrom: 'month',
+  basicPensionNumber: 'digits', insuredNumber: 'digits',
+  monthlyAmount: 'number', hourlyWage: 'number', dailyWage: 'number', scheduledWage: 'number',
+  expectedCash: 'number', expectedInKind: 'number', dailyMinutes: 'number',
+  monthlyDays: 'days', weeklyDays: 'number',
+};
+
+/** 計算に使うだけの項目の見出し（画面に出す） */
+export const EMPLOYEE_EXTRA_HEADERS: Record<Exclude<EmployeeImportKey, EmployeeColumn>, string> = {
+  fullName: '氏名（姓と名が1つの列）',
+  fullNameKana: 'フリガナ（セイとメイが1つの列）',
+  dailyMinutes: '1日の所定労働時間（分）',
+  weeklyDays: '週の所定労働日数',
+};
+
+const ORDER: readonly EmployeeImportKey[] = [
+  ...EMPLOYEE_COLUMNS.slice(0, 5), 'fullName', 'fullNameKana',
+  ...EMPLOYEE_COLUMNS.slice(5).flatMap((c): EmployeeImportKey[] =>
+    c === 'monthlyDays' ? [c, 'dailyMinutes', 'weeklyDays'] : [c]),
+];
+
+const OR_FROM: Partial<Record<EmployeeColumn, readonly EmployeeImportKey[]>> = {
+  lastNameKana: ['fullNameKana'],
+  weeklyHours: ['dailyMinutes', 'weeklyDays'],
+  monthlyDays: ['weeklyDays'],
+};
+
+export const EMPLOYEE_IMPORT_FIELDS: readonly ImportField<EmployeeImportKey>[] = ORDER.map((key) => ({
+  key,
+  header: key in EMPLOYEE_CSV_HEADERS
+    ? EMPLOYEE_CSV_HEADERS[key as EmployeeColumn]
+    : EMPLOYEE_EXTRA_HEADERS[key as Exclude<EmployeeImportKey, EmployeeColumn>],
+  words: W[key] ?? [],
+  kind: KIND[key],
+  required: (EMPLOYEE_REQUIRED as readonly string[]).includes(key),
+  orFrom: OR_FROM[key as EmployeeColumn],
+}));
+
+/**
+ * 項目どうしの計算（空の項目だけを埋める）
+ * - 氏名・フリガナが1列 → 空白で姓と名に分ける
+ * - 1日の分 × 週の日数 → 週の所定労働時間
+ * - 週の日数 × 52 ÷ 12（切り捨て）→ 月の所定労働日数（会社の休日の決め方で変わるので、画面で注意を出す）
+ */
+export function finishEmployeeRow(v: RowValues<EmployeeImportKey>): RowValues<EmployeeImportKey> {
+  const out = { ...v };
+  if (!out.lastName && !out.firstName && out.fullName) [out.lastName, out.firstName] = splitName(out.fullName);
+  if (!out.lastNameKana && !out.firstNameKana && out.fullNameKana) {
+    [out.lastNameKana, out.firstNameKana] = splitName(out.fullNameKana);
+  }
+  const num = (s: string | undefined) => (s && /^\d+(\.\d+)?$/.test(s) ? Number(s) : null);
+  const daily = num(out.dailyMinutes);
+  const week = num(out.weeklyDays);
+  if (!out.weeklyHours && daily !== null && week !== null) out.weeklyHours = formatHours(Math.round(daily * week));
+  if (!out.monthlyDays && week !== null) out.monthlyDays = String(Math.floor((week * 52) / 12));
+  return out;
+}
+
+export const EMPLOYEE_TABLE_SPEC: OurTableSpec<EmployeeImportKey, EmployeeColumn> = {
+  fields: EMPLOYEE_IMPORT_FIELDS,
+  out: EMPLOYEE_COLUMNS,
+  outHeader: (c) => EMPLOYEE_CSV_HEADERS[c],
+  finish: finishEmployeeRow,
+};

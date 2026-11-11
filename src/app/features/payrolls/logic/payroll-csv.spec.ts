@@ -1,6 +1,7 @@
 import { emptyPayrollInput, Payroll } from '../../../core/models/payroll';
 import { parseCsv, toCsv } from '../../../shared/csv/csv';
-import { buildPayrollCsv, classifyImport, CsvEmployee, makeMatcher, mapHeader, parseFlag, parseMonth, parseState, payrollFileName, readPayrollCsv } from './payroll-csv';
+import { guessMapping, missingRequired, toOurTable } from '../../../shared/import/column-map';
+import { buildPayrollCsv, classifyImport, CsvEmployee, makeMatcher, PAYROLL_IMPORT_FIELDS, PAYROLL_TABLE_SPEC, mapHeader, parseFlag, parseMonth, parseState, payrollFileName, readPayrollCsv } from './payroll-csv';
 import { monthsBetween } from '../../../shared/utils/date';
 import { PaySchedule } from './payroll-rows';
 
@@ -139,6 +140,47 @@ describe('readPayrollCsv', () => {
 
   it('数字が空でも、社員番号が未登録ならエラー', () => {
     expect(read('99,,2026-10,,,').errors).toEqual([{ line: 2, codes: ['unknownEmployee'] }]);
+  });
+
+  describe('社員番号が空の行は氏名で照合する（社員番号は任意の項目）', () => {
+    const NAMED: CsvEmployee[] = [
+      { ...EMPS[0], id: 'N1', employeeNumber: null, lastName: '番号', firstName: 'なし子' },
+      { ...EMPS[0], id: 'N2', employeeNumber: null, lastName: '同姓', firstName: '同名' },
+      { ...EMPS[0], id: 'N3', employeeNumber: null, lastName: '同姓', firstName: '同名' },
+    ];
+    const readN = (body: string) => readPayrollCsv(parseCsv(HEADER + '\n' + body), [...EMPS, ...NAMED], S);
+
+    it('氏名で1人に決まれば、その人（空白・全角半角の違いは無視）', () => {
+      const r = readN(',番号　なし子,2026-10,200000,200000,30');
+      expect(r.errors).toEqual([]);
+      expect(r.items.map((x) => x.employeeId)).toEqual(['N1']);
+    });
+
+    it('同じ氏名が2人なら、社員番号を入れてもらう', () => {
+      expect(readN(',同姓 同名,2026-10,1,1,1').errors).toEqual([{ line: 2, codes: ['ambiguousName'] }]);
+    });
+
+    it('番号も氏名も決まらない行：数字があればエラー、数字が空なら読み飛ばす', () => {
+      expect(readN(',いない 人,2026-10,1,1,1').errors).toEqual([{ line: 2, codes: ['unknownName'] }]);
+      const blank = readN(',いない 人,2026-10,,,\n,,2026-10,,,\n,同姓 同名,2026-10,,,');
+      expect(blank.errors).toEqual([]);
+      expect(blank.unfilledLines).toBe(3);
+    });
+
+    it('社員番号の列がないファイルも、氏名の列で照合できる（列を合わせる画面）', () => {
+      const table = [['氏名', '支給日', '総支給額', '固定給', '出勤日数'], ['番号 なし子', '2026/10/25', '200,000', '200000', '30']];
+      const m = guessMapping(table[0], PAYROLL_IMPORT_FIELDS);
+      expect(missingRequired(PAYROLL_IMPORT_FIELDS, m)).toEqual([]);
+      const r = readPayrollCsv(toOurTable(table, m, PAYROLL_TABLE_SPEC), [...EMPS, ...NAMED], S);
+      expect(r.errors).toEqual([]);
+      expect(r.items.map((x) => [x.employeeId, x.paidMonth, x.input.cash])).toEqual([['N1', '2026-10', 200000]]);
+    });
+
+    it('書き出したファイル（番号のない人は氏名だけ）をそのまま取り込める', () => {
+      const r = readN(',番号 なし子,2026-10,,,');
+      expect(r.errors).toEqual([]);
+      expect(r.unfilledLines).toBe(1);
+    });
   });
 
   it('空の行は読み飛ばす', () => {
