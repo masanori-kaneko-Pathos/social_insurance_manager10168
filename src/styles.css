@@ -24,6 +24,10 @@
   --color-danger-text: #b42318;
   --color-success-bg: #e7f3ea;
   --color-success-text: #2e6b3f;
+  /* 赤・オレンジの上に乗せる文字、行を指したときの色、薄いハイライト */
+  --color-on-danger: #ffffff;
+  --color-hover: #fcfaf7;
+  --color-highlight-soft: #fbf3e8;
 
   /* 余白 */
   --space-xs: 4px;
@@ -53,6 +57,54 @@
   --dur-base: 200ms;
   --dur-slow: 300ms;
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* ========== ダークモード（黒とオレンジのネオン。11/11） ==========
+   ライトは「やさしいオレンジ × 焦げ茶」、ダークは「黒に近い灰色 × 冷たく鮮やかなオレンジ」で、性格を分ける
+   - 背景は黒に近い無彩色。文字はほぼ白。灰色に茶色を混ぜない
+   - オレンジは黄みと白みを抜いた鮮やかな色。ボタンの上の文字は黒（茶色にしない）。ボタンは淡く光らせる
+   - 選択中の背景だけはオレンジ寄りの茶色（暗い中で「選んでいる」が分かる）
+   - 注意（黄）はそのまま。エラー（赤）はネオン寄りのピンク、完了（緑）も明るく */
+:root[data-theme='dark'] {
+  color-scheme: dark; /* 日付の選び窓・スクロールバーなど、ブラウザの部品も暗く */
+  --color-bg: #121214;
+  --color-surface: #1a1a1d;
+  --color-header-bg: #1a1a1d;
+  --color-header-text: #ededed;
+  --color-text: #ededed;
+  --color-text-sub: #a8a8ab;
+  --color-border: #2e2e33;
+  --color-border-strong: #3d3d43;
+  --color-primary: #ff8a3d;
+  --color-primary-hover: #ffa05e;
+  --color-on-primary: #0e0e10;
+  --color-highlight: #3f2a1d;
+  --color-accent-sub: #ff8a3d;
+
+  --color-warning-bg: #3a3218;
+  --color-warning-text: #f1d77c;
+  --color-warning-border: #6e5d22;
+  --color-danger-bg: #3a1626;
+  --color-danger-text: #ff5c8a;
+  --color-success-bg: #163126;
+  --color-success-text: #6ee7a4;
+
+  --color-on-danger: #0e0e10;
+  --color-hover: #222226;
+  --color-highlight-soft: #2a1f18;
+
+  --shadow-popover: 0 8px 24px rgb(0 0 0 / 60%);
+  /* ネオンの光（オレンジのボタン・選んだ欄の縁） */
+  --glow-primary: 0 0 12px rgb(255 138 61 / 35%);
+}
+
+/* ダークのときだけ、オレンジのボタンと、選んでいる入力欄を淡く光らせる */
+:root[data-theme='dark'] .btn-primary:not(:disabled) {
+  box-shadow: var(--glow-primary);
+}
+
+:root[data-theme='dark'] .input:focus {
+  box-shadow: 0 0 0 1px var(--color-primary), var(--glow-primary);
 }
 
 /* 「動きを減らす」設定の人には、動きをほぼ止める */

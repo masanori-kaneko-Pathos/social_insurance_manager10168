@@ -50,6 +50,23 @@
       </div>
     </div>
 
+    <div class="section">
+      <span class="label">{{ 'account.theme' | transloco }}</span>
+      <div class="lang" role="group" [attr.aria-label]="'account.theme' | transloco">
+        @for (t of themePrefs; track t) {
+          <button
+            type="button"
+            role="menuitemradio"
+            [attr.aria-checked]="theme.pref() === t"
+            [class.active]="theme.pref() === t"
+            (click)="theme.set(t)"
+          >
+            {{ 'account.themePref.' + t | transloco }}
+          </button>
+        }
+      </div>
+    </div>
+
     <button type="button" class="item" role="menuitem" (click)="openSettings()">
       {{ 'account.settings' | transloco }}
     </button>

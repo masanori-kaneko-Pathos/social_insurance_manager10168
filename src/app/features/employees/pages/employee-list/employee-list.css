@@ -101,7 +101,7 @@
   }
   
   tbody tr:hover {
-    background: #fcfaf7;
+    background: var(--color-hover);
   }
   
   tr.retired {

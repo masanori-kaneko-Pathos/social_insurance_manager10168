@@ -1921,7 +1921,13 @@
     "signedInAs": "Signed in as",
     "language": "Language",
     "logoutConfirm": "Log out?",
-    "settings": "Account settings"
+    "settings": "Account settings",
+    "theme": "Appearance",
+    "themePref": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "Auto"
+    }
   },
   "history": {
     "title": "Change history",

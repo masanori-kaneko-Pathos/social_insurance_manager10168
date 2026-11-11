@@ -1,4 +1,5 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { ThemeService } from './core/theme/theme.service';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
@@ -9,4 +10,6 @@ import { RouterOutlet } from '@angular/router';
 })
 export class App {
   protected readonly title = signal('socialinsurance10168');
+  /** ライト／ダークを最初に当てる（選んだものはブラウザに覚えさせる） */
+  private readonly theme = inject(ThemeService);
 }

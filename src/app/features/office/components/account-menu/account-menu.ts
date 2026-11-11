@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { LanguageService } from '../../../../core/i18n/language.service';
+import { THEME_PREFS, ThemeService } from '../../../../core/theme/theme.service';
 import { OfficeContext } from '../../office-context.service';
 
 /**
@@ -26,6 +27,8 @@ export class AccountMenu {
   private readonly transloco = inject(TranslocoService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly language = inject(LanguageService);
+  readonly theme = inject(ThemeService);
+  readonly themePrefs = THEME_PREFS;
 
   readonly profile = this.auth.profile;
   readonly open = signal(false);

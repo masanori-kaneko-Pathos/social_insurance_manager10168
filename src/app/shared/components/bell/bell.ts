@@ -53,7 +53,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
       font-weight: 600;
       line-height: 16px;
       text-align: center;
-      color: #fff;
+      color: var(--color-on-danger);
       background: var(--color-danger-text);
       border-radius: 999px;
     }

@@ -103,7 +103,7 @@ thead th {
 
 .status.submitted {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-on-primary);
 }
 
 .status.approved {

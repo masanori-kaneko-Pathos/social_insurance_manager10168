@@ -1921,7 +1921,13 @@
     "signedInAs": "ログイン中",
     "language": "表示の言語",
     "logoutConfirm": "ログアウトしますか？",
-    "settings": "アカウントの設定"
+    "settings": "アカウントの設定",
+    "theme": "画面の色",
+    "themePref": {
+      "light": "ライト",
+      "dark": "ダーク",
+      "system": "自動"
+    }
   },
   "history": {
     "title": "変更履歴",

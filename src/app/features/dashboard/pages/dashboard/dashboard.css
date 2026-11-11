@@ -165,7 +165,7 @@ h1 {
 
 .u-overdue {
   background: var(--color-danger-text);
-  color: #fff;
+  color: var(--color-on-danger);
 }
 
 .u-now {

@@ -42,7 +42,7 @@ h2 {
 .btn-danger {
   background: var(--color-danger-text);
   border-color: var(--color-danger-text);
-  color: #fff;
+  color: var(--color-on-danger);
 }
 
 .btn-danger:disabled {
