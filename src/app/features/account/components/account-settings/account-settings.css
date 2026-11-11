@@ -1,0 +1,21 @@
+.card {
+  max-width: 36rem;
+  margin-bottom: var(--space-md);
+}
+
+h2 {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-lg);
+}
+
+.sub {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.ok {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-sm);
+  color: var(--color-success-text, #2e6b3f);
+}

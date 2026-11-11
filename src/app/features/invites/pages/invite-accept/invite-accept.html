@@ -7,17 +7,44 @@
 
     @if (badLink) {
       <div class="alert alert-danger" role="alert">{{ 'invite.error.badLink' | transloco }}</div>
-    } @else if (!ready()) {
-      <p class="lead">{{ 'common.loading' | transloco }}</p>
-    } @else if (signedInAs() === 'other') {
-      <p class="lead">{{ 'invite.accept.otherAccount' | transloco }}</p>
-      <button type="button" class="btn btn-primary btn-block" (click)="logout()">{{ 'common.logout' | transloco }}</button>
-    } @else if (signedInAs() === 'none') {
-      <p class="lead">{{ 'invite.accept.lead' | transloco }}</p>
-
+    } @else {
       @if (errorKey(); as key) {
         <div class="alert alert-danger" role="alert">{{ key | transloco }}</div>
       }
+    }
+
+    @if (badLink) {
+      <!-- 上でエラーを出した -->
+    } @else if (state() === 'loading' || state() === 'self') {
+      <p class="lead">{{ 'common.loading' | transloco }}</p>
+    } @else if (state() === 'other') {
+      <p class="lead">{{ 'invite.accept.otherAccount' | transloco }}</p>
+      <button type="button" class="btn btn-primary btn-block" (click)="logout()">{{ 'common.logout' | transloco }}</button>
+    } @else if (state() === 'unverified') {
+      <!-- 会社がアドレスを決めた招待：そのアドレスの持ち主かを、確認のメールで確かめる -->
+      <p class="lead">{{ 'join.sent' | transloco: { email: auth.user()?.email } }}</p>
+      <ol class="steps">
+        <li>{{ 'join.step1' | transloco }}</li>
+        <li>{{ 'join.step2' | transloco }}</li>
+      </ol>
+      <button type="button" class="btn btn-primary btn-block" [disabled]="submitting()" (click)="checkAndFinish()">
+        {{ 'invite.accept.checkAndFinish' | transloco }}
+      </button>
+      <p class="auth-switch">
+        <button type="button" class="link-btn" [disabled]="submitting()" (click)="resend()">{{ 'join.resend' | transloco }}</button>
+        ・
+        <button type="button" class="link-btn" (click)="logout()">{{ 'join.otherAccount' | transloco }}</button>
+      </p>
+    } @else if (state() === 'ready') {
+      <p class="lead">{{ 'invite.accept.ready' | transloco: { email: auth.user()?.email } }}</p>
+      <button type="button" class="btn btn-primary btn-block" [disabled]="submitting()" (click)="finishNow()">
+        {{ (submitting() ? 'invite.accept.submitting' : 'invite.accept.finish') | transloco }}
+      </button>
+      <p class="auth-switch">
+        <button type="button" class="link-btn" (click)="logout()">{{ 'join.otherAccount' | transloco }}</button>
+      </p>
+    } @else if (state() === 'signedOut') {
+      <p class="lead">{{ 'invite.accept.lead' | transloco }}</p>
 
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <div class="field">

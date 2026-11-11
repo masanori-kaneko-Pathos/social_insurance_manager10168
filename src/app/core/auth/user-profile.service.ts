@@ -47,6 +47,17 @@ export class UserProfileService {
     this._profile.update((p) => (p ? { ...p, currentOfficeId: officeId } : p));
   }
 
+  async updateDisplayName(uid: string, displayName: string): Promise<void> {
+    await updateDoc(this.ref(uid), { displayName, updatedAt: serverTimestamp() });
+    this._profile.update((p) => (p ? { ...p, displayName } : p));
+  }
+
+  /** Auth のメールアドレスが変わったあと、users の写しを合わせる（ルールは Auth と同じアドレスだけ許す） */
+  async syncEmail(uid: string, email: string): Promise<void> {
+    await updateDoc(this.ref(uid), { email, updatedAt: serverTimestamp() });
+    this._profile.update((p) => (p ? { ...p, email } : p));
+  }
+
   clear(): void {
     this._profile.set(null);
   }

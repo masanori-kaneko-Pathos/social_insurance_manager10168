@@ -1,4 +1,4 @@
-import { emailMatches, inviteState, inviteUrl, isInviteCode, makeInviteCode } from './invite';
+import { emailMatches, inviteState, inviteUrl, isInviteCode, joinUrl, makeInviteCode } from './invite';
 
 describe('makeInviteCode', () => {
   it('24文字の英数字', () => {
@@ -41,5 +41,11 @@ describe('inviteState・emailMatches・inviteUrl', () => {
   it('コードの形', () => {
     expect(isInviteCode('short')).toBeFalse();
     expect(isInviteCode('ABCDEFGHIJKLMNOPQRSTUVW!')).toBeFalse();
+  });
+});
+
+describe('joinUrl', () => {
+  it('メンバーの招待は /join（従業員の /invite と分ける）', () => {
+    expect(joinUrl('https://x.web.app', 'off1', 'A'.repeat(24))).toBe(`https://x.web.app/join/off1/${'A'.repeat(24)}`);
   });
 });

@@ -1,0 +1,98 @@
+<!-- 表示名 -->
+<section class="card">
+  <h2>{{ 'accountPage.nameTitle' | transloco }}</h2>
+  <form [formGroup]="nameForm" (ngSubmit)="saveName()" novalidate>
+    <div class="field">
+      <label for="acDisplayName">{{ 'auth.field.displayName' | transloco }}</label>
+      <input id="acDisplayName" class="input" formControlName="displayName" autocomplete="name"
+             [class.is-invalid]="invalid('name', 'displayName')" />
+      @if (invalid('name', 'displayName')) {
+        <span class="field-error">{{ 'auth.validation.required' | transloco }}</span>
+      }
+    </div>
+    @if (errors().name; as k) {
+      <div class="alert alert-danger" role="alert">{{ k | transloco }}</div>
+    }
+    @if (done() === 'name') {
+      <p class="ok" role="status">{{ 'common.saved' | transloco }}</p>
+    }
+    <button class="btn btn-primary" type="submit" [disabled]="busy() !== null">{{ 'common.save' | transloco }}</button>
+  </form>
+</section>
+
+<!-- パスワード -->
+<section class="card">
+  <h2>{{ 'accountPage.passwordTitle' | transloco }}</h2>
+  <form [formGroup]="passwordForm" (ngSubmit)="savePassword()" novalidate>
+    <div class="field">
+      <label for="acCurrent">{{ 'accountPage.current' | transloco }}</label>
+      <app-password-field>
+        <input id="acCurrent" class="input" appPasswordInput formControlName="current" autocomplete="current-password"
+               [class.is-invalid]="invalid('password', 'current')" />
+      </app-password-field>
+    </div>
+    <div class="field">
+      <label for="acNext">{{ 'accountPage.next' | transloco }}</label>
+      <app-password-field>
+        <input id="acNext" class="input" appPasswordInput formControlName="next" autocomplete="new-password"
+               [class.is-invalid]="invalid('password', 'next')" />
+      </app-password-field>
+      @if (invalid('password', 'next')) {
+        <span class="field-error">{{ 'auth.validation.passwordRule' | transloco }}</span>
+      }
+    </div>
+    <div class="field">
+      <label for="acConfirm">{{ 'accountPage.confirm' | transloco }}</label>
+      <app-password-field>
+        <input id="acConfirm" class="input" appPasswordInput formControlName="confirm" autocomplete="new-password"
+               [class.is-invalid]="mismatch()" />
+      </app-password-field>
+      @if (mismatch()) {
+        <span class="field-error">{{ 'auth.validation.passwordMismatch' | transloco }}</span>
+      }
+    </div>
+    @if (errors().password; as k) {
+      <div class="alert alert-danger" role="alert">{{ k | transloco }}</div>
+    }
+    @if (done() === 'password') {
+      <p class="ok" role="status">{{ 'accountPage.passwordSaved' | transloco }}</p>
+    }
+    <button class="btn btn-primary" type="submit" [disabled]="busy() !== null">{{ 'accountPage.passwordSave' | transloco }}</button>
+  </form>
+</section>
+
+<!-- ログイン用のメールアドレス -->
+<section class="card">
+  <h2>{{ 'accountPage.emailTitle' | transloco }}</h2>
+  <p class="sub">
+    {{ 'accountPage.emailNow' | transloco: { email: auth.user()?.email } }}
+  </p>
+  <p class="sub">{{ 'accountPage.emailLead' | transloco }}</p>
+  @if (employee()) {
+    <p class="sub">{{ 'accountPage.employeeNote' | transloco }}</p>
+  }
+  <form [formGroup]="emailForm" (ngSubmit)="sendEmail()" novalidate>
+    <div class="field">
+      <label for="acEmail">{{ 'accountPage.emailNew' | transloco }}</label>
+      <input id="acEmail" class="input" type="email" formControlName="email" autocomplete="email"
+             [class.is-invalid]="invalid('email', 'email')" />
+      @if (invalid('email', 'email')) {
+        <span class="field-error">{{ 'auth.validation.email' | transloco }}</span>
+      }
+    </div>
+    <div class="field">
+      <label for="acEmailPw">{{ 'accountPage.current' | transloco }}</label>
+      <app-password-field>
+        <input id="acEmailPw" class="input" appPasswordInput formControlName="current" autocomplete="current-password"
+               [class.is-invalid]="invalid('email', 'current')" />
+      </app-password-field>
+    </div>
+    @if (errors().email; as k) {
+      <div class="alert alert-danger" role="alert">{{ k | transloco }}</div>
+    }
+    @if (done() === 'email' && sentTo()) {
+      <p class="ok" role="status">{{ 'accountPage.emailSent' | transloco: { email: sentTo() } }}</p>
+    }
+    <button class="btn btn-primary" type="submit" [disabled]="busy() !== null">{{ 'accountPage.emailSend' | transloco }}</button>
+  </form>
+</section>

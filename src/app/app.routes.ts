@@ -31,6 +31,12 @@ export const routes: Routes = [
       import('./features/invites/pages/invite-accept/invite-accept').then((m) => m.InviteAccept),
   },
 
+  // ===== 事業所のメンバー（管理者・一般）への招待。メールの確認待ちの人を追い出さないよう、ガードの外 =====
+  {
+    path: 'join/:officeId/:code',
+    loadComponent: () => import('./features/invites/pages/join/join').then((m) => m.JoinPage),
+  },
+
   // ===== ログイン後（親で authGuard を1回だけ） =====
   {
     path: '',
@@ -55,6 +61,11 @@ export const routes: Routes = [
             path: 'change',
             loadComponent: () =>
               import('./features/me/pages/my-change/my-change').then((m) => m.MyChange),
+          },
+          {
+            path: 'account',
+            loadComponent: () =>
+              import('./features/account/pages/my-account/my-account').then((m) => m.MyAccountPage),
           },
         ],
       },
@@ -186,6 +197,15 @@ export const routes: Routes = [
           {
             path: 'help',
             loadComponent: () => import('./features/help/pages/help/help').then((m) => m.HelpPage),
+          },
+          {
+            path: 'account',
+            loadComponent: () => import('./features/account/pages/account/account').then((m) => m.AccountPage),
+          },
+          {
+            path: 'members',
+            loadComponent: () =>
+              import('./features/members/pages/members/members').then((m) => m.MembersPage),
           },
           {
             path: 'settings',

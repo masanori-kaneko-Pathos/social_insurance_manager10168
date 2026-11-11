@@ -47,6 +47,7 @@ export class OfficeService {
       ...full,
       memberUids: [uid],
       memberRoles: { [uid]: 'admin' },
+      ownerUid: uid, // 作った人が代表（交代は関数 siUpdateMember）
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });

@@ -74,6 +74,9 @@
     <a [routerLink]="['/o', officeId(), 'settings']" routerLinkActive="active">
       <app-icon name="settings" />{{ 'nav.settings' | transloco }}
     </a>
+    <a [routerLink]="['/o', officeId(), 'members']" routerLinkActive="active">
+      <app-icon name="people" />{{ 'nav.members' | transloco }}
+    </a>
     <a [routerLink]="['/o', officeId(), 'help']" routerLinkActive="active">
       <app-icon name="help" />{{ 'nav.help' | transloco }}
     </a>

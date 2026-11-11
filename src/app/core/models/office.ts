@@ -77,6 +77,8 @@ export interface OfficeDoc {
   bonusMonths: number[]; // 賞与の支払予定月（1〜12）
   memberUids: string[];
   memberRoles: Record<string, OfficeRole>;
+  /** 代表（管理者の中の1人。作った人から始まり、交代できる）。古い事業所にはない → 名簿の最初の人 */
+  ownerUid?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -86,7 +88,7 @@ export interface Office extends OfficeDoc {
 }
 
 /** 画面から保存する形（メンバーと日時は係が付ける） */
-export type OfficeInput = Omit<OfficeDoc, 'memberUids' | 'memberRoles' | 'createdAt' | 'updatedAt'>;
+export type OfficeInput = Omit<OfficeDoc, 'memberUids' | 'memberRoles' | 'ownerUid' | 'createdAt' | 'updatedAt'>;
 
 /** 今の登録・編集画面が扱う項目（それ以外はまとまりごとに保存する） */
 export type OfficeBasicInput = Omit<

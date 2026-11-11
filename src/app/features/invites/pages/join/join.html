@@ -1,0 +1,129 @@
+<div class="auth-page">
+  <div class="auth-top"><app-lang-switch /></div>
+
+  <main class="card auth-card">
+    <p class="app-name">{{ 'common.appName' | transloco }}</p>
+    <h1>{{ 'join.title' | transloco }}</h1>
+
+    @if (errorKey(); as key) {
+      <div class="alert alert-danger" role="alert">{{ key | transloco }}</div>
+    }
+
+    @if (badLink) {
+      <div class="alert alert-danger" role="alert">{{ 'invite.error.badLink' | transloco }}</div>
+    } @else {
+      @switch (state()) {
+        @case ('loading') {
+          <p class="lead">{{ 'common.loading' | transloco }}</p>
+        }
+
+        @case ('employee') {
+          <p class="lead">{{ 'invite.error.employeeAccount' | transloco }}</p>
+          <button type="button" class="btn btn-block" (click)="logout()">{{ 'common.logout' | transloco }}</button>
+        }
+
+        @case ('unverified') {
+          <p class="lead">{{ 'join.sent' | transloco: { email: sentTo() ?? auth.user()?.email } }}</p>
+          <ol class="steps">
+            <li>{{ 'join.step1' | transloco }}</li>
+            <li>{{ 'join.step2' | transloco }}</li>
+          </ol>
+          <button type="button" class="btn btn-primary btn-block" [disabled]="busy()" (click)="checkAndJoin()">
+            {{ 'join.checkAndJoin' | transloco }}
+          </button>
+          <p class="auth-switch">
+            <button type="button" class="link-btn" [disabled]="busy()" (click)="resend()">{{ 'join.resend' | transloco }}</button>
+            ・
+            <button type="button" class="link-btn" (click)="logout()">{{ 'join.otherAccount' | transloco }}</button>
+          </p>
+        }
+
+        @case ('ready') {
+          <p class="lead">{{ 'join.ready' | transloco: { email: auth.user()?.email } }}</p>
+          <button type="button" class="btn btn-primary btn-block" [disabled]="busy()" (click)="joinNow()">
+            {{ (busy() ? 'join.joining' : 'join.join') | transloco }}
+          </button>
+          <p class="auth-switch">
+            <button type="button" class="link-btn" (click)="logout()">{{ 'join.otherAccount' | transloco }}</button>
+          </p>
+        }
+
+        @case ('signedOut') {
+          <p class="lead">{{ 'join.lead' | transloco }}</p>
+          <div class="tabs-mini" role="tablist">
+            <button type="button" role="tab" [attr.aria-selected]="mode() === 'signup'" (click)="mode.set('signup')">
+              {{ 'join.tabSignup' | transloco }}
+            </button>
+            <button type="button" role="tab" [attr.aria-selected]="mode() === 'login'" (click)="mode.set('login')">
+              {{ 'join.tabLogin' | transloco }}
+            </button>
+          </div>
+
+          @if (mode() === 'signup') {
+            <form [formGroup]="signupForm" (ngSubmit)="signup()" novalidate>
+              <div class="field">
+                <label for="displayName">{{ 'auth.field.displayName' | transloco }}</label>
+                <input id="displayName" class="input" type="text" formControlName="displayName" autocomplete="name"
+                       [class.is-invalid]="showError('signup', 'displayName')" />
+                @if (showError('signup', 'displayName')) {
+                  <span class="field-error">{{ 'auth.validation.required' | transloco }}</span>
+                }
+              </div>
+              <div class="field">
+                <label for="email">{{ 'auth.field.email' | transloco }}</label>
+                <input id="email" class="input" type="email" formControlName="email" autocomplete="email"
+                       [class.is-invalid]="showError('signup', 'email')" />
+                @if (showError('signup', 'email')) {
+                  <span class="field-error">{{ 'auth.validation.email' | transloco }}</span>
+                } @else {
+                  <span class="hint">{{ 'join.emailHint' | transloco }}</span>
+                }
+              </div>
+              <div class="field">
+                <label for="password">{{ 'auth.field.password' | transloco }}</label>
+                <app-password-field>
+                  <input id="password" class="input" appPasswordInput formControlName="password" autocomplete="new-password"
+                         [class.is-invalid]="showError('signup', 'password')" />
+                </app-password-field>
+                @if (showError('signup', 'password')) {
+                  <span class="field-error">{{ 'auth.validation.passwordRule' | transloco }}</span>
+                }
+              </div>
+              <div class="field">
+                <label for="passwordConfirm">{{ 'auth.field.passwordConfirm' | transloco }}</label>
+                <app-password-field>
+                  <input id="passwordConfirm" class="input" appPasswordInput formControlName="passwordConfirm" autocomplete="new-password"
+                         [class.is-invalid]="showConfirmError()" />
+                </app-password-field>
+                @if (showConfirmError()) {
+                  <span class="field-error">{{ 'auth.validation.passwordMismatch' | transloco }}</span>
+                }
+              </div>
+              <button class="btn btn-primary btn-block" type="submit" [disabled]="busy()">
+                {{ 'join.signup' | transloco }}
+              </button>
+            </form>
+          } @else {
+            <form [formGroup]="loginForm" (ngSubmit)="login()" novalidate>
+              <div class="field">
+                <label for="loginEmail">{{ 'auth.field.email' | transloco }}</label>
+                <input id="loginEmail" class="input" type="email" formControlName="email" autocomplete="email"
+                       [class.is-invalid]="showError('login', 'email')" />
+              </div>
+              <div class="field">
+                <label for="loginPassword">{{ 'auth.field.password' | transloco }}</label>
+                <app-password-field>
+                  <input id="loginPassword" class="input" appPasswordInput formControlName="password" autocomplete="current-password"
+                         [class.is-invalid]="showError('login', 'password')" />
+                </app-password-field>
+              </div>
+              <button class="btn btn-primary btn-block" type="submit" [disabled]="busy()">
+                {{ 'auth.login.submit' | transloco }}
+              </button>
+            </form>
+          }
+        }
+      }
+    }
+  </main>
+</div>

@@ -1,4 +1,5 @@
-import { Component, ElementRef, inject, signal } from '@angular/core';
+import { Component, computed, ElementRef, inject, signal } from '@angular/core';
+import { AuthService } from '../../../../core/auth/auth.service';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { LanguageService } from '../../../../core/i18n/language.service';
@@ -26,6 +27,8 @@ export class OfficeSwitcher {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   readonly open = signal(false);
+  private readonly authService = inject(AuthService);
+  readonly canCreate = computed(() => this.authService.profile()?.role === 'admin');
 
   toggle(): void {
     this.open.update((v) => !v);

@@ -67,7 +67,9 @@
       "tooManyRequests": "Too many attempts. Try again later.",
       "network": "Can't connect to the network.",
       "noAppAccount": "No account found for this app. Please sign up.",
-      "unknown": "Something went wrong. Try again later."
+      "unknown": "Something went wrong. Try again later.",
+      "noOffice": "You are not a member of any office. Ask an office administrator to invite you again.",
+      "recentLogin": "For your security, please sign in again and try again."
     }
   },
   "dashboard": {
@@ -179,7 +181,8 @@
     },
     "requests": "Requests",
     "help": "Help",
-    "home": "Home"
+    "home": "Home",
+    "members": "Members"
   },
   "employee": {
     "list": {
@@ -1835,7 +1838,8 @@
     "menu": "Settings",
     "signedInAs": "Signed in as",
     "language": "Language",
-    "logoutConfirm": "Log out?"
+    "logoutConfirm": "Log out?",
+    "settings": "Account settings"
   },
   "history": {
     "title": "Change history",
@@ -2059,11 +2063,14 @@
     "accept": {
       "title": "Create your My Page account",
       "lead": "This is an invitation from your company. Choose a name, email and password to see your social insurance information and answer requests from the company.",
-      "emailHint": "If the company specified an email address in the invitation, register with that address.",
+      "emailHint": "If the company specified an email address, register with that address. A verification email will be sent.",
       "submit": "Create account",
       "submitting": "Creating…",
       "hasAccount": "Already have an account?",
-      "otherAccount": "You are signed in with another account. To use this invitation, sign out and open this link again."
+      "otherAccount": "You are signed in with another account. To use this invitation, sign out and open this link again.",
+      "checkAndFinish": "I've verified. Finish registration",
+      "ready": "Your My Page account will be created as {{email}}.",
+      "finish": "Finish registration"
     },
     "error": {
       "badLink": "The invitation link is invalid. Ask the person in charge to send it again.",
@@ -2072,7 +2079,9 @@
       "expired": "This invitation has expired. Ask the person in charge for a new one.",
       "email": "This invitation is for a different email address. Register with the invited address.",
       "kind": "This invitation is not for My Page.",
-      "denied": "The invitation could not be used (expired, already used, or a different address). Please check with the person in charge."
+      "denied": "The invitation could not be used (expired, already used, or a different address). Please check with the person in charge.",
+      "unverified": "Your email address is not verified yet. Click the link in the verification email and try again.",
+      "employeeAccount": "This account is for an employee's My Page. To join as staff, use another account (another email address)."
     }
   },
   "myPageCard": {
@@ -2087,7 +2096,7 @@
     "revoke": "Revoke",
     "linkHint": "Send this link to the employee (email, chat, etc.). Anyone who has the link can create an account as this person, so send it carefully.",
     "email": "Employee's email address",
-    "emailHint": "The invitation works only when registering with this address, so it cannot be used even if the link reaches someone else. If empty, anyone with the link can register.",
+    "emailHint": "Only someone who registers with this address and clicks the link in the verification email can use the invitation, so it cannot be used even if the link reaches someone else. If empty, anyone with the link can register (they could see the address and bank account, so please enter it whenever possible).",
     "invite": "Create invitation link",
     "requests": "Requests",
     "noRequests": "None yet.",
@@ -2434,8 +2443,8 @@
         "body": "Create an invitation link from \"Personal info\" on the employee page and send it to the employee. On My Page, employees can see their premium breakdown, answer requests and apply for changes such as their address. Answers and applications are reviewed under \"Requests\"; approving writes them to the employee record (with change history)."
       },
       "roles": {
-        "title": "Roles (administrator, general user, employee)",
-        "body": "Administrators can register, edit and file. General users can only view, and cannot see contact, commute and bank details or change history. Employees can see only their own information on My Page."
+        "title": "Roles (administrator, general, employee) and the representative",
+        "body": "Administrators can register, edit, file and invite. General users can only view, and cannot see contact, commute and bank details or change history. Employees see only their own information on My Page. One administrator is the representative; only the representative can make other administrators general or remove them (so administrators cannot remove each other). Staff invitations are created under Members, and only someone who verifies the invited address can join."
       }
     }
   },
@@ -2468,5 +2477,112 @@
       "noText": "No text could be read from the PDF (scanned PDFs cannot be read).",
       "tooManyPages": "The PDF has too many pages (up to 20)."
     }
+  },
+  "members": {
+    "title": "Members",
+    "lead": "Staff who use this office (administrators and general users). Employees' My Page accounts are invited from each employee's page.",
+    "col": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "actions": "Actions",
+      "expires": "Expires"
+    },
+    "you": "(you)",
+    "owner": "Representative",
+    "role": {
+      "admin": "Administrator",
+      "general": "General"
+    },
+    "roleHint": {
+      "admin": "Can register, edit, file and invite.",
+      "general": "View only (cannot see addresses, bank accounts or change history)."
+    },
+    "action": {
+      "promote": "Make administrator",
+      "demote": "Make general",
+      "remove": "Remove",
+      "transfer": "Make representative",
+      "demoteSelf": "Make myself general",
+      "removeSelf": "Leave this office"
+    },
+    "confirm": {
+      "promote": "Make {{name}} an administrator?",
+      "demote": "Make {{name}} a general user?",
+      "remove": "Remove {{name}} from this office? They will no longer see this office's data.",
+      "transfer": "Make {{name}} the representative? You stay an administrator.",
+      "demoteSelf": "Make yourself a general user? You cannot make yourself an administrator again.",
+      "removeSelf": "Leave this office? You will need a new invitation to come back."
+    },
+    "done": {
+      "promote": "Made administrator",
+      "demote": "Made general user",
+      "remove": "Removed",
+      "transfer": "Representative changed"
+    },
+    "error": {
+      "load": "Could not load members.",
+      "invite": "Could not create the invitation.",
+      "revoke": "Could not revoke the invitation.",
+      "unknown": "Could not complete the operation. Please try again later.",
+      "notMember": "You are not a member of this office.",
+      "notAdmin": "Only administrators can do this.",
+      "notOwner": "Only the representative can change or remove other administrators.",
+      "targetNotMember": "This person is no longer a member.",
+      "ownerLocked": "The representative cannot be changed. To leave, first make another administrator the representative.",
+      "noChange": "Nothing to change.",
+      "badArgument": "The request is not valid.",
+      "signIn": "Please sign in again.",
+      "notFound": "Office not found."
+    },
+    "rulesTitle": "How roles work",
+    "rules": {
+      "general": "General: view only. Cannot manage members (can leave the office).",
+      "admin": "Administrator: invite, make general users administrators, remove general users. Cannot change other administrators (so a watcher always remains). Unless representative, can make themselves general or leave.",
+      "owner": "Representative (one of the administrators): can make other administrators general, remove them, and hand over the representative role. No one can change the representative; to leave, hand the role to another administrator first."
+    },
+    "inviteTitle": "Invite staff",
+    "inviteLead": "Create an invitation link and send it to the person (email, chat, etc.). Only someone who verifies the specified address can join. The link expires in 14 days.",
+    "inviteEmail": "Their email address",
+    "inviteRole": "Role",
+    "inviteButton": "Create invitation link",
+    "pendingTitle": "Unused invitations",
+    "linkHint": "Send this link to the person. It only works after verifying the specified address, so the link alone cannot be used by someone else."
+  },
+  "join": {
+    "title": "Join an office",
+    "lead": "This is an invitation from an office administrator. Create an account with the invited email address, or sign in with your existing account.",
+    "tabSignup": "Create account",
+    "tabLogin": "I have an account",
+    "emailHint": "Register with the invited email address. A verification email will be sent.",
+    "signup": "Create account and send verification email",
+    "sent": "We sent a verification email to {{email}}.",
+    "step1": "Click the link in the email (check your spam folder too).",
+    "step2": "Come back to this page and press the button below.",
+    "checkAndJoin": "I've verified. Join",
+    "resend": "Send the verification email again",
+    "otherAccount": "Use another account",
+    "ready": "You will join as {{email}}.",
+    "join": "Join",
+    "joining": "Joining…",
+    "notYetVerified": "Your email is not verified yet. Click the link in the email, then press the button again."
+  },
+  "accountPage": {
+    "title": "Account settings",
+    "nameTitle": "Display name",
+    "passwordTitle": "Change password",
+    "current": "Current password",
+    "next": "New password",
+    "confirm": "New password (confirm)",
+    "passwordSave": "Change password",
+    "passwordSaved": "Password changed. Use the new password next time you sign in.",
+    "emailTitle": "Sign-in email address",
+    "emailNow": "Current address: {{email}}",
+    "emailLead": "We will send a verification email to the new address. The address changes when you click the link in that email (until then, the current address stays). After it changes, sign in again with the new address.",
+    "employeeNote": "This changes only the sign-in address. To change the contact email in the company's records, apply from \"Apply for a change\" on My Page.",
+    "emailNew": "New email address",
+    "emailSend": "Send verification email",
+    "emailSent": "We sent a verification email to {{email}}. Click the link in it to change the address.",
+    "sameEmail": "This is the same as the current address."
   }
 }

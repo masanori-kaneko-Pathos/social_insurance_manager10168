@@ -32,8 +32,11 @@
         }
       </div>
     }
-    <a class="item add" role="menuitem" routerLink="/offices/new" (click)="close()">
-      ＋ {{ 'office.switcher.add' | transloco }}
-    </a>
+    <!-- 事業所を作れるのは、新規登録したアカウントだけ（招待で入った人は作れない。ルールでも同じ） -->
+    @if (canCreate()) {
+      <a class="item add" role="menuitem" routerLink="/offices/new" (click)="close()">
+        ＋ {{ 'office.switcher.add' | transloco }}
+      </a>
+    }
   </div>
 }

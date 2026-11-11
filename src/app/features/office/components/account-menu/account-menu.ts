@@ -47,6 +47,14 @@ export class AccountMenu {
     this.language.set(lang);
   }
 
+  /** アカウントの設定：従業員はマイページの中、労務担当は今の事業所の中 */
+  async openSettings(): Promise<void> {
+    this.close();
+    const officeId = this.context.current()?.id;
+    const url = this.profile()?.role === 'employee' || !officeId ? '/me/account' : `/o/${officeId}/account`;
+    await this.router.navigateByUrl(url);
+  }
+
   async logout(): Promise<void> {
     // 押し間違いで締め出されないように、ひと声かける（ブラウザの確認窓）
     if (!window.confirm(this.transloco.translate('account.logoutConfirm'))) return;

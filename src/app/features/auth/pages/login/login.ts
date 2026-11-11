@@ -30,9 +30,9 @@ export class Login {
   private readonly route = inject(ActivatedRoute);
 
   constructor() {
-    if (this.route.snapshot.queryParamMap.get('reason') === 'noAccount') {
-      this.errorKey.set('auth.error.noAppAccount');
-    }
+    const reason = this.route.snapshot.queryParamMap.get('reason');
+    if (reason === 'noAccount') this.errorKey.set('auth.error.noAppAccount');
+    if (reason === 'noOffice') this.errorKey.set('auth.error.noOffice');
   }
 
   /** 触った後に不正なら赤くする（開いた直後から赤くしない） */

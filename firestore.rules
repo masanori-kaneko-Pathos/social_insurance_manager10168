@@ -142,9 +142,12 @@ service cloud.firestore {
             || validEmployeeUser(request.resource.data));
 
       // 開いている事業所は「自分がメンバーの事業所」にしか切り替えられない
+      // email は、ログイン用のアドレスを変えた（確認のリンクで Auth の側が切り替わった）あとに写しを合わせるときだけ
       allow update: if isSelf(uid)
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['displayName', 'lang', 'currentOfficeId', 'updatedAt'])
+             .hasOnly(['displayName', 'lang', 'currentOfficeId', 'email', 'updatedAt'])
+        && (request.resource.data.email == resource.data.email
+            || request.resource.data.email == request.auth.token.email)
         && str(request.resource.data.displayName, 50)
         && request.resource.data.lang in ['ja', 'en']
         && (request.resource.data.currentOfficeId == null
@@ -265,7 +268,7 @@ service cloud.firestore {
       // 従業員のアカウントには見せない（要るものは shared/forEmployees に写す）
       allow read: if signedIn() && request.auth.uid in resource.data.memberUids;
 
-      // 作る：事業所を作れるアカウントだけ。メンバーは自分1人・権限は admin で始める
+      // 作る：事業所を作れるアカウントだけ。メンバーは自分1人・権限は admin・代表は自分で始める
       allow create: if signedIn()
         && myUser().role == 'admin'
         && exactKeys(request.resource.data, [
@@ -273,18 +276,20 @@ service cloud.firestore {
              'address', 'healthInsurer', 'officeSymbol', 'officeNumber', 'industry', 'employeeCount',
              'insurerHistory', 'payroll', 'premium',
              'standardHours', 'specificApplication', 'pensionFund', 'inKind', 'bonusMonths',
-             'memberUids', 'memberRoles', 'createdAt', 'updatedAt'])
+             'memberUids', 'memberRoles', 'ownerUid', 'createdAt', 'updatedAt'])
         && request.resource.data.memberUids == [request.auth.uid]
+        && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.memberRoles.keys().hasOnly([request.auth.uid])
         && request.resource.data.memberRoles[request.auth.uid] == 'admin'
         && validOffice(request.resource.data)
         && created(request.resource.data);
 
-      // 更新：その事業所の admin だけ。メンバーと作成日時は変えられない
+      // 更新：その事業所の admin だけ。メンバー・代表・作成日時は変えられない
+      // （名簿を書き換えるのは関数 siAcceptMemberInvite・siUpdateMember だけ。Admin なのでルールを通らない）
       allow update: if signedIn()
         && resource.data.memberRoles[request.auth.uid] == 'admin'
         && !request.resource.data.diff(resource.data).affectedKeys()
-              .hasAny(['memberUids', 'memberRoles', 'createdAt'])
+              .hasAny(['memberUids', 'memberRoles', 'ownerUid', 'createdAt'])
         && validOffice(request.resource.data)
         && request.resource.data.updatedAt == request.time;
 
@@ -703,7 +708,9 @@ service cloud.firestore {
         allow delete: if isAdmin(officeId);
       }
 
-      // ----- 招待（ID ＝ 招待コード）※ 招待された人が使う部分は、マイページの工事で足す -----
+      // ----- 招待（ID ＝ 招待コード）-----
+      // 従業員の招待（kind: employee）は、下の update で本人が使う。
+      // メンバーの招待（kind: member）を使うのは関数 siAcceptMemberInvite（メールの確認・アドレスの一致を関数が確かめる）
       match /invites/{code} {
         function validInvite(d) {
           return exactKeys(d, ['code', 'kind', 'employeeId', 'role', 'email', 'expiresAt', 'usedBy', 'usedAt',
@@ -711,7 +718,7 @@ service cloud.firestore {
             && d.code == code && code.size() >= 20
             && d.kind in ['employee', 'member']
             && (d.kind != 'employee' || d.employeeId is string)
-            && (d.kind != 'member' || d.role in ['admin', 'general'])
+            && (d.kind != 'member' || (d.role in ['admin', 'general'] && d.email is string && d.email.size() > 0))
             && optStr(d.email, 254)
             && d.expiresAt is timestamp && d.expiresAt > request.time
             && d.usedBy == null && d.usedAt == null
@@ -727,7 +734,9 @@ service cloud.firestore {
           && resource.data.kind == 'employee'
           && resource.data.usedBy == null
           && resource.data.expiresAt > request.time
-          && (resource.data.email == null || resource.data.email == request.auth.token.email)
+          // アドレスを決めた招待は、そのアドレスの持ち主だと確かめた（確認のメールのリンクを押した）人だけ
+          && (resource.data.email == null
+              || (resource.data.email == request.auth.token.email && request.auth.token.email_verified == true))
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedBy', 'usedAt'])
           && request.resource.data.usedBy == request.auth.uid
           && request.resource.data.usedAt == request.time

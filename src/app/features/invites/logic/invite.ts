@@ -32,6 +32,11 @@ export function inviteState(i: { usedBy: string | null; expiresMs: number }, now
   return i.expiresMs <= nowMs ? 'expired' : 'usable';
 }
 
+/** 事業所のメンバー（管理者・一般）への招待のリンク。従業員の招待（/invite）と URL で分ける（開いた時点で種類が分かるように） */
+export function joinUrl(origin: string, officeId: string, code: string): string {
+  return `${origin}/join/${encodeURIComponent(officeId)}/${code}`;
+}
+
 /** 招待のリンク */
 export function inviteUrl(origin: string, officeId: string, code: string): string {
   return `${origin}/invite/${encodeURIComponent(officeId)}/${code}`;

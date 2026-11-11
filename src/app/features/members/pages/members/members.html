@@ -1,0 +1,145 @@
+<div class="page-head">
+  <h1>{{ 'members.title' | transloco }}</h1>
+</div>
+<p class="lead">{{ 'members.lead' | transloco }}</p>
+
+@if (errorKey(); as k) {
+  <div class="alert alert-danger" role="alert">{{ k | transloco }}</div>
+}
+
+@if (loading()) {
+  <p class="muted">{{ 'common.loading' | transloco }}</p>
+} @else {
+  <section class="card">
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>{{ 'members.col.name' | transloco }}</th>
+            <th>{{ 'members.col.email' | transloco }}</th>
+            <th>{{ 'members.col.role' | transloco }}</th>
+            <th><span class="sr-only">{{ 'members.col.actions' | transloco }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (m of members(); track m.uid) {
+            <tr>
+              <td>
+                {{ nameOf(m) }}
+                @if (m.me) {
+                  <span class="you">{{ 'members.you' | transloco }}</span>
+                }
+              </td>
+              <td class="email">{{ m.email }}</td>
+              <td>
+                {{ 'members.role.' + m.role | transloco }}
+                @if (m.owner) {
+                  <span class="chip-owner">{{ 'members.owner' | transloco }}</span>
+                }
+              </td>
+              <td class="actions">
+                @for (a of m.actions; track a) {
+                  <button
+                    type="button"
+                    class="btn btn-small"
+                    [class.danger]="a === 'remove'"
+                    [disabled]="busy() !== null"
+                    (click)="act(m, a)"
+                  >
+                    {{ 'members.action.' + a + (m.me ? 'Self' : '') | transloco }}
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <details class="fold">
+      <summary>{{ 'members.rulesTitle' | transloco }}</summary>
+      <ul class="rules">
+        <li>{{ 'members.rules.general' | transloco }}</li>
+        <li>{{ 'members.rules.admin' | transloco }}</li>
+        <li>{{ 'members.rules.owner' | transloco }}</li>
+      </ul>
+    </details>
+  </section>
+
+  @if (context.isAdmin()) {
+    <section class="card">
+      <h2>{{ 'members.inviteTitle' | transloco }}</h2>
+      <p class="sub">{{ 'members.inviteLead' | transloco }}</p>
+      <div class="invite-form">
+        <label class="field">
+          <span>{{ 'members.inviteEmail' | transloco }}<span class="req" aria-hidden="true">※</span></span>
+          <input
+            class="input"
+            type="email"
+            autocomplete="off"
+            [value]="email()"
+            (input)="email.set($any($event.target).value)"
+          />
+        </label>
+        <fieldset class="field roles">
+          <legend>{{ 'members.inviteRole' | transloco }}</legend>
+          @for (r of ['general', 'admin']; track r) {
+            <label>
+              <input type="radio" name="role" [checked]="role() === r" (change)="role.set($any(r))" />
+              {{ 'members.role.' + r | transloco }}
+              <span class="sub">{{ 'members.roleHint.' + r | transloco }}</span>
+            </label>
+          }
+        </fieldset>
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="!emailValid() || busy() !== null"
+          (click)="invite()"
+        >
+          {{ 'members.inviteButton' | transloco }}
+        </button>
+      </div>
+
+      @if (invites().length > 0) {
+        <h3>{{ 'members.pendingTitle' | transloco }}</h3>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>{{ 'members.col.email' | transloco }}</th>
+                <th>{{ 'members.col.role' | transloco }}</th>
+                <th>{{ 'members.col.expires' | transloco }}</th>
+                <th><span class="sr-only">{{ 'members.col.actions' | transloco }}</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (i of invites(); track i.code) {
+                <tr [class.new]="created()?.code === i.code">
+                  <td class="email">{{ i.email }}</td>
+                  <td>{{ 'members.role.' + i.role | transloco }}</td>
+                  <td class="mono">{{ expires(i) }}</td>
+                  <td class="actions">
+                    <button type="button" class="btn btn-small" (click)="copy(i)">
+                      {{ (copiedCode() === i.code ? 'myPageCard.copied' : 'myPageCard.copy') | transloco }}
+                    </button>
+                    <button type="button" class="btn btn-small" [disabled]="busy() !== null" (click)="revoke(i)">
+                      {{ 'myPageCard.revoke' | transloco }}
+                    </button>
+                  </td>
+                </tr>
+                @if (created()?.code === i.code) {
+                  <tr class="new">
+                    <td colspan="4">
+                      <input class="input link" readonly [value]="link(i)" (focus)="$any($event.target).select()" />
+                      <p class="sub">{{ 'members.linkHint' | transloco }}</p>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+}
