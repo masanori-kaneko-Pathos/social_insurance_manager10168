@@ -21,6 +21,7 @@ export const HELP_TOPICS = [
   'annual',
   'filings',
   'premiumList',
+  'payrollSoft',
   'display',
 ] as const;
 export type HelpTopic = (typeof HELP_TOPICS)[number];

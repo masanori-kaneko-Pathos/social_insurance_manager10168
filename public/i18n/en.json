@@ -2553,6 +2553,10 @@
       "display": {
         "title": "Display (colors, menu, input)",
         "body": "Choose Light, Dark or Auto (follow the computer) in Settings > Appearance at the top right. Press the orange square at the top left to collapse the left menu to icons and widen the content. Both are remembered by the browser. In the payroll month and bonus tables, Enter and arrow keys move between cells (Enter moves to the next field in the employee form)."
+      },
+      "payrollSoft": {
+        "title": "Split with payroll software (export and cross-check)",
+        "body": "Payroll software calculates the deductions; this app is the master record of grades, rates and filings. On the premium list, “CSV for payroll software” exports employee numbers, standard monthly remuneration, care insurance, the employee share and the pay month for the deduction, for import into the payroll software. “Check deductions” reads the deductions file the payroll software produced; after matching the columns it compares them with the app's employee shares and lists only the people with differences or who could not be matched. Health etc. is compared as health insurance plus care insurance."
       }
     }
   },
@@ -2972,5 +2976,38 @@
     "checked": "Checked by {{name}} ({{at}}; requested by {{by}})",
     "redo": "Request again after changes",
     "error": "Could not save."
+  },
+  "payrollSoft": {
+    "title": "Split with payroll software",
+    "lead": "Payroll software calculates the deductions. This app keeps the master record of grades, rates and filings, hands the inputs to the payroll software, and cross-checks the deductions it calculated.",
+    "export": "CSV for payroll software",
+    "exportNote": "Deducted from wages paid in month {{payMonth}}",
+    "fileLabel": "for-payroll-software",
+    "check": "Check deductions",
+    "result": "Compared with “{{file}}”: {{match}} matched, {{other}} need checking",
+    "otherMonth": "(compared with the list for {{month}})",
+    "showAll": "Show matched rows too",
+    "hideMatch": "Show differences only",
+    "close": "Close",
+    "diffHint": "Difference = payroll software − app. Common causes: a grade revision not yet entered in the payroll software, care insurance starting or ending at 40 or 65, and different rounding of 50 sen.",
+    "col": {
+      "name": "Employee",
+      "appHealth": "Health etc. (app)",
+      "softHealth": "Health etc. (software)",
+      "appPension": "Pension (app)",
+      "softPension": "Pension (software)",
+      "diff": "Diff",
+      "status": "Result"
+    },
+    "status": {
+      "match": "Match",
+      "diff": "Different",
+      "notInApp": "Not in app",
+      "notInFile": "Not in file",
+      "ambiguous": "Same name twice"
+    },
+    "error": {
+      "read": "Could not read the file"
+    }
   }
 }

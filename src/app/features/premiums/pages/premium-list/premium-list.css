@@ -388,3 +388,67 @@ td.calc a {
 .notice .review {
   margin-top: var(--space-md);
 }
+
+/* ===== 給与ソフトとの役割分担 ===== */
+.soft {
+  margin-top: var(--space-md);
+}
+
+.soft h2 {
+  margin: 0 0 var(--space-xs);
+}
+
+.soft-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.soft label.btn {
+  cursor: pointer;
+}
+
+/* ファイル選びはボタンの見た目で（input はキーボードでも届くよう、画面外に置くだけ） */
+.file-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.soft label.btn:focus-within {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.soft-result {
+  margin-top: var(--space-sm);
+}
+
+.soft .status {
+  padding: 0 8px;
+  font-size: var(--font-xs);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+  white-space: nowrap;
+}
+
+.soft .s-match {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.soft .s-diff,
+.soft .s-ambiguous {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+
+.soft .s-notInApp,
+.soft .s-notInFile {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}

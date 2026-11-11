@@ -41,6 +41,9 @@ import { ReviewBox } from '../../../reviews/components/review-box/review-box';
 import { noticeReviewId } from '../../../reviews/logic/review';
 import { PremiumNotice } from '../../../../core/models/premium-notice';
 import { parseNat } from '../../../../shared/utils/number';
+import { ColumnMapper } from '../../../../shared/components/column-mapper/column-mapper';
+import { IMPORT_ACCEPT, ImportFileError, readTables, SheetTable } from '../../../../shared/import/parse';
+import { AppDeduction, compareDeductions, CompareRow, DEDUCTION_TABLE_SPEC, softwareExportRows } from '../../logic/payroll-software';
 import { buildPremiumCsv, PremiumCsvRow, premiumFileName } from '../../logic/premium-csv';
 import {
   DEFAULT_PREMIUM_SORT,
@@ -60,7 +63,7 @@ interface ListItem extends PremiumRow {
 
 @Component({
   selector: 'app-premium-list',
-  imports: [MonthPicker, ReviewBox, RouterLink, TranslocoPipe],
+  imports: [ColumnMapper, MonthPicker, ReviewBox, RouterLink, TranslocoPipe],
   templateUrl: './premium-list.html',
   styleUrl: './premium-list.css',
 })
@@ -436,6 +439,93 @@ export class PremiumList {
     } catch (err) {
       console.error(err);
     }
+  }
+
+  // ===== 給与ソフトとの役割分担（天引きの計算は給与ソフト。ここは材料を渡し、控除額を検算する） =====
+
+  /** 計算できた人・免除の人（給与ソフトに渡す・比べる相手） */
+  private readonly softwareTargets = computed(() => this.rows().filter((r) => r.state === 'ok' || r.state === 'exempt'));
+
+  /** 給与ソフト向け CSV：等級・標準報酬月額・介護の有無・本人負担の目安 */
+  exportForSoftware(): void {
+    const office = this.context.current();
+    if (!office || !this.context.isAdmin()) return;
+    const rows = softwareExportRows(
+      this.softwareTargets().map((r) => ({
+        employeeNumber: r.employee.employeeNumber ?? null,
+        name: `${r.employee.lastName} ${r.employee.firstName}`,
+        healthStandard: r.health?.standard ?? null,
+        pensionStandard: r.pension?.standard ?? null,
+        care: !!r.care,
+        healthEmployeeYen: r.healthEmployeeYen,
+        pensionEmployeeYen: r.pension ? r.pensionEmployeeYen : null,
+      })),
+      this.month(),
+      this.payMonth(),
+    );
+    const label = this.transloco.translate('payrollSoft.fileLabel');
+    downloadCsv(safeFileName(`${label}_${office.name}_${this.month()}.csv`), rows);
+  }
+
+  readonly importAccept = IMPORT_ACCEPT;
+  readonly deductionSpec = DEDUCTION_TABLE_SPEC;
+  /** 読んだ控除額のファイル（列を合わせている間） */
+  readonly deductionFile = signal<{ name: string; tables: SheetTable[] } | null>(null);
+  /** 比べた結果（どの月の一覧と比べたか） */
+  readonly deductionResult = signal<{ month: string; fileName: string; rows: CompareRow[] } | null>(null);
+  readonly deductionError = signal<string | null>(null);
+  readonly showAllDeductions = signal(false);
+
+  async onDeductionFile(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    this.deductionResult.set(null);
+    this.deductionError.set(null);
+    try {
+      const { tables } = await readTables(file);
+      this.deductionFile.set({ name: file.name, tables });
+    } catch (err) {
+      console.error(err);
+      this.deductionError.set(err instanceof ImportFileError ? `importMap.error.${err.code}` : 'payrollSoft.error.read');
+    }
+  }
+
+  /** 列を合わせ終わった（うちの見出しの表）→ アプリの本人負担と比べる */
+  onDeductionMapped(table: string[][]): void {
+    const file = this.deductionFile();
+    this.deductionFile.set(null);
+    const app: AppDeduction[] = this.softwareTargets().map((r) => ({
+      id: r.employee.id,
+      employeeNumber: r.employee.employeeNumber ?? null,
+      lastName: r.employee.lastName,
+      firstName: r.employee.firstName,
+      healthEmployeeYen: r.healthEmployeeYen,
+      pensionEmployeeYen: r.pensionEmployeeYen,
+    }));
+    this.showAllDeductions.set(false);
+    this.deductionResult.set({ month: this.month(), fileName: file?.name ?? '', rows: compareDeductions(table, app) });
+  }
+
+  cancelDeduction(): void {
+    this.deductionFile.set(null);
+  }
+
+  closeDeduction(): void {
+    this.deductionResult.set(null);
+  }
+
+  /** 表に出す行（初期は差がある人・照合できない人だけ） */
+  readonly deductionRows = computed(() => {
+    const r = this.deductionResult();
+    if (!r) return [];
+    return this.showAllDeductions() ? r.rows : r.rows.filter((x) => x.status !== 'match');
+  });
+  readonly deductionMatchCount = computed(() => this.deductionResult()?.rows.filter((x) => x.status === 'match').length ?? 0);
+
+  nameOf(row: CompareRow): string {
+    return row.employee ? `${row.employee.lastName} ${row.employee.firstName}` : row.label;
   }
 
   // ===== 表示の小道具 =====
