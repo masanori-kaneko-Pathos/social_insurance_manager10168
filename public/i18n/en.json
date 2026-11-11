@@ -196,7 +196,8 @@
     "members": "Administrators",
     "filings": "Filing lists",
     "collapse": "Collapse menu",
-    "expand": "Expand menu"
+    "expand": "Expand menu",
+    "calendar": "Year calendar"
   },
   "employee": {
     "list": {
@@ -2890,6 +2891,73 @@
     },
     "error": {
       "load": "Could not load the data for the filing list."
+    }
+  },
+  "premiumNotice": {
+    "title": "Payment reconciliation",
+    "lead": "Enter the amounts from the premium payment notice (arrives around the 20th of the next month, about {{arrival}}) and compare them with the app totals (monthly plus bonuses paid this month). The payment deadline is {{due}}.",
+    "status": {
+      "notEntered": "Notice amounts not entered",
+      "match": "Match",
+      "rounding": "Rounding difference",
+      "diff": "Difference"
+    },
+    "col": {
+      "app": "App total",
+      "notice": "Notice amount",
+      "diff": "Difference (notice − app)"
+    },
+    "reasonsTitle": "Reasons for the difference (check what you confirmed)",
+    "reason": {
+      "acquireLoss": "Acquisition or loss mid-month (app data differs from the filing)",
+      "pendingFiling": "Filing not yet processed by the pension office",
+      "bonusFiling": "Bonus filing missing or not yet processed",
+      "retroAdjust": "Retroactive corrections for previous months",
+      "gradeChange": "Timing of standard remuneration revisions",
+      "excluded": "Some employees could not be calculated in the app",
+      "rounding": "Rounding (monthly and bonus amounts are each rounded down, so 1–2 yen may differ)",
+      "other": "Other (write a note)"
+    },
+    "excludedNow": "{{count}} now",
+    "note": "Note",
+    "save": "Save reconciliation",
+    "hint": "The app totals add everyone's full premiums and round down below 1 yen, as the Japan Pension Service does. For months without bonuses, they should match the notice exactly. If they differ, check the reasons above. The notice is authoritative: adjust the difference in the employer share and submit any missing filings.",
+    "error": {
+      "save": "Could not save. Please try again later."
+    }
+  },
+  "calendar": {
+    "title": "Year calendar",
+    "lead": "Social insurance tasks for the next 12 months, starting this month. The to-do list shows what is due now; this calendar shows what is coming in the year. Click an item to open its page.",
+    "monthlyTitle": "Every month / as needed",
+    "todoCount": "{{n}} to-dos",
+    "monthLabel": "{{m}}/{{y}}",
+    "now": "This month",
+    "due": "Payment deadline for last month's premiums: {{date}}",
+    "none": "No tasks specific to this month.",
+    "outside": "Outside this app",
+    "hint": "Tasks outside this app (year-end adjustment, resident tax, labor insurance renewal, etc.) are listed in gray so they are not missed. Bonus months come from the office settings.",
+    "task": {
+      "payroll": "Enter payroll records (after payday)",
+      "payment": "Pay last month's premiums (notice arrives around the 20th; reconcile in the premium list)",
+      "joinLeave": "Joiners and leavers (acquisition and loss filings within 5 days)",
+      "watchRevision": "Monthly changes for employees whose fixed wages changed (revision candidates)",
+      "ratesKyokai": "Health and care insurance rates change (Kyokai Kenpo from March; deductions change from the month {{payMonth}} pay)",
+      "ratesKumiai": "Check and register rates notified by the health insurance society (timing differs by society)",
+      "raise": "Raise month: watch revision candidates (April–June pay is also used for the annual determination)",
+      "regular": "Annual determination (July 1–10): set standard remuneration from September using April–June pay",
+      "regularApply": "New standard remuneration from September (deductions change from the month {{payMonth}} pay)",
+      "dependentList": "Dependent status list arrives (Kyokai Kenpo, late Oct to mid Nov); check dependent requirements",
+      "dependentDue": "Dependent status list due (early December); file changes for dependents who no longer qualify",
+      "dependentKumiai": "Dependent re-check (timing and method differ by health insurance society)",
+      "bonus": "Bonus payment → bonus filing within 5 days",
+      "withholdingSlip": "Withholding slips and statutory statements (by January 31)",
+      "salaryReport": "Salary payment reports (by January 31)",
+      "employmentRate": "Employment insurance rate change",
+      "residentTax": "Resident tax notices (new amounts from June pay)",
+      "laborInsurance": "Labor insurance annual renewal (June 1 to July 10)",
+      "yearEndForms": "Hand out year-end adjustment forms",
+      "yearEnd": "Year-end adjustment"
     }
   }
 }

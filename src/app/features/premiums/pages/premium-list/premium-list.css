@@ -294,3 +294,93 @@ td.calc a {
   margin: 0 0 var(--space-sm);
   font-size: var(--font-sm);
 }
+
+/* ===== 納付の突き合わせ ===== */
+.notice {
+  margin-top: var(--space-md);
+}
+
+.notice-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.notice-head h2 {
+  margin: 0;
+}
+
+.notice .status {
+  padding: 0 8px;
+  font-size: var(--font-xs);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+}
+
+.notice .s-match {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.notice .s-rounding {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.notice .s-diff {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+
+.notice-input {
+  width: 9em;
+  height: 32px;
+  text-align: right;
+}
+
+.diff-cell {
+  color: var(--color-danger-text);
+  font-weight: 600;
+}
+
+.reasons {
+  margin: var(--space-md) 0 0;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.reasons legend {
+  padding: 0 var(--space-xs);
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.reasons .check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 2px 0;
+  font-size: var(--font-sm);
+}
+
+.notice .field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-top: var(--space-md);
+  font-size: var(--font-sm);
+}
+
+.notice-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.ok {
+  font-size: var(--font-sm);
+  color: var(--color-success-text);
+}

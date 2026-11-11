@@ -95,6 +95,11 @@
     >
       <app-icon name="revision" /><span class="label">{{ 'nav.revisions' | transloco }}</span>
     </a>
+    <a [routerLink]="['/o', officeId(), 'calendar']" routerLinkActive="active"
+      [attr.title]="navCollapsed() ? ('nav.calendar' | transloco) : null"
+    >
+      <app-icon name="calendar" /><span class="label">{{ 'nav.calendar' | transloco }}</span>
+    </a>
     <a [routerLink]="['/o', officeId(), 'filings']" routerLinkActive="active"
       [attr.title]="navCollapsed() ? ('nav.filings' | transloco) : null"
     >

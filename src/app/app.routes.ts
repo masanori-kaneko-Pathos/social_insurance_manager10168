@@ -170,6 +170,11 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'calendar',
+            loadComponent: () =>
+              import('./features/calendar/pages/calendar/calendar').then((m) => m.CalendarPage),
+          },
+          {
             path: 'filings',
             loadComponent: () =>
               import('./features/filings/pages/filings/filings').then((m) => m.FilingsPage),

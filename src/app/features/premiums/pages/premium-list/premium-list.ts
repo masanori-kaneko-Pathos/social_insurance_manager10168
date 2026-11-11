@@ -35,6 +35,10 @@ import { downloadXlsx } from '../../../../shared/xlsx/download-xlsx';
 import { Payroll } from '../../../../core/models/payroll';
 import { PayrollService } from '../../../payrolls/payroll.service';
 import { advanceAmount, advanceState } from '../../logic/advance';
+import { checkNotice, DIFF_REASONS, DiffReason, dueDateOf, NOTICE_CATEGORIES, NoticeCategory, noticeArrivalOf } from '../../logic/notice-check';
+import { PremiumNoticeService } from '../../premium-notice.service';
+import { PremiumNotice } from '../../../../core/models/premium-notice';
+import { parseNat } from '../../../../shared/utils/number';
 import { buildPremiumCsv, PremiumCsvRow, premiumFileName } from '../../logic/premium-csv';
 import {
   DEFAULT_PREMIUM_SORT,
@@ -66,6 +70,7 @@ export class PremiumList {
   private readonly rates = inject(RateService);
   private readonly bonusApi = inject(BonusService);
   private readonly payrollApi = inject(PayrollService);
+  private readonly noticeApi = inject(PremiumNoticeService);
   private readonly transloco = inject(TranslocoService);
   readonly context = inject(OfficeContext);
 
@@ -228,6 +233,108 @@ export class PremiumList {
       const office = this.context.current();
       if (office) this.load(office.id, office);
     });
+    // 月を変えたら、その月の突き合わせの記録を読む（1件）
+    effect(() => {
+      const officeId = this.context.current()?.id;
+      const month = this.month();
+      if (officeId) this.loadNotice(officeId, month);
+    });
+  }
+
+  // ===== 毎月の納付額の突き合わせ（年金事務所の告知額 ↔ アプリの合計） =====
+
+  readonly noticeCategories = NOTICE_CATEGORIES;
+  readonly diffReasons = DIFF_REASONS;
+  /** 保存済みの記録（なければ null）。読み込み中は undefined */
+  private readonly savedNotice = signal<PremiumNotice | null | undefined>(undefined);
+  /** 入力中の告知額（文字のまま） */
+  readonly noticeText = signal<Record<NoticeCategory, string>>({ health: '', pension: '', childContribution: '' });
+  readonly noticeReasons = signal<ReadonlySet<DiffReason>>(new Set());
+  readonly noticeNote = signal('');
+  readonly noticeSaving = signal(false);
+  readonly noticeSaved = signal(false);
+  readonly noticeError = signal<string | null>(null);
+
+  private async loadNotice(officeId: string, month: string): Promise<void> {
+    this.savedNotice.set(undefined);
+    this.noticeSaved.set(false);
+    this.noticeError.set(null);
+    try {
+      const n = await this.noticeApi.get(officeId, month);
+      if (month !== this.month()) return; // 読んでいる間に月が変わった
+      this.savedNotice.set(n);
+      const t = (v: number | null | undefined) => (v == null ? '' : String(v));
+      this.noticeText.set({ health: t(n?.health), pension: t(n?.pension), childContribution: t(n?.childContribution) });
+      this.noticeReasons.set(new Set((n?.reasons ?? []) as DiffReason[]));
+      this.noticeNote.set(n?.note ?? '');
+    } catch (err) {
+      console.error(err);
+      this.savedNotice.set(null);
+    }
+  }
+
+  /** 比べるアプリの合計：月額 ＋ その月に払った賞与 */
+  private readonly appTotals = computed(() => {
+    const b = this.bonusSummary();
+    return b ? b.rows.find((r) => r.key === 'sum')!.totals : this.totals();
+  });
+
+  /** 入力の告知額（読めない・空は null） */
+  private readonly noticeAmounts = computed(() => {
+    const t = this.noticeText();
+    const n = (s: string) => {
+      const v = parseNat(s.replace(/[,，円\s]/g, ''));
+      return v == null ? null : v;
+    };
+    return { health: n(t.health), pension: n(t.pension), childContribution: n(t.childContribution) };
+  });
+
+  readonly noticeCheck = computed(() => checkNotice(this.appTotals(), this.noticeAmounts(), !!this.bonusSummary()));
+  readonly dueDate = computed(() => dueDateOf(this.month()));
+  readonly arrival = computed(() => noticeArrivalOf(this.month()));
+
+  setNoticeText(c: NoticeCategory, v: string): void {
+    this.noticeText.update((t) => ({ ...t, [c]: v }));
+    this.noticeSaved.set(false);
+  }
+
+  toggleReason(r: DiffReason): void {
+    this.noticeReasons.update((s) => {
+      const next = new Set(s);
+      if (next.has(r)) next.delete(r);
+      else next.add(r);
+      return next;
+    });
+    this.noticeSaved.set(false);
+  }
+
+  async saveNotice(): Promise<void> {
+    const officeId = this.context.current()?.id;
+    if (!officeId || !this.context.isAdmin() || this.noticeSaving()) return;
+    this.noticeSaving.set(true);
+    this.noticeError.set(null);
+    try {
+      const a = this.noticeAmounts();
+      await this.noticeApi.save(
+        officeId,
+        {
+          month: this.month(),
+          health: a.health,
+          pension: a.pension,
+          childContribution: a.childContribution,
+          reasons: DIFF_REASONS.filter((r) => this.noticeReasons().has(r)),
+          note: this.noticeNote().trim() || null,
+        },
+        !!this.savedNotice(),
+      );
+      await this.loadNotice(officeId, this.month());
+      this.noticeSaved.set(true);
+    } catch (err) {
+      console.error(err);
+      this.noticeError.set('premiumNotice.error.save');
+    } finally {
+      this.noticeSaving.set(false);
+    }
   }
 
   private async load(officeId: string, office: Office): Promise<void> {

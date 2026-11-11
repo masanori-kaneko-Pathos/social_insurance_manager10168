@@ -1,0 +1,52 @@
+<div class="page-head">
+  <h1>{{ 'calendar.title' | transloco }}</h1>
+  <p class="lead">{{ 'calendar.lead' | transloco }}</p>
+</div>
+
+<!-- 毎月・随時の業務 -->
+<section class="card monthly">
+  <h2>{{ 'calendar.monthlyTitle' | transloco }}</h2>
+  <ul class="tasks">
+    @for (t of monthly; track t.key) {
+      <li>
+        @if (linkOf(t, thisMonth); as l) {
+          <a [routerLink]="l.path" [queryParams]="l.query">{{ 'calendar.task.' + t.key | transloco: t.params }}</a>
+        }
+        @if (t.key === 'joinLeave' && badge.todoCount(); as n) {
+          <span class="count">{{ 'calendar.todoCount' | transloco: { n: n } }}</span>
+        }
+      </li>
+    }
+  </ul>
+</section>
+
+<!-- 今月から12か月 -->
+<div class="months">
+  @for (mo of months(); track mo.ym) {
+    <section class="card month" [class.current]="mo.current">
+      <div class="month-head">
+        <h2>{{ 'calendar.monthLabel' | transloco: { y: mo.y, m: mo.m } }}</h2>
+        @if (mo.current) {
+          <span class="now">{{ 'calendar.now' | transloco }}</span>
+        }
+      </div>
+      <p class="due">{{ 'calendar.due' | transloco: { date: mo.due } }}</p>
+      @if (mo.tasks.length === 0) {
+        <p class="empty">{{ 'calendar.none' | transloco }}</p>
+      }
+      <ul class="tasks">
+        @for (t of mo.tasks; track t.key) {
+          <li [class.outside]="t.outside">
+            @if (linkOf(t, mo.ym); as l) {
+              <a [routerLink]="l.path" [queryParams]="l.query">{{ 'calendar.task.' + t.key | transloco: t.params }}</a>
+            } @else {
+              <span>{{ 'calendar.task.' + t.key | transloco: t.params }}</span>
+              <span class="chip">{{ 'calendar.outside' | transloco }}</span>
+            }
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</div>
+<p class="hint">{{ 'calendar.hint' | transloco }}</p>

@@ -848,6 +848,28 @@ service cloud.firestore {
         allow delete: if isAdmin(officeId);
       }
 
+      // ----- 毎月の納付額の突き合わせ（ID ＝ 納付対象月）。告知額と、確かめた差の理由 -----
+      match /premiumNotices/{month} {
+        function validNotice(d) {
+          return exactKeys(d, ['month', 'health', 'pension', 'childContribution', 'reasons', 'note',
+                               'updatedBy', 'createdAt', 'updatedAt'])
+            && d.month == month && isMonth(month)
+            && optIntIn(d.health, 0, 999999999) && optIntIn(d.pension, 0, 999999999)
+            && optIntIn(d.childContribution, 0, 999999999)
+            && d.reasons is list && d.reasons.size() <= 8
+            && d.reasons.hasOnly(['acquireLoss', 'pendingFiling', 'bonusFiling', 'retroAdjust', 'gradeChange',
+                                  'excluded', 'rounding', 'other'])
+            && optStr(d.note, 500)
+            && d.updatedBy == request.auth.uid && d.updatedAt == request.time;
+        }
+
+        allow read: if isMember(officeId);
+        allow create: if isAdmin(officeId) && validNotice(request.resource.data) && request.resource.data.createdAt == request.time;
+        allow update: if isAdmin(officeId) && validNotice(request.resource.data)
+          && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if false;
+      }
+
       // ----- 「やること」の確認済み（ID ＝ カードの鍵） -----
       match /todoDismissals/{key} {
         allow read: if isMember(officeId);
