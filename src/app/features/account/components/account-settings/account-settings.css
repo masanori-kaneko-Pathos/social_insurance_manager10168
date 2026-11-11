@@ -29,3 +29,22 @@ h2 {
   font-size: var(--font-xs, 12px);
   color: var(--color-text-sub);
 }
+
+/* アカウントの削除（取り消せない操作なので、赤い縁で分ける） */
+.danger-zone {
+  border-color: var(--color-danger-text);
+}
+
+.list {
+  padding-left: 1.25em;
+}
+
+.btn-danger {
+  background: var(--color-danger-text);
+  border-color: var(--color-danger-text);
+  color: #fff;
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+}

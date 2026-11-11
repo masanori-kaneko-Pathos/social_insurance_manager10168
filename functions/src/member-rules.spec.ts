@@ -1,4 +1,4 @@
-import { actionsFor, applyAction, denyReason, memberInviteProblem, ownerOf, Roster } from './member-rules';
+import { actionsFor, applyAction, deleteProblem, denyReason, memberInviteProblem, ownerOf, Roster } from './member-rules';
 
 // O：代表（管理者）、A・B：管理者、G・H：一般
 const R: Roster = { roles: { O: 'admin', A: 'admin', B: 'admin', G: 'general', H: 'general' }, owner: 'O' };
@@ -105,5 +105,25 @@ describe('メンバーの招待を使えるか', () => {
     expect(memberInviteProblem(inv, { ...user, emailVerified: false }, now)).toBe('unverified');
     expect(memberInviteProblem(inv, { ...user, appRole: 'employee' }, now)).toBe('employeeAccount');
     expect(memberInviteProblem(inv, { ...user, isMember: true }, now)).toBe('alreadyMember');
+  });
+});
+
+describe('アカウントを消してよいか（本人だけ）', () => {
+  const office = (owner: string, members: string[]) => ({ ownerUid: owner, memberUids: members });
+
+  it('代表でない管理者・一般は消せる。どこにも入っていない人も消せる', () => {
+    expect(deleteProblem('G', 'general', [office('O', ['O', 'G'])])).toBeNull();
+    expect(deleteProblem('A', 'admin', [office('O', ['O', 'A'])])).toBeNull();
+    expect(deleteProblem('X', 'admin', [])).toBeNull();
+  });
+
+  it('どこか1つでも代表なら消せない（1人だけの事業所も）', () => {
+    expect(deleteProblem('O', 'admin', [office('X', ['X', 'O']), office('O', ['O'])])).toBe('owner');
+    // ownerUid がない古い事業所は、名簿の最初の人が代表
+    expect(deleteProblem('O', 'admin', [{ memberUids: ['O', 'G'] }])).toBe('owner');
+  });
+
+  it('従業員のアカウントは消せない', () => {
+    expect(deleteProblem('E', 'employee', [])).toBe('employee');
   });
 });

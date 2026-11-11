@@ -125,3 +125,48 @@
     </form>
   }
 </section>
+
+<!-- アカウントの削除（管理者・一般だけ。ふだんは閉じておく。代表になっている事業所があれば消せない） -->
+@if (!employee()) {
+  <section class="card danger-zone">
+    <h2>{{ 'accountPage.delete.title' | transloco }}</h2>
+    @if (ownedOffices().length > 0) {
+      <p class="sub">
+        {{ 'accountPage.delete.owner' | transloco: { offices: ownedOfficeNames() } }}
+      </p>
+    } @else if (opened() !== 'delete') {
+      <button type="button" class="btn" [disabled]="busy() !== null" (click)="openSection('delete')">
+        {{ 'accountPage.delete.open' | transloco }}
+      </button>
+    } @else {
+      <ul class="sub list">
+        <li>{{ 'accountPage.delete.gone' | transloco }}</li>
+        <li>{{ 'accountPage.delete.kept' | transloco }}</li>
+        <li>{{ 'accountPage.delete.again' | transloco }}</li>
+      </ul>
+      <form [formGroup]="deleteForm" (ngSubmit)="deleteAccount()" novalidate>
+        <div class="field">
+          <label for="acDeletePw">{{ 'accountPage.current' | transloco }}</label>
+          <app-password-field>
+            <input id="acDeletePw" class="input" appPasswordInput formControlName="current" autocomplete="current-password" />
+          </app-password-field>
+        </div>
+        <div class="field">
+          <label for="acDeleteWord">{{ 'accountPage.delete.typeWord' | transloco: { word: deleteWord() } }}</label>
+          <input id="acDeleteWord" class="input" formControlName="word" autocomplete="off" />
+        </div>
+        @if (errors().delete; as k) {
+          <div class="alert alert-danger" role="alert">{{ k | transloco }}</div>
+        }
+        <div class="actions">
+          <button type="button" class="btn" [disabled]="busy() !== null" (click)="cancel('delete')">
+            {{ 'common.cancel' | transloco }}
+          </button>
+          <button class="btn btn-danger" type="submit" [disabled]="deleteForm.invalid || !wordOk() || busy() !== null">
+            {{ (busy() === 'delete' ? 'accountPage.delete.deleting' : 'accountPage.delete.submit') | transloco }}
+          </button>
+        </div>
+      </form>
+    }
+  </section>
+}

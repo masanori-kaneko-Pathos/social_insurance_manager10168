@@ -84,3 +84,10 @@
   font-size: var(--font-xs);
   color: var(--color-text-sub);
 }
+
+/* お知らせ（アカウントを削除したあと など） */
+.alert-notice {
+  margin-bottom: var(--space-md);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}

@@ -27,12 +27,15 @@ export class Login {
 
   readonly submitting = signal(false);
   readonly errorKey = signal<string | null>(null);
+  /** お知らせ（アカウントを削除したあと など。エラーではない） */
+  readonly noticeKey = signal<string | null>(null);
   private readonly route = inject(ActivatedRoute);
 
   constructor() {
     const reason = this.route.snapshot.queryParamMap.get('reason');
     if (reason === 'noAccount') this.errorKey.set('auth.error.noAppAccount');
     if (reason === 'noOffice') this.errorKey.set('auth.error.noOffice');
+    if (reason === 'deleted') this.noticeKey.set('accountPage.delete.done');
   }
 
   /** 触った後に不正なら赤くする（開いた直後から赤くしない） */

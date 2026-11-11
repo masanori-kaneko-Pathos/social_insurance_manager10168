@@ -102,3 +102,25 @@ export function memberInviteProblem(
   if (user.isMember) return 'alreadyMember';
   return null;
 }
+
+// ===== アカウントの削除（本人だけ。11/11 に決めた） =====
+
+/** 消せない理由（画面で翻訳する：accountPage.delete.error.〇〇） */
+export type DeleteProblem = 'employee' | 'owner';
+
+/**
+ * 本人のアカウントを消してよいか。よければ null
+ * - 従業員（マイページ）のアカウントは消さない（招待で作り、自分では消さない決まり）
+ * - 代表になっている事業所が1つでもあれば消さない（先に代表を譲る）。代表はいつも管理者なので、
+ *   この決まりだけで「管理者が1人もいない事業所」はできない
+ * offices は、本人が名簿に入っている事業所
+ */
+export function deleteProblem(
+  uid: string,
+  appRole: string | null,
+  offices: readonly { ownerUid?: string | null; memberUids: readonly string[] }[],
+): DeleteProblem | null {
+  if (appRole === 'employee') return 'employee';
+  if (offices.some((o) => ownerOf(o) === uid)) return 'owner';
+  return null;
+}

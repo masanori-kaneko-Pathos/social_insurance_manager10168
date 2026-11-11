@@ -9,6 +9,7 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import {
   actionsFor,
   applyAction,
+  deleteProblem,
   denyReason,
   MemberAction,
   MemberRole,
@@ -185,5 +186,41 @@ export const siUpdateMember = onCall({ region: REGION }, async (req) => {
       });
     }
   });
+  return { ok: true };
+});
+
+/**
+ * 本人のアカウントを消す（管理者・一般だけ。代表になっている事業所があれば断る。決まりは deleteProblem）
+ * 順番：名簿から外す・users を消す（トランザクション）→ 最後に Auth のアカウントを消す
+ * （途中で失敗しても「名簿に残っているのにログインできない人」が出ないように、Auth を最後にする）
+ * 本人の確認（パスワードの再入力）は画面で済ませてから呼ぶ。作った記録（変更履歴・招待など）は会社の記録なので残す
+ */
+export const siDeleteAccount = onCall({ region: REGION }, async (req) => {
+  const uid = needUid(req.auth);
+  const userRef = db.doc(`users/${uid}`);
+  const officesQuery = db.collection('offices').where('memberUids', 'array-contains', uid);
+
+  await db.runTransaction(async (tx) => {
+    const [user, offices] = await Promise.all([tx.get(userRef), tx.get(officesQuery)]);
+    const appRole = (user.data()?.role as string | undefined) ?? null;
+    const problem = deleteProblem(
+      uid,
+      appRole,
+      offices.docs.map((d) => d.data() as OfficeData),
+    );
+    if (problem) fail('failed-precondition', problem);
+
+    const now = FieldValue.serverTimestamp();
+    for (const o of offices.docs) {
+      tx.update(o.ref, {
+        memberUids: FieldValue.arrayRemove(uid),
+        [`memberRoles.${uid}`]: FieldValue.delete(),
+        updatedAt: now,
+      });
+    }
+    if (user.exists) tx.delete(userRef);
+  });
+
+  await getAuth().deleteUser(uid);
   return { ok: true };
 });

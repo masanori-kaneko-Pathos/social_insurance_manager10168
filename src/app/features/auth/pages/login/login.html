@@ -5,6 +5,9 @@
       <p class="app-name">{{ 'common.appName' | transloco }}</p>
       <h1>{{ 'auth.login.title' | transloco }}</h1>
   
+      @if (noticeKey(); as key) {
+        <div class="alert alert-notice" role="status">{{ key | transloco }}</div>
+      }
       @if (errorKey(); as key) {
         <div class="alert alert-danger" role="alert">{{ key | transloco }}</div>
       }

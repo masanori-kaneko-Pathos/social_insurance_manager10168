@@ -2645,7 +2645,23 @@
     "emailSent": "We sent a verification email to {{email}}. Click the link in it to change the address.",
     "sameEmail": "This is the same as the current address.",
     "openPassword": "Change password",
-    "openEmail": "Change email address"
+    "openEmail": "Change email address",
+    "delete": {
+      "title": "Delete account",
+      "open": "Delete my account",
+      "owner": "You cannot delete your account because you are the owner of: {{offices}}. First transfer the owner role to another administrator in \"Administrators\".",
+      "gone": "You will no longer be able to sign in to any office with this account, and you will be removed from the member lists. This cannot be undone.",
+      "kept": "The records you entered (employees, payroll, etc.) and the change history stay as the office's records.",
+      "again": "You can create a new account with the same email address later (you will need to be invited to the office again).",
+      "typeWord": "To confirm, type \"{{word}}\"",
+      "submit": "Delete account",
+      "deleting": "Deleting…",
+      "done": "Your account has been deleted.",
+      "error": {
+        "owner": "You are the owner of an office, so you cannot delete your account. Transfer the owner role first.",
+        "employee": "Employee accounts cannot be deleted."
+      }
+    }
   },
   "home": {
     "menuTitle": "Frequently used",

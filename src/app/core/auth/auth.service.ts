@@ -13,7 +13,8 @@ import {
   updatePassword,
   verifyBeforeUpdateEmail,
 } from 'firebase/auth';
-import { auth } from '../firebase';
+import { httpsCallable } from 'firebase/functions';
+import { auth, functions } from '../firebase';
 import { LanguageService, Lang } from '../i18n/language.service';
 import { UserProfileService } from './user-profile.service';
 
@@ -199,6 +200,17 @@ export class AuthService {
     if (!user) return;
     await updateProfile(user, { displayName });
     await this.profiles.updateDisplayName(user.uid, displayName);
+  }
+
+  /**
+   * 本人のアカウントを消す（管理者・一般だけ）。今のパスワードで本人を確かめ直してから、関数で消す
+   * 消せないとき（代表・従業員）は関数が理由を返す（details.reason）。消えたらログアウトする
+   */
+  async deleteAccount(currentPassword: string): Promise<void> {
+    await this.reauth(currentPassword);
+    await httpsCallable(functions, 'siDeleteAccount')({});
+    this.profiles.clear();
+    await signOut(auth);
   }
 
   async logout(): Promise<void> {
