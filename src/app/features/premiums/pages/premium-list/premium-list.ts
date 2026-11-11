@@ -31,6 +31,9 @@ import { BonusPayment } from '../../../../core/models/bonus';
 import { BonusService } from '../../bonus.service';
 import { addTotals, collectBonusResults } from '../../logic/bonus-rows';
 import { downloadCsv, safeFileName } from '../../../../shared/csv/csv';
+import { Payroll } from '../../../../core/models/payroll';
+import { PayrollService } from '../../../payrolls/payroll.service';
+import { advanceAmount, advanceState } from '../../logic/advance';
 import { buildPremiumCsv, PremiumCsvRow, premiumFileName } from '../../logic/premium-csv';
 import {
   DEFAULT_PREMIUM_SORT,
@@ -61,6 +64,7 @@ export class PremiumList {
   private readonly remApi = inject(RemunerationService);
   private readonly rates = inject(RateService);
   private readonly bonusApi = inject(BonusService);
+  private readonly payrollApi = inject(PayrollService);
   private readonly transloco = inject(TranslocoService);
   readonly context = inject(OfficeContext);
 
@@ -311,6 +315,51 @@ export class PremiumList {
 
   /** 何月に支払う給与から控除するか */
   readonly payMonth = computed(() => deductionPayMonth(this.month(), this.payroll()));
+
+  // ===== 保険料の立替（ボタンを押したときだけ、控除する支払月の給与を読む） =====
+
+  /** 確かめた支払月と、その月の給与（従業員ID → 実績） */
+  private readonly advanceChecked = signal<{ payMonth: string; payrolls: Map<string, Payroll> } | null>(null);
+  readonly advanceBusy = signal(false);
+  /** 今見ている月で確かめ済みか（月を変えたら、もう一度押す） */
+  readonly advanceReady = computed(() => this.advanceChecked()?.payMonth === this.payMonth());
+
+  /** 立替が要りそうな人（従業員ID → 立て替える額の目安） */
+  readonly advances = computed(() => {
+    const c = this.advanceChecked();
+    const out = new Map<string, number>();
+    if (!c || c.payMonth !== this.payMonth()) return out;
+    for (const r of this.rows()) {
+      if (r.state !== 'ok' || !r.result) continue;
+      const p = c.payrolls.get(r.employee.id) ?? null;
+      if (advanceState(p, r.result.employeeYen) === 'needed') out.set(r.employee.id, advanceAmount(p!, r.result.employeeYen));
+    }
+    return out;
+  });
+  /** 給与の実績がなくて判断できなかった人の数 */
+  readonly advanceUnknown = computed(() => {
+    const c = this.advanceChecked();
+    if (!c || c.payMonth !== this.payMonth()) return 0;
+    return this.rows().filter((r) => r.state === 'ok' && r.result && advanceState(c.payrolls.get(r.employee.id) ?? null, r.result.employeeYen) === 'unknown').length;
+  });
+
+  async checkAdvance(): Promise<void> {
+    const officeId = this.context.current()?.id;
+    if (!officeId || this.advanceBusy()) return;
+    this.advanceBusy.set(true);
+    try {
+      const payMonth = this.payMonth();
+      const ids = this.rows().filter((r) => r.state === 'ok').map((r) => r.employee.id);
+      this.advanceChecked.set({ payMonth, payrolls: await this.payrollApi.month(officeId, ids, payMonth) });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      this.advanceBusy.set(false);
+    }
+  }
+
+  /** 二以上の事業所に勤務する人がいるか（表の下に注意を出す） */
+  readonly hasMultipleOffices = computed(() => this.rows().some((r) => r.employee.multipleOffices));
 
   monthParts(month: YearMonth): { y: string; m: string } {
     return { y: month.slice(0, 4), m: String(Number(month.slice(5))) };

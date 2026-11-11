@@ -508,6 +508,9 @@
           </div>
         </details>
         <label class="check plain"><input type="checkbox" formControlName="multipleOffices" />{{ 'employee.field.multipleOffices' | transloco }}</label>
+        @if (form.controls.multipleOffices.value) {
+          <p class="hint">{{ 'employee.hint.multipleOffices' | transloco }}</p>
+        }
         <label class="check plain"><input type="checkbox" formControlName="rehired" />{{ 'employee.field.rehired' | transloco }}</label>
         <label class="check plain"><input type="checkbox" formControlName="needsConfirmationCard" />{{ 'employee.field.needsConfirmationCard' | transloco }}</label>
       </section>
@@ -607,6 +610,13 @@
               <span class="field-error">{{ e | transloco }}</span>
             } @else {
               <span class="hint">{{ 'employee.hint.phone' | transloco }}</span>
+            }
+          </div>
+          <div class="field">
+            <label for="phone2">{{ 'employee.field.phone2' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+            <input id="phone2" class="input" formControlName="phone2" inputmode="tel" [class.is-invalid]="errorOf('contact.phone2')" />
+            @if (errorOf('contact.phone2'); as e) {
+              <span class="field-error">{{ e | transloco }}</span>
             }
           </div>
           <div class="field">

@@ -125,6 +125,7 @@ const PATTERN_KEYS: Record<string, string> = {
   romanFirstName: 'employee.validation.roman',
   romanMiddleName: 'employee.validation.roman',
   phone: 'employee.validation.phone',
+  phone2: 'employee.validation.phone',
   postalCode: 'employee.validation.postalCode',
   basicPensionNumber: 'employee.validation.basicPensionNumber',
   accountNumber: 'employee.validation.accountNumber',
@@ -272,6 +273,7 @@ export class EmployeeForm {
           postalCode: [v.contact.postalCode, [halfPattern(PATTERNS.postalCode)]],
           address: [v.contact.address, [Validators.maxLength(200)]],
           phone: [v.contact.phone, [halfPattern(PATTERNS.phone)]],
+          phone2: [v.contact.phone2, [halfPattern(PATTERNS.phone)]],
           email: [v.contact.email, [halfPattern(PATTERNS.email), Validators.maxLength(254)]],
         }),
         commute: this.fb.group({

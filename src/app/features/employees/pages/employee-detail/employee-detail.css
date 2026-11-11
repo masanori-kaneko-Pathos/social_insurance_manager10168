@@ -243,3 +243,13 @@
   margin: 0;
   padding-left: 1.2em;
 }
+
+/* 二以上の事業所に勤務する人の注意 */
+.warn-note {
+  margin: var(--space-xs) 0 0;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  font-size: var(--font-sm);
+}

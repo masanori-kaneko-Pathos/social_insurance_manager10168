@@ -87,7 +87,7 @@ export interface EmployeeFormValue {
   optOutDate: string;
   insuredNumber: string;
   basicPensionNumber: string;
-  contact: { postalCode: string; address: string; phone: string; email: string };
+  contact: { postalCode: string; address: string; phone: string; phone2: string; email: string };
   commute: { method: string; route: string };
   bankAccount: {
     bankName: string;
@@ -201,7 +201,7 @@ export function emptyEmployeeForm(): EmployeeFormValue {
     optOutDate: '',
     insuredNumber: '',
     basicPensionNumber: '',
-    contact: { postalCode: '', address: '', phone: '', email: '' },
+    contact: { postalCode: '', address: '', phone: '', phone2: '', email: '' },
     commute: { method: '', route: '' },
     bankAccount: { bankName: '', branchName: '', accountType: '', accountNumber: '', holderKana: '' },
     collectionMethod: '',
@@ -250,6 +250,7 @@ export function toEmployeeForm(e: EmployeeFull): EmployeeFormValue {
       postalCode: e.contact.postalCode ?? '',
       address: e.contact.address ?? '',
       phone: e.contact.phone ?? '',
+      phone2: e.contact.phone2 ?? '',
       email: e.contact.email ?? '',
     },
     commute: { method: e.commute.method ?? '', route: e.commute.route ?? '' },
@@ -390,6 +391,7 @@ export function fromEmployeeForm(v: EmployeeFormValue): EmployeeFormInput {
       postalCode: digitsOrNull(v.contact.postalCode),
       address: toNull(v.contact.address),
       phone: phoneOrNull(v.contact.phone),
+      phone2: phoneOrNull(v.contact.phone2 ?? ''),
       email: toNull(toHalfWidth(v.contact.email)),
     },
     commute: { method: toNull(v.commute.method), route: toNull(v.commute.route) },

@@ -313,6 +313,12 @@
                 <dt>{{ 'employee.field.phone' | transloco }}</dt>
                 <dd class="mono">{{ e.contact.phone ?? '—' }}</dd>
               </div>
+              @if (e.contact.phone2) {
+                <div>
+                  <dt>{{ 'employee.field.phone2' | transloco }}</dt>
+                  <dd class="mono">{{ e.contact.phone2 }}</dd>
+                </div>
+              }
               <div>
                 <dt>{{ 'employee.field.email' | transloco }}</dt>
                 <dd>{{ e.contact.email ?? '—' }}</dd>
@@ -342,6 +348,9 @@
                   }
                   @if (e.optOutDate) {
                     <span class="badge">{{ 'employee.field.optOutDate' | transloco }} {{ e.optOutDate }}</span>
+                  }
+                  @if (e.multipleOffices) {
+                    <p class="warn-note">{{ 'employee.hint.multipleOffices' | transloco }}</p>
                   }
                 </dd>
               </div>

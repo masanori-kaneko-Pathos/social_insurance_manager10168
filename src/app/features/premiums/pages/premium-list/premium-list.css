@@ -283,3 +283,14 @@ td.calc a {
   padding-left: var(--space-lg);
   font-weight: 400;
 }
+
+.badge-warn {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
+}
+
+.advance-note {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-sm);
+}

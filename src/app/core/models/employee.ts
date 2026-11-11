@@ -53,6 +53,8 @@ export interface ContactDoc {
   postalCode: string | null; // 7桁
   address: string | null;
   phone: string | null;
+  /** 2つ目の電話（携帯・勤務先など。11/11 に足した。前の文書にはない） */
+  phone2?: string | null;
   email: string | null; // マイページの招待にも使う
 }
 
@@ -263,7 +265,7 @@ export function emptyEnrollment(): EnrollmentDoc {
 }
 
 export function emptyContact(): ContactDoc {
-  return { postalCode: null, address: null, phone: null, email: null };
+  return { postalCode: null, address: null, phone: null, phone2: null, email: null };
 }
 
 export function emptyBankAccount(): BankAccountDoc {

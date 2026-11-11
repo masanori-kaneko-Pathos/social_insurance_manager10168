@@ -63,12 +63,25 @@
           | transloco
       }}
     </button>
+    @if (rows().length > 0) {
+      <button type="button" class="btn btn-small" [disabled]="advanceBusy()" (click)="checkAdvance()">
+        {{ 'premiumList.advance.check' | transloco }}
+      </button>
+    }
     @if (context.isAdmin() && rows().length > 0) {
       <button type="button" class="btn btn-small" (click)="exportCsv()">
         {{ 'premiumList.exportCsv' | transloco }}
       </button>
     }
   </p>
+  @if (advanceReady()) {
+    <p class="advance-note" role="status">
+      {{ 'premiumList.advance.result' | transloco: { count: advances().size, payMonth: monthParts(payMonth()).m } }}
+      @if (advanceUnknown() > 0) {
+        <span class="muted">{{ 'premiumList.advance.unknown' | transloco: { count: advanceUnknown() } }}</span>
+      }
+    </p>
+  }
   <!-- 計算できなかった人（合計から抜けているので、見落とさないよう一番上に出す） -->
   @if (problems().length > 0) {
     <div class="alert alert-warning" role="alert">
@@ -147,6 +160,12 @@
                     'premiumList.change.' + c | transloco
                   }}</span>
                 }
+                @if (r.employee.multipleOffices) {
+                  <span class="badge badge-warn" [title]="'premiumList.multipleOfficesNote' | transloco">{{ 'premiumList.multipleOffices' | transloco }}</span>
+                }
+                @if (advances().get(r.employee.id); as amt) {
+                  <span class="badge badge-warn" [title]="'premiumList.advance.note' | transloco">{{ 'premiumList.advance.badge' | transloco: { amount: yen(amt) } }}</span>
+                }
               </td>
               @if (r.state === 'ok' || r.state === 'exempt') {
                 <td class="num std">
@@ -197,6 +216,12 @@
         </tbody>
       </table>
     </div>
+    @if (hasMultipleOffices()) {
+      <p class="hint">{{ 'premiumList.multipleOfficesNote' | transloco }}</p>
+    }
+    @if (advances().size > 0) {
+      <p class="hint">{{ 'premiumList.advance.note' | transloco }}</p>
+    }
 
     <!-- 事業所の合計 -->
     <section class="card totals">

@@ -311,7 +311,8 @@
       "sortByKana": "Sort by katakana reading in the list (あ–わ)",
       "residentRegistered": "Has resident registration in Japan",
       "needsRomanNameFiling": "File the Report of Insured Worker's Name in English Alphabet (ローマ字氏名届)",
-      "optOutDate": "Date of request to withdraw"
+      "optOutDate": "Date of request to withdraw",
+      "phone2": "Second phone"
     },
     "insurance": {
       "health": "Enrolled in health insurance",
@@ -340,7 +341,8 @@
       "postalCode": "7 digits (no hyphen needed)",
       "phone": "Digits only (no hyphens needed)",
       "digitsOnly": "Digits only",
-      "optOut": "For specified reduction special cases, the date they asked to withdraw from coverage."
+      "optOut": "For specified reduction special cases, the date they asked to withdraw from coverage.",
+      "multipleOffices": "An employee working at two or more offices chooses the managing pension office with a notification, and the premiums are split by each office's pay. The premiums in the app are an estimate using only this office's pay. Check the amounts in the notice from the pension office (the split is not calculated by the app)."
     },
     "validation": {
       "required": "This field is required.",
@@ -905,7 +907,16 @@
       "health": "Health",
       "pension": "Pension"
     },
-    "employerNote": "incl. fractions of ¥1"
+    "employerNote": "incl. fractions of ¥1",
+    "multipleOffices": "2+ offices",
+    "multipleOfficesNote": "\"2+ offices\" employees work at two or more offices. Their premiums are split by each office's pay, so the amounts here are estimates. Check the notice from the pension office.",
+    "advance": {
+      "check": "Check advances",
+      "result": "Employees whose pay in month {{payMonth}} cannot cover their share: {{count}}",
+      "unknown": "(No payroll record to judge: {{count}})",
+      "badge": "Advance {{amount}} yen",
+      "note": "\"Advance\" means the pay (cash) in the deduction month is less than the employee's share, so it cannot be fully deducted. The company pays it in advance and collects it from the employee later. The amount is an estimate: share minus pay."
+    }
   },
   "rateDialog": {
     "title": "Health insurance rates",
