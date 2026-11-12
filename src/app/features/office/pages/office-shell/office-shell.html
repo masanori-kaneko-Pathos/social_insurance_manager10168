@@ -10,7 +10,8 @@
         [title]="(navCollapsed() ? 'nav.expand' : 'nav.collapse') | transloco"
         (click)="toggleNav()"
       ></button>
-      {{ 'common.appName' | transloco }}
+      <!-- アプリの名前を押すとホームへ -->
+      <a class="app-home" [routerLink]="['/o', officeId()]">{{ 'common.appName' | transloco }}</a>
     </span>
     <app-office-switcher />
   </div>
@@ -81,7 +82,7 @@
     <a [routerLink]="['/o', officeId(), 'requests']" routerLinkActive="active"
       [attr.title]="navCollapsed() ? ('nav.requests' | transloco) : null"
     >
-      <app-icon name="inbox" /><span class="label">{{ 'nav.requests' | transloco }}</span>
+      <app-icon name="request" /><span class="label">{{ 'nav.requests' | transloco }}</span>
     </a>
 
     <span class="nav-sep" aria-hidden="true"></span>
@@ -115,7 +116,7 @@
     <a [routerLink]="['/o', officeId(), 'members']" routerLinkActive="active"
       [attr.title]="navCollapsed() ? ('nav.members' | transloco) : null"
     >
-      <app-icon name="people" /><span class="label">{{ 'nav.members' | transloco }}</span>
+      <app-icon name="admin" /><span class="label">{{ 'nav.members' | transloco }}</span>
     </a>
     <a [routerLink]="['/o', officeId(), 'help']" routerLinkActive="active"
       [attr.title]="navCollapsed() ? ('nav.help' | transloco) : null"

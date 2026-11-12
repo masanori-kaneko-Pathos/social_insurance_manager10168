@@ -189,3 +189,23 @@ tr.has-error td {
   font-size: 12px;
   white-space: nowrap;
 }
+
+/* 「‹ 年月 › 今月」（保険料の一覧と同じ形。11/12） */
+.period {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.period a.btn {
+  width: 40px;
+  padding: 0;
+  text-align: center;
+  text-decoration: none;
+}
+
+.period-label {
+  min-width: 9em;
+  text-align: center;
+  font-weight: 600;
+}

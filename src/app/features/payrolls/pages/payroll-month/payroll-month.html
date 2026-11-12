@@ -14,25 +14,26 @@
       </p>
     }
   </div>
-  <div class="month-nav">
+  <!-- 保険料の一覧と同じ「‹ 年月 › 今月」。真ん中を押すと、年と12か月の選び窓（11/12） -->
+  <div class="period">
     <a
       class="btn"
       [routerLink]="['/o', context.current()?.id, 'payrolls', prevMonth()]"
       queryParamsHandling="preserve"
-    >
-      ← {{ prevMonth() }}
-    </a>
-    <!-- 押すと、年と12か月の選び窓 -->
-    <app-month-picker [value]="month()" [today]="thisMonth" (picked)="goMonth($event)">
-      {{ 'monthPicker.pick' | transloco }}
+      [attr.aria-label]="prevMonth()"
+    >‹</a>
+    <app-month-picker class="period-label" [value]="month()" [today]="thisMonth" (picked)="goMonth($event)">
+      {{ 'payroll.monthPick' | transloco: monthParts(month()) }}
     </app-month-picker>
     <a
       class="btn"
       [routerLink]="['/o', context.current()?.id, 'payrolls', nextMonth()]"
       queryParamsHandling="preserve"
-    >
-      {{ nextMonth() }} →
-    </a>
+      [attr.aria-label]="nextMonth()"
+    >›</a>
+    @if (month() !== thisMonth) {
+      <button type="button" class="btn" (click)="goMonth(thisMonth)">{{ 'premiumList.thisMonth' | transloco }}</button>
+    }
   </div>
 </div>
 

@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
@@ -69,7 +69,6 @@ import {
   MONTHS_OF_YEAR,
   SpecificChoice,
   SPECIFIC_CHOICES,
-  STANDARD_HOURS_CANDIDATE,
   StandardHoursUnit,
   standardWeeklyMinutes,
   toCoverageForm,
@@ -286,7 +285,6 @@ export class OfficeForm {
   // ===== 社会保険の適用 =====
   readonly specificChoices = SPECIFIC_CHOICES;
   readonly months = MONTHS_OF_YEAR;
-  readonly standardCandidate = STANDARD_HOURS_CANDIDATE;
   /** 人数を数える月・基準を選ぶ月（今月） */
   readonly thisMonth = toYearMonth(todayLocal());
 
@@ -323,7 +321,19 @@ export class OfficeForm {
   });
 
   readonly myOffices = signal<Office[]>([]);
-  readonly copied = signal(false);
+  /** コピーした事業所の名前（していなければ null） */
+  readonly copied = signal<string | null>(null);
+  /** 「既存の事業所をコピー」の選ぶ欄 */
+  readonly copyOpen = signal(false);
+
+  // ===== チェックを入れたときだけ開く欄（任意の項目。中身があれば初めから開く） =====
+  readonly openNameEn = signal(false);
+  readonly openGroup = signal(false);
+  readonly openInKind = signal(false);
+  readonly openFiling = signal(false);
+
+  /** 「登録する」を押して、足りない項目があった（下の帯にも件数を出す） */
+  readonly submitTried = signal(false);
   readonly postalStatus = signal<'idle' | 'loading' | 'notFound' | 'failed'>('idle');
   readonly submitting = signal(false);
   readonly saved = signal(false);
@@ -337,6 +347,19 @@ export class OfficeForm {
         console.error(err);
         this.criteriaRows.set([]);
       });
+    // 新規登録：人数が基準以上なら、特定適用事業所の初期値を「該当する」に（人が触っていなければ）
+    effect(() => {
+      const n = this.suggestSpecific();
+      untracked(() => {
+        const c = this.form.controls.coverage.controls.specific;
+        if (!this.isEdit && n !== null && c.pristine) {
+          c.setValue('applied');
+          // 該当した年月は通知書で決まる。空なら今月を仮に入れる（ヒントで直すよう知らせる）
+          const since = this.form.controls.coverage.controls.specificSince;
+          if (!since.value) since.setValue(this.thisMonth);
+        }
+      });
+    });
     if (this.isEdit) {
       const o = this.context.current();
       if (o) this.fillFrom(o);
@@ -381,6 +404,17 @@ export class OfficeForm {
       changeFrom: '',
       coverage: toCoverageForm(o),
     });
+    this.openNameEn.set(!!o.nameEn);
+    this.openGroup.set(!!o.groupName);
+    this.openInKind.set(!!o.inKind?.housing || !!o.inKind?.meals);
+    this.openFiling.set(!!o.officeSymbol || !!o.officeNumber || o.employeeCount != null);
+  }
+
+  /** 現物の欄を閉じたら、チェックも外す（閉じた欄の値を黙って保存しない） */
+  toggleInKind(): void {
+    const open = !this.openInKind();
+    this.openInKind.set(open);
+    if (!open) this.form.controls.coverage.patchValue({ housing: false, meals: false });
   }
 
   /** フォームの保険者・都道府県 */
@@ -467,7 +501,9 @@ export class OfficeForm {
       specific: cov.specific,
       specificSince: cov.specificSince,
     });
-    this.copied.set(true);
+    this.openGroup.set(!!o.groupName);
+    this.copied.set(o.name);
+    this.copyOpen.set(false);
   }
 
   // ===== 社会保険の適用 =====
@@ -475,18 +511,48 @@ export class OfficeForm {
   /** 適用の欄のエラーの翻訳キー（触る前・正しいときは null） */
   coverageErrorOf(name: keyof CoverageFormValue): string | null {
     if (!this.form.controls.coverage.controls[name].touched) return null;
+    // 新しく登録するときは、所定労働時間と月の所定労働日数が必須（4分の3基準の物差し。取り込みでも使う）
+    if (this.standardMissing().includes(name)) return 'office.validation.required';
     const e = this.coverageErrs()[name];
     return e ? `office.coverage.error.${e}` : null;
   }
 
-  hasWarning(w: CoverageWarning): boolean {
-    return this.coverageWarns().includes(w);
+  /** 新規登録で空の所定の欄 */
+  readonly standardMissing = computed<(keyof CoverageFormValue)[]>(() => {
+    if (this.isEdit) return [];
+    const v = this.coverageValue();
+    return (['hours', 'monthlyDays'] as const).filter((k) => !v[k].trim());
+  });
+
+  /** 人数が基準以上なのに「該当しない」：特定適用事業所に当たる見込み（基準の人数を返す） */
+  readonly suggestSpecific = computed<number | null>(() => {
+    const min = this.criteriaNow()?.sizeMin ?? null;
+    const typed = parseNat(this.coverageValue().insuredCount);
+    const n = typed ?? this.headcount()?.counted ?? null;
+    return min !== null && n !== null && n >= min && this.coverageValue().specific === 'none' ? min : null;
+  });
+
+  /** 足りない・正しくない項目の数（「登録する」を押したあとだけ。下の帯に出す） */
+  readonly invalidCount = computed(() => {
+    if (!this.submitTried()) return 0;
+    this.value(); // 入れ直すたびに数え直す
+    const fields: Field[] = [
+      'name', 'corporateName', 'corporateNumber', 'ownerName', 'postalCode', 'prefecture', 'address',
+      'kumiaiName', 'officeSymbol', 'officeNumber', 'employeeCount', 'changeFrom',
+    ];
+    const coverage: (keyof CoverageFormValue)[] = ['hours', 'monthlyDays', 'specificSince', 'insuredCount'];
+    return fields.filter((f) => this.errorOf(f)).length + coverage.filter((c) => this.coverageErrorOf(c)).length;
+  });
+
+  /** 下の帯のエラーを押したら、最初のエラーの欄へ */
+  scrollToError(): void {
+    const el = document.querySelector<HTMLElement>('.is-invalid');
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el?.focus({ preventScroll: true });
   }
 
-  /** 候補ボタン：週 40:00 */
-  fillStandardHours(): void {
-    this.form.controls.coverage.patchValue({ hoursUnit: 'week', hours: this.standardCandidate });
-    this.form.controls.coverage.controls.hours.markAsTouched();
+  hasWarning(w: CoverageWarning): boolean {
+    return this.coverageWarns().includes(w);
   }
 
   toggleBonusMonth(month: number): void {
@@ -557,12 +623,16 @@ export class OfficeForm {
     if (this.readOnly) return;
     const changeFrom = this.form.controls.changeFrom;
     const coverage = fromCoverageForm(this.form.controls.coverage.getRawValue());
+    this.submitTried.set(true);
     if (
       this.form.invalid ||
       !coverage ||
+      this.standardMissing().length > 0 ||
       (this.insurerChanged() && !MONTH.test(changeFrom.value))
     ) {
       this.form.markAllAsTouched();
+      // 帯の件数が出たあとで、最初のエラーの欄まで動かす
+      setTimeout(() => this.scrollToError());
       return;
     }
     const uid = this.auth.user()?.uid;
@@ -574,10 +644,12 @@ export class OfficeForm {
 
     const v = this.form.getRawValue();
     const period = this.periodFromForm();
+    // 閉じた欄の値は保存しない（チェックを外した ＝ 使わない）
+    const filing = this.openFiling();
     const base = {
       name: v.name.trim(),
-      nameEn: emptyToNull(v.nameEn),
-      groupName: emptyToNull(v.groupName),
+      nameEn: this.openNameEn() ? emptyToNull(v.nameEn) : null,
+      groupName: this.openGroup() ? emptyToNull(v.groupName) : null,
       corporateName: emptyToNull(v.corporateName),
       corporateNumber: emptyToNull(v.corporateNumber),
       ownerName: v.ownerName.trim(),
@@ -585,10 +657,10 @@ export class OfficeForm {
       prefecture: period.prefecture,
       address: v.address.trim(),
       healthInsurer: period.healthInsurer,
-      officeSymbol: emptyToNull(v.officeSymbol),
-      officeNumber: emptyToNull(v.officeNumber),
+      officeSymbol: filing ? emptyToNull(v.officeSymbol) : null,
+      officeNumber: filing ? emptyToNull(v.officeNumber) : null,
       industry: v.industry || null,
-      employeeCount: v.employeeCount ?? null,
+      employeeCount: filing ? (v.employeeCount ?? null) : null,
       payroll: {
         closingDay: Number(v.closingDay),
         payMonth: v.payMonth,

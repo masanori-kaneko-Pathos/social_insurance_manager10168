@@ -95,6 +95,11 @@ export class PayrollMonth {
   readonly thisMonth = toYearMonth(todayLocal());
 
   /** 選び窓で選んだ月へ（前後の月のボタンと同じく、?all= などはそのまま） */
+  /** '2026-10' → { y: '2026', m: 10 }（「2026年10月払い」の表示） */
+  monthParts(ym: string): { y: string; m: number } {
+    return { y: ym.slice(0, 4), m: Number(ym.slice(5)) };
+  }
+
   goMonth(month: string): void {
     const officeId = this.context.current()?.id;
     if (officeId && month !== this.month()) {

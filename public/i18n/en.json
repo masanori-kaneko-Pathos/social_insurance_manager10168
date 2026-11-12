@@ -267,7 +267,7 @@
     "group": {
       "setup": "Setup"
     },
-    "requests": "Employee My Pages",
+    "requests": "Requests",
     "help": "Help",
     "home": "Home",
     "members": "Administrators",
@@ -324,7 +324,8 @@
       "contractFailed": "The employee was registered, but the contract could not be saved. Please add it again from the Contract card.",
       "addPhone": "Add phone number",
       "removePhone": "Remove",
-      "addEmergency": "Add an emergency contact"
+      "addEmergency": "Add an emergency contact",
+      "toImport": "Import from a file"
     },
     "section": {
       "basic": "Basic information",
@@ -742,7 +743,8 @@
       "readOnly": "View only (only administrators can make changes).",
       "save": "Save",
       "saving": "Saving…",
-      "saved": "Saved. Premium screens now use the new settings."
+      "saved": "Saved. Premium screens now use the new settings.",
+      "invalid": "{{n}} item(s) are missing or invalid (click to jump)"
     },
     "section": {
       "basic": "Basic information",
@@ -752,7 +754,7 @@
       "history": "Insurer and location history",
       "payroll": "Payroll and deduction",
       "premium": "Premium calculation",
-      "coverage": "Social insurance coverage"
+      "coverage": "Who must join social insurance"
     },
     "field": {
       "name": "Office name",
@@ -776,7 +778,7 @@
       "method": "Employee share collected by",
       "healthRounding": "Rounding of health, care and child care support",
       "nameEn": "Office name in English",
-      "groupName": "Group name"
+      "groupName": "Group label"
     },
     "insurer": {
       "kyokai": "Japan Health Insurance Association (Kyokai Kenpo)",
@@ -792,7 +794,7 @@
       "method": "Per-employee settings (e.g. cash for employees on leave) are coming later.",
       "healthRounding": "There is no official guidance, so both are available. The method once published by the ministry is 'together'.",
       "nameEn": "Enter the English name if there is one.",
-      "groupName": "Enter this when you handle several group companies. Offices with the same group name are listed together in the switcher, even if their corporate numbers differ (e.g., a parent and its subsidiaries)."
+      "groupName": "Offices with the same label are listed together in the office menu. Example: Kanto sites, Head office and plant"
     },
     "postal": {
       "search": "Find address",
@@ -803,8 +805,10 @@
     "copy": {
       "label": "Copy details from an existing office",
       "action": "Copy",
-      "hint": "Copies corporate number, corporate name, employer name, health insurance and industry.",
-      "done": "Copied. Review the details."
+      "hint": "Copies corporate number and name, owner, health insurance, industry, pay closing and pay days, scheduled hours and more. You can edit them afterwards.",
+      "done": "Copied. Review the details.",
+      "open": "Copy from an existing office",
+      "doneFrom": "Copied from \"{{name}}\". Edit anything that differs before registering."
     },
     "validation": {
       "required": "This field is required.",
@@ -852,13 +856,13 @@
       "add": "Add office"
     },
     "coverage": {
-      "standardTitle": "Full-time schedule",
+      "standardTitle": "Scheduled work of full-time employees",
       "specificTitle": "Specified applicable office",
       "fundTitle": "Employees' pension fund",
       "bonusTitle": "Planned bonus months",
       "inKindTitle": "Benefits in kind",
       "field": {
-        "hours": "Scheduled hours per week",
+        "hours": "Scheduled hours (per week)",
         "hoursUnit": "Unit of hours",
         "days": "Scheduled days per month",
         "since": "Applicable from",
@@ -877,8 +881,8 @@
         "voluntary": "Voluntary (labor-management agreement)"
       },
       "hint": {
-        "standard": "Full-time schedule. Employees at 3/4 or more are regular insured; others are judged as short-time workers.",
-        "hours": "Enter as \"40:00\" or \"40\".",
+        "standard": "Hours and days of full-time employees from your work rules or contracts. Part-timers working 3/4 or more of this must join social insurance.",
+        "hours": "Enter as \"40:00\" or \"40\". 8 hours a day × 5 days a week is 40:00.",
         "month": "Monthly hours are saved as weekly hours (× 12 ÷ 52; 173:20 a month → 40:00 a week).",
         "specific": "Once applicable, the office stays applicable even if headcount drops.",
         "insuredCount": "If blank, the app counts employees of this office. If the corporation has other offices, enter the total.",
@@ -908,7 +912,12 @@
         "pair": "Enter both hours and days (leave both blank to skip).",
         "since": "Select the month.",
         "count": "Enter a number of 0 or more."
-      }
+      },
+      "placeholder": {
+        "hours": "e.g. 40:00"
+      },
+      "countTitle": "Headcount",
+      "suggestSpecific": "With {{n}} or more people, this office is likely a specified applicable office. Check the month on the notice from the pension service."
     },
     "change": {
       "nameAddress": "The name/address will change. When you save, a \"Name/address change notification\" appears in the To-do list.",
@@ -932,6 +941,15 @@
         "tooMany": "Up to 50 departments.",
         "save": "Could not save the departments."
       }
+    },
+    "open": {
+      "nameEn": "This office has an English name",
+      "group": "Show together with other offices (when you manage several)",
+      "inKind": "Housing or meals are provided in kind",
+      "filing": "Office symbol and numbers are already assigned"
+    },
+    "part": {
+      "insurance": "Social insurance settings"
     }
   },
   "remuneration": {
@@ -1313,7 +1331,7 @@
     "emptyMonth": "No employees were employed during this pay period.",
     "futureMonth": "The pay day for this month has not come yet.",
     "readonly": "View only. Only administrators can enter records.",
-    "showAll": "Also enter in-kind pay and details",
+    "showAll": "Show more columns",
     "showBasic": "Amount paid in money only",
     "fillEmptyDays": "Fill empty days with suggestions",
     "candidate": "Use {{days}}",
@@ -1388,7 +1406,8 @@
     "sortNewest": "Newest first",
     "inKindMerged": "Not itemized",
     "inKindMergedTitle": "The payroll software included in-kind remuneration in the pay amount, so there is no separate figure. The total is still calculated correctly.",
-    "splitInKind": "Enter separately"
+    "splitInKind": "Enter separately",
+    "monthPick": "Paid {{y}}-{{m}}"
   },
   "regular": {
     "title": "Annual SMR determination {{year}} (定時決定, teiji kettei)",

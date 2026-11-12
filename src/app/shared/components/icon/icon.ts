@@ -13,7 +13,11 @@ export type IconName =
   | 'inbox'
   | 'filing'
   | 'calendar'
-  | 'help';
+  | 'help'
+  | 'request' // 依頼・申請（封筒）
+  | 'userPlus' // 従業員を登録
+  | 'upload' // ファイルから取り込む
+  | 'admin'; // 管理者（鍵）
 
 /**
  * 小さな線画のアイコン（16px。色は文字色をそのまま使う）
@@ -69,8 +73,11 @@ export type IconName =
           <path d="M11.5 3v10M9 10.5l2.5 2.5 2.5-2.5" />
         }
         @case ('regular') {
-          <rect x="2" y="3" width="12" height="11" rx="1.5" />
-          <path d="M2 6.5h12M5 1.5v3M11 1.5v3" />
+          <!-- 定時決定：4〜6月の報酬を並べる（棒グラフ。暦と見分ける） -->
+          <path d="M2 14h12" />
+          <rect x="3" y="8" width="2.5" height="6" />
+          <rect x="6.75" y="5" width="2.5" height="9" />
+          <rect x="10.5" y="9.5" width="2.5" height="4.5" />
         }
         @case ('settings') {
           <path d="M2 4.5h7M12.5 4.5h1.5M2 11.5h1.5M7 11.5h7" />
@@ -89,6 +96,23 @@ export type IconName =
         @case ('filing') {
           <path d="M4 1.5h5.5L12.5 4.5v10h-8.5z" />
           <path d="M9.5 1.5v3h3M6 7.5h4.5M6 10h4.5M6 12.5h3" />
+        }
+        @case ('request') {
+          <rect x="1.5" y="3.5" width="13" height="9" rx="1" />
+          <path d="M1.5 4.5L8 9l6.5-4.5" />
+        }
+        @case ('userPlus') {
+          <circle cx="6" cy="5" r="2.5" />
+          <path d="M1.5 13.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" />
+          <path d="M12.5 4.5v4M10.5 6.5h4" />
+        }
+        @case ('upload') {
+          <path d="M2 10.5v3h12v-3" />
+          <path d="M8 10V2.5M5 5.5l3-3 3 3" />
+        }
+        @case ('admin') {
+          <circle cx="5.5" cy="8" r="3" />
+          <path d="M8.5 8h6M12.5 8v2.5M14.5 8v2" />
         }
         @case ('help') {
           <circle cx="8" cy="8" r="6.25" />

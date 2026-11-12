@@ -283,3 +283,16 @@ h3 {
 .officer-result {
   font-weight: 600;
 }
+
+/* 見出しの右に「ファイルからまとめて登録」（11/12） */
+.title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.title-row .btn {
+  text-decoration: none;
+}

@@ -1,6 +1,5 @@
-<div class="page-head">
-  <h1>{{ 'nav.home' | transloco }}</h1>
-</div>
+<!-- 見出しは置かず、よく使うメニューを一番上に（To-do を高い位置に。11/12） -->
+<h1 class="sr-only">{{ 'nav.home' | transloco }}</h1>
 
 <!-- よく使うメニュー：毎月の作業の入口（サイドバーを探さずに押せる） -->
 <nav class="menu" [attr.aria-label]="'home.menuTitle' | transloco">

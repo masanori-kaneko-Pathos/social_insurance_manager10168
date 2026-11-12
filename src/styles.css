@@ -605,3 +605,10 @@ a:where(:link, :visited):hover {
 .fold[open] > summary {
   margin-bottom: var(--space-sm);
 }
+
+/* 11/12：「※がついている項目は必須です」を赤字で目立たせる */
+.required-note {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--color-danger-text);
+}

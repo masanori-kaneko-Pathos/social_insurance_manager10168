@@ -7,25 +7,29 @@
     </p>
   } @else {
     <a class="back" routerLink="/">← {{ 'common.back' | transloco }}</a>
-    <h1>{{ 'office.form.titleNew' | transloco }}</h1>
-    <p class="lead">{{ 'office.form.lead' | transloco }}</p>
-  }
-
-  @if (!isEdit && myOffices().length > 0) {
-    <section class="card copy">
-      <label for="copyFrom">{{ 'office.copy.label' | transloco }}</label>
-      <div class="row">
-        <select id="copyFrom" class="input" #copySel>
-          @for (o of myOffices(); track o.id) {
-            <option [value]="o.id">{{ o.name }}</option>
+    <div class="title-row">
+      <h1>{{ 'office.form.titleNew' | transloco }}</h1>
+      <!-- 既存の事業所をコピー（押したときだけ選ぶ欄を出す） -->
+      @if (myOffices().length > 0) {
+        <div class="copy-menu">
+          <button type="button" class="btn" [attr.aria-expanded]="copyOpen()" (click)="copyOpen.set(!copyOpen())">
+            {{ 'office.copy.open' | transloco }}
+          </button>
+          @if (copyOpen()) {
+            <div class="copy-pop" role="menu">
+              <p class="hint">{{ 'office.copy.hint' | transloco }}</p>
+              @for (o of myOffices(); track o.id) {
+                <button type="button" class="copy-item" role="menuitem" (click)="copyFrom(o.id)">{{ o.name }}</button>
+              }
+            </div>
           }
-        </select>
-        <button type="button" class="btn" (click)="copyFrom(copySel.value)">
-          {{ 'office.copy.action' | transloco }}
-        </button>
-      </div>
-      <p class="hint">{{ (copied() ? 'office.copy.done' : 'office.copy.hint') | transloco }}</p>
-    </section>
+        </div>
+      }
+    </div>
+    <p class="lead">{{ 'office.form.lead' | transloco }}</p>
+    @if (copied(); as name) {
+      <div class="alert alert-success" role="status">{{ 'office.copy.doneFrom' | transloco: { name: name } }}</div>
+    }
   }
 
   @if (errorKey(); as key) {
@@ -54,16 +58,27 @@
           }
         </div>
 
+        <!-- 英語の名前・まとめの名前：チェックを入れたときだけ開く（任意） -->
         <div class="field full">
-          <label for="nameEn">{{ 'office.field.nameEn' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
-          <input id="nameEn" class="input" formControlName="nameEn" />
-          <span class="hint">{{ 'office.hint.nameEn' | transloco }}</span>
+          <label class="check">
+            <input type="checkbox" [checked]="openNameEn()" [disabled]="readOnly" (change)="openNameEn.set(!openNameEn())" />
+            {{ 'office.open.nameEn' | transloco }}
+          </label>
+          @if (openNameEn()) {
+            <input id="nameEn" class="input" formControlName="nameEn" [attr.aria-label]="'office.field.nameEn' | transloco" />
+          }
         </div>
 
         <div class="field full">
-          <label for="groupName">{{ 'office.field.groupName' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
-          <input id="groupName" class="input" formControlName="groupName" maxlength="40" />
-          <span class="hint">{{ 'office.hint.groupName' | transloco }}</span>
+          <label class="check">
+            <input type="checkbox" [checked]="openGroup()" [disabled]="readOnly" (change)="openGroup.set(!openGroup())" />
+            {{ 'office.open.group' | transloco }}
+          </label>
+          @if (openGroup()) {
+            <label for="groupName">{{ 'office.field.groupName' | transloco }}</label>
+            <input id="groupName" class="input" formControlName="groupName" maxlength="40" />
+            <span class="hint">{{ 'office.hint.groupName' | transloco }}</span>
+          }
         </div>
 
         <div class="field">
@@ -135,6 +150,26 @@
       <h2>{{ 'office.section.location' | transloco }}</h2>
       <div class="grid">
         <div class="field">
+          <label for="prefecture">{{ 'office.field.prefecture' | transloco }}<span class="req" aria-hidden="true">※</span></label>
+          <select
+            id="prefecture"
+            class="input"
+            formControlName="prefecture"
+            [class.is-invalid]="errorOf('prefecture')"
+          >
+            <option value="">{{ 'common.select' | transloco }}</option>
+            @for (p of prefectures; track p.code) {
+              <option [value]="p.code">{{ p[lang()] }}</option>
+            }
+          </select>
+          @if (errorOf('prefecture'); as e) {
+            <span class="field-error">{{ e | transloco }}</span>
+          } @else {
+            <span class="hint">{{ 'office.hint.prefecture' | transloco }}</span>
+          }
+        </div>
+
+        <div class="field">
           <label for="postalCode">
             {{ 'office.field.postalCode' | transloco
             }}<span class="optional">{{ 'common.optional' | transloco }}</span>
@@ -171,26 +206,6 @@
           }
         </div>
 
-        <div class="field">
-          <label for="prefecture">{{ 'office.field.prefecture' | transloco }}<span class="req" aria-hidden="true">※</span></label>
-          <select
-            id="prefecture"
-            class="input"
-            formControlName="prefecture"
-            [class.is-invalid]="errorOf('prefecture')"
-          >
-            <option value="">{{ 'common.select' | transloco }}</option>
-            @for (p of prefectures; track p.code) {
-              <option [value]="p.code">{{ p[lang()] }}</option>
-            }
-          </select>
-          @if (errorOf('prefecture'); as e) {
-            <span class="field-error">{{ e | transloco }}</span>
-          } @else {
-            <span class="hint">{{ 'office.hint.prefecture' | transloco }}</span>
-          }
-        </div>
-
         <div class="field full">
           <label for="address">{{ 'office.field.address' | transloco }}<span class="req" aria-hidden="true">※</span></label>
           <input
@@ -205,6 +220,9 @@
         </div>
       </div>
     </section>
+
+    <!-- ここから社会保険の設定（基本情報・所在地と分けて見せる） -->
+    <h2 class="part">{{ 'office.part.insurance' | transloco }}</h2>
 
     <!-- 健康保険 -->
     <section class="card">
@@ -311,45 +329,29 @@
     <section class="card" formGroupName="coverage">
       <h2>{{ 'office.section.coverage' | transloco }}</h2>
 
-      <!-- 通常の労働者の所定 -->
+      <!-- 通常の労働者の所定（新しく登録するときは必須。4分の3基準の物差し） -->
       <h3>{{ 'office.coverage.standardTitle' | transloco }}</h3>
       <p class="hint section-hint">{{ 'office.coverage.hint.standard' | transloco }}</p>
       <div class="grid">
         <div class="field">
           <label for="stdHours">
-            {{ 'office.coverage.field.hours' | transloco
-            }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+            {{ 'office.coverage.field.hours' | transloco }}
+            @if (isEdit) {
+              <span class="optional">{{ 'common.optional' | transloco }}</span>
+            } @else {
+              <span class="req" aria-hidden="true">※</span>
+            }
           </label>
-          <div class="row">
-            <select
-              class="input unit"
-              formControlName="hoursUnit"
-              [attr.aria-label]="'office.coverage.field.hoursUnit' | transloco"
-            >
-              <option value="week">{{ 'office.coverage.unit.week' | transloco }}</option>
-              <option value="month">{{ 'office.coverage.unit.month' | transloco }}</option>
-            </select>
-            <input
-              id="stdHours"
-              class="input num"
-              inputmode="decimal"
-              placeholder="40:00"
-              formControlName="hours"
-              [class.is-invalid]="coverageErrorOf('hours')"
-            />
-            <button
-              type="button"
-              class="chip"
-              (click)="fillStandardHours()"
-              [disabled]="readOnly"
-            >
-              {{ standardCandidate }}
-            </button>
-          </div>
+          <input
+            id="stdHours"
+            class="input num"
+            inputmode="decimal"
+            [placeholder]="'office.coverage.placeholder.hours' | transloco"
+            formControlName="hours"
+            [class.is-invalid]="coverageErrorOf('hours')"
+          />
           @if (coverageErrorOf('hours'); as e) {
             <span class="field-error">{{ e | transloco }}</span>
-          } @else if (coverageValue().hoursUnit === 'month') {
-            <span class="hint">{{ 'office.coverage.hint.month' | transloco }}</span>
           } @else {
             <span class="hint">{{ 'office.coverage.hint.hours' | transloco }}</span>
           }
@@ -357,8 +359,12 @@
 
         <div class="field">
           <label for="stdDays">
-            {{ 'office.coverage.field.days' | transloco
-            }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+            {{ 'office.coverage.field.days' | transloco }}
+            @if (isEdit) {
+              <span class="optional">{{ 'common.optional' | transloco }}</span>
+            } @else {
+              <span class="req" aria-hidden="true">※</span>
+            }
           </label>
           <input
             id="stdDays"
@@ -377,36 +383,8 @@
         <p class="warn">{{ 'office.coverage.warn.noStandardHours' | transloco }}</p>
       }
 
-      <!-- 特定適用事業所 -->
-      <h3>{{ 'office.coverage.specificTitle' | transloco }}</h3>
-      <div class="field">
-        <div class="radio-group">
-          @for (c of specificChoices; track c) {
-            <label class="radio">
-              <input type="radio" [value]="c" formControlName="specific" />
-              {{ 'office.coverage.specific.' + c | transloco }}
-            </label>
-          }
-        </div>
-        <span class="hint">{{ 'office.coverage.hint.specific' | transloco }}</span>
-      </div>
-
-      @if (coverageValue().specific !== 'none') {
-        <div class="field since">
-          <label for="specificSince">{{ 'office.coverage.field.since' | transloco }}</label>
-          <input
-            id="specificSince"
-            class="input"
-            type="month"
-            formControlName="specificSince"
-            [class.is-invalid]="coverageErrorOf('specificSince')"
-          />
-          @if (coverageErrorOf('specificSince'); as e) {
-            <span class="field-error">{{ e | transloco }}</span>
-          }
-        </div>
-      }
-
+      <!-- 人数（法人全体の厚生年金の被保険者）→ 特定適用事業所か（人数から推しを出し、人が選ぶ） -->
+      <h3>{{ 'office.coverage.countTitle' | transloco }}</h3>
       <div class="field count">
         <label for="insuredCount">
           {{ 'office.coverage.field.insuredCount' | transloco
@@ -473,6 +451,39 @@
         <p class="warn">
           {{ 'office.coverage.warn.maybeSpecific' | transloco: { n: criteriaNow()?.sizeMin } }}
         </p>
+      }
+
+      <!-- 特定適用事業所 -->
+      <h3>{{ 'office.coverage.specificTitle' | transloco }}</h3>
+      <div class="field">
+        <div class="radio-group">
+          @for (c of specificChoices; track c) {
+            <label class="radio">
+              <input type="radio" [value]="c" formControlName="specific" />
+              {{ 'office.coverage.specific.' + c | transloco }}
+            </label>
+          }
+        </div>
+        @if (suggestSpecific(); as n) {
+          <p class="suggest">{{ 'office.coverage.suggestSpecific' | transloco: { n: n } }}</p>
+        }
+        <span class="hint">{{ 'office.coverage.hint.specific' | transloco }}</span>
+      </div>
+
+      @if (coverageValue().specific !== 'none') {
+        <div class="field since">
+          <label for="specificSince">{{ 'office.coverage.field.since' | transloco }}</label>
+          <input
+            id="specificSince"
+            class="input"
+            type="month"
+            formControlName="specificSince"
+            [class.is-invalid]="coverageErrorOf('specificSince')"
+          />
+          @if (coverageErrorOf('specificSince'); as e) {
+            <span class="field-error">{{ e | transloco }}</span>
+          }
+        </div>
       }
 
       <!-- 厚生年金基金 -->
@@ -569,6 +580,11 @@
         }
 
         <h3>{{ 'office.coverage.inKindTitle' | transloco }}</h3>
+        <label class="check">
+          <input type="checkbox" [checked]="openInKind()" [disabled]="readOnly" (change)="toggleInKind()" />
+          {{ 'office.open.inKind' | transloco }}
+        </label>
+        @if (openInKind()) {
         <div class="checks">
           <label class="check">
             <input type="checkbox" formControlName="housing" />
@@ -580,6 +596,7 @@
           </label>
         </div>
         <span class="hint">{{ 'office.coverage.hint.inKind' | transloco }}</span>
+        }
       </div>
 
       <h3>{{ 'office.section.premium' | transloco }}</h3>
@@ -620,6 +637,11 @@
         {{ 'office.section.filing' | transloco
         }}<span class="optional">{{ 'common.optional' | transloco }}</span>
       </h2>
+      <label class="check">
+        <input type="checkbox" [checked]="openFiling()" [disabled]="readOnly" (change)="openFiling.set(!openFiling())" />
+        {{ 'office.open.filing' | transloco }}
+      </label>
+      @if (openFiling()) {
       <p class="hint section-hint">{{ 'office.hint.filing' | transloco }}</p>
       <div class="grid">
         <div class="field">
@@ -664,6 +686,7 @@
           }
         </div>
       </div>
+      }
     </section>
 
     @if (!readOnly && pendingChanges(); as c) {
@@ -691,6 +714,11 @@
 
     @if (!readOnly) {
       <div class="actions save-bar">
+        @if (invalidCount() > 0) {
+          <button type="button" class="bar-error" role="alert" (click)="scrollToError()">
+            {{ 'office.form.invalid' | transloco: { n: invalidCount() } }}
+          </button>
+        }
         @if (isEdit) {
           <a class="btn" [routerLink]="['/o', office()?.id]">{{ 'common.back' | transloco }}</a>
         } @else {

@@ -1,5 +1,11 @@
 <a class="back" routerLink="..">← {{ 'employee.list.title' | transloco }}</a>
-<h1>{{ (isEdit ? 'employee.form.titleEdit' : 'employee.form.titleNew') | transloco }}</h1>
+<div class="title-row">
+  <h1>{{ (isEdit ? 'employee.form.titleEdit' : 'employee.form.titleNew') | transloco }}</h1>
+  <!-- 何人もまとめて入れるなら、ファイルから（11/12） -->
+  @if (!isEdit) {
+    <a class="btn" routerLink="../import">{{ 'employee.form.toImport' | transloco }}</a>
+  }
+</div>
 
 @if (errorKey(); as key) {
   <div class="alert alert-danger" role="alert">{{ key | transloco }}</div>
