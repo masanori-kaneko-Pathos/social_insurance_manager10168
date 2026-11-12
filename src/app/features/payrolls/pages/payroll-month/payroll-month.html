@@ -77,6 +77,15 @@
     />
   }
 
+  <!-- 探す・絞る・並べる・ページ（入れた値は、ページを移っても保存するまで残る） -->
+  <app-person-list-bar
+    [(options)]="listOptions"
+    [(page)]="page"
+    [total]="filtered().length"
+    [pages]="shown().pages"
+    entryKey="personList.entryState."
+  />
+
   <div class="card table-wrap">
     <!-- Enter・矢印キーで次のセルへ（表計算ソフトと同じ動き） -->
     <table appEnterNext="grid">
@@ -100,7 +109,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (v of views(); track v.employee.id) {
+        @for (v of shown().rows; track v.employee.id) {
           <tr [formGroup]="v.form" [class.has-error]="rowErrors().has(v.employee.id)">
             <td>
               <a
@@ -163,14 +172,18 @@
               <div class="days">
                 <input class="input num w-days" formControlName="days" inputmode="numeric" />
                 @if (context.isAdmin()) {
-                  <button
-                    type="button"
-                    class="btn btn-small"
-                    (click)="fillCandidate(v)"
-                    [title]="'payroll.candidateTitle' | transloco"
-                  >
-                    {{ 'payroll.candidate' | transloco: { days: candidate(v) } }}
-                  </button>
+                  @if (candidate(v) !== null) {
+                    <button
+                      type="button"
+                      class="btn btn-small"
+                      (click)="fillCandidate(v)"
+                      [title]="'payroll.candidateTitle' | transloco"
+                    >
+                      {{ 'payroll.candidate' | transloco: { days: candidate(v) } }}
+                    </button>
+                  } @else if (contractOf(v)) {
+                    <span class="sub" [title]="'payroll.workedDaysTitle' | transloco">{{ 'payroll.workedDays' | transloco }}</span>
+                  }
                 }
               </div>
             </td>

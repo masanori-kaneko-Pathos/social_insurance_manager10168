@@ -51,6 +51,7 @@ import { parseNat } from '../../../../shared/utils/number';
 import { FilingTaskInput } from '../../../../core/models/filing-task';
 import { hasOfficeChanges, OfficeChanges, officeChanges } from '../../logic/office-changes';
 import { DepartmentCard } from '../../components/department-card/department-card';
+import { PasswordGate } from '../../../my-number/components/password-gate/password-gate';
 import { ContractService } from '../../../employees/contract.service';
 import { EmployeeService } from '../../../employees/employee.service';
 import {
@@ -115,7 +116,7 @@ const emptyToNull = (v: string) => (v.trim() ? v.trim() : null);
 
 @Component({
   selector: 'app-office-form',
-  imports: [DepartmentCard, HalfWidthDigits, ReactiveFormsModule, RouterLink, TranslocoPipe, RateDialog],
+  imports: [DepartmentCard, HalfWidthDigits, PasswordGate, ReactiveFormsModule, RouterLink, TranslocoPipe, RateDialog],
   templateUrl: './office-form.html',
   styleUrl: './office-form.css',
 })
@@ -331,6 +332,40 @@ export class OfficeForm {
   readonly openGroup = signal(false);
   readonly openInKind = signal(false);
   readonly openFiling = signal(false);
+
+  // ===== 事業所の削除（代表だけ。名前を打ち込み、パスワードを入れ直してから。11/12） =====
+  readonly isOwner = computed(() => {
+    const o = this.office();
+    const uid = this.auth.user()?.uid;
+    if (!o || !uid) return false;
+    return (o.ownerUid && o.memberUids.includes(o.ownerUid) ? o.ownerUid : o.memberUids[0]) === uid;
+  });
+  readonly deleteOpen = signal(false);
+  readonly deleteName = signal('');
+  readonly deleting = signal(false);
+  readonly deleteError = signal<string | null>(null);
+  readonly deleteNameOk = computed(() => this.deleteName().trim() === (this.office()?.name ?? '').trim());
+
+  async deleteOffice(): Promise<void> {
+    const o = this.office();
+    const uid = this.auth.user()?.uid;
+    if (!o || !uid || !this.deleteNameOk() || this.deleting()) return;
+    this.deleting.set(true);
+    this.deleteError.set(null);
+    try {
+      await this.offices.deleteOffice(o.id, this.deleteName().trim());
+      await this.profiles.load(uid);
+      await this.context.refresh(uid);
+      this.toast.show('office.delete.done');
+      await this.router.navigateByUrl('/');
+    } catch (err) {
+      console.error(err);
+      const r = (err as { details?: { reason?: string } })?.details?.reason;
+      this.deleteError.set(`office.delete.error.${r ?? 'unknown'}`);
+    } finally {
+      this.deleting.set(false);
+    }
+  }
 
   /** 「登録する」を押して、足りない項目があった（下の帯にも件数を出す） */
   readonly submitTried = signal(false);

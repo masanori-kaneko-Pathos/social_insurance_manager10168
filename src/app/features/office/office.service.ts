@@ -9,7 +9,9 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
-import { db } from '../../core/firebase';
+import { db, functions } from '../../core/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { forgetAll } from '../../core/data-cache';
 import { FilingTaskInput } from '../../core/models/filing-task';
 import { insurerHistoryOf, premiumOf } from './office-settings';
 import {
@@ -116,6 +118,15 @@ export class OfficeService {
   }
 
   /** 1件読む（メンバーでなければルールで拒否される） */
+  /**
+   * 事業所を削除する（代表だけ。関数 siDeleteOffice。呼ぶ前にパスワードで確かめ直す）
+   * 中身は全部消え、元に戻せない。覚えておいた一覧も全部忘れる
+   */
+  async deleteOffice(officeId: string, confirmName: string): Promise<void> {
+    await httpsCallable(functions, 'siDeleteOffice', { timeout: 540_000 })({ officeId, confirmName });
+    forgetAll();
+  }
+
   async get(officeId: string): Promise<Office | null> {
     const snap = await countedGetDoc(doc(db, 'offices', officeId));
     return snap.exists() ? { id: snap.id, ...(snap.data() as OfficeDoc) } : null;

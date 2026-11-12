@@ -739,6 +739,33 @@
   @if (isEdit) {
     <app-department-card />
   }
+
+  <!-- 事業所の削除（代表だけ。元に戻せない） -->
+  @if (isEdit && isOwner()) {
+    <section class="card danger-zone">
+      <h2>{{ 'office.delete.title' | transloco }}</h2>
+      <p class="hint">{{ 'office.delete.lead' | transloco }}</p>
+      @if (!deleteOpen()) {
+        <button type="button" class="btn danger" (click)="deleteOpen.set(true)">{{ 'office.delete.open' | transloco }}</button>
+      } @else {
+        <div class="field">
+          <label for="deleteName">{{ 'office.delete.typeName' | transloco: { name: office()?.name } }}</label>
+          <input id="deleteName" class="input" autocomplete="off" [value]="deleteName()" (input)="deleteName.set($any($event.target).value)" />
+        </div>
+        @if (deleteNameOk()) {
+          <app-password-gate action="office.delete.confirm" (confirmed)="deleteOffice()" (cancelled)="deleteOpen.set(false)" />
+        } @else {
+          <button type="button" class="btn" (click)="deleteOpen.set(false)">{{ 'common.cancel' | transloco }}</button>
+        }
+        @if (deleting()) {
+          <p class="muted">{{ 'office.delete.deleting' | transloco }}</p>
+        }
+        @if (deleteError(); as e) {
+          <p class="field-error" role="alert">{{ e | transloco }}</p>
+        }
+      }
+    </section>
+  }
   @if (rateTarget(); as t) {
     <app-rate-dialog [target]="t" [canEdit]="!readOnly" (closed)="rateTarget.set(null)" />
   }

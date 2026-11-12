@@ -29,6 +29,11 @@ import { formatMilli } from '../../logic/rounding';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { EnterNext } from '../../../../shared/directives/enter-next';
+import { PersonListBar } from '../../../../shared/components/person-list-bar/person-list-bar';
+import { defaultListOptions, filterAndSort, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
+import { ContractDoc } from '../../../../core/models/contract';
+import { ContractService } from '../../../employees/contract.service';
+import { contractAt } from '../../../employees/logic/contract-form-model';
 const DATE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 /** 新規の支給を計算の中で区別するための仮の ID */
 const NEW_ID = '__new__';
@@ -41,7 +46,7 @@ interface FormRow extends BonusRow {
 
 @Component({
   selector: 'app-bonus-form',
-  imports: [EnterNext, HalfWidthDigits, RouterLink, TranslocoPipe],
+  imports: [EnterNext, HalfWidthDigits, PersonListBar, RouterLink, TranslocoPipe],
   templateUrl: './bonus-form.html',
   styleUrl: './bonus-form.css',
 })
@@ -143,6 +148,32 @@ export class BonusForm {
       .map((employee) => ({ employee, ...buildBonusRow(employee, payments, date, ctx) }));
   });
 
+  // ===== 探す・絞る・並べる・ページ（だれに払うかを探せるように。11/12） =====
+  private readonly contractsApi = inject(ContractService);
+  readonly listOptions = signal<PersonListOptions>(defaultListOptions());
+  readonly page = signal(1);
+  private readonly contracts = signal<ReadonlyMap<string, ContractDoc[]>>(new Map());
+
+  private contractOf(r: FormRow): ContractDoc | null {
+    const list = this.contracts().get(r.employee.id);
+    return list && this.dateOk() ? contractAt(list, this.paidDate()) : null;
+  }
+
+  readonly filtered = computed(() =>
+    filterAndSort(
+      this.rows(),
+      this.listOptions(),
+      (r) => r.employee,
+      (r) => this.contractOf(r),
+      // 保存済みの額で分ける（打っている途中の行が、目の前から消えないように）
+      (r) => this.savedIds().has(r.employee.id),
+    ),
+  );
+  readonly shown = computed(() => pageOf(this.filtered(), this.page()));
+  private readonly savedIds = computed(
+    () => new Set(Object.keys(this.payments().find((p) => p.id === this.bonusId)?.amounts ?? {})),
+  );
+
   readonly hiddenCount = computed(() =>
     this.dateOk() ? this.employees().length - this.rows().length : 0,
   );
@@ -174,6 +205,10 @@ export class BonusForm {
       this.employees.set(employees);
       this.payments.set(payments);
       this.tables.set(tables);
+      // 契約は絞り込みにだけ使う（読めなくても入力はできる。覚えておいた分は読まない）
+      Promise.all(employees.map((e) => this.contractsApi.list(office.id, e.id)))
+        .then((lists) => this.contracts.set(new Map(employees.map((e, i) => [e.id, lists[i]]))))
+        .catch((err) => console.error(err));
 
       if (this.bonusId) {
         const p = payments.find((x) => x.id === this.bonusId);

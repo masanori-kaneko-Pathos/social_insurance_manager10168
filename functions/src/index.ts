@@ -225,5 +225,46 @@ export const siDeleteAccount = onCall({ region: REGION }, async (req) => {
   return { ok: true };
 });
 
+/**
+ * 事業所を削除する（11/12）。代表だけ。事業所の名前を打ち込み、5分以内にパスワードを入れ直していること
+ * - 事業所の下のものは全部消す（従業員・契約・給与・届出・依頼・マイナンバーの金庫・記録まで）。元に戻せない
+ * - この事業所の従業員のアカウント（マイページ）も消す（ほかの事業所には入れないアカウントのため）
+ * - この事業所を開いていたメンバーは、開く事業所を空にする（次にログインすると、事業所を選ぶ画面になる）
+ * data: { officeId, confirmName }
+ */
+export const siDeleteOffice = onCall({ region: REGION, timeoutSeconds: 540 }, async (req) => {
+  const uid = needUid(req.auth);
+  const officeId = idArg(req.data?.officeId);
+  const confirmName = typeof req.data?.confirmName === 'string' ? req.data.confirmName.trim() : '';
+  const authTime = req.auth?.token?.auth_time as number | undefined;
+  if (typeof authTime !== 'number' || Math.floor(Date.now() / 1000) - authTime > 5 * 60) fail('permission-denied', 'reauth');
+
+  const officeRef = db.doc(`offices/${officeId}`);
+  const office = await officeRef.get();
+  if (!office.exists) fail('not-found', 'notFound');
+  const data = office.data() as OfficeData & { name?: string };
+  if (ownerOf(data) !== uid) fail('permission-denied', 'notOwner');
+  if (!confirmName || confirmName !== (data.name ?? '').trim()) fail('invalid-argument', 'nameMismatch');
+
+  // 従業員のアカウント（マイページ）と、この事業所を開いていたメンバー
+  const [employeeUsers, openingUsers] = await Promise.all([
+    db.collection('users').where('employeeRef.officeId', '==', officeId).get(),
+    db.collection('users').where('currentOfficeId', '==', officeId).get(),
+  ]);
+
+  // 中身を全部消す（下のコレクションまで）
+  await db.recursiveDelete(officeRef);
+
+  const batch = db.batch();
+  for (const u of employeeUsers.docs) batch.delete(u.ref);
+  for (const u of openingUsers.docs) {
+    if (u.get('employeeRef.officeId') !== officeId) batch.update(u.ref, { currentOfficeId: null });
+  }
+  await batch.commit();
+  const employeeUids = employeeUsers.docs.map((u) => u.id);
+  for (let i = 0; i < employeeUids.length; i += 1000) await getAuth().deleteUsers(employeeUids.slice(i, i + 1000));
+  return { ok: true };
+});
+
 // マイナンバー（暗号化して保管。読み書きは mynumber.ts の関数だけ）
 export { siMyNumberAdmin, siMyNumberExport, siMyNumberImport, siMyNumberSubmit, siMyNumberView } from './mynumber.js';

@@ -83,6 +83,15 @@
       </div>
     }
 
+    <!-- 探す・絞る・並べる・ページ（入れた額は、ページを移っても保存するまで残る。合計は全員分） -->
+    <app-person-list-bar
+      [(options)]="listOptions"
+      [(page)]="page"
+      [total]="filtered().length"
+      [pages]="shown().pages"
+      entryKey="personList.bonusState."
+    />
+
     <!-- 1行1人 -->
     <div class="card table-wrap">
       <table appEnterNext="grid">
@@ -103,7 +112,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (r of rows(); track r.employee.id) {
+          @for (r of shown().rows; track r.employee.id) {
             <tr [class.problem]="r.state === 'missing' || r.state === 'error'">
               <td class="mono">{{ r.employee.employeeNumber ?? '—' }}</td>
               <td>

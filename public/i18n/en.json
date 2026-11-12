@@ -950,6 +950,22 @@
     },
     "part": {
       "insurance": "Social insurance settings"
+    },
+    "delete": {
+      "title": "Delete this office",
+      "lead": "Deletes this office and all its data (employees, contracts, payroll, premiums, filings, requests, My Numbers, change history). Employee My Page accounts are also deleted. This cannot be undone. Social insurance records have retention periods (such as 2 years), so export anything you need first. Only the owner can delete.",
+      "open": "Start deletion",
+      "typeName": "To confirm, type the office name \"{{name}}\" exactly",
+      "confirm": "Delete permanently",
+      "deleting": "Deleting… (this may take a few minutes for large offices)",
+      "done": "The office has been deleted.",
+      "error": {
+        "reauth": "Too much time has passed since you confirmed. Enter your password again.",
+        "notOwner": "Only the owner can delete the office.",
+        "nameMismatch": "The office name does not match.",
+        "notFound": "Office not found.",
+        "unknown": "Could not delete. Please try again later."
+      }
     }
   },
   "remuneration": {
@@ -1333,7 +1349,7 @@
     "readonly": "View only. Only administrators can enter records.",
     "showAll": "Show more columns",
     "showBasic": "Amount paid in money only",
-    "fillEmptyDays": "Fill empty days with suggestions",
+    "fillEmptyDays": "Fill empty days for salaried employees",
     "candidate": "Use {{days}}",
     "candidateTitle": "Calendar days employed minus days absent (for monthly salary)",
     "save": "Save",
@@ -1407,7 +1423,9 @@
     "inKindMerged": "Not itemized",
     "inKindMergedTitle": "The payroll software included in-kind remuneration in the pay amount, so there is no separate figure. The total is still calculated correctly.",
     "splitInKind": "Enter separately",
-    "monthPick": "Paid {{y}}-{{m}}"
+    "monthPick": "Paid {{y}}-{{m}}",
+    "workedDays": "Enter days worked",
+    "workedDaysTitle": "For hourly or daily pay, base days are the days actually worked, including paid leave."
   },
   "regular": {
     "title": "Annual SMR determination {{year}} (定時決定, teiji kettei)",
@@ -3569,6 +3587,34 @@
         "lead": "Your company has asked for your family member's My Number. Check the number and identity with their Individual Number Card or similar, then enter the number.",
         "docHint": "You (the insured person) verify your family member's identity. For a spouse, only when the company has delegated this to you."
       }
+    }
+  },
+  "personList": {
+    "search": "Search by name, kana or employee number",
+    "employment": "Employment type",
+    "payType": "Pay type",
+    "entry": "Entry status",
+    "sort": "Sort",
+    "allEmployment": "All employment types",
+    "allPayType": "All pay types",
+    "entryState": {
+      "all": "All",
+      "empty": "Not entered yet",
+      "filled": "Entered"
+    },
+    "sortBy": {
+      "kana": "By kana",
+      "number": "By employee number",
+      "hire": "By hire date"
+    },
+    "count": "{{n}} people",
+    "page": "Page {{page}} of {{pages}}",
+    "prev": "Previous page",
+    "next": "Next page",
+    "bonusState": {
+      "all": "All",
+      "empty": "No amount yet",
+      "filled": "Amount entered"
     }
   }
 }

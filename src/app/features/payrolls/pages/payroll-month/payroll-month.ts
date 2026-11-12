@@ -35,6 +35,9 @@ import { PayrollChange, PayrollService } from '../../payroll.service';
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { InKindCalculator } from '../../components/in-kind-calculator/in-kind-calculator';
 import { EnterNext } from '../../../../shared/directives/enter-next';
+import { PersonListBar } from '../../../../shared/components/person-list-bar/person-list-bar';
+import { defaultListOptions, filterAndSort, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
+import { ContractDoc } from '../../../../core/models/contract';
 type RowForm = FormGroup<{
   cash: FormControl<string>;
   fixed: FormControl<string>;
@@ -59,7 +62,7 @@ const MONTH_RE = /^[0-9]{4}-(0[1-9]|1[0-2])$/;
 
 @Component({
   selector: 'app-payroll-month',
-  imports: [EnterNext, HalfWidthDigits, InKindCalculator, MonthPicker, RouterLink, TranslocoPipe, ReactiveFormsModule],
+  imports: [EnterNext, HalfWidthDigits, InKindCalculator, MonthPicker, PersonListBar, RouterLink, TranslocoPipe, ReactiveFormsModule],
   templateUrl: './payroll-month.html',
   styleUrl: './payroll-month.css',
 })
@@ -144,6 +147,39 @@ export class PayrollMonth {
     this.inKindFor.set(null);
   }
 
+  // ===== 探す・絞る・並べる・ページ（1000人を縦に並べない。11/12） =====
+  readonly listOptions = signal<PersonListOptions>(defaultListOptions());
+  readonly page = signal(1);
+  /** 従業員ごとの契約（雇用形態・給与の形で絞る・日数の候補に使う。覚えておいた分は読まない） */
+  readonly contracts = signal<ReadonlyMap<string, ContractDoc[]>>(new Map());
+
+  /** その期間の終わりに効いている契約 */
+  contractOf(v: ViewRow): ContractDoc | null {
+    const end = this.period()?.end;
+    const list = this.contracts().get(v.employee.id);
+    return end && list ? contractAt(list, end) : null;
+  }
+
+  readonly filtered = computed(() =>
+    filterAndSort(
+      this.views(),
+      this.listOptions(),
+      (v) => v.employee,
+      (v) => this.contractOf(v),
+      (v) => !!v.row.saved,
+    ),
+  );
+  readonly shown = computed(() => pageOf(this.filtered(), this.page()));
+
+  private async loadContracts(officeId: string, employees: readonly Employee[]): Promise<void> {
+    try {
+      const lists = await Promise.all(employees.map((e) => this.contractsApi.list(officeId, e.id)));
+      this.contracts.set(new Map(employees.map((e, i) => [e.id, lists[i]])));
+    } catch (err) {
+      console.error(err); // 読めなくても入力はできる（絞り込みと日数の候補が出ないだけ）
+    }
+  }
+
   constructor() {
     this.route.paramMap
       .pipe(takeUntilDestroyed(inject(DestroyRef)))
@@ -181,6 +217,8 @@ export class PayrollMonth {
       });
       this.period.set(period);
       this.views.set(views);
+      this.page.set(1);
+      void this.loadContracts(office.id, employees);
     } catch (err) {
       console.error(err);
       this.errorKey.set('payroll.error.load');
@@ -215,13 +253,20 @@ export class PayrollMonth {
     const t = totalOf(v.form.controls.cash.value, v.form.controls.inKind.value);
     return t === null ? '—' : t.toLocaleString('ja-JP');
   }
-  /** 日数の候補（在籍していた暦日数 − 欠勤日数） */
-  candidate(v: ViewRow): number {
+  /**
+   * 支払基礎日数の候補（11/12：給与の形で分ける）
+   * - 月給・日給月給：在籍していた暦日数 − 欠勤日数
+   * - 時給・日給：候補は出さない（実際に働いた日数 ＋ 有給の日数を入れる）。契約が分からないときも出さない
+   */
+  candidate(v: ViewRow): number | null {
+    const pay = this.contractOf(v)?.payType;
+    if (pay !== 'monthly' && pay !== 'dailyMonthly') return null;
     return candidateDays(v.row.suggestedDays, v.form.controls.absentDays.value);
   }
 
   fillCandidate(v: ViewRow): void {
-    v.form.controls.days.setValue(String(this.candidate(v)));
+    const c = this.candidate(v);
+    if (c !== null) v.form.controls.days.setValue(String(c));
   }
 
   /** 日数が空欄の行に、まとめて候補を入れる */
