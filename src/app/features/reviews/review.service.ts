@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { deleteDoc, doc, getDoc, serverTimestamp, setDoc, Timestamp, updateDoc } from 'firebase/firestore';
+import { deleteDoc, doc, serverTimestamp, setDoc, Timestamp, updateDoc } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { auth, db } from '../../core/firebase';
 import { UserProfileService } from '../../core/auth/user-profile.service';
 
@@ -31,7 +32,7 @@ export class ReviewService {
   }
 
   async get(officeId: string, id: string): Promise<Review | null> {
-    const snap = await getDoc(this.ref(officeId, id));
+    const snap = await countedGetDoc(this.ref(officeId, id));
     return snap.exists() ? (snap.data() as Review) : null;
   }
 

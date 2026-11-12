@@ -1,10 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
 import { ThemeService } from './core/theme/theme.service';
 import { RouterOutlet } from '@angular/router';
+import { ReadMeter } from './shared/components/read-meter/read-meter';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [ReadMeter, RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

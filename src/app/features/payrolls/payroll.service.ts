@@ -3,12 +3,12 @@ import {
   collection,
   collectionGroup,
   doc,
-  getDocs,
   query,
   serverTimestamp,
   where,
   writeBatch,
 } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { db } from '../../core/firebase';
 import { Payroll, PayrollInput } from '../../core/models/payroll';
 import { HistoryService } from '../employees/history.service';
@@ -73,7 +73,7 @@ export class PayrollService {
 
   /** 1人の全部（新しい順） */
   async listOfEmployee(officeId: string, employeeId: string): Promise<Payroll[]> {
-    const snap = await getDocs(this.col(officeId, employeeId));
+    const snap = await countedGetDocs(this.col(officeId, employeeId));
     return snap.docs
       .map((d) => this.strip(d.data()))
       .sort((a, b) => b.paidMonth.localeCompare(a.paidMonth));
@@ -86,7 +86,7 @@ export class PayrollService {
    */
   async listOfOffice(officeId: string, employeeIds: readonly string[]): Promise<Payroll[]> {
     const ids = new Set(employeeIds);
-    const snap = await getDocs(query(collectionGroup(db, 'payrolls'), where('officeId', '==', officeId)));
+    const snap = await countedGetDocs(query(collectionGroup(db, 'payrolls'), where('officeId', '==', officeId)));
     return snap.docs.map((d) => this.strip(d.data())).filter((p) => ids.has(p.employeeId));
   }
 
@@ -100,7 +100,7 @@ export class PayrollService {
     paidMonth: string,
   ): Promise<Map<string, Payroll>> {
     const ids = new Set(employeeIds);
-    const snap = await getDocs(
+    const snap = await countedGetDocs(
       query(collectionGroup(db, 'payrolls'), where('officeId', '==', officeId), where('paidMonth', '==', paidMonth)),
     );
     const map = new Map<string, Payroll>();

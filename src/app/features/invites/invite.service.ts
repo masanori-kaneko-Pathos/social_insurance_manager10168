@@ -4,8 +4,6 @@ import {
   collection,
   deleteDoc,
   doc,
-  getDoc,
-  getDocs,
   query,
   serverTimestamp,
   setDoc,
@@ -13,6 +11,7 @@ import {
   where,
   writeBatch,
 } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { auth, db } from '../../core/firebase';
 import { Lang } from '../../core/i18n/language.service';
 import { Invite, InviteDoc } from '../../core/models/office-records';
@@ -96,13 +95,13 @@ export class InviteService {
 
   /** 管理者：従業員への招待を全部（一覧で状態を出すため。1回の問い合わせ） */
   async listEmployeeInvites(officeId: string): Promise<Invite[]> {
-    const snap = await getDocs(query(this.col(officeId), where('kind', '==', 'employee')));
+    const snap = await countedGetDocs(query(this.col(officeId), where('kind', '==', 'employee')));
     return snap.docs.map((d) => d.data() as InviteDoc);
   }
 
   /** 管理者：その従業員への招待（新しい順） */
   async listFor(officeId: string, employeeId: string): Promise<Invite[]> {
-    const snap = await getDocs(
+    const snap = await countedGetDocs(
       query(this.col(officeId), where('kind', '==', 'employee'), where('employeeId', '==', employeeId)),
     );
     return snap.docs
@@ -117,7 +116,7 @@ export class InviteService {
 
   /** コードで1件読む（なければ null） */
   async get(officeId: string, code: string): Promise<Invite | null> {
-    const snap = await getDoc(doc(this.col(officeId), code));
+    const snap = await countedGetDoc(doc(this.col(officeId), code));
     return snap.exists() ? (snap.data() as InviteDoc) : null;
   }
 

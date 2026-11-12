@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { collection, deleteDoc, doc, getDocs, query, serverTimestamp, setDoc, Timestamp, where } from 'firebase/firestore';
+import { collection, deleteDoc, doc, query, serverTimestamp, setDoc, Timestamp, where } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { httpsCallable } from 'firebase/functions';
 import { auth, db, functions } from '../../core/firebase';
 import { OfficeRole } from '../../core/models/office';
@@ -72,7 +73,7 @@ export class MemberService {
 
   /** 管理者：まだ使われていない、期限内のメンバーの招待（新しい順） */
   async pendingInvites(officeId: string): Promise<Invite[]> {
-    const snap = await getDocs(query(this.col(officeId), where('kind', '==', 'member')));
+    const snap = await countedGetDocs(query(this.col(officeId), where('kind', '==', 'member')));
     const now = Date.now();
     return snap.docs
       .map((d) => d.data() as InviteDoc)

@@ -2,14 +2,13 @@ import { Injectable } from '@angular/core';
 import {
   collection,
   doc,
-  getDoc,
-  getDocs,
   query,
   serverTimestamp,
   setDoc,
   where,
   writeBatch,
 } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { db } from '../../core/firebase';
 import { FilingTaskInput } from '../../core/models/filing-task';
 import { insurerHistoryOf, premiumOf } from './office-settings';
@@ -77,7 +76,7 @@ export class OfficeService {
 
   /** 従業員向けの写し（マイページ。なければ null） */
   async getForEmployees(officeId: string): Promise<(OfficeForEmployeesDoc & { id: string }) | null> {
-    const snap = await getDoc(this.sharedRef(officeId));
+    const snap = await countedGetDoc(this.sharedRef(officeId));
     return snap.exists() ? { id: officeId, ...(snap.data() as OfficeForEmployeesDoc) } : null;
   }
 
@@ -112,13 +111,13 @@ export class OfficeService {
   /** 自分が所属している事業所の一覧 */
   async listMine(uid: string): Promise<Office[]> {
     const q = query(collection(db, 'offices'), where('memberUids', 'array-contains', uid));
-    const snap = await getDocs(q);
+    const snap = await countedGetDocs(q);
     return snap.docs.map((d) => ({ id: d.id, ...(d.data() as OfficeDoc) }));
   }
 
   /** 1件読む（メンバーでなければルールで拒否される） */
   async get(officeId: string): Promise<Office | null> {
-    const snap = await getDoc(doc(db, 'offices', officeId));
+    const snap = await countedGetDoc(doc(db, 'offices', officeId));
     return snap.exists() ? { id: snap.id, ...(snap.data() as OfficeDoc) } : null;
   }
 

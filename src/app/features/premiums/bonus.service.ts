@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { collection, doc, getDoc, getDocs, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { HistoryService } from '../employees/history.service';
 import { bonusChanges } from '../employees/logic/history';
 import { db } from '../../core/firebase';
@@ -16,7 +17,7 @@ export class BonusService {
 
   /** 新しい順（年度の累計を出すため、いつも全件を読む。1事業所で年に数件なので軽い） */
   async list(officeId: string): Promise<BonusPayment[]> {
-    const snap = await getDocs(this.col(officeId));
+    const snap = await countedGetDocs(this.col(officeId));
     return snap.docs
       .map((d) => ({ id: d.id, ...(d.data() as BonusPaymentDoc) }))
       .sort((a, b) => b.paidDate.localeCompare(a.paidDate));
@@ -49,7 +50,7 @@ export class BonusService {
     data: Partial<BonusPaymentDoc> = {},
   ): Promise<void> {
     const ref = doc(this.col(officeId), id);
-    const snap = await getDoc(ref);
+    const snap = await countedGetDoc(ref);
     const before = snap.exists() ? (snap.data() as BonusPaymentDoc) : null;
     const after = op === 'delete' ? null : { ...(before ?? {}), ...data };
     const paidDate = (after?.paidDate ?? before?.paidDate ?? id) as string;

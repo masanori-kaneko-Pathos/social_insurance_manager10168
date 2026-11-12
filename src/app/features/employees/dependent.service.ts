@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { collection, doc, getDocs } from 'firebase/firestore';
+import { collection, doc } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { HistoryService } from './history.service';
 import { db } from '../../core/firebase';
 import { Dependent, DependentDoc, DependentInput } from '../../core/models/dependent';
@@ -14,7 +15,7 @@ export class DependentService {
   }
 
   async list(officeId: string, employeeId: string): Promise<Dependent[]> {
-    const snap = await getDocs(this.col(officeId, employeeId));
+    const snap = await countedGetDocs(this.col(officeId, employeeId));
     return snap.docs.map((d) => ({ id: d.id, ...(d.data() as DependentDoc) }));
   }
 

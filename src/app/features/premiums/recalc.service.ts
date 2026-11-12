@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { addDoc, collection, deleteDoc, doc, getDocs, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { auth, db } from '../../core/firebase';
 import { Recalc, RecalcDoc } from '../../core/models/employee-records';
 
@@ -12,7 +13,7 @@ export class RecalcService {
 
   /** 新しい順 */
   async list(officeId: string, employeeId: string): Promise<Recalc[]> {
-    const snap = await getDocs(this.col(officeId, employeeId));
+    const snap = await countedGetDocs(this.col(officeId, employeeId));
     return snap.docs
       .map((d) => ({ id: d.id, ...(d.data() as RecalcDoc) }))
       .sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));

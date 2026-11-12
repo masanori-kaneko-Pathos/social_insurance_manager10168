@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { User } from 'firebase/auth';
-import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { db } from '../firebase';
 import { Lang } from '../i18n/language.service';
 import { AppUser, AppUserDoc } from '../models/app-user';
@@ -31,7 +32,7 @@ export class UserProfileService {
 
   /** 読み込んで保持する。存在しなければ null */
   async load(uid: string): Promise<AppUser | null> {
-    const snap = await getDoc(this.ref(uid));
+    const snap = await countedGetDoc(this.ref(uid));
     const profile = snap.exists() ? { uid, ...(snap.data() as AppUserDoc) } : null;
     this._profile.set(profile);
     return profile;

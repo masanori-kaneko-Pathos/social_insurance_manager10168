@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { collection, doc, getDocs } from 'firebase/firestore';
+import { collection, doc } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { HistoryService } from './history.service';
 import { db } from '../../core/firebase';
 import { ContractDoc, ContractInput } from '../../core/models/contract';
@@ -15,7 +16,7 @@ export class ContractService {
 
   /** 新しい順 */
   async list(officeId: string, employeeId: string): Promise<ContractDoc[]> {
-    const snap = await getDocs(this.col(officeId, employeeId));
+    const snap = await countedGetDocs(this.col(officeId, employeeId));
     return snap.docs
       .map((d) => d.data() as ContractDoc)
       .sort((a, b) => b.from.localeCompare(a.from));

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { db } from '../../core/firebase';
 import { InKindDoc } from '../../core/models/master';
 
@@ -10,7 +11,7 @@ export class InKindService {
 
   list(): Promise<InKindDoc[]> {
     if (!this.cache) {
-      this.cache = getDocs(collection(db, 'masterInKind'))
+      this.cache = countedGetDocs(collection(db, 'masterInKind'))
         .then((snap) => snap.docs.map((d) => d.data() as InKindDoc))
         .catch((err) => {
           this.cache = null; // 失敗したら次回は読み直す

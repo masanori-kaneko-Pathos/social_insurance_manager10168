@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { auth, db } from '../../core/firebase';
 import { PremiumNotice, PremiumNoticeDoc } from '../../core/models/premium-notice';
 
@@ -12,7 +13,7 @@ export class PremiumNoticeService {
 
   /** その月の記録（なければ null） */
   async get(officeId: string, month: string): Promise<PremiumNotice | null> {
-    const snap = await getDoc(this.ref(officeId, month));
+    const snap = await countedGetDoc(this.ref(officeId, month));
     if (!snap.exists()) return null;
     const { createdAt: _c, updatedAt: _u, ...rest } = snap.data() as PremiumNoticeDoc;
     return rest;

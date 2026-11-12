@@ -4,14 +4,13 @@ import {
   deleteDoc,
   doc,
   getCountFromServer,
-  getDoc,
-  getDocs,
   query,
   serverTimestamp,
   updateDoc,
   where,
   writeBatch,
 } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { auth, db } from '../../core/firebase';
 import { EmployeePrivate, emptyPrivate, legacyPrivate } from '../../core/models/employee';
 import {
@@ -71,13 +70,13 @@ export class RequestService {
 
   /** 管理者：事業所のすべて */
   async listAll(officeId: string): Promise<EmployeeRequest[]> {
-    const snap = await getDocs(this.col(officeId));
+    const snap = await countedGetDocs(this.col(officeId));
     return snap.docs.map((d) => ({ id: d.id, ...(d.data() as RequestDoc) }));
   }
 
   /** 1人分（管理者も、従業員本人も。ルールが通すのは employeeId で絞った検索だけ） */
   async listFor(officeId: string, employeeId: string): Promise<EmployeeRequest[]> {
-    const snap = await getDocs(query(this.col(officeId), where('employeeId', '==', employeeId)));
+    const snap = await countedGetDocs(query(this.col(officeId), where('employeeId', '==', employeeId)));
     return snap.docs.map((d) => ({ id: d.id, ...(d.data() as RequestDoc) }));
   }
 
@@ -88,13 +87,13 @@ export class RequestService {
   }
 
   async get(officeId: string, id: string): Promise<EmployeeRequest | null> {
-    const snap = await getDoc(doc(this.col(officeId), id));
+    const snap = await countedGetDoc(doc(this.col(officeId), id));
     return snap.exists() ? { id: snap.id, ...(snap.data() as RequestDoc) } : null;
   }
 
   /** 受信箱（1人分・新しい順） */
   async inboxFor(officeId: string, employeeId: string): Promise<InboxNotification[]> {
-    const snap = await getDocs(query(this.inbox(officeId), where('employeeId', '==', employeeId)));
+    const snap = await countedGetDocs(query(this.inbox(officeId), where('employeeId', '==', employeeId)));
     return snap.docs
       .map((d) => ({ id: d.id, ...(d.data() as NotificationDoc) }))
       .sort((a, b) => (b.createdAt?.toMillis() ?? 0) - (a.createdAt?.toMillis() ?? 0));
@@ -138,7 +137,7 @@ export class RequestService {
     // 書き込む先は鍵付きの文書（連絡先・通勤・口座）。まだなければ、従業員の文書に残っている古い項目から始める
     const empRef = doc(db, 'offices', officeId, 'employees', r.employeeId);
     const privRef = doc(empRef, 'details', 'private');
-    const [empSnap, privSnap] = await Promise.all([getDoc(empRef), getDoc(privRef)]);
+    const [empSnap, privSnap] = await Promise.all([countedGetDoc(empRef), countedGetDoc(privRef)]);
     if (!empSnap.exists()) throw new Error('employee not found');
     const before: EmployeePrivate = privSnap.exists()
       ? (privSnap.data() as EmployeePrivate)

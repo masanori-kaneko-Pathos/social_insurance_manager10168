@@ -3,11 +3,11 @@ import {
   collection,
   deleteDoc,
   doc,
-  getDocs,
   serverTimestamp,
   setDoc,
   updateDoc,
 } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { db } from '../../core/firebase';
 import {
   GradeTableDoc,
@@ -25,7 +25,7 @@ export class RateService {
   /** 料率マスタ（協会けんぽ・全国一律） */
   master(): Promise<MasterRateDoc[]> {
     if (!this.masterCache) {
-      this.masterCache = getDocs(collection(db, 'masterRates'))
+      this.masterCache = countedGetDocs(collection(db, 'masterRates'))
         .then((snap) => snap.docs.map((d) => d.data() as MasterRateDoc))
         .catch((err) => {
           this.masterCache = null; // 失敗したら次回は読み直す
@@ -40,7 +40,7 @@ export class RateService {
   /** 標準報酬月額の等級表（健保・厚年。全事業所共通なので使い回す） */
   grades(): Promise<GradeTableDoc[]> {
     if (!this.gradesCache) {
-      this.gradesCache = getDocs(collection(db, 'masterGrades'))
+      this.gradesCache = countedGetDocs(collection(db, 'masterGrades'))
         .then((snap) => snap.docs.map((d) => d.data() as GradeTableDoc))
         .catch((err) => {
           this.gradesCache = null;
@@ -56,7 +56,7 @@ export class RateService {
 
   /** 組合健保の料率（新しい順） */
   async kumiaiList(officeId: string): Promise<KumiaiRateDoc[]> {
-    const snap = await getDocs(this.kumiaiCol(officeId));
+    const snap = await countedGetDocs(this.kumiaiCol(officeId));
     return snap.docs
       .map((d) => d.data() as KumiaiRateDoc)
       .sort((a, b) => b.from.localeCompare(a.from));

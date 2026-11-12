@@ -2,13 +2,13 @@ import { Injectable } from '@angular/core';
 import {
   collection,
   doc,
-  getDocs,
   query,
   serverTimestamp,
   updateDoc,
   where,
   WriteBatch,
 } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { db } from '../../core/firebase';
 import { FilingTask, FilingTaskDoc, FilingTaskInput } from '../../core/models/filing-task';
 
@@ -21,7 +21,7 @@ export class FilingTaskService {
 
   /** まだの宿題（To-do に出す）。事業所ごとに1回の問い合わせ */
   async listOpen(officeId: string): Promise<FilingTask[]> {
-    const snap = await getDocs(query(this.ref(officeId), where('status', '==', 'open')));
+    const snap = await countedGetDocs(query(this.ref(officeId), where('status', '==', 'open')));
     return snap.docs.map((d) => ({ id: d.id, ...(d.data() as FilingTaskDoc) }));
   }
 

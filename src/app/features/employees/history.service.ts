@@ -3,8 +3,6 @@ import {
   collection,
   doc,
   DocumentReference,
-  getDoc,
-  getDocs,
   limit,
   orderBy,
   query,
@@ -12,6 +10,7 @@ import {
   WriteBatch,
   writeBatch,
 } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { auth, db } from '../../core/firebase';
 import { ChangeHistory, HistoryDoc } from '../../core/models/employee-records';
 import { changesOf, FieldChange } from './logic/history';
@@ -71,7 +70,7 @@ export class HistoryService {
     op: WriteOp,
     data: Record<string, unknown> = {},
   ): Promise<void> {
-    const snap = await getDoc(ref);
+    const snap = await countedGetDoc(ref);
     const before = snap.exists() ? (snap.data() as Record<string, unknown>) : null;
     const after =
       op === 'delete' ? null : op === 'update' ? { ...(before ?? {}), ...data } : { ...data };
@@ -87,7 +86,7 @@ export class HistoryService {
 
   /** 新しい順（多すぎる人は max 件まで） */
   async list(officeId: string, employeeId: string, max = 200): Promise<ChangeHistory[]> {
-    const snap = await getDocs(
+    const snap = await countedGetDocs(
       query(this.col(officeId, employeeId), orderBy('changedAt', 'desc'), limit(max)),
     );
     return snap.docs.map((d) => ({ id: d.id, ...(d.data() as HistoryDoc) }));

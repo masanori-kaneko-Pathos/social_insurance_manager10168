@@ -3,12 +3,11 @@ import {
   collection,
   deleteDoc,
   doc,
-  getDoc,
-  getDocs,
   serverTimestamp,
   setDoc,
   writeBatch,
 } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { auth, db } from '../../core/firebase';
 import { TodoDismissalDoc } from '../../core/models/office-records';
 import { HistoryService } from '../employees/history.service';
@@ -38,7 +37,7 @@ export class TodoService {
   // ===== 確認済み =====
 
   async listDismissals(officeId: string): Promise<TodoDismissalDoc[]> {
-    const snap = await getDocs(this.dismissals(officeId));
+    const snap = await countedGetDocs(this.dismissals(officeId));
     return snap.docs.map((d) => d.data() as TodoDismissalDoc);
   }
 
@@ -64,7 +63,7 @@ export class TodoService {
 
     // 加入（変わる前を読んで、変更履歴を同じ batch に）
     if (s.enrollment) {
-      const snap = await getDoc(empRef);
+      const snap = await countedGetDoc(empRef);
       const before = snap.data() as Record<string, unknown> | undefined;
       if (!before) throw new Error('employee not found');
       batch.update(empRef, { ...s.enrollment, updatedAt: serverTimestamp() });

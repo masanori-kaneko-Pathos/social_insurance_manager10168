@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HistoryService } from '../employees/history.service';
 import { changesOf } from '../employees/logic/history';
-import { collection, doc, getDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { db } from '../../core/firebase';
 import { RegularDecision } from '../../core/models/revision';
 import { RemunerationInput } from '../../core/models/remuneration';
@@ -23,7 +24,7 @@ export class RegularService {
   ): Promise<Map<string, RegularDecision>> {
     const snaps = await Promise.all(
       employeeIds.map((id) =>
-        getDoc(doc(collection(db, ...this.emp(officeId, id), 'regularDecisions'), String(year))),
+        countedGetDoc(doc(collection(db, ...this.emp(officeId, id), 'regularDecisions'), String(year))),
       ),
     );
     const map = new Map<string, RegularDecision>();

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { db } from '../../core/firebase';
 import { AgreementDoc } from '../../core/models/master';
 
@@ -10,7 +11,7 @@ export class AgreementService {
 
   list(): Promise<AgreementDoc[]> {
     if (!this.cache) {
-      this.cache = getDocs(collection(db, 'masterAgreements'))
+      this.cache = countedGetDocs(collection(db, 'masterAgreements'))
         .then((snap) => snap.docs.map((d) => d.data() as AgreementDoc))
         .catch((err) => {
           this.cache = null; // 失敗したら次回は読み直す

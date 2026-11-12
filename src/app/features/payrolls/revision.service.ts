@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HistoryService } from '../employees/history.service';
 import { changesOf } from '../employees/logic/history';
-import { collection, doc, getDoc, getDocs, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { db } from '../../core/firebase';
 import { RemunerationInput } from '../../core/models/remuneration';
 import { IrregularDecision, LeaveEndDecision } from '../../core/models/revision';
@@ -27,7 +28,7 @@ export class RevisionService {
     const base = this.emp(d.officeId, d.employeeId);
     const decRef = doc(collection(db, ...base, kind), d.startMonth);
     // 同じ起算月の記録が前に残っていたら更新（作成日時は変えない。ルールで確かめている）
-    const exists = (await getDoc(decRef)).exists();
+    const exists = (await countedGetDoc(decRef)).exists();
     const batch = writeBatch(db);
     if (exists) batch.update(decRef, { ...d, updatedAt: serverTimestamp() });
     else batch.set(decRef, { ...d, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
@@ -43,7 +44,7 @@ export class RevisionService {
   /** 随時改定の記録（届書の一覧で使う。渡した人の分だけ、1人1回の問い合わせ） */
   async irregularDecisions(officeId: string, employeeIds: readonly string[]): Promise<IrregularDecision[]> {
     const lists = await Promise.all(
-      employeeIds.map((id) => getDocs(collection(db, ...this.emp(officeId, id), 'irregularDecisions'))),
+      employeeIds.map((id) => countedGetDocs(collection(db, ...this.emp(officeId, id), 'irregularDecisions'))),
     );
     return lists.flatMap((snap) =>
       snap.docs.map((d) => {
