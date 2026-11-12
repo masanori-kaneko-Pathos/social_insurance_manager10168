@@ -31,7 +31,9 @@ h1 {
   font-weight: 600;
   text-align: center;
   text-decoration: none;
-  transition: background var(--dur-fast), border-color var(--dur-fast);
+  transition:
+    background var(--dur-fast),
+    border-color var(--dur-fast);
 }
 
 .tile:hover {
@@ -344,4 +346,10 @@ h1 {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+/* よく使うメニュー：文節で折り返し、2行の長さをそろえる */
+.tile span {
+  word-break: auto-phrase;
+  text-wrap: balance;
 }
