@@ -35,6 +35,7 @@ export interface DependentFormValue {
   alias: string;
   basicPensionNumber: string;
   relationshipConfirmed: boolean;
+  visaExcluded: boolean;
   // ② 住まい
   livingTogether: boolean;
   postalCode: string;
@@ -136,6 +137,7 @@ export function emptyDependentForm(from: string): DependentFormValue {
     alias: '',
     basicPensionNumber: '',
     relationshipConfirmed: false,
+    visaExcluded: false,
     livingTogether: true,
     postalCode: '',
     address: '',
@@ -194,6 +196,7 @@ export function toDependentForm(d: Dependent | DependentInput): DependentFormVal
     alias: d.alias ?? '',
     basicPensionNumber: d.basicPensionNumber ?? '',
     relationshipConfirmed: d.relationshipConfirmed,
+    visaExcluded: d.visaExcluded ?? false, // 11/12 より前の文書にはない
     livingTogether: d.livingTogether,
     postalCode: d.postalCode ?? '',
     address: d.address ?? '',
@@ -305,6 +308,7 @@ export function fromDependentForm(v: DependentFormValue): DependentInput | null 
     alias: spouse ? trimOrNull(v.alias) : null,
     basicPensionNumber: spouse && pension ? pension : null,
     relationshipConfirmed: v.relationshipConfirmed,
+    visaExcluded: v.visaExcluded,
     livingTogether: v.livingTogether,
     postalCode: postal ? postal : null,
     address: trimOrNull(v.address),

@@ -9,6 +9,8 @@
 //   （直近12か月のうち6か月以上で基準を超えると該当。ここでは今月の人数で知らせる）
 // - myNumberCheck：本人が提出したマイナンバーのチェック待ち（管理者だけ）
 // - myNumberDispose：資格喪失から2年たった人のマイナンバー（廃棄する。ガイドライン「保管制限と廃棄」）
+// - cardReturn：協会けんぽの事業所で、資格確認書が交付されている人が資格を喪失した（喪失届に添えて返す）
+//   回収できなければ「資格確認書回収不能届」。組合健保は添付なし（日本年金機構「資格喪失届」の添付書類）
 // - contractEnd：有期の雇用契約の満了が60日以内（過ぎていても、次の契約も退職日もなければ出す）
 //   3回以上の更新か、入社から1年を超えて続いている人は、更新しないなら満了の30日前までに予告が要る
 //   （有期労働契約の締結、更新、雇止め等に関する基準 第2条。あらかじめ「更新しない」と明示した契約は除く）
@@ -26,7 +28,8 @@ export type ExtraKind =
   | 'specificOffice'
   | 'myNumberCheck'
   | 'myNumberDispose'
-  | 'contractEnd';
+  | 'contractEnd'
+  | 'cardReturn';
 
 export interface ExtraTodo {
   kind: ExtraKind;
@@ -211,4 +214,29 @@ export function contractEndTodo(
       shortTerm: isShortTerm(last) ? 'yes' : 'no',
     },
   };
+}
+
+// ===== 資格確認書の回収 =====
+
+/** 喪失の前後、何日のあいだ出すか */
+export const CARD_RETURN_DAYS = 60;
+
+export interface CardPerson {
+  id: string;
+  retireDate: DateStr | null;
+  needsConfirmationCard: boolean;
+  health: { enrolled: boolean; lostDate: DateStr | null };
+}
+
+/** 協会けんぽで、資格確認書が交付されている人の喪失（喪失日の60日前〜60日後） */
+export function cardReturnTodo(
+  p: CardPerson,
+  insurer: 'kyokai' | 'kumiai',
+  today: DateStr,
+  days = CARD_RETURN_DAYS,
+): ExtraTodo | null {
+  if (insurer !== 'kyokai' || !p.needsConfirmationCard || !p.health.enrolled) return null;
+  const lost = p.health.lostDate ?? (p.retireDate ? addDays(p.retireDate, 1) : null);
+  if (!lost || lost < addDays(today, -days) || lost > addDays(today, days)) return null;
+  return { kind: 'cardReturn', employeeId: p.id, date: lost, params: { date: lost } };
 }

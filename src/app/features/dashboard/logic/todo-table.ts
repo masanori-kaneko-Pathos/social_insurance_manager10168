@@ -55,6 +55,13 @@ export function deadlineOf(it: BoardItem): { deadline: DateStr | null; note: Dea
     case 'residence':
       // 届の期限ではなく、在留期間の満了日（更新の申請は満了日まで）
       return { deadline: it.date, note: null };
+    case 'officeNameAddress':
+    case 'officeRelation':
+      // 事実発生から5日以内（変わった日を1日目）
+      return it.date ? { deadline: filingDeadline(it.date), note: null } : { deadline: null, note: 'asap' };
+    case 'address':
+      // 被保険者住所変更届：速やかに
+      return { deadline: null, note: 'asap' };
     case 'contractEnd': {
       const by = it.extra?.params['noticeBy'];
       return { deadline: typeof by === 'string' && by ? by : it.date, note: null };

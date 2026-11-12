@@ -666,6 +666,29 @@
       </div>
     </section>
 
+    @if (!readOnly && pendingChanges(); as c) {
+      <!-- 届が要る変更：保存すると To-do に届出の宿題が出る -->
+      <section class="card change-notice" role="status">
+        <p>
+          @if (c.nameAddress.length > 0) {
+            {{ 'office.change.nameAddress' | transloco }}
+          }
+          @if (c.relation.length > 0) {
+            {{ 'office.change.relation' | transloco }}
+          }
+          @if (c.prefectureChanged) {
+            {{ 'office.change.prefecture' | transloco }}
+          }
+        </p>
+        <div class="field">
+          <label for="changeFactDate">{{ 'office.change.factDate' | transloco }}</label>
+          <input id="changeFactDate" class="input" type="date" [value]="changeFactDate()"
+                 (change)="changeFactDate.set($any($event.target).value)" />
+          <span class="hint">{{ 'office.change.factDateHint' | transloco }}</span>
+        </div>
+      </section>
+    }
+
     @if (!readOnly) {
       <div class="actions save-bar">
         @if (isEdit) {

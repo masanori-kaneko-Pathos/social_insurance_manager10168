@@ -109,6 +109,11 @@
                           {{ 'todoAction.button.' + (it.kind === 'upcoming' ? 'early' : req.mode) | transloco }}
                         </button>
                       }
+                      @if (it.task && isAdmin()) {
+                        <button type="button" class="btn btn-small btn-primary" [disabled]="busyKey() === it.key" (click)="completeTask(it)">
+                          {{ (it.kind === 'addressKumiai' ? 'dashboard.todo.taskChecked' : 'dashboard.todo.taskDone') | transloco }}
+                        </button>
+                      }
                       @if (canDismiss(it)) {
                         <button type="button" class="btn btn-small" [disabled]="busyKey() === it.key" (click)="dismiss(it)">
                           {{ 'dashboard.todo.dismiss' | transloco }}
@@ -154,6 +159,21 @@
                           @case ('lumpSum') {
                             {{ 'dashboard.todo.text.lumpSum' | transloco: it.extra!.params }}
                           }
+                          @case ('officeNameAddress') {
+                            {{ 'dashboard.todo.text.officeNameAddress' | transloco: { date: it.date } }}
+                          }
+                          @case ('officeRelation') {
+                            {{ 'dashboard.todo.text.officeRelation' | transloco: { date: it.date } }}
+                          }
+                          @case ('address') {
+                            {{ 'dashboard.todo.text.address' | transloco: { date: it.date } }}
+                          }
+                          @case ('addressKumiai') {
+                            {{ 'dashboard.todo.text.addressKumiai' | transloco: { date: it.date } }}
+                          }
+                          @case ('cardReturn') {
+                            {{ 'dashboard.todo.text.cardReturn' | transloco: it.extra!.params }}
+                          }
                           @case ('contractEnd') {
                             {{ 'dashboard.todo.text.contractEnd' | transloco: it.extra!.params }}
                             @if (it.extra!.params['notice'] === 'yes') {
@@ -186,6 +206,17 @@
                           }
                         }
                       </p>
+                      @if (it.kind === 'lose' && employeeOf(it)?.retireReason === 'death') {
+                        <p class="why">{{ 'dashboard.todo.text.loseDeath' | transloco }}</p>
+                      }
+                      @if (it.task; as tk) {
+                        <p class="why">
+                          {{ 'dashboard.todo.taskFields' | transloco }}
+                          @for (f of tk.fields; track f) {
+                            <span class="field-chip">{{ 'dashboard.todo.taskField.' + f | transloco }}</span>
+                          }
+                        </p>
+                      }
                       @if (it.todo; as t) {
                         @let c = t.next ?? t.today;
                         @let p = reasonParams(c);
@@ -214,7 +245,7 @@
                             <a [routerLink]="['/o', office()?.id, 'filings']" [queryParams]="{ kind: 'acquire', from: it.date?.slice(0, 7) }">{{ 'dashboard.todo.toFilings' | transloco }} →</a>
                           }
                           @case ('office') {
-                            @if (it.office === 'noStandard') {
+                            @if (it.office === 'noStandard' || it.office === 'newApplication') {
                               <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>
                             }
                           }
@@ -232,6 +263,18 @@
                           }
                           @case ('specificOffice') {
                             <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>
+                          }
+                          @case ('officeNameAddress') {
+                            <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>
+                          }
+                          @case ('officeRelation') {
+                            <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>
+                          }
+                          @case ('address') {
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'person' }">{{ 'dashboard.todo.toPerson' | transloco }} →</a>
+                          }
+                          @case ('addressKumiai') {
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'person' }">{{ 'dashboard.todo.toPerson' | transloco }} →</a>
                           }
                           @case ('contractEnd') {
                             <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'employment' }">{{ 'dashboard.todo.toRenew' | transloco }} →</a>

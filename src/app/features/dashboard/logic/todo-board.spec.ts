@@ -1,6 +1,7 @@
 import type { Classification } from '../../employees/logic/classify';
 import {
   activeDismissals,
+  taskItem,
   ageItems,
   groupBoard,
   GROUP_LIMIT,
@@ -103,5 +104,25 @@ describe('ageItems：今月と来月の年齢到達', () => {
       ['age:B:40', '2026-11-20'],
       ['age:H:75', '2026-12-05'],
     ]);
+  });
+});
+
+describe('届出の宿題', () => {
+  it('宿題は文書の ID を鍵にし、変わった日を並べる日にする。事業所の変更は「今すぐ」のまとまり', () => {
+    const it = taskItem({
+      id: 't1',
+      kind: 'officeRelation',
+      employeeId: null,
+      factDate: '2026-11-12',
+      fields: ['ownerName'],
+      status: 'open',
+      createdAt: null as never,
+      updatedAt: null as never,
+      doneAt: null,
+    });
+    expect(it.key).toBe('task:t1');
+    expect(it.date).toBe('2026-11-12');
+    const g = groupBoard([it], new Set());
+    expect(g[0].section).toBe('now');
   });
 });

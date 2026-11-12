@@ -17,12 +17,51 @@ import {
   splitPrivate,
 } from '../../core/models/employee';
 import { changesOf } from './logic/history';
+import { ContactDoc } from '../../core/models/employee';
+import { FilingTaskInput } from '../../core/models/filing-task';
+import { todayLocal } from '../../shared/utils/date';
+import { FilingTaskService } from '../filings/filing-task.service';
+import { MyNumberService } from '../my-number/my-number.service';
+import { OfficeContext } from '../office/office-context.service';
+import { addressChanges, addressFilingReasons, addressTasks } from './logic/address-filing';
 
 const kana = (e: Employee) => e.lastNameKana + e.firstNameKana;
 
 @Injectable({ providedIn: 'root' })
 export class EmployeeService {
   private readonly history = inject(HistoryService);
+  private readonly tasks = inject(FilingTaskService);
+  private readonly myNumbers = inject(MyNumberService);
+  private readonly context = inject(OfficeContext);
+
+  /**
+   * 住所が変わったときの届出の宿題（被保険者住所変更届・組合への届け）
+   * 住所が変わったときだけ、従業員の文書とマイナンバーの状態を読む（ふだんの保存で読み込みを増やさない）
+   */
+  async addressTasksFor(
+    officeId: string,
+    employeeId: string,
+    before: ContactDoc,
+    after: ContactDoc,
+    factDate: string = todayLocal(),
+  ): Promise<FilingTaskInput[]> {
+    const fields = addressChanges(before, after);
+    if (fields.length === 0) return [];
+    const [e, entry] = await Promise.all([
+      this.get(officeId, employeeId),
+      this.myNumbers.entry(officeId, employeeId).catch(() => undefined),
+    ]);
+    if (!e) return [];
+    const reasons = addressFilingReasons({
+      contact: after,
+      health: e.health,
+      pension: e.pension,
+      noAddressReason: e.foreign?.noAddressReason ?? null,
+      myNumberRegistered: entry === undefined ? null : entry?.status === 'registered',
+    });
+    const kumiai = this.context.current()?.healthInsurer.type === 'kumiai';
+    return addressTasks(employeeId, fields, reasons, kumiai, factDate);
+  }
 
   private col(officeId: string) {
     return collection(db, 'offices', officeId, 'employees');
@@ -77,6 +116,7 @@ export class EmployeeService {
     officeId: string,
     employeeId: string,
     patch: Partial<EmployeePrivate>,
+    addressFactDate?: string,
   ): Promise<void> {
     const ref = this.privateRef(officeId, employeeId);
     const snap = await getDoc(ref);
@@ -93,9 +133,12 @@ export class EmployeeService {
       { ...after },
     );
     if (snap.exists() && changes.length === 0) return; // 何も変わっていない
+    // 住所が変わったら、届出の宿題も同じ batch で残す
+    const tasks = await this.addressTasksFor(officeId, employeeId, before.contact, after.contact, addressFactDate);
     const batch = writeBatch(db);
     batch.set(ref, { ...after, updatedAt: serverTimestamp() });
     this.history.addTo(batch, officeId, employeeId, 'details/private', changes);
+    for (const t of tasks) this.tasks.addTo(batch, officeId, t);
     await batch.commit();
   }
 
@@ -122,6 +165,8 @@ export class EmployeeService {
     officeId: string,
     employeeId: string,
     input: Partial<EmployeeFormInput> | Partial<EmployeeInput>,
+    /** 住所が変わった日（画面で入れたもの。なければ今日） */
+    addressFactDate?: string,
   ): Promise<void> {
     const { main, priv } = splitPrivate(input as Partial<EmployeeFormInput>);
     // 書き込みと変更履歴は同じ batch（HistoryService）
@@ -129,7 +174,7 @@ export class EmployeeService {
       const ref = doc(this.col(officeId), employeeId);
       await this.history.write(officeId, employeeId, 'employee', ref, 'update', { ...main });
     }
-    if (Object.keys(priv).length > 0) await this.writePrivate(officeId, employeeId, priv);
+    if (Object.keys(priv).length > 0) await this.writePrivate(officeId, employeeId, priv, addressFactDate);
   }
 
   /** 産休・育休だけを書き換える（ほかの項目には触らない） */

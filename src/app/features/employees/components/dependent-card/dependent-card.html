@@ -153,6 +153,7 @@
         <label class="check"><input type="checkbox" formControlName="commonLaw" />{{ 'dependent.field.commonLaw' | transloco }}</label>
       }
       <label class="check"><input type="checkbox" formControlName="relationshipConfirmed" />{{ 'dependent.field.relationshipConfirmed' | transloco }}</label>
+      <label class="check"><input type="checkbox" formControlName="visaExcluded" />{{ 'dependent.field.visaExcluded' | transloco }}</label>
 
       <!-- ② 住まい -->
       <h3>{{ 'dependent.group.home' | transloco }}</h3>
@@ -411,6 +412,10 @@
         </div>
       </div>
       <label class="check"><input type="checkbox" formControlName="needsConfirmationCard" />{{ 'dependent.field.needsConfirmationCard' | transloco }}</label>
+      @if (form.controls.to.value && form.controls.needsConfirmationCard.value) {
+        <!-- 扶養から外れる人の資格確認書は、被扶養者（異動）届に添えて返す（協会けんぽ） -->
+        <p class="hint">{{ 'dependent.hint.cardReturn' | transloco }}</p>
+      }
 
       <!-- 判定の候補（扶養に入った日の時点） -->
       @if (preview(); as p) {

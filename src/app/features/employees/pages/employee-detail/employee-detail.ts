@@ -368,6 +368,12 @@ export class EmployeeDetail {
     return zip + (c.address ?? '') || '—';
   }
 
+  livingAddress(e: EmployeeFull): string {
+    const c = e.contact;
+    const zip = c.livingPostalCode ? `〒${formatPostalCode(c.livingPostalCode)} ` : '';
+    return zip + (c.livingAddress ?? '') || '—';
+  }
+
   /** 外国籍の人のローマ字氏名（姓 名 ミドルネーム）。ないときは null */
   romanName(e: EmployeeFull): string | null {
     const f = e.foreign;

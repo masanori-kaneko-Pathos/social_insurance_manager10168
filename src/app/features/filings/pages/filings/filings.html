@@ -48,8 +48,36 @@
 @if (result(); as r) {
   <div class="result-head">
     <h2>{{ 'filing.kind.' + r.kind | transloco }} <span class="sub">{{ 'filing.count' | transloco: { n: r.rows.length } }}</span></h2>
-    <button type="button" class="btn" [disabled]="r.rows.length === 0" (click)="exportCsv()">{{ 'filing.csv' | transloco }}</button>
+    <div class="result-actions">
+      <button type="button" class="btn" [disabled]="r.rows.length === 0" (click)="exportCsv()">{{ 'filing.csv' | transloco }}</button>
+      <!-- ブラウザの印刷を開く（「PDF に保存」を選べば PDF になる） -->
+      <button type="button" class="btn" [disabled]="r.rows.length === 0" (click)="print()">{{ 'filing.print' | transloco }}</button>
+      <button type="button" class="btn" [disabled]="r.rows.length === 0 || exportingNenkin()" (click)="exportNenkin()"
+              [title]="'filing.nenkinTitle' | transloco">
+        {{ 'filing.nenkin' | transloco }}
+      </button>
+    </div>
   </div>
+  @if (nenkinIssues(); as issues) {
+    <!-- 届書作成プログラム向け CSV で省いた項目（使えない文字など） -->
+    <div class="alert" [class.alert-warning]="issues.length > 0 || nenkinMultiBonus().length > 0">
+      <p>{{ 'filing.nenkinDone' | transloco }}</p>
+      @if (issues.length > 0) {
+        <ul>
+          @for (i of issues; track $index) {
+            <li>{{ i.name }}：{{ 'filing.nenkinIssue.' + i.kind | transloco: { chars: i.chars.join(' ') } }}</li>
+          }
+        </ul>
+      }
+      @if (nenkinMultiBonus().length > 0) {
+        <p>{{ 'filing.nenkinMultiBonus' | transloco: { names: nenkinMultiBonus().join('、') } }}</p>
+      }
+    </div>
+  }
+  <!-- 印刷したときだけ出る見出し（事業所・届・期間・作った日） -->
+  <p class="print-only print-title">
+    {{ context.current()?.name }}／{{ 'filing.kind.' + r.kind | transloco }}／{{ r.period }}（{{ 'filing.printedOn' | transloco: { date: today } }}）
+  </p>
   <!-- 届を出す前に、作った人とは別の人が確かめる -->
   @if (r.rows.length > 0) {
     <app-review-box class="review" [target]="reviewId(r.kind, r.period)" />

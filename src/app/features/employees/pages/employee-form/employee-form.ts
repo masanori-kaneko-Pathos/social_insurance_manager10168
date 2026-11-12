@@ -61,6 +61,8 @@ import { EnterNext } from '../../../../shared/directives/enter-next';
 import { MY_NUMBER_DOC_TYPES, MyNumberDocType } from '../../../../core/models/my-number';
 import { myNumberProblem, normalizeMyNumber } from '../../../my-number/logic/my-number';
 import { MyNumberService } from '../../../my-number/my-number.service';
+import { ContactDoc } from '../../../../core/models/employee';
+import { addressChanges } from '../../logic/address-filing';
 const NOT_BLANK = Validators.pattern(/\S/);
 
 /** 全角を半角にしてから形式を見る（空欄は通す） */
@@ -278,6 +280,10 @@ export class EmployeeForm {
         contact: this.fb.group({
           postalCode: [v.contact.postalCode, [halfPattern(PATTERNS.postalCode)]],
           address: [v.contact.address, [Validators.maxLength(200)]],
+          livingPostalCode: [v.contact.livingPostalCode, [halfPattern(PATTERNS.postalCode)]],
+          livingAddress: [v.contact.livingAddress, [Validators.maxLength(200)]],
+          overseasCountry: [v.contact.overseasCountry],
+          overseasCity: [v.contact.overseasCity, [Validators.maxLength(100)]],
           phone: [v.contact.phone, [halfPattern(PATTERNS.phone)]],
           phoneNote: [v.contact.phoneNote, [Validators.maxLength(20)]],
           phone2: [v.contact.phone2, [halfPattern(PATTERNS.phone)]],
@@ -448,6 +454,18 @@ export class EmployeeForm {
   /** 備考の候補（自由に書ける。候補は入力の手間を省くだけ） */
   readonly phoneNoteChoices = ['ownMobile', 'home', 'companyMobile', 'work'];
 
+  // ===== 住所が変わった日（編集で住所を変えたときだけ。届出の宿題の期限に使う） =====
+  /** 読み込んだときの住所（変わったかを比べる） */
+  private loadedContact: ContactDoc | null = null;
+  readonly addressChanged = signal(false);
+  readonly addressFactDate = signal(todayLocal());
+
+  private syncAddressChanged(): void {
+    if (!this.loadedContact) return;
+    const after = fromEmployeeForm(this.form.getRawValue()).contact;
+    this.addressChanged.set(addressChanges(this.loadedContact, after).length > 0);
+  }
+
   /** 緊急連絡先の2件目の欄を出しているか */
   readonly secondEmergency = signal(false);
   /** 続柄の候補（自由に書ける） */
@@ -528,6 +546,7 @@ export class EmployeeForm {
       if (covers && f.certCovers.value !== covers) f.certCovers.setValue(covers);
     });
     c.foreign.valueChanges.subscribe(() => this.syncCert());
+    c.contact.valueChanges.subscribe(() => this.syncAddressChanged());
     this.agreementsApi.list().then(
       (list) => {
         this.agreements.set(list);
@@ -590,6 +609,8 @@ export class EmployeeForm {
       this.form.setValue(toEmployeeForm(e), { emitEvent: false });
       this.extraPhones.set(e.contact.otherPhones?.length ?? 0);
       this.secondEmergency.set((e.contact.emergencyContacts?.length ?? 0) >= 2);
+      this.loadedContact = e.contact;
+      this.addressChanged.set(false);
       this.syncCert();
     } catch (err) {
       console.error(err);
@@ -650,7 +671,14 @@ export class EmployeeForm {
     try {
       let id: string;
       if (this.isEdit && this.employeeId) {
-        await this.employees.update(officeId, this.employeeId, input);
+        await this.employees.update(
+          officeId,
+          this.employeeId,
+          input,
+          this.addressChanged() ? this.addressFactDate() || undefined : undefined,
+        );
+        this.loadedContact = input.contact;
+        this.addressChanged.set(false);
         id = this.employeeId;
       } else {
         id = await this.employees.create(officeId, input);

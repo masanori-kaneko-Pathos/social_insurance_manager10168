@@ -130,7 +130,12 @@
         "specificOffice": "Specified office",
         "myNumberCheck": "My Number check",
         "myNumberDispose": "Dispose of My Number",
-        "contractEnd": "Contract ending"
+        "contractEnd": "Contract ending",
+        "officeNameAddress": "Name/address change notification",
+        "officeRelation": "Office information change notification",
+        "address": "Address change notification",
+        "addressKumiai": "Address notice to the health insurance society",
+        "cardReturn": "Return of eligibility certificate"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. An Application to Enroll in EPI / EHI (資格取得届) is needed.",
@@ -154,11 +159,18 @@
         "myNumberDispose": "Two years have passed since losing coverage ({{date}}). The retention period for health insurance and pension documents (two years from completion) has ended, so dispose of the My Number. If you count completion from the date of the pension service's notice, wait two years from that date and dismiss this with “Checked”.",
         "contractEnd": "The employment contract ends on {{date}}. If it is renewed, register the next contract; if not, enter the retirement date (this leads to the loss-of-coverage To-do). If it renews automatically on the same terms, check and then dismiss with \"Checked\".",
         "contractEndNotice": "Because the contract has been renewed 3 or more times or the employee has worked for more than 1 year, advance notice must be given by {{noticeBy}} if it will not be renewed (MHLW standards on fixed-term contracts, Article 2).",
-        "contractEndShort": "This is a contract of 2 months or less. Once it is expected to continue beyond 2 months through renewal, the employee becomes subject to social insurance from that point."
+        "contractEndShort": "This is a contract of 2 months or less. Once it is expected to continue beyond 2 months through renewal, the employee becomes subject to social insurance from that point.",
+        "officeNameAddress": "The office name/address was changed on {{date}}. File the \"Change (correction) of name/address of the covered office\" within 5 days of the change (if the office moved outside the jurisdiction, file with the pension office for the previous address).",
+        "officeRelation": "Office information was changed on {{date}}. File the \"Change (correction) of office-related information\" within 5 days of the change (for a change of employer etc., also write the previous information).",
+        "address": "The address changed on {{date}}. Automatic updates through the link between My Number and the basic pension number may not apply to this person, so check whether the \"Insured person address change notification\" is needed and, if so, file it promptly.",
+        "addressKumiai": "The address changed on {{date}}. Some health insurance societies require a separate address notice. Check the society's rules.",
+        "cardReturn": "Coverage ends (ended) on {{date}}. This person was issued an eligibility certificate (shikaku kakunin-sho), so collect it and return it with the loss-of-coverage notification (Kyokai Kenpo). If it cannot be collected, attach the \"Notice of inability to collect the eligibility certificate\". Dismiss with \"Checked\" once collected.",
+        "loseDeath": "This is a loss of coverage due to death. The loss date is the day after the date of death, and the notification is due within 5 days. Collect and attach the eligibility certificate if one was issued. If the person had dependents, they also lose dependent status, so guide them to switch to National Health Insurance etc."
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
-        "noCriteria": "Coverage criteria (masterCriteria) are not registered."
+        "noCriteria": "Coverage criteria (masterCriteria) are not registered.",
+        "newApplication": "No office reference symbol is set. When the office becomes covered by social insurance, file the \"New application\" within 5 days. If it is already done, enter the office reference symbol and office number from the Japan Pension Service in the office settings."
       },
       "toSettings": "Office settings",
       "toRevisions": "See revision candidates",
@@ -186,7 +198,29 @@
       "toFilings": "Open the acquisition filing list",
       "toMyNumber": "Go to My Number",
       "toRenew": "Register the next contract (renew)",
-      "toRetire": "Enter the retirement date (do not renew)"
+      "toRetire": "Enter the retirement date (do not renew)",
+      "taskDone": "Filed",
+      "taskChecked": "Checked",
+      "taskFields": "Changed items:",
+      "taskField": {
+        "name": "Name",
+        "postalCode": "Postal code",
+        "address": "Address",
+        "prefecture": "Prefecture",
+        "ownerName": "Employer name",
+        "corporateNumber": "Corporate number",
+        "kumiaiName": "Health insurance society name",
+        "bonusMonths": "Scheduled bonus months",
+        "inKind": "Types of in-kind remuneration",
+        "livingAddress": "Place of residence",
+        "overseas": "Overseas address",
+        "reason_overseas": "Lives overseas",
+        "reason_shortStay": "Short stay",
+        "reason_healthOnly": "Health insurance only",
+        "reason_living": "Place of residence registered",
+        "reason_noMyNumber": "My Number not registered"
+      },
+      "toPerson": "Go to personal information"
     }
   },
   "nav": {
@@ -294,7 +328,7 @@
       "insuredNumber": "Insured person reference number",
       "basicPensionNumber": "Basic pension number",
       "postalCode": "Postal code",
-      "address": "Address",
+      "address": "Address (resident register)",
       "phone": "Phone",
       "email": "Email",
       "commuteMethod": "Commute method",
@@ -336,7 +370,12 @@
       "emergencyName": "Emergency contact ({{n}}) name",
       "emergencyRelation": "Relationship",
       "emergencyPhone": "Phone number",
-      "emergencyContacts": "Emergency contacts"
+      "emergencyContacts": "Emergency contacts",
+      "livingPostalCode": "Postal code of place of residence",
+      "livingAddress": "Place of residence",
+      "overseasCountry": "Country/region",
+      "overseasCity": "City",
+      "addressFactDate": "Date the address changed"
     },
     "insurance": {
       "health": "Enrolled in health insurance",
@@ -367,7 +406,14 @@
       "digitsOnly": "Digits only",
       "optOut": "For specified reduction special cases, the date they asked to withdraw from coverage.",
       "multipleOffices": "An employee working at two or more offices chooses the managing pension office with a notification, and the premiums are split by each office's pay. The premiums in the app are an estimate using only this office's pay. Check the amounts in the notice from the pension office (the split is not calculated by the app).",
-      "emergency": "Who the company contacts in case of an accident or sudden illness (up to 2). Enter separately from the employee's own phone."
+      "emergency": "Who the company contacts in case of an accident or sudden illness (up to 2). Enter separately from the employee's own phone.",
+      "retireReason": {
+        "transfer": "For a transfer, enter the last day worked at the previous office as the retirement date. The loss-of-coverage date becomes the next day (the day of the transfer).",
+        "death": "The loss-of-coverage date is the day after the date of death. File the loss notification within 5 days."
+      },
+      "address": "The address on notifications is the one in the resident register. If the person lives somewhere else, also enter the place of residence below.",
+      "overseas": "On notifications, write the country and city, e.g. \"Living in London, UK\".",
+      "addressFactDate": "If an address change notification is needed, it appears in the To-do list. It is needed for people whose My Number is not linked to their basic pension number, people living overseas, short-stay foreign nationals, people with health insurance only, and people registering a place of residence."
     },
     "validation": {
       "required": "This field is required.",
@@ -588,7 +634,9 @@
     },
     "fold": {
       "personName": "Enter the kanji name / alias on the residence record",
-      "optIn": "Enter request dates for the special reduced-wage rule"
+      "optIn": "Enter request dates for the special reduced-wage rule",
+      "living": "Lives somewhere other than the registered address (enter place of residence)",
+      "overseas": "Lives overseas (moved out of the resident register)"
     },
     "contractStep": {
       "lead": "Enter the terms from the employment contract or working conditions notice. The app uses this contract to decide whether the person is insured (regular, short-time, or not insured) and shows the result on the confirm step. When the contract changes later, add it in the Contract card on the employee page.",
@@ -794,6 +842,13 @@
         "since": "Select the month.",
         "count": "Enter a number of 0 or more."
       }
+    },
+    "change": {
+      "nameAddress": "The name/address will change. When you save, a \"Name/address change notification\" appears in the To-do list.",
+      "relation": "The employer, corporate number, scheduled bonus months or types of in-kind remuneration will change. When you save, an \"Office information change notification\" appears in the To-do list.",
+      "prefecture": "When the prefecture changes, the competent pension office changes and the Kyokai Kenpo rate may change (add \"from which month\" in the insurer/location history).",
+      "factDate": "Date of change",
+      "factDateHint": "The deadline is within 5 days, counting this date as day 1."
     }
   },
   "remuneration": {
@@ -1657,7 +1712,8 @@
       "to": "Stopped being a dependent on",
       "endReason": "Reason for leaving",
       "needsConfirmationCard": "Needs an eligibility certificate",
-      "note": "Remarks"
+      "note": "Remarks",
+      "visaExcluded": "Not a Japanese national, staying with \"Designated Activities (medical treatment)\" or \"Designated Activities (long-term sightseeing)\" status"
     },
     "relationship": {
       "spouse": "Spouse",
@@ -1738,7 +1794,8 @@
       "contractPeriodEnd": "Leave blank for no fixed term. Contracts ending within one year of becoming a dependent cannot use this method.",
       "startReason": "May be left blank when filed together with the Application to Enroll (資格取得届).",
       "to": "For death, enter the day after the date of death.",
-      "deleteVsEnd": "When someone stops being a dependent, enter the end date instead of deleting. Delete only to fix mistakes."
+      "deleteVsEnd": "When someone stops being a dependent, enter the end date instead of deleting. Delete only to fix mistakes.",
+      "cardReturn": "Return the eligibility certificate of a family member who leaves dependent status with the dependent change notification (Kyokai Kenpo). If it is lost, attach the \"Notice of inability to collect the eligibility certificate\"."
     },
     "col": {
       "name": "Name",
@@ -1772,7 +1829,8 @@
       "halfOrMore": "Living together and earning half or more of this employee's income (may still be accepted).",
       "insuredIncomeUnknown": "This employee's income is unknown, so the \"less than half\" check cannot be done.",
       "overRemittance": "Living apart and income is at or above the yearly remittance.",
-      "noRemittance": "Living apart but no remittance amount entered."
+      "noRemittance": "Living apart but no remittance amount entered.",
+      "visaExcluded": "Foreign nationals staying with \"Designated Activities (medical treatment / long-term sightseeing)\" status cannot be dependents even if they have an address in Japan (Japan Pension Service)."
     },
     "contractIssue": {
       "notYet": "The contract method starts 2026-04-01 (judged by expected income).",
@@ -2447,7 +2505,8 @@
     "group": {
       "contact": "Address & contact",
       "commute": "Commute",
-      "bankAccount": "Salary account"
+      "bankAccount": "Salary account",
+      "other": "Other notices"
     },
     "changeHint": "Apply to the company for a change of address, phone number, salary account, etc. Once approved, the company record is updated.",
     "newValues": "New values",
@@ -2460,7 +2519,9 @@
       "lists": "Could not load the inbox and requests.",
       "request": "Could not open this request.",
       "submit": "Could not send. Please try again."
-    }
+    },
+    "lostCard": "I lost my eligibility certificate",
+    "lostCardHint": "The company will apply to the insurer for a reissue. The new certificate arrives at the company in about a week. If you find the old one, hand it to the company."
   },
   "todoAction": {
     "title": {
@@ -2940,8 +3001,24 @@
       "m3Total": "Total 3"
     },
     "error": {
-      "load": "Could not load the data for the filing list."
-    }
+      "load": "Could not load the data for the filing list.",
+      "nenkin": "Could not create the CSV for the notification creation program."
+    },
+    "print": "Print / PDF",
+    "printedOn": "created {{date}}",
+    "nenkin": "CSV for the notification creation program",
+    "nenkinTitle": "Exports in the format read by \"Import CSV file\" of the Japan Pension Service notification creation program (Shift_JIS, 57 items)",
+    "nenkinFile": "for-notification-program",
+    "nenkinDone": "Exported. In the notification creation program, use \"Import CSV file\" and check \"Use the first row as item names\" (no quotation marks are used). The My Number column is left blank.",
+    "nenkinIssue": {
+      "noInsuredNumber": "No insured person reference number (it will be registered as a new person when imported)",
+      "nameChars": "The kanji name was omitted because it contains unsupported characters ({{chars}})",
+      "nameLong": "The kanji name was omitted because it exceeds 12 characters",
+      "kanaChars": "The kana name was omitted because it contains unsupported characters ({{chars}})",
+      "addressChars": "The kanji address was omitted because it contains unsupported characters ({{chars}})",
+      "addressLong": "The kanji address was omitted because it exceeds 37 characters"
+    },
+    "nenkinMultiBonus": "For people with two or more bonuses in the period ({{names}}), only the latest bonus was exported (one row per person)."
   },
   "premiumNotice": {
     "title": "Payment reconciliation",

@@ -91,6 +91,12 @@ export interface EmployeeFormValue {
   contact: {
     postalCode: string;
     address: string;
+    /** 居所（住民票と違うときだけ） */
+    livingPostalCode: string;
+    livingAddress: string;
+    /** 海外に住んでいる（住民票を抜いた）ときの国コードと都市 */
+    overseasCountry: string;
+    overseasCity: string;
     phone: string;
     phoneNote: string;
     /** 2つ目・3つ目の電話（「電話番号を追加」で出す欄） */
@@ -265,6 +271,10 @@ export function emptyEmployeeForm(): EmployeeFormValue {
     contact: {
       postalCode: '',
       address: '',
+      livingPostalCode: '',
+      livingAddress: '',
+      overseasCountry: '',
+      overseasCity: '',
       phone: '',
       phoneNote: '',
       phone2: '',
@@ -321,6 +331,10 @@ export function toEmployeeForm(e: EmployeeFull): EmployeeFormValue {
     contact: {
       postalCode: e.contact.postalCode ?? '',
       address: e.contact.address ?? '',
+      livingPostalCode: e.contact.livingPostalCode ?? '',
+      livingAddress: e.contact.livingAddress ?? '',
+      overseasCountry: e.contact.overseasCountry ?? '',
+      overseasCity: e.contact.overseasCity ?? '',
       phone: e.contact.phone ?? '',
       phoneNote: e.contact.phoneNote ?? '',
       phone2: e.contact.otherPhones?.[0]?.number ?? '',
@@ -467,6 +481,10 @@ export function fromEmployeeForm(v: EmployeeFormValue): EmployeeFormInput {
     contact: {
       postalCode: digitsOrNull(v.contact.postalCode),
       address: toNull(v.contact.address),
+      livingPostalCode: digitsOrNull(v.contact.livingPostalCode ?? ''),
+      livingAddress: toNull(v.contact.livingAddress ?? ''),
+      overseasCountry: upperOrNull(v.contact.overseasCountry ?? ''),
+      overseasCity: toNull(v.contact.overseasCity ?? ''),
       phone: phoneOrNull(v.contact.phone),
       phoneNote: toNull(v.contact.phoneNote ?? ''),
       otherPhones: otherPhonesOf(v.contact),

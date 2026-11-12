@@ -25,6 +25,8 @@ import {
 import { HistoryService } from '../employees/history.service';
 import { changesOf } from '../employees/logic/history';
 import { planApply } from './logic/request-model';
+import { EmployeeService } from '../employees/employee.service';
+import { FilingTaskService } from '../filings/filing-task.service';
 
 /** 1回の batch に入れる従業員の数（依頼と受信箱の2件ずつ。上限500件に余裕を持たせる） */
 const PER_BATCH = 200;
@@ -44,6 +46,8 @@ export interface NewRequest {
 @Injectable({ providedIn: 'root' })
 export class RequestService {
   private readonly history = inject(HistoryService);
+  private readonly employees = inject(EmployeeService);
+  private readonly filingTasks = inject(FilingTaskService);
 
   private col(officeId: string) {
     return collection(db, 'offices', officeId, 'requests');
@@ -137,13 +141,20 @@ export class RequestService {
       : (legacyPrivate(empSnap.data()) ?? emptyPrivate());
     const { patch } = planApply(before, r.questions, r.answers);
 
+    const after: EmployeePrivate = {
+      contact: patch.contact ?? before.contact,
+      commute: patch.commute ?? before.commute,
+      bankAccount: patch.bankAccount ?? before.bankAccount,
+    };
+    // 住所が変わる申請なら、届出の宿題も同じ batch で残す（変わった日 ＝ 承認した日）
+    const tasks =
+      Object.keys(patch).length > 0
+        ? await this.employees.addressTasksFor(officeId, r.employeeId, before.contact, after.contact)
+        : [];
+
     const batch = writeBatch(db);
+    for (const t of tasks) this.filingTasks.addTo(batch, officeId, t);
     if (Object.keys(patch).length > 0) {
-      const after: EmployeePrivate = {
-        contact: patch.contact ?? before.contact,
-        commute: patch.commute ?? before.commute,
-        bankAccount: patch.bankAccount ?? before.bankAccount,
-      };
       batch.set(privRef, { ...after, updatedAt: serverTimestamp() });
       const changes = changesOf(
         { contact: before.contact, commute: before.commute, bankAccount: before.bankAccount },

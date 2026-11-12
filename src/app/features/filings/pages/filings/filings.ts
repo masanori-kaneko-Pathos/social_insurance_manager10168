@@ -4,10 +4,12 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
 import { Payroll } from '../../../../core/models/payroll';
 import { downloadCsv, safeFileName } from '../../../../shared/csv/csv';
+import { downloadSjisCsv } from '../../../../shared/csv/sjis';
+import { NenkinIssue, NenkinPerson, nenkinRows } from '../../logic/nenkin-csv';
 import { MonthPicker } from '../../../../shared/components/month-picker/month-picker';
 import { ReviewBox } from '../../../reviews/components/review-box/review-box';
 import { filingReviewId } from '../../../reviews/logic/review';
-import { daysInMonth, shiftMonth, todayLocal, toYearMonth, YearMonth } from '../../../../shared/utils/date';
+import { ageAt, daysInMonth, shiftMonth, todayLocal, toYearMonth, YearMonth } from '../../../../shared/utils/date';
 import { ContractService } from '../../../employees/contract.service';
 import { DependentService } from '../../../employees/dependent.service';
 import { EmployeeService } from '../../../employees/employee.service';
@@ -90,6 +92,15 @@ export class FilingsPage {
 
   private employees: Employee[] | null = null;
 
+  // ===== 届書作成プログラム向け CSV =====
+  /** 表示した届の金額（人ごと）。算定基礎届・賞与支払届のときだけ入る */
+  private nenkinExtra = new Map<string, Pick<NenkinPerson, 'previous' | 'regular' | 'bonus'>>();
+  /** 同じ期間に2回以上の賞与がある人（1人1行の決まりなので、新しいほうだけ出す） */
+  private multiBonus = new Set<string>();
+  readonly nenkinIssues = signal<NenkinIssue[] | null>(null);
+  readonly nenkinMultiBonus = signal<string[]>([]);
+  readonly exportingNenkin = signal(false);
+
   private monthParam(key: string): YearMonth | null {
     const v = this.q.get(key);
     return v && /^\d{4}-\d{2}$/.test(v) ? v : null;
@@ -131,6 +142,10 @@ export class FilingsPage {
     this.errorKey.set(null);
     try {
       this.employees ??= await this.employeesApi.list(office.id);
+      this.nenkinExtra = new Map();
+      this.multiBonus = new Set();
+      this.nenkinIssues.set(null);
+      this.nenkinMultiBonus.set([]);
       const kind = this.kind();
       const fromDate = `${this.from()}-01`;
       const toDate = `${this.to()}-${String(daysInMonth(this.to())).padStart(2, '0')}`;
@@ -223,6 +238,15 @@ export class FilingsPage {
       });
       const prev = standardAt(rems[i], `${year}-08`);
       const raise = findStartMonths(payrolls).find((s) => s.month >= `${year}-04` && s.direction !== 'unclear');
+      const three = ['04', '05', '06'].map((m) => payrolls.get(`${year}-${m}`) ?? null);
+      this.nenkinExtra.set(e.id, {
+        previous: prev ? { health: prev.health.standard, pension: prev.pension.standard, from: prev.from } : null,
+        regular: {
+          months: three.map((p) => (p ? { days: p.days, cash: p.cash, inKind: p.inKind } : null)),
+          retro: three.reduce((s, p) => s + (p?.retro ?? 0), 0),
+        },
+        bonus: null,
+      });
       return revisionRow('regular', {
         employee: e,
         month: `${year}-09`,
@@ -284,26 +308,90 @@ export class FilingsPage {
   private async bonusRows(officeId: string, from: string, to: string): Promise<FilingRow[]> {
     const payments = await this.bonusApi.list(officeId);
     const byId = new Map(this.employees!.map((e) => [e.id, e]));
+    const bonusDates = new Map<string, string>();
     return payments
       .filter((p) => p.paidDate >= from && p.paidDate <= to)
       .flatMap((p) =>
         Object.entries(p.amounts)
           .filter(([id, amount]) => amount > 0 && byId.has(id) && eligibleOn(byId.get(id)!, p.paidDate))
-          .map(([id, amount]) =>
-            bonusRow({
+          .map(([id, amount]) => {
+            const inKind = p.inKindAmounts?.[id] ?? 0;
+            // 届書作成プログラム向け：1人1行なので、同じ期間に2回以上あれば新しいほうを使う
+            const seen = bonusDates.get(id);
+            if (seen) this.multiBonus.add(id);
+            if (!seen || p.paidDate > seen) {
+              bonusDates.set(id, p.paidDate);
+              this.nenkinExtra.set(id, { previous: null, regular: null, bonus: { cash: amount, inKind } });
+            }
+            return bonusRow({
               employee: byId.get(id)!,
               paidDate: p.paidDate,
               cash: amount,
-              inKind: p.inKindAmounts?.[id] ?? 0,
+              inKind,
               firstPaidInMonth: firstPaidInMonth(id, p.paidDate, payments),
-            }),
-          ),
+            });
+          }),
       );
   }
 
   readonly reviewId = filingReviewId;
 
   // ===== 書き出し =====
+
+  /** 印刷用の見た目（filings.css の @media print）でブラウザの印刷を開く */
+  print(): void {
+    window.print();
+  }
+
+  /**
+   * 届書作成プログラム向けの CSV（Shift_JIS・57項目）：表にいる人の分
+   * 住所は鍵付きの文書から読む（書き出すときだけ。人数分の読み込み）
+   */
+  async exportNenkin(): Promise<void> {
+    const office = this.context.current();
+    const r = this.result();
+    if (!office || !r || !this.employees || this.exportingNenkin()) return;
+    this.exportingNenkin.set(true);
+    this.errorKey.set(null);
+    try {
+      const byId = new Map(this.employees.map((e) => [e.id, e]));
+      const ids = [...new Set(r.rows.map((x) => x['employeeId']).filter((id): id is string => !!id && byId.has(id)))];
+      const persons: NenkinPerson[] = await Promise.all(
+        ids.map(async (id) => {
+          const e = byId.get(id)!;
+          const priv = await this.employeesApi.getPrivate(office.id, id, e).catch(() => null);
+          const ex = this.nenkinExtra.get(id);
+          return {
+            employee: e,
+            contact: priv?.contact ?? null,
+            previous: ex?.previous ?? null,
+            regular: ex?.regular ?? null,
+            bonus: ex?.bonus ?? null,
+            over70: ageAt(e.birthDate, this.today) >= 70,
+          };
+        }),
+      );
+      const { rows, issues } = nenkinRows(
+        { prefecture: office.prefecture, officeSymbol: office.officeSymbol, pensionFund: !!office.pensionFund },
+        persons,
+      );
+      const t = (k: string) => this.transloco.translate(k);
+      downloadSjisCsv(
+        safeFileName(`${t('filing.nenkinFile')}_${t(`filing.kind.${r.kind}`)}_${r.period}_${this.today.replace(/-/g, '')}.csv`),
+        rows,
+      );
+      this.nenkinIssues.set(issues);
+      this.nenkinMultiBonus.set([...this.multiBonus].map((id) => {
+        const e = byId.get(id);
+        return e ? `${e.lastName} ${e.firstName}` : id;
+      }));
+    } catch (err) {
+      console.error(err);
+      this.errorKey.set('filing.error.nenkin');
+    } finally {
+      this.exportingNenkin.set(false);
+    }
+  }
 
   exportCsv(): void {
     const r = this.result();

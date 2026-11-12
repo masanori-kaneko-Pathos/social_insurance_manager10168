@@ -426,6 +426,9 @@
                   <option [value]="r">{{ 'employee.retireReason.' + r | transloco }}</option>
                 }
               </select>
+              @if (form.controls.retireReason.value === 'transfer' || form.controls.retireReason.value === 'death') {
+                <span class="hint">{{ 'employee.hint.retireReason.' + form.controls.retireReason.value | transloco }}</span>
+              }
             </div>
           }
         </div>
@@ -629,7 +632,55 @@
           <div class="field wide">
             <label for="address">{{ 'employee.field.address' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
             <input id="address" class="input" formControlName="address" />
+            <span class="hint">{{ 'employee.hint.address' | transloco }}</span>
           </div>
+          <!-- 居所（住民票と違う所に住んでいるとき）・海外に住んでいるとき。値があれば開いたまま -->
+          <details class="fold wide" #lv [open]="lv.open || anyFilled('contact.livingAddress') || anyFilled('contact.livingPostalCode')">
+            <summary>{{ 'employee.fold.living' | transloco }}</summary>
+            <div class="grid">
+              <div class="field">
+                <label for="livingPostalCode">{{ 'employee.field.livingPostalCode' | transloco }}</label>
+                <input id="livingPostalCode" class="input" formControlName="livingPostalCode" inputmode="numeric"
+                       [class.is-invalid]="errorOf('contact.livingPostalCode')" />
+                @if (errorOf('contact.livingPostalCode'); as e) {
+                  <span class="field-error">{{ e | transloco }}</span>
+                }
+              </div>
+              <div class="field"></div>
+              <div class="field wide">
+                <label for="livingAddress">{{ 'employee.field.livingAddress' | transloco }}</label>
+                <input id="livingAddress" class="input" formControlName="livingAddress" />
+              </div>
+            </div>
+          </details>
+          <details class="fold wide" #ov [open]="ov.open || anyFilled('contact.overseasCountry')">
+            <summary>{{ 'employee.fold.overseas' | transloco }}</summary>
+            <div class="grid">
+              <div class="field">
+                <label for="overseasCountry">{{ 'employee.field.overseasCountry' | transloco }}</label>
+                <select id="overseasCountry" class="input" formControlName="overseasCountry">
+                  <option value="">{{ 'common.select' | transloco }}</option>
+                  @for (o of countries(); track o.code) {
+                    <option [value]="o.code">{{ o.code }} — {{ o.name }}</option>
+                  }
+                </select>
+              </div>
+              <div class="field">
+                <label for="overseasCity">{{ 'employee.field.overseasCity' | transloco }}</label>
+                <input id="overseasCity" class="input" formControlName="overseasCity" />
+              </div>
+            </div>
+            <p class="hint">{{ 'employee.hint.overseas' | transloco }}</p>
+          </details>
+          @if (addressChanged()) {
+            <!-- 編集で住所を変えた：届出の宿題の期限に使う日 -->
+            <div class="field wide address-changed">
+              <label for="addressFactDate">{{ 'employee.field.addressFactDate' | transloco }}</label>
+              <input id="addressFactDate" class="input" type="date" [value]="addressFactDate()"
+                     (change)="addressFactDate.set($any($event.target).value)" />
+              <span class="hint">{{ 'employee.hint.addressFactDate' | transloco }}</span>
+            </div>
+          }
           <div class="field">
             <label for="phone">{{ 'employee.field.phone' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
             <input id="phone" class="input" formControlName="phone" inputmode="tel" [class.is-invalid]="errorOf('contact.phone')" />

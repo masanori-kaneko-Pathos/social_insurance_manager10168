@@ -51,7 +51,14 @@ export interface EnrollmentDoc {
 
 export interface ContactDoc {
   postalCode: string | null; // 7桁
+  /** 住民票の住所（資格取得届・被扶養者異動届の住所欄は住民票の住所。令和5年12月の健保則の改正） */
   address: string | null;
+  /** 居所（住民票と違う所に住んでいるときだけ。11/12 に足した。前の文書にはない） */
+  livingPostalCode?: string | null;
+  livingAddress?: string | null;
+  /** 海外に住んでいる（住民票を抜いた）ときの国（国・地域コード2文字）と都市。届書には「英国 ロンドン在住」のように書く */
+  overseasCountry?: string | null;
+  overseasCity?: string | null;
   phone: string | null;
   /** 電話の備考（本人携帯・自宅 など。11/11 に足した。前の文書にはない） */
   phoneNote?: string | null;

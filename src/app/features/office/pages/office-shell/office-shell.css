@@ -205,3 +205,15 @@
       display: none;
     }
   }
+/* 印刷：ヘッダーとサイドバーを隠して、本文だけを紙いっぱいに（届書の一覧など） */
+@media print {
+  .app-header,
+  .side-nav {
+    display: none !important;
+  }
+  .shell-main {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+  }
+}

@@ -96,6 +96,11 @@ export interface DependentDoc {
   alias: string | null; // 外国人通称名（B⑥）
   basicPensionNumber: string | null; // 配偶者（第3号被保険者）のとき
   relationshipConfirmed: boolean; // 事業主が戸籍謄本などで続柄を確認した
+  /**
+   * 日本国籍でなく、在留資格が「特定活動（医療目的）」「特定活動（長期観光）」で滞在している
+   * → 日本に住所があっても被扶養者にならない（日本年金機構「外国人従業員を雇用する事業主の方へ」。11/12 に足した）
+   */
+  visaExcluded: boolean;
   // ② 住まい
   livingTogether: boolean;
   postalCode: string | null;

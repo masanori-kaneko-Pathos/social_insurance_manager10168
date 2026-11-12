@@ -382,6 +382,11 @@ service cloud.firestore {
             return exactKeys(d, ['contact', 'commute', 'bankAccount', 'updatedAt'])
               && d.contact is map && d.commute is map && d.bankAccount is map
               && (d.contact.postalCode == null || d.contact.postalCode.matches('^[0-9]{7}$'))
+              // 居所の郵便番号・海外の国（任意。11/12 より前の文書にはない）
+              && (!('livingPostalCode' in d.contact) || d.contact.livingPostalCode == null
+                  || d.contact.livingPostalCode.matches('^[0-9]{7}$'))
+              && (!('overseasCountry' in d.contact) || d.contact.overseasCountry == null
+                  || d.contact.overseasCountry.matches('^[A-Z]{2}$'))
               // 緊急連絡先（2件まで。11/12 より前の文書にはない）
               && (!('emergencyContacts' in d.contact)
                   || (d.contact.emergencyContacts is list && d.contact.emergencyContacts.size() <= 2))
@@ -461,7 +466,7 @@ service cloud.firestore {
           function validDependent(d) {
             return exactKeys(d, ['lastName', 'firstName', 'lastNameKana', 'firstNameKana', 'birthDate', 'sex',
                                  'relationship', 'relationshipNote', 'commonLaw', 'nationality', 'alias',
-                                 'basicPensionNumber', 'relationshipConfirmed',
+                                 'basicPensionNumber', 'relationshipConfirmed', 'visaExcluded',
                                  'livingTogether', 'postalCode', 'address', 'phone', 'phoneType',
                                  'remittance', 'remittanceTimes', 'overseas',
                                  'occupation', 'occupationNote', 'schoolYear', 'annualIncome', 'disabled',
@@ -479,6 +484,7 @@ service cloud.firestore {
               && optCode(d.nationality) && optStr(d.alias, 100)
               && (d.basicPensionNumber == null || (d.basicPensionNumber is string && d.basicPensionNumber.matches('^[0-9]{10}$')))
               && d.relationshipConfirmed is bool
+              && d.visaExcluded is bool
               && d.livingTogether is bool
               && (d.postalCode == null || (d.postalCode is string && d.postalCode.matches('^[0-9]{7}$')))
               && optStr(d.address, 200) && optStr(d.phone, 20)
@@ -855,6 +861,29 @@ service cloud.firestore {
       }
 
       // ----- 毎月の納付額の突き合わせ（ID ＝ 納付対象月）。告知額と、確かめた差の理由 -----
+      // ----- 届出の宿題（変わった瞬間の出来事のメモ。core/models/filing-task.ts）。管理者だけ -----
+      match /filingTasks/{taskId} {
+        function validFilingTask(d) {
+          return exactKeys(d, ['kind', 'employeeId', 'factDate', 'fields', 'status', 'createdAt', 'updatedAt', 'doneAt'])
+            && d.kind in ['officeNameAddress', 'officeRelation', 'address', 'addressKumiai']
+            && (d.employeeId == null || (d.employeeId is string && d.employeeId.size() > 0 && d.employeeId.size() <= 40))
+            && isDate(d.factDate)
+            && d.fields is list && d.fields.size() <= 20
+            && d.status in ['open', 'done'];
+        }
+
+        allow read: if isAdmin(officeId);
+        allow create: if isAdmin(officeId) && validFilingTask(request.resource.data)
+          && request.resource.data.status == 'open' && request.resource.data.doneAt == null
+          && created(request.resource.data);
+        // 更新：「届を出した」だけ（中身は変えない）
+        allow update: if isAdmin(officeId) && validFilingTask(request.resource.data)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'doneAt', 'updatedAt'])
+          && request.resource.data.status == 'done'
+          && request.resource.data.updatedAt == request.time;
+        allow delete: if false;
+      }
+
       match /premiumNotices/{month} {
         function validNotice(d) {
           return exactKeys(d, ['month', 'health', 'pension', 'childContribution', 'reasons', 'note',

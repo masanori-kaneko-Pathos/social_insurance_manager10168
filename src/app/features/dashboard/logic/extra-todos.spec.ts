@@ -1,4 +1,4 @@
-import { contractEndTodo, isShortTerm, myNumberTodos, noticeRequired } from './extra-todos';
+import { cardReturnTodo, contractEndTodo, isShortTerm, myNumberTodos, noticeRequired } from './extra-todos';
 import {
   ExtraPerson,
   lumpSumTodo,
@@ -143,5 +143,17 @@ describe('contractEndTodo：契約の満了', () => {
     expect(isShortTerm(t('2026-04-10', '2026-06-10'))).toBeFalse();
     expect(isShortTerm(t('2026-12-31', '2027-02-27'))).toBeTrue(); // 2/28 の前の日まで
     expect(isShortTerm(t('2026-04-01', null))).toBeFalse();
+  });
+});
+
+describe('cardReturnTodo：資格確認書の回収', () => {
+  const p = { id: 'e1', retireDate: '2026-11-30', needsConfirmationCard: true, health: { enrolled: true, lostDate: null } };
+  it('協会けんぽで交付されている人の喪失（喪失日は退職日の翌日）', () => {
+    expect(cardReturnTodo(p, 'kyokai', TODAY)?.date).toBe('2026-12-01');
+  });
+  it('組合健保・交付なし・60日より前の喪失は出さない', () => {
+    expect(cardReturnTodo(p, 'kumiai', TODAY)).toBeNull();
+    expect(cardReturnTodo({ ...p, needsConfirmationCard: false }, 'kyokai', TODAY)).toBeNull();
+    expect(cardReturnTodo({ ...p, retireDate: '2026-08-01' }, 'kyokai', TODAY)).toBeNull();
   });
 });

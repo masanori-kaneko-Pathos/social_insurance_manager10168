@@ -89,6 +89,8 @@ export function kindCode(sex: FilingEmployee['sex'], pensionFund: boolean): stri
 
 function person(e: FilingEmployee): FilingRow {
   return {
+    // 画面・CSV の列には出さない（届書作成プログラム向けの CSV で、誰の行かを知るため）
+    employeeId: e.id,
     insuredNumber: e.insuredNumber ?? '',
     name: `${e.lastName} ${e.firstName}`.trim(),
     kana: `${e.lastNameKana} ${e.firstNameKana}`.trim(),

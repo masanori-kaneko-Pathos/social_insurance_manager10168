@@ -7,11 +7,11 @@ import {
   query,
   serverTimestamp,
   setDoc,
-  updateDoc,
   where,
   writeBatch,
 } from 'firebase/firestore';
 import { db } from '../../core/firebase';
+import { FilingTaskInput } from '../../core/models/filing-task';
 import { insurerHistoryOf, premiumOf } from './office-settings';
 import {
   FOR_EMPLOYEES_KEYS,
@@ -81,12 +81,30 @@ export class OfficeService {
     return snap.exists() ? { id: officeId, ...(snap.data() as OfficeForEmployeesDoc) } : null;
   }
 
-  /** 事業所を更新する（メンバーと作成日時は変えない。ルールでも禁止している） */
-  async update(officeId: string, input: OfficeBasicInput | Partial<OfficeInput>): Promise<void> {
-    await updateDoc(doc(db, 'offices', officeId), {
+  /**
+   * 事業所を更新する（メンバーと作成日時は変えない。ルールでも禁止している）
+   * 届が要る変更があれば、届出の宿題（filingTasks）も同じ batch で残す（片方だけ保存されないように）
+   */
+  async update(
+    officeId: string,
+    input: OfficeBasicInput | Partial<OfficeInput>,
+    tasks: readonly FilingTaskInput[] = [],
+  ): Promise<void> {
+    const batch = writeBatch(db);
+    batch.update(doc(db, 'offices', officeId), {
       ...input,
       updatedAt: serverTimestamp(),
     });
+    for (const t of tasks) {
+      batch.set(doc(collection(db, 'offices', officeId, 'filingTasks')), {
+        ...t,
+        status: 'open',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        doneAt: null,
+      });
+    }
+    await batch.commit();
     // 従業員向けの写しも合わせる（失敗しても設定の保存は済んでいるので、止めずに残す）
     await this.publishForEmployees(officeId).catch((err) => console.error(err));
   }

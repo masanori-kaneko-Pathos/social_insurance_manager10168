@@ -309,6 +309,18 @@
                 <dt>{{ 'employee.field.address' | transloco }}</dt>
                 <dd>{{ address(e) }}</dd>
               </div>
+              @if (e.contact.livingAddress) {
+                <div class="wide">
+                  <dt>{{ 'employee.field.livingAddress' | transloco }}</dt>
+                  <dd>{{ livingAddress(e) }}</dd>
+                </div>
+              }
+              @if (e.contact.overseasCountry) {
+                <div class="wide">
+                  <dt>{{ 'employee.fold.overseas' | transloco }}</dt>
+                  <dd>{{ e.contact.overseasCountry }} {{ e.contact.overseasCity ?? '' }}</dd>
+                </div>
+              }
               <div>
                 <dt>{{ 'employee.field.phone' | transloco }}</dt>
                 <dd>

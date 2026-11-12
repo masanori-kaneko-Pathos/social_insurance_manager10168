@@ -48,6 +48,8 @@ import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits
 import { CriteriaDoc } from '../../../../core/models/master';
 import { todayLocal, toYearMonth } from '../../../../shared/utils/date';
 import { parseNat } from '../../../../shared/utils/number';
+import { FilingTaskInput } from '../../../../core/models/filing-task';
+import { hasOfficeChanges, OfficeChanges, officeChanges } from '../../logic/office-changes';
 import { ContractService } from '../../../employees/contract.service';
 import { EmployeeService } from '../../../employees/employee.service';
 import {
@@ -199,6 +201,56 @@ export class OfficeForm {
 
   /** 編集中の事業所（新規登録なら null） */
   readonly office = computed<Office | null>(() => (this.isEdit ? this.context.current() : null));
+
+  // ===== 届が要る変更（名称・所在地・事業主・賞与の月・現物など。11/12） =====
+  /** 変わった日（期限はこの日を1日目に5日。初期値は今日） */
+  readonly changeFactDate = signal(todayLocal());
+  /** 保存すると届出の宿題になる変更（新規登録・変更なしなら null） */
+  readonly pendingChanges = computed<OfficeChanges | null>(() => {
+    const o = this.office();
+    if (!o) return null;
+    const v = this.value();
+    const p = this.periodFromForm();
+    const c = officeChanges(
+      {
+        name: o.name,
+        postalCode: o.postalCode,
+        address: o.address,
+        prefecture: o.prefecture,
+        ownerName: o.ownerName,
+        corporateNumber: o.corporateNumber,
+        healthInsurer: o.healthInsurer,
+        bonusMonths: o.bonusMonths ?? [],
+        inKind: o.inKind ?? { housing: false, meals: false },
+      },
+      {
+        name: v.name ?? '',
+        postalCode: (v.postalCode ?? '').replace('-', '') || null,
+        address: v.address ?? '',
+        prefecture: p.prefecture,
+        ownerName: v.ownerName ?? '',
+        corporateNumber: (v.corporateNumber ?? '').trim() || null,
+        healthInsurer: p.healthInsurer,
+        bonusMonths: v.coverage?.bonusMonths ?? [],
+        inKind: { housing: !!v.coverage?.housing, meals: !!v.coverage?.meals },
+      },
+    );
+    return hasOfficeChanges(c) ? c : null;
+  });
+
+  /** 変更 → 届出の宿題 */
+  private tasksOf(c: OfficeChanges | null): FilingTaskInput[] {
+    if (!c) return [];
+    const factDate = this.changeFactDate() || todayLocal();
+    const tasks: FilingTaskInput[] = [];
+    if (c.nameAddress.length > 0) {
+      tasks.push({ kind: 'officeNameAddress', employeeId: null, factDate, fields: [...c.nameAddress] });
+    }
+    if (c.relation.length > 0) {
+      tasks.push({ kind: 'officeRelation', employeeId: null, factDate, fields: [...c.relation] });
+    }
+    return tasks;
+  }
   readonly history = computed<InsurerPeriod[]>(() => {
     const o = this.office();
     return o ? insurerHistoryOf(o) : [];
@@ -554,7 +606,8 @@ export class OfficeForm {
           ? withInsurerChange(insurerHistoryOf(office), { from: changeFrom.value, ...period })
           : insurerHistoryOf(office);
         const input: OfficeInput = { ...base, insurerHistory: history };
-        await this.offices.update(office.id, input);
+        await this.offices.update(office.id, input, this.tasksOf(this.pendingChanges()));
+        this.changeFactDate.set(todayLocal());
         const fresh = await this.offices.get(office.id);
         if (fresh) {
           this.context.setCurrent(fresh); // 保険料の画面などに、新しい設定をすぐ反映

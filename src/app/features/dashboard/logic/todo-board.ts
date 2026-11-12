@@ -9,11 +9,13 @@
 import { DateStr, YearMonth } from '../../../shared/utils/date';
 import { AgeEvent, ageEventsIn, AgeTarget, compareAgeEvents, isActive } from '../../employees/logic/age-events';
 import { ExtraKind, ExtraTodo } from './extra-todos';
+import type { FilingTask, FilingTaskKind } from '../../../core/models/filing-task';
 import { Todo, TodoKind } from './todos';
 
-export type BoardKind = TodoKind | ExtraKind | 'age' | 'requests' | 'office';
+export type BoardKind = TodoKind | ExtraKind | FilingTaskKind | 'age' | 'requests' | 'office';
 export type Section = 'now' | 'soon' | 'missing';
-export type OfficeIssue = 'noStandard' | 'noCriteria';
+/** noStandard・noCriteria：判定の材料が足りない／newApplication：事業所整理記号が空（新規適用届はまだかも） */
+export type OfficeIssue = 'noStandard' | 'noCriteria' | 'newApplication';
 
 /** 1件（1人の1つの手続き。依頼と事業所の設定は人に結びつかない） */
 export interface BoardItem {
@@ -28,6 +30,8 @@ export interface BoardItem {
   office: OfficeIssue | null;
   /** 在留・資格外活動・脱退一時金・特定適用事業所（extra-todos.ts） */
   extra?: ExtraTodo | null;
+  /** 届出の宿題（変わった瞬間の出来事のメモ。filingTasks） */
+  task?: FilingTask | null;
 }
 
 export interface BoardGroup {
@@ -46,15 +50,20 @@ export const BOARD_ORDER: readonly BoardKind[] = [
   'workPermit',
   'myNumberCheck',
   'requests',
+  'officeNameAddress',
+  'officeRelation',
+  'address',
   'upcoming',
   'categoryChange',
   'certificateEnd',
   'contractEnd',
+  'cardReturn',
   'residence',
   'age',
   'lumpSum',
   'specificOffice',
   'myNumberDispose',
+  'addressKumiai',
   'noContract',
   'office',
 ];
@@ -66,10 +75,15 @@ export const SECTION_OF: Record<BoardKind, Section> = {
   workPermit: 'now',
   myNumberCheck: 'now',
   requests: 'now',
+  officeNameAddress: 'now',
+  officeRelation: 'now',
+  address: 'now',
+  addressKumiai: 'soon',
   upcoming: 'soon',
   categoryChange: 'soon',
   certificateEnd: 'soon',
   contractEnd: 'soon',
+  cardReturn: 'soon',
   age: 'soon',
   residence: 'soon',
   lumpSum: 'soon',
@@ -89,6 +103,7 @@ export const DISMISSABLE: ReadonlySet<BoardKind> = new Set<BoardKind>([
   'workPermit', // 長期休業期間（1日8時間まで）など、確かめたうえで続ける場合
   'lumpSum', // 本人に案内したら消す
   'specificOffice', // 事業所の設定を確かめたら消す
+  'cardReturn', // 回収した（または回収不能届を書いた）ら消す
   'contractEnd', // 同じ条件のまま自動で更新する場合など。次の契約か退職日を入れれば、そもそも出なくなる
   'myNumberDispose', // 「完結の日」を通知の日と考えて待つ場合など。廃棄すれば、そもそも出なくなる
 ]);
@@ -146,6 +161,20 @@ export function extraItem(t: ExtraTodo): BoardItem {
     age: null,
     office: null,
     extra: t,
+  };
+}
+
+/** 届出の宿題の1件（鍵は文書のID。「届を出した」で done にすると、次に読んだときから出ない） */
+export function taskItem(t: FilingTask): BoardItem {
+  return {
+    key: `task:${t.id}`,
+    kind: t.kind,
+    employeeId: t.employeeId,
+    date: t.factDate,
+    todo: null,
+    age: null,
+    office: null,
+    task: t,
   };
 }
 

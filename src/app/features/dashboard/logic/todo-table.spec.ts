@@ -109,3 +109,10 @@ describe('契約の満了の期限と急ぎ', () => {
     expect(urgencyOf('contractEnd', '2026-12-31', null, '2026-11-30', '2026-12-31')).toBe('soon');
   });
 });
+
+describe('届出の宿題の期限', () => {
+  it('事業所の変更は変わった日を1日目に5日、住所変更は速やかに', () => {
+    expect(deadlineOf(item({ kind: 'officeNameAddress', key: 'k', date: '2026-11-12' })).deadline).toBe('2026-11-16');
+    expect(deadlineOf(item({ kind: 'address', key: 'k', date: '2026-11-12' })).note).toBe('asap');
+  });
+});

@@ -31,11 +31,15 @@ import {
   OfficeIssue,
   openCount,
   requestsItem,
+  taskItem,
   todoItem,
 } from '../../logic/todo-board';
+import { FilingTask } from '../../../../core/models/filing-task';
+import { FilingTaskService } from '../../../filings/filing-task.service';
 import { daysLeft, filterRows, kindsIn, RowView, TABLE_LIMIT, toRows } from '../../logic/todo-table';
 import { personTodos } from '../../logic/todos';
 import {
+  cardReturnTodo,
   contractEndTodo,
   lumpSumTodo,
   myNumberTodos,
@@ -83,6 +87,9 @@ export class Dashboard {
   private readonly myNumbersApi = inject(MyNumberService);
   private readonly api = inject(TodoService);
   private readonly badge = inject(TodoBadgeService);
+  private readonly tasksApi = inject(FilingTaskService);
+  /** 届出の宿題（まだのもの。管理者だけ） */
+  private readonly tasks = signal<FilingTask[]>([]);
 
   readonly office = this.context.current;
   readonly isAdmin = this.context.isAdmin;
@@ -123,6 +130,8 @@ export class Dashboard {
     const list: OfficeIssue[] = [];
     if (o && !o.standardHours) list.push('noStandard');
     if (this.criteria()?.length === 0) list.push('noCriteria');
+    // 事業所整理記号は、適用されると年金機構から付く → 空なら新規適用届がまだかもしれない（事実発生から5日以内）
+    if (o && !o.officeSymbol) list.push('newApplication');
     return list;
   });
 
@@ -152,6 +161,7 @@ export class Dashboard {
         workPermitTodo(e, contracts.get(e.id) ?? [], this.today),
         lumpSumTodo(e, this.today),
         contractEndTodo(e, contracts.get(e.id) ?? [], this.today),
+        cardReturnTodo(e, o.healthInsurer.type, this.today),
       ].filter((t) => t !== null),
     );
     const specific = specificOfficeTodo(
@@ -169,6 +179,7 @@ export class Dashboard {
       ...(specific ? [extraItem(specific)] : []),
       ...ageItems(this.employees(), this.thisMonth, shiftMonth(this.thisMonth, 1), this.today),
       ...this.officeIssues().map(officeItem),
+      ...this.tasks().map(taskItem),
       ...(this.submittedRequests() > 0 ? [requestsItem()] : []),
     ];
     return groupBoard(items, activeDismissals(this.dismissalDocs(), this.today));
@@ -271,6 +282,10 @@ export class Dashboard {
         .index(officeId)
         .then((m) => this.myNumberIndex.set(m))
         .catch((err) => console.error(err));
+      this.tasksApi
+        .listOpen(officeId)
+        .then((list) => this.tasks.set(list))
+        .catch((err) => console.error(err));
       this.requestsApi
         .countSubmitted(officeId)
         .then((n) => {
@@ -330,6 +345,23 @@ export class Dashboard {
       this.dismissalDocs.set(dismissals);
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  /** 届出の宿題：「届を出した」「確認した」→ done にして表から外す */
+  async completeTask(it: BoardItem): Promise<void> {
+    const officeId = this.office()?.id;
+    const task = it.task;
+    if (!officeId || !task || this.busyKey()) return;
+    this.busyKey.set(it.key);
+    try {
+      await this.tasksApi.markDone(officeId, task.id);
+      this.tasks.update((list) => list.filter((t) => t.id !== task.id));
+    } catch (err) {
+      console.error(err);
+      this.errorKey.set('dashboard.todo.errorDismiss');
+    } finally {
+      this.busyKey.set(null);
     }
   }
 

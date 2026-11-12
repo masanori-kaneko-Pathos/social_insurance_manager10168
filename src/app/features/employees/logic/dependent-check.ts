@@ -21,7 +21,8 @@ export type CheckIssue =
   | 'halfOrMore' // 同居で、被保険者の年収の半分以上（review：総合的に判断されることがある）
   | 'insuredIncomeUnknown' // 被保険者の年収がわからない（review）
   | 'overRemittance' // 別居で、仕送りの年額以上（ng）
-  | 'noRemittance'; // 別居なのに仕送りの額がない（review）
+  | 'noRemittance' // 別居なのに仕送りの額がない（review）
+  | 'visaExcluded'; // 特定活動（医療目的・長期観光）で滞在する外国籍の人（ng）
 
 /** 労働契約の方式が使えない理由 */
 export type ContractIssue =
@@ -60,7 +61,10 @@ export type CheckedDependent = Pick<
   | 'contractIncome'
   | 'from'
   | 'to'
->;
+> & {
+  /** 11/12 より前の文書にはない（ない ＝ false） */
+  visaExcluded?: boolean;
+}
 
 export const LIMITS: Record<LimitReason, number> = {
   base: 1_300_000,
@@ -149,6 +153,7 @@ export function checkDependent(
 
   const issues: CheckIssue[] = [];
   if (age >= 75) issues.push('age75');
+  if (d.visaExcluded) issues.push('visaExcluded');
   if (!d.livingTogether && needsCohabitation(d.relationship)) issues.push('cohabitationRequired');
   if (income >= limit) issues.push('overLimit');
   if (d.livingTogether) {
@@ -161,7 +166,7 @@ export function checkDependent(
     issues.push('overRemittance');
   }
 
-  const NG: CheckIssue[] = ['age75', 'cohabitationRequired', 'overLimit', 'overInsured', 'overRemittance'];
+  const NG: CheckIssue[] = ['age75', 'visaExcluded', 'cohabitationRequired', 'overLimit', 'overInsured', 'overRemittance'];
   const level: CheckLevel = issues.some((i) => NG.includes(i)) ? 'ng' : issues.length ? 'review' : 'ok';
 
   return {

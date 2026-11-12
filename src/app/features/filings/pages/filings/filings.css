@@ -106,3 +106,59 @@ td.wrap {
 .review {
   margin-bottom: var(--space-sm);
 }
+
+.result-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+/* ===== 印刷（届書の一覧を A4 横で。ブラウザの「PDF に保存」で PDF にもなる） ===== */
+.print-only {
+  display: none;
+}
+
+@page {
+  size: A4 landscape;
+  margin: 10mm;
+}
+
+@media print {
+  .print-only {
+    display: block;
+  }
+  .print-title {
+    margin: 0 0 4mm;
+    font-weight: 600;
+  }
+  .page-head,
+  .controls,
+  .hint,
+  .review,
+  .result-actions,
+  .alert {
+    display: none !important;
+  }
+  .table-wrap {
+    overflow: visible;
+    box-shadow: none;
+    border: none;
+    padding: 0;
+  }
+  table {
+    font-size: 9pt;
+    border-collapse: collapse;
+  }
+  th,
+  td {
+    border: 0.5pt solid #999;
+    padding: 1mm 1.5mm;
+    color: #000;
+    background: #fff !important;
+  }
+  thead {
+    display: table-header-group; /* ページをまたいでも見出しを出す */
+  }
+  tr {
+    break-inside: avoid;
+  }
+}

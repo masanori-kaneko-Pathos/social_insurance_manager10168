@@ -247,3 +247,11 @@ h3 {
   gap: var(--space-xs, 4px);
   margin-bottom: var(--space-xs, 4px);
 }
+
+/* 届が要る変更の知らせ（保存の前） */
+.change-notice {
+  border-left: 4px solid var(--color-primary);
+}
+.change-notice p {
+  margin: 0 0 var(--space-sm);
+}

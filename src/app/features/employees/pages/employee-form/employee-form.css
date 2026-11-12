@@ -260,3 +260,8 @@ h3 {
   font-size: 14px;
   font-weight: 600;
 }
+
+/* 連絡先のカードの中の折りたたみ（居所・海外）は、2列の表の横いっぱいに */
+.grid > .fold.wide {
+  grid-column: 1 / -1;
+}

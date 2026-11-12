@@ -159,3 +159,24 @@ describe('insuredIncomeCandidate：被保険者の年収の候補', () => {
     expect(insuredIncomeCandidate({ payrolls: [], bonuses: [] }, '2026-11-06')).toBeNull();
   });
 });
+
+describe('特定活動（医療目的・長期観光）', () => {
+  it('印があれば、ほかの条件にかかわらず基準外', () => {
+    const base = {
+      birthDate: '1990-01-01',
+      relationship: 'spouse' as const,
+      livingTogether: true,
+      remittance: null,
+      remittanceTimes: null,
+      annualIncome: 0,
+      disabled: false,
+      incomeBasis: 'estimate' as const,
+      contractIncome: null,
+      from: '2026-01-01',
+      to: null,
+    };
+    expect(checkDependent({ ...base, visaExcluded: true }, 5_000_000, '2026-11-12').issues).toContain('visaExcluded');
+    expect(checkDependent({ ...base, visaExcluded: true }, 5_000_000, '2026-11-12').level).toBe('ng');
+    expect(checkDependent({ ...base, visaExcluded: false }, 5_000_000, '2026-11-12').level).toBe('ok');
+  });
+});

@@ -37,7 +37,33 @@ export class MyChange implements OnInit {
   readonly groups = GROUPS;
   readonly chosen = signal<ReadonlySet<RequestField>>(new Set());
   readonly answers = signal<Record<string, string>>({});
-  readonly questions = computed(() => changeRequestQuestions([...this.chosen()]));
+  /** 資格確認書をなくした（書き込む項目はない。管理者が見て、保険者へ再交付を申請する） */
+  readonly lostCard = signal(false);
+  readonly questions = computed(() => [
+    ...changeRequestQuestions([...this.chosen()]),
+    ...(this.lostCard()
+      ? [
+          {
+            id: 'lostCard',
+            label: this.transloco.translate('me.lostCard'),
+            type: 'yesno' as const,
+            choices: null,
+            required: true,
+            field: null,
+          },
+        ]
+      : []),
+  ]);
+
+  toggleLostCard(on: boolean): void {
+    this.lostCard.set(on);
+    this.answers.update((a) => {
+      const next = { ...a };
+      if (on) next['lostCard'] = 'yes';
+      else delete next['lostCard'];
+      return next;
+    });
+  }
   readonly current = computed<Record<string, string | null>>(() => {
     const e = this.me.employee();
     return e ? Object.fromEntries(REQUEST_FIELDS.map((f) => [f, currentValue(e, f)])) : {};
