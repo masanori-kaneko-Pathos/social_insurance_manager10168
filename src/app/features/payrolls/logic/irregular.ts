@@ -20,7 +20,7 @@
 // ※ アプリの読み：現物は固定的なもの（社宅・食事）として固定的賃金の側に入れる。非固定 ＝ 支払額 − 固定的賃金 − 遡及支払額
 // ※ 月の途中の資格取得の月（Q8）は、まだ除いていない（入社月の実績は支払基礎日数で外れることが多い）
 
-import type { Payroll } from '../../../core/models/payroll';
+import { inKindYen, payTotal, type Payroll } from '../../../core/models/payroll';
 import type { WageChange } from '../../../core/models/revision';
 import type { StandardRemuneration } from '../../../core/models/remuneration';
 import { shiftMonth } from '../../../shared/utils/date';
@@ -186,7 +186,7 @@ export function judgeAnnualIrregular(x: {
   const outsideCount = used.filter((m) => !m.inThree).length;
   if (used.length === 0) return null;
 
-  const fixedAverage = Math.floor(three.reduce((s, m) => s + m.payroll!.fixed + m.payroll!.inKind, 0) / 3);
+  const fixedAverage = Math.floor(three.reduce((s, m) => s + m.payroll!.fixed + inKindYen(m.payroll!), 0) / 3);
   const nonFixedAverage = Math.floor(used.reduce((s, m) => s + m.nonFixed, 0) / used.length);
   const average = fixedAverage + nonFixedAverage;
 
@@ -235,7 +235,7 @@ export function judgeIrregular(x: IrregularInput): IrregularResult {
     return {
       month,
       payroll,
-      amount: payroll ? payroll.cash + payroll.inKind : 0,
+      amount: payroll ? payTotal(payroll) : 0,
       minDays,
       used: !!payroll && payroll.days >= minDays,
     };

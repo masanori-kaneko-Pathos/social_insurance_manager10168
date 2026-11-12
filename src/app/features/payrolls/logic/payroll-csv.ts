@@ -77,6 +77,16 @@ export const PAYROLL_HEADERS: Record<CsvLang, Record<PayrollColumn, string>> = {
   },
 };
 
+/** 現物の欄の「内訳なし」（支払額に含まれていて分けた額がない）。書き出しはこの言葉、読むときは下の言い方も受け付ける */
+export const IN_KIND_MERGED_LABEL: Record<CsvLang, string> = { ja: '内訳なし', en: 'Included in pay' };
+const IN_KIND_MERGED_WORDS = ['内訳なし', '合計に含む', '支払額に含む', 'includedinpay', 'included'];
+
+/** 現物の欄が「内訳なし」を表しているか */
+export function isInKindMerged(s: string): boolean {
+  const k = toHalfWidth(s).trim().toLowerCase().replace(/\s+/g, '');
+  return k !== '' && IN_KIND_MERGED_WORDS.includes(k);
+}
+
 const STATE_LABELS: Record<CsvLang, Record<PayrollState, string>> = {
   ja: { normal: '通常', suspended: '休職', furlough: '一時帰休' },
   en: { normal: 'Normal', suspended: 'Leave of absence', furlough: 'Temporary layoff' },
@@ -249,12 +259,24 @@ export interface ImportRead {
   blankLines: number;
   /** 社員番号と月だけで、数字が空の行（ひな形の未記入。読み飛ばした） */
   unfilledLines: number;
+  /** 現物の列があったか（ないときは、画面で「現物はない／支払額に含まれている」を選んでもらう） */
+  hasInKindColumn: boolean;
+}
+
+export interface ReadOptions {
+  /**
+   * 現物の列がないファイルの扱い
+   * - zero：現物はない（0）
+   * - merged：給与ソフトが支払額に足して出している（内訳なし）
+   */
+  inKindMissing?: 'zero' | 'merged';
 }
 
 export function readPayrollCsv(
   rows: readonly (readonly string[])[],
   employees: readonly CsvEmployee[],
   schedule: PaySchedule,
+  opts: ReadOptions = {},
 ): ImportRead {
   const result: ImportRead = {
     missingColumns: [],
@@ -263,6 +285,7 @@ export function readPayrollCsv(
     zeroPadded: [],
     blankLines: 0,
     unfilledLines: 0,
+    hasInKindColumn: false,
   };
   if (rows.length === 0) {
     result.missingColumns = [...PAYROLL_REQUIRED];
@@ -273,6 +296,8 @@ export function readPayrollCsv(
     result.missingColumns = missing;
     return result;
   }
+  result.hasInKindColumn = index.inKind !== undefined;
+  const mergedWhenNoColumn = !result.hasInKindColumn && opts.inKindMissing === 'merged';
   const cell = (row: readonly string[], c: PayrollColumn) => {
     const i = index[c];
     return i === undefined ? '' : (row[i] ?? '');
@@ -334,7 +359,8 @@ export function readPayrollCsv(
     const text: PayrollRowText = {
       cash: cell(row, 'cash'),
       fixed: cell(row, 'fixed'),
-      inKind: cell(row, 'inKind'),
+      inKind: isInKindMerged(cell(row, 'inKind')) ? '' : cell(row, 'inKind'),
+      inKindMerged: mergedWhenNoColumn || isInKindMerged(cell(row, 'inKind')),
       retro: cell(row, 'retro'),
       days: cell(row, 'days'),
       absentDays: cell(row, 'absentDays'),
@@ -417,7 +443,7 @@ export function buildPayrollCsv(
         cash: s ? String(s.cash) : '',
         fixed: s ? String(s.fixed) : '',
         days: s ? String(s.days) : '',
-        inKind: s && s.inKind ? String(s.inKind) : '',
+        inKind: !s ? '' : s.inKind === null ? IN_KIND_MERGED_LABEL[lang] : s.inKind ? String(s.inKind) : '',
         retro: s && s.retro ? String(s.retro) : '',
         absentDays: s?.absentDays != null ? String(s.absentDays) : '',
         hours: s?.workMinutes != null ? formatHours(s.workMinutes) : '',

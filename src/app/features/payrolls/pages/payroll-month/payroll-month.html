@@ -132,7 +132,15 @@
             @if (showAll()) {
               <td class="num">
                 <div class="days">
-                  <input class="input num w-money" formControlName="inKind" inputmode="numeric" />
+                  @if (v.form.controls.inKindMerged.value) {
+                    <!-- 給与ソフトが支払額に含めていて、分けた額がない -->
+                    <span class="merged" [title]="'payroll.inKindMergedTitle' | transloco">{{ 'payroll.inKindMerged' | transloco }}</span>
+                    @if (context.isAdmin()) {
+                      <button type="button" class="link-btn" (click)="splitInKind(v)">{{ 'payroll.splitInKind' | transloco }}</button>
+                    }
+                  } @else {
+                    <input class="input num w-money" formControlName="inKind" inputmode="numeric" />
+                  }
                   @if (context.isAdmin()) {
                     <button
                       type="button"
@@ -220,6 +228,7 @@
     <li>{{ 'payroll.hint.cash' | transloco }}</li>
     <li>{{ 'payroll.hint.fixed' | transloco }}</li>
     <li>{{ 'payroll.hint.inKind' | transloco }}</li>
+    <li>{{ 'payroll.hint.inKindMerged' | transloco }}</li>
     <li>{{ 'payroll.hint.days' | transloco }}</li>
     <li>{{ 'payroll.hint.hours' | transloco }}</li>
     <li>{{ 'payroll.hint.blank' | transloco }}</li>

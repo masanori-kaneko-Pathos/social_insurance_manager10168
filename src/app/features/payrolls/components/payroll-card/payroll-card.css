@@ -163,3 +163,10 @@ td.num {
   color: var(--color-warning-text);
   border: 1px solid var(--color-warning-border);
 }
+
+/* 現物の「内訳なし」（給与ソフトが支払額に含めていて、分けた額がない） */
+.merged {
+  color: var(--color-text-sub);
+  font-size: 12px;
+  white-space: nowrap;
+}

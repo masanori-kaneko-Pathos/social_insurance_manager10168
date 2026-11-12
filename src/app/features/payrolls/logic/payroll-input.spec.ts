@@ -108,3 +108,20 @@ describe('totalOf（合計の列）', () => {
     expect(totalOf('250000', 'x')).toBeNull();
   });
 });
+
+describe('現物の「内訳なし」（画面の行）', () => {
+  it('内訳なしの行は現物の文字を使わず null で保存し、合計は支払額のまま', () => {
+    const r = readRow({ ...blank(), cash: '330000', fixed: '300000', days: '30', inKind: '999', inKindMerged: true }, 30);
+    expect(r.kind === 'ok' && r.input.inKind).toBeNull();
+    expect(totalOf('330000', '')).toBe(330000);
+  });
+  it('保存済みの null は「内訳なし」の行として出す', () => {
+    const t = textOf({ ...emptyPayrollInput(), cash: 1, fixed: 1, days: 1, inKind: null });
+    expect(t.inKindMerged).toBeTrue();
+    expect(t.inKind).toBe('');
+    expect(textOf({ ...emptyPayrollInput(), inKind: 0 }).inKindMerged).toBeFalse();
+  });
+  it('0 と null は別のものとして比べる', () => {
+    expect(sameInput({ ...emptyPayrollInput(), inKind: 0 }, { ...emptyPayrollInput(), inKind: null })).toBeFalse();
+  });
+});

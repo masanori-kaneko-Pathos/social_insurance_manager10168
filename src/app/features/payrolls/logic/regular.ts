@@ -10,7 +10,7 @@
 
 import type { GradeRow } from '../../../core/models/rates';
 import type { RemunerationDoc, StandardRemuneration } from '../../../core/models/remuneration';
-import type { Payroll } from '../../../core/models/payroll';
+import { payTotal, type Payroll } from '../../../core/models/payroll';
 import { gradeOf } from '../../rates/logic/grade';
 import { PayrollEmployee, PaySchedule, periodOf } from './payroll-rows';
 import { shiftMonth } from '../../../shared/utils/date';
@@ -133,7 +133,7 @@ function useMonth(
   schedule: PaySchedule,
 ): MonthUse {
   if (!payroll) return { month, payroll: null, used: false, skip: 'noRecord', amount: 0 };
-  const amount = payroll.cash + payroll.inKind;
+  const amount = payTotal(payroll);
   const p = periodOf(month, schedule);
   let skip: MonthSkip | null = null;
   if (acquiredDate != null && acquiredDate > p.start && acquiredDate <= p.end) {

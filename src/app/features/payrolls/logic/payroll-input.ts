@@ -12,6 +12,8 @@ export interface PayrollRowText {
   cash: string;
   fixed: string;
   inKind: string;
+  /** 現物が「内訳なし」（支払額に含まれていて分けた額がない）。true のとき inKind の文字は使わない */
+  inKindMerged: boolean;
   retro: string;
   days: string;
   absentDays: string;
@@ -26,6 +28,7 @@ export function textOf(p: PayrollInput | null): PayrollRowText {
       cash: '',
       fixed: '',
       inKind: '',
+      inKindMerged: false,
       retro: '',
       days: '',
       absentDays: '',
@@ -38,7 +41,8 @@ export function textOf(p: PayrollInput | null): PayrollRowText {
   return {
     cash: String(p.cash),
     fixed: String(p.fixed),
-    inKind: n(p.inKind),
+    inKind: p.inKind === null ? '' : n(p.inKind),
+    inKindMerged: p.inKind === null,
     retro: n(p.retro),
     days: String(p.days),
     absentDays: p.absentDays == null ? '' : String(p.absentDays),
@@ -72,7 +76,7 @@ export function readRow(t: PayrollRowText, periodDays: number): RowResult {
 
   const cash = parseNat(t.cash);
   const fixed = parseNat(t.fixed);
-  const inKind = parseNat(t.inKind);
+  const inKind = t.inKindMerged ? null : parseNat(t.inKind);
   const retro = parseNat(t.retro);
   const days = parseNat(t.days);
   const absentDays = parseNat(t.absentDays);
@@ -90,7 +94,7 @@ export function readRow(t: PayrollRowText, periodDays: number): RowResult {
   const input: PayrollInput = {
     cash: cash!,
     fixed: fixed!,
-    inKind: inKind ?? 0,
+    inKind: t.inKindMerged ? null : (inKind ?? 0),
     retro: retro ?? 0,
     days: days!,
     absentDays: absentDays ?? null,

@@ -112,6 +112,21 @@
             }
           </div>
 
+          @if (!pv.read.hasInKindColumn) {
+            <!-- 現物の列がないファイル：現物はないのか、給与ソフトが支払額に含めて出しているのか -->
+            <fieldset class="in-kind-choice">
+              <legend>{{ 'payrollCsv.import.noInKind' | transloco }}</legend>
+              <label>
+                <input type="radio" name="inKindMissing" [checked]="inKindMissing() === 'zero'" (change)="setInKindMissing('zero')" />
+                {{ 'payrollCsv.import.inKindZero' | transloco }}
+              </label>
+              <label>
+                <input type="radio" name="inKindMissing" [checked]="inKindMissing() === 'merged'" (change)="setInKindMissing('merged')" />
+                {{ 'payrollCsv.import.inKindMerged' | transloco }}
+              </label>
+            </fieldset>
+          }
+
           @if (pv.read.zeroPadded.length > 0) {
             <div class="alert alert-warning">
               {{ 'payrollCsv.import.zeroPadded' | transloco: { n: pv.read.zeroPadded.length } }}

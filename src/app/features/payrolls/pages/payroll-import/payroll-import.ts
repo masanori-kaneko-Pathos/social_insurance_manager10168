@@ -217,15 +217,28 @@ export class PayrollImport {
     this.doneCount.set(null);
     this.partial.set(null);
     this.errorKey.set(null);
+    this.inKindMissing.set('zero');
+    this.lastTable = null;
   }
 
   /** うちの見出しの表 → 読み取り（今までの確認画面） */
+  /** 現物の列がないファイルの扱い（初期値は「現物はない」） */
+  readonly inKindMissing = signal<'zero' | 'merged'>('zero');
+  /** いま確認画面に出している表（現物の扱いを変えたら読み直す） */
+  private lastTable: string[][] | null = null;
+
+  setInKindMissing(v: 'zero' | 'merged'): void {
+    this.inKindMissing.set(v);
+    if (this.lastTable) this.showPreview(this.lastTable);
+  }
+
   private showPreview(table: string[][]): void {
+    this.lastTable = table;
     const office = this.context.current();
     const file = this.loaded();
     if (!office || !file) return;
     try {
-      const read = readPayrollCsv(table, this.employees, payrollOf(office));
+      const read = readPayrollCsv(table, this.employees, payrollOf(office), { inKindMissing: this.inKindMissing() });
       this.preview.set({ fileName: file.fileName, encoding: file.encoding, read, ...classifyImport(read.items, this.saved) });
     } catch (err) {
       console.error(err);

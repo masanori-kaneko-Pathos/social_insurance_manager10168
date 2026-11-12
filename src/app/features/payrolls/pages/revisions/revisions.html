@@ -49,7 +49,12 @@
                 {{ p.days }}
                 <span class="sub">／{{ 'revision.minDays' | transloco: { n: m.minDays } }}</span>
               </td>
-              <td class="num mono">{{ yen(m.amount) }}</td>
+              <td class="num mono">
+                {{ yen(m.amount) }}
+                @if (p.inKind === null) {
+                  <span class="sub" [title]="'revision.inKindMergedTitle' | transloco">{{ 'revision.inKindMerged' | transloco }}</span>
+                }
+              </td>
               <td class="num mono">{{ p.retro ? yen(p.retro) : '—' }}</td>
             } @else {
               <td colspan="3" class="sub">{{ 'revision.noRecord' | transloco }}</td>
@@ -113,7 +118,7 @@
                     <td class="mono">{{ m.month }}</td>
                     @if (m.payroll; as p) {
                       <td class="num mono">{{ p.days }}</td>
-                      <td class="num mono">{{ m.inThree ? yen(p.fixed + p.inKind) : '—' }}</td>
+                      <td class="num mono">{{ m.inThree ? yen(p.fixed + (p.inKind ?? 0)) : '—' }}</td>
                       <td class="num mono">{{ yen(m.nonFixed) }}</td>
                       <td class="sub">
                         @if (m.skip) { {{ 'revision.annual.skip.' + m.skip | transloco }} }

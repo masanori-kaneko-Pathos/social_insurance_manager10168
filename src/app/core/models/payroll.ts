@@ -13,8 +13,12 @@ export interface PayrollInput {
   cash: number;
   /** cash のうち固定的賃金 */
   fixed: number;
-  /** 現物による報酬の額（価額表で換算済み） */
-  inKind: number;
+  /**
+   * 現物による報酬の額（価額表で換算済み）
+   * null ＝ 内訳なし：給与ソフトが現物を支払額（cash）に足して出していて、分けた額がわからない（11/12）
+   * 0 ＝ 現物はない。null のときも、合計（cash ＋ 現物）は cash のままで正しい
+   */
+  inKind: number | null;
   /** 遡及支払額（この月に払った、前の月の分の差額）。なければ 0 */
   retro: number;
   /** 支払基礎日数（決まった値） */
@@ -40,6 +44,16 @@ export interface Payroll extends PayrollInput {
 export interface PayrollDoc extends Payroll {
   createdAt: Timestamp;
   updatedAt: Timestamp;
+}
+
+/** 計算に使う現物の額（内訳なしは 0。その分は cash に入っている） */
+export function inKindYen(p: Pick<PayrollInput, 'inKind'>): number {
+  return p.inKind ?? 0;
+}
+
+/** 支払額＋現物（報酬月額の材料） */
+export function payTotal(p: Pick<PayrollInput, 'cash' | 'inKind'>): number {
+  return p.cash + inKindYen(p);
 }
 
 export const PAYROLL_STATES: readonly PayrollState[] = ['normal', 'suspended', 'furlough'];

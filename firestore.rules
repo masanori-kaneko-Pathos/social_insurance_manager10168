@@ -516,9 +516,11 @@ service cloud.firestore {
               // collectionGroup で読むときのための項目。パスと一致させる
               && d.officeId == officeId && d.employeeId == employeeId
               && d.paidMonth == paidMonth && isMonth(paidMonth)
-              && yen(d.cash) && yen(d.fixed) && yen(d.inKind) && yen(d.retro)
+              && yen(d.cash) && yen(d.fixed) && yen(d.retro)
               && d.fixed <= d.cash
-              && d.retro <= d.cash + d.inKind
+              // 現物：null ＝ 内訳なし（支払額に含まれていて分けた額がない。11/12）
+              && ((d.inKind == null && d.retro <= d.cash)
+                  || (d.inKind != null && yen(d.inKind) && d.retro <= d.cash + d.inKind))
               && intIn(d.days, 0, 31)
               && optIntIn(d.absentDays, 0, 31)
               && optIntIn(d.workMinutes, 0, 44640)

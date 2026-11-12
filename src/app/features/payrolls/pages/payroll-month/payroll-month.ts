@@ -39,6 +39,8 @@ type RowForm = FormGroup<{
   cash: FormControl<string>;
   fixed: FormControl<string>;
   inKind: FormControl<string>;
+  /** 現物が「内訳なし」（支払額に含まれている。取り込みで入る） */
+  inKindMerged: FormControl<boolean>;
   retro: FormControl<string>;
   days: FormControl<string>;
   absentDays: FormControl<string>;
@@ -131,6 +133,7 @@ export class PayrollMonth {
 
   /** 計算した額を現物の欄に入れる（保存は「保存する」で、ほかの欄と一緒に） */
   applyInKind(v: ViewRow, yen: number): void {
+    v.form.controls.inKindMerged.setValue(false);
     v.form.controls.inKind.setValue(String(yen));
     v.form.markAsDirty();
     this.inKindFor.set(null);
@@ -186,6 +189,7 @@ export class PayrollMonth {
       cash: t.cash,
       fixed: t.fixed,
       inKind: t.inKind,
+      inKindMerged: t.inKindMerged,
       retro: t.retro,
       days: t.days,
       absentDays: t.absentDays,
@@ -194,6 +198,13 @@ export class PayrollMonth {
       state: this.fb.control<PayrollState>(t.state),
     });
   }
+  /** 「内訳なし」を外して、現物を入れられるようにする（0 から入れ直す） */
+  splitInKind(v: ViewRow): void {
+    v.form.controls.inKindMerged.setValue(false);
+    v.form.controls.inKind.setValue('');
+    v.form.markAsDirty();
+  }
+
   /** 合計の列（支払額＋現物）。読めないときは「—」 */
   total(v: ViewRow): string {
     const t = totalOf(v.form.controls.cash.value, v.form.controls.inKind.value);

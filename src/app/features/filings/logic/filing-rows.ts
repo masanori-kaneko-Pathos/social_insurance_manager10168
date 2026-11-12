@@ -7,7 +7,7 @@
 // - 備考は、アプリの記録から分かる項目だけ「番号．名前」で入れる（複数は「、」でつなぐ）
 // - 届書作成プログラムの電子媒体（決まった桁の形式）ではない。e-Gov への送信は対象外（カタログ）
 
-import type { Payroll } from '../../../core/models/payroll';
+import { payTotal, type Payroll } from '../../../core/models/payroll';
 import { addDays, DateStr, shiftMonth, YearMonth } from '../../../shared/utils/date';
 import { ageReachDate } from '../../employees/logic/coverage';
 import { toWareki, toWarekiMonth } from './wareki';
@@ -221,7 +221,8 @@ function monthCells(x: RevisionRowInput): FilingRow {
     row[`m${n}Days`] = p ? `${p.days}日` : '';
     row[`m${n}Cash`] = p ? yen(p.cash) : '';
     row[`m${n}InKind`] = p ? yen(p.inKind) : '';
-    row[`m${n}Total`] = p ? yen(p.cash + p.inKind) : '';
+    // 現物が内訳なし（null）の月は、現物の欄を空にする（合計は支払額のままで正しい）
+    row[`m${n}Total`] = p ? yen(payTotal(p)) : '';
   });
   return row;
 }

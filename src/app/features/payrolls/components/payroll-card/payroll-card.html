@@ -57,7 +57,14 @@
         <div class="entry-grid">
           <label class="field">
             <span>{{ 'payroll.col.inKind' | transloco }}</span>
-            <input class="input num" inputmode="numeric" [value]="d.inKind" (input)="set('inKind', $any($event.target).value)" />
+            @if (d.inKindMerged) {
+              <span class="merged" [title]="'payroll.inKindMergedTitle' | transloco">
+                {{ 'payroll.inKindMerged' | transloco }}
+                <button type="button" class="link-btn" (click)="set('inKindMerged', false)">{{ 'payroll.splitInKind' | transloco }}</button>
+              </span>
+            } @else {
+              <input class="input num" inputmode="numeric" [value]="d.inKind" (input)="set('inKind', $any($event.target).value)" />
+            }
           </label>
           <label class="field">
             <span>{{ 'payroll.col.retro' | transloco }}</span>
@@ -146,8 +153,8 @@
               </td>
               <td class="mono">{{ periodText(p) }}</td>
               <td class="num">{{ yen(p.cash) }}</td>
-              <td class="num">{{ p.inKind ? yen(p.inKind) : '—' }}</td>
-              <td class="num">{{ yen(p.cash + p.inKind) }}</td>
+              <td class="num">{{ p.inKind === null ? ('payroll.inKindMerged' | transloco) : p.inKind ? yen(p.inKind) : '—' }}</td>
+              <td class="num">{{ yen(p.cash + (p.inKind ?? 0)) }}</td>
               <td class="num">{{ yen(p.fixed) }}</td>
               <td class="num">{{ p.retro ? yen(p.retro) : '—' }}</td>
               <td class="num">{{ p.days }}</td>

@@ -5,7 +5,7 @@
 // - 入力チェック
 //
 
-import { Payroll, PayrollInput, PAYROLL_STATES } from '../../../core/models/payroll';
+import { inKindYen, Payroll, PayrollInput, PAYROLL_STATES, payTotal } from '../../../core/models/payroll';
 import { PayrollSettings } from '../../../core/models/office';
 import {
   addDays,
@@ -171,13 +171,13 @@ const isNat = (v: number) => Number.isSafeInteger(v) && v >= 0;
 /** 問題がなければ空の配列。periodDays は対象期間の日数（日数の上限に使う） */
 export function validatePayroll(x: PayrollInput, periodDays: number): PayrollError[] {
   const errors: PayrollError[] = [];
-  const yen = [x.cash, x.fixed, x.inKind, x.retro];
+  const yen = [x.cash, x.fixed, inKindYen(x), x.retro];
   if (!yen.every(isNat)) {
     errors.push('notInteger');
   } else {
     if (yen.some((v) => v > MAX_YEN)) errors.push('tooLarge');
     if (x.fixed > x.cash) errors.push('fixedOverCash');
-    if (x.retro > x.cash + x.inKind) errors.push('retroOverTotal');
+    if (x.retro > payTotal(x)) errors.push('retroOverTotal');
   }
   if (!isNat(x.days) || x.days > periodDays) errors.push('daysOutOfRange');
   if (x.absentDays != null && (!isNat(x.absentDays) || x.absentDays > periodDays)) {

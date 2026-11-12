@@ -1,7 +1,7 @@
 import { emptyPayrollInput, Payroll } from '../../../core/models/payroll';
 import { parseCsv, toCsv } from '../../../shared/csv/csv';
 import { guessMapping, missingRequired, toOurTable } from '../../../shared/import/column-map';
-import { buildPayrollCsv, classifyImport, CsvEmployee, makeMatcher, PAYROLL_IMPORT_FIELDS, PAYROLL_TABLE_SPEC, mapHeader, parseFlag, parseMonth, parseState, payrollFileName, readPayrollCsv } from './payroll-csv';
+import { buildPayrollCsv, classifyImport, isInKindMerged, CsvEmployee, makeMatcher, PAYROLL_IMPORT_FIELDS, PAYROLL_TABLE_SPEC, mapHeader, parseFlag, parseMonth, parseState, payrollFileName, readPayrollCsv } from './payroll-csv';
 import { monthsBetween } from '../../../shared/utils/date';
 import { PaySchedule } from './payroll-rows';
 
@@ -266,5 +266,41 @@ describe('payrollFileName', () => {
       '給与の実績_伊藤テスト中商事_2026-04〜2026-06_20261106.csv',
     );
     expect(payrollFileName('X', '2026-10', '2026-10', '2026-11-06', 'en')).toBe('payroll_X_2026-10_20261106.csv');
+  });
+});
+
+describe('現物の「内訳なし」', () => {
+  it('現物の欄に「内訳なし」と書いた行は null で読む', () => {
+    const r = readPayrollCsv(parseCsv(`${HEADER},現物\n12,テスト 一郎,2026-10,330000,300000,30,内訳なし`), EMPS, S);
+    expect(r.errors).toEqual([]);
+    expect(r.hasInKindColumn).toBeTrue();
+    expect(r.items[0].input.inKind).toBeNull();
+  });
+  it('現物の列がないファイル：選ばなければ 0、「支払額に含まれている」なら null', () => {
+    const t = parseCsv(`${HEADER}\n12,テスト 一郎,2026-10,330000,300000,30`);
+    const zero = readPayrollCsv(t, EMPS, S);
+    expect(zero.hasInKindColumn).toBeFalse();
+    expect(zero.items[0].input.inKind).toBe(0);
+    expect(readPayrollCsv(t, EMPS, S, { inKindMissing: 'merged' }).items[0].input.inKind).toBeNull();
+  });
+  it('書き出しは「内訳なし」、読み直すと null に戻る（往復）', () => {
+    const p: Payroll = {
+      ...emptyPayrollInput(),
+      cash: 330000,
+      fixed: 300000,
+      days: 30,
+      inKind: null,
+      officeId: 'o',
+      employeeId: 'A',
+      paidMonth: '2026-10',
+    };
+    const rows = buildPayrollCsv([A], [p], ['2026-10'], S, 'ja');
+    expect(rows[1][rows[0].indexOf('現物')]).toBe('内訳なし');
+    expect(readPayrollCsv(rows, [A], S).items[0].input.inKind).toBeNull();
+  });
+  it('isInKindMerged：全角・英語も受け付ける', () => {
+    expect(isInKindMerged(' 内訳なし ')).toBeTrue();
+    expect(isInKindMerged('Included in pay')).toBeTrue();
+    expect(isInKindMerged('0')).toBeFalse();
   });
 });

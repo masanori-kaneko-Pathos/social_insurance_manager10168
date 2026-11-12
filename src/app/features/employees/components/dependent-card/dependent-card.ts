@@ -12,6 +12,7 @@ import {
   RELATIONSHIPS,
 } from '../../../../core/models/dependent';
 import { Employee } from '../../../../core/models/employee';
+import { payTotal } from '../../../../core/models/payroll';
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { ageAt, todayLocal } from '../../../../shared/utils/date';
 import { formatYen, parseNat } from '../../../../shared/utils/number';
@@ -150,7 +151,7 @@ export class DependentCard implements OnInit {
       this.incomeCandidate.set(
         insuredIncomeCandidate(
           {
-            payrolls: pays.map((p) => ({ paidMonth: p.paidMonth, amount: p.cash + p.inKind })),
+            payrolls: pays.map((p) => ({ paidMonth: p.paidMonth, amount: payTotal(p) })),
             bonuses: bonuses
               .filter((b) => b.amounts[id] !== undefined)
               .map((b) => ({ paidDate: b.paidDate, amount: b.amounts[id] + (b.inKindAmounts?.[id] ?? 0) })),

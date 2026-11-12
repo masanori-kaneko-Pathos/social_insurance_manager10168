@@ -202,3 +202,18 @@ td.mono {
   font-size: var(--font-xs, 12px);
   font-weight: 400;
 }
+
+/* 現物の列がないファイルの扱い */
+.in-kind-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  margin: var(--space-md) 0;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+.in-kind-choice legend {
+  padding: 0 var(--space-xs);
+  font-size: 14px;
+}

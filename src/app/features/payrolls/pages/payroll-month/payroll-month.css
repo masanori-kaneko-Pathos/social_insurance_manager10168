@@ -182,3 +182,10 @@ tr.has-error td {
   font-size: var(--font-xs);
   color: var(--color-text-sub);
 }
+
+/* 現物の「内訳なし」（給与ソフトが支払額に含めていて、分けた額がない） */
+.merged {
+  color: var(--color-text-sub);
+  font-size: 12px;
+  white-space: nowrap;
+}

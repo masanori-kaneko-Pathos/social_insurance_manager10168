@@ -11,7 +11,7 @@
 // - 健康保険と厚生年金は、それぞれ別に判定する
 
 import type { LeaveKind } from '../../../core/models/employee';
-import type { Payroll } from '../../../core/models/payroll';
+import { payTotal, type Payroll } from '../../../core/models/payroll';
 import { addDays, ageAt, shiftMonth, toYearMonth } from '../../../shared/utils/date';
 import { endOf } from '../../employees/logic/leave';
 import { GradeRows, Remuneration } from './regular';
@@ -100,7 +100,7 @@ export function judgeLeaveEnd(x: LeaveEndInput): LeaveEndResult | null {
     return {
       month,
       payroll,
-      amount: payroll ? payroll.cash + payroll.inKind : 0,
+      amount: payroll ? payTotal(payroll) : 0,
       minDays,
       used: !!payroll && payroll.days >= minDays,
     };

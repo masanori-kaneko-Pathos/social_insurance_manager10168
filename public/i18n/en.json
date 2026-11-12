@@ -1228,7 +1228,8 @@
       "inKind": "Remuneration provided in kind (現物給与): company housing, dormitories and meals are converted to yen with the value set by the government for each prefecture, minus what the employee pays (different from the tax valuation). Use \"Calculate\" for meals and housing.",
       "days": "Work days subject to remuneration payment (支払基礎日数): calendar days of the period for monthly salary; \"company-set days − days absent\" for monthly salary with absence deductions; days worked (including paid leave) for daily or hourly pay.",
       "blank": "Empty rows are not saved. Clearing a saved row and saving deletes that month's record.",
-      "hours": "Hours worked: enter as \"160:30\" (160 h 30 min) or \"160.5\"."
+      "hours": "Hours worked: enter as \"160:30\" (160 h 30 min) or \"160.5\".",
+      "inKindMerged": "In months marked \"Not itemized\", in-kind remuneration is included in the pay amount (the imported file had no in-kind column). Totals and premiums are still correct, but changes in in-kind remuneration (a change in fixed wages, such as moving into company housing) cannot be detected, so enter the in-kind amount with \"Enter separately\" when you know it."
     },
     "error": {
       "load": "Could not load payroll records.",
@@ -1238,7 +1239,10 @@
     },
     "toRevisions": "Revision candidates (irregular / after leave)",
     "sortOldest": "Oldest first",
-    "sortNewest": "Newest first"
+    "sortNewest": "Newest first",
+    "inKindMerged": "Not itemized",
+    "inKindMergedTitle": "The payroll software included in-kind remuneration in the pay amount, so there is no separate figure. The total is still calculated correctly.",
+    "splitInKind": "Enter separately"
   },
   "regular": {
     "title": "Annual SMR determination {{year}} (定時決定, teiji kettei)",
@@ -1352,7 +1356,10 @@
       "moreErrors": "{{n}} more rows have problems.",
       "moreItems": "{{n}} more",
       "nothing": "There is nothing to import (all rows match saved records or are blank).",
-      "button": "Import ({{c}} new, {{u}} overwrite)"
+      "button": "Import ({{c}} new, {{u}} overwrite)",
+      "noInKind": "This file has no in-kind column. How should in-kind remuneration be handled?",
+      "inKindZero": "There is none (import as 0 yen)",
+      "inKindMerged": "The payroll software includes it in the pay amount (import as \"Not itemized\")"
     },
     "encoding": {
       "utf-8": "UTF-8",
@@ -1879,7 +1886,9 @@
       "consent": "The employee agreed to use the annual average (get a consent form every time)",
       "reflect": "Apply with the annual average",
       "hint": "Write \"年間平均\" in the remarks of the monthly change notification and attach the statement (form example 1) and the consent form (form example 2). For employees who do not consent, use the normal \"Apply\"."
-    }
+    },
+    "inKindMerged": "(in-kind not itemized)",
+    "inKindMergedTitle": "In this month, in-kind remuneration is included in the pay amount with no separate figure. Check the payslip in your payroll software to see whether a change in in-kind remuneration (such as moving into company housing) should trigger a revision."
   },
   "employeeCsv": {
     "title": "Import employees (CSV)",
