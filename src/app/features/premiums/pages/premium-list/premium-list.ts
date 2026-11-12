@@ -187,6 +187,37 @@ export class PremiumList {
   readonly employeeTotalYen = computed(() => this.totals().reduce((s, t) => s + t.employeeYen, 0));
   readonly employerTotalYen = computed(() => this.totals().reduce((s, t) => s + t.employerYen, 0));
 
+  /**
+   * 部署ごとの小計（部署があるときだけ）。経理が部門ごとの人件費に配る目安
+   * 会社負担は事業所全体でしか決まらないので、部署ごとに同じ計算（全額の切り捨て − 本人負担）をした目安
+   */
+  readonly deptTotals = computed(() => {
+    const depts = this.context.current()?.departments ?? [];
+    if (depts.length === 0) return [];
+    const groups = new Map<string, ListItem[]>();
+    for (const r of this.rows()) {
+      if (r.state !== 'ok' || !r.result) continue;
+      const id = r.employee.org?.departmentId ?? '';
+      const key = depts.some((d) => d.id === id) ? id : '';
+      groups.set(key, [...(groups.get(key) ?? []), r]);
+    }
+    const order = [...depts.map((d) => ({ id: d.id, name: d.name })), { id: '', name: null as string | null }];
+    return order
+      .filter((d) => groups.has(d.id))
+      .map((d) => {
+        const list = groups.get(d.id)!;
+        const t = officeTotals(list.map((r) => r.result!));
+        return {
+          id: d.id,
+          name: d.name,
+          count: list.length,
+          employeeYen: t.reduce((s, x) => s + x.employeeYen, 0),
+          employerYen: t.reduce((s, x) => s + x.employerYen, 0),
+          totalYen: t.reduce((s, x) => s + x.totalYen, 0),
+        };
+      });
+  });
+
   readonly changedCount = computed(() => this.rows().filter((r) => r.changes.length > 0).length);
 
   /**

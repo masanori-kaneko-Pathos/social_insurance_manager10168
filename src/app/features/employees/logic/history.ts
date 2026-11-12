@@ -172,3 +172,42 @@ export function recordSummary(
       return null;
   }
 }
+
+// ===== その時点の値（変更履歴を新しいほうから巻き戻す） =====
+
+export interface HistoryEntry {
+  target: string;
+  field: string;
+  before: string | null;
+  after: string | null;
+  /** 変えた日時（ミリ秒） */
+  at: number;
+}
+
+export interface ValueAt {
+  target: string;
+  field: string;
+  /** その日の時点の値（JSON の文字。null ＝ なかった） */
+  then: string | null;
+  /** 今の値（いちばん新しい変更のあと） */
+  now: string | null;
+}
+
+/**
+ * その日（の終わり）より後に変わった項目だけ、「その日の値」と「今の値」を並べる
+ * - その日の値 ＝ その日より後の、いちばん古い変更の「変更前」
+ * - 今の値 ＝ いちばん新しい変更の「変更後」
+ * - その日より後に登録された記録（field '*' で変更前なし）は「その日にはなかった」
+ * - 前と後が同じになった項目（変えて戻した）は出さない
+ */
+export function valuesAt(history: readonly HistoryEntry[], atMs: number): ValueAt[] {
+  const later = history.filter((h) => h.at > atMs).sort((a, b) => a.at - b.at);
+  const map = new Map<string, ValueAt>();
+  for (const h of later) {
+    const key = `${h.target}|${h.field}`;
+    const v = map.get(key);
+    if (v) v.now = h.after;
+    else map.set(key, { target: h.target, field: h.field, then: h.before, now: h.after });
+  }
+  return [...map.values()].filter((v) => v.then !== v.now);
+}

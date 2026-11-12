@@ -63,6 +63,9 @@ import { myNumberProblem, normalizeMyNumber } from '../../../my-number/logic/my-
 import { MyNumberService } from '../../../my-number/my-number.service';
 import { ContactDoc } from '../../../../core/models/employee';
 import { addressChanges } from '../../logic/address-filing';
+import { OFFICER_CHECKS, OFFICER_TYPES } from '../../../../core/models/employee';
+import { orgOf } from '../../logic/employee-form-model';
+import { judgeOfficer, OfficerJudgement } from '../../logic/officer';
 const NOT_BLANK = Validators.pattern(/\S/);
 
 /** 全角を半角にしてから形式を見る（空欄は通す） */
@@ -310,6 +313,19 @@ export class EmployeeForm {
           holderKana: [v.bankAccount.holderKana, [Validators.pattern(PATTERNS.holderKana), Validators.maxLength(100)]],
         }),
         collectionMethod: [v.collectionMethod],
+        org: this.fb.group({
+          departmentId: [v.org.departmentId],
+          position: [v.org.position, [Validators.maxLength(50)]],
+          officerType: [v.org.officerType],
+          checks: this.fb.group({
+            attendance: [v.org.checks.attendance],
+            fewOtherJobs: [v.org.checks.fewOtherJobs],
+            boardMeetings: [v.org.checks.boardMeetings],
+            supervision: [v.org.checks.supervision],
+            beyondAdvice: [v.org.checks.beyondAdvice],
+            fairPay: [v.org.checks.fairPay],
+          }),
+        }),
         foreign: this.fb.group({
           romanLastName: [f.romanLastName, [halfPattern(PATTERNS.roman), Validators.maxLength(50)]],
           romanFirstName: [f.romanFirstName, [halfPattern(PATTERNS.roman), Validators.maxLength(50)]],
@@ -464,6 +480,17 @@ export class EmployeeForm {
     if (!this.loadedContact) return;
     const after = fromEmployeeForm(this.form.getRawValue()).contact;
     this.addressChanged.set(addressChanges(this.loadedContact, after).length > 0);
+  }
+
+  // ===== 部署・役職・役員 =====
+  readonly departments = computed(() => this.context.current()?.departments ?? []);
+  readonly officerTypes = OFFICER_TYPES;
+  readonly officerChecks = OFFICER_CHECKS;
+
+  /** 役員の加入の候補（非常勤は6項目から。報酬はここではわからないので null） */
+  officerJudgement(): OfficerJudgement | null {
+    const o = orgOf(this.form.controls.org.getRawValue());
+    return o?.officer ? judgeOfficer(o.officer, null) : null;
   }
 
   /** 緊急連絡先の2件目の欄を出しているか */

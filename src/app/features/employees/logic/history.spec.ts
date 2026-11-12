@@ -1,4 +1,5 @@
 import {
+  valuesAt,
   bonusChanges,
   changesOf,
   displayValue,
@@ -117,5 +118,23 @@ describe('recordSummary：登録・削除の行の要約', () => {
     expect(recordSummary('xyz', '{}', label)).toBeNull();
     expect(recordSummary('employee', 'not json', label)).toBeNull();
     expect(recordSummary('employee', null, label)).toBeNull();
+  });
+});
+
+describe('valuesAt：その日の時点の値', () => {
+  const h = (field: string, before: string | null, after: string | null, at: number, target = 'employee') => ({
+    target,
+    field,
+    before,
+    after,
+    at,
+  });
+  it('その日より後の変更だけを巻き戻す（いちばん古い変更前 → いちばん新しい変更後）', () => {
+    const list = [h('lastName', '"佐藤"', '"山田"', 10), h('contact.address', '"A"', '"B"', 30), h('contact.address', '"B"', '"C"', 40)];
+    expect(valuesAt(list, 20)).toEqual([{ target: 'employee', field: 'contact.address', then: '"A"', now: '"C"' }]);
+    expect(valuesAt(list, 5).map((v) => v.field)).toEqual(['lastName', 'contact.address']);
+  });
+  it('変えて戻した項目は出さない', () => {
+    expect(valuesAt([h('lastName', '"A"', '"B"', 10), h('lastName', '"B"', '"A"', 20)], 5)).toEqual([]);
   });
 });

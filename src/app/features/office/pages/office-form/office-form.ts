@@ -50,6 +50,7 @@ import { todayLocal, toYearMonth } from '../../../../shared/utils/date';
 import { parseNat } from '../../../../shared/utils/number';
 import { FilingTaskInput } from '../../../../core/models/filing-task';
 import { hasOfficeChanges, OfficeChanges, officeChanges } from '../../logic/office-changes';
+import { DepartmentCard } from '../../components/department-card/department-card';
 import { ContractService } from '../../../employees/contract.service';
 import { EmployeeService } from '../../../employees/employee.service';
 import {
@@ -115,7 +116,7 @@ const emptyToNull = (v: string) => (v.trim() ? v.trim() : null);
 
 @Component({
   selector: 'app-office-form',
-  imports: [HalfWidthDigits, ReactiveFormsModule, RouterLink, TranslocoPipe, RateDialog],
+  imports: [DepartmentCard, HalfWidthDigits, ReactiveFormsModule, RouterLink, TranslocoPipe, RateDialog],
   templateUrl: './office-form.html',
   styleUrl: './office-form.css',
 })

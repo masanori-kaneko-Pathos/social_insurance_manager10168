@@ -1,0 +1,22 @@
+.dept-list {
+  list-style: none;
+  margin: 0 0 var(--space-sm);
+  padding: 0;
+}
+.dept-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.dept-list .name {
+  flex: 1;
+}
+.dept-add {
+  display: flex;
+  gap: var(--space-sm);
+}
+.dept-add .input {
+  max-width: 280px;
+}

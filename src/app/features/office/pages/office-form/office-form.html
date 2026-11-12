@@ -706,6 +706,11 @@
       </div>
     }
   </form>
+
+  <!-- 部署（事業所のほかの設定とは別に保存する） -->
+  @if (isEdit) {
+    <app-department-card />
+  }
   @if (rateTarget(); as t) {
     <app-rate-dialog [target]="t" [canEdit]="!readOnly" (closed)="rateTarget.set(null)" />
   }

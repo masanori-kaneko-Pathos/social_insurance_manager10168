@@ -376,3 +376,17 @@ th .arrow.default {
   font-size: var(--font-xs, 12px);
   color: var(--color-text-sub);
 }
+
+/* 基準日 */
+.as-of {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 14px;
+}
+.as-of .input {
+  width: auto;
+}
+.as-of-note {
+  margin-bottom: var(--space-sm);
+}

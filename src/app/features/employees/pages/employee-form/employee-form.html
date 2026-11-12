@@ -856,6 +856,60 @@
         </div>
         <p class="hint">{{ 'employee.hint.collection' | transloco }}</p>
       </section>
+
+      <!-- 部署・役職・役員 -->
+      <section class="card" formGroupName="org">
+        <h2>{{ 'employee.section.org' | transloco }}</h2>
+        <div class="grid">
+          <div class="field">
+            <label for="departmentId">{{ 'employee.field.department' | transloco }}</label>
+            <select id="departmentId" class="input" formControlName="departmentId">
+              <option value="">{{ 'employee.org.noDepartment' | transloco }}</option>
+              @for (d of departments(); track d.id) {
+                <option [value]="d.id">{{ d.name }}</option>
+              }
+            </select>
+            @if (departments().length === 0) {
+              <span class="hint">{{ 'employee.org.noDepartmentsHint' | transloco }}</span>
+            }
+          </div>
+          <div class="field">
+            <label for="position">{{ 'employee.field.position' | transloco }}</label>
+            <input id="position" class="input" formControlName="position" maxlength="50" />
+          </div>
+          <div class="field">
+            <label for="officerType">{{ 'employee.field.officerType' | transloco }}</label>
+            <select id="officerType" class="input" formControlName="officerType">
+              <option value="">{{ 'employee.org.notOfficer' | transloco }}</option>
+              @for (t of officerTypes; track t) {
+                <option [value]="t">{{ 'employee.org.officerType.' + t | transloco }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        @if (form.controls.org.controls.officerType.value === 'partTime') {
+          <!-- 非常勤の役員：6項目（日本年金機構の判断材料）。多くが加入の方向なら加入 -->
+          <fieldset class="officer-checks" formGroupName="checks">
+            <legend>{{ 'employee.org.checksTitle' | transloco }}</legend>
+            @for (k of officerChecks; track k) {
+              <div class="officer-check">
+                <span>{{ 'employee.org.check.' + k | transloco }}</span>
+                <select class="input" [formControlName]="k">
+                  <option value="">{{ 'employee.org.unanswered' | transloco }}</option>
+                  <option value="yes">{{ 'common.yes' | transloco }}</option>
+                  <option value="no">{{ 'common.no' | transloco }}</option>
+                </select>
+              </div>
+            }
+          </fieldset>
+        }
+        @if (officerJudgement(); as j) {
+          <p class="hint officer-result">
+            {{ 'employee.org.candidate.' + j.candidate | transloco: { toward: j.toward, away: j.away, unanswered: j.unanswered } }}
+          </p>
+          <p class="hint">{{ 'employee.org.officerNote' | transloco }}</p>
+        }
+      </section>
     }
 
     <div class="actions save-bar">

@@ -5,7 +5,7 @@ import { Employee } from '../../../../core/models/employee';
 import { ChangeHistory } from '../../../../core/models/employee-records';
 import { OfficeContext } from '../../../office/office-context.service';
 import { HistoryService } from '../../history.service';
-import { displayValue, recordSummary } from '../../logic/history';
+import { displayValue, HistoryEntry, recordSummary, valuesAt } from '../../logic/history';
 
 /** 最初に出す件数（「もっと見る」で全部） */
 const FIRST = 20;
@@ -33,6 +33,24 @@ export class HistoryCard {
   readonly showAll = signal(false);
   readonly visible = computed(() => (this.showAll() ? this.rows() : this.rows().slice(0, FIRST)));
   readonly hasMore = computed(() => this.rows().length > FIRST);
+
+  // ===== その日の時点の値と比べる（変更履歴を巻き戻す。1人分の履歴だけ） =====
+  readonly compareDate = signal('');
+  readonly compared = computed(() => {
+    const d = this.compareDate();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return null;
+    // その日の終わり（23:59:59.999）までの変更は、その日の値に入れる
+    const end = new Date(`${d}T23:59:59.999`).getTime();
+    const entries: HistoryEntry[] = this.rows()
+      .filter((h) => h.field !== '*' && !!h.changedAt)
+      .map((h) => ({ target: h.target, field: h.field, before: h.before, after: h.after, at: h.changedAt.toMillis() }));
+    return valuesAt(entries, end);
+  });
+
+  /** 変更履歴の項目の名前（比べる表で使う） */
+  compareLabel(target: string, field: string): string {
+    return this.field({ target, field } as ChangeHistory);
+  }
 
   constructor() {
     // 従業員が読み直されたら（編集・扶養・休業のあと）、履歴も読み直す

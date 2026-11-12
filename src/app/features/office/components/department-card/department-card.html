@@ -1,0 +1,33 @@
+<section class="card">
+  <h2>{{ 'office.department.title' | transloco }}</h2>
+  <p class="hint">{{ 'office.department.lead' | transloco }}</p>
+  @if (errorKey(); as e) {
+    <div class="alert alert-danger">{{ e | transloco }}</div>
+  }
+  <ul class="dept-list">
+    @for (d of list(); track d.id) {
+      <li>
+        @if (editing() === d.id) {
+          <input class="input" [value]="editName()" (input)="editName.set($any($event.target).value)" maxlength="40" />
+          <button type="button" class="btn btn-small btn-primary" [disabled]="busy()" (click)="rename(d.id)">{{ 'common.save' | transloco }}</button>
+          <button type="button" class="btn btn-small" (click)="editing.set(null)">{{ 'common.cancel' | transloco }}</button>
+        } @else {
+          <span class="name">{{ d.name }}</span>
+          @if (context.isAdmin()) {
+            <button type="button" class="link-btn" (click)="startEdit(d)">{{ 'office.department.rename' | transloco }}</button>
+            <button type="button" class="link-btn" [disabled]="busy()" (click)="remove(d)">{{ 'office.department.remove' | transloco }}</button>
+          }
+        }
+      </li>
+    } @empty {
+      <li class="muted">{{ 'office.department.empty' | transloco }}</li>
+    }
+  </ul>
+  @if (context.isAdmin()) {
+    <div class="dept-add">
+      <input class="input" [value]="newName()" (input)="newName.set($any($event.target).value)" maxlength="40"
+             [attr.aria-label]="'office.department.newName' | transloco" />
+      <button type="button" class="btn" [disabled]="busy()" (click)="add()">＋ {{ 'office.department.add' | transloco }}</button>
+    </div>
+  }
+</section>

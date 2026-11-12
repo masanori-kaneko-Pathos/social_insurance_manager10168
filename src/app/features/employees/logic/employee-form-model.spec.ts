@@ -1,6 +1,9 @@
 import { EmployeeFull, employeeExtras } from '../../../core/models/employee';
 import {
   emergencyContactsOf,
+  emptyOrgForm,
+  orgFormOf,
+  orgOf,
   emergencyFormOf,
   emptyEmployeeForm,
   EmployeeFormValue,
@@ -244,5 +247,25 @@ describe('緊急連絡先（2件まで）', () => {
     ];
     expect(emergencyContactsOf(emergencyFormOf(saved))).toEqual(saved);
     expect(emergencyFormOf([]).emergency1Name).toBe('');
+  });
+});
+
+describe('部署・役職・役員', () => {
+  it('どれも空なら null。常勤の役員は6項目を持たない（null）', () => {
+    expect(orgOf(emptyOrgForm())).toBeNull();
+    const f = { ...emptyOrgForm(), position: ' 部長 ', officerType: 'fullTime' as const };
+    f.checks = { ...f.checks, attendance: 'yes' };
+    const o = orgOf(f)!;
+    expect(o.position).toBe('部長');
+    expect(o.officer?.checks.attendance).toBeNull();
+  });
+  it('非常勤の6項目は はい/いいえ/まだ を true/false/null で持ち、往復する', () => {
+    const f = { ...emptyOrgForm(), departmentId: 'd1', officerType: 'partTime' as const };
+    f.checks = { ...f.checks, attendance: 'yes', fairPay: 'no' };
+    const o = orgOf(f)!;
+    expect(o.officer?.checks).toEqual({
+      attendance: true, fewOtherJobs: null, boardMeetings: null, supervision: null, beyondAdvice: null, fairPay: false,
+    });
+    expect(orgFormOf(o)).toEqual(f);
   });
 });

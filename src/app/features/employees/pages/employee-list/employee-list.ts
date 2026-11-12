@@ -87,6 +87,35 @@ export class EmployeeList {
   readonly query = computed(() => this.params().get('q') ?? '');
   readonly status = computed(() => pick(STATUSES, this.params().get('status'), 'active'));
   /** 並び替え。sort がなければデフォルト（社員番号の昇順） */
+  /**
+   * 基準日（URL の asOf）：その日の時点の一覧（在籍・区分・加入・年齢）。なければ今日
+   * 日付つきの事実（入社日・退職日・契約・加入の日付）から出すので、読み込みは今と同じ
+   */
+  readonly asOf = computed(() => {
+    const v = this.params().get('asOf');
+    return v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : this.today;
+  });
+  readonly asOfMonth = computed(() => toYearMonth(this.asOf()));
+  readonly isPast = computed(() => this.asOf() !== this.today);
+
+  /** 部署で絞る（URL の dept。'none' ＝ 部署なし） */
+  readonly dept = computed(() => this.params().get('dept') ?? '');
+  readonly departments = computed(() => this.context.current()?.departments ?? []);
+
+  setDept(v: string): void {
+    this.setQuery({ dept: v || null });
+  }
+
+  /** 部署の名前（一覧の表示） */
+  deptName(e: Employee): string | null {
+    const id = e.org?.departmentId;
+    return id ? (this.departments().find((d) => d.id === id)?.name ?? null) : null;
+  }
+
+  setAsOf(v: string): void {
+    this.setQuery({ asOf: v && v !== this.today ? v : null });
+  }
+
   readonly sortKey = computed<SortKey>(() => pick(SORT_KEYS, this.params().get('sort'), 'number'));
   readonly sortDir = computed<SortDir>(() => (this.params().get('dir') === 'desc' ? 'desc' : 'asc'));
   readonly isDefaultSort = computed(() => this.sortKey() === 'number' && this.sortDir() === 'asc');
@@ -119,7 +148,7 @@ export class EmployeeList {
           { birthDate: e.birthDate, optInDate: e.optInDate, optOutDate: e.optOutDate ?? null, contracts: map.get(e.id) ?? [] },
           office,
           this.criteria(),
-          this.today,
+          this.asOf(),
         ),
       ]),
     );
@@ -131,15 +160,18 @@ export class EmployeeList {
     const classes = this.classifications();
     const contracts = this.contracts();
     return this.employees().filter((e) => {
+      const dept = this.dept();
+      if (dept === 'none' ? !!e.org?.departmentId : dept && e.org?.departmentId !== dept) return false;
       const retired = this.isRetired(e);
-      if (this.status() === 'active' && retired) return false;
+      // 基準日にまだ入社していない人は、在籍中に含めない
+      if (this.status() === 'active' && (retired || e.hireDate > this.asOf())) return false;
       if (this.status() === 'retired' && !retired) return false;
       const ctx = {
-        today: this.today,
-        month: this.thisMonth,
+        today: this.asOf(),
+        month: this.asOfMonth(),
         // 契約を読み終わるまでは undefined（絞らない）
         category: classes?.get(e.id)?.category,
-        employment: contracts ? (contractAt(contracts.get(e.id) ?? [], this.today)?.employmentType ?? null) : undefined,
+        employment: contracts ? (contractAt(contracts.get(e.id) ?? [], this.asOf())?.employmentType ?? null) : undefined,
       };
       return matchesFilter(e, f, ctx) && matchesName(e, q);
     });
@@ -290,11 +322,11 @@ export class EmployeeList {
 
   /** 退職日を過ぎていれば退職者（未来の退職日は「退職予定」で在籍中に含める） */
   isRetired(e: Employee): boolean {
-    return !!e.retireDate && e.retireDate < this.today;
+    return !!e.retireDate && e.retireDate < this.asOf();
   }
 
   age(e: Employee): number {
-    return ageAt(e.birthDate, this.today);
+    return ageAt(e.birthDate, this.asOf());
   }
 
   categoryOf(e: Employee): Category | null {

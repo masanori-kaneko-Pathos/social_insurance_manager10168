@@ -50,6 +50,12 @@ export interface InKindProvided {
   meals: boolean; // 食事
 }
 
+/** 部署（id は事業所の中で決まる短い文字。名前は変えても id は変えない） */
+export interface Department {
+  id: string;
+  name: string;
+}
+
 /** Firestore の offices/{officeId} に保存する中身 */
 export interface OfficeDoc {
   name: string;
@@ -57,6 +63,8 @@ export interface OfficeDoc {
   nameEn?: string | null;
   /** グループの名前（任意。同じ名前の事業所は、切り替えのメニューで法人番号が違ってもまとめて並べる。11/12 より前の文書にはない） */
   groupName?: string | null;
+  /** 部署の一覧（任意。50件まで。11/12 より前の文書にはない。事業所の設定の部署のカードだけが書く） */
+  departments?: Department[] | null;
   corporateName: string | null;
   corporateNumber: string | null;
   ownerName: string;

@@ -8,7 +8,31 @@
     }
   </div>
   
+  @if (isPast()) {
+    <div class="alert as-of-note" role="status">
+      {{ 'employee.list.asOfNote' | transloco: { date: asOf() } }}
+      <button type="button" class="link-btn" (click)="setAsOf('')">{{ 'employee.list.asOfReset' | transloco }}</button>
+    </div>
+  }
   <div class="toolbar">
+    <!-- 基準日：その日の時点の一覧（在籍・区分・加入・年齢） -->
+    <label class="as-of">
+      <span>{{ 'employee.list.asOf' | transloco }}</span>
+      <input class="input" type="date" [value]="asOf()" (change)="setAsOf($any($event.target).value)" />
+    </label>
+    @if (departments().length > 0) {
+      <!-- 部署で絞る -->
+      <label class="as-of">
+        <span>{{ 'employee.field.department' | transloco }}</span>
+        <select class="input" [value]="dept()" (change)="setDept($any($event.target).value)">
+          <option value="">{{ 'employee.org.allDepartments' | transloco }}</option>
+          @for (d of departments(); track d.id) {
+            <option [value]="d.id" [selected]="d.id === dept()">{{ d.name }}</option>
+          }
+          <option value="none" [selected]="dept() === 'none'">{{ 'employee.org.noDepartment' | transloco }}</option>
+        </select>
+      </label>
+    }
     <!-- フィルター（複数の条件を組み合わせる。選んだらすぐ反映） -->
     <div class="filter-wrap" #filterWrap>
       <button

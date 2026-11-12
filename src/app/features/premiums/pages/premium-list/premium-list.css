@@ -452,3 +452,9 @@ td.calc a {
   background: var(--color-warning-bg);
   color: var(--color-warning-text);
 }
+
+/* 部署ごとの小計 */
+.dept-head {
+  margin: var(--space-lg) 0 var(--space-sm);
+  font-size: 15px;
+}

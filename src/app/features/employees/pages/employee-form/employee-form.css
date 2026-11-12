@@ -265,3 +265,21 @@ h3 {
 .grid > .fold.wide {
   grid-column: 1 / -1;
 }
+
+/* 非常勤の役員の6項目 */
+.officer-checks {
+  margin: var(--space-md) 0 0;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+.officer-check {
+  display: grid;
+  grid-template-columns: 1fr 140px;
+  gap: var(--space-sm);
+  align-items: center;
+  padding: var(--space-xs) 0;
+}
+.officer-result {
+  font-weight: 600;
+}

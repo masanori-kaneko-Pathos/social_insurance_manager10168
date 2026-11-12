@@ -16,7 +16,9 @@
     },
     "close": "Close",
     "saved": "Saved",
-    "requiredNote": "Items marked ※ are required."
+    "requiredNote": "Items marked ※ are required.",
+    "yes": "Yes",
+    "no": "No"
   },
   "auth": {
     "password": {
@@ -292,7 +294,10 @@
         "number": "No.",
         "age": "Age",
         "hire": "Hire date"
-      }
+      },
+      "asOf": "As of",
+      "asOfNote": "This list is as of {{date}} (employment status, category, coverage and age on that date). Check each employee's values on that date (name, address, etc.) in their \"History\" tab.",
+      "asOfReset": "Back to today"
     },
     "status": {
       "active": "Active",
@@ -325,7 +330,8 @@
       "collection": "How premiums are collected",
       "foreign": "Foreign national information",
       "more": "Other information",
-      "emergency": "Emergency contacts"
+      "emergency": "Emergency contacts",
+      "org": "Department, position and officer"
     },
     "field": {
       "employeeNumber": "Employee number",
@@ -397,7 +403,10 @@
       "livingAddress": "Place of residence",
       "overseasCountry": "Country/region",
       "overseasCity": "City",
-      "addressFactDate": "Date the address changed"
+      "addressFactDate": "Date the address changed",
+      "department": "Department",
+      "position": "Position",
+      "officerType": "Officer"
     },
     "insurance": {
       "health": "Enrolled in health insurance",
@@ -684,6 +693,34 @@
       "child": "Child",
       "sibling": "Sibling",
       "other": "Other"
+    },
+    "org": {
+      "noDepartment": "No department",
+      "allDepartments": "All departments",
+      "noDepartmentsHint": "Create departments under \"Departments\" in the office settings.",
+      "notOfficer": "Not an officer",
+      "officerType": {
+        "representative": "Representative",
+        "fullTime": "Full-time officer",
+        "partTime": "Part-time officer"
+      },
+      "checksTitle": "Part-time officer: factors for coverage (6 items from the Japan Pension Service)",
+      "check": {
+        "attendance": "1. Comes to the office regularly",
+        "fewOtherJobs": "2. Does not hold many other positions",
+        "boardMeetings": "3. Attends board meetings etc.",
+        "supervision": "4. Coordinates with officers or supervises staff",
+        "beyondAdvice": "5. Does more than give opinions on request",
+        "fairPay": "6. Pay matches the work and is more than reimbursement of expenses"
+      },
+      "unanswered": "Not yet",
+      "candidate": {
+        "enroll": "Likely covered (toward coverage {{toward}}, away {{away}}, not yet {{unanswered}}).",
+        "exclude": "Likely not covered (toward coverage {{toward}}, away {{away}}, not yet {{unanswered}}).",
+        "unclear": "Unclear (toward coverage {{toward}}, away {{away}}, not yet {{unanswered}}). Check the actual situation.",
+        "noPay": "An officer without remuneration cannot be insured."
+      },
+      "officerNote": "Corporate officers are insured if they receive remuneration from the corporation for their work. For part-time officers, the 6 items above have no priority and the situation is judged as a whole (the pension office decides). Sole proprietors made officers who pay \"membership fees\" exceeding their remuneration are, in principle, not covered (MHLW notice, March 18, 2026)."
     }
   },
   "office": {
@@ -871,6 +908,22 @@
       "prefecture": "When the prefecture changes, the competent pension office changes and the Kyokai Kenpo rate may change (add \"from which month\" in the insurer/location history).",
       "factDate": "Date of change",
       "factDateHint": "The deadline is within 5 days, counting this date as day 1."
+    },
+    "department": {
+      "title": "Departments",
+      "lead": "Used for employees' departments. The employee list can be filtered by department, and the premium list shows subtotals by department. Renaming keeps employees' assignments.",
+      "empty": "No departments yet.",
+      "add": "Add department",
+      "newName": "New department name",
+      "rename": "Rename",
+      "remove": "Remove",
+      "error": {
+        "empty": "Enter a department name.",
+        "tooLong": "Department names can be up to 40 characters.",
+        "duplicate": "A department with the same name already exists.",
+        "tooMany": "Up to 50 departments.",
+        "save": "Could not save the departments."
+      }
     }
   },
   "remuneration": {
@@ -1036,7 +1089,15 @@
       "badge": "Advance {{amount}} yen",
       "note": "\"Advance\" means the pay (cash) in the deduction month is less than the employee's share, so it cannot be fully deducted. The company pays it in advance and collects it from the employee later. The amount is an estimate: share minus pay."
     },
-    "exportXlsx": "Export Excel"
+    "exportXlsx": "Export Excel",
+    "dept": {
+      "title": "Subtotals by department",
+      "count": "People",
+      "employee": "Employee share",
+      "employer": "Employer share",
+      "total": "Total",
+      "hint": "An estimate for allocating labor costs by department. The employer share is only determined for the whole office, so the same calculation (total rounded down − employee share) is applied per department. The sum of departments may differ from the office total by a few yen."
+    }
   },
   "rateDialog": {
     "title": "Health insurance rates",
@@ -2097,6 +2158,14 @@
       "private": "Address, contact, commute and bank account",
       "remuneration": "Health grade {health} / pension grade {pension} (monthly remuneration ¥{amount})",
       "payroll": "Paid in money ¥{cash}"
+    },
+    "compare": {
+      "title": "Compare with the values on a date",
+      "date": "Date",
+      "then": "As of {{date}}",
+      "now": "Now",
+      "same": "Nothing has changed since this date.",
+      "note": "Values are reconstructed by rolling back the change history. The history has been recorded since November 9, 2026, so earlier changes cannot be rolled back. Dates are when the change was made in the app, which may differ from the actual date (e.g., moving day)."
     }
   },
   "recalc": {

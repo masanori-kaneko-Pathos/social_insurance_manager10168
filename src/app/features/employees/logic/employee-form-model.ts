@@ -7,6 +7,10 @@ import {
   AcquisitionType,
   AgreementCovers,
   EmergencyContact,
+  EmployeeOrg,
+  OFFICER_CHECKS,
+  OfficerCheck,
+  OfficerType,
   EmployeeFormInput,
   EmployeeFull,
   EnrollmentDoc,
@@ -122,8 +126,61 @@ export interface EmployeeFormValue {
     holderKana: string;
   };
   collectionMethod: CollectionMethod | '';
+  /** 部署・役職・役員（11/12） */
+  org: OrgForm;
   hasForeign: boolean;
   foreign: ForeignForm;
+}
+
+// ===== 部署・役職・役員 =====
+
+export type YesNo = '' | 'yes' | 'no';
+
+export interface OrgForm {
+  departmentId: string;
+  position: string;
+  officerType: OfficerType | '';
+  /** 非常勤の役員の6項目（''＝まだ答えていない） */
+  checks: Record<OfficerCheck, YesNo>;
+}
+
+export function emptyOrgForm(): OrgForm {
+  return {
+    departmentId: '',
+    position: '',
+    officerType: '',
+    checks: { attendance: '', fewOtherJobs: '', boardMeetings: '', supervision: '', beyondAdvice: '', fairPay: '' },
+  };
+}
+
+export function orgFormOf(o: EmployeeOrg | null): OrgForm {
+  const f = emptyOrgForm();
+  if (!o) return f;
+  f.departmentId = o.departmentId ?? '';
+  f.position = o.position ?? '';
+  if (o.officer) {
+    f.officerType = o.officer.type;
+    for (const k of OFFICER_CHECKS) {
+      const v = o.officer.checks[k];
+      f.checks[k] = v === true ? 'yes' : v === false ? 'no' : '';
+    }
+  }
+  return f;
+}
+
+/** フォーム → 保存する形（どれも空なら null） */
+export function orgOf(f: OrgForm): EmployeeOrg | null {
+  const departmentId = f.departmentId.trim() || null;
+  const position = f.position.trim() || null;
+  const officer = f.officerType
+    ? {
+        type: f.officerType,
+        checks: Object.fromEntries(
+          OFFICER_CHECKS.map((k) => [k, f.officerType === 'partTime' ? (f.checks[k] === 'yes' ? true : f.checks[k] === 'no' ? false : null) : null]),
+        ) as Record<OfficerCheck, boolean | null>,
+      }
+    : null;
+  return departmentId || position || officer ? { departmentId, position, officer } : null;
 }
 
 // ===== 小さな道具 =====
@@ -287,6 +344,7 @@ export function emptyEmployeeForm(): EmployeeFormValue {
     commute: { method: '', route: '' },
     bankAccount: { bankName: '', branchName: '', accountType: '', accountNumber: '', holderKana: '' },
     collectionMethod: '',
+    org: emptyOrgForm(),
     hasForeign: false,
     foreign: emptyForeignForm(),
   };
@@ -353,6 +411,7 @@ export function toEmployeeForm(e: EmployeeFull): EmployeeFormValue {
       holderKana: e.bankAccount.holderKana ?? '',
     },
     collectionMethod: e.collectionMethod ?? '',
+    org: orgFormOf(e.org ?? null),
     hasForeign: f !== null,
     foreign: f
       ? {
@@ -500,6 +559,7 @@ export function fromEmployeeForm(v: EmployeeFormValue): EmployeeFormInput {
       holderKana: toNull(v.bankAccount.holderKana),
     },
     collectionMethod: orNull(v.collectionMethod),
+    org: orgOf(v.org ?? emptyOrgForm()),
     foreign,
   };
 }

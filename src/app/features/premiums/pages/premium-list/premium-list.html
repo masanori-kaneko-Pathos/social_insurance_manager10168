@@ -272,6 +272,35 @@
         </tbody>
       </table>
       <p class="hint">{{ 'premiumList.totalsHint' | transloco }}</p>
+      @if (deptTotals().length > 0) {
+        <!-- 部署ごとの小計（目安） -->
+        <h3 class="dept-head">{{ 'premiumList.dept.title' | transloco }}</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>{{ 'employee.field.department' | transloco }}</th>
+                <th class="num">{{ 'premiumList.dept.count' | transloco }}</th>
+                <th class="num">{{ 'premiumList.dept.employee' | transloco }}</th>
+                <th class="num">{{ 'premiumList.dept.employer' | transloco }}</th>
+                <th class="num">{{ 'premiumList.dept.total' | transloco }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (d of deptTotals(); track d.id) {
+                <tr>
+                  <td>{{ d.name ?? ('employee.org.noDepartment' | transloco) }}</td>
+                  <td class="num">{{ d.count }}</td>
+                  <td class="num">{{ yen(d.employeeYen) }}</td>
+                  <td class="num">{{ yen(d.employerYen) }}</td>
+                  <td class="num strong">{{ yen(d.totalYen) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="hint">{{ 'premiumList.dept.hint' | transloco }}</p>
+      }
       <!-- 賞与を払った月だけ：月額・賞与・合計 -->
       @if (bonusSummary(); as b) {
         <h3>{{ 'premiumList.bonusTitle' | transloco }}</h3>

@@ -43,5 +43,41 @@
         {{ 'history.more' | transloco: { n: rows().length } }}
       </button>
     }
+
+    <!-- その日の時点の値（変更履歴を巻き戻す） -->
+    <div class="compare">
+      <h3>{{ 'history.compare.title' | transloco }}</h3>
+      <label class="compare-date">
+        <span>{{ 'history.compare.date' | transloco }}</span>
+        <input class="input" type="date" [value]="compareDate()" (change)="compareDate.set($any($event.target).value)" />
+      </label>
+      @if (compared(); as list) {
+        @if (list.length === 0) {
+          <p class="muted">{{ 'history.compare.same' | transloco }}</p>
+        } @else {
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>{{ 'history.col.what' | transloco }}</th>
+                  <th>{{ 'history.compare.then' | transloco: { date: compareDate() } }}</th>
+                  <th>{{ 'history.compare.now' | transloco }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (v of list; track v.target + v.field) {
+                  <tr>
+                    <td>{{ compareLabel(v.target, v.field) }}</td>
+                    <td><div class="value">{{ value(v.then) }}</div></td>
+                    <td><div class="value after">{{ value(v.now) }}</div></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+      <p class="hint">{{ 'history.compare.note' | transloco }}</p>
+    </div>
   }
 </section>

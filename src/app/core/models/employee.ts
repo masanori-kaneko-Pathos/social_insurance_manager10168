@@ -198,6 +198,35 @@ export interface Leave {
 // ===== 従業員 =====
 
 /** Firestore の offices/{officeId}/employees/{employeeId} */
+// ===== 部署・役職・役員 =====
+
+/** 役員の種類：代表者／常勤／非常勤（非常勤は6項目で加入するかを総合的に判断する） */
+export type OfficerType = 'representative' | 'fullTime' | 'partTime';
+export const OFFICER_TYPES: readonly OfficerType[] = ['representative', 'fullTime', 'partTime'];
+
+/**
+ * 非常勤の役員の6項目（日本年金機構。どれも「はい」が加入の方向。null ＝ まだ答えていない）
+ * ① 定期的に出勤している ② ほかに多くの職を兼ねていない ③ 役員会などに出席している
+ * ④ 役員への連絡調整・職員の指揮監督をしている ⑤ 求めに応じて意見を述べる立場にとどまっていない
+ * ⑥ 報酬が労務に見合っていて、実費弁償の程度にとどまっていない
+ */
+export const OFFICER_CHECKS = ['attendance', 'fewOtherJobs', 'boardMeetings', 'supervision', 'beyondAdvice', 'fairPay'] as const;
+export type OfficerCheck = (typeof OFFICER_CHECKS)[number];
+
+export interface OfficerInfo {
+  type: OfficerType;
+  checks: Record<OfficerCheck, boolean | null>;
+}
+
+export interface EmployeeOrg {
+  /** 事業所の departments の id（なし ＝ null） */
+  departmentId: string | null;
+  /** 役職（部長・主任 など。自由な文字） */
+  position: string | null;
+  /** 役員なら（役員でなければ null） */
+  officer: OfficerInfo | null;
+}
+
 export interface EmployeeDoc {
   // 基本
   employeeNumber: string | null;
@@ -241,6 +270,8 @@ export interface EmployeeDoc {
   userUid: string | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  /** 部署・役職・役員（11/12 に足した。前の文書にはない） */
+  org?: EmployeeOrg | null;
 }
 
 export interface Employee extends EmployeeDoc {

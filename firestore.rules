@@ -246,6 +246,7 @@ service cloud.firestore {
       return str(d.name, 100)
         && (!('nameEn' in d) || optStr(d.nameEn, 100)) // 英語の名前（任意。11/10 より前の文書にはない）
         && (!('groupName' in d) || optStr(d.groupName, 40)) // グループの名前（任意。11/12 より前の文書にはない）
+        && (!('departments' in d) || d.departments == null || (d.departments is list && d.departments.size() <= 50)) // 部署（任意）
         && optStr(d.corporateName, 100)
         && (d.corporateNumber == null || (d.corporateNumber is string && d.corporateNumber.matches('^[0-9]{13}$')))
         && str(d.ownerName, 50)
@@ -332,7 +333,7 @@ service cloud.firestore {
       }
 
       function validEmployee(d, old) {
-        return d.keys().size() <= 33
+        return d.keys().size() <= 34
           && d.keys().hasAll(['lastName', 'lastNameKana', 'birthDate', 'hireDate', 'health', 'pension',
                               'foreign', 'leaves', 'userUid', 'createdAt', 'updatedAt'])
           // 氏名・番号
@@ -357,7 +358,12 @@ service cloud.firestore {
           // 休業・介護保険の適用除外：配列で件数まで（1件ずつの中身はアプリで確かめる）
           && d.leaves is list && d.leaves.size() <= 20
           && (!('careExemptions' in d) || (d.careExemptions is list && d.careExemptions.size() <= 10))
-          && (d.userUid == null || d.userUid is string);
+          && (d.userUid == null || d.userUid is string)
+          // 部署・役職・役員（任意。11/12 より前の文書にはない）
+          && (!('org' in d) || d.org == null || unchanged(d, old, 'org')
+              || (d.org is map && optStr(d.org.departmentId, 40) && optStr(d.org.position, 50)
+                  && (d.org.officer == null
+                      || (d.org.officer is map && d.org.officer.type in ['representative', 'fullTime', 'partTime']))));
       }
 
       match /employees/{employeeId} {
