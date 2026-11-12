@@ -102,6 +102,22 @@ describe('myNumberTodos：マイナンバー', () => {
     expect(myNumberTodos([{ ...p, retireDate: null }], new Map([['e1', entry('submitted')]]), '2026-11-11')[0].kind).toBe('myNumberCheck');
     expect(myNumberTodos([p], new Map(), '2026-11-11')).toEqual([]);
   });
+
+  it('家族の提出もチェック待ちにまとめる（1人1件）', () => {
+    const active = { ...p, retireDate: null };
+    const family = new Map([['e1', new Map([['d1', entry('submitted')], ['d2', entry('submitted')]])]]);
+    const t = myNumberTodos([active], new Map([['e1', entry('submitted')]]), '2026-11-11', family);
+    expect(t.length).toBe(1);
+    expect(t[0].params).toEqual({ self: 'yes', family: 2 });
+    const onlyFamily = myNumberTodos([active], new Map([['e1', entry('registered')]]), '2026-11-11', family);
+    expect(onlyFamily[0].params['self']).toBe('no');
+  });
+
+  it('廃棄のときは、残っている家族の番号の件数も出す', () => {
+    const family = new Map([['e1', new Map([['d1', entry('registered')]])]]);
+    const t = myNumberTodos([p], new Map([['e1', entry('registered')]]), '2026-11-11', family);
+    expect(t[0].params['family']).toBe(1);
+  });
 });
 
 describe('contractEndTodo：契約の満了', () => {

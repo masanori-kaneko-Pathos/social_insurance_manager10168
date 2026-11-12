@@ -133,6 +133,8 @@ export class Dashboard {
 
   /** マイナンバーの状態（管理者だけ。読めなければ空のまま） */
   private readonly myNumberIndex = signal<ReadonlyMap<string, MyNumberEntry>>(new Map());
+  /** 家族の番号の状態（従業員ID → 家族ID → 状態） */
+  private readonly familyIndex = signal<ReadonlyMap<string, ReadonlyMap<string, MyNumberEntry>>>(new Map());
 
   private readonly byId = computed(() => new Map(this.employees().map((e) => [e.id, e])));
 
@@ -190,7 +192,7 @@ export class Dashboard {
     const items: BoardItem[] = [
       ...todos.map(todoItem),
       ...extras.map(extraItem),
-      ...myNumberTodos(this.employees(), this.myNumberIndex(), this.today).map(extraItem),
+      ...myNumberTodos(this.employees(), this.myNumberIndex(), this.today, this.familyIndex()).map(extraItem),
       ...(specific ? [extraItem(specific)] : []),
       ...ageItems(this.employees(), this.thisMonth, shiftMonth(this.thisMonth, 1), this.today),
       ...this.officeIssues().map(officeItem),
@@ -294,8 +296,11 @@ export class Dashboard {
     if (this.context.isAdmin()) {
       // マイナンバーの状態（チェック待ち・廃棄の時期）。1回の読み取りで全員分
       this.myNumbersApi
-        .index(officeId)
-        .then((m) => this.myNumberIndex.set(m))
+        .indexAll(officeId)
+        .then((m) => {
+          this.myNumberIndex.set(m.people);
+          this.familyIndex.set(m.family);
+        })
         .catch((err) => console.error(err));
       this.tasksApi
         .listOpen(officeId)

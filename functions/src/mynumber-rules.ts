@@ -10,6 +10,10 @@ export type MyNumberStatus = 'requested' | 'submitted' | 'returned' | 'registere
 export type MyNumberDocType = 'card' | 'noticeCard' | 'residentRecord' | 'other';
 export const DOC_TYPES: readonly MyNumberDocType[] = ['card', 'noticeCard', 'residentRecord', 'other'];
 
+/** 家族の番号：本人確認をした人（会社／従業員）。配偶者（第3号）は会社が確認するのが原則で、従業員に任せることもできる */
+export type VerifiedBy = 'employer' | 'employee';
+export const VERIFIED_BY: readonly VerifiedBy[] = ['employer', 'employee'];
+
 export type AdminAction = 'set' | 'request' | 'cancel' | 'approve' | 'return' | 'refuse' | 'dispose';
 export const ADMIN_ACTIONS: readonly AdminAction[] = ['set', 'request', 'cancel', 'approve', 'return', 'refuse', 'dispose'];
 

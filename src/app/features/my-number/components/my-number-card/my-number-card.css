@@ -139,3 +139,23 @@ h2 {
   text-align: left;
   border-bottom: 1px solid var(--color-border);
 }
+
+/* 家族の番号（11/12）：見出しの続柄・届の添付の足りないもの・配偶者の本人確認の注意 */
+h2 .sub {
+  font-size: var(--font-sm);
+  font-weight: normal;
+  color: var(--color-text-sub);
+}
+
+.tag {
+  display: inline-block;
+  margin-left: var(--space-xs);
+  padding: 0 6px;
+  font-size: var(--font-xs);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.hint.warn {
+  color: var(--color-warning-text);
+}

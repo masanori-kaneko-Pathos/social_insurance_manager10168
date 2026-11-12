@@ -189,7 +189,9 @@
           "decrease": "A family member was reported as leaving on {{date}} (they may no longer be a dependent). Enter the end date on the dependents card and file the \"Dependent (change) notification\" within 5 days. Collect the eligibility certificate if one was issued."
         },
         "overseasCertificate": "The Japanese certificate of coverage for the assignment in {{country}} expires on {{date}}. To continue the assignment, apply for an extension before it expires (the other country must approve). Otherwise, the employee returns to Japan or switches to the local system (if the Japanese company stops paying salary, a loss-of-coverage notification is also needed in Japan). Once the extension certificate is issued, enter the new end date and this item disappears.",
-        "overseasPayAbroad": "Assigned to {{country}} since {{date}} and paid only by the overseas company, but still insured in Japan. If the Japanese company bears no salary (such as a family allowance at home), the employment relationship is regarded as ended and a loss-of-coverage notification is needed (the loss date is usually the start of the assignment). If you confirm that the Japanese company bears salary and coverage continues, dismiss with \"Checked\"."
+        "overseasPayAbroad": "Assigned to {{country}} since {{date}} and paid only by the overseas company, but still insured in Japan. If the Japanese company bears no salary (such as a family allowance at home), the employment relationship is regarded as ended and a loss-of-coverage notification is needed (the loss date is usually the start of the assignment). If you confirm that the Japanese company bears salary and coverage continues, dismiss with \"Checked\".",
+        "myNumberCheckFamily": "{{family}} family member number(s) have been submitted. Show all digits in the family My Number section, check them, and approve or return.",
+        "myNumberDisposeFamily": "{{family}} family member number(s) also remain. Dispose of them as well."
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -3498,6 +3500,34 @@
       "waiting": "Your employer is checking it.",
       "thanks": "Submitted. Your employer will check it.",
       "registered": "Registered with your employer."
+    },
+    "family": {
+      "title": "Family members' My Numbers",
+      "titleOf": "My Number of {{name}}",
+      "lead": "My Numbers of dependents. Writing them on the dependent change notification or the Category 3 insured notification can let you omit attachments. Numbers are encrypted like the employee's own and are never included in CSV export or import.",
+      "empty": "No dependents are registered.",
+      "verifiedBy": {
+        "label": "Identity verified by",
+        "employer": "Company (staff)",
+        "employee": "Employee (insured person)"
+      },
+      "verifyHint": {
+        "spouse": "For a spouse (Category 3 insured person), the company normally verifies identity, whether the spouse submits directly or the employee submits as an agent. Only when the company delegates the verification work to the employee does the employee verify (keep a written record of the delegation).",
+        "other": "For other dependents, the employee verifies identity. The company may look at documents such as the Individual Number Card to confirm the number (dispose of any copies promptly once no longer needed)."
+      },
+      "spouseWarning": "Identity verification for the spouse is set to \"Employee\". This is only valid if the company has delegated the verification work to the employee. Otherwise, the company must verify.",
+      "attachOk": "Both the employee's and this family member's numbers are registered, and the relationship is confirmed. Write both numbers on the dependent change notification and check \"Relationship confirmed\" in the remarks to omit relationship documents (family register or resident record).",
+      "attachMissing": "To omit relationship documents (family register or resident record), these are missing:",
+      "missing": {
+        "selfNumber": "Employee's own number (registered)",
+        "familyNumber": "This family member's number (registered)",
+        "relationship": "Relationship confirmation (dependents card)"
+      },
+      "disposalHint": "This number can be disposed of from {{date}}, two years after leaving dependent status.",
+      "me": {
+        "lead": "Your company has asked for your family member's My Number. Check the number and identity with their Individual Number Card or similar, then enter the number.",
+        "docHint": "You (the insured person) verify your family member's identity. For a spouse, only when the company has delegated this to you."
+      }
     }
   }
 }

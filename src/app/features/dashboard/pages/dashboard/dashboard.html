@@ -207,10 +207,18 @@
                             }
                           }
                           @case ('myNumberCheck') {
-                            {{ 'dashboard.todo.text.myNumberCheck' | transloco }}
+                            @if (it.extra!.params['self'] !== 'no') {
+                              {{ 'dashboard.todo.text.myNumberCheck' | transloco }}
+                            }
+                            @if (+it.extra!.params['family'] > 0) {
+                              {{ 'dashboard.todo.text.myNumberCheckFamily' | transloco: it.extra!.params }}
+                            }
                           }
                           @case ('myNumberDispose') {
                             {{ 'dashboard.todo.text.myNumberDispose' | transloco: it.extra!.params }}
+                            @if (+it.extra!.params['family'] > 0) {
+                              {{ 'dashboard.todo.text.myNumberDisposeFamily' | transloco: it.extra!.params }}
+                            }
                           }
                           @case ('specificOffice') {
                             {{ 'dashboard.todo.text.specificOffice' | transloco: it.extra!.params }}

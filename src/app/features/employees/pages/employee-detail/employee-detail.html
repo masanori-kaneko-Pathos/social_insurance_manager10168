@@ -432,6 +432,8 @@
         <app-my-page-card [employee]="e" />
         <!-- マイナンバー（管理者だけ。番号は関数でだけ扱う） -->
         <app-my-number-card [employee]="e" />
+        <!-- 家族のマイナンバー（開いたときだけ読む） -->
+        <app-family-my-numbers [employee]="e" />
       }
 
       @case ('history') {

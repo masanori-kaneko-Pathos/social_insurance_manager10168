@@ -1,4 +1,5 @@
 import { MyNumberCard } from '../../../my-number/components/my-number-card/my-number-card';
+import { FamilyMyNumbers } from '../../../my-number/components/family-my-numbers/family-my-numbers';
 import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -78,6 +79,7 @@ type AddKind = 'leave' | 'care' | 'overseas';
     OverseasCard,
     MyPageCard,
     MyNumberCard,
+    FamilyMyNumbers,
     PayrollCard,
     HistoryCard,
     RecalcCard,

@@ -2,12 +2,16 @@
   @if (en.status !== 'refused') {
     <section class="card">
       <div class="head">
-        <h2>{{ 'myNumber.title' | transloco }}</h2>
+        @if (dependent(); as d) {
+          <h2>{{ 'myNumber.family.titleOf' | transloco: { name: (d.lastName + ' ' + d.firstName).trim() } }}</h2>
+        } @else {
+          <h2>{{ 'myNumber.title' | transloco }}</h2>
+        }
         <span class="status s-{{ en.status }}">{{ 'myNumber.me.status.' + en.status | transloco }}</span>
       </div>
 
       @if (canSubmit()) {
-        <p>{{ 'myNumber.me.lead' | transloco }}</p>
+        <p>{{ (dependent() ? 'myNumber.family.me.lead' : 'myNumber.me.lead') | transloco }}</p>
         @if (en.status === 'returned' && en.note) {
           <p class="field-error">{{ 'myNumber.me.returned' | transloco: { note: en.note } }}</p>
         }
@@ -30,7 +34,7 @@
               </select>
             </label>
           </div>
-          <p class="hint">{{ 'myNumber.me.docHint' | transloco }}</p>
+          <p class="hint">{{ (dependent() ? 'myNumber.family.me.docHint' : 'myNumber.me.docHint') | transloco }}</p>
           <button type="submit" class="btn btn-solid" [disabled]="busy() || !numberText() || numberProblem()">
             {{ 'myNumber.me.submit' | transloco }}
           </button>

@@ -23,7 +23,7 @@
 import { addDays, DateStr, daysInMonth, monthsBetween, shiftMonth, toYearMonth, YearMonth } from '../../../shared/utils/date';
 import { contractAt } from '../../employees/logic/contract-form-model';
 import type { MyNumberEntry } from '../../../core/models/my-number';
-import { disposalDue, DisposalPerson } from '../../my-number/logic/my-number';
+import { disposalDue, DisposalPerson, hasNumber } from '../../my-number/logic/my-number';
 import { certificateEndingSoon, OverseasPerson, payAbroadEnrolled } from '../../employees/logic/overseas';
 import { countHeadcount, criteriaAt, HeadcountTarget, isSpecificApplied, WorkSchedule } from '../../employees/logic/coverage';
 
@@ -142,15 +142,33 @@ export function myNumberTodos(
   people: readonly DisposalPerson[],
   index: ReadonlyMap<string, MyNumberEntry>,
   today: DateStr,
+  /** 家族の番号（従業員ID → 家族ID → 状態）。チェック待ちと、廃棄のときの件数に使う */
+  family: ReadonlyMap<string, ReadonlyMap<string, MyNumberEntry>> = new Map(),
 ): ExtraTodo[] {
   const out: ExtraTodo[] = [];
   for (const p of people) {
     const e = index.get(p.id) ?? null;
-    if (e?.status === 'submitted') {
-      out.push({ kind: 'myNumberCheck', employeeId: p.id, date: e.updatedAt.slice(0, 10) || null, params: {} });
+    const fam = [...(family.get(p.id)?.values() ?? [])];
+    // チェック待ち：本人の分と家族の分を1件にまとめる（同じ人の To-do が2つに分かれないように）
+    const famSubmitted = fam.filter((f) => f.status === 'submitted');
+    if (e?.status === 'submitted' || famSubmitted.length > 0) {
+      const dates = [e?.status === 'submitted' ? e.updatedAt : '', ...famSubmitted.map((f) => f.updatedAt)]
+        .map((d) => d.slice(0, 10))
+        .filter(Boolean)
+        .sort();
+      out.push({
+        kind: 'myNumberCheck',
+        employeeId: p.id,
+        date: dates[0] ?? null,
+        params: { self: e?.status === 'submitted' ? 'yes' : 'no', family: famSubmitted.length },
+      });
     }
+    // 廃棄：本人の喪失から2年。家族の番号が残っていれば、その件数も知らせる
     const due = disposalDue(p, e, today);
-    if (due) out.push({ kind: 'myNumberDispose', employeeId: p.id, date: due, params: { date: due } });
+    if (due) {
+      const famHeld = fam.filter((f) => hasNumber(f.status)).length;
+      out.push({ kind: 'myNumberDispose', employeeId: p.id, date: due, params: { date: due, family: famHeld } });
+    }
   }
   return out;
 }

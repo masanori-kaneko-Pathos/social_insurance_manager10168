@@ -5,6 +5,10 @@
 // - offices/{o}/myNumberIndex/all                   状態の一覧 people.{employeeId}（管理者が読む。1回の読み取りで全員分）
 // - offices/{o}/employees/{e}/details/myNumber      本人の状態（管理者と本人が読む。番号は入れない）
 // - offices/{o}/myNumberLogs/{auto}                 アクセス記録（管理者が読む。書くのは関数だけ）
+// 家族（被扶養者）の番号（11/12）：data に dependentId があれば家族の分として扱う
+// - offices/{o}/myNumberVault/{employeeId}_{dependentId}   暗号化した番号
+// - offices/{o}/myNumberIndex/all                          family.{employeeId}.{dependentId}
+// - offices/{o}/employees/{e}/details/myNumberFamily       {dependentId}: 状態（管理者と本人が読む）
 // 決まりは mynumber-rules.ts、暗号化は mynumber-crypto.ts（どちらも spec あり）
 
 import { FieldValue, getFirestore, Transaction } from 'firebase-admin/firestore';
@@ -22,6 +26,8 @@ import {
   MyNumberStatus,
   nextStatus,
   normalizeMyNumber,
+  VERIFIED_BY,
+  VerifiedBy,
 } from './mynumber-rules.js';
 
 const REGION = 'asia-northeast1';
@@ -36,6 +42,8 @@ interface Entry {
   note: string | null;
   by: 'admin' | 'employee';
   updatedAt: string;
+  /** 家族だけ：本人確認をした人（会社／従業員） */
+  verifiedBy?: VerifiedBy | null;
 }
 
 type LogAction = AdminAction | 'submit' | 'view' | 'export' | 'import';
@@ -66,6 +74,16 @@ function docTypeArg(v: unknown, optional = false): MyNumberDocType | null {
   return v as MyNumberDocType;
 }
 
+/** 家族のID（任意。なければ従業員本人の番号） */
+function dependentArg(v: unknown): string | null {
+  return v == null || v === '' ? null : idArg(v);
+}
+
+function verifiedByArg(v: unknown): VerifiedBy {
+  if (!VERIFIED_BY.includes(v as VerifiedBy)) fail('invalid-argument', 'badArgument');
+  return v as VerifiedBy;
+}
+
 function noteArg(v: unknown, required: boolean): string | null {
   const t = typeof v === 'string' ? v.trim() : '';
   if (t.length > 200 || (required && !t)) fail('invalid-argument', 'badNote');
@@ -83,12 +101,29 @@ async function needAdmin(uid: string, officeId: string): Promise<void> {
   if ((o.data()?.memberRoles ?? {})[uid] !== 'admin') fail('permission-denied', 'notAdmin');
 }
 
+/** 番号の持ち主：従業員本人（dependentId なし）か、その家族 */
+interface Subject {
+  officeId: string;
+  employeeId: string;
+  dependentId: string | null;
+}
+
 const refs = (officeId: string, employeeId: string) => ({
   vault: db().doc(`offices/${officeId}/myNumberVault/${employeeId}`),
   index: db().doc(`offices/${officeId}/myNumberIndex/all`),
   self: db().doc(`offices/${officeId}/employees/${employeeId}/details/myNumber`),
   employee: db().doc(`offices/${officeId}/employees/${employeeId}`),
 });
+
+/** 金庫の文書（家族は {従業員ID}_{家族ID}） */
+const vaultOf = (s: Subject) =>
+  db().doc(`offices/${s.officeId}/myNumberVault/${s.dependentId ? `${s.employeeId}_${s.dependentId}` : s.employeeId}`);
+/** 暗号化に添える文字（取り違え防止。従業員本人は今までどおり） */
+const aadOf = (s: Subject) =>
+  s.dependentId ? `${s.officeId}/${s.employeeId}/${s.dependentId}` : `${s.officeId}/${s.employeeId}`;
+const familyRef = (s: Subject) => db().doc(`offices/${s.officeId}/employees/${s.employeeId}/details/myNumberFamily`);
+const dependentRef = (s: Subject) =>
+  db().doc(`offices/${s.officeId}/employees/${s.employeeId}/dependents/${s.dependentId}`);
 
 function writeLog(
   tx: Transaction | null,
@@ -98,17 +133,29 @@ function writeLog(
   employeeId: string | null,
   count: number,
   name: unknown,
+  dependentId: string | null = null,
 ): Promise<unknown> | void {
   const ref = db().collection(`offices/${officeId}/myNumberLogs`).doc();
   // 名前はログインのトークンから（表示名。なければ空）。記録を読むときに名簿を引かなくて済む
-  const data = { action, employeeId, count, uid, name: typeof name === 'string' ? name.slice(0, 50) : '', at: FieldValue.serverTimestamp() };
+  const data = {
+    action, employeeId, dependentId, count, uid,
+    name: typeof name === 'string' ? name.slice(0, 50) : '',
+    at: FieldValue.serverTimestamp(),
+  };
   if (tx) tx.set(ref, data);
   else return ref.set(data);
 }
 
-/** 状態を一覧と本人の文書の両方に書く（null ＝ 未登録に戻す） */
-function writeStatus(tx: Transaction, officeId: string, employeeId: string, entry: Entry | null): void {
+/** 状態を一覧と本人の文書の両方に書く（null ＝ 未登録に戻す）。家族は family の欄と details/myNumberFamily */
+function writeStatus(tx: Transaction, subject: Subject, entry: Entry | null): void {
+  const { officeId, employeeId, dependentId } = subject;
   const r = refs(officeId, employeeId);
+  if (dependentId) {
+    const value = entry ?? FieldValue.delete();
+    tx.set(r.index, { family: { [employeeId]: { [dependentId]: value } } }, { merge: true });
+    tx.set(familyRef(subject), { [dependentId]: value }, { merge: true });
+    return;
+  }
   if (entry) {
     tx.set(r.index, { people: { [employeeId]: entry } }, { merge: true });
     tx.set(r.self, { ...entry, updatedAt: FieldValue.serverTimestamp() });
@@ -118,61 +165,72 @@ function writeStatus(tx: Transaction, officeId: string, employeeId: string, entr
   }
 }
 
-async function currentOf(tx: Transaction, officeId: string, employeeId: string): Promise<Entry | null> {
-  const snap = await tx.get(refs(officeId, employeeId).self);
+async function currentOf(tx: Transaction, subject: Subject): Promise<Entry | null> {
+  if (subject.dependentId) {
+    const snap = await tx.get(familyRef(subject));
+    return (snap.data()?.[subject.dependentId] as Entry | undefined) ?? null;
+  }
+  const snap = await tx.get(refs(subject.officeId, subject.employeeId).self);
   return snap.exists ? (snap.data() as Entry) : null;
 }
 
 /**
  * 管理者の操作：登録（set）・提供の依頼・取り消し・承認・差し戻し・提供を受けられない・廃棄
- * data: { officeId, employeeId, action, number?, docType?, note? }
+ * data: { officeId, employeeId, dependentId?, action, number?, docType?, verifiedBy?, note? }
+ * 家族（dependentId あり）の登録では、本人確認をした人（verifiedBy：会社／従業員）を必ず受け取る
  */
 export const siMyNumberAdmin = onCall({ region: REGION }, async (req) => {
   const uid = needUid(req.auth);
   const officeId = idArg(req.data?.officeId);
   const employeeId = idArg(req.data?.employeeId);
+  const dependentId = dependentArg(req.data?.dependentId);
+  const subject: Subject = { officeId, employeeId, dependentId };
   const action = req.data?.action as AdminAction;
   if (!ADMIN_ACTIONS.includes(action)) fail('invalid-argument', 'badArgument');
   await needAdmin(uid, officeId);
   const number = action === 'set' ? numberArg(req.data?.number) : null;
   const docType = action === 'set' ? docTypeArg(req.data?.docType, true) : null;
+  const verifiedBy = action === 'set' && dependentId ? verifiedByArg(req.data?.verifiedBy) : null;
   const note = action === 'return' || action === 'refuse' ? noteArg(req.data?.note, true) : null;
   const r = refs(officeId, employeeId);
+  const vault = vaultOf(subject);
 
   await db().runTransaction(async (tx) => {
-    const [emp, cur] = await Promise.all([tx.get(r.employee), currentOf(tx, officeId, employeeId)]);
-    if (!emp.exists) fail('not-found', 'notFound');
+    const [emp, dep, cur] = await Promise.all([
+      tx.get(r.employee),
+      dependentId ? tx.get(dependentRef(subject)) : Promise.resolve(null),
+      currentOf(tx, subject),
+    ]);
+    if (!emp.exists || (dep && !dep.exists)) fail('not-found', 'notFound');
     const step = nextStatus(cur?.status ?? null, action);
     if (!step.ok) fail('failed-precondition', 'badStatus');
     const next = step.next;
-    if (number) tx.set(r.vault, { ...seal(key(), number, `${officeId}/${employeeId}`), updatedAt: FieldValue.serverTimestamp(), updatedBy: uid });
-    else if (!keepsVault(next)) tx.delete(r.vault);
-    writeStatus(
-      tx,
-      officeId,
-      employeeId,
-      next
-        ? {
-            status: next,
-            // 承認のときは、本人が選んだ確認書類をそのまま残す
-            docType: action === 'set' ? docType : (cur?.docType ?? null),
-            note,
-            by: 'admin',
-            updatedAt: new Date().toISOString(),
-          }
-        : null,
-    );
-    writeLog(tx, officeId, uid, action, employeeId, 1, req.auth?.token?.name);
-    // 依頼・差し戻し：本人のマイページの受信箱に知らせる（文は日本語。理由はそのまま）
+    if (number) tx.set(vault, { ...seal(key(), number, aadOf(subject)), updatedAt: FieldValue.serverTimestamp(), updatedBy: uid });
+    else if (!keepsVault(next)) tx.delete(vault);
+    const entry: Entry | null = next
+      ? {
+          status: next,
+          // 承認のときは、本人が選んだ確認書類をそのまま残す
+          docType: action === 'set' ? docType : (cur?.docType ?? null),
+          note,
+          by: 'admin',
+          updatedAt: new Date().toISOString(),
+          ...(dependentId ? { verifiedBy: action === 'set' ? verifiedBy : (cur?.verifiedBy ?? null) } : {}),
+        }
+      : null;
+    writeStatus(tx, subject, entry);
+    writeLog(tx, officeId, uid, action, employeeId, 1, req.auth?.token?.name, dependentId);
+    // 依頼・差し戻し：本人のマイページの受信箱に知らせる（文は日本語。理由はそのまま。家族の名前は書かない）
     if (action === 'request' || action === 'return') {
+      const family = dependentId ? 'ご家族の' : '';
       tx.set(db().collection(`offices/${officeId}/notifications`).doc(), {
         employeeId,
         kind: 'notice',
-        title: action === 'request' ? 'マイナンバーの提出のお願い' : 'マイナンバーの提出（修正のお願い）',
+        title: action === 'request' ? `${family}マイナンバーの提出のお願い` : `${family}マイナンバーの提出（修正のお願い）`,
         body:
           action === 'request'
-            ? '社会保険の届出のため、マイページの「マイナンバー」から番号を提出してください。'
-            : `提出いただいたマイナンバーを確認できませんでした。理由：${note ?? ''}　マイページから提出し直してください。`,
+            ? `社会保険の届出のため、マイページの「マイナンバー」から${family}番号を提出してください。`
+            : `提出いただいた${family}マイナンバーを確認できませんでした。理由：${note ?? ''}　マイページから提出し直してください。`,
         link: null,
         readAt: null,
         createdAt: FieldValue.serverTimestamp(),
@@ -182,39 +240,56 @@ export const siMyNumberAdmin = onCall({ region: REGION }, async (req) => {
   return { ok: true };
 });
 
-/** 本人の提出（マイページ）。依頼中・差し戻し中のときだけ。data: { number, docType } */
+/**
+ * 本人の提出（マイページ）。依頼中・差し戻し中のときだけ。data: { number, docType, dependentId? }
+ * 家族の分は、従業員が本人確認をしたもの（verifiedBy: employee）として受け取る
+ */
 export const siMyNumberSubmit = onCall({ region: REGION }, async (req) => {
   const uid = needUid(req.auth);
   const number = numberArg(req.data?.number);
   const docType = docTypeArg(req.data?.docType);
+  const dependentId = dependentArg(req.data?.dependentId);
   const user = await db().doc(`users/${uid}`).get();
   const ref = user.data()?.employeeRef as { officeId?: string; employeeId?: string } | undefined;
   if (user.data()?.role !== 'employee' || !ref?.officeId || !ref.employeeId) fail('permission-denied', 'notEmployee');
   const officeId = idArg(ref.officeId);
   const employeeId = idArg(ref.employeeId);
-  const r = refs(officeId, employeeId);
+  const subject: Subject = { officeId, employeeId, dependentId };
 
   await db().runTransaction(async (tx) => {
-    const cur = await currentOf(tx, officeId, employeeId);
+    const [dep, cur] = await Promise.all([
+      dependentId ? tx.get(dependentRef(subject)) : Promise.resolve(null),
+      currentOf(tx, subject),
+    ]);
+    if (dep && !dep.exists) fail('not-found', 'notFound');
     if (!canSubmit(cur?.status ?? null)) fail('failed-precondition', 'badStatus');
-    tx.set(r.vault, { ...seal(key(), number, `${officeId}/${employeeId}`), updatedAt: FieldValue.serverTimestamp(), updatedBy: uid });
-    writeStatus(tx, officeId, employeeId, { status: 'submitted', docType, note: null, by: 'employee', updatedAt: new Date().toISOString() });
-    writeLog(tx, officeId, uid, 'submit', employeeId, 1, req.auth?.token?.name);
+    tx.set(vaultOf(subject), { ...seal(key(), number, aadOf(subject)), updatedAt: FieldValue.serverTimestamp(), updatedBy: uid });
+    writeStatus(tx, subject, {
+      status: 'submitted',
+      docType,
+      note: null,
+      by: 'employee',
+      updatedAt: new Date().toISOString(),
+      ...(dependentId ? { verifiedBy: 'employee' as const } : {}),
+    });
+    writeLog(tx, officeId, uid, 'submit', employeeId, 1, req.auth?.token?.name, dependentId);
   });
   return { ok: true };
 });
 
-/** 全桁を見る（登録済み・チェック待ち）。5分以内にログインし直していること */
+/** 全桁を見る（登録済み・チェック待ち）。5分以内にログインし直していること。data: { officeId, employeeId, dependentId? } */
 export const siMyNumberView = onCall({ region: REGION }, async (req) => {
   const uid = needUid(req.auth);
   const officeId = idArg(req.data?.officeId);
   const employeeId = idArg(req.data?.employeeId);
+  const dependentId = dependentArg(req.data?.dependentId);
+  const subject: Subject = { officeId, employeeId, dependentId };
   await needAdmin(uid, officeId);
   needRecentAuth(req.auth?.token);
-  const snap = await refs(officeId, employeeId).vault.get();
+  const snap = await vaultOf(subject).get();
   if (!snap.exists) fail('not-found', 'notFound');
-  const number = open(key(), snap.data() as Sealed, `${officeId}/${employeeId}`);
-  await writeLog(null, officeId, uid, 'view', employeeId, 1, req.auth?.token?.name);
+  const number = open(key(), snap.data() as Sealed, aadOf(subject));
+  await writeLog(null, officeId, uid, 'view', employeeId, 1, req.auth?.token?.name, dependentId);
   return { number };
 });
 

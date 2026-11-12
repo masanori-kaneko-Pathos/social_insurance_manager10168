@@ -1,7 +1,14 @@
 @if (context.isAdmin()) {
   <section class="card">
     <div class="head">
-      <h2>{{ 'myNumber.title' | transloco }}</h2>
+      @if (dependent(); as d) {
+        <h2>
+          {{ 'myNumber.family.titleOf' | transloco: { name: (d.lastName + ' ' + d.firstName).trim() } }}
+          <span class="sub">（{{ 'dependent.relationship.' + d.relationship | transloco }}）</span>
+        </h2>
+      } @else {
+        <h2>{{ 'myNumber.title' | transloco }}</h2>
+      }
       @if (!loading()) {
         <span class="status s-{{ status() ?? 'none' }}">{{ 'myNumber.status.' + (status() ?? 'none') | transloco }}</span>
       }
@@ -16,6 +23,12 @@
             <div>
               <dt>{{ 'myNumber.docType.label' | transloco }}</dt>
               <dd>{{ 'myNumber.docType.' + en.docType | transloco }}</dd>
+            </div>
+          }
+          @if (dependent() && en.verifiedBy) {
+            <div>
+              <dt>{{ 'myNumber.family.verifiedBy.label' | transloco }}</dt>
+              <dd>{{ 'myNumber.family.verifiedBy.' + en.verifiedBy | transloco }}</dd>
             </div>
           }
           @if (en.note) {
@@ -36,7 +49,22 @@
       }
 
       @if (disposal(); as d) {
-        <p class="hint">{{ 'myNumber.disposalHint' | transloco: { date: d } }}</p>
+        <p class="hint">{{ (dependent() ? 'myNumber.family.disposalHint' : 'myNumber.disposalHint') | transloco: { date: d } }}</p>
+      }
+      @if (spouseWarning()) {
+        <p class="hint warn">{{ 'myNumber.family.spouseWarning' | transloco }}</p>
+      }
+      @if (attach(); as a) {
+        @if (a.ok) {
+          <p class="hint">{{ 'myNumber.family.attachOk' | transloco }}</p>
+        } @else {
+          <p class="hint">
+            {{ 'myNumber.family.attachMissing' | transloco }}
+            @for (m of a.missing; track m) {
+              <span class="tag">{{ 'myNumber.family.missing.' + m | transloco }}</span>
+            }
+          </p>
+        }
       }
 
       @if (shown(); as n) {
@@ -117,6 +145,19 @@
               </label>
             </div>
             <p class="hint">{{ 'myNumber.docType.hint' | transloco }}</p>
+            @if (dependent(); as d) {
+              <label class="field">
+                <span>{{ 'myNumber.family.verifiedBy.label' | transloco }}</span>
+                <select class="input" (change)="verifiedBy.set($any(input($event)))">
+                  @for (v of verifiers; track v) {
+                    <option [value]="v" [selected]="verifiedBy() === v">{{ 'myNumber.family.verifiedBy.' + v | transloco }}</option>
+                  }
+                </select>
+              </label>
+              <p class="hint">
+                {{ (d.relationship === 'spouse' ? 'myNumber.family.verifyHint.spouse' : 'myNumber.family.verifyHint.other') | transloco }}
+              </p>
+            }
             <button type="submit" class="btn btn-solid" [disabled]="busy() || !numberText() || numberProblem()">
               {{ 'common.save' | transloco }}
             </button>
