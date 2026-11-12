@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { collection, doc } from 'firebase/firestore';
+import { cached, cacheKey } from '../../core/data-cache';
 import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { HistoryService } from './history.service';
 import { db } from '../../core/firebase';
@@ -14,12 +15,15 @@ export class ContractService {
     return collection(db, 'offices', officeId, 'employees', employeeId, 'contracts');
   }
 
-  /** 新しい順 */
+  /** 新しい順。ログインしている間は覚えておく（core/data-cache.ts。書き込んだら HistoryService が忘れる） */
   async list(officeId: string, employeeId: string): Promise<ContractDoc[]> {
-    const snap = await countedGetDocs(this.col(officeId, employeeId));
-    return snap.docs
-      .map((d) => d.data() as ContractDoc)
-      .sort((a, b) => b.from.localeCompare(a.from));
+    const rows = await cached(cacheKey.contracts(officeId, employeeId), async () => {
+      const snap = await countedGetDocs(this.col(officeId, employeeId));
+      return snap.docs
+        .map((d) => d.data() as ContractDoc)
+        .sort((a, b) => b.from.localeCompare(a.from));
+    });
+    return [...rows];
   }
 
   /** 書き込みと変更履歴は同じ batch（HistoryService） */

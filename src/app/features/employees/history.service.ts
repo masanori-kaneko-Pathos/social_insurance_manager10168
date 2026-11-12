@@ -10,6 +10,7 @@ import {
   WriteBatch,
   writeBatch,
 } from 'firebase/firestore';
+import { forgetForWrite } from '../../core/data-cache';
 import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { auth, db } from '../../core/firebase';
 import { ChangeHistory, HistoryDoc } from '../../core/models/employee-records';
@@ -45,6 +46,8 @@ export class HistoryService {
     changes: readonly FieldChange[],
   ): void {
     const uid = this.uid();
+    // 覚えておいた一覧を忘れる（書き込みはすべてここを通る。commit のあとに読み直させる）
+    forgetForWrite(officeId, employeeId, target);
     for (const c of changes) {
       batch.set(doc(this.col(officeId, employeeId)), {
         target,
@@ -82,6 +85,8 @@ export class HistoryService {
     else batch.delete(ref);
     this.addTo(batch, officeId, employeeId, target, changes);
     await batch.commit();
+    // 書いている間に読まれて覚えられた古い値も、ここで忘れる
+    forgetForWrite(officeId, employeeId, target);
   }
 
   /** 新しい順（多すぎる人は max 件まで） */

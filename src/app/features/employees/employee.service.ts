@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HistoryService } from './history.service';
 import { addDoc, collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { cached, cacheKey, peek } from '../../core/data-cache';
 import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { db } from '../../core/firebase';
 import {
@@ -70,15 +71,24 @@ export class EmployeeService {
     return collection(db, 'offices', officeId, 'employees');
   }
 
-  /** 事業所の従業員（フリガナ順） */
+  /** 事業所の従業員（フリガナ順）。ログインしている間は覚えておく（core/data-cache.ts）。配列は呼ぶ側で並べ替えてよいように写しを返す */
   async list(officeId: string): Promise<Employee[]> {
-    const snap = await countedGetDocs(this.col(officeId));
-    return snap.docs
-      .map((d) => ({ id: d.id, ...(d.data() as EmployeeDoc) }))
-      .sort((a, b) => kana(a).localeCompare(kana(b), 'ja'));
+    const all = await cached(cacheKey.employees(officeId), async () => {
+      const snap = await countedGetDocs(this.col(officeId));
+      return snap.docs
+        .map((d) => ({ id: d.id, ...(d.data() as EmployeeDoc) }))
+        .sort((a, b) => kana(a).localeCompare(kana(b), 'ja'));
+    });
+    return [...all];
   }
 
   async get(officeId: string, employeeId: string): Promise<Employee | null> {
+    // 一覧を覚えていれば、そこから（詳細を開くたびに1回読まなくて済む）
+    const listed = peek<Employee[]>(cacheKey.employees(officeId));
+    if (listed) {
+      const hit = (await listed).find((e) => e.id === employeeId);
+      if (hit) return hit;
+    }
     const snap = await countedGetDoc(doc(this.col(officeId), employeeId));
     return snap.exists() ? { id: snap.id, ...(snap.data() as EmployeeDoc) } : null;
   }
