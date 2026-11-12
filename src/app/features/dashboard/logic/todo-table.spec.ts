@@ -86,3 +86,26 @@ describe('1つの表にする', () => {
     ]);
   });
 });
+
+describe('契約の満了の期限と急ぎ', () => {
+  const item = (date: string, noticeBy: string) =>
+    ({
+      key: 'k',
+      kind: 'contractEnd',
+      employeeId: 'e1',
+      date,
+      todo: null,
+      age: null,
+      office: null,
+      extra: { kind: 'contractEnd', employeeId: 'e1', date, params: { date, notice: noticeBy ? 'yes' : 'no', noticeBy, shortTerm: 'no' } },
+    }) as BoardItem;
+
+  it('予告が要る人は満了の30日前、ほかは満了日が期限', () => {
+    expect(deadlineOf(item('2026-12-31', '2026-12-01')).deadline).toBe('2026-12-01');
+    expect(deadlineOf(item('2026-12-31', '')).deadline).toBe('2026-12-31');
+  });
+  it('満了の30日前からは「今すぐ」、それより前は「もうすぐ」', () => {
+    expect(urgencyOf('contractEnd', '2026-12-31', null, '2026-12-01', '2026-12-31')).toBe('now');
+    expect(urgencyOf('contractEnd', '2026-12-31', null, '2026-11-30', '2026-12-31')).toBe('soon');
+  });
+});

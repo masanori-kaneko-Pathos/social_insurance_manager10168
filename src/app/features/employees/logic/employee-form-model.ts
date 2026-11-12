@@ -6,6 +6,7 @@ import {
   AccountType,
   AcquisitionType,
   AgreementCovers,
+  EmergencyContact,
   EmployeeFormInput,
   EmployeeFull,
   EnrollmentDoc,
@@ -98,6 +99,13 @@ export interface EmployeeFormValue {
     phone3: string;
     phone3Note: string;
     email: string;
+    /** 緊急連絡先（1件目・2件目） */
+    emergency1Name: string;
+    emergency1Relation: string;
+    emergency1Phone: string;
+    emergency2Name: string;
+    emergency2Relation: string;
+    emergency2Phone: string;
   };
   commute: { method: string; route: string };
   bankAccount: {
@@ -134,6 +142,38 @@ function otherPhonesOf(c: Partial<EmployeeFormValue['contact']>): { number: stri
   ]
     .map(([n, note]) => ({ number: phoneOrNull(n ?? ''), note: toNull(note ?? '') }))
     .filter((p): p is { number: string; note: string | null } => p.number !== null);
+}
+
+/** 緊急連絡先：保存する形 → フォームの欄 */
+export function emergencyFormOf(list: readonly EmergencyContact[]): Pick<
+  EmployeeFormValue['contact'],
+  'emergency1Name' | 'emergency1Relation' | 'emergency1Phone' | 'emergency2Name' | 'emergency2Relation' | 'emergency2Phone'
+> {
+  const [a, b] = list;
+  return {
+    emergency1Name: a?.name ?? '',
+    emergency1Relation: a?.relation ?? '',
+    emergency1Phone: a?.phone ?? '',
+    emergency2Name: b?.name ?? '',
+    emergency2Relation: b?.relation ?? '',
+    emergency2Phone: b?.phone ?? '',
+  };
+}
+
+/** 緊急連絡先：フォームの欄 → 保存する形（3つとも空の行は捨てる。1件目が空なら2件目を前に詰める） */
+export function emergencyContactsOf(c: Partial<EmployeeFormValue['contact']>): EmergencyContact[] {
+  return (
+    [
+      [c.emergency1Name, c.emergency1Relation, c.emergency1Phone],
+      [c.emergency2Name, c.emergency2Relation, c.emergency2Phone],
+    ] as const
+  )
+    .map(([name, relation, phone]) => ({
+      name: toNull(name ?? ''),
+      relation: toNull(relation ?? ''),
+      phone: phoneOrNull(phone ?? ''),
+    }))
+    .filter((x) => x.name !== null || x.relation !== null || x.phone !== null);
 }
 
 const phoneOrNull = (v: string): string | null => {
@@ -222,7 +262,18 @@ export function emptyEmployeeForm(): EmployeeFormValue {
     optOutDate: '',
     insuredNumber: '',
     basicPensionNumber: '',
-    contact: { postalCode: '', address: '', phone: '', phoneNote: '', phone2: '', phone2Note: '', phone3: '', phone3Note: '', email: '' },
+    contact: {
+      postalCode: '',
+      address: '',
+      phone: '',
+      phoneNote: '',
+      phone2: '',
+      phone2Note: '',
+      phone3: '',
+      phone3Note: '',
+      email: '',
+      ...emergencyFormOf([]),
+    },
     commute: { method: '', route: '' },
     bankAccount: { bankName: '', branchName: '', accountType: '', accountNumber: '', holderKana: '' },
     collectionMethod: '',
@@ -277,6 +328,7 @@ export function toEmployeeForm(e: EmployeeFull): EmployeeFormValue {
       phone3: e.contact.otherPhones?.[1]?.number ?? '',
       phone3Note: e.contact.otherPhones?.[1]?.note ?? '',
       email: e.contact.email ?? '',
+      ...emergencyFormOf(e.contact.emergencyContacts ?? []),
     },
     commute: { method: e.commute.method ?? '', route: e.commute.route ?? '' },
     bankAccount: {
@@ -419,6 +471,7 @@ export function fromEmployeeForm(v: EmployeeFormValue): EmployeeFormInput {
       phoneNote: toNull(v.contact.phoneNote ?? ''),
       otherPhones: otherPhonesOf(v.contact),
       email: toNull(toHalfWidth(v.contact.email)),
+      emergencyContacts: emergencyContactsOf(v.contact),
     },
     commute: { method: toNull(v.commute.method), route: toNull(v.commute.route) },
     bankAccount: {

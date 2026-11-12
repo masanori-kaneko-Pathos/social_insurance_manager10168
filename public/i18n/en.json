@@ -129,7 +129,8 @@
         "lumpSum": "Lump-sum withdrawal",
         "specificOffice": "Specified office",
         "myNumberCheck": "My Number check",
-        "myNumberDispose": "Dispose of My Number"
+        "myNumberDispose": "Dispose of My Number",
+        "contractEnd": "Contract ending"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. An Application to Enroll in EPI / EHI (資格取得届) is needed.",
@@ -150,7 +151,10 @@
           "manual": "(Uses the company-wide count entered in the office settings.)"
         },
         "myNumberCheck": "The employee submitted a My Number. Show all digits, check them against the ID documents, then register or return it.",
-        "myNumberDispose": "Two years have passed since losing coverage ({{date}}). The retention period for health insurance and pension documents (two years from completion) has ended, so dispose of the My Number. If you count completion from the date of the pension service's notice, wait two years from that date and dismiss this with “Checked”."
+        "myNumberDispose": "Two years have passed since losing coverage ({{date}}). The retention period for health insurance and pension documents (two years from completion) has ended, so dispose of the My Number. If you count completion from the date of the pension service's notice, wait two years from that date and dismiss this with “Checked”.",
+        "contractEnd": "The employment contract ends on {{date}}. If it is renewed, register the next contract; if not, enter the retirement date (this leads to the loss-of-coverage To-do). If it renews automatically on the same terms, check and then dismiss with \"Checked\".",
+        "contractEndNotice": "Because the contract has been renewed 3 or more times or the employee has worked for more than 1 year, advance notice must be given by {{noticeBy}} if it will not be renewed (MHLW standards on fixed-term contracts, Article 2).",
+        "contractEndShort": "This is a contract of 2 months or less. Once it is expected to continue beyond 2 months through renewal, the employee becomes subject to social insurance from that point."
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -180,7 +184,9 @@
       "errorDismiss": "Could not save. Please try again.",
       "toForeign": "Edit employee (residence)",
       "toFilings": "Open the acquisition filing list",
-      "toMyNumber": "Go to My Number"
+      "toMyNumber": "Go to My Number",
+      "toRenew": "Register the next contract (renew)",
+      "toRetire": "Enter the retirement date (do not renew)"
     }
   },
   "nav": {
@@ -248,7 +254,8 @@
       "created": "Employee registered",
       "contractFailed": "The employee was registered, but the contract could not be saved. Please add it again from the Contract card.",
       "addPhone": "Add phone number",
-      "removePhone": "Remove"
+      "removePhone": "Remove",
+      "addEmergency": "Add an emergency contact"
     },
     "section": {
       "basic": "Basic information",
@@ -261,7 +268,8 @@
       "bank": "Payroll bank account",
       "collection": "How premiums are collected",
       "foreign": "Foreign national information",
-      "more": "Other information"
+      "more": "Other information",
+      "emergency": "Emergency contacts"
     },
     "field": {
       "employeeNumber": "Employee number",
@@ -324,7 +332,11 @@
       "optOutDate": "Date of request to withdraw",
       "phoneNote": "Note",
       "phoneN": "Phone {{n}}",
-      "otherPhones": "Other phones"
+      "otherPhones": "Other phones",
+      "emergencyName": "Emergency contact ({{n}}) name",
+      "emergencyRelation": "Relationship",
+      "emergencyPhone": "Phone number",
+      "emergencyContacts": "Emergency contacts"
     },
     "insurance": {
       "health": "Enrolled in health insurance",
@@ -354,7 +366,8 @@
       "phone": "Digits only (no hyphens needed)",
       "digitsOnly": "Digits only",
       "optOut": "For specified reduction special cases, the date they asked to withdraw from coverage.",
-      "multipleOffices": "An employee working at two or more offices chooses the managing pension office with a notification, and the premiums are split by each office's pay. The premiums in the app are an estimate using only this office's pay. Check the amounts in the notice from the pension office (the split is not calculated by the app)."
+      "multipleOffices": "An employee working at two or more offices chooses the managing pension office with a notification, and the premiums are split by each office's pay. The premiums in the app are an estimate using only this office's pay. Check the amounts in the notice from the pension office (the split is not calculated by the app).",
+      "emergency": "Who the company contacts in case of an accident or sudden illness (up to 2). Enter separately from the employee's own phone."
     },
     "validation": {
       "required": "This field is required.",
@@ -593,6 +606,14 @@
       "companyMobile": "Company mobile",
       "work": "Work",
       "emergency": "Emergency contact"
+    },
+    "relationChoice": {
+      "spouse": "Spouse",
+      "father": "Father",
+      "mother": "Mother",
+      "child": "Child",
+      "sibling": "Sibling",
+      "other": "Other"
     }
   },
   "office": {
@@ -639,7 +660,8 @@
       "deduction": "Premium deduction",
       "method": "Employee share collected by",
       "healthRounding": "Rounding of health, care and child care support",
-      "nameEn": "Office name in English"
+      "nameEn": "Office name in English",
+      "groupName": "Group name"
     },
     "insurer": {
       "kyokai": "Japan Health Insurance Association (Kyokai Kenpo)",
@@ -654,7 +676,8 @@
       "switchToKumiai": "Until kumiai rates are registered, health premiums from the switch month show as 'No rate registered'.",
       "method": "Per-employee settings (e.g. cash for employees on leave) are coming later.",
       "healthRounding": "There is no official guidance, so both are available. The method once published by the ministry is 'together'.",
-      "nameEn": "Enter the English name if there is one."
+      "nameEn": "Enter the English name if there is one.",
+      "groupName": "Enter this when you handle several group companies. Offices with the same group name are listed together in the switcher, even if their corporate numbers differ (e.g., a parent and its subsidiaries)."
     },
     "postal": {
       "search": "Find address",
@@ -2155,7 +2178,8 @@
     "prefectureHint": "Table from {{from}}. Use the prefecture of the workplace (the office that manages personnel, labor and payroll), not where the housing is. If the head office and branches form one covered office, choose again.",
     "movedIn": "Move-in date",
     "movedInHint": "Prorated: monthly value × days from move-in ÷ days in the month.",
-    "changePrefecture": "Change"
+    "changePrefecture": "Change",
+    "dispatchedHint": "For dispatched workers, the value is calculated for the prefecture of the dispatching office (this office), not the actual workplace (Japan Pension Service Q&A on in-kind remuneration)."
   },
   "invite": {
     "accept": {
@@ -2322,7 +2346,10 @@
         "postalCode": "Postal code",
         "address": "Address",
         "phone": "Phone",
-        "email": "Email"
+        "email": "Email",
+        "emergencyName": "Emergency contact name",
+        "emergencyRelation": "Emergency contact relationship",
+        "emergencyPhone": "Emergency contact phone number"
       },
       "commute": {
         "method": "Commute method",

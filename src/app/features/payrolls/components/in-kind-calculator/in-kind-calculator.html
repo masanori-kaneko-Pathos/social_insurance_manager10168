@@ -15,7 +15,7 @@
     <div class="pref">
       <label for="ik-pref">{{ 'inKind.prefecture' | transloco }}</label>
       <!-- ふだんは文字で出し、「変更」を押したときだけ選べる（勤務地は事業所の都道府県がほとんどのため） -->
-      @if (changingPrefecture()) {
+      @if (changingPrefecture() && !dispatched()) {
         <select id="ik-pref" class="input" [value]="prefectureCode()" (change)="choosePrefecture($any($event.target).value)">
           @for (o of prefectureOptions(); track o.code) {
             <option [value]="o.code">{{ o.name }}{{ o.code === prefecture() ? ('inKind.officePrefecture' | transloco) : '' }}</option>
@@ -27,8 +27,13 @@
           @if (prefectureCode() === prefecture()) {
             <span class="hint">{{ 'inKind.officePrefecture' | transloco }}</span>
           }
-          <button type="button" class="btn change-btn" (click)="changingPrefecture.set(true)">{{ 'inKind.changePrefecture' | transloco }}</button>
+          @if (!dispatched()) {
+            <button type="button" class="btn change-btn" (click)="changingPrefecture.set(true)">{{ 'inKind.changePrefecture' | transloco }}</button>
+          }
         </div>
+      }
+      @if (dispatched()) {
+        <span class="hint">{{ 'inKind.dispatchedHint' | transloco }}</span>
       }
       <span class="hint">{{ 'inKind.prefectureHint' | transloco: { from: t.from } }}</span>
     </div>

@@ -9,19 +9,29 @@
 //   （直近12か月のうち6か月以上で基準を超えると該当。ここでは今月の人数で知らせる）
 // - myNumberCheck：本人が提出したマイナンバーのチェック待ち（管理者だけ）
 // - myNumberDispose：資格喪失から2年たった人のマイナンバー（廃棄する。ガイドライン「保管制限と廃棄」）
+// - contractEnd：有期の雇用契約の満了が60日以内（過ぎていても、次の契約も退職日もなければ出す）
+//   3回以上の更新か、入社から1年を超えて続いている人は、更新しないなら満了の30日前までに予告が要る
+//   （有期労働契約の締結、更新、雇止め等に関する基準 第2条。あらかじめ「更新しない」と明示した契約は除く）
 
-import { addDays, DateStr, monthsBetween, shiftMonth, toYearMonth, YearMonth } from '../../../shared/utils/date';
+import { addDays, DateStr, daysInMonth, monthsBetween, shiftMonth, toYearMonth, YearMonth } from '../../../shared/utils/date';
 import { contractAt } from '../../employees/logic/contract-form-model';
 import type { MyNumberEntry } from '../../../core/models/my-number';
 import { disposalDue, DisposalPerson } from '../../my-number/logic/my-number';
 import { countHeadcount, criteriaAt, HeadcountTarget, isSpecificApplied, WorkSchedule } from '../../employees/logic/coverage';
 
-export type ExtraKind = 'residence' | 'workPermit' | 'lumpSum' | 'specificOffice' | 'myNumberCheck' | 'myNumberDispose';
+export type ExtraKind =
+  | 'residence'
+  | 'workPermit'
+  | 'lumpSum'
+  | 'specificOffice'
+  | 'myNumberCheck'
+  | 'myNumberDispose'
+  | 'contractEnd';
 
 export interface ExtraTodo {
   kind: ExtraKind;
   employeeId: string | null;
-  /** residence：満了日／workPermit：今の契約の始まる日／lumpSum：退職日 */
+  /** residence：満了日／workPermit：今の契約の始まる日／lumpSum：退職日／contractEnd：契約の満了日 */
   date: DateStr | null;
   /** 文の差し込み（時間・人数など） */
   params: Record<string, string | number>;
@@ -131,4 +141,74 @@ export function myNumberTodos(
     if (due) out.push({ kind: 'myNumberDispose', employeeId: p.id, date: due, params: { date: due } });
   }
   return out;
+}
+
+// ===== 契約の満了 =====
+
+/** 満了の何日前から出すか */
+export const CONTRACT_END_DAYS = 60;
+/** 雇止めの予告：満了の何日前までか（基準 第2条） */
+export const NOTICE_DAYS = 30;
+/** 予告が要る更新の回数（3回以上） */
+export const NOTICE_RENEWALS = 3;
+
+export interface ContractTerm {
+  from: DateStr;
+  periodEnd: DateStr | null;
+  renewal: 'none' | 'possible' | 'expected';
+}
+
+/** 1年後の同じ日（2/29 は 2/28 にする） */
+function oneYearAfter(date: DateStr): DateStr {
+  const y = Number(date.slice(0, 4)) + 1;
+  const md = date.slice(5) === '02-29' ? '02-28' : date.slice(5);
+  return `${y}-${md}`;
+}
+
+/**
+ * 雇止めの予告が要るか（更新しないとき）
+ * - 3回以上更新している（有期の契約が4つ目以上）か、入社から1年を超えて続いている
+ * - ただし、この契約で「更新しない」とあらかじめ明示していれば要らない
+ */
+export function noticeRequired(hireDate: DateStr, terms: readonly ContractTerm[], last: ContractTerm): boolean {
+  if (last.renewal === 'none' || !last.periodEnd) return false;
+  const renewals = terms.filter((t) => t.periodEnd !== null && t.from <= last.from).length - 1;
+  return renewals >= NOTICE_RENEWALS || last.periodEnd >= oneYearAfter(hireDate);
+}
+
+/** 2か月以内の契約か（更新して2か月を超える見込みになると、その時点で社会保険の対象になる） */
+export function isShortTerm(t: ContractTerm): boolean {
+  if (!t.periodEnd) return false;
+  // 2か月後の同じ日の前の日（4/10 始まり → 6/9 まで）。その月にない日は月末にそろえる
+  const ym = shiftMonth(toYearMonth(t.from), 2);
+  const day = Math.min(Number(t.from.slice(8)), daysInMonth(ym));
+  return t.periodEnd <= addDays(`${ym}-${String(day).padStart(2, '0')}`, -1);
+}
+
+/** 有期の契約の満了が近い（いちばん新しい契約で判断する） */
+export function contractEndTodo(
+  p: Pick<ExtraPerson, 'id' | 'retireDate'> & { hireDate: DateStr },
+  terms: readonly ContractTerm[],
+  today: DateStr,
+  days = CONTRACT_END_DAYS,
+): ExtraTodo | null {
+  if (terms.length === 0) return null;
+  const last = terms.reduce((a, b) => (b.from > a.from ? b : a));
+  const end = last.periodEnd;
+  if (!end || end > addDays(today, days)) return null;
+  // 更新しないと決めて退職日が入っていれば、喪失の To-do に任せる
+  if (p.retireDate && p.retireDate <= end) return null;
+  if (p.retireDate && p.retireDate < today) return null;
+  const notice = noticeRequired(p.hireDate, terms, last);
+  return {
+    kind: 'contractEnd',
+    employeeId: p.id,
+    date: end,
+    params: {
+      date: end,
+      notice: notice ? 'yes' : 'no',
+      noticeBy: notice ? addDays(end, -NOTICE_DAYS) : '',
+      shortTerm: isShortTerm(last) ? 'yes' : 'no',
+    },
+  };
 }

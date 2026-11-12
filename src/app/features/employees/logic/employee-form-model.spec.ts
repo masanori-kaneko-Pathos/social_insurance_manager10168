@@ -1,5 +1,7 @@
 import { EmployeeFull, employeeExtras } from '../../../core/models/employee';
 import {
+  emergencyContactsOf,
+  emergencyFormOf,
   emptyEmployeeForm,
   EmployeeFormValue,
   fromEmployeeForm,
@@ -220,5 +222,27 @@ describe('小さな道具', () => {
     expect(PATTERNS.phone.test('abc')).toBeFalse();
     expect(PATTERNS.roman.test("O'BRIEN")).toBeTrue();
     expect(PATTERNS.roman.test('グエン')).toBeFalse();
+  });
+});
+
+describe('緊急連絡先（2件まで）', () => {
+  it('空の行は捨て、1件目が空なら2件目を前に詰める。電話は数字だけ', () => {
+    const list = emergencyContactsOf({
+      emergency1Name: ' ',
+      emergency1Relation: '',
+      emergency1Phone: '',
+      emergency2Name: '山田 花子',
+      emergency2Relation: '母',
+      emergency2Phone: '090-1111-2222',
+    });
+    expect(list).toEqual([{ name: '山田 花子', relation: '母', phone: '09011112222' }]);
+  });
+  it('保存した形 → フォームの欄 → 保存した形 が往復する', () => {
+    const saved = [
+      { name: '山田 太郎', relation: '父', phone: '0312345678' },
+      { name: null, relation: '配偶者', phone: '09000000000' },
+    ];
+    expect(emergencyContactsOf(emergencyFormOf(saved))).toEqual(saved);
+    expect(emergencyFormOf([]).emergency1Name).toBe('');
   });
 });

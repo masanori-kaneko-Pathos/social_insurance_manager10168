@@ -1,4 +1,4 @@
-import { myNumberTodos } from './extra-todos';
+import { contractEndTodo, isShortTerm, myNumberTodos, noticeRequired } from './extra-todos';
 import {
   ExtraPerson,
   lumpSumTodo,
@@ -101,5 +101,47 @@ describe('myNumberTodos：マイナンバー', () => {
     expect(t[0].date).toBe('2026-04-01');
     expect(myNumberTodos([{ ...p, retireDate: null }], new Map([['e1', entry('submitted')]]), '2026-11-11')[0].kind).toBe('myNumberCheck');
     expect(myNumberTodos([p], new Map(), '2026-11-11')).toEqual([]);
+  });
+});
+
+describe('contractEndTodo：契約の満了', () => {
+  const p = { id: 'e1', retireDate: null, hireDate: '2026-04-01' };
+  const t = (from: string, periodEnd: string | null, renewal: 'none' | 'possible' | 'expected' = 'possible') => ({
+    from,
+    periodEnd,
+    renewal,
+  });
+
+  it('満了の60日前から出す。61日先は出さない', () => {
+    expect(contractEndTodo(p, [t('2026-04-01', '2027-01-10')], TODAY)?.date).toBe('2027-01-10');
+    expect(contractEndTodo(p, [t('2026-04-01', '2027-01-11')], TODAY)).toBeNull();
+  });
+  it('過ぎても次の契約がなければ出し続ける', () => {
+    expect(contractEndTodo(p, [t('2026-04-01', '2026-09-30')], TODAY)?.date).toBe('2026-09-30');
+  });
+  it('次の契約を入れた・期間の定めがない・退職日を入れた なら出さない', () => {
+    expect(contractEndTodo(p, [t('2026-04-01', '2026-12-31'), t('2027-01-01', '2027-12-31')], TODAY)).toBeNull();
+    expect(contractEndTodo(p, [t('2026-04-01', null)], TODAY)).toBeNull();
+    expect(contractEndTodo({ ...p, retireDate: '2026-12-31' }, [t('2026-04-01', '2026-12-31')], TODAY)).toBeNull();
+  });
+  it('入社から1年を超えるなら、30日前までの予告が要る', () => {
+    const r = contractEndTodo({ ...p, hireDate: '2025-12-01' }, [t('2025-12-01', '2026-12-01')], TODAY);
+    expect(r?.params).toEqual({ date: '2026-12-01', notice: 'yes', noticeBy: '2026-11-01', shortTerm: 'no' });
+    // ちょうど1年（4/1 入社・翌年3/31 満了）は「超えて」いない
+    expect(noticeRequired('2026-04-01', [t('2026-04-01', '2027-03-31')], t('2026-04-01', '2027-03-31'))).toBeFalse();
+    expect(noticeRequired('2026-04-01', [t('2026-04-01', '2027-04-01')], t('2026-04-01', '2027-04-01'))).toBeTrue();
+  });
+  it('3回以上の更新（4つ目の契約）なら、1年以内でも予告が要る。「更新しない」と明示していれば要らない', () => {
+    const terms = [t('2026-08-01', '2026-08-31'), t('2026-09-01', '2026-09-30'), t('2026-10-01', '2026-10-31'), t('2026-11-01', '2026-11-30')];
+    expect(noticeRequired('2026-08-01', terms, terms[3])).toBeTrue();
+    expect(noticeRequired('2026-08-01', terms.slice(0, 3), terms[2])).toBeFalse();
+    const last = t('2026-11-01', '2026-11-30', 'none');
+    expect(noticeRequired('2026-08-01', [...terms.slice(0, 3), last], last)).toBeFalse();
+  });
+  it('2か月以内の契約に印をつける', () => {
+    expect(isShortTerm(t('2026-04-10', '2026-06-09'))).toBeTrue();
+    expect(isShortTerm(t('2026-04-10', '2026-06-10'))).toBeFalse();
+    expect(isShortTerm(t('2026-12-31', '2027-02-27'))).toBeTrue(); // 2/28 の前の日まで
+    expect(isShortTerm(t('2026-04-01', null))).toBeFalse();
   });
 });

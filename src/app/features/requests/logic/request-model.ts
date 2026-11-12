@@ -6,7 +6,7 @@
 // 質問に field（'contact.address' など）があれば、承認したときに従業員の情報へ書き込む。
 // 書き込める項目は、ここに並べたものだけ（マイナンバーなどは入れない）
 
-import type { AccountType, BankAccountDoc, CommuteDoc, ContactDoc } from '../../../core/models/employee';
+import type { AccountType, BankAccountDoc, CommuteDoc, ContactDoc, EmergencyContact } from '../../../core/models/employee';
 import type { QuestionType, RequestQuestion, RequestStatus, RequestType } from '../../../core/models/office-records';
 import { DATE_RE } from '../../../shared/utils/date';
 import { toHalfWidth } from '../../../shared/utils/text';
@@ -18,6 +18,9 @@ export const REQUEST_FIELDS = [
   'contact.address',
   'contact.phone',
   'contact.email',
+  'contact.emergencyName',
+  'contact.emergencyRelation',
+  'contact.emergencyPhone',
   'commute.method',
   'commute.route',
   'bankAccount.bankName',
@@ -66,6 +69,16 @@ export const FIELD_SPECS: Record<RequestField, FieldSpec> = {
     normalize: (s) => {
       const t = toHalfWidth(s).trim();
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t) && t.length <= 254 ? t : undefined;
+    },
+  },
+  'contact.emergencyName': { type: 'text', choices: null, normalize: upTo(50) },
+  'contact.emergencyRelation': { type: 'text', choices: null, normalize: upTo(20) },
+  'contact.emergencyPhone': {
+    type: 'text',
+    choices: null,
+    normalize: (s) => {
+      const t = toHalfWidth(s).trim();
+      return /^\+?[\d\-()\s]{6,20}$/.test(t) ? t : undefined;
     },
   },
   'commute.method': { type: 'text', choices: null, normalize: upTo(50) },
@@ -205,8 +218,20 @@ export interface FieldChange {
   after: string;
 }
 
+/**
+ * 緊急連絡先の3つの項目 → 1件目（emergencyContacts[0]）のどの値か
+ * 依頼・申請で扱うのは1件目だけ（2件目は管理者が従業員の画面で入れる）
+ */
+const EMERGENCY_KEYS: Record<string, keyof EmergencyContact> = {
+  'contact.emergencyName': 'name',
+  'contact.emergencyRelation': 'relation',
+  'contact.emergencyPhone': 'phone',
+};
+
 /** 今の値（画面で答えと並べる） */
 export function currentValue(e: ApplyTarget, field: RequestField): string | null {
+  const ek = EMERGENCY_KEYS[field];
+  if (ek) return e.contact.emergencyContacts?.[0]?.[ek] ?? null;
   const [group, key] = field.split('.') as [keyof ApplyTarget, string];
   return ((e[group] as unknown as Record<string, string | null>)[key] ?? null) as string | null;
 }
@@ -233,7 +258,15 @@ export function planApply(
     if (before === after) continue;
     const [group, key] = q.field.split('.') as [keyof ApplyTarget, string];
     patch[group] ??= { ...(e[group] as unknown as Record<string, unknown>) };
-    patch[group]![key] = after;
+    const ek = EMERGENCY_KEYS[q.field];
+    if (ek) {
+      // 1件目だけを書き換える（2件目はそのまま）
+      const list = [...((patch.contact!['emergencyContacts'] as EmergencyContact[] | undefined) ?? [])];
+      list[0] = { ...(list[0] ?? { name: null, relation: null, phone: null }), [ek]: after };
+      patch.contact!['emergencyContacts'] = list;
+    } else {
+      patch[group]![key] = after;
+    }
     changes.push({ field: q.field, before, after });
   }
   return { patch: patch as Partial<ApplyTarget>, changes };

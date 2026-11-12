@@ -146,6 +146,7 @@ export class OfficeForm {
     {
       name: ['', [Validators.required, NOT_BLANK, Validators.maxLength(100)]],
       nameEn: ['', [Validators.maxLength(100)]],
+      groupName: ['', [Validators.maxLength(40)]],
       corporateName: ['', [Validators.maxLength(100)]],
       corporateNumber: ['', [corporateNumberValidator]],
       ownerName: ['', [Validators.required, NOT_BLANK, Validators.maxLength(50)]],
@@ -305,6 +306,7 @@ export class OfficeForm {
     this.form.setValue({
       name: o.name,
       nameEn: o.nameEn ?? '',
+      groupName: o.groupName ?? '',
       corporateName: o.corporateName ?? '',
       corporateNumber: o.corporateNumber ?? '',
       ownerName: o.ownerName,
@@ -389,6 +391,7 @@ export class OfficeForm {
     const payroll = payrollOf(o);
     const premium = premiumOf(o);
     this.form.patchValue({
+      groupName: o.groupName ?? '',
       corporateName: o.corporateName ?? '',
       corporateNumber: o.corporateNumber ?? '',
       ownerName: o.ownerName,
@@ -521,6 +524,7 @@ export class OfficeForm {
     const base = {
       name: v.name.trim(),
       nameEn: emptyToNull(v.nameEn),
+      groupName: emptyToNull(v.groupName),
       corporateName: emptyToNull(v.corporateName),
       corporateNumber: emptyToNull(v.corporateNumber),
       ownerName: v.ownerName.trim(),

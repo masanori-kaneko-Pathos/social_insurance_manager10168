@@ -6,9 +6,11 @@
 // - 70歳到達届：到達日から5日以内。ただし報酬が変わる人だけ（同じなら機構が処理し、届は不要）
 // - 75歳（健康保険の喪失）：喪失日（75歳の誕生日）から5日以内
 // - 40・65歳：届出なし
+// - 契約の満了：予告が要る人は満了の30日前（雇止めの予告）、ほかは満了日。満了の30日前からは「今すぐ」
 
 import { addDays, DateStr, daysInclusive } from '../../../shared/utils/date';
 import { BoardGroup, BoardItem, BoardKind } from './todo-board';
+import { NOTICE_DAYS } from './extra-todos';
 
 /** 当日から起算して5日以内 → 当日を1日目として、5日目が期限 */
 export const FILING_DAYS = 5;
@@ -53,6 +55,10 @@ export function deadlineOf(it: BoardItem): { deadline: DateStr | null; note: Dea
     case 'residence':
       // 届の期限ではなく、在留期間の満了日（更新の申請は満了日まで）
       return { deadline: it.date, note: null };
+    case 'contractEnd': {
+      const by = it.extra?.params['noticeBy'];
+      return { deadline: typeof by === 'string' && by ? by : it.date, note: null };
+    }
     case 'age': {
       const ev = it.age;
       if (ev?.age === 70) return { deadline: filingDeadline(ev.reachDate), note: 'onlyIfPayChanges' };
@@ -65,10 +71,19 @@ export function deadlineOf(it: BoardItem): { deadline: DateStr | null; note: Dea
 }
 
 /** 急ぎのバッジ：期限があれば期限から、なければ種類から */
-export function urgencyOf(kind: BoardKind, deadline: DateStr | null, note: DeadlineNote, today: DateStr): Urgency {
+export function urgencyOf(
+  kind: BoardKind,
+  deadline: DateStr | null,
+  note: DeadlineNote,
+  today: DateStr,
+  factDate: DateStr | null = null,
+): Urgency {
   if (deadline) {
     if (deadline < today) return 'overdue';
-    return daysInclusive(today, deadline) - 1 <= NOW_DAYS ? 'now' : 'soon';
+    if (daysInclusive(today, deadline) - 1 <= NOW_DAYS) return 'now';
+    // 契約の満了：満了の30日前からは、更新するかどうかを決める時期
+    if (kind === 'contractEnd' && factDate && today >= addDays(factDate, -NOTICE_DAYS)) return 'now';
+    return 'soon';
   }
   if (note === 'asap' || kind === 'requests') return 'now';
   if (kind === 'noContract' || kind === 'office') return 'missing';
@@ -91,7 +106,7 @@ export function compareRows(a: TodoRow, b: TodoRow): number {
 export function toRows(groups: readonly BoardGroup[], today: DateStr): TodoRow[] {
   const row = (item: BoardItem, dismissed: boolean): TodoRow => {
     const { deadline, note } = deadlineOf(item);
-    return { item, dismissed, deadline, note, urgency: urgencyOf(item.kind, deadline, note, today) };
+    return { item, dismissed, deadline, note, urgency: urgencyOf(item.kind, deadline, note, today, item.date) };
   };
   return groups
     .flatMap((g) => [...g.items.map((i) => row(i, false)), ...g.dismissed.map((i) => row(i, true))])

@@ -245,6 +245,7 @@ service cloud.firestore {
     function validOffice(d) {
       return str(d.name, 100)
         && (!('nameEn' in d) || optStr(d.nameEn, 100)) // 英語の名前（任意。11/10 より前の文書にはない）
+        && (!('groupName' in d) || optStr(d.groupName, 40)) // グループの名前（任意。11/12 より前の文書にはない）
         && optStr(d.corporateName, 100)
         && (d.corporateNumber == null || (d.corporateNumber is string && d.corporateNumber.matches('^[0-9]{13}$')))
         && str(d.ownerName, 50)
@@ -277,7 +278,7 @@ service cloud.firestore {
       allow create: if signedIn()
         && myUser().role == 'admin'
         && exactKeys(request.resource.data, [
-             'name', 'nameEn', 'corporateName', 'corporateNumber', 'ownerName', 'postalCode', 'prefecture',
+             'name', 'nameEn', 'groupName', 'corporateName', 'corporateNumber', 'ownerName', 'postalCode', 'prefecture',
              'address', 'healthInsurer', 'officeSymbol', 'officeNumber', 'industry', 'employeeCount',
              'insurerHistory', 'payroll', 'premium',
              'standardHours', 'specificApplication', 'pensionFund', 'inKind', 'bonusMonths',
@@ -381,6 +382,9 @@ service cloud.firestore {
             return exactKeys(d, ['contact', 'commute', 'bankAccount', 'updatedAt'])
               && d.contact is map && d.commute is map && d.bankAccount is map
               && (d.contact.postalCode == null || d.contact.postalCode.matches('^[0-9]{7}$'))
+              // 緊急連絡先（2件まで。11/12 より前の文書にはない）
+              && (!('emergencyContacts' in d.contact)
+                  || (d.contact.emergencyContacts is list && d.contact.emergencyContacts.size() <= 2))
               && (d.bankAccount.accountNumber == null || d.bankAccount.accountNumber.matches('^[0-9]{7}$'))
               && d.updatedAt == request.time;
           }

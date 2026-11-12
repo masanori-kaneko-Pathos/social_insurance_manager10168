@@ -58,6 +58,15 @@ export interface ContactDoc {
   /** 2つ目からの電話（「電話番号を追加」で足す。2つまで。前の文書にはない） */
   otherPhones?: { number: string; note: string | null }[];
   email: string | null; // マイページの招待にも使う
+  /** 緊急連絡先（2件まで。11/12 に足した。前の文書にはない） */
+  emergencyContacts?: EmergencyContact[];
+}
+
+export interface EmergencyContact {
+  name: string | null;
+  /** 続柄（父・配偶者 など） */
+  relation: string | null;
+  phone: string | null;
 }
 
 export interface CommuteDoc {
@@ -267,7 +276,15 @@ export function emptyEnrollment(): EnrollmentDoc {
 }
 
 export function emptyContact(): ContactDoc {
-  return { postalCode: null, address: null, phone: null, phoneNote: null, otherPhones: [], email: null };
+  return {
+    postalCode: null,
+    address: null,
+    phone: null,
+    phoneNote: null,
+    otherPhones: [],
+    email: null,
+    emergencyContacts: [],
+  };
 }
 
 export function emptyBankAccount(): BankAccountDoc {

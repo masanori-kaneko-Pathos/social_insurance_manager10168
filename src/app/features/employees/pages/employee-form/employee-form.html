@@ -681,6 +681,48 @@
           </div>
         </div>
         <p class="hint">{{ 'employee.hint.email' | transloco }}</p>
+
+        <!-- 緊急連絡先（2件まで） -->
+        <h3 class="sub-head">{{ 'employee.section.emergency' | transloco }}</h3>
+        <div class="grid">
+          @for (n of [1, 2]; track n) {
+            @if (n === 1 || secondEmergency()) {
+              <div class="field wide">
+                <label [for]="'emergency' + n + 'Name'">{{ 'employee.field.emergencyName' | transloco: { n: n } }}</label>
+                <input [id]="'emergency' + n + 'Name'" class="input" [formControlName]="'emergency' + n + 'Name'" maxlength="50" />
+              </div>
+              <div class="field">
+                <label [for]="'emergency' + n + 'Relation'">{{ 'employee.field.emergencyRelation' | transloco }}</label>
+                <input [id]="'emergency' + n + 'Relation'" class="input" [formControlName]="'emergency' + n + 'Relation'"
+                       list="relation-choices" maxlength="20" />
+              </div>
+              <div class="field">
+                <label [for]="'emergency' + n + 'Phone'">{{ 'employee.field.emergencyPhone' | transloco }}</label>
+                <span class="with-remove">
+                  <input [id]="'emergency' + n + 'Phone'" class="input" [formControlName]="'emergency' + n + 'Phone'" inputmode="tel"
+                         [class.is-invalid]="errorOf('contact.emergency' + n + 'Phone')" />
+                  @if (n === 2) {
+                    <button type="button" class="link-btn" (click)="removeEmergency2()">{{ 'employee.form.removePhone' | transloco }}</button>
+                  }
+                </span>
+                @if (errorOf('contact.emergency' + n + 'Phone'); as e) {
+                  <span class="field-error">{{ e | transloco }}</span>
+                }
+              </div>
+            }
+          }
+          @if (!secondEmergency()) {
+            <div class="field wide">
+              <button type="button" class="link-btn add-phone" (click)="secondEmergency.set(true)">＋ {{ 'employee.form.addEmergency' | transloco }}</button>
+            </div>
+          }
+          <datalist id="relation-choices">
+            @for (c of relationChoices; track c) {
+              <option [value]="'employee.relationChoice.' + c | transloco"></option>
+            }
+          </datalist>
+        </div>
+        <p class="hint">{{ 'employee.hint.emergency' | transloco }}</p>
       </section>
 
       <!-- 通勤 -->

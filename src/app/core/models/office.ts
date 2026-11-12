@@ -55,6 +55,8 @@ export interface OfficeDoc {
   name: string;
   /** 英語の表示に使う名前（任意。英語の画面で、あればこちらを出す。11/10 より前の文書にはない） */
   nameEn?: string | null;
+  /** グループの名前（任意。同じ名前の事業所は、切り替えのメニューで法人番号が違ってもまとめて並べる。11/12 より前の文書にはない） */
+  groupName?: string | null;
   corporateName: string | null;
   corporateNumber: string | null;
   ownerName: string;

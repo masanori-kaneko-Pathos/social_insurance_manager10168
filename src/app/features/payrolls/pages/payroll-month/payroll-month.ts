@@ -7,6 +7,8 @@ import { map } from 'rxjs';
 import { Employee } from '../../../../core/models/employee';
 import { PAYROLL_STATES, PayrollState } from '../../../../core/models/payroll';
 import { EmployeeService } from '../../../employees/employee.service';
+import { ContractService } from '../../../employees/contract.service';
+import { contractAt } from '../../../employees/logic/contract-form-model';
 import { OfficeContext } from '../../../office/office-context.service';
 import {
   candidateDays,
@@ -27,7 +29,7 @@ import {
 } from '../../logic/payroll-rows';
 import { payrollOf } from '../../../office/office-settings';
 import { MonthPicker } from '../../../../shared/components/month-picker/month-picker';
-import { shiftMonth, daysInclusive, todayLocal, toYearMonth } from '../../../../shared/utils/date';
+import { shiftMonth, daysInclusive, daysInMonth, todayLocal, toYearMonth } from '../../../../shared/utils/date';
 import { PayrollChange, PayrollService } from '../../payroll.service';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
@@ -109,9 +111,22 @@ export class PayrollMonth {
 
   /** 現物給与の計算を開いている行（null は閉じている） */
   readonly inKindFor = signal<ViewRow | null>(null);
+  /** 開いている人が、その月の末日に派遣の契約か（派遣元＝事業所の都道府県で計算する。現物給与 Q&A Q6） */
+  readonly inKindDispatched = signal(false);
+  private readonly contractsApi = inject(ContractService);
 
   openInKind(v: ViewRow): void {
+    this.inKindDispatched.set(false);
     this.inKindFor.set(v);
+    const officeId = this.context.current()?.id;
+    if (!officeId) return;
+    const monthEnd = `${this.month()}-${String(daysInMonth(this.month())).padStart(2, '0')}`;
+    this.contractsApi
+      .list(officeId, v.employee.id)
+      .then((list) => {
+        if (this.inKindFor() === v) this.inKindDispatched.set(contractAt(list, monthEnd)?.dispatch === 'dispatch');
+      })
+      .catch(() => undefined); // 読めなくても計算はできる（都道府県を選べるまま）
   }
 
   /** 計算した額を現物の欄に入れる（保存は「保存する」で、ほかの欄と一緒に） */

@@ -325,6 +325,19 @@
                 <dd>{{ e.contact.email ?? '—' }}</dd>
               </div>
               <div class="wide">
+                <dt>{{ 'employee.section.emergency' | transloco }}</dt>
+                <dd>
+                  @for (c of e.contact.emergencyContacts ?? []; track $index) {
+                    @if (!$first) { <br /> }
+                    {{ c.name ?? '—' }}
+                    @if (c.relation) { <span class="muted">（{{ c.relation }}）</span> }
+                    <span class="mono">{{ c.phone ?? '' }}</span>
+                  } @empty {
+                    —
+                  }
+                </dd>
+              </div>
+              <div class="wide">
                 <dt>{{ 'employee.section.commute' | transloco }}</dt>
                 <dd>{{ commute(e) }}</dd>
               </div>

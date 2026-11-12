@@ -8,34 +8,40 @@ export interface OfficeGroup {
 
 const byName = (a: Office, b: Office) => a.name.localeCompare(b.name, 'ja');
 
-/** 法人番号ごとにまとめる。法人番号なしは最後に1グループ */
+/**
+ * まとめて並べる
+ * - グループの名前があれば、その名前ごと（親会社と子会社のように、法人番号が違ってもまとめる）
+ * - なければ法人番号ごと。どちらもないものは最後に「その他」
+ */
 export function groupOfficesByCorporation(offices: Office[]): OfficeGroup[] {
-  const corps = new Map<string, OfficeGroup>();
+  const groups = new Map<string, OfficeGroup>();
   const others: Office[] = [];
 
   for (const o of offices) {
-    if (!o.corporateNumber) {
+    const groupName = o.groupName?.trim() || null;
+    const key = groupName ? `group:${groupName}` : o.corporateNumber;
+    if (!key) {
       others.push(o);
       continue;
     }
-    const g = corps.get(o.corporateNumber);
+    const g = groups.get(key);
     if (g) {
       g.offices.push(o);
     } else {
-      corps.set(o.corporateNumber, {
-        key: o.corporateNumber,
-        label: o.corporateName ?? o.corporateNumber,
+      groups.set(key, {
+        key,
+        label: groupName ?? o.corporateName ?? o.corporateNumber,
         offices: [o],
       });
     }
   }
 
-  const groups = [...corps.values()]
+  const list = [...groups.values()]
     .map((g) => ({ ...g, offices: [...g.offices].sort(byName) }))
     .sort((a, b) => (a.label ?? '').localeCompare(b.label ?? '', 'ja'));
 
   if (others.length > 0) {
-    groups.push({ key: 'others', label: null, offices: others.sort(byName) });
+    list.push({ key: 'others', label: null, offices: others.sort(byName) });
   }
-  return groups;
+  return list;
 }

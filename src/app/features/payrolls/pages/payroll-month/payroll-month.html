@@ -70,6 +70,7 @@
       [prefecture]="context.current()?.prefecture ?? ''"
       [kumiai]="context.current()?.healthInsurer?.type === 'kumiai'"
       [employeeName]="v.employee.lastName + ' ' + v.employee.firstName"
+      [dispatched]="inKindDispatched()"
       (apply)="applyInKind(v, $event)"
       (closed)="inKindFor.set(null)"
     />

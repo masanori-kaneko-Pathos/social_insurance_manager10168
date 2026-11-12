@@ -253,3 +253,10 @@ h3 {
 .add-phone {
   justify-self: start;
 }
+
+/* 緊急連絡先の小見出し（連絡先のカードの中） */
+.sub-head {
+  margin: var(--space-lg) 0 var(--space-sm);
+  font-size: 14px;
+  font-weight: 600;
+}

@@ -7,6 +7,7 @@ import {
   customQuestion,
   fieldQuestion,
   isAnswerable,
+  currentValue,
   planApply,
   sortRequests,
   templateQuestions,
@@ -19,9 +20,9 @@ const employee = (): ApplyTarget => ({
 });
 
 describe('ひな形', () => {
-  it('入社の手続き：11項目。郵便番号・住所・電話だけ必須', () => {
+  it('入社の手続き：14項目（緊急連絡先を含む）。郵便番号・住所・電話だけ必須', () => {
     const q = templateQuestions('onboarding');
-    expect(q.length).toBe(11);
+    expect(q.length).toBe(14);
     expect(q.filter((x) => x.required).map((x) => x.field)).toEqual(['contact.postalCode', 'contact.address', 'contact.phone']);
   });
 
@@ -122,5 +123,39 @@ describe('cleanAnswers・状態・並び', () => {
       { status: 'rejected' as const, updatedMs: 3 },
     ]);
     expect(r.map((x) => `${x.status}${x.updatedMs}`)).toEqual(['submitted5', 'submitted2', 'open1', 'rejected3', 'approved9']);
+  });
+});
+
+describe('緊急連絡先（依頼・申請では1件目だけ）', () => {
+  it('今の値は1件目から読む。なければ null', () => {
+    const e = employee();
+    expect(currentValue(e, 'contact.emergencyName')).toBeNull();
+    const withEm = { ...e, contact: { ...e.contact, emergencyContacts: [{ name: '山田 花子', relation: '母', phone: '0900000000' }] } };
+    expect(currentValue(withEm, 'contact.emergencyRelation')).toBe('母');
+  });
+  it('承認すると1件目を書き換え、2件目は残す', () => {
+    const e = employee();
+    const two = {
+      ...e,
+      contact: {
+        ...e.contact,
+        emergencyContacts: [
+          { name: '山田 花子', relation: '母', phone: '0900000000' },
+          { name: '山田 次郎', relation: '兄', phone: '0800000000' },
+        ],
+      },
+    };
+    const qs = changeRequestQuestions(['contact.emergencyName', 'contact.emergencyPhone']);
+    const r = planApply(two, qs, { 'contact.emergencyName': '山田 一子', 'contact.emergencyPhone': '090-9999-9999' });
+    expect(r.patch.contact?.emergencyContacts).toEqual([
+      { name: '山田 一子', relation: '母', phone: '090-9999-9999' },
+      { name: '山田 次郎', relation: '兄', phone: '0800000000' },
+    ]);
+    expect(r.changes.map((c) => c.field)).toEqual(['contact.emergencyName', 'contact.emergencyPhone']);
+  });
+  it('まだ1件もなければ、1件目を作る', () => {
+    const qs = changeRequestQuestions(['contact.emergencyRelation']);
+    const r = planApply(employee(), qs, { 'contact.emergencyRelation': '配偶者' });
+    expect(r.patch.contact?.emergencyContacts).toEqual([{ name: null, relation: '配偶者', phone: null }]);
   });
 });

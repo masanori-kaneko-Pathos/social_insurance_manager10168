@@ -35,7 +35,14 @@ import {
 } from '../../logic/todo-board';
 import { daysLeft, filterRows, kindsIn, RowView, TABLE_LIMIT, toRows } from '../../logic/todo-table';
 import { personTodos } from '../../logic/todos';
-import { lumpSumTodo, myNumberTodos, residenceTodo, specificOfficeTodo, workPermitTodo } from '../../logic/extra-todos';
+import {
+  contractEndTodo,
+  lumpSumTodo,
+  myNumberTodos,
+  residenceTodo,
+  specificOfficeTodo,
+  workPermitTodo,
+} from '../../logic/extra-todos';
 import { MyNumberEntry } from '../../../../core/models/my-number';
 import { MyNumberService } from '../../../my-number/my-number.service';
 import { TodoBadgeService } from '../../todo-badge.service';
@@ -144,6 +151,7 @@ export class Dashboard {
         residenceTodo(e, this.today),
         workPermitTodo(e, contracts.get(e.id) ?? [], this.today),
         lumpSumTodo(e, this.today),
+        contractEndTodo(e, contracts.get(e.id) ?? [], this.today),
       ].filter((t) => t !== null),
     );
     const specific = specificOfficeTodo(

@@ -49,6 +49,7 @@ export const BOARD_ORDER: readonly BoardKind[] = [
   'upcoming',
   'categoryChange',
   'certificateEnd',
+  'contractEnd',
   'residence',
   'age',
   'lumpSum',
@@ -68,6 +69,7 @@ export const SECTION_OF: Record<BoardKind, Section> = {
   upcoming: 'soon',
   categoryChange: 'soon',
   certificateEnd: 'soon',
+  contractEnd: 'soon',
   age: 'soon',
   residence: 'soon',
   lumpSum: 'soon',
@@ -87,6 +89,7 @@ export const DISMISSABLE: ReadonlySet<BoardKind> = new Set<BoardKind>([
   'workPermit', // 長期休業期間（1日8時間まで）など、確かめたうえで続ける場合
   'lumpSum', // 本人に案内したら消す
   'specificOffice', // 事業所の設定を確かめたら消す
+  'contractEnd', // 同じ条件のまま自動で更新する場合など。次の契約か退職日を入れれば、そもそも出なくなる
   'myNumberDispose', // 「完結の日」を通知の日と考えて待つ場合など。廃棄すれば、そもそも出なくなる
 ]);
 

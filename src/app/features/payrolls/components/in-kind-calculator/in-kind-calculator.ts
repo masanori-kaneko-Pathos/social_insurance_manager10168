@@ -27,6 +27,8 @@ export class InKindCalculator {
   /** 健康保険組合（規約で別の価額を決めていることがある） */
   readonly kumiai = input(false);
   readonly employeeName = input('');
+  /** 派遣の契約の人：派遣先ではなく派遣元（＝事業所）の都道府県で計算する（現物給与 Q&A Q6）。選び直せない */
+  readonly dispatched = input(false);
 
   readonly apply = output<number>();
   readonly closed = output<void>();
@@ -42,7 +44,7 @@ export class InKindCalculator {
   readonly chosenPrefecture = signal<string | null>(null);
   /** 都道府県を選び直しているところか（「変更」を押したら選べる） */
   readonly changingPrefecture = signal(false);
-  readonly prefectureCode = computed(() => this.chosenPrefecture() ?? this.prefecture());
+  readonly prefectureCode = computed(() => (this.dispatched() ? null : this.chosenPrefecture()) ?? this.prefecture());
   readonly pref = computed(() => this.table()?.prefectures[this.prefectureCode()] ?? null);
   /** 選べる都道府県（コード順） */
   readonly prefectureOptions = computed(() =>

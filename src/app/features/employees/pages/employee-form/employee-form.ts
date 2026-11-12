@@ -285,6 +285,12 @@ export class EmployeeForm {
           phone3: [v.contact.phone3, [halfPattern(PATTERNS.phone)]],
           phone3Note: [v.contact.phone3Note, [Validators.maxLength(20)]],
           email: [v.contact.email, [halfPattern(PATTERNS.email), Validators.maxLength(254)]],
+          emergency1Name: [v.contact.emergency1Name, [Validators.maxLength(50)]],
+          emergency1Relation: [v.contact.emergency1Relation, [Validators.maxLength(20)]],
+          emergency1Phone: [v.contact.emergency1Phone, [halfPattern(PATTERNS.phone)]],
+          emergency2Name: [v.contact.emergency2Name, [Validators.maxLength(50)]],
+          emergency2Relation: [v.contact.emergency2Relation, [Validators.maxLength(20)]],
+          emergency2Phone: [v.contact.emergency2Phone, [halfPattern(PATTERNS.phone)]],
         }),
         commute: this.fb.group({
           method: [v.commute.method, [Validators.maxLength(50)]],
@@ -440,7 +446,21 @@ export class EmployeeForm {
   /** 出している追加の欄の数（0〜2） */
   readonly extraPhones = signal(0);
   /** 備考の候補（自由に書ける。候補は入力の手間を省くだけ） */
-  readonly phoneNoteChoices = ['ownMobile', 'home', 'companyMobile', 'work', 'emergency'];
+  readonly phoneNoteChoices = ['ownMobile', 'home', 'companyMobile', 'work'];
+
+  /** 緊急連絡先の2件目の欄を出しているか */
+  readonly secondEmergency = signal(false);
+  /** 続柄の候補（自由に書ける） */
+  readonly relationChoices = ['spouse', 'father', 'mother', 'child', 'sibling', 'other'];
+
+  /** 2件目を消す */
+  removeEmergency2(): void {
+    const c = this.form.controls.contact.controls;
+    c.emergency2Name.setValue('');
+    c.emergency2Relation.setValue('');
+    c.emergency2Phone.setValue('');
+    this.secondEmergency.set(false);
+  }
 
   addPhone(): void {
     this.extraPhones.update((n) => Math.min(n + 1, 2));
@@ -569,6 +589,7 @@ export class EmployeeForm {
       // 読み込みで自動入力が走らないように
       this.form.setValue(toEmployeeForm(e), { emitEvent: false });
       this.extraPhones.set(e.contact.otherPhones?.length ?? 0);
+      this.secondEmergency.set((e.contact.emergencyContacts?.length ?? 0) >= 2);
       this.syncCert();
     } catch (err) {
       console.error(err);

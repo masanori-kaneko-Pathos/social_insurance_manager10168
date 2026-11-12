@@ -154,6 +154,15 @@
                           @case ('lumpSum') {
                             {{ 'dashboard.todo.text.lumpSum' | transloco: it.extra!.params }}
                           }
+                          @case ('contractEnd') {
+                            {{ 'dashboard.todo.text.contractEnd' | transloco: it.extra!.params }}
+                            @if (it.extra!.params['notice'] === 'yes') {
+                              {{ 'dashboard.todo.text.contractEndNotice' | transloco: it.extra!.params }}
+                            }
+                            @if (it.extra!.params['shortTerm'] === 'yes') {
+                              {{ 'dashboard.todo.text.contractEndShort' | transloco }}
+                            }
+                          }
                           @case ('myNumberCheck') {
                             {{ 'dashboard.todo.text.myNumberCheck' | transloco }}
                           }
@@ -223,6 +232,10 @@
                           }
                           @case ('specificOffice') {
                             <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>
+                          }
+                          @case ('contractEnd') {
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'employment' }">{{ 'dashboard.todo.toRenew' | transloco }} →</a>
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId, 'edit']">{{ 'dashboard.todo.toRetire' | transloco }} →</a>
                           }
                         }
                       </p>
