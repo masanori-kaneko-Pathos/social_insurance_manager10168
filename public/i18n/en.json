@@ -2105,6 +2105,56 @@
       "partial": "Stopped partway. Check the list and import only the remaining rows."
     }
   },
+  "historyCsv": {
+    "modeLabel": "What to import",
+    "mode": {
+      "employees": "Employees",
+      "contract": "Contract history",
+      "remuneration": "Standard remuneration history"
+    },
+    "pageLead": "Add records to registered employees: employment contracts from the second one onward, and standard monthly remuneration decisions (annual determination, occasional revision, etc.). Employees are matched by employee number. Records for a date (month) that already exists are skipped, never overwritten. Coverage (acquisition and loss dates) is not changed, so check the \"Review coverage\" items in the To-do list after importing.",
+    "lead": {
+      "contract": "One record per row: the date the contract starts and the employment terms from that date. The contract starting on the hire date (the first contract) is already registered through the employee import or the employee screen.",
+      "remuneration": "One record per row: the month the standard monthly remuneration changed, the reason for the decision, and the monthly remuneration. If you enter grades, they are registered as written on the decision notice (if blank, they are calculated from the monthly remuneration)."
+    },
+    "columnsHint": {
+      "contract": "Required: employee number, contract start date, employment type, pay type, weekly scheduled hours, monthly scheduled days, scheduled wage. Other columns are written as in the employee import (employment type: 正社員, 契約社員, パート, アルバイト, 嘱託, その他; pay type: 月給, 日給月給, 日給, 時給; hours as 40:00 or 40). The start date must be between the hire date and the retirement date.",
+      "remuneration": "Required: employee number, start month (as 2026-09), reason for the decision, monthly remuneration. Reasons: 資格取得時決定 (acquisition), 定時決定 (annual determination), 随時改定 (occasional revision), 休業終了 (after maternity/childcare leave), その他. Health and pension grades are optional; if entered, use the numbers on the decision notice."
+    },
+    "hasErrors": "{{n}} rows have errors. Fix them and choose the file again (nothing is imported while there are errors).",
+    "planError": {
+      "unknownEmployee": "Line {{line}}: no employee is registered with number {{number}}. Register the employee first.",
+      "duplicateInFile": "Line {{line}}: {{id}} for employee number {{number}} appears more than once in the file.",
+      "beforeHire": "Line {{line}}: {{id}} for employee number {{number}} is before the hire date.",
+      "afterRetire": "Line {{line}}: {{id}} for employee number {{number}} is after the retirement date.",
+      "badGrade": "Line {{line}}: {{id}} for employee number {{number}}: the grade is not in the grade table, or there is no grade table for that month."
+    },
+    "skipped": "Already registered, skipped: {{n}} (not overwritten)",
+    "skippedItem": "Line {{line}}: {{id}} for employee number {{number}}",
+    "planTitle": {
+      "contract": "Contracts to import: {{n}}",
+      "remuneration": "Standard remuneration records to import: {{n}}"
+    },
+    "planNote": "Coverage (acquisition and loss dates) is not changed. After importing, check any \"Review coverage\" items in the To-do list.",
+    "col": {
+      "from": {
+        "contract": "Contract start",
+        "remuneration": "Start month"
+      },
+      "reason": "Reason",
+      "standard": "Remuneration and grades"
+    },
+    "warning": {
+      "gradeDiffers": "Differs from the grades calculated from the monthly remuneration (health grade {{health}}, pension grade {{pension}}). The written grades will be registered",
+      "oldTable": "Before the earliest grade table (calculated with the oldest table)"
+    },
+    "import": "Import {{n}} records",
+    "progress": "Importing… {{done}} / {{total}}",
+    "done": "Imported {{n}} records.",
+    "error": {
+      "partial": "Stopped partway. Import the same file again: records already imported are skipped and only the rest are added."
+    }
+  },
   "account": {
     "menu": "Settings",
     "signedInAs": "Signed in as",

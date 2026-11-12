@@ -3,11 +3,23 @@
 >
 
 <h1>{{ 'employeeCsv.title' | transloco }}</h1>
-<p class="lead">{{ 'employeeCsv.lead' | transloco }}</p>
+<p class="lead">{{ (mode() === 'employees' ? 'employeeCsv.lead' : 'historyCsv.pageLead') | transloco }}</p>
 
 @if (!context.isAdmin()) {
   <div class="alert alert-warning">{{ 'employeeCsv.adminOnly' | transloco }}</div>
 } @else {
+  <!-- 何を取り込むか（履歴は、登録済みの人に足す） -->
+  <div class="segmented mode" role="group" [attr.aria-label]="'historyCsv.modeLabel' | transloco">
+    @for (m of modes; track m) {
+      <button type="button" [class.active]="mode() === m" [disabled]="saving()" (click)="mode.set(m)">
+        {{ 'historyCsv.mode.' + m | transloco }}
+      </button>
+    }
+  </div>
+
+  @if (mode() !== 'employees') {
+    <app-history-import [kind]="mode() === 'contract' ? 'contract' : 'remuneration'" />
+  } @else {
   <section class="card">
     <h2>{{ 'employeeCsv.step1' | transloco }}</h2>
     <p class="sub">{{ 'employeeCsv.templateHint' | transloco }}</p>
@@ -282,4 +294,5 @@
       <p class="sub" role="status">{{ 'myNumber.export.done' | transloco: { n: exportDone() } }}</p>
     }
   </section>
+  }
 }

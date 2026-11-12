@@ -117,3 +117,31 @@ progress {
   font-size: var(--font-xs, 12px);
   font-weight: 400;
 }
+
+/* 何を取り込むか（従業員／契約の履歴／標準報酬の履歴） */
+.segmented.mode {
+  display: inline-flex;
+  margin-bottom: var(--space-md);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.segmented.mode button {
+  padding: var(--space-xs) var(--space-md);
+  font: inherit;
+  font-size: var(--font-sm);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 0;
+  cursor: pointer;
+}
+
+.segmented.mode button + button {
+  border-left: 1px solid var(--color-border-strong);
+}
+
+.segmented.mode button.active {
+  background: var(--color-highlight);
+  font-weight: 600;
+}

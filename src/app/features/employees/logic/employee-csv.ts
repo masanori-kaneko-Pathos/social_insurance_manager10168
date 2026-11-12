@@ -26,7 +26,7 @@ import { toHalfWidth } from '../../../shared/utils/text';
 import { myNumberProblem, normalizeMyNumber } from '../../my-number/logic/my-number';
 import { gradeOf, pickGradeTable } from '../../rates/logic/grade';
 import { classify, Classification, ClassifyCriteria, ClassifyOffice, isInsured } from './classify';
-import { contractErrors, emptyContractForm, fromContractForm } from './contract-form-model';
+import { contractErrors, ContractFormValue, emptyContractForm, fromContractForm } from './contract-form-model';
 import { defaultEnrollmentDates } from './coverage';
 import { emptyEmployeeForm, emptyForeignForm, fromEmployeeForm, PATTERNS } from './employee-form-model';
 
@@ -99,7 +99,7 @@ export const EMPLOYEE_REQUIRED: readonly EmployeeColumn[] = [
 
 // ===== 値の読み方（日本語の言葉でも、コードでも読める） =====
 
-type Dict<T extends string> = Record<string, T>;
+export type Dict<T extends string> = Record<string, T>;
 
 // 1・2 は性別のコードとしてよく使われる決まり（労務ソフトの書き出しで「男女コード」として出ることがある）
 const SEX: Dict<Sex> = {
@@ -143,7 +143,7 @@ const YES = new Set(['はい', 'あり', '○', '〇', '1', 'true', 'yes', 'y', 
 const NO = new Set(['いいえ', 'なし', '×', '0', 'false', 'no', 'n', '未加入', '加入していない', 'していない', '対象外']);
 
 /** はい／いいえ（空は null） */
-function yesNo(s: string): boolean | null | undefined {
+export function yesNo(s: string): boolean | null | undefined {
   const t = toHalfWidth(s).trim().toLowerCase();
   if (t === '') return null;
   if (YES.has(t)) return true;
@@ -164,13 +164,100 @@ export function readDate(s: string): string | undefined {
   return dt.toISOString().slice(0, 10) === d ? d : undefined;
 }
 
-function readMonth(s: string): string | undefined {
+export function readMonth(s: string): string | undefined {
   const t = toHalfWidth(s).trim();
   if (t === '') return '';
   const m = /^(\d{4})[-/.](\d{1,2})$/.exec(t);
   if (!m) return undefined;
   const v = `${m[1]}-${m[2].padStart(2, '0')}`;
   return YEAR_MONTH_RE.test(v) ? v : undefined;
+}
+
+// ===== 契約の列（従業員の取り込みと、契約の履歴の取り込みで同じ読み方をする） =====
+
+export const CONTRACT_CSV_COLUMNS = [
+  'employmentType', 'payType', 'weeklyHours', 'monthlyDays', 'hourlyWage', 'dailyWage', 'scheduledWage',
+  'expectedCash', 'expectedInKind', 'periodEnd', 'renewal', 'student', 'minimumWageReduction',
+  'specialEmployment', 'renewalPrecedent', 'noExtensionAgreed', 'note',
+] as const satisfies readonly EmployeeColumn[];
+export type ContractCsvColumn = (typeof CONTRACT_CSV_COLUMNS)[number];
+
+/**
+ * 契約の列 → 契約のフォームの値（画面と同じ形）。エラーは err で返す
+ * - from：契約が始まる日（従業員の取り込みは入社日）。読めなければ undefined
+ * - hasError：その列にもうエラーがあるか（契約のチェックのエラーを重ねて出さないため）
+ */
+export function readContractCells(
+  get: (c: ContractCsvColumn) => string,
+  from: string | undefined,
+  err: (c: ContractCsvColumn, code: string) => void,
+  hasError: (c: ContractCsvColumn) => boolean,
+): ContractFormValue {
+  const employmentType = pick(EMPLOYMENT, get('employmentType'));
+  const payType = pick(PAY, get('payType'));
+  const renewal = pick(RENEWAL, get('renewal'));
+  const student = pick(STUDENT, get('student'));
+  const special = pick(SPECIAL, get('specialEmployment'));
+  const choices: [ContractCsvColumn, unknown][] = [
+    ['employmentType', employmentType],
+    ['payType', payType],
+    ['renewal', renewal],
+    ['student', student],
+    ['specialEmployment', special],
+  ];
+  for (const [c, x] of choices) if (x === undefined && get(c)) err(c, 'choice');
+  const reduction = yesNo(get('minimumWageReduction'));
+  const precedent = yesNo(get('renewalPrecedent'));
+  const agreed = yesNo(get('noExtensionAgreed'));
+  const flags: [ContractCsvColumn, boolean | null | undefined][] = [
+    ['minimumWageReduction', reduction],
+    ['renewalPrecedent', precedent],
+    ['noExtensionAgreed', agreed],
+  ];
+  for (const [c, x] of flags) if (x === undefined) err(c, 'yesNo');
+  const periodEnd = readDate(get('periodEnd'));
+  if (periodEnd === undefined) err('periodEnd', 'date');
+
+  const contractForm: ContractFormValue = {
+    ...emptyContractForm(from || ''),
+    employmentType: employmentType ?? 'regular',
+    payType: payType ?? 'monthly',
+    hours: get('weeklyHours'),
+    monthlyDays: get('monthlyDays'),
+    hourlyWage: get('hourlyWage'),
+    dailyWage: get('dailyWage'),
+    scheduledWage: get('scheduledWage'),
+    // 見込みの報酬月額は、空なら所定内賃金を写す（画面と同じ）
+    expectedCash: get('expectedCash') || get('scheduledWage'),
+    expectedInKind: get('expectedInKind') || '0',
+    periodEnd: periodEnd || '',
+    renewal: renewal ?? 'none',
+    student: student ?? 'none',
+    minimumWageReduction: reduction ?? false,
+    specialEmployment: special ?? 'none',
+    renewalPrecedent: precedent ?? false,
+    noExtensionAgreed: agreed ?? false,
+    note: get('note'),
+  };
+  // 契約のエラーは、CSV の列に置き換えて出す
+  const CONTRACT_COLUMN: Record<string, ContractCsvColumn> = {
+    hours: 'weeklyHours',
+    monthlyDays: 'monthlyDays',
+    hourlyWage: 'hourlyWage',
+    dailyWage: 'dailyWage',
+    scheduledWage: 'scheduledWage',
+    expectedCash: 'expectedCash',
+    expectedInKind: 'expectedInKind',
+    periodEnd: 'periodEnd',
+  };
+  // 雇用形態は契約のチェックに関係しないので、給与の形と始まる日が読めれば確かめる
+  if (from && payType) {
+    for (const [field, code] of Object.entries(contractErrors(contractForm))) {
+      const column = CONTRACT_COLUMN[field];
+      if (column && !hasError(column)) err(column, `contract.${code}`);
+    }
+  }
+  return contractForm;
 }
 
 // ===== 1行の読み取り =====
@@ -209,7 +296,7 @@ function columnOf(header: string): EmployeeColumn | null {
   return null;
 }
 
-function pick<T extends string>(dict: Dict<T>, s: string): T | null | undefined {
+export function pick<T extends string>(dict: Dict<T>, s: string): T | null | undefined {
   const t = s.trim();
   if (t === '') return null;
   return dict[t] ?? dict[t.toLowerCase()] ?? undefined;
@@ -310,71 +397,13 @@ function readRow(line: number, v: Partial<Record<EmployeeColumn, string>>): Empl
   const remunerationFrom = readMonth(get('remunerationFrom'));
   if (remunerationFrom === undefined) err('remunerationFrom', 'month');
 
-  // --- 契約（画面と同じ部品でチェックする） ---
-  const employmentType = pick(EMPLOYMENT, get('employmentType'));
-  const payType = pick(PAY, get('payType'));
-  const renewal = pick(RENEWAL, get('renewal'));
-  const student = pick(STUDENT, get('student'));
-  const special = pick(SPECIAL, get('specialEmployment'));
-  const choices: [EmployeeColumn, unknown][] = [
-    ['employmentType', employmentType],
-    ['payType', payType],
-    ['renewal', renewal],
-    ['student', student],
-    ['specialEmployment', special],
-  ];
-  for (const [c, x] of choices) if (x === undefined && get(c)) err(c, 'choice');
-  const reduction = yesNo(get('minimumWageReduction'));
-  const precedent = yesNo(get('renewalPrecedent'));
-  const agreed = yesNo(get('noExtensionAgreed'));
-  const flags: [EmployeeColumn, boolean | null | undefined][] = [
-    ['minimumWageReduction', reduction],
-    ['renewalPrecedent', precedent],
-    ['noExtensionAgreed', agreed],
-  ];
-  for (const [c, x] of flags) if (x === undefined) err(c, 'yesNo');
-  const periodEnd = readDate(get('periodEnd'));
-  if (periodEnd === undefined) err('periodEnd', 'date');
-
-  const contractForm = {
-    ...emptyContractForm(hireDate || ''),
-    employmentType: employmentType ?? 'regular',
-    payType: payType ?? 'monthly',
-    hours: get('weeklyHours'),
-    monthlyDays: get('monthlyDays'),
-    hourlyWage: get('hourlyWage'),
-    dailyWage: get('dailyWage'),
-    scheduledWage: get('scheduledWage'),
-    // 見込みの報酬月額は、空なら所定内賃金を写す（画面と同じ）
-    expectedCash: get('expectedCash') || get('scheduledWage'),
-    expectedInKind: get('expectedInKind') || '0',
-    periodEnd: periodEnd || '',
-    renewal: renewal ?? 'none',
-    student: student ?? 'none',
-    minimumWageReduction: reduction ?? false,
-    specialEmployment: special ?? 'none',
-    renewalPrecedent: precedent ?? false,
-    noExtensionAgreed: agreed ?? false,
-    note: get('note'),
-  };
-  // 契約のエラーは、CSV の列に置き換えて出す
-  const CONTRACT_COLUMN: Record<string, EmployeeColumn> = {
-    hours: 'weeklyHours',
-    monthlyDays: 'monthlyDays',
-    hourlyWage: 'hourlyWage',
-    dailyWage: 'dailyWage',
-    scheduledWage: 'scheduledWage',
-    expectedCash: 'expectedCash',
-    expectedInKind: 'expectedInKind',
-    periodEnd: 'periodEnd',
-  };
-  // 雇用形態は契約のチェックに関係しないので、給与の形と入社日が読めれば確かめる
-  if (hireDate && payType) {
-    for (const [field, code] of Object.entries(contractErrors(contractForm))) {
-      const column = CONTRACT_COLUMN[field];
-      if (column && !errors.some((e) => e.column === column)) err(column, `contract.${code}`);
-    }
-  }
+  // --- 契約（画面と同じ部品でチェックする。履歴の取り込みと同じ関数） ---
+  const contractForm = readContractCells(
+    get,
+    hireDate,
+    err,
+    (c) => errors.some((e) => e.column === c),
+  );
 
   const leaves = [readLeave(v, 1, errors), readLeave(v, 2, errors)].filter((l): l is Leave => !!l);
 
@@ -598,7 +627,7 @@ export function employeeCsvTemplate(): string[][] {
 /** うちの列に加えて、計算に使うだけの項目（うちの表には出さない） */
 export type EmployeeImportKey = EmployeeColumn | 'fullName' | 'fullNameKana' | 'dailyMinutes' | 'weeklyDays';
 
-const W: Partial<Record<EmployeeImportKey, readonly string[]>> = {
+export const EMPLOYEE_WORDS: Partial<Record<EmployeeImportKey, readonly string[]>> = {
   employeeNumber: ['従業員番号', '従業員コード', '社員コード', '社員No', '社員ID', '職員番号', 'employee number', 'employee id', 'employee code'],
   lastName: ['氏', '苗字', 'last name', 'family name', 'surname'],
   firstName: ['first name', 'given name'],
@@ -667,7 +696,7 @@ export const EMPLOYEE_IMPORT_FIELDS: readonly ImportField<EmployeeImportKey>[] =
   header: key in EMPLOYEE_CSV_HEADERS
     ? EMPLOYEE_CSV_HEADERS[key as EmployeeColumn]
     : EMPLOYEE_EXTRA_HEADERS[key as Exclude<EmployeeImportKey, EmployeeColumn>],
-  words: W[key] ?? [],
+  words: EMPLOYEE_WORDS[key] ?? [],
   kind: KIND[key],
   required: (EMPLOYEE_REQUIRED as readonly string[]).includes(key),
   orFrom: OR_FROM[key as EmployeeColumn],

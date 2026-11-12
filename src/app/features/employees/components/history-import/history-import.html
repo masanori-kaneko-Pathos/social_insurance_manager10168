@@ -1,0 +1,173 @@
+<section class="card">
+  <h2>{{ 'employeeCsv.step1' | transloco }}</h2>
+  <p class="sub">{{ 'historyCsv.lead.' + kind() | transloco }}</p>
+  <button type="button" class="btn" (click)="downloadTemplate()">{{ 'employeeCsv.template' | transloco }}</button>
+  <details class="columns">
+    <summary>{{ 'employeeCsv.columnsTitle' | transloco }}</summary>
+    <p class="sub">{{ 'historyCsv.columnsHint.' + kind() | transloco }}</p>
+  </details>
+</section>
+
+<section class="card">
+  <h2>{{ 'employeeCsv.step2' | transloco }}</h2>
+  <label class="btn file">
+    {{ 'employeeCsv.choose' | transloco }}
+    <input type="file" [accept]="accept" (change)="onFile($event)" [disabled]="saving()" />
+  </label>
+  <p class="sub">{{ 'importMap.fileHint' | transloco }}</p>
+
+  @if (errorKey(); as key) {
+    <div class="alert alert-danger">{{ key | transloco }}</div>
+  }
+  @if (doneCount() !== null) {
+    <div class="alert alert-success">
+      {{ 'historyCsv.done' | transloco: { n: doneCount() } }}
+      <a [routerLink]="['/o', context.current()?.id, 'employees']">{{ 'employeeCsv.toList' | transloco }}</a>
+    </div>
+  }
+  @if (progress(); as p) {
+    <p class="muted">{{ 'historyCsv.progress' | transloco: { done: p.done, total: p.total } }}</p>
+    <progress [value]="p.done" [max]="p.total"></progress>
+  }
+
+  @if (loaded(); as f) {
+    <app-column-mapper
+      [hidden]="!mapping()"
+      [tables]="f.tables"
+      [spec]="spec()"
+      [noteKey]="kind() === 'contract' ? 'importMap.employeeNote' : null"
+      (confirmed)="onMapped($event)"
+      (cancelled)="clear()"
+    />
+  }
+
+  @if (preview(); as pv) {
+    <p class="file-name">
+      {{ pv.fileName }}
+      @if (pv.encoding) {
+        <span class="sub">（{{ 'payrollCsv.encoding.' + pv.encoding | transloco }}）</span>
+      }
+      <button type="button" class="btn redo" (click)="remap()" [disabled]="saving()">
+        {{ 'importMap.redo' | transloco }}
+      </button>
+    </p>
+
+    @if (pv.read.missingColumns.length > 0) {
+      <div class="alert alert-danger">
+        {{ 'employeeCsv.missingColumns' | transloco }}
+        @for (c of pv.read.missingColumns; track c) {
+          <span class="tag">{{ columnLabel(c) }}</span>
+        }
+      </div>
+    }
+
+    @if (rowErrors().length > 0) {
+      <div class="alert alert-danger">{{ 'historyCsv.hasErrors' | transloco: { n: rowErrors().length } }}</div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>{{ 'employeeCsv.col.line' | transloco }}</th>
+            <th>{{ 'employeeCsv.col.column' | transloco }}</th>
+            <th>{{ 'employeeCsv.col.problem' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rowErrors(); track r.line) {
+            @for (e of r.errors; track $index) {
+              <tr>
+                <td class="num">{{ r.line }}</td>
+                <td>{{ columnLabel(e.column) }}</td>
+                <td>
+                  {{
+                    (e.code.startsWith('contract.') ? 'contract.error.' + e.code.slice(9) : 'employeeCsv.rowError.' + e.code)
+                      | transloco
+                  }}
+                  @if (cellOf(r, e); as v) {
+                    <span class="sub">（{{ v }}）</span>
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    }
+
+    @for (e of pv.plan.errors; track e.line) {
+      <div class="alert alert-danger">
+        {{ 'historyCsv.planError.' + e.code | transloco: { line: e.line, number: e.employeeNumber, id: e.id } }}
+      </div>
+    }
+
+    @if (pv.plan.skipped.length > 0) {
+      <details class="columns">
+        <summary>{{ 'historyCsv.skipped' | transloco: { n: pv.plan.skipped.length } }}</summary>
+        <ul class="sub">
+          @for (s of pv.plan.skipped; track s.line) {
+            <li>{{ 'historyCsv.skippedItem' | transloco: { line: s.line, number: s.employeeNumber, id: s.id } }}</li>
+          }
+        </ul>
+      </details>
+    }
+
+    @if (pv.plan.items.length > 0) {
+      <h3>{{ 'historyCsv.planTitle.' + kind() | transloco: { n: pv.plan.items.length } }}</h3>
+      <p class="sub">{{ 'historyCsv.planNote' | transloco }}</p>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>{{ 'employeeCsv.col.line' | transloco }}</th>
+              <th>{{ 'employeeCsv.col.number' | transloco }}</th>
+              <th>{{ 'employeeCsv.col.name' | transloco }}</th>
+              <th>{{ 'historyCsv.col.from.' + kind() | transloco }}</th>
+              @if (kind() === 'contract') {
+                <th>{{ 'employeeCsv.col.contract' | transloco }}</th>
+              } @else {
+                <th>{{ 'historyCsv.col.reason' | transloco }}</th>
+                <th>{{ 'historyCsv.col.standard' | transloco }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (it of pv.plan.items; track it.line) {
+              <tr [class.warn]="it.warnings.length > 0">
+                <td class="num">{{ it.line }}</td>
+                <td class="mono">{{ it.employeeNumber }}</td>
+                <td>{{ it.name }}</td>
+                <td class="mono">{{ it.id }}</td>
+                @if (it.contract; as c) {
+                  <td>
+                    {{ 'contract.employmentType.' + c.employmentType | transloco }}・{{ 'contract.payType.' + c.payType | transloco }}
+                    <br /><span class="mono">{{ hours(it) }}／{{ c.monthlyDays }}日・{{ yen(c.scheduledWage) }}円</span>
+                    @if (c.periodEnd) {
+                      <br /><span class="sub">〜{{ c.periodEnd }}</span>
+                    }
+                  </td>
+                }
+                @if (it.remuneration; as r) {
+                  <td>{{ 'remuneration.reason.' + r.reason | transloco }}</td>
+                  <td class="mono">
+                    {{ yen(r.monthlyAmount) }}円<br />
+                    {{ 'employeeCsv.ins.health' | transloco }} {{ r.health.grade }}級 {{ yen(r.health.standard) }}<br />
+                    {{ 'employeeCsv.ins.pension' | transloco }} {{ r.pension.grade }}級 {{ yen(r.pension.standard) }}
+                    @for (w of it.warnings; track w) {
+                      <br /><span class="badge">{{ 'historyCsv.warning.' + w | transloco: it.computed ?? {} }}</span>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <div class="actions">
+      <button type="button" class="btn" (click)="clear()" [disabled]="saving()">{{ 'common.cancel' | transloco }}</button>
+      <button type="button" class="btn btn-solid" (click)="importCsv()" [disabled]="!canImport()">
+        {{ 'historyCsv.import' | transloco: { n: pv.plan.items.length } }}
+      </button>
+    </div>
+  }
+</section>
