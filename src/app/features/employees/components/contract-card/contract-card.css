@@ -304,3 +304,74 @@ h3:first-child {
 .category .hint {
   flex-basis: 100%;
 }
+
+/* 契約書の PDF から読む（11/12） */
+.pdf {
+  margin-bottom: var(--space-md);
+}
+
+.pdf .file {
+  position: relative;
+  overflow: hidden;
+  margin-right: var(--space-sm);
+}
+
+.pdf .file input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.pdf-result {
+  margin-top: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
+.pdf-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-sm);
+}
+
+.pdf-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+.pdf-table th,
+.pdf-table td {
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.pdf-table .source {
+  max-width: 28em;
+  word-break: break-all;
+}
+
+.pdf .tag {
+  display: inline-block;
+  margin-left: var(--space-xs);
+  padding: 0 6px;
+  font-size: var(--font-xs);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.pdf .sub,
+.pdf .hint {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.pdf > .hint {
+  margin-left: var(--space-xs);
+}

@@ -1732,6 +1732,27 @@
     },
     "fold": {
       "inKind": "Enter the expected in-kind amount (housing, meals, etc.)"
+    },
+    "pdf": {
+      "choose": "Read from contract PDF",
+      "hint": "Shows candidates from an employment conditions notice or employment contract PDF. Only items you click \"Apply\" for are entered. The PDF is not saved.",
+      "applyAll": "Apply all",
+      "apply": "Apply",
+      "applied": "Applied",
+      "close": "Close",
+      "fromLocked": "The start date cannot be changed when editing",
+      "none": "No contract items were found. Please enter them manually.",
+      "weeklyHours": "Weekly scheduled hours",
+      "ambiguous": "Options are only listed, so these could not be determined:",
+      "missing": "Not found:",
+      "check": "Reading may be wrong depending on how the document is written. Compare with the source lines and check the applied values before saving.",
+      "note": {
+        "noPeriod": "No fixed term (end date left blank)",
+        "fromDailyTimes": "Calculated from {{daily}} per day (end − start − break) × {{days}} days a week",
+        "fromWeekDays": "Calculated as {{days}} days a week × 52 ÷ 12 (rounded down). This depends on the company's holidays, so please check",
+        "allowances": "Base pay + allowances (excluded: {{excluded}})"
+      },
+      "error": "Could not read the PDF."
     }
   },
   "dependent": {

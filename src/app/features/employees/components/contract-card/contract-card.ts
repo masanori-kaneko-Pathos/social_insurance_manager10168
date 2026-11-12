@@ -19,6 +19,11 @@ import {
   toContractForm,
 } from '../../logic/contract-form-model';
 import { ContractFields } from '../contract-fields/contract-fields';
+import { ImportFileError } from '../../../../shared/import/parse';
+import { ContractCandidate, ContractPdfRead, readContractText } from '../../logic/contract-pdf';
+
+/** 契約書の PDF の上限（読み取りの部品と同じ 5MB） */
+const MAX_PDF_BYTES = 5 * 1024 * 1024;
 
 /**
  * 雇用契約の履歴（契約書の束：変わるたびに上に重ねる）
@@ -59,6 +64,13 @@ export class ContractCard implements OnInit {
 
   /** 入力欄は ContractFields（登録の段と同じ部品）。フォームはここで持つ */
   readonly form = this.fb.group(emptyContractForm(''));
+  // ===== 契約書の PDF からの候補（入力欄には勝手に入れない。「反映」を押した項目だけ入れる） =====
+  readonly pdfRead = signal<(ContractPdfRead & { fileName: string }) | null>(null);
+  readonly pdfLoading = signal(false);
+  readonly pdfError = signal<string | null>(null);
+  /** 反映した候補（同じものを二度押さないように） */
+  readonly applied = signal<ReadonlySet<ContractCandidate>>(new Set());
+
   /** 加入の基準（masterCriteria。null ＝ 読み込み中） */
   readonly criteriaRows = signal<CriteriaDoc[] | null>(null);
 
@@ -141,7 +153,69 @@ export class ContractCard implements OnInit {
     this.submitted.set(false);
     this.confirmingOverwrite.set(false);
     this.errorKey.set(null);
+    this.closePdf();
     this.editing.set(key);
+  }
+
+  /** 契約書の PDF を読んで候補を出す（PDF はどこにも保存しない） */
+  async onPdf(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    this.closePdf();
+    if (file.size > MAX_PDF_BYTES) {
+      this.pdfError.set('importMap.error.tooBig');
+      return;
+    }
+    this.pdfLoading.set(true);
+    try {
+      // pdf.js は大きいので、選んだときに初めて読み込む
+      const { readPdfLines } = await import('../../../../shared/import/pdf');
+      const read = readContractText(await readPdfLines(await file.arrayBuffer()));
+      this.pdfRead.set({ ...read, fileName: file.name });
+    } catch (err) {
+      console.error(err);
+      this.pdfError.set(err instanceof ImportFileError ? `importMap.error.${err.code}` : 'contract.pdf.error');
+    } finally {
+      this.pdfLoading.set(false);
+    }
+  }
+
+  closePdf(): void {
+    this.pdfRead.set(null);
+    this.pdfError.set(null);
+    this.applied.set(new Set());
+  }
+
+  /** 始まる日は、編集中（ドキュメントIDが決まっている）なら変えられない */
+  canApply(c: ContractCandidate): boolean {
+    return !(c.field === 'from' && this.form.controls.from.disabled);
+  }
+
+  apply(c: ContractCandidate): void {
+    if (!this.canApply(c)) return;
+    const patch = { [c.field]: c.value } as Partial<ContractFormValue>;
+    // 時間は「週」の単位で入れる
+    if (c.field === 'hours') patch.hoursUnit = 'week';
+    this.form.patchValue(patch);
+    this.applied.update((s) => new Set([...s, c]));
+  }
+
+  applyAll(): void {
+    // 給与の形を先に（時給・日給の欄が出てから値を入れる）
+    const list = [...(this.pdfRead()?.candidates ?? [])].sort(
+      (a, b) => Number(b.field === 'payType') - Number(a.field === 'payType'),
+    );
+    for (const c of list) this.apply(c);
+  }
+
+  /** 候補の見せ方（選択肢は言葉に、時間・日付はそのまま） */
+  candidateLabel(c: ContractCandidate): string | null {
+    if (c.field === 'renewal') return `contract.renewal.${c.value}`;
+    if (c.field === 'employmentType') return `contract.employmentType.${c.value}`;
+    if (c.field === 'payType') return `contract.payType.${c.value}`;
+    return null;
   }
 
   /** 最初の契約は入社日から。2つ目からは今の契約を写す（変わった所だけ直せばよい） */
@@ -161,6 +235,7 @@ export class ContractCard implements OnInit {
 
   cancel(): void {
     this.editing.set(null);
+    this.closePdf();
   }
 
   async save(): Promise<void> {
@@ -184,6 +259,7 @@ export class ContractCard implements OnInit {
       if (isNew && !exists) await this.api.create(officeId, this.employee().id, input);
       else await this.api.update(officeId, this.employee().id, input);
       this.editing.set(null);
+      this.closePdf();
       await this.load();
       this.changed.emit();
     } catch (err) {

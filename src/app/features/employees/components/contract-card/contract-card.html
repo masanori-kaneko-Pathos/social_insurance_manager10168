@@ -31,6 +31,84 @@
   <!-- 追加・編集のフォーム -->
   @if (editing() !== null) {
     <form class="editor" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <!-- 契約書の PDF から候補を出す（入力欄には、反映を押した項目だけ入る） -->
+      <div class="pdf">
+        <label class="btn file">
+          {{ 'contract.pdf.choose' | transloco }}
+          <input type="file" accept=".pdf,application/pdf" (change)="onPdf($event)" [disabled]="pdfLoading()" />
+        </label>
+        <span class="hint">{{ 'contract.pdf.hint' | transloco }}</span>
+        @if (pdfLoading()) {
+          <p class="muted">{{ 'common.loading' | transloco }}</p>
+        }
+        @if (pdfError(); as e) {
+          <p class="field-error" role="alert">{{ e | transloco }}</p>
+        }
+        @if (pdfRead(); as pr) {
+          <div class="pdf-result">
+            <p class="pdf-head">
+              <strong>{{ pr.fileName }}</strong>
+              @if (pr.candidates.length > 0) {
+                <button type="button" class="btn" (click)="applyAll()">{{ 'contract.pdf.applyAll' | transloco }}</button>
+              }
+              <button type="button" class="link" (click)="closePdf()">{{ 'contract.pdf.close' | transloco }}</button>
+            </p>
+            @if (pr.candidates.length === 0) {
+              <p class="muted">{{ 'contract.pdf.none' | transloco }}</p>
+            } @else {
+              <table class="pdf-table">
+                <tbody>
+                  @for (c of pr.candidates; track $index) {
+                    <tr>
+                      <th>{{ (c.field === 'hours' ? 'contract.pdf.weeklyHours' : 'contract.field.' + c.field) | transloco }}</th>
+                      <td class="mono">
+                        @if (candidateLabel(c); as k) {
+                          {{ k | transloco }}
+                        } @else if (c.value === '') {
+                          {{ 'contract.noPeriod' | transloco }}
+                        } @else {
+                          {{ c.value }}
+                        }
+                        @if (c.note) {
+                          <div class="sub">{{ 'contract.pdf.note.' + c.note | transloco: c.params ?? {} }}</div>
+                        }
+                      </td>
+                      <td class="sub source">{{ c.source }}</td>
+                      <td>
+                        @if (!canApply(c)) {
+                          <span class="sub">{{ 'contract.pdf.fromLocked' | transloco }}</span>
+                        } @else if (applied().has(c)) {
+                          <span class="sub">{{ 'contract.pdf.applied' | transloco }}</span>
+                        } @else {
+                          <button type="button" class="link" (click)="apply(c)">{{ 'contract.pdf.apply' | transloco }}</button>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+            @if (pr.ambiguous.length > 0) {
+              <p class="hint">
+                {{ 'contract.pdf.ambiguous' | transloco }}
+                @for (f of pr.ambiguous; track f) {
+                  <span class="tag">{{ 'contract.field.' + f | transloco }}</span>
+                }
+              </p>
+            }
+            @if (pr.missing.length > 0) {
+              <p class="hint">
+                {{ 'contract.pdf.missing' | transloco }}
+                @for (f of pr.missing; track f) {
+                  <span class="tag">{{ (f === 'hours' ? 'contract.pdf.weeklyHours' : 'contract.field.' + f) | transloco }}</span>
+                }
+              </p>
+            }
+            <p class="hint">{{ 'contract.pdf.check' | transloco }}</p>
+          </div>
+        }
+      </div>
+
       <app-contract-fields
         [form]="form"
         [submitted]="submitted()"
