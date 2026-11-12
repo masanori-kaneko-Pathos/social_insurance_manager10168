@@ -1,0 +1,111 @@
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.app-name {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg);
+}
+
+h1 {
+  margin: 0 0 var(--space-xs);
+}
+
+.lead {
+  margin: 0 0 var(--space-lg);
+  color: var(--color-text-sub);
+}
+
+/* 最初にやること */
+.first {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  border: 2px solid var(--color-primary);
+}
+
+.first-text {
+  flex: 1 1 18em;
+}
+
+.first h2 {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-lg, 1.15rem);
+}
+
+.first p {
+  margin: 0;
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+/* このあとの流れ */
+.flow {
+  margin-top: var(--space-xl);
+}
+
+.flow h2 {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-md, 1rem);
+}
+
+.flow ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.flow li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-sub);
+}
+
+.flow li.now {
+  color: var(--color-text);
+  border-color: var(--color-primary);
+}
+
+.flow li div {
+  display: flex;
+  flex-direction: column;
+}
+
+.flow .num {
+  width: 1.6em;
+  font-weight: 700;
+  text-align: center;
+}
+
+.flow .sub {
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.note {
+  margin-top: var(--space-lg);
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}

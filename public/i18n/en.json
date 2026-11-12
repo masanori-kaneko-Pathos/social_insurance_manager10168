@@ -3620,5 +3620,35 @@
       "empty": "No amount yet",
       "filled": "Amount entered"
     }
+  },
+  "welcome": {
+    "hello": "Welcome, {{name}}",
+    "helloNoName": "Welcome",
+    "lead": "Welcome to Social Insurance Manager. First, register the office whose premiums you will calculate.",
+    "first": {
+      "title": "Register an office",
+      "body": "Enter the office name, the insurer (Japan Health Insurance Association or a health insurance society), the payroll closing and pay days, and the scheduled working hours of regular employees. You can change these later in the office settings.",
+      "button": "Register an office"
+    },
+    "flowTitle": "What comes next",
+    "step": {
+      "office": {
+        "title": "Register an office",
+        "body": "Set the insurer, rates and scheduled working hours."
+      },
+      "employees": {
+        "title": "Register employees",
+        "body": "Enter them one by one or import a file. Coverage is determined automatically."
+      },
+      "payroll": {
+        "title": "Enter payroll",
+        "body": "Enter each month's pay, or import a file from your payroll software."
+      },
+      "premiums": {
+        "title": "Check premiums",
+        "body": "See the employee and employer shares with the grade, rate and formula."
+      }
+    },
+    "invited": "If another office invited you, join from the link in the email you received."
   }
 }

@@ -25,10 +25,10 @@ export const startGuard: CanActivateFn = async () => {
     return router.createUrlTree(['/o', mine[0].id]);
   }
 
-  // 3. 1つもなければ：事業所を作れるアカウントは登録画面へ。招待で入った一般のアカウント（外された人など）はログインの画面へ
+  // 3. 1つもなければ：事業所を作れるアカウントは「はじめに」の画面へ（いきなり登録のフォームにしない）。招待で入った一般のアカウント（外された人など）はログインの画面へ
   if (auth.profile()?.role !== 'admin') {
     await auth.logout();
     return router.createUrlTree(['/login'], { queryParams: { reason: 'noOffice' } });
   }
-  return router.createUrlTree(['/offices/new']);
+  return router.createUrlTree(['/start']);
 };

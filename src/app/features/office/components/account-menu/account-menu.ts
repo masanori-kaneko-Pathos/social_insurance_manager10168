@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, signal } from '@angular/core';
+import { Component, computed, ElementRef, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../../../core/auth/auth.service';
@@ -33,6 +33,8 @@ export class AccountMenu {
   readonly profile = this.auth.profile;
   readonly open = signal(false);
   readonly loggingOut = signal(false);
+  /** アカウントの設定を開けるか（事業所がまだない管理者は、開く先がないので出さない） */
+  readonly canOpenSettings = computed(() => this.profile()?.role === 'employee' || !!this.context.current());
 
   toggle(): void {
     this.open.update((v) => !v);

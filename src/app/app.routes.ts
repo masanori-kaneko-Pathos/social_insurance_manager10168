@@ -69,6 +69,12 @@ export const routes: Routes = [
           },
         ],
       },
+      // 事業所がまだない管理者のホーム（新規登録の直後はここ。11/12）
+      {
+        path: 'start',
+        canActivate: [staffGuard],
+        loadComponent: () => import('./features/office/pages/welcome/welcome').then((m) => m.Welcome),
+      },
       {
         path: 'offices/new',
         canActivate: [staffGuard],

@@ -60,9 +60,11 @@
       </div>
     </div>
 
-    <button type="button" class="item" role="menuitem" (click)="openSettings()">
-      {{ 'account.settings' | transloco }}
-    </button>
+    @if (canOpenSettings()) {
+      <button type="button" class="item" role="menuitem" (click)="openSettings()">
+        {{ 'account.settings' | transloco }}
+      </button>
+    }
 
     <button type="button" class="item logout" role="menuitem" (click)="logout()" [disabled]="loggingOut()">
       {{ 'common.logout' | transloco }}
