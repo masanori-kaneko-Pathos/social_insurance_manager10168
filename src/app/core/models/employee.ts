@@ -111,6 +111,27 @@ export interface CareExemption {
   note: string | null;
 }
 
+/**
+ * 海外勤務の給与をどこが払うか
+ * - japan：日本の会社だけ（出張に近い形・在籍のまま赴任）
+ * - both：日本と海外の会社の両方（日本の会社が払う分があれば、日本の被保険者のまま）
+ * - abroad：海外の会社だけ（日本の会社との使用関係がないとみなされ、資格を喪失することがある）
+ */
+export type OverseasPayer = 'japan' | 'both' | 'abroad';
+export const OVERSEAS_PAYERS: readonly OverseasPayer[] = ['japan', 'both', 'abroad'];
+
+/** 海外勤務（赴任・在籍出向）。カタログ「利用にあたって 5」・対応イベント「海外赴任」 */
+export interface Overseas {
+  country: string; // 勤務する国・地域（ISO 3166-1 alpha-2）
+  from: string; // 赴任した日
+  to: string | null; // 帰任した日（予定でもよい。未定なら null）
+  payer: OverseasPayer;
+  /** 日本の適用証明書（協定国へ5年以内の一時派遣。日本の保険に残り、相手国の保険が免除される） */
+  certificateFrom: string | null;
+  certificateTo: string | null;
+  note: string | null;
+}
+
 /** 一覧で並ぶ列：あ〜わ（カナ）か A〜Z（ローマ字） */
 export const NAME_ORDERS = ['kana', 'roman'] as const;
 export type NameOrder = (typeof NAME_ORDERS)[number];
@@ -261,6 +282,8 @@ export interface EmployeeDoc {
   leaves: Leave[];
   /** 介護保険の適用除外（古い文書にはない＝ 空とみなす） */
   careExemptions?: CareExemption[];
+  /** 海外勤務（11/12 に足した。前の文書にはない＝ 空とみなす） */
+  overseas?: Overseas[];
   // 扶養家族の判定と届書の材料（扶養家族のカードで入れる）
   /** 被保険者の今後1年の年収の見込み。null なら給与・賞与の実績から計算する（届書 A⑦） */
   annualIncomeEstimate: number | null;
@@ -301,7 +324,7 @@ export type EmployeeFull = Employee & EmployeePrivate;
 /** 登録・編集画面が扱う項目のうち、従業員の文書に入るもの（休業はカード、マイページのアカウントは招待で保存する） */
 export type EmployeeBasicInput = Omit<
   EmployeeInput,
-  'leaves' | 'careExemptions' | 'userUid' | 'annualIncomeEstimate' | 'spouseAnnualIncome'
+  'leaves' | 'careExemptions' | 'overseas' | 'userUid' | 'annualIncomeEstimate' | 'spouseAnnualIncome'
 >;
 
 /** 登録・編集画面の保存する形（従業員の文書＋鍵付きの文書。保存のときに分ける） */
@@ -384,5 +407,5 @@ export function emptyLeave(kind: LeaveKind, start: string): Leave {
 
 /** 登録画面が扱わない項目の初期値（登録のときに係が足す） */
 export function employeeExtras(): Omit<EmployeeInput, keyof EmployeeBasicInput> {
-  return { leaves: [], careExemptions: [], userUid: null, annualIncomeEstimate: null, spouseAnnualIncome: null };
+  return { leaves: [], careExemptions: [], overseas: [], userUid: null, annualIncomeEstimate: null, spouseAnnualIncome: null };
 }

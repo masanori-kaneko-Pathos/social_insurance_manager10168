@@ -16,11 +16,15 @@
 // - contractEnd：有期の雇用契約の満了が60日以内（過ぎていても、次の契約も退職日もなければ出す）
 //   3回以上の更新か、入社から1年を超えて続いている人は、更新しないなら満了の30日前までに予告が要る
 //   （有期労働契約の締結、更新、雇止め等に関する基準 第2条。あらかじめ「更新しない」と明示した契約は除く）
+// - overseasCertificate：海外勤務の日本の適用証明書が6か月以内に切れる（帰任が期限までなら出さない）
+//   延長するなら相手国の承認が要る。延長しないなら帰任するか、相手国の保険に切り替える
+// - overseasPayAbroad：海外の会社だけが給与を払う海外勤務なのに、日本の保険に入っている（資格喪失の候補）
 
 import { addDays, DateStr, daysInMonth, monthsBetween, shiftMonth, toYearMonth, YearMonth } from '../../../shared/utils/date';
 import { contractAt } from '../../employees/logic/contract-form-model';
 import type { MyNumberEntry } from '../../../core/models/my-number';
 import { disposalDue, DisposalPerson } from '../../my-number/logic/my-number';
+import { certificateEndingSoon, OverseasPerson, payAbroadEnrolled } from '../../employees/logic/overseas';
 import { countHeadcount, criteriaAt, HeadcountTarget, isSpecificApplied, WorkSchedule } from '../../employees/logic/coverage';
 
 export type ExtraKind =
@@ -32,7 +36,9 @@ export type ExtraKind =
   | 'myNumberDispose'
   | 'contractEnd'
   | 'cardReturn'
-  | 'retireGuide';
+  | 'retireGuide'
+  | 'overseasCertificate'
+  | 'overseasPayAbroad';
 
 export interface ExtraTodo {
   kind: ExtraKind;
@@ -293,4 +299,25 @@ export function retireGuideTodo(
       insurer,
     },
   };
+}
+
+// ===== 海外勤務 =====
+
+/** 日本の適用証明書の期限が近い（日付 ＝ 証明書の期限） */
+export function overseasCertificateTodo(p: OverseasPerson, today: DateStr): ExtraTodo | null {
+  const o = certificateEndingSoon(p, today);
+  if (!o) return null;
+  return {
+    kind: 'overseasCertificate',
+    employeeId: p.id,
+    date: o.certificateTo,
+    params: { date: o.certificateTo!, country: o.country, from: o.from },
+  };
+}
+
+/** 海外の会社だけが給与を払う（日付 ＝ 赴任した日。喪失するならその日が資格喪失日） */
+export function overseasPayAbroadTodo(p: OverseasPerson, today: DateStr): ExtraTodo | null {
+  const o = payAbroadEnrolled(p, today);
+  if (!o) return null;
+  return { kind: 'overseasPayAbroad', employeeId: p.id, date: o.from, params: { date: o.from, country: o.country } };
 }

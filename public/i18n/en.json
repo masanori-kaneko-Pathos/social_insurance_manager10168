@@ -144,7 +144,9 @@
         "cardReturn": "Return of eligibility certificate",
         "retireGuide": "Guidance for a retiring employee",
         "name": "Name change notification",
-        "dependentChange": "Dependent change notification"
+        "dependentChange": "Dependent change notification",
+        "overseasCertificate": "Overseas certificate expiry",
+        "overseasPayAbroad": "Coverage check for overseas assignment"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. An Application to Enroll in EPI / EHI (資格取得届) is needed.",
@@ -185,7 +187,9 @@
         "dependentChange": {
           "increase": "A family member was reported as joining on {{date}}. Check whether they qualify as a dependent; if so, register them on the dependents card and file the \"Dependent (change) notification\" within 5 days (for a spouse, the National Pension category 3 notification uses the same form).",
           "decrease": "A family member was reported as leaving on {{date}} (they may no longer be a dependent). Enter the end date on the dependents card and file the \"Dependent (change) notification\" within 5 days. Collect the eligibility certificate if one was issued."
-        }
+        },
+        "overseasCertificate": "The Japanese certificate of coverage for the assignment in {{country}} expires on {{date}}. To continue the assignment, apply for an extension before it expires (the other country must approve). Otherwise, the employee returns to Japan or switches to the local system (if the Japanese company stops paying salary, a loss-of-coverage notification is also needed in Japan). Once the extension certificate is issued, enter the new end date and this item disappears.",
+        "overseasPayAbroad": "Assigned to {{country}} since {{date}} and paid only by the overseas company, but still insured in Japan. If the Japanese company bears no salary (such as a family allowance at home), the employment relationship is regarded as ended and a loss-of-coverage notification is needed (the loss date is usually the start of the assignment). If you confirm that the Japanese company bears salary and coverage continues, dismiss with \"Checked\"."
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -244,7 +248,9 @@
       },
       "toPerson": "Go to personal information",
       "toEmployee": "Go to the employee page",
-      "toDependents": "Go to the dependents card"
+      "toDependents": "Go to the dependents card",
+      "toOverseas": "View overseas assignment",
+      "toLoss": "Enter the loss-of-coverage date"
     }
   },
   "nav": {
@@ -2152,7 +2158,8 @@
       "contact_address": "Address",
       "health_enrolled": "Enrolled",
       "pension_enrolled": "Enrolled",
-      "careExemptions": "Periods without long-term care premiums (exemption)"
+      "careExemptions": "Periods without long-term care premiums (exemption)",
+      "overseas": "Overseas assignment"
     },
     "summary": {
       "private": "Address, contact, commute and bank account",
@@ -2285,6 +2292,64 @@
       "noEnd": "Enter the end date first.",
       "overlap": "Overlaps another period.",
       "tooMany": "Up to 10 periods.",
+      "save": "Could not save. Please try again."
+    }
+  },
+  "overseas": {
+    "title": "Overseas assignment",
+    "add": "Add overseas assignment",
+    "empty": "No overseas assignments.",
+    "now": "Current",
+    "noCertificate": "No certificate",
+    "confirmDelete": "Delete permanently",
+    "field": {
+      "country": "Country/region of work",
+      "from": "Start of assignment",
+      "to": "Return date",
+      "payer": "Who pays the salary",
+      "certificateFrom": "Certificate of coverage (from)",
+      "certificateTo": "Certificate of coverage (to)",
+      "note": "Note",
+      "period": "Period",
+      "certificate": "Japanese certificate of coverage"
+    },
+    "payer": {
+      "japan": "Japanese company only",
+      "both": "Both the Japanese and the overseas company",
+      "abroad": "Overseas company only"
+    },
+    "payerHint": {
+      "japan": "The employee stays insured in Japan. The standard monthly remuneration is based on the salary paid by the Japanese company.",
+      "both": "Because the Japanese company pays part of the salary, the employee stays insured in Japan. The standard monthly remuneration covers the salary paid by the Japanese company (such as a family allowance at home). Amounts paid by the overseas company are excluded unless the Japanese company bears them.",
+      "abroad": "If the Japanese company pays no salary, the employment relationship with the Japanese company may be regarded as ended, and coverage may be lost (shown in the To-do list)."
+    },
+    "agreement": {
+      "pension": "This country has a social security agreement with Japan (pension only). For a temporary assignment of up to 5 years, the Japanese certificate of coverage exempts the employee from the other country's pension system.",
+      "pensionAndHealth": "This country has a social security agreement with Japan (pension and health). For a temporary assignment of up to 5 years, the Japanese certificate of coverage exempts the employee from the other country's pension and health insurance.",
+      "none": "There is no social security agreement with this country/region. The employee may have to join the local system while staying insured in Japan."
+    },
+    "hint": {
+      "to": "Leave blank if undecided. A planned date is fine.",
+      "certificate": "For a temporary assignment of up to 5 years to an agreement country, the pension office issues a certificate of coverage on application. Submitting it to the overseas company exempts the employee from the local system, so they are insured only in Japan.",
+      "list": "The To-do list shows certificates expiring within 6 months and employees paid only by the overseas company. For employees aged 40–64 who moved their resident registration abroad, also register the long-term care insurance exemption."
+    },
+    "warning": {
+      "payAbroad": "If only the overseas company pays the salary, Japanese coverage may be lost. Check whether the Japanese company bears any salary (such as a family allowance at home); if not, file the loss-of-coverage notification.",
+      "noCertificate": "The employee works in an agreement country while insured in Japan. Without a Japanese certificate of coverage, they must also join the local system (double coverage). For a temporary assignment of up to 5 years, apply for the certificate at the pension office.",
+      "noAgreement": "There is no agreement with this country/region, so the employee may also have to join the local system (Japanese coverage continues).",
+      "pensionOnly": "The agreement with this country covers pension only. The employee may also have to join the local health insurance.",
+      "overFiveYears": "The certificate period is longer than 5 years. Check that an extension was approved.",
+      "certificateOutside": "The certificate period goes outside the assignment period. Check the dates.",
+      "careExemption": "This period overlaps the long-term care insurance age (40–64). If the employee moved their resident registration abroad, also register the care insurance exemption (\"+ Add\" → \"Add period\")."
+    },
+    "error": {
+      "required": "Required.",
+      "date": "Invalid date.",
+      "order": "Enter a date after the start date.",
+      "country": "Select a country or region other than Japan.",
+      "pair": "Enter both the start and end of the certificate period.",
+      "overlap": "This period overlaps another overseas assignment.",
+      "tooMany": "Up to 10 overseas assignments.",
       "save": "Could not save. Please try again."
     }
   },

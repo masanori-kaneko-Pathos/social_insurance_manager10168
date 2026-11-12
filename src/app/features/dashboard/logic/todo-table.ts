@@ -52,13 +52,16 @@ export function deadlineOf(it: BoardItem): { deadline: DateStr | null; note: Dea
     case 'myNumberDispose':
       // 保存期間が過ぎた日（ここから「できるだけ速やかに」廃棄）
       return { deadline: it.date, note: null };
+    case 'overseasCertificate':
+      // 届の期限ではなく、証明書の期限（延長の申請はそれより前に）
     case 'residence':
       // 届の期限ではなく、在留期間の満了日（更新の申請は満了日まで）
       return { deadline: it.date, note: null };
     case 'officeNameAddress':
     case 'officeRelation':
     case 'dependentChange':
-      // 事実発生から5日以内（変わった日を1日目）
+    case 'overseasPayAbroad':
+      // 事実発生から5日以内（変わった日を1日目。海外の会社だけが払うなら、赴任した日に喪失）
       return it.date ? { deadline: filingDeadline(it.date), note: null } : { deadline: null, note: 'asap' };
     case 'address':
     case 'name':

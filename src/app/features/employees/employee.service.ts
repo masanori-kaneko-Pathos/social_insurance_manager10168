@@ -1,9 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { HistoryService } from './history.service';
-import { addDoc, collection, doc, getDoc, getDocs, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { addDoc, collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { db } from '../../core/firebase';
 import {
   CareExemption,
+  Overseas,
   Employee,
   EmployeeDoc,
   EmployeeFormInput,
@@ -70,14 +72,14 @@ export class EmployeeService {
 
   /** 事業所の従業員（フリガナ順） */
   async list(officeId: string): Promise<Employee[]> {
-    const snap = await getDocs(this.col(officeId));
+    const snap = await countedGetDocs(this.col(officeId));
     return snap.docs
       .map((d) => ({ id: d.id, ...(d.data() as EmployeeDoc) }))
       .sort((a, b) => kana(a).localeCompare(kana(b), 'ja'));
   }
 
   async get(officeId: string, employeeId: string): Promise<Employee | null> {
-    const snap = await getDoc(doc(this.col(officeId), employeeId));
+    const snap = await countedGetDoc(doc(this.col(officeId), employeeId));
     return snap.exists() ? { id: snap.id, ...(snap.data() as EmployeeDoc) } : null;
   }
 
@@ -93,7 +95,7 @@ export class EmployeeService {
    */
   async getPrivate(officeId: string, employeeId: string, legacyFrom?: object): Promise<EmployeePrivate> {
     try {
-      const snap = await getDoc(this.privateRef(officeId, employeeId));
+      const snap = await countedGetDoc(this.privateRef(officeId, employeeId));
       if (snap.exists()) {
         const d = snap.data() as EmployeePrivate;
         return { contact: d.contact, commute: d.commute, bankAccount: d.bankAccount };
@@ -138,7 +140,7 @@ export class EmployeeService {
     addressFactDate?: string,
   ): Promise<void> {
     const ref = this.privateRef(officeId, employeeId);
-    const snap = await getDoc(ref);
+    const snap = await countedGetDoc(ref);
     const before = snap.exists()
       ? (snap.data() as EmployeePrivate)
       : (legacyPrivate((await this.get(officeId, employeeId)) ?? {}) ?? emptyPrivate());
@@ -210,5 +212,11 @@ export class EmployeeService {
   ): Promise<void> {
     const ref = doc(this.col(officeId), employeeId);
     await this.history.write(officeId, employeeId, 'employee', ref, 'update', { careExemptions });
+  }
+
+  /** 海外勤務（従業員の文書の配列。To-do で全員分を読むので、別の入れ物にしない） */
+  async updateOverseas(officeId: string, employeeId: string, overseas: Overseas[]): Promise<void> {
+    const ref = doc(this.col(officeId), employeeId);
+    await this.history.write(officeId, employeeId, 'employee', ref, 'update', { overseas });
   }
 }

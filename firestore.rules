@@ -333,7 +333,7 @@ service cloud.firestore {
       }
 
       function validEmployee(d, old) {
-        return d.keys().size() <= 34
+        return d.keys().size() <= 35
           && d.keys().hasAll(['lastName', 'lastNameKana', 'birthDate', 'hireDate', 'health', 'pension',
                               'foreign', 'leaves', 'userUid', 'createdAt', 'updatedAt'])
           // 氏名・番号
@@ -358,6 +358,8 @@ service cloud.firestore {
           // 休業・介護保険の適用除外：配列で件数まで（1件ずつの中身はアプリで確かめる）
           && d.leaves is list && d.leaves.size() <= 20
           && (!('careExemptions' in d) || (d.careExemptions is list && d.careExemptions.size() <= 10))
+          // 海外勤務（11/12。前の文書にはない）：配列で件数まで
+          && (!('overseas' in d) || (d.overseas is list && d.overseas.size() <= 10))
           && (d.userUid == null || d.userUid is string)
           // 部署・役職・役員（任意。11/12 より前の文書にはない）
           && (!('org' in d) || d.org == null || unchanged(d, old, 'org')
@@ -633,22 +635,6 @@ service cloud.firestore {
           allow read: if isMember(officeId);
           allow create: if isAdmin(officeId) && validLeaveEnd(request.resource.data) && created(request.resource.data);
           allow update: if isAdmin(officeId) && validLeaveEnd(request.resource.data) && updated(request.resource.data);
-          allow delete: if isAdmin(officeId);
-        }
-
-        // ----- 海外赴任（ID ＝ 赴任した日） -----
-        match /overseas/{from} {
-          function validOverseas(d) {
-            return exactKeys(d, ['from', 'to', 'country', 'certificateFrom', 'certificateTo', 'note', 'createdAt', 'updatedAt'])
-              && d.from == from && isDate(from) && optDate(d.to)
-              && optCode(d.country) && d.country != null
-              && optDate(d.certificateFrom) && optDate(d.certificateTo)
-              && optStr(d.note, 200);
-          }
-
-          allow read: if isMember(officeId);
-          allow create: if isAdmin(officeId) && validOverseas(request.resource.data) && created(request.resource.data);
-          allow update: if isAdmin(officeId) && validOverseas(request.resource.data) && updated(request.resource.data);
           allow delete: if isAdmin(officeId);
         }
 

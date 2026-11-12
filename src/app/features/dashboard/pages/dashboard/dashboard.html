@@ -191,6 +191,12 @@
                           @case ('cardReturn') {
                             {{ 'dashboard.todo.text.cardReturn' | transloco: it.extra!.params }}
                           }
+                          @case ('overseasCertificate') {
+                            {{ 'dashboard.todo.text.overseasCertificate' | transloco: withCountry(it.extra!.params) }}
+                          }
+                          @case ('overseasPayAbroad') {
+                            {{ 'dashboard.todo.text.overseasPayAbroad' | transloco: withCountry(it.extra!.params) }}
+                          }
                           @case ('contractEnd') {
                             {{ 'dashboard.todo.text.contractEnd' | transloco: it.extra!.params }}
                             @if (it.extra!.params['notice'] === 'yes') {
@@ -298,6 +304,13 @@
                           }
                           @case ('dependentChange') {
                             <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'person' }">{{ 'dashboard.todo.toDependents' | transloco }} →</a>
+                          }
+                          @case ('overseasCertificate') {
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'employment' }">{{ 'dashboard.todo.toOverseas' | transloco }} →</a>
+                          }
+                          @case ('overseasPayAbroad') {
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'employment' }">{{ 'dashboard.todo.toOverseas' | transloco }} →</a>
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId, 'edit']">{{ 'dashboard.todo.toLoss' | transloco }} →</a>
                           }
                           @case ('contractEnd') {
                             <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'employment' }">{{ 'dashboard.todo.toRenew' | transloco }} →</a>

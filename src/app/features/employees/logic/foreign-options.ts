@@ -43,6 +43,15 @@ export function countryOptions(lang: string): CountryOption[] {
   return COUNTRY_CODES.map((code) => ({ code, name: names?.of(code) ?? code }));
 }
 
+/** 1つの国コードの名前（その言語。辞書にない国はコードのまま） */
+export function countryName(code: string, lang: string): string {
+  try {
+    return new Intl.DisplayNames([lang], { type: 'region' }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
 export type ResidenceGroup = 'work' | 'status' | 'nonWork' | 'diplomatic';
 
 export interface ResidenceStatus {

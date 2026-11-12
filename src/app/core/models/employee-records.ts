@@ -4,26 +4,10 @@ import { StandardRemuneration } from './remuneration';
 /**
  * 従業員の下の、そのほかの入れ物
  * - 介護保険の適用除外（カタログ【7】）
- * - 海外赴任（カタログ「利用にあたって 5」）
+ * （海外勤務は従業員の文書の overseas に移した。To-do で全員分を読むため。11/12）
  * - 変更履歴（カタログ【3】）
  * - 遡及計算の結果（カタログ【9】。元のデータは書き換えない）
  */
-
-// ===== 海外赴任 offices/{o}/employees/{e}/overseas/{from} =====
-
-export interface OverseasDoc {
-  from: string; // 赴任した日（＝ ドキュメントID）
-  to: string | null;
-  country: string; // 国・地域コード
-  /** 日本の適用証明書（協定国へ5年以内の一時派遣など。日本の保険に残る） */
-  certificateFrom: string | null;
-  certificateTo: string | null;
-  note: string | null;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-}
-
-export type Overseas = Omit<OverseasDoc, 'createdAt' | 'updatedAt'>;
 
 // ===== 変更履歴 offices/{o}/employees/{e}/history/{自動ID} =====
 

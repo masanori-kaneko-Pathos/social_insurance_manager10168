@@ -1,0 +1,147 @@
+<section class="card">
+  <div class="head">
+    <h2>{{ 'overseas.title' | transloco }}</h2>
+    @if (context.isAdmin() && editing() === null) {
+      <button type="button" class="btn" (click)="startAdd()">{{ 'overseas.add' | transloco }}</button>
+    }
+  </div>
+
+  @if (errorKey(); as key) {
+    <div class="alert alert-danger">{{ key | transloco }}</div>
+  }
+
+  @if (editing() !== null) {
+    <form class="editor" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="grid">
+        <div class="field">
+          <label for="ov-country">{{ 'overseas.field.country' | transloco }}</label>
+          <select id="ov-country" class="input" formControlName="country" [class.is-invalid]="errorOf('country')">
+            <option value="">{{ 'common.select' | transloco }}</option>
+            @for (o of countries(); track o.code) {
+              <option [value]="o.code">{{ o.code }} — {{ o.name }}</option>
+            }
+          </select>
+          @if (errorOf('country'); as e) {
+            <span class="field-error">{{ e | transloco }}</span>
+          } @else if (form.controls.country.value) {
+            <span class="hint">
+              @if (agreement(); as a) {
+                {{ 'overseas.agreement.' + a.covers | transloco }}
+              } @else {
+                {{ 'overseas.agreement.none' | transloco }}
+              }
+            </span>
+          }
+        </div>
+        <div class="field">
+          <label for="ov-from">{{ 'overseas.field.from' | transloco }}</label>
+          <input id="ov-from" class="input" type="date" formControlName="from" [class.is-invalid]="errorOf('from')" />
+          @if (errorOf('from'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+        </div>
+        <div class="field">
+          <label for="ov-to">{{ 'overseas.field.to' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="ov-to" class="input" type="date" formControlName="to" [class.is-invalid]="errorOf('to')" />
+          @if (errorOf('to'); as e) {
+            <span class="field-error">{{ e | transloco }}</span>
+          } @else {
+            <span class="hint">{{ 'overseas.hint.to' | transloco }}</span>
+          }
+        </div>
+        <div class="field wide">
+          <label for="ov-payer">{{ 'overseas.field.payer' | transloco }}</label>
+          <select id="ov-payer" class="input" formControlName="payer">
+            @for (p of payers; track p) {
+              <option [value]="p">{{ 'overseas.payer.' + p | transloco }}</option>
+            }
+          </select>
+          <span class="hint">{{ 'overseas.payerHint.' + form.controls.payer.value | transloco }}</span>
+        </div>
+        <div class="field">
+          <label for="ov-cert-from">{{ 'overseas.field.certificateFrom' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="ov-cert-from" class="input" type="date" formControlName="certificateFrom" [class.is-invalid]="errorOf('certificateFrom')" />
+          @if (errorOf('certificateFrom'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+        </div>
+        <div class="field">
+          <label for="ov-cert-to">{{ 'overseas.field.certificateTo' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="ov-cert-to" class="input" type="date" formControlName="certificateTo" [class.is-invalid]="errorOf('certificateTo')" />
+          @if (errorOf('certificateTo'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+        </div>
+        <div class="field wide">
+          <label for="ov-note">{{ 'overseas.field.note' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+          <input id="ov-note" class="input" maxlength="200" formControlName="note" />
+        </div>
+      </div>
+      <p class="hint">{{ 'overseas.hint.certificate' | transloco }}</p>
+
+      @for (w of warnings(); track w) {
+        <p class="hint warn">{{ 'overseas.warning.' + w | transloco }}</p>
+      }
+      @if (formErrorKey(); as key) {
+        <p class="field-error">{{ key | transloco }}</p>
+      }
+
+      <div class="actions">
+        <button type="button" class="btn" (click)="cancel()">{{ 'common.cancel' | transloco }}</button>
+        <button type="submit" class="btn btn-solid" [disabled]="saving()">
+          {{ (saving() ? 'common.saving' : 'common.save') | transloco }}
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (rows().length === 0) {
+    <p class="muted">{{ 'overseas.empty' | transloco }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'overseas.field.country' | transloco }}</th>
+            <th>{{ 'overseas.field.period' | transloco }}</th>
+            <th>{{ 'overseas.field.payer' | transloco }}</th>
+            <th>{{ 'overseas.field.certificate' | transloco }}</th>
+            @if (context.isAdmin()) {
+              <th><span class="sr-only">{{ 'common.edit' | transloco }}</span></th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.index) {
+            <tr>
+              <td>
+                {{ r.name }}
+                @if (r.now) { <span class="status">{{ 'overseas.now' | transloco }}</span> }
+                @if (r.item.note) { <div class="sub">{{ r.item.note }}</div> }
+              </td>
+              <td class="mono">{{ r.item.from }} 〜 {{ r.item.to ?? '' }}</td>
+              <td>{{ 'overseas.payer.' + r.item.payer | transloco }}</td>
+              <td class="mono">
+                @if (r.item.certificateFrom) {
+                  {{ r.item.certificateFrom }} 〜 {{ r.item.certificateTo ?? '' }}
+                } @else if (r.agreement && r.item.payer !== 'abroad') {
+                  <span class="status">{{ 'overseas.noCertificate' | transloco }}</span>
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+              @if (context.isAdmin()) {
+                <td class="row-actions">
+                  @if (confirmingDelete() === r.index) {
+                    <button type="button" class="link danger" [disabled]="saving()" (click)="remove(r.index)">
+                      {{ 'overseas.confirmDelete' | transloco }}
+                    </button>
+                    <button type="button" class="link" (click)="confirmingDelete.set(null)">{{ 'common.cancel' | transloco }}</button>
+                  } @else {
+                    <button type="button" class="link" [disabled]="editing() !== null" (click)="startEdit(r)">{{ 'common.edit' | transloco }}</button>
+                    <button type="button" class="link" [disabled]="editing() !== null" (click)="confirmingDelete.set(r.index)">{{ 'common.delete' | transloco }}</button>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  <p class="hint">{{ 'overseas.hint.list' | transloco }}</p>
+</section>

@@ -58,7 +58,9 @@ export const BOARD_ORDER: readonly BoardKind[] = [
   'upcoming',
   'categoryChange',
   'certificateEnd',
+  'overseasPayAbroad',
   'contractEnd',
+  'overseasCertificate',
   'cardReturn',
   'retireGuide',
   'residence',
@@ -83,6 +85,8 @@ export const SECTION_OF: Record<BoardKind, Section> = {
   address: 'now',
   name: 'now',
   dependentChange: 'now',
+  overseasPayAbroad: 'now',
+  overseasCertificate: 'soon',
   addressKumiai: 'soon',
   upcoming: 'soon',
   categoryChange: 'soon',
@@ -112,6 +116,8 @@ export const DISMISSABLE: ReadonlySet<BoardKind> = new Set<BoardKind>([
   'retireGuide', // 本人に案内したら消す
   'cardReturn', // 回収した（または回収不能届を書いた）ら消す
   'contractEnd', // 同じ条件のまま自動で更新する場合など。次の契約か退職日を入れれば、そもそも出なくなる
+  'overseasCertificate', // 延長の承認が出た（新しい期限を入れれば、そもそも出なくなる）など
+  'overseasPayAbroad', // 日本の会社が負担する給与（留守宅手当など）があって、被保険者のままでよいと確かめた場合
   'myNumberDispose', // 「完結の日」を通知の日と考えて待つ場合など。廃棄すれば、そもそも出なくなる
 ]);
 

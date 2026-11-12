@@ -44,11 +44,15 @@ import {
   retireGuideTodo,
   lumpSumTodo,
   myNumberTodos,
+  overseasCertificateTodo,
+  overseasPayAbroadTodo,
   residenceTodo,
   specificOfficeTodo,
   workPermitTodo,
 } from '../../logic/extra-todos';
 import { MyNumberEntry } from '../../../../core/models/my-number';
+import { LanguageService } from '../../../../core/i18n/language.service';
+import { countryName } from '../../../employees/logic/foreign-options';
 import { MyNumberService } from '../../../my-number/my-number.service';
 import { TodoBadgeService } from '../../todo-badge.service';
 import { TodoService } from '../../todo.service';
@@ -89,6 +93,13 @@ export class Dashboard {
   private readonly api = inject(TodoService);
   private readonly badge = inject(TodoBadgeService);
   private readonly tasksApi = inject(FilingTaskService);
+  private readonly language = inject(LanguageService);
+
+  /** 文の差し込みの国コードを、国の名前にする（海外勤務の To-do） */
+  withCountry(params: Record<string, string | number>): Record<string, string | number> {
+    const c = params['country'];
+    return typeof c === 'string' ? { ...params, country: countryName(c, this.language.lang()) } : params;
+  }
   /** 届出の宿題（まだのもの。管理者だけ） */
   private readonly tasks = signal<FilingTask[]>([]);
 
@@ -164,6 +175,8 @@ export class Dashboard {
         contractEndTodo(e, contracts.get(e.id) ?? [], this.today),
         cardReturnTodo(e, o.healthInsurer.type, this.today),
         retireGuideTodo(e, o.healthInsurer.type, this.today),
+        overseasCertificateTodo(e, this.today),
+        overseasPayAbroadTodo(e, this.today),
       ].filter((t) => t !== null),
     );
     const specific = specificOfficeTodo(
