@@ -6,6 +6,7 @@ import { ENTRY_STATES, PERSON_SORTS, PersonListOptions } from '../../logic/perso
 /**
  * 人の並ぶ表の上の帯：探す・絞る・並べる・ページ（給与の入力・賞与の登録。11/12）
  * 値は親が持つ（options・page を双方向で受け渡す）。絞ると1ページ目に戻す
+ * 契約を読まない画面は showContract・showEntry を false にし、独自の絞り込みは中に差し込む（ng-content）
  */
 @Component({
   selector: 'app-person-list-bar',
@@ -20,6 +21,7 @@ import { ENTRY_STATES, PERSON_SORTS, PersonListOptions } from '../../logic/perso
         [value]="options().query"
         (input)="set('query', $any($event.target).value)"
       />
+      @if (showContract()) {
       <select class="input" [attr.aria-label]="'personList.employment' | transloco" (change)="set('employment', $any($event.target).value)">
         <option value="all" [selected]="options().employment === 'all'">{{ 'personList.allEmployment' | transloco }}</option>
         @for (t of employmentTypes; track t) {
@@ -32,11 +34,16 @@ import { ENTRY_STATES, PERSON_SORTS, PersonListOptions } from '../../logic/perso
           <option [value]="t" [selected]="options().payType === t">{{ 'contract.payType.' + t | transloco }}</option>
         }
       </select>
+      }
+      @if (showEntry()) {
       <select class="input" [attr.aria-label]="'personList.entry' | transloco" (change)="set('entry', $any($event.target).value)">
         @for (s of entryStates; track s) {
           <option [value]="s" [selected]="options().entry === s">{{ entryKey() + s | transloco }}</option>
         }
       </select>
+      }
+      <!-- 親の画面だけの絞り込み（マイページの状態など） -->
+      <ng-content />
       <select class="input" [attr.aria-label]="'personList.sort' | transloco" (change)="set('sort', $any($event.target).value)">
         @for (s of sorts; track s) {
           <option [value]="s" [selected]="options().sort === s">{{ 'personList.sortBy.' + s | transloco }}</option>
@@ -70,6 +77,10 @@ export class PersonListBar {
   readonly pages = input.required<number>();
   /** 「入れたかどうか」の言い方（給与：payroll、賞与：bonus） */
   readonly entryKey = input('personList.entryState.');
+  /** 雇用形態・給与の形で絞る欄を出すか（契約を読まない画面では出さない） */
+  readonly showContract = input(true);
+  /** 「入れたかどうか」の欄を出すか */
+  readonly showEntry = input(true);
 
   readonly employmentTypes = EMPLOYMENT_TYPES;
   readonly payTypes = PAY_TYPES;

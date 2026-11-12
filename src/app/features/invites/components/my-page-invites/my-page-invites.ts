@@ -3,7 +3,9 @@ import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
 import { Invite } from '../../../../core/models/office-records';
+import { PersonListBar } from '../../../../shared/components/person-list-bar/person-list-bar';
 import { downloadCsv } from '../../../../shared/csv/csv';
+import { defaultListOptions, filterAndSort, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
 import { todayLocal } from '../../../../shared/utils/date';
 import { EmployeeService } from '../../../employees/employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
@@ -26,6 +28,9 @@ interface Row {
   selectable: boolean;
 }
 
+/** 1ページの人数（招待は人を選ぶだけの軽い表なので、給与の入力より多めに） */
+const PAGE_SIZE = 100;
+
 /** 招待を作った結果（画面に出す） */
 interface Result {
   made: number;
@@ -37,10 +42,12 @@ interface Result {
  * - 一覧の読み込みは、招待の問い合わせ1回だけ（従業員は親の画面で読んだものを使う）
  * - 連絡先のメールは鍵付きの文書にあるので、「招待する」を押したときに選んだ人の分だけ読む
  * - メールは送らない。リンクを CSV で書き出して、差し込みメールなどで送ってもらう
+ * - 探す・並べる・ページは給与の入力と同じ帯（契約は読まないので雇用形態の絞り込みは出さない）。11/12
+ * - 選んだ人は、絞り込みやページを変えても残る
  */
 @Component({
   selector: 'app-my-page-invites',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [RouterLink, TranslocoPipe, PersonListBar],
   templateUrl: './my-page-invites.html',
   styleUrl: './my-page-invites.css',
 })
@@ -62,6 +69,12 @@ export class MyPageInvites implements OnInit {
   readonly selected = signal<ReadonlySet<string>>(new Set());
   readonly copiedId = signal<string | null>(null);
 
+  // ===== 探す・絞る・並べる・ページ =====
+  readonly listOptions = signal<PersonListOptions>(defaultListOptions());
+  readonly page = signal(1);
+  /** マイページの状態で絞る（all ＝ すべて） */
+  readonly statusFilter = signal<MyPageStatus | 'all'>('all');
+
   private readonly now = Date.now();
   private readonly today = todayLocal();
 
@@ -79,7 +92,6 @@ export class MyPageInvites implements OnInit {
     const invites = this.inviteLikes();
     return this.employees()
       .filter((e) => !e.retireDate || e.retireDate >= this.today)
-      .sort((a, b) => (a.employeeNumber ?? '').localeCompare(b.employeeNumber ?? '', 'ja', { numeric: true }))
       .map((employee) => ({
         employee,
         status: myPageStatus(employee, invites, this.now),
@@ -93,9 +105,23 @@ export class MyPageInvites implements OnInit {
     for (const r of this.rows()) c[r.status]++;
     return c;
   });
-  readonly selectableIds = computed(() => this.rows().filter((r) => r.selectable).map((r) => r.employee.id));
+
+  /** 状態で絞ってから、名前で探して並べる */
+  readonly filtered = computed(() => {
+    const st = this.statusFilter();
+    const rows = st === 'all' ? this.rows() : this.rows().filter((r) => r.status === st);
+    return filterAndSort(rows, this.listOptions(), (r) => r.employee, () => null, () => false);
+  });
+  readonly shown = computed(() => pageOf(this.filtered(), this.page(), PAGE_SIZE));
+
+  /** 見出しのチェック：今のページの選べる人 */
+  readonly selectableIds = computed(() => this.shown().rows.filter((r) => r.selectable).map((r) => r.employee.id));
   readonly allSelected = computed(
     () => this.selectableIds().length > 0 && this.selectableIds().every((id) => this.selected().has(id)),
+  );
+  /** 条件に合う選べる人（全ページ） */
+  readonly filteredSelectableIds = computed(() =>
+    this.filtered().filter((r) => r.selectable).map((r) => r.employee.id),
   );
   readonly invitedRows = computed(() => this.rows().filter((r) => r.invite));
 
@@ -126,8 +152,32 @@ export class MyPageInvites implements OnInit {
     });
   }
 
+  /** 今のページの選べる人をまとめて選ぶ／外す（ほかのページで選んだ人はそのまま） */
   toggleAll(): void {
-    this.selected.set(this.allSelected() ? new Set() : new Set(this.selectableIds()));
+    const ids = this.selectableIds();
+    const off = this.allSelected();
+    this.selected.update((s) => {
+      const next = new Set(s);
+      for (const id of ids) {
+        if (off) next.delete(id);
+        else next.add(id);
+      }
+      return next;
+    });
+  }
+
+  /** 条件に合う選べる人を、全ページまとめて選ぶ */
+  selectFiltered(): void {
+    this.selected.update((s) => new Set([...s, ...this.filteredSelectableIds()]));
+  }
+
+  clearSelection(): void {
+    this.selected.set(new Set());
+  }
+
+  setStatus(value: string): void {
+    this.statusFilter.set(value as MyPageStatus | 'all');
+    this.page.set(1);
   }
 
   /** 選んだ人の連絡先のメールを読み、アドレスのある人の招待をまとめて作る */

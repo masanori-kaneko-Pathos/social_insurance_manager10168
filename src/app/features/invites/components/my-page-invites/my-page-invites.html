@@ -24,6 +24,32 @@
   </div>
   <p class="hint">{{ 'myPages.hint' | transloco }}</p>
 
+  <!-- 探す・状態で絞る・並べる・ページ（選んだ人はページを移っても残る） -->
+  <app-person-list-bar
+    [(options)]="listOptions"
+    [(page)]="page"
+    [total]="filtered().length"
+    [pages]="shown().pages"
+    [showContract]="false"
+    [showEntry]="false"
+  >
+    <select class="input status-filter" [attr.aria-label]="'myPages.col.status' | transloco" (change)="setStatus($any($event.target).value)">
+      <option value="all" [selected]="statusFilter() === 'all'">{{ 'myPages.allStatus' | transloco }}</option>
+      @for (s of statuses; track s) {
+        <option [value]="s" [selected]="statusFilter() === s">{{ 'myPages.status.' + s | transloco }}</option>
+      }
+    </select>
+  </app-person-list-bar>
+
+  <div class="select-line">
+    <button type="button" class="btn btn-small" [disabled]="filteredSelectableIds().length === 0" (click)="selectFiltered()">
+      {{ 'myPages.selectFiltered' | transloco: { count: filteredSelectableIds().length } }}
+    </button>
+    @if (selected().size > 0) {
+      <button type="button" class="btn btn-small" (click)="clearSelection()">{{ 'myPages.clearSelection' | transloco }}</button>
+    }
+  </div>
+
   @if (errorKey(); as key) {
     <div class="alert alert-danger">{{ key | transloco }}</div>
   }
@@ -56,7 +82,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (r of rows(); track r.employee.id) {
+        @for (r of shown().rows; track r.employee.id) {
           <tr>
             <td class="check">
               @if (r.selectable) {
@@ -88,7 +114,7 @@
             </td>
           </tr>
         } @empty {
-          <tr><td colspan="5" class="muted">{{ 'myPages.empty' | transloco }}</td></tr>
+          <tr><td colspan="5" class="muted">{{ (rows().length === 0 ? 'myPages.empty' : 'myPages.noMatch') | transloco }}</td></tr>
         }
       </tbody>
     </table>

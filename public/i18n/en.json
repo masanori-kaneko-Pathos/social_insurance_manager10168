@@ -3160,7 +3160,7 @@
   },
   "myPages": {
     "tabs": "Switch view",
-    "tab": "Invites and accounts",
+    "tab": "Issue My Page",
     "lead": "My Page status of current employees. Select people and press \"Invite\" to create invites that only work with the email in each employee's contact details. No email is sent automatically: export the links as CSV and send them yourself (for example with a mail merge).",
     "status": {
       "linked": "Has account",
@@ -3173,7 +3173,7 @@
     "hint": "You can select people with no account and no usable invite. Invites expire after 14 days and can only be used by the person who clicks the link in the confirmation email.",
     "made": "Created {{count}} invite(s).",
     "noEmail": "Skipped {{count}} without a contact email ({{names}}). Add the email on the employee page and select them again.",
-    "selectAll": "Select everyone selectable",
+    "selectAll": "Select everyone selectable on this page",
     "anyone": "Any address",
     "empty": "No current employees.",
     "col": {
@@ -3191,7 +3191,11 @@
     "error": {
       "load": "Could not load invites.",
       "create": "Could not create invites. Please try again later."
-    }
+    },
+    "allStatus": "My Page: all",
+    "selectFiltered": "Select everyone selectable that matches ({{count}})",
+    "clearSelection": "Clear selection",
+    "noMatch": "No employees match the conditions."
   },
   "monthPicker": {
     "pick": "Pick a month",
