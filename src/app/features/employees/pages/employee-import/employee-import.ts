@@ -105,6 +105,8 @@ export class EmployeeImport {
     );
   });
   readonly reasonParams = reasonParams;
+  /** 事業所の所定労働時間がまだ → 区分を判定できず、全員が「加入しない」で入ってしまう */
+  readonly noStandard = computed(() => !this.context.current()?.standardHours);
   readonly insuredCount = computed(
     () =>
       this.preview()?.plan.items.filter(

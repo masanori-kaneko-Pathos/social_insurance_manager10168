@@ -17,6 +17,13 @@
     }
   </div>
 
+  @if (mode() === 'employees' && noStandard()) {
+    <div class="alert alert-warning">
+      {{ 'employeeCsv.noStandard' | transloco }}
+      <a [routerLink]="['/o', context.current()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>
+    </div>
+  }
+
   @if (mode() !== 'employees') {
     <app-history-import [kind]="mode() === 'contract' ? 'contract' : 'remuneration'" />
   } @else {

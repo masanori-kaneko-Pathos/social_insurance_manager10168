@@ -2126,7 +2126,8 @@
       "read": "Could not read the file. Make sure it is a CSV.",
       "save": "Could not import. Please try again later.",
       "partial": "Stopped partway. Check the list and import only the remaining rows."
-    }
+    },
+    "noStandard": "The office's scheduled working hours (weekly and daily) are not set yet. If you import now, categories cannot be determined, so everyone is registered as not insured and acquisition To-dos will appear on the home screen. Set the scheduled hours in the office settings first (and the specified applicable office setting if you have 51 or more employees)."
   },
   "historyCsv": {
     "modeLabel": "What to import",
