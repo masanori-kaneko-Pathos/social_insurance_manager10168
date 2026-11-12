@@ -865,7 +865,7 @@ service cloud.firestore {
       match /filingTasks/{taskId} {
         function validFilingTask(d) {
           return exactKeys(d, ['kind', 'employeeId', 'factDate', 'fields', 'status', 'createdAt', 'updatedAt', 'doneAt'])
-            && d.kind in ['officeNameAddress', 'officeRelation', 'address', 'addressKumiai']
+            && d.kind in ['officeNameAddress', 'officeRelation', 'address', 'addressKumiai', 'name', 'dependentChange']
             && (d.employeeId == null || (d.employeeId is string && d.employeeId.size() > 0 && d.employeeId.size() <= 40))
             && isDate(d.factDate)
             && d.fields is list && d.fields.size() <= 20

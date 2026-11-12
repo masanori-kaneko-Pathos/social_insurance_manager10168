@@ -108,7 +108,11 @@
       "effectNote": "Born on the 1st, so the age is treated as reached in the previous month ({{y}}-{{m}}).",
       "empty": "No one reaches a milestone in this period.",
       "hint": "Only current employees are shown. Ages 40, 65 and 75 apply to health insurance members; age 70 to pension members. Filings are a guide.",
-      "error": "Couldn't load employees."
+      "error": "Couldn't load employees.",
+      "pension": {
+        "60": "Pension: depending on the date of birth, a \"special old-age employees' pension\" may be paid before age 65 (for those with 1 year or more of employees' pension coverage). The Japan Pension Service sends the claim form to the person 3 months before the starting age.",
+        "65": "Pension: old-age basic and employees' pensions start at 65. A claim is required; the Japan Pension Service sends the claim form 3 months before the 65th birthday, and it can be submitted from the day before the birthday (unclaimed amounts may be lost after 5 years). Please inform the employee."
+      }
     },
     "todo": {
       "title": "To-do list",
@@ -135,7 +139,10 @@
         "officeRelation": "Office information change notification",
         "address": "Address change notification",
         "addressKumiai": "Address notice to the health insurance society",
-        "cardReturn": "Return of eligibility certificate"
+        "cardReturn": "Return of eligibility certificate",
+        "retireGuide": "Guidance for a retiring employee",
+        "name": "Name change notification",
+        "dependentChange": "Dependent change notification"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. An Application to Enroll in EPI / EHI (資格取得届) is needed.",
@@ -165,7 +172,18 @@
         "address": "The address changed on {{date}}. Automatic updates through the link between My Number and the basic pension number may not apply to this person, so check whether the \"Insured person address change notification\" is needed and, if so, file it promptly.",
         "addressKumiai": "The address changed on {{date}}. Some health insurance societies require a separate address notice. Check the society's rules.",
         "cardReturn": "Coverage ends (ended) on {{date}}. This person was issued an eligibility certificate (shikaku kakunin-sho), so collect it and return it with the loss-of-coverage notification (Kyokai Kenpo). If it cannot be collected, attach the \"Notice of inability to collect the eligibility certificate\". Dismiss with \"Checked\" once collected.",
-        "loseDeath": "This is a loss of coverage due to death. The loss date is the day after the date of death, and the notification is due within 5 days. Collect and attach the eligibility certificate if one was issued. If the person had dependents, they also lose dependent status, so guide them to switch to National Health Insurance etc."
+        "loseDeath": "This is a loss of coverage due to death. The loss date is the day after the date of death, and the notification is due within 5 days. Collect and attach the eligibility certificate if one was issued. If the person had dependents, they also lose dependent status, so guide them to switch to National Health Insurance etc.",
+        "retireGuide": "Retires on {{date}}. Explain health insurance and pension after retirement to the employee.",
+        "retireVoluntary": {
+          "kyokai": "Voluntary continuation: if the employee submits the application to the Kyokai Kenpo branch of their prefecture by {{deadline}} (within 20 days from the day after retirement), they can stay covered for 2 years. The premium is paid entirely by the person (standard monthly remuneration capped at 320,000 yen). National Health Insurance or becoming a family member's dependent are other options. For pension, if there is no next employer, enroll in the National Pension at the municipality. Dismiss with \"Checked\" after explaining.",
+          "kumiai": "Voluntary continuation: if the employee applies to the health insurance society by {{deadline}} (within 20 days from the day after retirement), they can stay covered for 2 years (premium paid entirely by the person; check the society's rules). National Health Insurance or becoming a family member's dependent are other options. For pension, if there is no next employer, enroll in the National Pension at the municipality. Dismiss with \"Checked\" after explaining."
+        },
+        "retireNoVoluntary": "Voluntary continuation is not possible because the person was not continuously covered for 2 months. Guide them to National Health Insurance or becoming a family member's dependent. For pension, if there is no next employer, enroll in the National Pension at the municipality. Dismiss with \"Checked\" after explaining.",
+        "name": "The name changed on {{date}} (the registered name has been updated). Automatic updates via the link between My Number and the basic pension number may not apply to this person, so check whether the \"Insured person name change notification\" is needed and, if so, file it promptly.",
+        "dependentChange": {
+          "increase": "A family member was reported as joining on {{date}}. Check whether they qualify as a dependent; if so, register them on the dependents card and file the \"Dependent (change) notification\" within 5 days (for a spouse, the National Pension category 3 notification uses the same form).",
+          "decrease": "A family member was reported as leaving on {{date}} (they may no longer be a dependent). Enter the end date on the dependents card and file the \"Dependent (change) notification\" within 5 days. Collect the eligibility certificate if one was issued."
+        }
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -218,9 +236,13 @@
         "reason_shortStay": "Short stay",
         "reason_healthOnly": "Health insurance only",
         "reason_living": "Place of residence registered",
-        "reason_noMyNumber": "My Number not registered"
+        "reason_noMyNumber": "My Number not registered",
+        "increase": "Joined",
+        "decrease": "Left"
       },
-      "toPerson": "Go to personal information"
+      "toPerson": "Go to personal information",
+      "toEmployee": "Go to the employee page",
+      "toDependents": "Go to the dependents card"
     }
   },
   "nav": {
@@ -2521,7 +2543,27 @@
       "submit": "Could not send. Please try again."
     },
     "lostCard": "I lost my eligibility certificate",
-    "lostCardHint": "The company will apply to the insurer for a reissue. The new certificate arrives at the company in about a week. If you find the old one, hand it to the company."
+    "lostCardHint": "The company will apply to the insurer for a reissue. The new certificate arrives at the company in about a week. If you find the old one, hand it to the company.",
+    "nameChanged": "My name changed (marriage, etc.)",
+    "nameChangedHint": "Enter the new name and the date it changed. Leave the given name empty if it did not change. Once the company confirms, the registered name is updated.",
+    "newName": {
+      "last": "New family name",
+      "first": "New given name (leave empty if unchanged)",
+      "lastKana": "New family name (katakana)",
+      "firstKana": "New given name in katakana (leave empty if unchanged)",
+      "date": "Date of change"
+    },
+    "familyChanged": "A family member joined or left (marriage, birth, employment, etc.)",
+    "familyChangedHint": "The company checks income and living arrangements before adding or removing dependents. The company may ask you for documents or information later.",
+    "family": {
+      "kind": "Joined / left",
+      "increase": "Joined",
+      "decrease": "Left",
+      "name": "Family member's name",
+      "relation": "Relationship (spouse, child, etc.)",
+      "date": "Date (marriage, birth, employment, etc.)",
+      "note": "Note (optional)"
+    }
   },
   "todoAction": {
     "title": {

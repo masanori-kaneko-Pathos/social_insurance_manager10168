@@ -143,6 +143,9 @@
                           @case ('age') {
                             {{ 'dashboard.todo.text.age' | transloco: { date: it.date, age: it.age!.age } }}
                             {{ 'dashboard.ages.what.' + it.age!.age | transloco }}
+                            @if (it.age!.age === 60 || it.age!.age === 65) {
+                              {{ 'dashboard.ages.pension.' + it.age!.age | transloco }}
+                            }
                           }
                           @case ('office') {
                             {{ 'dashboard.todo.office.' + it.office | transloco }}
@@ -170,6 +173,20 @@
                           }
                           @case ('addressKumiai') {
                             {{ 'dashboard.todo.text.addressKumiai' | transloco: { date: it.date } }}
+                          }
+                          @case ('name') {
+                            {{ 'dashboard.todo.text.name' | transloco: { date: it.date } }}
+                          }
+                          @case ('dependentChange') {
+                            {{ 'dashboard.todo.text.dependentChange.' + (it.task?.fields?.[0] ?? 'increase') | transloco: { date: it.date } }}
+                          }
+                          @case ('retireGuide') {
+                            {{ 'dashboard.todo.text.retireGuide' | transloco: it.extra!.params }}
+                            @if (it.extra!.params['voluntary'] === 'yes') {
+                              {{ 'dashboard.todo.text.retireVoluntary.' + it.extra!.params['insurer'] | transloco: it.extra!.params }}
+                            } @else {
+                              {{ 'dashboard.todo.text.retireNoVoluntary' | transloco }}
+                            }
                           }
                           @case ('cardReturn') {
                             {{ 'dashboard.todo.text.cardReturn' | transloco: it.extra!.params }}
@@ -275,6 +292,12 @@
                           }
                           @case ('addressKumiai') {
                             <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'person' }">{{ 'dashboard.todo.toPerson' | transloco }} →</a>
+                          }
+                          @case ('name') {
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]">{{ 'dashboard.todo.toEmployee' | transloco }} →</a>
+                          }
+                          @case ('dependentChange') {
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'person' }">{{ 'dashboard.todo.toDependents' | transloco }} →</a>
                           }
                           @case ('contractEnd') {
                             <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'employment' }">{{ 'dashboard.todo.toRenew' | transloco }} →</a>

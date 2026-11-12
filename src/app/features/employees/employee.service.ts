@@ -24,6 +24,7 @@ import { FilingTaskService } from '../filings/filing-task.service';
 import { MyNumberService } from '../my-number/my-number.service';
 import { OfficeContext } from '../office/office-context.service';
 import { addressChanges, addressFilingReasons, addressTasks } from './logic/address-filing';
+import { nameFilingReasons } from '../requests/logic/life-events';
 
 const kana = (e: Employee) => e.lastNameKana + e.firstNameKana;
 
@@ -112,6 +113,24 @@ export class EmployeeService {
   }
 
   /** 鍵付きの文書を書く（変わったまとまりだけ重ねる。変更履歴は同じ batch） */
+  /**
+   * 氏名が変わったときの届出の宿題（被保険者氏名変更届）。要るかもしれない人だけ
+   * マイナンバーの状態を1回読む（氏名が変わったときだけ）
+   */
+  async nameTasksFor(officeId: string, e: Pick<Employee, 'id' | 'health' | 'pension' | 'foreign'>, factDate: string): Promise<FilingTaskInput[]> {
+    const entry = await this.myNumbers.entry(officeId, e.id).catch(() => undefined);
+    const reasons = nameFilingReasons({
+      myNumberRegistered: entry === undefined ? null : entry?.status === 'registered',
+      healthEnrolled: e.health.enrolled,
+      pensionEnrolled: e.pension.enrolled,
+      kyokai: this.context.current()?.healthInsurer.type === 'kyokai',
+      shortStay: e.foreign?.noAddressReason === 'shortStay',
+    });
+    return reasons.length > 0
+      ? [{ kind: 'name', employeeId: e.id, factDate, fields: ['name', ...reasons.map((r) => `reason_${r}`)] }]
+      : [];
+  }
+
   private async writePrivate(
     officeId: string,
     employeeId: string,

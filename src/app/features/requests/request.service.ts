@@ -25,6 +25,10 @@ import {
 import { HistoryService } from '../employees/history.service';
 import { changesOf } from '../employees/logic/history';
 import { planApply } from './logic/request-model';
+import { familyEventFrom, nameChangeFrom } from './logic/life-events';
+import { Employee } from '../../core/models/employee';
+import { FilingTaskInput } from '../../core/models/filing-task';
+import { todayLocal } from '../../shared/utils/date';
 import { EmployeeService } from '../employees/employee.service';
 import { FilingTaskService } from '../filings/filing-task.service';
 
@@ -147,13 +151,40 @@ export class RequestService {
       bankAccount: patch.bankAccount ?? before.bankAccount,
     };
     // 住所が変わる申請なら、届出の宿題も同じ batch で残す（変わった日 ＝ 承認した日）
-    const tasks =
+    const tasks: FilingTaskInput[] =
       Object.keys(patch).length > 0
         ? await this.employees.addressTasksFor(officeId, r.employeeId, before.contact, after.contact)
         : [];
+    // 氏名が変わった：従業員の氏名に書き込み、氏名変更届が要るかもしれない人には宿題
+    const today = todayLocal();
+    const emp = { id: r.employeeId, ...(empSnap.data() as Omit<Employee, 'id'>) };
+    const nameChange = nameChangeFrom(r.questions, r.answers);
+    if (nameChange) tasks.push(...(await this.employees.nameTasksFor(officeId, emp, nameChange.date || today)));
+    // 家族が増えた・減った：扶養の登録は管理者が確かめてから（被扶養者（異動）届の宿題）
+    const family = familyEventFrom(r.questions, r.answers);
+    if (family) {
+      tasks.push({ kind: 'dependentChange', employeeId: r.employeeId, factDate: family.date || today, fields: [family.kind] });
+    }
 
     const batch = writeBatch(db);
     for (const t of tasks) this.filingTasks.addTo(batch, officeId, t);
+    if (nameChange) {
+      const names = {
+        lastName: nameChange.lastName,
+        // 名・メイが空なら変わっていない（結婚で姓だけ変わることが多い）
+        firstName: nameChange.firstName || emp.firstName,
+        lastNameKana: nameChange.lastNameKana,
+        firstNameKana: nameChange.firstNameKana || emp.firstNameKana,
+      };
+      const beforeNames = {
+        lastName: emp.lastName,
+        firstName: emp.firstName,
+        lastNameKana: emp.lastNameKana,
+        firstNameKana: emp.firstNameKana,
+      };
+      batch.update(empRef, { ...names, updatedAt: serverTimestamp() });
+      this.history.addTo(batch, officeId, r.employeeId, 'employee', changesOf(beforeNames, names));
+    }
     if (Object.keys(patch).length > 0) {
       batch.set(privRef, { ...after, updatedAt: serverTimestamp() });
       const changes = changesOf(

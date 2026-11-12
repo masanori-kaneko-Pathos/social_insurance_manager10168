@@ -11,6 +11,7 @@ import {
   RequestField,
 } from '../../../requests/logic/request-model';
 import { RequestService } from '../../../requests/request.service';
+import { familyQuestions, nameQuestions } from '../../../requests/logic/life-events';
 import { MeHeader } from '../../components/me-header/me-header';
 import { MeContext } from '../../me-context.service';
 
@@ -39,7 +40,13 @@ export class MyChange implements OnInit {
   readonly answers = signal<Record<string, string>>({});
   /** 資格確認書をなくした（書き込む項目はない。管理者が見て、保険者へ再交付を申請する） */
   readonly lostCard = signal(false);
+  /** 氏名が変わった・家族が増えた／減った（承認したあとの扱いは requests/logic/life-events.ts） */
+  readonly nameChanged = signal(false);
+  readonly familyChanged = signal(false);
+  private readonly label = (k: string) => this.transloco.translate(k);
   readonly questions = computed(() => [
+    ...(this.nameChanged() ? nameQuestions(this.label) : []),
+    ...(this.familyChanged() ? familyQuestions(this.label) : []),
     ...changeRequestQuestions([...this.chosen()]),
     ...(this.lostCard()
       ? [

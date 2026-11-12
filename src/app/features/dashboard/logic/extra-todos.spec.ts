@@ -1,4 +1,4 @@
-import { cardReturnTodo, contractEndTodo, isShortTerm, myNumberTodos, noticeRequired } from './extra-todos';
+import { cardReturnTodo, contractEndTodo, isShortTerm, myNumberTodos, noticeRequired, retireGuideTodo, voluntaryEligible } from './extra-todos';
 import {
   ExtraPerson,
   lumpSumTodo,
@@ -155,5 +155,26 @@ describe('cardReturnTodo：資格確認書の回収', () => {
     expect(cardReturnTodo(p, 'kumiai', TODAY)).toBeNull();
     expect(cardReturnTodo({ ...p, needsConfirmationCard: false }, 'kyokai', TODAY)).toBeNull();
     expect(cardReturnTodo({ ...p, retireDate: '2026-08-01' }, 'kyokai', TODAY)).toBeNull();
+  });
+});
+
+describe('retireGuideTodo：退職する人への案内', () => {
+  const p = {
+    id: 'e1',
+    retireDate: '2026-11-30',
+    retireReason: 'resign' as const,
+    health: { enrolled: true, acquiredDate: '2026-10-01' },
+  };
+  it('継続して2か月以上なら任意継続の案内（期限は退職日＋20日）', () => {
+    const t = retireGuideTodo(p, 'kyokai', TODAY);
+    expect(t?.params).toEqual({ date: '2026-11-30', voluntary: 'yes', deadline: '2026-12-20', insurer: 'kyokai' });
+  });
+  it('2か月に届かなければ任意継続はできない（10/2 取得・11/30 退職 → 喪失日 12/1 は 12/2 より前）', () => {
+    expect(voluntaryEligible({ ...p, health: { enrolled: true, acquiredDate: '2026-10-02' } })).toBeFalse();
+  });
+  it('死亡・転勤・30日より前の退職は出さない', () => {
+    expect(retireGuideTodo({ ...p, retireReason: 'death' }, 'kyokai', TODAY)).toBeNull();
+    expect(retireGuideTodo({ ...p, retireReason: 'transfer' }, 'kyokai', TODAY)).toBeNull();
+    expect(retireGuideTodo({ ...p, retireDate: '2026-10-11' }, 'kyokai', TODAY)).toBeNull();
   });
 });

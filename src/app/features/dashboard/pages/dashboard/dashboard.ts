@@ -41,6 +41,7 @@ import { personTodos } from '../../logic/todos';
 import {
   cardReturnTodo,
   contractEndTodo,
+  retireGuideTodo,
   lumpSumTodo,
   myNumberTodos,
   residenceTodo,
@@ -162,6 +163,7 @@ export class Dashboard {
         lumpSumTodo(e, this.today),
         contractEndTodo(e, contracts.get(e.id) ?? [], this.today),
         cardReturnTodo(e, o.healthInsurer.type, this.today),
+        retireGuideTodo(e, o.healthInsurer.type, this.today),
       ].filter((t) => t !== null),
     );
     const specific = specificOfficeTodo(

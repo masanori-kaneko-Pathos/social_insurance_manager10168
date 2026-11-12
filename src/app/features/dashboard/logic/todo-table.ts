@@ -57,10 +57,12 @@ export function deadlineOf(it: BoardItem): { deadline: DateStr | null; note: Dea
       return { deadline: it.date, note: null };
     case 'officeNameAddress':
     case 'officeRelation':
+    case 'dependentChange':
       // 事実発生から5日以内（変わった日を1日目）
       return it.date ? { deadline: filingDeadline(it.date), note: null } : { deadline: null, note: 'asap' };
     case 'address':
-      // 被保険者住所変更届：速やかに
+    case 'name':
+      // 被保険者住所変更届・氏名変更届：速やかに
       return { deadline: null, note: 'asap' };
     case 'contractEnd': {
       const by = it.extra?.params['noticeBy'];

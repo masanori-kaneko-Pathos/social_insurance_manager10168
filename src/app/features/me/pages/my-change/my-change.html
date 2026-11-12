@@ -20,8 +20,16 @@
     }
     <h3>{{ 'me.group.other' | transloco }}</h3>
     <div class="fields">
+      <label class="check"><input type="checkbox" [checked]="nameChanged()" (change)="nameChanged.set($any($event.target).checked)" />{{ 'me.nameChanged' | transloco }}</label>
+      <label class="check"><input type="checkbox" [checked]="familyChanged()" (change)="familyChanged.set($any($event.target).checked)" />{{ 'me.familyChanged' | transloco }}</label>
       <label class="check"><input type="checkbox" [checked]="lostCard()" (change)="toggleLostCard($any($event.target).checked)" />{{ 'me.lostCard' | transloco }}</label>
     </div>
+    @if (nameChanged()) {
+      <p class="hint">{{ 'me.nameChangedHint' | transloco }}</p>
+    }
+    @if (familyChanged()) {
+      <p class="hint">{{ 'me.familyChangedHint' | transloco }}</p>
+    }
     @if (lostCard()) {
       <p class="hint">{{ 'me.lostCardHint' | transloco }}</p>
     }

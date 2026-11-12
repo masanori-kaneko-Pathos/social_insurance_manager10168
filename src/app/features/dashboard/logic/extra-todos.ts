@@ -11,6 +11,8 @@
 // - myNumberDispose：資格喪失から2年たった人のマイナンバー（廃棄する。ガイドライン「保管制限と廃棄」）
 // - cardReturn：協会けんぽの事業所で、資格確認書が交付されている人が資格を喪失した（喪失届に添えて返す）
 //   回収できなければ「資格確認書回収不能届」。組合健保は添付なし（日本年金機構「資格喪失届」の添付書類）
+// - retireGuide：退職する人への案内（任意継続・国民健康保険・国民年金）。案内したら消せる
+//   任意継続は、退職日までに継続して2か月以上加入していて、退職日の翌日から20日以内に本人が申し出る（協会けんぽ）
 // - contractEnd：有期の雇用契約の満了が60日以内（過ぎていても、次の契約も退職日もなければ出す）
 //   3回以上の更新か、入社から1年を超えて続いている人は、更新しないなら満了の30日前までに予告が要る
 //   （有期労働契約の締結、更新、雇止め等に関する基準 第2条。あらかじめ「更新しない」と明示した契約は除く）
@@ -29,7 +31,8 @@ export type ExtraKind =
   | 'myNumberCheck'
   | 'myNumberDispose'
   | 'contractEnd'
-  | 'cardReturn';
+  | 'cardReturn'
+  | 'retireGuide';
 
 export interface ExtraTodo {
   kind: ExtraKind;
@@ -239,4 +242,55 @@ export function cardReturnTodo(
   const lost = p.health.lostDate ?? (p.retireDate ? addDays(p.retireDate, 1) : null);
   if (!lost || lost < addDays(today, -days) || lost > addDays(today, days)) return null;
   return { kind: 'cardReturn', employeeId: p.id, date: lost, params: { date: lost } };
+}
+
+// ===== 退職する人への案内（任意継続など） =====
+
+/** 退職日の前後、何日のあいだ出すか */
+export const RETIRE_GUIDE_DAYS = 30;
+/** 任意継続：退職日の翌日から20日以内（翌日を1日目に数えて20日目 ＝ 退職日＋20日） */
+export const VOLUNTARY_DAYS = 20;
+
+export interface RetirePerson {
+  id: string;
+  retireDate: DateStr | null;
+  retireReason: 'resign' | 'death' | 'transfer' | 'other' | null;
+  health: { enrolled: boolean; acquiredDate: DateStr | null };
+}
+
+/** 'YYYY-MM-DD' の n か月後の同じ日（その月にない日は月末） */
+function addMonthsTo(date: DateStr, n: number): DateStr {
+  const ym = shiftMonth(toYearMonth(date), n);
+  const d = Math.min(Number(date.slice(8)), daysInMonth(ym));
+  return `${ym}-${String(d).padStart(2, '0')}`;
+}
+
+/** 退職日までに、継続して2か月以上健康保険に入っていたか（任意継続の条件） */
+export function voluntaryEligible(p: RetirePerson): boolean {
+  if (!p.retireDate || !p.health.enrolled || !p.health.acquiredDate) return false;
+  // 資格を失う日（退職日の翌日）が、取得日の2か月後以降
+  return addDays(p.retireDate, 1) >= addMonthsTo(p.health.acquiredDate, 2);
+}
+
+/** 退職する人への案内（死亡・転勤は除く） */
+export function retireGuideTodo(
+  p: RetirePerson,
+  insurer: 'kyokai' | 'kumiai',
+  today: DateStr,
+  days = RETIRE_GUIDE_DAYS,
+): ExtraTodo | null {
+  if (!p.retireDate || !p.health.enrolled) return null;
+  if (p.retireReason === 'death' || p.retireReason === 'transfer') return null;
+  if (p.retireDate < addDays(today, -days) || p.retireDate > addDays(today, days)) return null;
+  return {
+    kind: 'retireGuide',
+    employeeId: p.id,
+    date: p.retireDate,
+    params: {
+      date: p.retireDate,
+      voluntary: voluntaryEligible(p) ? 'yes' : 'no',
+      deadline: addDays(p.retireDate, VOLUNTARY_DAYS),
+      insurer,
+    },
+  };
 }

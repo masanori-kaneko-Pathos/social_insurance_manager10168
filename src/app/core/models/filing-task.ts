@@ -12,9 +12,18 @@ import { Timestamp } from 'firebase/firestore';
  * - officeRelation：事業所関係変更（訂正）届（同じく5日以内）
  * - address：被保険者住所変更届（マイナンバーと基礎年金番号の紐づけがない人・海外居住者など。速やかに）
  * - addressKumiai：組合健保の事業所で住所が変わった（組合の決まりを確かめる）
+ * - name：被保険者氏名変更（訂正）届（マイナンバーと基礎年金番号が結びついていない人・協会けんぽの健保だけの人など。速やかに）
+ * - dependentChange：家族が増えた・減った（マイページの申請）→ 被扶養者（異動）届を確かめる（事実発生から5日以内）
  */
-export type FilingTaskKind = 'officeNameAddress' | 'officeRelation' | 'address' | 'addressKumiai';
-export const FILING_TASK_KINDS: readonly FilingTaskKind[] = ['officeNameAddress', 'officeRelation', 'address', 'addressKumiai'];
+export type FilingTaskKind = 'officeNameAddress' | 'officeRelation' | 'address' | 'addressKumiai' | 'name' | 'dependentChange';
+export const FILING_TASK_KINDS: readonly FilingTaskKind[] = [
+  'officeNameAddress',
+  'officeRelation',
+  'address',
+  'addressKumiai',
+  'name',
+  'dependentChange',
+];
 
 export type FilingTaskStatus = 'open' | 'done';
 
