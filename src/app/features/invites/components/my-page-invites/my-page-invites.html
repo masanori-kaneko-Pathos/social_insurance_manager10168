@@ -48,16 +48,6 @@
       </button>
     </p>
   }
-  <!-- 選んだときだけ出る帯（表の上に貼り付く）：何人選んだか・招待する・選択を外す -->
-  @if (selected().size > 0) {
-    <div class="selection-bar" role="region" [attr.aria-label]="'myPages.selectionBar' | transloco" animate.enter="bar-enter" animate.leave="bar-leave">
-      <span class="sel-count">{{ 'myPages.selectedCount' | transloco: { n: selected().size } }}</span>
-      <button type="button" class="btn btn-primary btn-small" [disabled]="working()" (click)="inviteSelected()">
-        {{ 'myPages.inviteSelected' | transloco: { count: selected().size } }}
-      </button>
-      <button type="button" class="link-btn" (click)="clearSelection()">{{ 'myPages.clearSelection' | transloco }}</button>
-    </div>
-  }
 
   @if (errorKey(); as key) {
     <div class="alert alert-danger">{{ key | transloco }}</div>
@@ -158,5 +148,16 @@
       </tbody>
     </table>
   </div>
-  <app-pager variant="bottom" [total]="filtered().length" [(page)]="page" [size]="listOptions().size" />
+  <app-pager variant="bottom" [total]="filtered().length" [(page)]="page" [size]="listOptions().size">
+      <!-- 選んだときだけ出る帯：ページ送りの帯のすぐ上（画面の下に一緒に貼り付き、表の最後では表とページ送りのあいだに収まる） -->
+    @if (selected().size > 0) {
+      <div class="selection-bar" role="region" [attr.aria-label]="'myPages.selectionBar' | transloco" animate.enter="bar-enter" animate.leave="bar-leave">
+        <span class="sel-count">{{ 'myPages.selectedCount' | transloco: { n: selected().size } }}</span>
+        <button type="button" class="btn btn-primary btn-small" [disabled]="working()" (click)="inviteSelected()">
+          {{ 'myPages.inviteSelected' | transloco: { count: selected().size } }}
+        </button>
+        <button type="button" class="link-btn" (click)="clearSelection()">{{ 'myPages.clearSelection' | transloco }}</button>
+      </div>
+    }
+  </app-pager>
 }

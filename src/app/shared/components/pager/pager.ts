@@ -35,7 +35,10 @@ import { PAGE_SIZES, PageSize } from '../../logic/person-list';
           </select>
         </label>
       </div>
-    } @else if (pages() > 1) {
+    } @else {
+      <!-- 帯の上に差し込む中身（選んだ人への操作の帯など。下に貼り付くのも一緒。11/13） -->
+      <ng-content />
+      @if (pages() > 1) {
       <div class="band bottom">
         <nav class="pages" [attr.aria-label]="'pager.label' | transloco">
           <button type="button" class="pg wide" [disabled]="page() <= 1" (click)="go(page() - 1)">‹ {{ 'pager.prev' | transloco }}</button>
@@ -51,6 +54,7 @@ import { PAGE_SIZES, PageSize } from '../../logic/person-list';
         <span class="where">{{ 'pager.where' | transloco: { total: total(), from: from(), to: to(), pages: pages(), page: page() } }}</span>
         <button type="button" class="to-top" (click)="toTop()">↑ {{ 'pager.toTop' | transloco }}</button>
       </div>
+      }
     }
   `,
   styles: `
