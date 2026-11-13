@@ -8,19 +8,19 @@
     @for (d of list(); track d.id) {
       <li>
         @if (editing() === d.id) {
-          <input class="input" [value]="editName()" (input)="editName.set($any($event.target).value)" maxlength="40"
+          <input class="input" [value]="editName()" (input)="editName.set($any($event.target).value)" (keydown.enter)="$event.preventDefault(); rename(d.id)" maxlength="40"
                  [attr.aria-label]="'office.department.newName' | transloco" />
           <span class="kana-label">{{ 'office.department.kana' | transloco }}</span>
-          <input class="input kana" [value]="editKana()" (input)="editKana.set($any($event.target).value)" maxlength="60"
+          <input class="input kana" [value]="editKana()" (input)="editKana.set($any($event.target).value)" (keydown.enter)="$event.preventDefault(); rename(d.id)" maxlength="60"
                  [attr.aria-label]="'office.department.kana' | transloco" />
-          <button type="button" class="btn btn-small btn-primary" [disabled]="busy()" (click)="rename(d.id)">{{ 'common.save' | transloco }}</button>
+          <button type="button" class="btn btn-small btn-primary" (click)="rename(d.id)">{{ 'common.save' | transloco }}</button>
           <button type="button" class="btn btn-small" (click)="editing.set(null)">{{ 'common.cancel' | transloco }}</button>
         } @else {
           <span class="name">{{ d.name }}</span>
           @if (d.kana) { <span class="kana">{{ d.kana }}</span> }
-          @if (context.isAdmin()) {
+          @if (!readOnly()) {
             <button type="button" class="link-btn" (click)="startEdit(d)">{{ 'office.department.rename' | transloco }}</button>
-            <button type="button" class="link-btn" [disabled]="busy()" (click)="remove(d)">{{ 'office.department.remove' | transloco }}</button>
+            <button type="button" class="link-btn" (click)="remove(d)">{{ 'office.department.remove' | transloco }}</button>
           }
         }
       </li>
@@ -28,14 +28,14 @@
       <li class="muted">{{ 'office.department.empty' | transloco }}</li>
     }
   </ul>
-  @if (context.isAdmin()) {
+  @if (!readOnly()) {
     <div class="dept-add">
-      <input class="input" [value]="newName()" (input)="newName.set($any($event.target).value)" maxlength="40"
+      <input class="input" [value]="newName()" (input)="newName.set($any($event.target).value)" (keydown.enter)="$event.preventDefault(); add()" maxlength="40"
              [attr.aria-label]="'office.department.newName' | transloco" />
       <span class="kana-label">{{ 'office.department.kana' | transloco }}</span>
-      <input class="input kana" [value]="newKana()" (input)="newKana.set($any($event.target).value)" maxlength="60"
+      <input class="input kana" [value]="newKana()" (input)="newKana.set($any($event.target).value)" (keydown.enter)="$event.preventDefault(); add()" maxlength="60"
              [attr.aria-label]="'office.department.kana' | transloco" />
-      <button type="button" class="btn" [disabled]="busy()" (click)="add()">＋ {{ 'office.department.add' | transloco }}</button>
+      <button type="button" class="btn" (click)="add()">＋ {{ 'office.department.add' | transloco }}</button>
     </div>
   }
 </section>

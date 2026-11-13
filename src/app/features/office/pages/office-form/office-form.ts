@@ -22,6 +22,7 @@ import {
   Office,
   OfficeInput,
   PayrollSettings,
+  Department,
 } from '../../../../core/models/office';
 import { CollectionMethod, HealthRounding } from '../../../../core/models/premium';
 import { PostalCodeService } from '../../../../shared/services/postal-code.service';
@@ -327,11 +328,17 @@ export class OfficeForm {
   /** 「既存の事業所をコピー」の選ぶ欄 */
   readonly copyOpen = signal(false);
 
+  /** 部署（フォームと一緒に保存する。11/13 に事業所のフォームの一部にした） */
+  readonly departments = signal<Department[]>([]);
+  /** 読み込んだときの部署（変わったときだけ書く） */
+  private savedDepartments: Department[] = [];
+
   // ===== チェックを入れたときだけ開く欄（任意の項目。中身があれば初めから開く） =====
   readonly openNameEn = signal(false);
   readonly openGroup = signal(false);
   readonly openInKind = signal(false);
-  readonly openFiling = signal(false);
+  // 新規登録では最初から開いておく（適用通知書を見ながら、基本情報と続けて入れられるように。11/13）
+  readonly openFiling = signal(!this.isEdit);
 
   // ===== 事業所の削除（代表だけ。名前を打ち込み、パスワードを入れ直してから。11/12） =====
   readonly isOwner = computed(() => {
@@ -412,6 +419,8 @@ export class OfficeForm {
 
   /** 編集：保存済みの事業所の値をフォームに入れる（設定がない古いデータは初期値） */
   private fillFrom(o: Office): void {
+    this.departments.set(o.departments ?? []);
+    this.savedDepartments = o.departments ?? [];
     const payroll = payrollOf(o);
     const premium = premiumOf(o);
     this.form.setValue({
@@ -654,6 +663,14 @@ export class OfficeForm {
     this.openRates(this.history().length - 1);
   }
 
+  /** 部署が変わっていれば書く */
+  private async saveDepartments(officeId: string): Promise<void> {
+    const list = this.departments();
+    if (JSON.stringify(list) === JSON.stringify(this.savedDepartments)) return;
+    await this.offices.update(officeId, { departments: list });
+    this.savedDepartments = list;
+  }
+
   async submit(): Promise<void> {
     if (this.readOnly) return;
     const changeFrom = this.form.controls.changeFrom;
@@ -715,6 +732,7 @@ export class OfficeForm {
           : insurerHistoryOf(office);
         const input: OfficeInput = { ...base, insurerHistory: history };
         await this.offices.update(office.id, input, this.tasksOf(this.pendingChanges()));
+        await this.saveDepartments(office.id);
         this.changeFactDate.set(todayLocal());
         const fresh = await this.offices.get(office.id);
         if (fresh) {
@@ -732,6 +750,8 @@ export class OfficeForm {
           insurerHistory: [{ from: FROM_THE_START, ...period }],
         };
         const officeId = await this.offices.create(uid, input);
+        // 部署は作ったあとに足す（作るときの項目の決まりを変えないため）
+        await this.saveDepartments(officeId);
         await this.profiles.load(uid); // currentOfficeId を最新にする
         await this.context.refresh(uid); // 切り替えの一覧にすぐ反映
         await this.router.navigateByUrl(`/o/${officeId}`);

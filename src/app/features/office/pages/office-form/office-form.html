@@ -146,6 +146,67 @@
     </section>
 
     <!-- 所在地 -->
+    <!-- 届出情報（事業所整理記号・事業所番号など）。適用通知書に並んでいる番号なので、基本情報のすぐ下に（11/13） -->
+    <section class="card">
+      <h2>
+        {{ 'office.section.filing' | transloco
+        }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+      </h2>
+      <label class="check">
+        <input type="checkbox" [checked]="openFiling()" [disabled]="readOnly" (change)="openFiling.set(!openFiling())" />
+        {{ 'office.open.filing' | transloco }}
+      </label>
+      @if (openFiling()) {
+      <p class="hint section-hint">{{ 'office.hint.filing' | transloco }}</p>
+      <div class="grid">
+        <div class="field">
+          <label for="officeSymbol">{{ 'office.field.officeSymbol' | transloco }}</label>
+          <input
+            id="officeSymbol"
+            class="input"
+            formControlName="officeSymbol"
+            [class.is-invalid]="errorOf('officeSymbol')"
+          />
+          @if (errorOf('officeSymbol'); as e) {
+            <span class="field-error">{{ e | transloco }}</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="officeNumber">{{ 'office.field.officeNumber' | transloco }}</label>
+          <input
+            id="officeNumber"
+            class="input"
+            inputmode="numeric"
+            formControlName="officeNumber"
+            [class.is-invalid]="errorOf('officeNumber')"
+          />
+          @if (errorOf('officeNumber'); as e) {
+            <span class="field-error">{{ e | transloco }}</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="employeeCount">{{ 'office.field.employeeCount' | transloco }}</label>
+          <input
+            id="employeeCount"
+            class="input num"
+            type="number"
+            min="0"
+            formControlName="employeeCount"
+            [class.is-invalid]="errorOf('employeeCount')"
+          />
+          @if (errorOf('employeeCount'); as e) {
+            <span class="field-error">{{ e | transloco }}</span>
+          }
+        </div>
+      </div>
+      }
+    </section>
+
+    <!-- 部署（新規登録でも入れられる。「保存する」で事業所と一緒に保存。11/13） -->
+    <app-department-card [(list)]="departments" [readOnly]="readOnly" />
+
     <section class="card">
       <h2>{{ 'office.section.location' | transloco }}</h2>
       <div class="grid">
@@ -631,63 +692,6 @@
       </div>
     </section>
 
-    <!-- 届出情報 -->
-    <section class="card">
-      <h2>
-        {{ 'office.section.filing' | transloco
-        }}<span class="optional">{{ 'common.optional' | transloco }}</span>
-      </h2>
-      <label class="check">
-        <input type="checkbox" [checked]="openFiling()" [disabled]="readOnly" (change)="openFiling.set(!openFiling())" />
-        {{ 'office.open.filing' | transloco }}
-      </label>
-      @if (openFiling()) {
-      <p class="hint section-hint">{{ 'office.hint.filing' | transloco }}</p>
-      <div class="grid">
-        <div class="field">
-          <label for="officeSymbol">{{ 'office.field.officeSymbol' | transloco }}</label>
-          <input
-            id="officeSymbol"
-            class="input"
-            formControlName="officeSymbol"
-            [class.is-invalid]="errorOf('officeSymbol')"
-          />
-          @if (errorOf('officeSymbol'); as e) {
-            <span class="field-error">{{ e | transloco }}</span>
-          }
-        </div>
-
-        <div class="field">
-          <label for="officeNumber">{{ 'office.field.officeNumber' | transloco }}</label>
-          <input
-            id="officeNumber"
-            class="input"
-            inputmode="numeric"
-            formControlName="officeNumber"
-            [class.is-invalid]="errorOf('officeNumber')"
-          />
-          @if (errorOf('officeNumber'); as e) {
-            <span class="field-error">{{ e | transloco }}</span>
-          }
-        </div>
-
-        <div class="field">
-          <label for="employeeCount">{{ 'office.field.employeeCount' | transloco }}</label>
-          <input
-            id="employeeCount"
-            class="input num"
-            type="number"
-            min="0"
-            formControlName="employeeCount"
-            [class.is-invalid]="errorOf('employeeCount')"
-          />
-          @if (errorOf('employeeCount'); as e) {
-            <span class="field-error">{{ e | transloco }}</span>
-          }
-        </div>
-      </div>
-      }
-    </section>
 
     @if (!readOnly && pendingChanges(); as c) {
       <!-- 届が要る変更：保存すると To-do に届出の宿題が出る -->
@@ -735,10 +739,6 @@
     }
   </form>
 
-  <!-- 部署（事業所のほかの設定とは別に保存する） -->
-  @if (isEdit) {
-    <app-department-card />
-  }
 
   <!-- 事業所の削除（代表だけ。元に戻せない） -->
   @if (isEdit && isOwner()) {
