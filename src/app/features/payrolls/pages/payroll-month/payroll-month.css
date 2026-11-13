@@ -217,3 +217,9 @@ tr.has-error td {
   font-weight: 400;
   color: var(--color-text-sub);
 }
+
+/* 社員番号の列（数字の幅をそろえる） */
+td.mono {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-sub);
+}

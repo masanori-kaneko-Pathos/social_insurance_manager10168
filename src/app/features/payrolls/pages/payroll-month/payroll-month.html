@@ -87,7 +87,9 @@
     <table appEnterNext="grid">
       <thead>
         <tr>
-          <th><app-sort-header key="kana" [(options)]="listOptions" [(page)]="page">{{ 'payroll.col.employee' | transloco }}</app-sort-header></th>
+          <!-- 社員番号 → 氏名（ほかの表と同じ順。どちらも見出しを押すと並び替え。11/13） -->
+          <th><app-sort-header key="number" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.employeeNumber' | transloco }}</app-sort-header></th>
+          <th><app-sort-header key="kana" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.name' | transloco }}</app-sort-header></th>
           <th class="num">{{ 'payroll.col.cash' | transloco }}</th>
           @if (showAll()) {
             <th class="num">{{ 'payroll.col.inKind' | transloco }}</th>
@@ -107,6 +109,7 @@
       <tbody>
         @for (v of shown().rows; track v.employee.id) {
           <tr [formGroup]="v.form" [class.has-error]="rowErrors().has(v.employee.id)">
+            <td class="mono">{{ v.employee.employeeNumber ?? '—' }}</td>
             <td>
               <a
                 class="name"
@@ -114,9 +117,6 @@
               >
                 {{ name(v.employee) }}
               </a>
-              @if (v.employee.employeeNumber) {
-                <span class="sub">{{ v.employee.employeeNumber }}</span>
-              }
               <div class="tags">
                 @if (!v.row.saved) {
                   <span class="badge badge-sub">{{ 'payroll.tag.notSaved' | transloco }}</span>
@@ -205,7 +205,7 @@
           </tr>
           @if (rowErrors().get(v.employee.id); as errs) {
             <tr class="error-row">
-              <td [attr.colspan]="showAll() ? 11 : 4">
+              <td [attr.colspan]="showAll() ? 12 : 5">
                 @for (e of errs; track e) {
                   <span>{{ 'payroll.rowError.' + e | transloco }}</span>
                 }
