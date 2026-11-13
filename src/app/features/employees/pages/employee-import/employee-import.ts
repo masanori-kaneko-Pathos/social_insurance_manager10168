@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ColumnMapper } from '../../../../shared/components/column-mapper/column-mapper';
 import { CsvEncoding, downloadCsv } from '../../../../shared/csv/csv';
 import { isOurFormat } from '../../../../shared/import/column-map';
@@ -40,7 +40,12 @@ interface Preview {
   encoding: CsvEncoding | null; // Excel・PDF は null
   read: EmployeeCsvRead;
   plan: ImportPlan;
+  /** 読んだ表（うちの見出し）。画面で直すとき・エラーの行を書き出すときに使う */
+  table: string[][];
 }
+
+/** エラーがこれより多いときは、書き出して Excel で直すことを勧める */
+const INLINE_FIX_LIMIT = 30;
 
 /**
  * 従業員の取り込み（CSV）
@@ -96,6 +101,68 @@ export class EmployeeImport {
   readonly numberError = signal<string | null>(null);
   readonly numberDone = signal<number | null>(null);
 
+  // ===== エラーの直し方（11/13）：少なければ画面の中で、多ければエラーの行だけ書き出して Excel で =====
+  private readonly transloco = inject(TranslocoService);
+  /** 画面で直した値（'行|列' → 値）。「直した内容で確かめ直す」で表に入れて読み直す */
+  readonly edits = signal<Map<string, string>>(new Map());
+  /** エラーのない行だけ取り込む（エラーの行は、あとで直して取り込み直す） */
+  readonly skipErrors = signal(false);
+  readonly manyErrors = computed(() => this.rowErrors().reduce((n, r) => n + r.errors.length, 0) > INLINE_FIX_LIMIT);
+
+  editKey(line: number, column: string): string {
+    return `${line}|${column}`;
+  }
+
+  editValue(r: EmployeeCsvRow, e: CsvRowError): string {
+    return e.column ? (this.edits().get(this.editKey(r.line, e.column)) ?? this.cellOf(r, e)) : '';
+  }
+
+  setEdit(line: number, column: string, value: string): void {
+    this.edits.update((m) => new Map(m).set(this.editKey(line, column), value));
+  }
+
+  /** 直した値を表に入れて、確認をやり直す */
+  async applyEdits(): Promise<void> {
+    const p = this.preview();
+    if (!p || this.edits().size === 0) return;
+    const table = p.table.map((row) => [...row]);
+    const header = table[0];
+    for (const [k, value] of this.edits()) {
+      const [lineText, column] = k.split('|');
+      const row = table[Number(lineText) - 1];
+      if (!row) continue;
+      const label = EMPLOYEE_CSV_HEADERS[column as keyof typeof EMPLOYEE_CSV_HEADERS];
+      let j = header.findIndex((h) => h.replace(/^\uFEFF/, '').trim() === label || h.trim() === column);
+      if (j < 0) {
+        // 表にない列（任意の列を使っていなかった）は、右に足す
+        header.push(label);
+        j = header.length - 1;
+      }
+      while (row.length <= j) row.push('');
+      row[j] = value;
+    }
+    this.edits.set(new Map());
+    await this.showPreview(table);
+  }
+
+  /** エラーの行だけを書き出す（右端に「エラー」の列。Excel で直して、そのファイルを取り込み直す） */
+  exportErrorRows(): void {
+    const p = this.preview();
+    if (!p) return;
+    const t = (key: string) => this.transloco.translate(key);
+    const header = [...p.table[0], t('employeeCsv.errorColumn')];
+    const rows = this.rowErrors().map((r) => {
+      const msg = r.errors
+        .map((e) => {
+          const what = e.code.startsWith('contract.') ? t('contract.error.' + e.code.slice(9)) : t('employeeCsv.rowError.' + e.code);
+          return e.column ? `${this.columnLabel(e.column)}：${what}` : what;
+        })
+        .join(' ／ ');
+      return [...(p.table[r.line - 1] ?? []), msg];
+    });
+    downloadCsv(`employees-errors-${todayLocal()}.csv`, [header, ...rows]);
+  }
+
   readonly rowErrors = computed(
     () => this.preview()?.read.rows.filter((r) => r.errors.length > 0) ?? [],
   );
@@ -106,8 +173,8 @@ export class EmployeeImport {
       this.context.isAdmin() &&
       !this.saving() &&
       p.read.missingColumns.length === 0 &&
-      this.rowErrors().length === 0 &&
-      p.plan.errors.length === 0 &&
+      (this.rowErrors().length === 0 || this.skipErrors()) &&
+      (p.plan.errors.length === 0 || this.skipErrors()) &&
       p.plan.items.length > 0
     );
   });
@@ -191,7 +258,8 @@ export class EmployeeImport {
         existingNumbers: new Set(existing.map((e) => e.employeeNumber ?? '').filter(Boolean)),
         departments: office.departments ?? [],
       });
-      this.preview.set({ fileName: file.fileName, encoding: file.encoding, read, plan });
+      this.preview.set({ fileName: file.fileName, encoding: file.encoding, read, plan, table });
+      this.skipErrors.set(false);
     } catch (err) {
       console.error(err);
       this.errorKey.set('employeeCsv.error.read');

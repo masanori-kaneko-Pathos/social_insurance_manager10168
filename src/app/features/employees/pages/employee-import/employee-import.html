@@ -106,12 +106,28 @@
         <div class="alert alert-danger">
           {{ 'employeeCsv.hasErrors' | transloco: { n: rowErrors().length } }}
         </div>
+        <!-- 直し方：少なければこの表の中で直して確かめ直す。多ければエラーの行だけ書き出して Excel で（11/13） -->
+        <div class="fix-bar">
+          <button type="button" class="btn btn-small btn-primary" [disabled]="edits().size === 0 || saving()" (click)="applyEdits()">
+            {{ 'employeeCsv.applyEdits' | transloco: { n: edits().size } }}
+          </button>
+          <button type="button" class="btn btn-small" (click)="exportErrorRows()">{{ 'employeeCsv.exportErrors' | transloco }}</button>
+          <label class="opt">
+            <input type="checkbox" [checked]="skipErrors()" (change)="skipErrors.set($any($event.target).checked)" />
+            {{ 'employeeCsv.skipErrors' | transloco }}
+          </label>
+        </div>
+        @if (manyErrors()) {
+          <p class="sub">{{ 'employeeCsv.manyErrors' | transloco }}</p>
+        }
+        <div class="table-wrap scroll">
         <table class="table">
           <thead>
             <tr>
               <th>{{ 'employeeCsv.col.line' | transloco }}</th>
               <th>{{ 'employeeCsv.col.column' | transloco }}</th>
               <th>{{ 'employeeCsv.col.problem' | transloco }}</th>
+              <th>{{ 'employeeCsv.col.fix' | transloco }}</th>
             </tr>
           </thead>
           <tbody>
@@ -127,8 +143,17 @@
                         : 'employeeCsv.rowError.' + e.code
                       ) | transloco
                     }}
-                    @if (cellOf(r, e); as v) {
-                      <span class="sub">（{{ v }}）</span>
+                  </td>
+                  <td>
+                    @if (e.column) {
+                      <input
+                        class="input fix-input"
+                        [class.changed]="edits().has(editKey(r.line, e.column))"
+                        [value]="editValue(r, e)"
+                        (input)="setEdit(r.line, e.column, $any($event.target).value)"
+                        (keydown.enter)="applyEdits()"
+                        [attr.aria-label]="r.line + ' ' + columnLabel(e.column)"
+                      />
                     }
                   </td>
                 </tr>
@@ -136,6 +161,7 @@
             }
           </tbody>
         </table>
+        </div>
       }
 
       @for (e of pv.plan.errors; track e.line) {

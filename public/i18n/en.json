@@ -2165,7 +2165,8 @@
       "category": "Category (hire date)",
       "enrolled": "Enrolled",
       "standard": "Standard remuneration",
-      "leaves": "Leaves"
+      "leaves": "Leaves",
+      "fix": "Fix"
     },
     "ins": {
       "health": "Health",
@@ -2208,7 +2209,12 @@
       "save": "Could not import. Please try again later.",
       "partial": "Stopped partway. Check the list and import only the remaining rows."
     },
-    "noStandard": "The office's scheduled working hours (weekly and daily) are not set yet. If you import now, categories cannot be determined, so everyone is registered as not insured and acquisition To-dos will appear on the home screen. Set the scheduled hours in the office settings first (and the specified applicable office setting if you have 51 or more employees)."
+    "noStandard": "The office's scheduled working hours (weekly and daily) are not set yet. If you import now, categories cannot be determined, so everyone is registered as not insured and acquisition To-dos will appear on the home screen. Set the scheduled hours in the office settings first (and the specified applicable office setting if you have 51 or more employees).",
+    "applyEdits": "Check again with fixes ({{n}})",
+    "exportErrors": "Export only rows with errors",
+    "skipErrors": "Import without the rows with errors",
+    "manyErrors": "With many errors, export the error rows, fix them in Excel and import that file again. The \"Error\" column on the right says what to fix.",
+    "errorColumn": "Error"
   },
   "historyCsv": {
     "modeLabel": "What to import",
