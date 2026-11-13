@@ -191,3 +191,39 @@ td .field-error {
   border-color: var(--color-danger-text);
   background: var(--color-danger-bg);
 }
+
+/* ファイルから読み込む（11/13） */
+.import-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.file-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.import-result p {
+  margin: 0 0 var(--space-xs);
+}
+
+.import-result .warn {
+  color: var(--color-warning-text);
+}
+
+.link-close {
+  padding: 0;
+  font: inherit;
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}

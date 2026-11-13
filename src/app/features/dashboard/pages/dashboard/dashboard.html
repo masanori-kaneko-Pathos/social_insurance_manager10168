@@ -4,12 +4,68 @@
 <!-- よく使うメニュー：毎月の作業の入口（サイドバーを探さずに押せる） -->
 <nav class="menu" [attr.aria-label]="'home.menuTitle' | transloco">
   @for (t of menu(); track t.key) {
-    <a class="tile" [routerLink]="t.link">
-      <app-icon [name]="t.icon" />
-      <span>{{ 'home.menu.' + t.key | transloco: monthParts(payMonth()) }}</span>
-    </a>
+    @if (t.action === 'import') {
+      <!-- 取り込みは、何を取り込むかを選ぶ窓を開く -->
+      <button type="button" class="tile" (click)="openImport()">
+        <app-icon [name]="t.icon" />
+        <span>{{ 'home.menu.' + t.key | transloco: monthParts(payMonth()) }}</span>
+      </button>
+    } @else {
+      <a class="tile" [routerLink]="t.link">
+        <app-icon [name]="t.icon" />
+        <span>{{ 'home.menu.' + t.key | transloco: monthParts(payMonth()) }}</span>
+      </a>
+    }
   }
 </nav>
+
+<!-- はじめの3ステップ（従業員か、今月の給与がまだのときだけ。11/13） -->
+@if (showSteps()) {
+  <section class="card start-steps">
+    <div class="steps-head">
+      <h2>{{ 'home.steps.title' | transloco }}</h2>
+      <button type="button" class="link-close" (click)="closeSteps()">{{ 'common.close' | transloco }}</button>
+    </div>
+    <ol>
+      @for (s of startSteps(); track s.key; let i = $index) {
+        <li [class.done]="s.done">
+          <span class="num">{{ s.done ? '✓' : i + 1 }}</span>
+          <app-icon [name]="s.icon" />
+          <div class="step-text">
+            <strong>{{ 'home.steps.' + s.key + '.title' | transloco: monthParts(payMonth()) }}</strong>
+            <span class="sub">{{ 'home.steps.' + s.key + '.body' | transloco }}</span>
+          </div>
+          <a class="btn btn-small" [class.btn-primary]="!s.done" [routerLink]="s.link">
+            {{ (s.done ? 'home.steps.again' : 'home.steps.go') | transloco }}
+          </a>
+        </li>
+      }
+    </ol>
+  </section>
+}
+
+<!-- 取り込みの入口：何を取り込むかを選ぶ（11/13） -->
+<dialog #importDialog class="import-dialog" aria-labelledby="import-dialog-title" (click)="onImportBackdrop($event)">
+  <div class="dialog-body">
+    <header class="dialog-head">
+      <h2 id="import-dialog-title">{{ 'home.import.title' | transloco }}</h2>
+      <button type="button" class="close-btn" (click)="closeImport()" [attr.aria-label]="'common.close' | transloco">×</button>
+    </header>
+    <p class="lead">{{ 'home.import.lead' | transloco }}</p>
+    <div class="choices">
+      @for (c of importChoices(); track c.key) {
+        <a class="choice" [routerLink]="c.link" (click)="closeImport()">
+          <app-icon [name]="c.icon" />
+          <span class="choice-text">
+            <strong>{{ 'home.import.' + c.key + '.title' | transloco }}</strong>
+            <span class="sub">{{ 'home.import.' + c.key + '.body' | transloco }}</span>
+          </span>
+          <span class="arrow" aria-hidden="true">›</span>
+        </a>
+      }
+    </div>
+  </div>
+</dialog>
 
 <div class="home-grid">
   <!-- ===== To-do の表（1行1件。届出の期限の近い順） ===== -->

@@ -1251,7 +1251,16 @@
       "save": "Couldn't save. Try again later."
     },
     "openPeople": "By person",
-    "closePeople": "Close"
+    "closePeople": "Close",
+    "import": {
+      "button": "Import from file",
+      "note": "A CSV or Excel file with employee number (or name) and bonus amount. Amounts are only filled in; press Save to keep them.",
+      "result": "Filled in bonus amounts for {{count}} people from {{file}}. Check them before saving.",
+      "notFound": "Not found: {{list}} (includes people not covered on this pay date)",
+      "ambiguous": "Several people share the name: {{list}} (use an employee number column)",
+      "badAmount": "Amount could not be read: {{list}}",
+      "errorRead": "The file could not be read."
+    }
   },
   "leave": {
     "title": "Leave",
@@ -3168,6 +3177,39 @@
       "noRequests": "Nothing to review.",
       "yearly": "Yearly / as needed",
       "season": "Now"
+    },
+    "steps": {
+      "title": "Getting started in 3 steps",
+      "go": "Start",
+      "again": "Again",
+      "employees": {
+        "title": "Import employees",
+        "body": "Register them at once from a CSV or Excel file. Coverage is determined automatically."
+      },
+      "payroll": {
+        "title": "Import payroll paid in month {{m}}",
+        "body": "Read the file exported from your payroll software."
+      },
+      "premiums": {
+        "title": "Check premiums",
+        "body": "See the employee and employer shares with grade, rate and formula."
+      }
+    },
+    "import": {
+      "title": "Import from a file",
+      "lead": "What would you like to import? CSV, Excel and text PDFs are supported.",
+      "employees": {
+        "title": "Employees",
+        "body": "Name, birth date, hire date, contract and more. New people and updates."
+      },
+      "payrolls": {
+        "title": "Payroll records",
+        "body": "Pay, fixed wages and pay days by month. Any number of months at once."
+      },
+      "bonus": {
+        "title": "Bonus",
+        "body": "On the bonus page, set the pay date, then press \"Import from file\"."
+      }
     }
   },
   "myPages": {

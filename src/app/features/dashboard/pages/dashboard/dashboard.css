@@ -16,6 +16,9 @@ h1 {
 }
 
 .tile {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -31,9 +34,7 @@ h1 {
   font-weight: 600;
   text-align: center;
   text-decoration: none;
-  transition:
-    background var(--dur-fast),
-    border-color var(--dur-fast);
+  transition: background var(--dur-fast), border-color var(--dur-fast);
 }
 
 .tile:hover {
@@ -348,8 +349,169 @@ h1 {
   white-space: nowrap;
 }
 
-/* よく使うメニュー：文節で折り返し、2行の長さをそろえる */
-.tile span {
-  word-break: auto-phrase;
-  text-wrap: balance;
+/* ===== はじめの3ステップ（11/13） ===== */
+.start-steps {
+  margin-bottom: var(--space-lg);
+  border: 2px solid var(--color-primary);
+}
+
+.steps-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+}
+
+.steps-head h2 {
+  margin: 0;
+  font-size: var(--font-md);
+}
+
+.start-steps ol {
+  display: grid;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.start-steps li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.start-steps li.done {
+  color: var(--color-text-sub);
+  background: var(--color-bg);
+}
+
+.start-steps .num {
+  width: 1.6em;
+  font-weight: 700;
+  text-align: center;
+}
+
+.start-steps li.done .num {
+  color: var(--color-success-text);
+}
+
+.step-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.step-text .sub,
+.choice .sub {
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.link-close {
+  padding: 0;
+  font: inherit;
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ===== 取り込みの入口の窓 ===== */
+.import-dialog {
+  width: min(520px, calc(100vw - 32px));
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-popover);
+}
+
+.import-dialog[open] {
+  animation: import-in var(--dur-base) var(--ease-out);
+}
+
+.import-dialog::backdrop {
+  background: rgb(62 30 2 / 45%);
+}
+
+@keyframes import-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.import-dialog .dialog-body {
+  padding: var(--space-lg);
+}
+
+.import-dialog .dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.import-dialog h2 {
+  margin: 0;
+  font-size: var(--font-lg);
+}
+
+.import-dialog .close-btn {
+  width: 36px;
+  height: 36px;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--color-text-sub);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.import-dialog .lead {
+  margin: var(--space-xs) 0 var(--space-md);
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.choices {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  color: var(--color-text);
+  text-decoration: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.choice:hover {
+  border-color: var(--color-primary);
+  background: var(--color-highlight-soft);
+}
+
+.choice-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.choice .arrow {
+  font-size: var(--font-lg);
+  color: var(--color-text-sub);
 }

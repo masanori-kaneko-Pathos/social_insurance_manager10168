@@ -14,6 +14,9 @@ import {
 } from '../../../office/office-settings';
 import { parseYen } from '../../../rates/logic/grade';
 import { formatYen } from '../../../../shared/utils/number';
+import { ColumnMapper } from '../../../../shared/components/column-mapper/column-mapper';
+import { IMPORT_ACCEPT, ImportFileError, readTables, SheetTable } from '../../../../shared/import/parse';
+import { BONUS_IMPORT_SPEC, BonusImportResult, matchBonusRows } from '../../logic/bonus-import';
 import { RateTables } from '../../../rates/logic/pick-rates';
 import { RateService } from '../../../rates/rate.service';
 import { BonusService } from '../../bonus.service';
@@ -48,7 +51,7 @@ interface FormRow extends BonusRow {
 
 @Component({
   selector: 'app-bonus-form',
-  imports: [EnterNext, HalfWidthDigits, Pager, PersonListBar, RouterLink, SortHeader, TranslocoPipe],
+  imports: [ColumnMapper, EnterNext, HalfWidthDigits, Pager, PersonListBar, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './bonus-form.html',
   styleUrl: './bonus-form.css',
 })
@@ -233,6 +236,53 @@ export class BonusForm {
   }
 
   // ===== 入力 =====
+
+  // ===== ファイルから賞与額を読み込む（入力欄に入れるだけ。保存は「保存する」で。11/13） =====
+  readonly importAccept = IMPORT_ACCEPT;
+  readonly importSpec = BONUS_IMPORT_SPEC;
+  /** 読んだファイル（列を合わせている間） */
+  readonly importFile = signal<{ name: string; tables: SheetTable[] } | null>(null);
+  readonly importResult = signal<(BonusImportResult & { fileName: string }) | null>(null);
+  readonly importError = signal<string | null>(null);
+
+  async onImportFile(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    this.importResult.set(null);
+    this.importError.set(null);
+    try {
+      const { tables } = await readTables(file);
+      this.importFile.set({ name: file.name, tables });
+    } catch (err) {
+      console.error(err);
+      this.importError.set(err instanceof ImportFileError ? `importMap.error.${err.code}` : 'bonus.import.errorRead');
+    }
+  }
+
+  /** 列を合わせ終わった → その支払日に対象の人に結んで、入力欄に入れる */
+  onImportMapped(table: string[][]): void {
+    const file = this.importFile();
+    this.importFile.set(null);
+    const targets = this.rows().map((r) => ({
+      id: r.employee.id,
+      employeeNumber: r.employee.employeeNumber ?? null,
+      lastName: r.employee.lastName,
+      firstName: r.employee.firstName,
+    }));
+    const result = matchBonusRows(table, targets);
+    this.amountTexts.update((cur) => {
+      const next = { ...cur };
+      for (const [id, n] of result.amounts) next[id] = formatYen(n);
+      return next;
+    });
+    this.importResult.set({ ...result, fileName: file?.name ?? '' });
+  }
+
+  cancelImport(): void {
+    this.importFile.set(null);
+  }
 
   setAmount(employeeId: string, text: string): void {
     this.amountTexts.update((m) => ({ ...m, [employeeId]: text }));

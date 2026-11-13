@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, signal, untracked, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { ContractDoc } from '../../../../core/models/contract';
@@ -12,6 +12,7 @@ import { reasonParams } from '../../../employees/logic/classify';
 import { CriteriaService } from '../../../office/criteria.service';
 import { payrollOf } from '../../../office/office-settings';
 import { latestPaidMonth } from '../../../payrolls/logic/payroll-rows';
+import { PayrollService } from '../../../payrolls/payroll.service';
 import { IconName, Icon } from '../../../../shared/components/icon/icon';
 import { OfficeContext } from '../../../office/office-context.service';
 import { RequestService } from '../../../requests/request.service';
@@ -63,6 +64,23 @@ interface MenuTile {
   icon: IconName;
   link: (string | number)[];
   params?: Record<string, string>;
+  /** リンクの代わりに窓を開く（取り込みの入口） */
+  action?: 'import';
+}
+
+/** はじめの3ステップ（11/13） */
+interface StartStep {
+  key: 'employees' | 'payroll' | 'premiums';
+  icon: IconName;
+  link: (string | number)[];
+  done: boolean;
+}
+
+/** 取り込みの入口で選ぶもの */
+interface ImportChoice {
+  key: 'employees' | 'payrolls' | 'bonus';
+  icon: IconName;
+  link: (string | number)[];
 }
 
 /** 開いている窓（どの To-do から開いたか） */
@@ -86,6 +104,7 @@ interface OpenAction {
 export class Dashboard {
   private readonly context = inject(OfficeContext);
   private readonly employeesApi = inject(EmployeeService);
+  private readonly payrollApi = inject(PayrollService);
   private readonly contractsApi = inject(ContractService);
   private readonly criteriaApi = inject(CriteriaService);
   private readonly requestsApi = inject(RequestService);
@@ -232,11 +251,74 @@ export class Dashboard {
       { key: 'payroll', icon: 'payroll', link: [...o, 'payrolls', this.payMonth()] },
       { key: 'premiums', icon: 'premium', link: [...o, 'premiums'] },
       { key: 'addEmployee', icon: 'userPlus', link: [...o, 'employees', 'new'] },
-      { key: 'import', icon: 'upload', link: [...o, 'employees', 'import'] },
+      { key: 'import', icon: 'upload', link: [], action: 'import' },
       { key: 'request', icon: 'request', link: [...o, 'requests', 'new'] },
       { key: 'bonus', icon: 'bonus', link: [...o, 'bonuses', 'new'] },
     ];
   });
+
+  // ===== はじめの3ステップ（従業員 → 給与 → 保険料。済んだら消える。11/13） =====
+
+  /** 最新の支払月に給与の実績が入っている人数（月の索引を1件読む。null ＝ まだ） */
+  readonly payrollCount = signal<number | null>(null);
+  /** 「閉じる」を押した（事業所ごとにこのブラウザに覚える） */
+  readonly stepsClosed = signal(false);
+
+  readonly startSteps = computed<StartStep[]>(() => {
+    const o = ['/o', this.office()?.id ?? ''];
+    return [
+      { key: 'employees', icon: 'people', link: [...o, 'employees', 'import'], done: this.employees().length > 0 },
+      { key: 'payroll', icon: 'payroll', link: [...o, 'payrolls', 'import'], done: (this.payrollCount() ?? 0) > 0 },
+      { key: 'premiums', icon: 'premium', link: [...o, 'premiums'], done: false },
+    ];
+  });
+
+  /** 従業員か今月の給与がまだのときだけ出す */
+  readonly showSteps = computed(
+    () =>
+      this.isAdmin() &&
+      !this.loading() &&
+      !this.stepsClosed() &&
+      this.payrollCount() !== null &&
+      (this.employees().length === 0 || this.payrollCount() === 0),
+  );
+
+  private stepsKey(): string {
+    return `shaho.startSteps.closed.${this.office()?.id ?? ''}`;
+  }
+
+  closeSteps(): void {
+    this.stepsClosed.set(true);
+    try {
+      localStorage.setItem(this.stepsKey(), '1');
+    } catch {
+      // 保存できなくても、この画面では閉じる
+    }
+  }
+
+  // ===== 取り込みの入口（何を取り込むかを選ぶ窓。11/13） =====
+  private readonly importDialog = viewChild<ElementRef<HTMLDialogElement>>('importDialog');
+  readonly importChoices = computed<ImportChoice[]>(() => {
+    const o = ['/o', this.office()?.id ?? ''];
+    return [
+      { key: 'employees', icon: 'people', link: [...o, 'employees', 'import'] },
+      { key: 'payrolls', icon: 'payroll', link: [...o, 'payrolls', 'import'] },
+      { key: 'bonus', icon: 'bonus', link: [...o, 'bonuses', 'new'] },
+    ];
+  });
+
+  openImport(): void {
+    this.importDialog()?.nativeElement.showModal();
+  }
+
+  closeImport(): void {
+    this.importDialog()?.nativeElement.close();
+  }
+
+  /** 背景（窓の外側）を押したら閉じる */
+  onImportBackdrop(event: MouseEvent): void {
+    if (event.target === this.importDialog()?.nativeElement) this.closeImport();
+  }
 
   setView(v: string): void {
     this.view.set(v === 'dismissed' ? 'dismissed' : 'open');
@@ -261,6 +343,26 @@ export class Dashboard {
     effect(() => {
       const office = this.context.current();
       if (office) void this.load(office.id);
+    });
+    // はじめの3ステップ：最新の支払月に給与が入っているか（管理者だけ。月の索引を1件読む）
+    effect(() => {
+      const office = this.office();
+      const month = this.payMonth();
+      if (!office || !this.isAdmin()) return;
+      untracked(() => {
+        try {
+          this.stepsClosed.set(localStorage.getItem(this.stepsKey()) === '1');
+        } catch {
+          this.stepsClosed.set(false);
+        }
+        this.payrollApi
+          .savedIdsByMonth(office.id, [month], true)
+          .then((m) => this.payrollCount.set(m.get(month)?.size ?? 0))
+          .catch((err) => {
+            console.error(err);
+            this.payrollCount.set(null);
+          });
+      });
     });
     // ヘッダーのベルに件数を渡す（片づけるたびに減る）
     effect(() => {

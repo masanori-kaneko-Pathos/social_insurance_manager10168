@@ -83,6 +83,38 @@
       </div>
     }
 
+    <!-- 賞与額をファイルから読み込む（給与ソフトの書き出しなど。入力欄に入れるだけで、保存は下の「保存する」。11/13） -->
+    @if (!readOnly) {
+      <div class="import-line">
+        <label class="btn btn-small">
+          {{ 'bonus.import.button' | transloco }}
+          <input type="file" class="file-hidden" [accept]="importAccept" (change)="onImportFile($event)" />
+        </label>
+        <span class="muted">{{ 'bonus.import.note' | transloco }}</span>
+      </div>
+      @if (importError(); as e) {
+        <div class="alert alert-danger">{{ e | transloco }}</div>
+      }
+      @if (importFile(); as f) {
+        <app-column-mapper [tables]="f.tables" [spec]="importSpec" (confirmed)="onImportMapped($event)" (cancelled)="cancelImport()" />
+      }
+      @if (importResult(); as res) {
+        <div class="alert import-result" role="status">
+          <p>{{ 'bonus.import.result' | transloco: { file: res.fileName, count: res.amounts.size } }}</p>
+          @if (res.notFound.length > 0) {
+            <p class="warn">{{ 'bonus.import.notFound' | transloco: { list: res.notFound.join('、') } }}</p>
+          }
+          @if (res.ambiguous.length > 0) {
+            <p class="warn">{{ 'bonus.import.ambiguous' | transloco: { list: res.ambiguous.join('、') } }}</p>
+          }
+          @if (res.badAmount.length > 0) {
+            <p class="warn">{{ 'bonus.import.badAmount' | transloco: { list: res.badAmount.join('、') } }}</p>
+          }
+          <button type="button" class="link-close" (click)="importResult.set(null)">{{ 'common.close' | transloco }}</button>
+        </div>
+      }
+    }
+
     <!-- 探す・絞る・並べる・ページ（入れた額は、ページを移っても保存するまで残る。合計は全員分） -->
     <app-person-list-bar
       [departments]="context.current()?.departments ?? []"
