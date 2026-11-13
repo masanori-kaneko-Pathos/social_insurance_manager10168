@@ -19,8 +19,8 @@
           <span class="name">{{ d.name }}</span>
           @if (d.kana) { <span class="kana">{{ d.kana }}</span> }
           @if (!readOnly()) {
-            <button type="button" class="link-btn" (click)="startEdit(d)">{{ 'office.department.rename' | transloco }}</button>
-            <button type="button" class="link-btn" (click)="remove(d)">{{ 'office.department.remove' | transloco }}</button>
+            <button type="button" class="btn btn-small" (click)="startEdit(d)">{{ 'office.department.rename' | transloco }}</button>
+            <button type="button" class="btn btn-small btn-danger-text" (click)="remove(d)">{{ 'office.department.remove' | transloco }}</button>
           }
         }
       </li>

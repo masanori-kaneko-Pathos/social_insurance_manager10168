@@ -644,6 +644,11 @@ export class PremiumList {
     return this.rows().filter((r) => r.state === 'ok' && r.result && advanceState(c.payrolls.get(r.employee.id) ?? null, r.result.employeeYen) === 'unknown').length;
   });
 
+  /** 立替の確認をしまう（絞り込みのパネルのチェックを外したとき。11/13） */
+  clearAdvance(): void {
+    this.advanceChecked.set(null);
+  }
+
   async checkAdvance(): Promise<void> {
     const officeId = this.context.current()?.id;
     if (!officeId || this.advanceBusy()) return;

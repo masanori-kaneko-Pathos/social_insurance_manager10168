@@ -35,6 +35,11 @@
   padding: 2px 0;
 }
 
+.line .split {
+  grid-column: 2;
+  font-variant-numeric: tabular-nums;
+}
+
 .line .rate-note {
   grid-column: 2;
   font-size: var(--font-xs);
@@ -61,7 +66,8 @@
     grid-template-columns: 1fr;
   }
 
-  .line .rate-note {
+  .line .rate-note,
+  .line .split {
     grid-column: 1;
   }
 

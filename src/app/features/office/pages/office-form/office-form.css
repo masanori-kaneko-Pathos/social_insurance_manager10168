@@ -345,3 +345,74 @@ h3 {
   color: var(--color-danger-text);
   border-color: var(--color-danger-text);
 }
+
+/* ===== 目次（設定の画面だけ。左に貼り付き、押すとその欄へ。11/13） ===== */
+.layout.with-toc {
+  display: grid;
+  grid-template-columns: 11em minmax(0, 760px);
+  justify-content: center;
+  gap: var(--space-lg);
+  padding-left: var(--space-lg);
+}
+
+.layout.with-toc .page {
+  margin: 0;
+  max-width: none;
+}
+
+.toc {
+  position: sticky;
+  top: var(--space-lg);
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: calc(var(--space-xl) + 4.5em);
+  font-size: var(--font-sm);
+}
+
+.toc-title {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--color-text-sub);
+}
+
+.toc a {
+  padding: 4px var(--space-sm);
+  color: var(--color-text-sub);
+  text-decoration: none;
+  border-left: 2px solid var(--color-border);
+}
+
+.toc a:hover {
+  color: var(--color-text);
+  border-left-color: var(--color-primary);
+}
+
+.toc a.part {
+  margin-top: var(--space-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.toc a.sub {
+  padding-left: calc(var(--space-sm) + 0.8em);
+}
+
+/* 目次で飛んだとき、見出しが画面の端に貼り付きすぎないように */
+.page [id^='sec-'] {
+  scroll-margin-top: var(--space-lg);
+}
+
+/* 狭い画面では目次を出さない */
+@media (max-width: 1000px) {
+  .layout.with-toc {
+    display: block;
+    padding-left: 0;
+  }
+
+  .toc {
+    display: none;
+  }
+}

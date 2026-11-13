@@ -113,7 +113,7 @@
     @if (pv.plan.items.length > 0) {
       <h3>{{ 'historyCsv.planTitle.' + kind() | transloco: { n: pv.plan.items.length } }}</h3>
       <p class="sub">{{ 'historyCsv.planNote' | transloco }}</p>
-      <div class="table-wrap">
+      <div class="table-wrap scroll">
         <table class="table">
           <thead>
             <tr>

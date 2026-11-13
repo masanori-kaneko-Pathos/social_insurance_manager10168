@@ -328,6 +328,29 @@ export class OfficeForm {
   /** 「既存の事業所をコピー」の選ぶ欄 */
   readonly copyOpen = signal(false);
 
+  /** 目次（設定の画面だけ）。part ＝ 「社会保険に関する設定」の区切り、sub ＝ その中の欄 */
+  readonly toc = computed(() => {
+    const items: { id: string; key: string; sub?: boolean; part?: boolean }[] = [
+      { id: 'sec-basic', key: 'office.section.basic' },
+      { id: 'sec-filing', key: 'office.section.filing' },
+      { id: 'sec-departments', key: 'office.department.title' },
+      { id: 'sec-location', key: 'office.section.location' },
+      { id: 'sec-insurance', key: 'office.part.insurance', part: true },
+      { id: 'sec-insurer', key: 'office.section.insurer', sub: true },
+      { id: 'sec-history', key: 'office.section.history', sub: true },
+      { id: 'sec-coverage', key: 'office.section.coverage', sub: true },
+      { id: 'sec-payroll', key: 'office.section.payroll', sub: true },
+    ];
+    if (this.isOwner()) items.push({ id: 'sec-delete', key: 'office.delete.title' });
+    return items;
+  });
+
+  /** 目次から、その欄へなめらかに動かす（URL の # は変えない） */
+  jump(event: Event, id: string): void {
+    event.preventDefault();
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   /** 部署（フォームと一緒に保存する。11/13 に事業所のフォームの一部にした） */
   readonly departments = signal<Department[]>([]);
   /** 読み込んだときの部署（変わったときだけ書く） */

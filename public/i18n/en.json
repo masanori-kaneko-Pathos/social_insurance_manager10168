@@ -970,6 +970,9 @@
         "notFound": "Office not found.",
         "unknown": "Could not delete. Please try again later."
       }
+    },
+    "toc": {
+      "label": "Contents"
     }
   },
   "remuneration": {
@@ -1056,7 +1059,9 @@
       "calc": "Could not calculate (check the rate data)."
     },
     "exempt": "Exempt (maternity/childcare leave)",
-    "employerHint": "The employer share per person is an estimate (total minus employee share). The office pays the sum of all totals, rounded down to the yen."
+    "employerHint": "The employer share per person is an estimate (total minus employee share). The office pays the sum of all totals, rounded down to the yen.",
+    "lineSplit": "of which employee {{employee}} yen · employer {{employer}} yen",
+    "lineEmployerOnly": "of which employer {{employer}} yen"
   },
   "premiumList": {
     "title": "Premiums",
@@ -1154,7 +1159,12 @@
       "count": "People"
     },
     "healthLegendSeparate": "\"Health etc.\" = health insurance + long-term care + child-rearing support (the employee share is rounded for each).",
-    "breakdown": "Details"
+    "breakdown": "Details",
+    "panel": {
+      "show": "Show in the table",
+      "contribution": "Child-rearing contribution column",
+      "advance": "Check advances (people whose pay cannot cover the deduction)"
+    }
   },
   "rateDialog": {
     "title": "Health insurance rates",

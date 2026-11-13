@@ -52,25 +52,6 @@
         'premiumList.changedCount' | transloco: { count: changedCount() }
       }}</span>
     }
-    <button
-      type="button"
-      class="btn btn-small"
-      (click)="toggleContribution()"
-      [attr.aria-pressed]="showContribution()"
-    >
-      {{
-        (showContribution() ? 'premiumList.hideContribution' : 'premiumList.showContribution')
-          | transloco
-      }}
-    </button>
-    @if (rows().length > 0) {
-      <button type="button" class="btn btn-small" [disabled]="advanceBusy()" (click)="checkAdvance()">
-        {{ 'premiumList.advance.check' | transloco }}
-      </button>
-    }
-    <button type="button" class="btn btn-small" (click)="toggleParts()" [attr.aria-pressed]="showParts()">
-      {{ (showParts() ? 'premiumList.hideParts' : 'premiumList.showParts') | transloco }}
-    </button>
     @if (context.isAdmin() && rows().length > 0) {
       <!-- 出力は1つのボタンにまとめる（開くと CSV・Excel を選ぶ） -->
       <details class="menu">
@@ -415,7 +396,14 @@
       [total]="filteredRows().length"
       [showContract]="false"
       [showEntry]="false"
-    />
+    >
+      <!-- この画面だけ：表に出すもの（拠出金の列・立替の確認）。11/13 にボタンから移した -->
+      <fieldset>
+        <legend>{{ 'premiumList.panel.show' | transloco }}</legend>
+        <label class="opt"><input type="checkbox" [checked]="showContribution()" (change)="toggleContribution()" />{{ 'premiumList.panel.contribution' | transloco }}</label>
+        <label class="opt"><input type="checkbox" [checked]="advanceReady()" [disabled]="advanceBusy()" (change)="$any($event.target).checked ? checkAdvance() : clearAdvance()" />{{ 'premiumList.panel.advance' | transloco }}</label>
+      </fieldset>
+    </app-person-list-bar>
     <p class="legend">{{ (options().healthRounding === 'combined' ? 'premiumList.healthLegend' : 'premiumList.healthLegendSeparate') | transloco }}</p>
     <div class="card table-wrap">
       <table>

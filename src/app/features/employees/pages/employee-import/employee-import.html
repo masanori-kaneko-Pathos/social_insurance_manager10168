@@ -157,7 +157,15 @@
         @if (myNumberCount() > 0) {
           <p class="sub">{{ 'myNumber.importNote' | transloco: { n: myNumberCount() } }}</p>
         }
-        <div class="table-wrap">
+        <!-- 取り込むボタンは表の上にも（人数が多くても、下まで行かずに押せる。11/13） -->
+        <div class="actions top">
+          <button type="button" class="btn" (click)="clear()" [disabled]="saving()">{{ 'common.cancel' | transloco }}</button>
+          <button type="button" class="btn btn-solid" (click)="importCsv()" [disabled]="!canImport()">
+            {{ 'employeeCsv.import' | transloco: { n: pv.plan.items.length } }}
+          </button>
+        </div>
+        <!-- 表は枠の中でスクロール（見出しは上に貼り付く。給与の実績の取り込みと同じ） -->
+        <div class="table-wrap scroll">
           <table class="table">
             <thead>
               <tr>

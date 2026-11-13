@@ -1,3 +1,13 @@
+<div class="layout" [class.with-toc]="isEdit">
+  <!-- 目次（設定の画面だけ。押すとその欄へ。11/13） -->
+  @if (isEdit) {
+    <nav class="toc" [attr.aria-label]="'office.toc.label' | transloco">
+      <p class="toc-title">{{ 'office.toc.label' | transloco }}</p>
+      @for (t of toc(); track t.id) {
+        <a [href]="'#' + t.id" [class.sub]="t.sub" [class.part]="t.part" (click)="jump($event, t.id)">{{ t.key | transloco }}</a>
+      }
+    </nav>
+  }
 <div class="page">
   @if (isEdit) {
     <a class="back" [routerLink]="['/o', office()?.id]">← {{ 'common.back' | transloco }}</a>
@@ -42,7 +52,7 @@
   <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <p class="required-note">{{ 'common.requiredNote' | transloco }}</p>
     <!-- 基本情報 -->
-    <section class="card">
+    <section id="sec-basic" class="card">
       <h2>{{ 'office.section.basic' | transloco }}</h2>
       <div class="grid">
         <div class="field full">
@@ -147,7 +157,7 @@
 
     <!-- 所在地 -->
     <!-- 届出情報（事業所整理記号・事業所番号など）。適用通知書に並んでいる番号なので、基本情報のすぐ下に（11/13） -->
-    <section class="card">
+    <section id="sec-filing" class="card">
       <h2>
         {{ 'office.section.filing' | transloco
         }}<span class="optional">{{ 'common.optional' | transloco }}</span>
@@ -205,9 +215,9 @@
     </section>
 
     <!-- 部署（新規登録でも入れられる。「保存する」で事業所と一緒に保存。11/13） -->
-    <app-department-card [(list)]="departments" [readOnly]="readOnly" />
+    <app-department-card id="sec-departments" [(list)]="departments" [readOnly]="readOnly" />
 
-    <section class="card">
+    <section id="sec-location" class="card">
       <h2>{{ 'office.section.location' | transloco }}</h2>
       <div class="grid">
         <div class="field">
@@ -283,10 +293,10 @@
     </section>
 
     <!-- ここから社会保険の設定（基本情報・所在地と分けて見せる） -->
-    <h2 class="part">{{ 'office.part.insurance' | transloco }}</h2>
+    <h2 id="sec-insurance" class="part">{{ 'office.part.insurance' | transloco }}</h2>
 
     <!-- 健康保険 -->
-    <section class="card">
+    <section id="sec-insurer" class="card">
       <h2>{{ 'office.section.insurer' | transloco }}</h2>
       <div class="field">
         <span class="label">{{ 'office.field.insurerType' | transloco }}</span>
@@ -325,7 +335,7 @@
 
     <!-- 保険者・所在地の履歴（編集のときだけ） -->
     @if (isEdit) {
-      <section class="card">
+      <section id="sec-history" class="card">
         <h2>{{ 'office.section.history' | transloco }}</h2>
         <p class="hint section-hint">{{ 'office.hint.history' | transloco }}</p>
 
@@ -387,7 +397,7 @@
     }
 
     <!-- 社会保険の適用（短時間労働者の加入判定・届出の種別に使う） -->
-    <section class="card" formGroupName="coverage">
+    <section id="sec-coverage" class="card" formGroupName="coverage">
       <h2>{{ 'office.section.coverage' | transloco }}</h2>
 
       <!-- 通常の労働者の所定（新しく登録するときは必須。4分の3基準の物差し） -->
@@ -557,7 +567,7 @@
     </section>
 
     <!-- 給与と保険料の計算 -->
-    <section class="card">
+    <section id="sec-payroll" class="card">
       <h2>{{ 'office.section.payroll' | transloco }}</h2>
       <div class="grid">
         <div class="field">
@@ -742,7 +752,7 @@
 
   <!-- 事業所の削除（代表だけ。元に戻せない） -->
   @if (isEdit && isOwner()) {
-    <section class="card danger-zone">
+    <section id="sec-delete" class="card danger-zone">
       <h2>{{ 'office.delete.title' | transloco }}</h2>
       <p class="hint">{{ 'office.delete.lead' | transloco }}</p>
       @if (!deleteOpen()) {
@@ -769,4 +779,5 @@
   @if (rateTarget(); as t) {
     <app-rate-dialog [target]="t" [canEdit]="!readOnly" (closed)="rateTarget.set(null)" />
   }
+</div>
 </div>
