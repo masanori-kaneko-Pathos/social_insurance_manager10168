@@ -1436,7 +1436,8 @@
     "splitInKind": "Enter separately",
     "monthPick": "Paid {{y}}-{{m}}",
     "workedDays": "Enter days worked",
-    "workedDaysTitle": "For hourly or daily pay, base days are the days actually worked, including paid leave."
+    "workedDaysTitle": "For hourly or daily pay, base days are the days actually worked, including paid leave.",
+    "toMonthList": "Months"
   },
   "regular": {
     "title": "Annual SMR determination {{year}} (定時決定, teiji kettei)",

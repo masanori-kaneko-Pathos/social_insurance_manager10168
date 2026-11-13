@@ -1436,7 +1436,8 @@
     "splitInKind": "分けて入れる",
     "monthPick": "{{y}}年{{m}}月払い",
     "workedDays": "働いた日数を入れる",
-    "workedDaysTitle": "時給・日給の人の支払基礎日数は、実際に働いた日数（有給の日を含む）です。"
+    "workedDaysTitle": "時給・日給の人の支払基礎日数は、実際に働いた日数（有給の日を含む）です。",
+    "toMonthList": "月の一覧"
   },
   "regular": {
     "title": "{{year}}年の定時決定",

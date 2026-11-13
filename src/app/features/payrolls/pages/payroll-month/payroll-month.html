@@ -1,20 +1,10 @@
 <a class="back" [routerLink]="['/o', context.current()?.id, 'payrolls']">
-  ← {{ 'payroll.listTitle' | transloco }}
+  ← {{ 'payroll.toMonthList' | transloco }}
 </a>
 
+<!-- 保険料一覧と同じ形：見出しの横に「‹ 年月 › 今月」、年月の下に小さく対象期間（11/13） -->
 <div class="page-head">
-  <div>
-    <h1>{{ 'payroll.monthTitle' | transloco: { month: month() } }}</h1>
-    @if (period(); as p) {
-      <p class="lead">
-        {{
-          'payroll.monthLead'
-            | transloco: { start: md(p.start), end: md(p.end), days: periodDays() }
-        }}
-      </p>
-    }
-  </div>
-  <!-- 保険料の一覧と同じ「‹ 年月 › 今月」。真ん中を押すと、年と12か月の選び窓（11/12） -->
+  <h1>{{ 'payroll.listTitle' | transloco }}</h1>
   <div class="period">
     <a
       class="btn"
@@ -24,6 +14,11 @@
     >‹</a>
     <app-month-picker class="period-label" [value]="month()" [today]="thisMonth" (picked)="goMonth($event)">
       {{ 'payroll.monthPick' | transloco: monthParts(month()) }}
+      @if (period(); as p) {
+        <small class="period-sub">{{
+          'payroll.monthLead' | transloco: { start: md(p.start), end: md(p.end), days: periodDays() }
+        }}</small>
+      }
     </app-month-picker>
     <a
       class="btn"

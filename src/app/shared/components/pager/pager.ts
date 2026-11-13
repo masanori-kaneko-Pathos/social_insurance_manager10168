@@ -14,6 +14,7 @@ import { PAGE_SIZES, PageSize } from '../../logic/person-list';
 @Component({
   selector: 'app-pager',
   imports: [TranslocoPipe],
+  host: { '[class.sticky]': "variant() === 'bottom'" },
   template: `
     @if (variant() === 'top') {
       <div class="band top">
@@ -54,6 +55,11 @@ import { PAGE_SIZES, PageSize } from '../../logic/person-list';
   `,
   styles: `
     :host { display: block; }
+    /*
+     * 下の帯：画面の下に貼り付く（ページの上にいるときから出ていて、表の最後まで来ると定位置に収まる）
+     * 貼り付けるのは外側（:host）。内側の帯に付けると、自分と同じ大きさの箱の中でしか動けず、貼り付かない
+     */
+    :host(.sticky) { position: sticky; bottom: 0; z-index: 5; }
     .band { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm) var(--space-md); font-size: var(--font-sm); }
     .top { padding: var(--space-sm) var(--space-md); background: color-mix(in srgb, var(--color-highlight) 35%, transparent); border-radius: var(--radius-md); }
     .summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-sm); margin: 0; outline-offset: 4px; }
@@ -62,7 +68,7 @@ import { PAGE_SIZES, PageSize } from '../../logic/person-list';
     .size { display: inline-flex; align-items: center; gap: var(--space-xs); margin-left: auto; color: var(--color-text-sub); }
     .size .input { width: auto; }
     /* 下の帯：画面の下に貼り付く */
-    .bottom { position: sticky; bottom: 0; z-index: 5; justify-content: center; padding: var(--space-sm) var(--space-md); background: color-mix(in srgb, var(--color-bg) 92%, transparent); backdrop-filter: blur(4px); border-top: 1px solid var(--color-border); }
+    .bottom { justify-content: center; padding: var(--space-sm) var(--space-md); background: color-mix(in srgb, var(--color-bg) 92%, transparent); backdrop-filter: blur(4px); border-top: 1px solid var(--color-border); }
     .pages { display: inline-flex; align-items: center; gap: var(--space-xs); }
     .pg { box-sizing: border-box; width: 44px; height: 44px; padding: 0; font: inherit; font-size: var(--font-sm); color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); cursor: pointer; font-variant-numeric: tabular-nums; }
     .pg.wide { width: 6.5em; font-weight: 600; }

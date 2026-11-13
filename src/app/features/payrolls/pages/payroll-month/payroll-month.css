@@ -8,8 +8,8 @@
 .page-head {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: flex-start;
   gap: var(--space-md);
   margin-bottom: var(--space-md);
 }
@@ -205,7 +205,15 @@ tr.has-error td {
 }
 
 .period-label {
-  min-width: 9em;
+  min-width: 11em;
   text-align: center;
   font-weight: 600;
+}
+
+/* 年月の下の対象期間（保険料一覧の「○月に支払う給与から控除」と同じ見せ方） */
+.period-sub {
+  display: block;
+  font-size: var(--font-xs);
+  font-weight: 400;
+  color: var(--color-text-sub);
 }
