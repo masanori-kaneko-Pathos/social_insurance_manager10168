@@ -3224,14 +3224,14 @@
   "myPages": {
     "tabs": "Switch view",
     "tab": "Issue My Page",
-    "lead": "My Page status of current employees. Select people and press \"Invite\" to create invites that only work with the email in each employee's contact details. No email is sent automatically: export the links as CSV and send them yourself (for example with a mail merge).",
+    "lead": "My Page status of employees. Inviting creates a sign-up link for each person (no email is sent automatically; export the links as CSV).",
     "status": {
       "linked": "Has account",
       "invited": "Invited",
       "expired": "Expired",
       "none": "Not invited"
     },
-    "inviteSelected": "Invite selected ({{count}})",
+    "inviteSelected": "Invite",
     "exportCsv": "Export invite links as CSV ({{count}})",
     "hint": "You can select people with no account and no usable invite. Invites expire after 14 days and can only be used by the person who clicks the link in the confirmation email.",
     "made": "Created {{count}} invite(s).",
@@ -3271,7 +3271,9 @@
     },
     "pageAll": "All {{n}} people on this page are selected.",
     "pageAllMore": "Select all {{n}} people that match",
-    "unselectFiltered": "Unselect all matching ({{count}})"
+    "unselectFiltered": "Unselect all matching ({{count}})",
+    "selectedCount": "{{n}} selected",
+    "selectionBar": "Actions for selected people"
   },
   "monthPicker": {
     "pick": "Pick a month",

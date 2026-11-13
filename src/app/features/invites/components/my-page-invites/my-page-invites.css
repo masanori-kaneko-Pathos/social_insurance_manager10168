@@ -188,3 +188,53 @@ td.check {
   background: var(--color-highlight-soft);
   border-radius: var(--radius-sm);
 }
+
+/* 書き出しのボタンは、人数の札の右端へ */
+.summary .export {
+  margin-left: auto;
+}
+
+/* 選んだときだけ出る帯（スクロールしても表の上に見えている。11/13） */
+.selection-bar {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  color: var(--color-on-primary);
+  background: var(--color-text-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popover);
+}
+
+.sel-count {
+  font-weight: 600;
+}
+
+.selection-bar .link-btn {
+  margin-left: auto;
+  color: var(--color-on-primary);
+}
+
+.bar-enter {
+  animation: bar-in var(--dur-base) var(--ease-out);
+}
+
+.bar-leave {
+  animation: bar-in var(--dur-fast) var(--ease-out) reverse forwards;
+}
+
+@keyframes bar-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -3,26 +3,15 @@
 @if (loading()) {
   <p class="muted">{{ 'common.loading' | transloco }}</p>
 } @else {
+  <!-- 状態ごとの人数と、招待中のリンクの書き出し（1行にまとめて、一覧を上に。11/13） -->
   <div class="summary">
     @for (s of statuses; track s) {
       <span class="st st-{{ s }}">{{ 'myPages.status.' + s | transloco }} {{ counts()[s] }}</span>
     }
-  </div>
-
-  <div class="actions">
-    <button
-      type="button"
-      class="btn btn-primary"
-      [disabled]="selected().size === 0 || working()"
-      (click)="inviteSelected()"
-    >
-      {{ 'myPages.inviteSelected' | transloco: { count: selected().size } }}
-    </button>
-    <button type="button" class="btn" [disabled]="invitedRows().length === 0" (click)="exportCsv()">
+    <button type="button" class="btn btn-small export" [disabled]="invitedRows().length === 0" (click)="exportCsv()">
       {{ 'myPages.exportCsv' | transloco: { count: invitedRows().length } }}
     </button>
   </div>
-  <p class="hint">{{ 'myPages.hint' | transloco }}</p>
 
   <!-- 探す・状態で絞る・並べる・ページ（選んだ人はページを移っても残る） -->
   <app-person-list-bar
@@ -59,11 +48,16 @@
       </button>
     </p>
   }
-  <div class="select-line">
-    <button type="button" class="btn btn-small" [disabled]="filteredSelectableIds().length === 0" (click)="toggleFiltered()">
-      {{ (filteredAllSelected() ? 'myPages.unselectFiltered' : 'myPages.selectFiltered') | transloco: { count: filteredSelectableIds().length } }}
-    </button>
-  </div>
+  <!-- 選んだときだけ出る帯（表の上に貼り付く）：何人選んだか・招待する・選択を外す -->
+  @if (selected().size > 0) {
+    <div class="selection-bar" role="region" [attr.aria-label]="'myPages.selectionBar' | transloco" animate.enter="bar-enter" animate.leave="bar-leave">
+      <span class="sel-count">{{ 'myPages.selectedCount' | transloco: { n: selected().size } }}</span>
+      <button type="button" class="btn btn-primary btn-small" [disabled]="working()" (click)="inviteSelected()">
+        {{ 'myPages.inviteSelected' | transloco: { count: selected().size } }}
+      </button>
+      <button type="button" class="link-btn" (click)="clearSelection()">{{ 'myPages.clearSelection' | transloco }}</button>
+    </div>
+  }
 
   @if (errorKey(); as key) {
     <div class="alert alert-danger">{{ key | transloco }}</div>
