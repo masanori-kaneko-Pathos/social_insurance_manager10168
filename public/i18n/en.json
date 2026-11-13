@@ -3256,7 +3256,7 @@
       "create": "Could not create invites. Please try again later."
     },
     "allStatus": "My Page: all",
-    "selectFiltered": "Select everyone selectable that matches ({{count}})",
+    "selectFiltered": "Select all matching ({{count}})",
     "clearSelection": "Clear selection",
     "noMatch": "No employees match the conditions.",
     "beforeHire": "Before joining ({{date}})",
@@ -3267,10 +3267,11 @@
       "invited": "Sent to {{to}} · until {{date}}",
       "linked": "Registered",
       "to": "To: {{to}}",
-      "noEmail": "No email (add it to the contact details)"
+      "noEmail": "No email"
     },
     "pageAll": "All {{n}} people on this page are selected.",
-    "pageAllMore": "Select all {{n}} people that match"
+    "pageAllMore": "Select all {{n}} people that match",
+    "unselectFiltered": "Unselect all matching ({{count}})"
   },
   "monthPicker": {
     "pick": "Pick a month",

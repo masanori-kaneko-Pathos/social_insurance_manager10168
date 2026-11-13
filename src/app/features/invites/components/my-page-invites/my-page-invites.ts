@@ -49,7 +49,11 @@ interface Result {
  */
 @Component({
   selector: 'app-my-page-invites',
-  host: { '(document:pointerup)': 'onPointerUp()', '(document:pointercancel)': 'onPointerUp()' },
+  host: {
+    '(document:pointerup)': 'onPointerUp()',
+    '(document:pointercancel)': 'onPointerUp()',
+    '(document:pointermove)': 'onPointerMove($event)',
+  },
   imports: [Pager, PersonListBar, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './my-page-invites.html',
   styleUrl: './my-page-invites.css',
@@ -208,6 +212,13 @@ export class MyPageInvites implements OnInit {
   private lastClicked: string | null = null;
   /** なぞっている間の「入れる／外す」（null ＝ なぞっていない） */
   private dragMode: boolean | null = null;
+  /** なぞり始めた行と、なぞる前の選択（始めた行から今の行までを、いつも隙間なく埋める） */
+  private dragStart: string | null = null;
+  private dragBase: Set<string> = new Set();
+  /** なぞっている指・マウスの位置（画面の端で自動で動かすため） */
+  private pointerY = 0;
+  private pointerX = 0;
+  private scrollTimer: number | null = null;
 
   private setChecked(ids: readonly string[], on: boolean): void {
     const selectable = new Set(this.shown().rows.filter((r) => r.selectable).map((r) => r.employee.id));
@@ -239,15 +250,73 @@ export class MyPageInvites implements OnInit {
     this.setChecked([id], on);
     this.lastClicked = id;
     this.dragMode = on;
+    this.dragStart = id;
+    this.dragBase = new Set(this.selected());
+    this.pointerX = event.clientX;
+    this.pointerY = event.clientY;
+    this.startAutoScroll();
   }
 
-  /** なぞって、ほかの行のチェックボックスに入った */
-  onCheckPointerEnter(id: string): void {
-    if (this.dragMode !== null) this.setChecked([id], this.dragMode);
+  /** なぞって、ほかの行に入った：始めた行からこの行までを全部同じ状態に（斜めに動いても抜けない） */
+  private dragTo(id: string): void {
+    if (this.dragMode === null || !this.dragStart) return;
+    const ids = this.shown().rows.map((r) => r.employee.id);
+    const a = ids.indexOf(this.dragStart);
+    const b = ids.indexOf(id);
+    if (a < 0 || b < 0) return;
+    const range = new Set(ids.slice(Math.min(a, b), Math.max(a, b) + 1));
+    const selectable = new Set(this.shown().rows.filter((r) => r.selectable).map((r) => r.employee.id));
+    // なぞる前の選択から作り直す（戻ったときに、通り過ぎた行は元に戻る）
+    const next = new Set(this.dragBase);
+    for (const x of range) {
+      if (!selectable.has(x)) continue;
+      if (this.dragMode) next.add(x);
+      else next.delete(x);
+    }
+    this.selected.set(next);
+    this.lastClicked = id;
+  }
+
+  /** なぞっている間：指・マウスの下の行を探す（チェックボックスの外を通っても、行の高さで拾う） */
+  onPointerMove(event: PointerEvent): void {
+    if (this.dragMode === null) return;
+    this.pointerX = event.clientX;
+    this.pointerY = event.clientY;
+    this.pickRowUnderPointer();
+  }
+
+  private pickRowUnderPointer(): void {
+    const el = document.elementFromPoint(this.pointerX, this.pointerY);
+    const id = el?.closest<HTMLElement>('tr[data-row-id]')?.dataset['rowId'];
+    if (id) this.dragTo(id);
+  }
+
+  /** 画面の上下の端（60px）に近づいたら、自動で画面を動かす（なぞったまま下の人まで選べる） */
+  private startAutoScroll(): void {
+    this.stopAutoScroll();
+    const EDGE = 60;
+    this.scrollTimer = window.setInterval(() => {
+      if (this.dragMode === null) return this.stopAutoScroll();
+      const h = window.innerHeight;
+      let dy = 0;
+      if (this.pointerY > h - EDGE) dy = Math.ceil((this.pointerY - (h - EDGE)) / 3);
+      else if (this.pointerY < EDGE) dy = -Math.ceil((EDGE - this.pointerY) / 3);
+      if (dy !== 0) {
+        window.scrollBy(0, dy);
+        this.pickRowUnderPointer();
+      }
+    }, 16);
+  }
+
+  private stopAutoScroll(): void {
+    if (this.scrollTimer !== null) window.clearInterval(this.scrollTimer);
+    this.scrollTimer = null;
   }
 
   onPointerUp(): void {
     this.dragMode = null;
+    this.dragStart = null;
+    this.stopAutoScroll();
   }
 
   /** 見出しのチェックでこのページを全部選んだあと、「条件に合う全員」を勧める案内を出すか */
@@ -296,6 +365,22 @@ export class MyPageInvites implements OnInit {
       }
       return next;
     });
+  }
+
+  /** 条件に合う選べる人が、全員選ばれているか（ボタンを「外す」に変える） */
+  readonly filteredAllSelected = computed(
+    () =>
+      this.filteredSelectableIds().length > 0 && this.filteredSelectableIds().every((id) => this.selected().has(id)),
+  );
+
+  /** 「現在の条件ですべて選択」：もう一度押すと、その人たちの選択を外す */
+  toggleFiltered(): void {
+    if (this.filteredAllSelected()) {
+      const off = new Set(this.filteredSelectableIds());
+      this.selected.update((s) => new Set([...s].filter((id) => !off.has(id))));
+    } else {
+      this.selectFiltered();
+    }
   }
 
   /** 条件に合う選べる人を、全ページまとめて選ぶ */

@@ -60,12 +60,9 @@
     </p>
   }
   <div class="select-line">
-    <button type="button" class="btn btn-small" [disabled]="filteredSelectableIds().length === 0" (click)="selectFiltered()">
-      {{ 'myPages.selectFiltered' | transloco: { count: filteredSelectableIds().length } }}
+    <button type="button" class="btn btn-small" [disabled]="filteredSelectableIds().length === 0" (click)="toggleFiltered()">
+      {{ (filteredAllSelected() ? 'myPages.unselectFiltered' : 'myPages.selectFiltered') | transloco: { count: filteredSelectableIds().length } }}
     </button>
-    @if (selected().size > 0) {
-      <button type="button" class="btn btn-small" (click)="clearSelection()">{{ 'myPages.clearSelection' | transloco }}</button>
-    }
   </div>
 
   @if (errorKey(); as key) {
@@ -102,7 +99,7 @@
       </thead>
       <tbody>
         @for (r of shown().rows; track r.employee.id) {
-          <tr>
+          <tr [attr.data-row-id]="r.employee.id">
             <td class="check">
               @if (r.selectable) {
                 <!-- 押す・Shift＋押す（範囲）・押したままなぞる（まとめて）。付け外しは pointerdown で行う -->
@@ -110,7 +107,6 @@
                   type="checkbox"
                   [checked]="selected().has(r.employee.id)"
                   (pointerdown)="onCheckPointerDown($event, r.employee.id)"
-                  (pointerenter)="onCheckPointerEnter(r.employee.id)"
                   (click)="$event.preventDefault()"
                   (keydown.space)="$event.preventDefault(); toggle(r.employee.id)"
                   [attr.aria-label]="nameOf(r.employee)"

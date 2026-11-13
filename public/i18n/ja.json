@@ -3256,7 +3256,7 @@
       "create": "招待を作れませんでした。時間をおいてお試しください。"
     },
     "allStatus": "マイページ：すべて",
-    "selectFiltered": "条件に合う選べる人をすべて選ぶ（{{count}}人）",
+    "selectFiltered": "現在の条件ですべて選択（{{count}}人）",
     "clearSelection": "選択を外す",
     "noMatch": "条件に合う従業員がいません。",
     "beforeHire": "入社前（{{date}} 入社）",
@@ -3267,10 +3267,11 @@
       "invited": "{{to}} に送付・{{date}} まで",
       "linked": "登録済み",
       "to": "宛先：{{to}}",
-      "noEmail": "メール未登録（従業員の連絡先に入れてください）"
+      "noEmail": "メール未登録"
     },
     "pageAll": "このページの {{n}}人を選びました。",
-    "pageAllMore": "条件に合う {{n}}人をすべて選ぶ"
+    "pageAllMore": "条件に合う {{n}}人をすべて選ぶ",
+    "unselectFiltered": "現在の条件ですべての選択を外す（{{count}}人）"
   },
   "monthPicker": {
     "pick": "月を選ぶ",
