@@ -3,7 +3,9 @@ import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
 import { Invite } from '../../../../core/models/office-records';
+import { Pager } from '../../../../shared/components/pager/pager';
 import { PersonListBar } from '../../../../shared/components/person-list-bar/person-list-bar';
+import { SortHeader } from '../../../../shared/components/sort-header/sort-header';
 import { downloadCsv } from '../../../../shared/csv/csv';
 import { defaultListOptions, filterAndSort, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
 import { todayLocal } from '../../../../shared/utils/date';
@@ -28,9 +30,6 @@ interface Row {
   selectable: boolean;
 }
 
-/** 1ページの人数（招待は人を選ぶだけの軽い表なので、給与の入力より多めに） */
-const PAGE_SIZE = 100;
-
 /** 招待を作った結果（画面に出す） */
 interface Result {
   made: number;
@@ -47,7 +46,7 @@ interface Result {
  */
 @Component({
   selector: 'app-my-page-invites',
-  imports: [RouterLink, TranslocoPipe, PersonListBar],
+  imports: [Pager, PersonListBar, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './my-page-invites.html',
   styleUrl: './my-page-invites.css',
 })
@@ -112,7 +111,7 @@ export class MyPageInvites implements OnInit {
     const rows = st === 'all' ? this.rows() : this.rows().filter((r) => r.status === st);
     return filterAndSort(rows, this.listOptions(), (r) => r.employee, () => null, () => false);
   });
-  readonly shown = computed(() => pageOf(this.filtered(), this.page(), PAGE_SIZE));
+  readonly shown = computed(() => pageOf(this.filtered(), this.page(), this.listOptions().size));
 
   /** 見出しのチェック：今のページの選べる人 */
   readonly selectableIds = computed(() => this.shown().rows.filter((r) => r.selectable).map((r) => r.employee.id));

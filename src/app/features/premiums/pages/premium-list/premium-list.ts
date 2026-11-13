@@ -27,6 +27,9 @@ import { RateService } from '../../../rates/rate.service';
 import { healthPartTotals, officeTotals } from '../../logic/premium-core';
 import { buildPremiumRow, PremiumRow } from '../../logic/premium-rows';
 import { PremiumBreakdown } from '../../components/premium-breakdown/premium-breakdown';
+import { Pager } from '../../../../shared/components/pager/pager';
+import { PersonListBar } from '../../../../shared/components/person-list-bar/person-list-bar';
+import { defaultListOptions, filterAndSort, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
 import { formatMilli } from '../../logic/rounding';
 import { BonusPayment } from '../../../../core/models/bonus';
 import { BonusService } from '../../bonus.service';
@@ -64,7 +67,7 @@ interface ListItem extends PremiumRow {
 
 @Component({
   selector: 'app-premium-list',
-  imports: [ColumnMapper, MonthPicker, PremiumBreakdown, ReviewBox, RouterLink, TranslocoPipe],
+  imports: [ColumnMapper, MonthPicker, Pager, PersonListBar, PremiumBreakdown, ReviewBox, RouterLink, TranslocoPipe],
   templateUrl: './premium-list.html',
   styleUrl: './premium-list.css',
 })
@@ -185,7 +188,17 @@ export class PremiumList {
 
   /** 並べ替え（見出しを押す。月を変えても並びはそのまま） */
   readonly sort = signal<PremiumSort>(DEFAULT_PREMIUM_SORT);
-  readonly sortedRows = computed(() => sortPremiumRows(this.rows(), this.sort()));
+  /** 探す・絞る（従業員の一覧と同じ条件）・ページ。合計は絞り込みに関係なく全員分（11/13） */
+  readonly listOptions = signal<PersonListOptions>(defaultListOptions());
+  readonly page = signal(1);
+  readonly filteredRows = computed(() =>
+    sortPremiumRows(
+      filterAndSort(this.rows(), this.listOptions(), (r) => r.employee, () => null, () => false),
+      this.sort(),
+    ),
+  );
+  private readonly shown = computed(() => pageOf(this.filteredRows(), this.page(), this.listOptions().size));
+  readonly sortedRows = computed(() => this.shown().rows);
 
   sortBy(key: PremiumSortKey): void {
     this.sort.update((cur) => nextSort(cur, key));

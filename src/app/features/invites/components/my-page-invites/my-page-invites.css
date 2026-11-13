@@ -111,11 +111,6 @@ td a {
   font-size: var(--font-sm);
 }
 
-/* 帯の中に差し込む状態の絞り込み（帯の CSS は差し込んだ要素に届かないので、ここで幅を決める） */
-.status-filter {
-  width: auto;
-  min-width: 9em;
-}
 
 .select-line {
   display: flex;

@@ -32,13 +32,16 @@
     [pages]="shown().pages"
     [showContract]="false"
     [showEntry]="false"
+    [extraCount]="statusFilter() === 'all' ? 0 : 1"
   >
-    <select class="input status-filter" [attr.aria-label]="'myPages.col.status' | transloco" (change)="setStatus($any($event.target).value)">
-      <option value="all" [selected]="statusFilter() === 'all'">{{ 'myPages.allStatus' | transloco }}</option>
+    <!-- この画面だけの条件：マイページの状態 -->
+    <fieldset>
+      <legend>{{ 'myPages.col.status' | transloco }}</legend>
+      <label class="opt"><input type="radio" name="mp-status" [checked]="statusFilter() === 'all'" (change)="setStatus('all')" />{{ 'myPages.allStatus' | transloco }}</label>
       @for (s of statuses; track s) {
-        <option [value]="s" [selected]="statusFilter() === s">{{ 'myPages.status.' + s | transloco }}</option>
+        <label class="opt"><input type="radio" name="mp-status" [checked]="statusFilter() === s" (change)="setStatus(s)" />{{ 'myPages.status.' + s | transloco }}</label>
       }
-    </select>
+    </fieldset>
   </app-person-list-bar>
 
   <div class="select-line">
@@ -75,7 +78,7 @@
               [attr.aria-label]="'myPages.selectAll' | transloco"
             />
           </th>
-          <th>{{ 'myPages.col.employee' | transloco }}</th>
+          <th><app-sort-header key="kana" [(options)]="listOptions" [(page)]="page">{{ 'myPages.col.employee' | transloco }}</app-sort-header></th>
           <th>{{ 'myPages.col.status' | transloco }}</th>
           <th>{{ 'myPages.col.detail' | transloco }}</th>
           <th></th>
@@ -119,4 +122,5 @@
       </tbody>
     </table>
   </div>
+  <app-pager [total]="filtered().length" [(page)]="page" [size]="listOptions().size" [showSize]="false" />
 }

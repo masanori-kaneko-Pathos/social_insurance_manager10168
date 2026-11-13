@@ -30,6 +30,8 @@ import { formatMilli } from '../../logic/rounding';
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { EnterNext } from '../../../../shared/directives/enter-next';
 import { PersonListBar } from '../../../../shared/components/person-list-bar/person-list-bar';
+import { Pager } from '../../../../shared/components/pager/pager';
+import { SortHeader } from '../../../../shared/components/sort-header/sort-header';
 import { defaultListOptions, filterAndSort, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
 import { ContractDoc } from '../../../../core/models/contract';
 import { ContractService } from '../../../employees/contract.service';
@@ -46,7 +48,7 @@ interface FormRow extends BonusRow {
 
 @Component({
   selector: 'app-bonus-form',
-  imports: [EnterNext, HalfWidthDigits, PersonListBar, RouterLink, TranslocoPipe],
+  imports: [EnterNext, HalfWidthDigits, Pager, PersonListBar, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './bonus-form.html',
   styleUrl: './bonus-form.css',
 })
@@ -169,7 +171,7 @@ export class BonusForm {
       (r) => this.savedIds().has(r.employee.id),
     ),
   );
-  readonly shown = computed(() => pageOf(this.filtered(), this.page()));
+  readonly shown = computed(() => pageOf(this.filtered(), this.page(), this.listOptions().size));
   private readonly savedIds = computed(
     () => new Set(Object.keys(this.payments().find((p) => p.id === this.bonusId)?.amounts ?? {})),
   );

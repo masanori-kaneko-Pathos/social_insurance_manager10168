@@ -390,3 +390,12 @@ th .arrow.default {
 .as-of-note {
   margin-bottom: var(--space-sm);
 }
+
+/* ページ送り（表の上と下） */
+.pager-top {
+  margin-bottom: var(--space-sm);
+}
+
+.pager-bottom {
+  margin-top: var(--space-sm);
+}

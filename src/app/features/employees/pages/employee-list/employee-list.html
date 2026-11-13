@@ -157,6 +157,7 @@
   } @else if (filtered().length === 0) {
     <p class="muted">{{ 'employee.list.noMatch' | transloco }}</p>
   } @else {
+    <app-pager class="pager-top" [total]="filtered().length" [page]="page()" (pageChange)="setPage($event)" [size]="pageSize()" (sizeChange)="setPageSize($event)" />
     <div class="card table-wrap">
       <table>
         <thead>
@@ -177,7 +178,7 @@
             }
           </tr>
         </thead>
-        @for (sec of sections(); track sec.label) {
+        @for (sec of pagedSections(); track sec.label) {
         <tbody>
           @if (sec.label) {
             <tr class="section-row">
@@ -187,11 +188,14 @@
           @for (e of sec.items; track e.id) {
             <tr [class.retired]="isRetired(e)">
               <td>
-                <div class="name"><a [routerLink]="[e.id]">{{ e.lastName }} {{ e.firstName }}</a></div>
-                <div class="kana">
-                  {{ e.lastNameKana }} {{ e.firstNameKana }}
-                  @if (e.foreign?.alias; as a) { <span class="alias">（{{ a.last }} {{ a.first }}）</span> }
-                </div>
+                <!-- 氏名とフリガナを横に並べる（行を1段にする。長い名前は折り返す。11/13） -->
+                <span class="person">
+                  <a class="person-name" [routerLink]="[e.id]">{{ e.lastName }} {{ e.firstName }}</a>
+                  <span class="person-kana">
+                    {{ e.lastNameKana }} {{ e.firstNameKana }}
+                    @if (e.foreign?.alias; as a) { （{{ a.last }} {{ a.first }}） }
+                  </span>
+                </span>
               </td>
               <td class="mono">{{ e.employeeNumber ?? '—' }}</td>
               <td class="num">{{ age(e) }}</td>
@@ -213,4 +217,5 @@
         }
       </table>
     </div>
+    <app-pager class="pager-bottom" [total]="filtered().length" [page]="page()" (pageChange)="setPage($event)" [size]="pageSize()" [showSize]="false" />
   }

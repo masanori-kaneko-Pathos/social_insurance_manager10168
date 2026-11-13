@@ -31,6 +31,8 @@ import {
 import { groupByName, matchesName, NameSection, RomanBy } from '../../logic/name-index';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
+import { Pager } from '../../../../shared/components/pager/pager';
+import { PAGE_SIZE, PAGE_SIZES, PageSize } from '../../../../shared/logic/person-list';
 type StatusFilter = 'active' | 'retired' | 'all';
 const STATUSES: readonly StatusFilter[] = ['active', 'retired', 'all'];
 
@@ -49,7 +51,7 @@ const pick = <T extends string>(list: readonly T[], v: string | null, fallback: 
 
 @Component({
   selector: 'app-employee-list',
-  imports: [HalfWidthDigits, RouterLink, TranslocoPipe],
+  imports: [HalfWidthDigits, Pager, RouterLink, TranslocoPipe],
   templateUrl: './employee-list.html',
   styleUrl: './employee-list.css',
   host: {
@@ -190,6 +192,38 @@ export class EmployeeList {
     }
     return [{ label: '', items: sortEmployees(this.filtered(), this.sortKey(), this.sortDir()) }];
   });
+  // ===== ページ（URL の page・size。並べ替え・絞り込みのあとで切り分ける。11/13） =====
+  readonly pageSize = computed<PageSize>(() => {
+    const n = Number(this.params().get('size'));
+    return (PAGE_SIZES as readonly number[]).includes(n) ? (n as PageSize) : PAGE_SIZE;
+  });
+  readonly pageCount = computed(() => Math.max(1, Math.ceil(this.filtered().length / this.pageSize())));
+  readonly page = computed(() => {
+    const n = Number(this.params().get('page'));
+    return Number.isInteger(n) && n >= 1 ? Math.min(n, this.pageCount()) : 1;
+  });
+
+  /** 今のページの分だけ、見出し（あ・か…）ごとにまとめ直す（ページの先頭には、その行の見出しを出す） */
+  readonly pagedSections = computed<NameSection<Employee>[]>(() => {
+    const flat = this.sections().flatMap((s) => s.items.map((e) => ({ label: s.label, e })));
+    const start = (this.page() - 1) * this.pageSize();
+    const out: NameSection<Employee>[] = [];
+    for (const { label, e } of flat.slice(start, start + this.pageSize())) {
+      const last = out[out.length - 1];
+      if (last && last.label === label) last.items.push(e);
+      else out.push({ label, items: [e] });
+    }
+    return out;
+  });
+
+  setPage(p: number): void {
+    this.setQuery({ page: p > 1 ? String(p) : null });
+  }
+
+  setPageSize(n: PageSize): void {
+    this.setQuery({ size: n === PAGE_SIZE ? null : String(n) });
+  }
+
   /** ローマ字の列に並ぶ人がいるときだけ「姓／名」の切り替えを出す */
   readonly hasRoman = computed(
     () => this.sortKey() === 'name' && this.sections().some((s) => /^[A-Z]$/.test(s.label)),
@@ -243,10 +277,11 @@ export class EmployeeList {
 
   // ===== URL を書き換える =====
 
+  /** 絞り込み・並びを変えたら1ページ目に戻す（page を渡したときだけ、そのページへ） */
   private setQuery(queryParams: Record<string, string | null>): void {
     this.router.navigate([], {
       relativeTo: this.route,
-      queryParams,
+      queryParams: 'page' in queryParams ? queryParams : { ...queryParams, page: null },
       queryParamsHandling: 'merge',
       replaceUrl: true, // 1文字打つたびに履歴が増えないように
     });

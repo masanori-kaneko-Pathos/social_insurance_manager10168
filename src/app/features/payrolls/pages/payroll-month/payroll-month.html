@@ -91,7 +91,7 @@
     <table appEnterNext="grid">
       <thead>
         <tr>
-          <th>{{ 'payroll.col.employee' | transloco }}</th>
+          <th><app-sort-header key="kana" [(options)]="listOptions" [(page)]="page">{{ 'payroll.col.employee' | transloco }}</app-sort-header></th>
           <th class="num">{{ 'payroll.col.cash' | transloco }}</th>
           @if (showAll()) {
             <th class="num">{{ 'payroll.col.inKind' | transloco }}</th>
@@ -220,6 +220,7 @@
       </tbody>
     </table>
   </div>
+  <app-pager [total]="filtered().length" [(page)]="page" [size]="listOptions().size" [showSize]="false" />
 
   @if (errorKey(); as key) {
     <div class="alert alert-danger">{{ key | transloco }}</div>

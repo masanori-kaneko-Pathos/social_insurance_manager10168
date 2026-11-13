@@ -36,6 +36,8 @@ import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits
 import { InKindCalculator } from '../../components/in-kind-calculator/in-kind-calculator';
 import { EnterNext } from '../../../../shared/directives/enter-next';
 import { PersonListBar } from '../../../../shared/components/person-list-bar/person-list-bar';
+import { Pager } from '../../../../shared/components/pager/pager';
+import { SortHeader } from '../../../../shared/components/sort-header/sort-header';
 import { defaultListOptions, filterAndSort, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
 import { ContractDoc } from '../../../../core/models/contract';
 type RowForm = FormGroup<{
@@ -62,7 +64,7 @@ const MONTH_RE = /^[0-9]{4}-(0[1-9]|1[0-2])$/;
 
 @Component({
   selector: 'app-payroll-month',
-  imports: [EnterNext, HalfWidthDigits, InKindCalculator, MonthPicker, PersonListBar, RouterLink, TranslocoPipe, ReactiveFormsModule],
+  imports: [EnterNext, HalfWidthDigits, InKindCalculator, MonthPicker, Pager, PersonListBar, ReactiveFormsModule, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './payroll-month.html',
   styleUrl: './payroll-month.css',
 })
@@ -169,7 +171,7 @@ export class PayrollMonth {
       (v) => !!v.row.saved,
     ),
   );
-  readonly shown = computed(() => pageOf(this.filtered(), this.page()));
+  readonly shown = computed(() => pageOf(this.filtered(), this.page(), this.listOptions().size));
 
   private async loadContracts(officeId: string, employees: readonly Employee[]): Promise<void> {
     try {

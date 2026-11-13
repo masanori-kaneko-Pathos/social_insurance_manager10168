@@ -235,6 +235,13 @@
       <p>{{ 'premiumList.empty' | transloco }}</p>
     </section>
   } @else {
+    <app-person-list-bar
+      [(options)]="listOptions"
+      [(page)]="page"
+      [total]="filteredRows().length"
+      [showContract]="false"
+      [showEntry]="false"
+    />
     <p class="legend">{{ (options().healthRounding === 'combined' ? 'premiumList.healthLegend' : 'premiumList.healthLegendSeparate') | transloco }}</p>
     <div class="card table-wrap">
       <table>
@@ -377,6 +384,7 @@
         </tbody>
       </table>
     </div>
+    <app-pager [total]="filteredRows().length" [(page)]="page" [size]="listOptions().size" [showSize]="false" />
     @if (hasMultipleOffices()) {
       <p class="hint">{{ 'premiumList.multipleOfficesNote' | transloco }}</p>
     }

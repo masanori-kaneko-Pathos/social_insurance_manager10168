@@ -97,8 +97,8 @@
       <table appEnterNext="grid">
         <thead>
           <tr>
-            <th rowspan="2">{{ 'employee.field.employeeNumber' | transloco }}</th>
-            <th rowspan="2">{{ 'employee.field.name' | transloco }}</th>
+            <th rowspan="2"><app-sort-header key="number" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.employeeNumber' | transloco }}</app-sort-header></th>
+            <th rowspan="2"><app-sort-header key="kana" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.name' | transloco }}</app-sort-header></th>
             <th rowspan="2" class="num">{{ 'bonus.col.amount' | transloco }}</th>
             <th rowspan="2" class="num">{{ 'bonus.col.standard' | transloco }}</th>
             <th colspan="3" class="group-head">{{ 'premium.col.employee' | transloco }}</th>
@@ -192,6 +192,7 @@
         </tbody>
       </table>
     </div>
+    <app-pager [total]="filtered().length" [(page)]="page" [size]="listOptions().size" [showSize]="false" />
 
     <!-- この支給の合計 -->
     <section class="card totals">

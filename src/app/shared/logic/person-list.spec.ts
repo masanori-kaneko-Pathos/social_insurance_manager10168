@@ -7,6 +7,12 @@ const P = (n: string, last: string, kana: string, hire = '2020-04-01'): PersonLi
   lastNameKana: kana,
   firstNameKana: '',
   hireDate: hire,
+  // 絞り込み（加入・年齢など）の項目。ここのテストでは使わない
+  birthDate: '1990-01-01',
+  health: { enrolled: false } as PersonLike['health'],
+  pension: { enrolled: false } as PersonLike['pension'],
+  sex: null,
+  foreign: null,
 });
 
 interface Row {
@@ -41,14 +47,16 @@ describe('person-list', () => {
     expect(run({ sort: 'number' })).toEqual(['鈴木', '佐藤', '山田']);
     expect(run({ sort: 'hire' })).toEqual(['佐藤', '山田', '鈴木']);
     expect(run({})).toEqual(['佐藤', '鈴木', '山田']);
+    expect(run({ sort: 'number', dir: 'desc' })).toEqual(['山田', '佐藤', '鈴木']);
   });
 
   it('ページに分ける（はみ出したら最後のページ）', () => {
-    const list = Array.from({ length: 120 }, (_, i) => i);
-    expect(pageOf(list, 1).rows.length).toBe(50);
+    const list = Array.from({ length: 250 }, (_, i) => i);
+    expect(pageOf(list, 1).rows.length).toBe(100);
     expect(pageOf(list, 3)).toEqual(jasmine.objectContaining({ page: 3, pages: 3 }));
-    expect(pageOf(list, 3).rows.length).toBe(20);
+    expect(pageOf(list, 3).rows.length).toBe(50);
     expect(pageOf(list, 9).page).toBe(3);
+    expect(pageOf(list, 1, 200).pages).toBe(2);
     expect(pageOf([], 1).pages).toBe(1);
   });
 });
