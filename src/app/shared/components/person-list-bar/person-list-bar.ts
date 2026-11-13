@@ -1,4 +1,4 @@
-import { Component, computed, ElementRef, input, model, signal, viewChild } from '@angular/core';
+import { Component, computed, ElementRef, input, model, output, signal, viewChild } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { EMPLOYMENT_TYPES, PAY_TYPES } from '../../../core/models/contract';
 import {
@@ -165,6 +165,8 @@ export class PersonListBar {
   readonly departments = input<readonly { id: string; name: string }[]>([]);
   /** 画面だけの条件を使っている数（ボタンの数に足す） */
   readonly extraCount = input(0);
+  /** 「クリア」を押した（画面だけの条件は、親がこれを受けて戻す） */
+  readonly cleared = output<void>();
 
   readonly open = signal(false);
   private readonly wrap = viewChild<ElementRef<HTMLElement>>('wrap');
@@ -211,6 +213,7 @@ export class PersonListBar {
   clear(): void {
     this.options.set({ ...this.options(), filter: emptyFilter(), employment: 'all', payType: 'all', entry: 'all', dept: '' });
     this.page.set(1);
+    this.cleared.emit();
   }
 
   onDocumentClick(event: MouseEvent): void {

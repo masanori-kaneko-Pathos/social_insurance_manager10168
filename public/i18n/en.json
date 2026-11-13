@@ -3260,7 +3260,9 @@
     "clearSelection": "Clear selection",
     "noMatch": "No employees match the conditions.",
     "beforeHire": "Before joining ({{date}})",
-    "beforeHireTitle": "People who have not joined yet can be invited too. They can answer pre-joining requests from My Page."
+    "beforeHireTitle": "People who have not joined yet can be invited too. They can answer pre-joining requests from My Page.",
+    "beforeHireFilter": "Before joining",
+    "beforeHireOnly": "Only people who have not joined yet"
   },
   "monthPicker": {
     "pick": "Pick a month",

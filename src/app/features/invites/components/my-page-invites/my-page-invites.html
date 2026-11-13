@@ -32,8 +32,14 @@
     [total]="filtered().length"
     [pages]="shown().pages"
     [showEntry]="false"
-    [extraCount]="statusFilter() === 'all' ? 0 : 1"
+    [extraCount]="(statusFilter() === 'all' ? 0 : 1) + (beforeOnly() ? 1 : 0)"
+    (cleared)="clearExtra()"
   >
+    <!-- この画面だけの条件：入社前の人だけ -->
+    <fieldset>
+      <legend>{{ 'myPages.beforeHireFilter' | transloco }}</legend>
+      <label class="opt"><input type="checkbox" [checked]="beforeOnly()" (change)="setBeforeOnly($any($event.target).checked)" />{{ 'myPages.beforeHireOnly' | transloco }}</label>
+    </fieldset>
     <!-- この画面だけの条件：マイページの状態 -->
     <fieldset>
       <legend>{{ 'myPages.col.status' | transloco }}</legend>

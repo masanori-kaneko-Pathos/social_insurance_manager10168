@@ -77,6 +77,8 @@ export class MyPageInvites implements OnInit {
   readonly page = signal(1);
   /** マイページの状態で絞る（all ＝ すべて） */
   readonly statusFilter = signal<MyPageStatus | 'all'>('all');
+  /** 入社前の人だけ（内定者にまとめて招待するとき。11/13） */
+  readonly beforeOnly = signal(false);
 
   private readonly now = Date.now();
   private readonly today = todayLocal();
@@ -112,7 +114,9 @@ export class MyPageInvites implements OnInit {
   /** 状態で絞ってから、名前で探して並べる */
   readonly filtered = computed(() => {
     const st = this.statusFilter();
-    const rows = st === 'all' ? this.rows() : this.rows().filter((r) => r.status === st);
+    const rows = this.rows().filter(
+      (r) => (st === 'all' || r.status === st) && (!this.beforeOnly() || this.isBeforeHire(r.employee)),
+    );
     return filterAndSort(rows, this.listOptions(), (r) => r.employee, (r) => this.contractOf(r.employee), () => false, {
       dept: (r) => this.deptName(r.employee) ?? '',
       employment: (r) => {
@@ -219,6 +223,17 @@ export class MyPageInvites implements OnInit {
 
   clearSelection(): void {
     this.selected.set(new Set());
+  }
+
+  setBeforeOnly(on: boolean): void {
+    this.beforeOnly.set(on);
+    this.page.set(1);
+  }
+
+  /** 帯の「クリア」：この画面だけの条件も戻す */
+  clearExtra(): void {
+    this.statusFilter.set('all');
+    this.beforeOnly.set(false);
   }
 
   setStatus(value: string): void {

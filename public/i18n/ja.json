@@ -3260,7 +3260,9 @@
     "clearSelection": "選択を外す",
     "noMatch": "条件に合う従業員がいません。",
     "beforeHire": "入社前（{{date}} 入社）",
-    "beforeHireTitle": "まだ入社していない人も招待できます。マイページから、入社前の手続きの依頼に答えてもらえます。"
+    "beforeHireTitle": "まだ入社していない人も招待できます。マイページから、入社前の手続きの依頼に答えてもらえます。",
+    "beforeHireFilter": "入社前",
+    "beforeHireOnly": "入社前の人だけ（入社日が今日より先）"
   },
   "monthPicker": {
     "pick": "月を選ぶ",
