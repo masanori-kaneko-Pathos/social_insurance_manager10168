@@ -6,7 +6,9 @@ describe('部署の一覧', () => {
     list = addDepartment(list, '営業部');
     expect(list.map((d) => d.id)).toEqual(['d1', 'd2']);
     list = renameDepartment(list, 'd1', '総務人事部');
-    expect(list[0]).toEqual({ id: 'd1', name: '総務人事部' });
+    expect(list[0]).toEqual({ id: 'd1', name: '総務人事部', kana: null });
+    // 読みは、ひらがなでもカタカナにそろえる
+    expect(renameDepartment(list, 'd1', '総務人事部', 'そうむじんじぶ')[0].kana).toBe('ソウムジンジブ');
     list = removeDepartment(list, 'd2');
     expect(nextDepartmentId(list)).toBe('d2');
     expect(nextDepartmentId([{ id: 'd5', name: 'x' }])).toBe('d6');

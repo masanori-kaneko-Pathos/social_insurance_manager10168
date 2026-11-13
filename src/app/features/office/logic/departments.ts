@@ -3,6 +3,7 @@
 // id は名前を変えても変わらない（従業員の org.departmentId が指す）
 
 import type { Department } from '../../../core/models/office';
+import { toKatakana } from '../../../shared/utils/text';
 
 export const MAX_DEPARTMENTS = 50;
 export const MAX_DEPARTMENT_NAME = 40;
@@ -25,12 +26,18 @@ export function departmentError(list: readonly Department[], name: string, excep
   return null;
 }
 
-export function addDepartment(list: readonly Department[], name: string): Department[] {
-  return [...list, { id: nextDepartmentId(list), name: name.trim() }];
+/** 読み（空なら null。ひらがなはカタカナにそろえる） */
+function kanaOf(kana: string | null | undefined): string | null {
+  const k = toKatakana((kana ?? '').normalize('NFKC').trim());
+  return k ? k : null;
 }
 
-export function renameDepartment(list: readonly Department[], id: string, name: string): Department[] {
-  return list.map((d) => (d.id === id ? { ...d, name: name.trim() } : d));
+export function addDepartment(list: readonly Department[], name: string, kana: string | null = null): Department[] {
+  return [...list, { id: nextDepartmentId(list), name: name.trim(), kana: kanaOf(kana) }];
+}
+
+export function renameDepartment(list: readonly Department[], id: string, name: string, kana: string | null = null): Department[] {
+  return list.map((d) => (d.id === id ? { ...d, name: name.trim(), kana: kanaOf(kana) } : d));
 }
 
 export function removeDepartment(list: readonly Department[], id: string): Department[] {

@@ -64,6 +64,22 @@ export function sortKeyOf(e: NamedEmployee, by: RomanBy = 'last'): { label: stri
   return { label: kanaRow(key[0] ?? '') ?? '#', key };
 }
 
+/**
+ * 部署の並べる文字（11/13）：氏名と同じく あ〜わ → A〜Z → その他 の順
+ * - 読みがあれば読みで（漢字の部署名も あいうえお順 に並ぶ）
+ * - 読みがなければ名前の1文字目で：カナ・ひらがな → あ〜わ、英字 → A〜Z、漢字など → 最後
+ * 返す文字の先頭の数字（0・1・2）がまとまりの順番
+ */
+export function deptSortKey(name: string, kana?: string | null): string {
+  const k = toKatakana((kana ?? '').normalize('NFKC').trim());
+  if (k && kanaRow(k[0])) return `0${k}`;
+  const n = toHalfWidth(name.normalize('NFKC').trim());
+  const head = (n[0] ?? '').toUpperCase();
+  if (ALPHABET.includes(head)) return `1${n.toUpperCase()}`;
+  if (kanaRow(n[0] ?? '')) return `0${toKatakana(n)}`;
+  return `2${n}`;
+}
+
 /** 見出しごとにまとめて並べる（空の見出しは出さない） */
 export function groupByName<T extends NamedEmployee>(list: T[], by: RomanBy = 'last'): NameSection<T>[] {
   const keyed = list.map((e) => ({ e, ...sortKeyOf(e, by) }));

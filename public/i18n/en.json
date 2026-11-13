@@ -301,7 +301,9 @@
         "name": "Name",
         "number": "No.",
         "age": "Age",
-        "hire": "Hire date"
+        "hire": "Hire date",
+        "dept": "Department",
+        "employment": "Employment"
       },
       "asOf": "As of",
       "asOfNote": "This list is as of {{date}} (employment status, category, coverage and age on that date). Check each employee's values on that date (name, address, etc.) in their \"History\" tab.",
@@ -929,7 +931,7 @@
     },
     "department": {
       "title": "Departments",
-      "lead": "Used for employees' departments. The employee list can be filtered by department, and the premium list shows subtotals by department. Renaming keeps employees' assignments.",
+      "lead": "Used for employees' departments. The employee list can be filtered by department, and the premium list shows subtotals by department. Renaming keeps employees' assignments.Adding the katakana reading lets you sort departments in Japanese syllabary order.",
       "empty": "No departments yet.",
       "add": "Add department",
       "newName": "New department name",
@@ -941,7 +943,8 @@
         "duplicate": "A department with the same name already exists.",
         "tooMany": "Up to 50 departments.",
         "save": "Could not save the departments."
-      }
+      },
+      "kana": "Reading (optional)"
     },
     "open": {
       "nameEn": "This office has an English name",

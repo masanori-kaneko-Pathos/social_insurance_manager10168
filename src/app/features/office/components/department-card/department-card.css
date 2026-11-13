@@ -20,3 +20,19 @@
 .dept-add .input {
   max-width: 280px;
 }
+
+/* 読み（任意）。名前より少し狭く */
+.input.kana {
+  max-width: 14em;
+}
+
+.kana {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.kana-label {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+  white-space: nowrap;
+}

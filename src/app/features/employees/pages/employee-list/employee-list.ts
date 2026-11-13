@@ -2,7 +2,7 @@ import { Component, computed, effect, ElementRef, inject, signal, untracked, vie
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { ContractDoc, EmploymentType } from '../../../../core/models/contract';
+import { ContractDoc, EMPLOYMENT_TYPES, EmploymentType } from '../../../../core/models/contract';
 import { Employee } from '../../../../core/models/employee';
 import { CriteriaDoc } from '../../../../core/models/master';
 import { ageAt, todayLocal, toYearMonth } from '../../../../shared/utils/date';
@@ -28,7 +28,7 @@ import {
   SEX_OPTIONS,
   toggle,
 } from '../../logic/employee-filter';
-import { groupByName, matchesName, NameSection, RomanBy } from '../../logic/name-index';
+import { deptSortKey, groupByName, matchesName, NameSection, RomanBy } from '../../logic/name-index';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { Pager } from '../../../../shared/components/pager/pager';
@@ -76,6 +76,7 @@ export class EmployeeList {
   readonly sortKeys = SORT_KEYS;
   /** 見出しの前半（社員番号・氏名）と後半（年齢・入社日）。あいだに部署・雇用形態の列を入れる */
   readonly leadKeys: readonly SortKey[] = ['number', 'name'];
+  readonly midKeys: readonly SortKey[] = ['dept', 'employment'];
   readonly tailKeys: readonly SortKey[] = ['age', 'hire'];
   readonly options = {
     coverage: COVERAGE_OPTIONS,
@@ -195,7 +196,21 @@ export class EmployeeList {
         ? secs
         : [...secs].reverse().map((s) => ({ ...s, items: [...s.items].reverse() }));
     }
-    return [{ label: '', items: sortEmployees(this.filtered(), this.sortKey(), this.sortDir()) }];
+    return [
+      {
+        label: '',
+        items: sortEmployees(this.filtered(), this.sortKey(), this.sortDir(), {
+          dept: (e) => {
+            const d = this.departments().find((x) => x.id === e.org?.departmentId);
+            return d ? deptSortKey(d.name, d.kana) : '';
+          },
+          employment: (e) => {
+            const t = this.employmentOf(e);
+            return t ? String(EMPLOYMENT_TYPES.indexOf(t)) : '';
+          },
+        }),
+      },
+    ];
   });
   // ===== ページ（URL の page・per。並べ替え・絞り込みのあとで切り分ける。11/13） =====
   readonly pageSize = computed<PageSize>(() => {
@@ -279,7 +294,9 @@ export class EmployeeList {
     // 区分・雇用形態で絞り込むときだけ、契約を読む
     effect(() => {
       const officeId = this.context.current()?.id;
-      if (officeId && needsContracts(this.filter()) && !this.contracts() && !this.loading()) {
+      // 雇用形態で並べるときも、全員の契約が要る（読んだ契約はログイン中は覚えているので2回目からは増えない）
+      const needAll = needsContracts(this.filter()) || this.sortKey() === 'employment';
+      if (officeId && needAll && !this.contracts() && !this.loading()) {
         this.loadContracts(officeId);
       }
     });

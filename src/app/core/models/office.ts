@@ -54,6 +54,8 @@ export interface InKindProvided {
 export interface Department {
   id: string;
   name: string;
+  /** 読み（カタカナ。漢字の部署名を あいうえお順 に並べるため。任意。11/13） */
+  kana?: string | null;
 }
 
 /** Firestore の offices/{officeId} に保存する中身 */

@@ -171,9 +171,15 @@
                 </button>
               </th>
             }
-            <!-- 所属（どこの人か）→ 働き方（どんな契約か）→ 年齢・入社日（11/13） -->
-            <th>{{ 'employee.field.department' | transloco }}</th>
-            <th>{{ 'employee.list.employment' | transloco }}</th>
+            <!-- 所属（どこの人か）→ 働き方（どんな契約か）→ 年齢・入社日。部署・雇用形態も押すと並び替え（11/13） -->
+            @for (k of midKeys; track k) {
+              <th [attr.aria-sort]="ariaSort(k)">
+                <button type="button" class="sort" [class.on]="sortKey() === k" (click)="sortBy(k)">
+                  {{ 'employee.list.sort.' + k | transloco }}
+                  <span class="arrow" aria-hidden="true">{{ sortKey() === k ? (sortDir() === 'asc' ? '▲' : '▼') : '' }}</span>
+                </button>
+              </th>
+            }
             @for (k of tailKeys; track k) {
               <th [class.num]="k === 'age'" [attr.aria-sort]="ariaSort(k)">
                 <button type="button" class="sort" [class.on]="sortKey() === k" (click)="sortBy(k)">

@@ -1,5 +1,5 @@
 import { ForeignDoc } from '../../../core/models/employee';
-import { groupByName, kanaRow, matchesName, NamedEmployee, sortKeyOf } from './name-index';
+import { groupByName, kanaRow, matchesName, NamedEmployee, sortKeyOf, deptSortKey } from './name-index';
 
 function jp(last: string, first: string, lastKana: string, firstKana: string): NamedEmployee {
   return { employeeNumber: null, lastName: last, firstName: first, lastNameKana: lastKana, firstNameKana: firstKana, nameOrder: 'kana', foreign: null };
@@ -96,3 +96,18 @@ describe('name-index', () => {
     expect(matchesName(e, '  ')).toBeTrue();
   });
 });
+
+describe('deptSortKey（部署の並べ方。11/13）', () => {
+  it('読み → あいうえお順、英字 → A〜Z、読みのない漢字 → 最後', () => {
+    const list = [
+      { name: '総務部', kana: 'そうむぶ' },
+      { name: 'IT推進部', kana: null },
+      { name: '営業部', kana: 'エイギョウブ' },
+      { name: '品質管理部', kana: null },
+      { name: 'カスタマー部', kana: null },
+    ];
+    const sorted = [...list].sort((a, b) => deptSortKey(a.name, a.kana).localeCompare(deptSortKey(b.name, b.kana), 'ja'));
+    expect(sorted.map((d) => d.name)).toEqual(['営業部', 'カスタマー部', '総務部', 'IT推進部', '品質管理部']);
+  });
+});
+

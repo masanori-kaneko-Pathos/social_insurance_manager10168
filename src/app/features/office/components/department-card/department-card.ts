@@ -21,6 +21,9 @@ export class DepartmentCard {
 
   readonly list = computed<Department[]>(() => this.context.current()?.departments ?? []);
   readonly newName = signal('');
+  /** 読み（任意。漢字の部署名を あいうえお順 に並べるため） */
+  readonly newKana = signal('');
+  readonly editKana = signal('');
   readonly editing = signal<string | null>(null);
   readonly editName = signal('');
   readonly errorKey = signal<string | null>(null);
@@ -29,20 +32,22 @@ export class DepartmentCard {
   async add(): Promise<void> {
     const err = departmentError(this.list(), this.newName());
     if (err) return this.errorKey.set(`office.department.error.${err}`);
-    await this.save(addDepartment(this.list(), this.newName()));
+    await this.save(addDepartment(this.list(), this.newName(), this.newKana()));
     this.newName.set('');
+    this.newKana.set('');
   }
 
   startEdit(d: Department): void {
     this.editing.set(d.id);
     this.editName.set(d.name);
+    this.editKana.set(d.kana ?? '');
     this.errorKey.set(null);
   }
 
   async rename(id: string): Promise<void> {
     const err = departmentError(this.list(), this.editName(), id);
     if (err) return this.errorKey.set(`office.department.error.${err}`);
-    await this.save(renameDepartment(this.list(), id, this.editName()));
+    await this.save(renameDepartment(this.list(), id, this.editName(), this.editKana()));
     this.editing.set(null);
   }
 
