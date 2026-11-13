@@ -79,6 +79,7 @@ export const EMPLOYEE_CSV_HEADERS = {
   leave2Start: '休業2_開始日',
   leave2End: '休業2_終了日',
   leave2Birth: '休業2_出産日・子の生年月日',
+  department: '部署', // 事業所の設定の部署の名前（11/13）
   note: 'メモ',
 } as const;
 
@@ -493,13 +494,16 @@ export interface ImportContext {
   gradeTables: GradeTableDoc[];
   /** 登録済みの社員番号 */
   existingNumbers: ReadonlySet<string>;
+  /** 事業所の部署（部署の列を、名前で結ぶ） */
+  departments?: readonly { id: string; name: string }[];
 }
 
 export type ImportWarning =
   | 'notInsured' // 区分の判定で加入しない（理由は classification）
   | 'unknownCategory' // 判定できない（所定が空など）→ 加入しないで登録する
   | 'override' // 加入を列で上書きした
-  | 'oldTable'; // 標準報酬の開始月に等級表がなく、いちばん古い表で出した
+  | 'oldTable' // 標準報酬の開始月に等級表がなく、いちばん古い表で出した
+  | 'unknownDepartment'; // 部署の名前が事業所の部署にない（部署なしで登録する）
 
 export interface ImportItem {
   line: number;
@@ -562,7 +566,16 @@ export function planImport(rows: EmployeeCsvRow[], ctx: ImportContext): ImportPl
       lostDate: on ? dates.lostDate : null,
       lossReason: on && dates.lostDate ? ('retire' as const) : null,
     });
-    const employee: EmployeeFormInput = { ...e, health: enrollment(health), pension: enrollment(pension) };
+    // 部署：名前で事業所の部署に結ぶ（全角半角・前後の空白は区別しない）。見つからなければ部署なしで登録して知らせる
+    const deptKey = (s: string) => s.normalize('NFKC').replace(/\s+/g, '');
+    const deptName = (r.values.department ?? '').trim();
+    let org = e.org;
+    if (deptName) {
+      const d = (ctx.departments ?? []).find((x) => deptKey(x.name) === deptKey(deptName));
+      if (d) org = { departmentId: d.id, position: org?.position ?? null, officer: org?.officer ?? null };
+      else warnings.push('unknownDepartment');
+    }
+    const employee: EmployeeFormInput = { ...e, org, health: enrollment(health), pension: enrollment(pension) };
 
     // 標準報酬（資格取得時決定）：加入する人だけ
     let remuneration: RemunerationInput | null = null;
@@ -629,6 +642,7 @@ export type EmployeeImportKey = EmployeeColumn | 'fullName' | 'fullNameKana' | '
 
 export const EMPLOYEE_WORDS: Partial<Record<EmployeeImportKey, readonly string[]>> = {
   employeeNumber: ['従業員番号', '従業員コード', '社員コード', '社員No', '社員ID', '職員番号', 'employee number', 'employee id', 'employee code'],
+  department: ['所属', '所属部署', '部門', '部門名', '部署名', 'department'],
   lastName: ['氏', '苗字', 'last name', 'family name', 'surname'],
   firstName: ['first name', 'given name'],
   lastNameKana: ['姓カナ', '姓フリガナ', '姓ヨミガナ', '姓（ヨミガナ）', 'セイカナ', 'フリガナ姓', 'カナ姓', '氏フリガナ'],

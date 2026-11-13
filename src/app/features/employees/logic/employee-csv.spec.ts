@@ -101,6 +101,15 @@ describe('readEmployeeCsv', () => {
 describe('planImport：契約から加入と標準報酬を出す', () => {
   const plan = (rows: Record<string, string>[], ctx = CTX) => planImport(readEmployeeCsv(table(...rows)).rows, ctx);
 
+  it('部署の列は、事業所の部署の名前で結ぶ（見つからなければ部署なしで、知らせる）', () => {
+    const ctx = { ...CTX, departments: [{ id: 'd1', name: '営業部' }] };
+    const hit = plan([{ ...BASE, department: '営業部 ' }], ctx).items[0];
+    expect(hit.employee.org?.departmentId).toBe('d1');
+    const miss = plan([{ ...BASE, department: '開発部' }], ctx).items[0];
+    expect(miss.employee.org?.departmentId ?? null).toBeNull();
+    expect(miss.warnings).toContain('unknownDepartment');
+  });
+
   it('正社員は加入。資格取得日は入社日、標準報酬は見込みの報酬月額から', () => {
     const it0 = plan([BASE]).items[0];
     expect(it0.classification.category).toBe('regular');

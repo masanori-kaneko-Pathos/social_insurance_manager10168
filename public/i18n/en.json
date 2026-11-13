@@ -2165,7 +2165,8 @@
       "notInsured": "Not insured",
       "unknownCategory": "Cannot judge (registered as not insured)",
       "override": "Enrollment overridden",
-      "oldTable": "Before grade tables (oldest table used)"
+      "oldTable": "Before grade tables (oldest table used)",
+      "unknownDepartment": "Department not found in office settings (registered without a department)"
     },
     "planError": {
       "duplicateInFile": "Line {{line}}: employee number {{number}} appears more than once.",
@@ -3730,7 +3731,8 @@
         "body": "See the employee and employer shares with the grade, rate and formula."
       }
     },
-    "invited": "If another office invited you, join from the link in the email you received."
+    "invited": "If another office invited you, join from the link in the email you received.",
+    "back": "Getting started"
   },
   "pager": {
     "totalPrefix": "",

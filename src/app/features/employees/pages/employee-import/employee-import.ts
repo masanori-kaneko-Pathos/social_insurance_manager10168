@@ -182,6 +182,7 @@ export class EmployeeImport {
         criteria,
         gradeTables,
         existingNumbers: new Set(existing.map((e) => e.employeeNumber ?? '').filter(Boolean)),
+        departments: office.departments ?? [],
       });
       this.preview.set({ fileName: file.fileName, encoding: file.encoding, read, plan });
     } catch (err) {

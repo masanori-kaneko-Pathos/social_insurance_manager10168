@@ -34,7 +34,7 @@ export class AccountMenu {
   readonly open = signal(false);
   readonly loggingOut = signal(false);
   /** アカウントの設定を開けるか（事業所がまだない管理者は、開く先がないので出さない） */
-  readonly canOpenSettings = computed(() => this.profile()?.role === 'employee' || !!this.context.current());
+  readonly canOpenSettings = computed(() => !!this.profile());
 
   toggle(): void {
     this.open.update((v) => !v);
@@ -56,7 +56,9 @@ export class AccountMenu {
   async openSettings(): Promise<void> {
     this.close();
     const officeId = this.context.current()?.id;
-    const url = this.profile()?.role === 'employee' || !officeId ? '/me/account' : `/o/${officeId}/account`;
+    // 従業員はマイページの設定、事業所がまだない管理者は「はじめに」の設定（11/13）
+    const url =
+      this.profile()?.role === 'employee' ? '/me/account' : officeId ? `/o/${officeId}/account` : '/start/account';
     await this.router.navigateByUrl(url);
   }
 

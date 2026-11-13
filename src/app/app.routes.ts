@@ -75,6 +75,12 @@ export const routes: Routes = [
         canActivate: [staffGuard],
         loadComponent: () => import('./features/office/pages/welcome/welcome').then((m) => m.Welcome),
       },
+      // 事業所がまだない管理者のアカウントの設定（パスワード・メールアドレスの変更。11/13）
+      {
+        path: 'start/account',
+        canActivate: [staffGuard],
+        loadComponent: () => import('./features/office/pages/welcome/welcome-account').then((m) => m.WelcomeAccount),
+      },
       {
         path: 'offices/new',
         canActivate: [staffGuard],
