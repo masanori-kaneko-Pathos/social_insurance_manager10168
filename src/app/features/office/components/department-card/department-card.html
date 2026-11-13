@@ -29,12 +29,16 @@
     }
   </ul>
   @if (!readOnly()) {
+    <!-- ほかの欄と同じく、見出しを上に置く -->
     <div class="dept-add">
-      <input class="input" [value]="newName()" (input)="newName.set($any($event.target).value)" (keydown.enter)="$event.preventDefault(); add()" maxlength="40"
-             [attr.aria-label]="'office.department.newName' | transloco" />
-      <span class="kana-label">{{ 'office.department.kana' | transloco }}</span>
-      <input class="input kana" [value]="newKana()" (input)="newKana.set($any($event.target).value)" (keydown.enter)="$event.preventDefault(); add()" maxlength="60"
-             [attr.aria-label]="'office.department.kana' | transloco" />
+      <label class="field">
+        <span class="label">{{ 'office.department.newName' | transloco }}</span>
+        <input class="input" [value]="newName()" (input)="newName.set($any($event.target).value)" (keydown.enter)="$event.preventDefault(); add()" maxlength="40" />
+      </label>
+      <label class="field">
+        <span class="label">{{ 'office.department.kana' | transloco }}</span>
+        <input class="input" [value]="newKana()" (input)="newKana.set($any($event.target).value)" (keydown.enter)="$event.preventDefault(); add()" maxlength="60" />
+      </label>
       <button type="button" class="btn" (click)="add()">＋ {{ 'office.department.add' | transloco }}</button>
     </div>
   }

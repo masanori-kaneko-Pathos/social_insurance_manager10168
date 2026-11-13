@@ -931,10 +931,10 @@
     },
     "department": {
       "title": "Departments",
-      "lead": "Used for employees' departments. The employee list can be filtered by department, and the premium list shows subtotals by department. Renaming keeps employees' assignments.Adding the katakana reading lets you sort departments in Japanese syllabary order.",
+      "lead": "Add a katakana reading to sort departments in Japanese syllabary order.",
       "empty": "No departments yet.",
       "add": "Add department",
-      "newName": "New department name",
+      "newName": "Department name",
       "rename": "Rename",
       "remove": "Remove",
       "error": {
