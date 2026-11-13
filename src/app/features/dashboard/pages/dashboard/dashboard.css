@@ -148,6 +148,7 @@ h1 {
 
 .who {
   font-weight: 600;
+  white-space: nowrap; /* 外国人の名前（SMITH JOHN）も途中で折り返さない */
 }
 
 .mono {
@@ -188,8 +189,13 @@ h1 {
   color: var(--color-text-sub);
 }
 
+/* 期限と残りの日数は1行に（2段にすると行が高くなるので横に並べる。11/13） */
+.deadline {
+  white-space: nowrap;
+}
+
 .deadline .left {
-  display: block;
+  margin-left: var(--space-xs);
   font-size: var(--font-xs);
   color: var(--color-text-sub);
 }
