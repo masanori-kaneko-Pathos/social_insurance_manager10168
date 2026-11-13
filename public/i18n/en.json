@@ -368,7 +368,7 @@
       "postalCode": "Postal code",
       "address": "Address (resident register)",
       "phone": "Phone",
-      "email": "Email",
+      "email": "Email (where My Page invitations are sent)",
       "commuteMethod": "Commute method",
       "commuteRoute": "Commute route",
       "bankName": "Bank",
@@ -3262,7 +3262,15 @@
     "beforeHire": "Before joining ({{date}})",
     "beforeHireTitle": "People who have not joined yet can be invited too. They can answer pre-joining requests from My Page.",
     "beforeHireFilter": "Before joining",
-    "beforeHireOnly": "Only people who have not joined yet"
+    "beforeHireOnly": "Only people who have not joined yet",
+    "line": {
+      "invited": "Sent to {{to}} · until {{date}}",
+      "linked": "Registered",
+      "to": "To: {{to}}",
+      "noEmail": "No email (add it to the contact details)"
+    },
+    "pageAll": "All {{n}} people on this page are selected.",
+    "pageAllMore": "Select all {{n}} people that match"
   },
   "monthPicker": {
     "pick": "Pick a month",

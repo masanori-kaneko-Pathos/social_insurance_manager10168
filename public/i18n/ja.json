@@ -368,7 +368,7 @@
       "postalCode": "郵便番号",
       "address": "住所（住民票）",
       "phone": "電話番号",
-      "email": "メールアドレス",
+      "email": "メールアドレス（マイページの招待の宛先）",
       "commuteMethod": "通勤の手段",
       "commuteRoute": "通勤の経路",
       "bankName": "銀行",
@@ -3262,7 +3262,15 @@
     "beforeHire": "入社前（{{date}} 入社）",
     "beforeHireTitle": "まだ入社していない人も招待できます。マイページから、入社前の手続きの依頼に答えてもらえます。",
     "beforeHireFilter": "入社前",
-    "beforeHireOnly": "入社前の人だけ（入社日が今日より先）"
+    "beforeHireOnly": "入社前の人だけ（入社日が今日より先）",
+    "line": {
+      "invited": "{{to}} に送付・{{date}} まで",
+      "linked": "登録済み",
+      "to": "宛先：{{to}}",
+      "noEmail": "メール未登録（従業員の連絡先に入れてください）"
+    },
+    "pageAll": "このページの {{n}}人を選びました。",
+    "pageAllMore": "条件に合う {{n}}人をすべて選ぶ"
   },
   "monthPicker": {
     "pick": "月を選ぶ",

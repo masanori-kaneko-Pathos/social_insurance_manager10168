@@ -49,6 +49,7 @@ interface Result {
  */
 @Component({
   selector: 'app-my-page-invites',
+  host: { '(document:pointerup)': 'onPointerUp()', '(document:pointercancel)': 'onPointerUp()' },
   imports: [Pager, PersonListBar, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './my-page-invites.html',
   styleUrl: './my-page-invites.css',
@@ -173,6 +174,87 @@ export class MyPageInvites implements OnInit {
     const id = e.org?.departmentId;
     return id ? (this.context.current()?.departments?.find((d) => d.id === id)?.name ?? null) : null;
   }
+
+  // ===== 招待の宛先（連絡用メール。管理者だけが読める文書にあるので、今のページの未招待・期限切れの人だけ読む。11/13） =====
+  /** 従業員ID → 連絡用メール（null ＝ 未登録・形式が正しくない） */
+  readonly contactEmails = signal<Map<string, string | null>>(new Map());
+
+  private readonly contactEffect = effect(() => {
+    const officeId = this.context.current()?.id;
+    const need = this.shown()
+      .rows.filter((r) => r.status === 'none' || r.status === 'expired')
+      .map((r) => r.employee);
+    if (!officeId || need.length === 0) return;
+    untracked(() => {
+      const have = this.contactEmails();
+      const todo = need.filter((e) => !have.has(e.id));
+      if (todo.length > 0) void this.loadContacts(officeId, todo);
+    });
+  });
+
+  private async loadContacts(officeId: string, list: readonly Employee[]): Promise<void> {
+    try {
+      const got = await Promise.all(
+        list.map(async (e) => [e.id, contactEmailOf({ ...e, contact: (await this.employeesApi.getPrivate(officeId, e.id, e)).contact })] as const),
+      );
+      this.contactEmails.update((cur) => new Map([...cur, ...got]));
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  // ===== チェックの付け方（11/13）：見出し＝このページ、Shift＋クリック＝範囲、押したままなぞる＝まとめて =====
+  /** 最後に押した行（Shift＋クリックの起点） */
+  private lastClicked: string | null = null;
+  /** なぞっている間の「入れる／外す」（null ＝ なぞっていない） */
+  private dragMode: boolean | null = null;
+
+  private setChecked(ids: readonly string[], on: boolean): void {
+    const selectable = new Set(this.shown().rows.filter((r) => r.selectable).map((r) => r.employee.id));
+    this.selected.update((s) => {
+      const next = new Set(s);
+      for (const id of ids) {
+        if (!selectable.has(id)) continue;
+        if (on) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+  }
+
+  /** チェックボックスを押した（Shift なら、前に押した行からここまで同じ状態に） */
+  onCheckPointerDown(event: PointerEvent, id: string): void {
+    event.preventDefault(); // 文字の選択やフォーカスの移動を止め、こちらで付け外しする
+    const on = !this.selected().has(id);
+    if (event.shiftKey && this.lastClicked) {
+      const ids = this.shown().rows.map((r) => r.employee.id);
+      const a = ids.indexOf(this.lastClicked);
+      const b = ids.indexOf(id);
+      if (a >= 0 && b >= 0) {
+        this.setChecked(ids.slice(Math.min(a, b), Math.max(a, b) + 1), on);
+        this.lastClicked = id;
+        return;
+      }
+    }
+    this.setChecked([id], on);
+    this.lastClicked = id;
+    this.dragMode = on;
+  }
+
+  /** なぞって、ほかの行のチェックボックスに入った */
+  onCheckPointerEnter(id: string): void {
+    if (this.dragMode !== null) this.setChecked([id], this.dragMode);
+  }
+
+  onPointerUp(): void {
+    this.dragMode = null;
+  }
+
+  /** 見出しのチェックでこのページを全部選んだあと、「条件に合う全員」を勧める案内を出すか */
+  readonly pageAllSelected = computed(
+    () => this.allSelected() && this.filteredSelectableIds().length > this.selectableIds().length &&
+      !this.filteredSelectableIds().every((id) => this.selected().has(id)),
+  );
 
   /** 入社前の人（マイページだけ先に作ってもらい、入社前の手続きの依頼に答えてもらえる） */
   isBeforeHire(e: Employee): boolean {

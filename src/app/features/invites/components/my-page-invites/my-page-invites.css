@@ -147,3 +147,44 @@ td.dept {
   border-radius: var(--radius-sm);
   white-space: nowrap;
 }
+
+/* マイページの列：札の下に1行（11/13） */
+td.mp {
+  white-space: normal;
+}
+
+.mp-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.mp-sub .warn {
+  color: var(--color-warning-text);
+}
+
+.link-btn {
+  margin-left: var(--space-xs);
+  padding: 0;
+  font: inherit;
+  color: var(--color-primary);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* なぞって選ぶとき、文字が選択されないように */
+td.check {
+  user-select: none;
+  touch-action: none;
+}
+
+.page-all-note {
+  margin: 0 0 var(--space-sm);
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--font-sm);
+  background: var(--color-highlight-soft);
+  border-radius: var(--radius-sm);
+}

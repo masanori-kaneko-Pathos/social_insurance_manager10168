@@ -50,6 +50,15 @@
     </fieldset>
   </app-person-list-bar>
 
+  @if (pageAllSelected()) {
+    <!-- 見出しのチェックはこのページだけ。全ページを選ぶのは、もう一押し（Gmail と同じ） -->
+    <p class="page-all-note" role="status">
+      {{ 'myPages.pageAll' | transloco: { n: selectableIds().length } }}
+      <button type="button" class="link-btn" (click)="selectFiltered()">
+        {{ 'myPages.pageAllMore' | transloco: { n: filteredSelectableIds().length } }}
+      </button>
+    </p>
+  }
   <div class="select-line">
     <button type="button" class="btn btn-small" [disabled]="filteredSelectableIds().length === 0" (click)="selectFiltered()">
       {{ 'myPages.selectFiltered' | transloco: { count: filteredSelectableIds().length } }}
@@ -89,8 +98,6 @@
           <th><app-sort-header key="dept" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.department' | transloco }}</app-sort-header></th>
           <th><app-sort-header key="employment" [(options)]="listOptions" [(page)]="page">{{ 'employee.list.employment' | transloco }}</app-sort-header></th>
           <th>{{ 'myPages.col.status' | transloco }}</th>
-          <th>{{ 'myPages.col.detail' | transloco }}</th>
-          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -98,10 +105,14 @@
           <tr>
             <td class="check">
               @if (r.selectable) {
+                <!-- 押す・Shift＋押す（範囲）・押したままなぞる（まとめて）。付け外しは pointerdown で行う -->
                 <input
                   type="checkbox"
                   [checked]="selected().has(r.employee.id)"
-                  (change)="toggle(r.employee.id)"
+                  (pointerdown)="onCheckPointerDown($event, r.employee.id)"
+                  (pointerenter)="onCheckPointerEnter(r.employee.id)"
+                  (click)="$event.preventDefault()"
+                  (keydown.space)="$event.preventDefault(); toggle(r.employee.id)"
                   [attr.aria-label]="nameOf(r.employee)"
                 />
               }
@@ -121,22 +132,38 @@
                 <span class="muted">—</span>
               }
             </td>
-            <td><span class="st st-{{ r.status }}">{{ 'myPages.status.' + r.status | transloco }}</span></td>
-            <td class="sub">
-              @if (r.invite; as i) {
-                {{ i.email ?? ('myPages.anyone' | transloco) }} ・ {{ 'myPageCard.expires' | transloco: { date: dateOf(i.expiresMs) } }}
-              }
-            </td>
-            <td class="row-actions">
-              @if (r.invite) {
-                <button type="button" class="btn btn-small" (click)="copy(r)">
-                  {{ (copiedId() === r.employee.id ? 'myPageCard.copied' : 'myPageCard.copy') | transloco }}
-                </button>
-              }
+            <!-- マイページ：状態の札と、その下に状態に合った1行（宛先・期限・リンクのコピー） -->
+            <td class="mp">
+              <span class="st st-{{ r.status }}">{{ 'myPages.status.' + r.status | transloco }}</span>
+              <span class="mp-sub">
+                @switch (r.status) {
+                  @case ('invited') {
+                    @if (r.invite; as i) {
+                      {{ 'myPages.line.invited' | transloco: { to: i.email ?? ('myPages.anyone' | transloco), date: dateOf(i.expiresMs) } }}
+                      <button type="button" class="link-btn" (click)="copy(r)">
+                        {{ (copiedId() === r.employee.id ? 'myPageCard.copied' : 'myPageCard.copy') | transloco }}
+                      </button>
+                    }
+                  }
+                  @case ('linked') {
+                    {{ 'myPages.line.linked' | transloco }}
+                  }
+                  @default {
+                    @let to = contactEmails().get(r.employee.id);
+                    @if (to === undefined) {
+                      <span class="muted">…</span>
+                    } @else if (to) {
+                      {{ 'myPages.line.to' | transloco: { to: to } }}
+                    } @else {
+                      <span class="warn">{{ 'myPages.line.noEmail' | transloco }}</span>
+                    }
+                  }
+                }
+              </span>
             </td>
           </tr>
         } @empty {
-          <tr><td colspan="8" class="muted">{{ (rows().length === 0 ? 'myPages.empty' : 'myPages.noMatch') | transloco }}</td></tr>
+          <tr><td colspan="6" class="muted">{{ (rows().length === 0 ? 'myPages.empty' : 'myPages.noMatch') | transloco }}</td></tr>
         }
       </tbody>
     </table>
