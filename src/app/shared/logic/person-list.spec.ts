@@ -52,6 +52,14 @@ describe('person-list', () => {
     expect(run({ sort: 'number', dir: 'desc' })).toEqual(['山田', '佐藤', '鈴木']);
   });
 
+  it('部署で並べる（部署なしは最後。同じ部署は社員番号の順）', () => {
+    const dept: Record<string, string> = { 山田: '営業部', 佐藤: '' , 鈴木: '営業部' };
+    const r = filterAndSort(rows, { ...defaultListOptions(), sort: 'dept' }, (x) => x.p, (x) => x.c, (x) => x.filled, {
+      dept: (x) => dept[x.p.lastName],
+    }).map((x) => x.p.lastName);
+    expect(r).toEqual(['鈴木', '山田', '佐藤']);
+  });
+
   it('ページに分ける（はみ出したら最後のページ）', () => {
     const list = Array.from({ length: 250 }, (_, i) => i);
     expect(pageOf(list, 1).rows.length).toBe(100);

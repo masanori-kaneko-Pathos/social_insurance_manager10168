@@ -90,6 +90,9 @@
           <!-- 社員番号 → 氏名（ほかの表と同じ順。どちらも見出しを押すと並び替え。11/13） -->
           <th><app-sort-header key="number" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.employeeNumber' | transloco }}</app-sort-header></th>
           <th><app-sort-header key="kana" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.name' | transloco }}</app-sort-header></th>
+          <!-- 部署・雇用形態（担当が分かれていても、自分の受け持ちが目で見て分かるように。11/13） -->
+          <th><app-sort-header key="dept" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.department' | transloco }}</app-sort-header></th>
+          <th><app-sort-header key="employment" [(options)]="listOptions" [(page)]="page">{{ 'employee.list.employment' | transloco }}</app-sort-header></th>
           <th class="num">{{ 'payroll.col.cash' | transloco }}</th>
           @if (showAll()) {
             <th class="num">{{ 'payroll.col.inKind' | transloco }}</th>
@@ -131,6 +134,14 @@
                   <span class="badge badge-info">{{ 'payroll.tag.extra' | transloco }}</span>
                 }
               </div>
+            </td>
+            <td class="org">{{ deptName(v.employee) ?? '—' }}</td>
+            <td class="org">
+              @if (contractOf(v)?.employmentType; as t) {
+                {{ 'contract.employmentType.' + t | transloco }}
+              } @else {
+                <span class="muted">—</span>
+              }
             </td>
             <td class="num">
               <input class="input num w-money" formControlName="cash" inputmode="numeric" />
@@ -205,7 +216,7 @@
           </tr>
           @if (rowErrors().get(v.employee.id); as errs) {
             <tr class="error-row">
-              <td [attr.colspan]="showAll() ? 12 : 5">
+              <td [attr.colspan]="showAll() ? 14 : 7">
                 @for (e of errs; track e) {
                   <span>{{ 'payroll.rowError.' + e | transloco }}</span>
                 }

@@ -9,7 +9,8 @@ import type { Employee } from '../../core/models/employee';
 import { activeCount, emptyFilter, EmployeeFilter, matchesFilter } from '../../features/employees/logic/employee-filter';
 import { todayLocal, toYearMonth } from '../utils/date';
 
-export type PersonSort = 'kana' | 'number' | 'hire';
+/** dept・employment は、呼ぶ側が並べ方（sortKeys）を渡したときだけ使える（11/13） */
+export type PersonSort = 'kana' | 'number' | 'hire' | 'dept' | 'employment';
 export const PERSON_SORTS: readonly PersonSort[] = ['kana', 'number', 'hire'];
 export type EntryState = 'all' | 'empty' | 'filled';
 export const ENTRY_STATES: readonly EntryState[] = ['all', 'empty', 'filled'];
@@ -112,6 +113,8 @@ export function filterAndSort<T>(
   getPerson: (r: T) => PersonLike,
   getContract: (r: T) => { employmentType: EmploymentType; payType: PayType } | null,
   isFilled: (r: T) => boolean,
+  /** 部署・雇用形態で並べるときの値（部署の名前・雇用形態の順番など。空は最後） */
+  sortKeys?: { dept?: (r: T) => string; employment?: (r: T) => string },
 ): T[] {
   const today = todayLocal();
   const ctx = { today, month: toYearMonth(today) };
@@ -132,7 +135,7 @@ export function filterAndSort<T>(
     return true;
   });
   const kana = (p: PersonLike) => p.lastNameKana + p.firstNameKana;
-  const cmp: Record<PersonSort, (a: PersonLike, b: PersonLike) => number> = {
+  const cmp: Record<'kana' | 'number' | 'hire', (a: PersonLike, b: PersonLike) => number> = {
     kana: (a, b) => kana(a).localeCompare(kana(b), 'ja'),
     number: (a, b) =>
       (a.employeeNumber ?? '￿').localeCompare(b.employeeNumber ?? '￿', 'ja', { numeric: true }) ||
@@ -140,7 +143,18 @@ export function filterAndSort<T>(
     hire: (a, b) => a.hireDate.localeCompare(b.hireDate) || kana(a).localeCompare(kana(b), 'ja'),
   };
   const sign = opts.dir === 'desc' ? -1 : 1;
-  return [...out].sort((a, b) => sign * cmp[opts.sort](getPerson(a), getPerson(b)));
+  const extra = opts.sort === 'dept' || opts.sort === 'employment' ? sortKeys?.[opts.sort] : undefined;
+  if (extra) {
+    // 空（部署なし・契約なし）は、向きに関係なく最後。同じ値なら社員番号の順
+    return [...out].sort((a, b) => {
+      const x = extra(a);
+      const y = extra(b);
+      if (!x !== !y) return x ? -1 : 1;
+      return sign * x.localeCompare(y, 'ja', { numeric: true }) || cmp.number(getPerson(a), getPerson(b));
+    });
+  }
+  const key: 'kana' | 'number' | 'hire' = opts.sort === 'dept' || opts.sort === 'employment' ? 'number' : opts.sort;
+  return [...out].sort((a, b) => sign * cmp[key](getPerson(a), getPerson(b)));
 }
 
 /** ページの数（0人でも1ページ） */

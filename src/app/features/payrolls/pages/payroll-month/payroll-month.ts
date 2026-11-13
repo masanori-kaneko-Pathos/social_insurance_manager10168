@@ -39,7 +39,7 @@ import { PersonListBar } from '../../../../shared/components/person-list-bar/per
 import { Pager } from '../../../../shared/components/pager/pager';
 import { SortHeader } from '../../../../shared/components/sort-header/sort-header';
 import { defaultListOptions, filterAndSort, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
-import { ContractDoc } from '../../../../core/models/contract';
+import { ContractDoc, EMPLOYMENT_TYPES } from '../../../../core/models/contract';
 type RowForm = FormGroup<{
   cash: FormControl<string>;
   fixed: FormControl<string>;
@@ -169,8 +169,22 @@ export class PayrollMonth {
       (v) => v.employee,
       (v) => this.contractOf(v),
       (v) => !!v.row.saved,
+      {
+        dept: (v) => this.deptName(v.employee) ?? '',
+        // 雇用形態は選択肢の順（正社員 → 契約社員 → …）。1文字目で比べられるよう番号にする
+        employment: (v) => {
+          const t = this.contractOf(v)?.employmentType;
+          return t ? String(EMPLOYMENT_TYPES.indexOf(t)) : '';
+        },
+      },
     ),
   );
+
+  /** 部署の名前（なし ＝ null） */
+  deptName(e: Employee): string | null {
+    const id = e.org?.departmentId;
+    return id ? (this.context.current()?.departments?.find((d) => d.id === id)?.name ?? null) : null;
+  }
   readonly shown = computed(() => pageOf(this.filtered(), this.page(), this.listOptions().size));
 
   private async loadContracts(officeId: string, employees: readonly Employee[]): Promise<void> {

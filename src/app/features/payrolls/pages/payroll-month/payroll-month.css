@@ -223,3 +223,9 @@ td.mono {
   font-variant-numeric: tabular-nums;
   color: var(--color-text-sub);
 }
+
+/* 部署・雇用形態の列 */
+td.org {
+  font-size: var(--font-sm);
+  white-space: nowrap;
+}
