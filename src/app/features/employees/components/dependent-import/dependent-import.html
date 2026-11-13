@@ -1,0 +1,103 @@
+<section class="card">
+  <h2>{{ 'employeeCsv.step1' | transloco }}</h2>
+  <p class="sub">{{ 'dependentCsv.lead' | transloco }}</p>
+  <button type="button" class="btn" (click)="downloadTemplate()">{{ 'employeeCsv.template' | transloco }}</button>
+  <details class="columns">
+    <summary>{{ 'employeeCsv.columnsTitle' | transloco }}</summary>
+    <p class="sub">{{ 'dependentCsv.columnsHint' | transloco }}</p>
+  </details>
+</section>
+
+<section class="card">
+  <h2>{{ 'employeeCsv.step2' | transloco }}</h2>
+  <label class="btn file">
+    {{ 'employeeCsv.choose' | transloco }}
+    <input type="file" [accept]="accept" (change)="onFile($event)" [disabled]="saving()" />
+  </label>
+  <p class="sub">{{ 'importMap.fileHint' | transloco }}</p>
+
+  @if (errorKey(); as key) {
+    <div class="alert alert-danger">{{ key | transloco }}</div>
+  }
+  @if (doneCount() !== null) {
+    <div class="alert alert-success">
+      {{ 'dependentCsv.done' | transloco: { n: doneCount() } }}
+      <a [routerLink]="['/o', context.current()?.id, 'employees']">{{ 'employeeCsv.toList' | transloco }}</a>
+    </div>
+  }
+  @if (progress(); as p) {
+    <p class="muted">{{ 'historyCsv.progress' | transloco: { done: p.done, total: p.total } }}</p>
+    <progress [value]="p.done" [max]="p.total"></progress>
+  }
+
+  @if (loaded(); as f) {
+    <app-column-mapper [hidden]="!mapping()" [tables]="f.tables" [spec]="spec" (confirmed)="onMapped($event)" (cancelled)="clear()" />
+  }
+
+  @if (preview(); as pv) {
+    <p class="file-name">
+      {{ pv.fileName }}
+      @if (pv.encoding) {
+        <span class="sub">（{{ 'payrollCsv.encoding.' + pv.encoding | transloco }}）</span>
+      }
+      <button type="button" class="btn redo" (click)="remap()" [disabled]="saving()">{{ 'importMap.redo' | transloco }}</button>
+    </p>
+
+    <p>
+      {{ 'dependentCsv.summary' | transloco: { add: addRows().length, skip: skipRows().length, error: errorRows().length, warn: warnCount() } }}
+    </p>
+
+    @if (errorRows().length > 0) {
+      <div class="alert alert-danger">{{ 'dependentCsv.hasErrors' | transloco: { n: errorRows().length } }}</div>
+    }
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>{{ 'employeeCsv.col.line' | transloco }}</th>
+            <th>{{ 'employee.field.employeeNumber' | transloco }}</th>
+            <th>{{ 'dependentCsv.col.employee' | transloco }}</th>
+            <th>{{ 'dependentCsv.col.dependent' | transloco }}</th>
+            <th>{{ 'dependentCsv.col.result' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of pv.rows; track r.line) {
+            <tr [class.warn]="r.errors.length > 0">
+              <td class="num">{{ r.line }}</td>
+              <td class="mono">{{ r.employee?.employeeNumber ?? '—' }}</td>
+              <td>{{ r.employee ? r.employee.lastName + ' ' + r.employee.firstName : '—' }}</td>
+              <td>
+                {{ r.name || '—' }}
+                @if (r.relationship) { <span class="sub">（{{ 'dependent.relationship.' + r.relationship | transloco }}）</span> }
+              </td>
+              <td>
+                @if (r.errors.length > 0) {
+                  @for (e of r.errors; track $index) {
+                    @let t = errorText(e);
+                    <span class="badge">{{ fieldLabel(t.field) }}{{ t.field ? '：' : '' }}{{ t.key | transloco }}</span>
+                  }
+                } @else if (r.skip) {
+                  <span class="sub">{{ 'dependentCsv.skip.' + r.skip | transloco }}</span>
+                } @else {
+                  {{ 'dependentCsv.add' | transloco }}
+                  @for (w of r.warnings; track w) {
+                    <br /><span class="badge">{{ 'dependentCsv.warning.' + w | transloco }}</span>
+                  }
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn btn-primary" [disabled]="!canImport()" (click)="importCsv()">
+        {{ 'dependentCsv.import' | transloco: { n: addRows().length } }}
+      </button>
+      <button type="button" class="btn" [disabled]="saving()" (click)="clear()">{{ 'common.cancel' | transloco }}</button>
+    </div>
+  }
+</section>

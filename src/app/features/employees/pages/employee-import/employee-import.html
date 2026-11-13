@@ -3,7 +3,7 @@
 >
 
 <h1>{{ 'employeeCsv.title' | transloco }}</h1>
-<p class="lead">{{ (mode() === 'employees' ? 'employeeCsv.lead' : 'historyCsv.pageLead') | transloco }}</p>
+<p class="lead">{{ (mode() === 'employees' ? 'employeeCsv.lead' : mode() === 'dependents' ? 'dependentCsv.pageLead' : 'historyCsv.pageLead') | transloco }}</p>
 
 @if (!context.isAdmin()) {
   <div class="alert alert-warning">{{ 'employeeCsv.adminOnly' | transloco }}</div>
@@ -24,7 +24,9 @@
     </div>
   }
 
-  @if (mode() !== 'employees') {
+  @if (mode() === 'dependents') {
+    <app-dependent-import />
+  } @else if (mode() !== 'employees') {
     <app-history-import [kind]="mode() === 'contract' ? 'contract' : 'remuneration'" />
   } @else {
   <section class="card">

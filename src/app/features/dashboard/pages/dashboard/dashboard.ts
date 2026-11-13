@@ -78,9 +78,10 @@ interface StartStep {
 
 /** 取り込みの入口で選ぶもの */
 interface ImportChoice {
-  key: 'employees' | 'payrolls' | 'bonus';
+  key: 'employees' | 'dependents' | 'payrolls' | 'bonus';
   icon: IconName;
   link: (string | number)[];
+  params?: Record<string, string>;
 }
 
 /** 開いている窓（どの To-do から開いたか） */
@@ -302,6 +303,7 @@ export class Dashboard {
     const o = ['/o', this.office()?.id ?? ''];
     return [
       { key: 'employees', icon: 'people', link: [...o, 'employees', 'import'] },
+      { key: 'dependents', icon: 'people', link: [...o, 'employees', 'import'], params: { mode: 'dependents' } },
       { key: 'payrolls', icon: 'payroll', link: [...o, 'payrolls', 'import'] },
       { key: 'bonus', icon: 'bonus', link: [...o, 'bonuses', 'new'] },
     ];

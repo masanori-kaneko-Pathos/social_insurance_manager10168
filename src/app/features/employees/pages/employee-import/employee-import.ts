@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { ColumnMapper } from '../../../../shared/components/column-mapper/column-mapper';
 import { CsvEncoding, downloadCsv } from '../../../../shared/csv/csv';
@@ -28,11 +28,12 @@ import {
   readEmployeeCsv,
 } from '../../logic/employee-csv';
 import { reasonParams } from '../../logic/classify';
+import { DependentImport } from '../../components/dependent-import/dependent-import';
 import { HistoryImport } from '../../components/history-import/history-import';
 
-/** 何を取り込むか：従業員（1行1人）／契約の履歴／標準報酬の履歴（登録済みの人に足す） */
-export type ImportMode = 'employees' | 'contract' | 'remuneration';
-export const IMPORT_MODES: readonly ImportMode[] = ['employees', 'contract', 'remuneration'];
+/** 何を取り込むか：従業員（1行1人）／扶養家族（1行1人。11/13）／契約の履歴／標準報酬の履歴（登録済みの人に足す） */
+export type ImportMode = 'employees' | 'dependents' | 'contract' | 'remuneration';
+export const IMPORT_MODES: readonly ImportMode[] = ['employees', 'dependents', 'contract', 'remuneration'];
 
 interface Preview {
   fileName: string;
@@ -48,7 +49,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-employee-import',
-  imports: [ColumnMapper, HistoryImport, PasswordGate, RouterLink, TranslocoPipe],
+  imports: [ColumnMapper, DependentImport, HistoryImport, PasswordGate, RouterLink, TranslocoPipe],
   templateUrl: './employee-import.html',
   styleUrl: './employee-import.css',
 })
@@ -61,7 +62,13 @@ export class EmployeeImport {
   private readonly myNumbers = inject(MyNumberService);
 
   readonly modes = IMPORT_MODES;
-  readonly mode = signal<ImportMode>('employees');
+  /** ?mode=dependents などで開ける（ホームの「ファイルから取り込む」から。11/13） */
+  private readonly route = inject(ActivatedRoute);
+  readonly mode = signal<ImportMode>(
+    (IMPORT_MODES as readonly string[]).includes(this.route.snapshot.queryParamMap.get('mode') ?? '')
+      ? (this.route.snapshot.queryParamMap.get('mode') as ImportMode)
+      : 'employees',
+  );
   readonly headers = EMPLOYEE_CSV_HEADERS;
   readonly accept = IMPORT_ACCEPT;
   readonly tableSpec = EMPLOYEE_TABLE_SPEC;

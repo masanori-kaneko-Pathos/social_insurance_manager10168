@@ -54,7 +54,7 @@
     <p class="lead">{{ 'home.import.lead' | transloco }}</p>
     <div class="choices">
       @for (c of importChoices(); track c.key) {
-        <a class="choice" [routerLink]="c.link" (click)="closeImport()">
+        <a class="choice" [routerLink]="c.link" [queryParams]="c.params ?? null" (click)="closeImport()">
           <app-icon [name]="c.icon" />
           <span class="choice-text">
             <strong>{{ 'home.import.' + c.key + '.title' | transloco }}</strong>

@@ -2205,7 +2205,8 @@
     "mode": {
       "employees": "Employees",
       "contract": "Contract history",
-      "remuneration": "Standard remuneration history"
+      "remuneration": "Standard remuneration history",
+      "dependents": "Dependents"
     },
     "pageLead": "Add records to registered employees: employment contracts from the second one onward, and standard monthly remuneration decisions (annual determination, occasional revision, etc.). Employees are matched by employee number. Records for a date (month) that already exists are skipped, never overwritten. Coverage (acquisition and loss dates) is not changed, so check the \"Review coverage\" items in the To-do list after importing.",
     "lead": {
@@ -3222,6 +3223,10 @@
       "bonus": {
         "title": "Bonus",
         "body": "On the bonus page, set the pay date, then press \"Import from file\"."
+      },
+      "dependents": {
+        "title": "Dependents",
+        "body": "Add dependents in bulk, matched to employees by employee number."
       }
     }
   },
@@ -3746,5 +3751,54 @@
     "sizeOpt": "{{n}}",
     "where": "{{from}}–{{to}} of {{total}} (page {{page}} of {{pages}})",
     "toTop": "Back to top"
+  },
+  "dependentCsv": {
+    "pageLead": "Add dependents to registered employees in bulk. One row per dependent, matched by employee number. People already registered with the same name and birth date are skipped; nothing is overwritten.",
+    "lead": "If you keep the template headers, the file is read without mapping columns. Exports from other software can be read by mapping columns.",
+    "columnsHint": "Required: employee number, relationship (spouse, eldest son, father, etc.), surname, surname in katakana, birth date, date became dependent. Blank income is 0 yen; blank occupation becomes \"under junior high\" for age 15 or younger and \"none\" otherwise. Overseas exception, contract-based income, relationship check, eligibility certificate and spouse phone are entered on the dependent screen.",
+    "summary": "Add {{add}} · skip {{skip}} · errors {{error}} rows (with notes {{warn}})",
+    "hasErrors": "{{n}} rows have errors. Fix them and choose the file again.",
+    "import": "Import {{n}} people",
+    "add": "Add",
+    "done": "Imported {{n}} dependents.",
+    "col": {
+      "employee": "Employee",
+      "dependent": "Dependent",
+      "result": "Result"
+    },
+    "skip": {
+      "exists": "Already registered, skipped",
+      "duplicateInFile": "Duplicate in the file, skipped"
+    },
+    "warning": {
+      "noIncome": "Income blank (entered as 0 yen)",
+      "overLimit": "Income may exceed the dependent limit",
+      "beforeHire": "Became dependent before the hire date",
+      "age75": "Age 75 or over (cannot be a dependent)"
+    },
+    "error": {
+      "employeeNotFound": "No employee with this number",
+      "relationship": "Relationship not recognized",
+      "occupation": "Occupation not recognized",
+      "startReason": "Reason for becoming dependent not recognized",
+      "endReason": "Reason for leaving not recognized",
+      "sex": "Sex not recognized",
+      "yesNo": "Yes/No not recognized",
+      "date": "Date not recognized",
+      "save": "Saving stopped partway. Check the list for the people already imported."
+    },
+    "fieldError": {
+      "required": "Missing",
+      "kana": "Use katakana",
+      "postalCode": "Postal code must be 7 digits",
+      "basicPensionNumber": "Basic pension number must be 10 digits",
+      "country": "Nationality must be a 2-letter code (e.g. US)",
+      "yen": "Amount not recognized",
+      "times": "Count not recognized",
+      "schoolYear": "School year not recognized",
+      "toBeforeFrom": "End date is before the start date",
+      "fromBeforeBirth": "Start date is before the birth date",
+      "reasonMismatch": "Reason does not match the relationship"
+    }
   }
 }
