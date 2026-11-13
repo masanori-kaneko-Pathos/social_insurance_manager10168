@@ -1,0 +1,71 @@
+:host {
+  display: block;
+  white-space: normal;
+}
+
+.warn {
+  color: var(--color-warning-text);
+}
+
+.contribution-head {
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+  border-top: 1px solid var(--color-border-strong);
+}
+
+.group.contribution {
+  color: var(--color-text-sub);
+}
+
+.group {
+  padding: var(--space-sm) 0;
+  border-bottom: 1px dashed var(--color-border-strong);
+}
+
+.group:last-child {
+  border-bottom: 0;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: 10em 1fr;
+  gap: 0 var(--space-md);
+  padding: 2px 0;
+}
+
+.line .rate-note {
+  grid-column: 2;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.part {
+  color: var(--color-text-sub);
+}
+
+.formula {
+  font-variant-numeric: tabular-nums;
+}
+
+.group-sum {
+  margin-top: var(--space-xs);
+  padding-left: calc(10em + var(--space-md));
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 600px) {
+  .line {
+    grid-template-columns: 1fr;
+  }
+
+  .line .rate-note {
+    grid-column: 1;
+  }
+
+  .group-sum {
+    padding-left: 0;
+  }
+}

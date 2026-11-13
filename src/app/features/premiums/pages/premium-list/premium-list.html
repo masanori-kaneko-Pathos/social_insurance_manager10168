@@ -37,7 +37,7 @@
 } @else if (errorKey()) {
   <div class="alert alert-danger">{{ errorKey()! | transloco }}</div>
 } @else {
-  <p class="summary">
+  <div class="summary">
     <span class="muted">
       {{ 'premium.method.' + options().method | transloco }}・{{
         'premium.rounding.' + options().healthRounding | transloco
@@ -68,15 +68,20 @@
         {{ 'premiumList.advance.check' | transloco }}
       </button>
     }
+    <button type="button" class="btn btn-small" (click)="toggleParts()" [attr.aria-pressed]="showParts()">
+      {{ (showParts() ? 'premiumList.hideParts' : 'premiumList.showParts') | transloco }}
+    </button>
     @if (context.isAdmin() && rows().length > 0) {
-      <button type="button" class="btn btn-small" (click)="exportCsv()">
-        {{ 'premiumList.exportCsv' | transloco }}
-      </button>
-      <button type="button" class="btn btn-small" (click)="exportXlsx()">
-        {{ 'premiumList.exportXlsx' | transloco }}
-      </button>
+      <!-- 出力は1つのボタンにまとめる（開くと CSV・Excel を選ぶ） -->
+      <details class="menu">
+        <summary class="btn btn-small">{{ 'premiumList.export' | transloco }} ▾</summary>
+        <div class="menu-list" role="menu">
+          <button type="button" role="menuitem" (click)="exportCsv()">{{ 'premiumList.exportCsv' | transloco }}</button>
+          <button type="button" role="menuitem" (click)="exportXlsx()">{{ 'premiumList.exportXlsx' | transloco }}</button>
+        </div>
+      </details>
     }
-  </p>
+  </div>
   @if (advanceReady()) {
     <p class="advance-note" role="status">
       {{ 'premiumList.advance.result' | transloco: { count: advances().size, payMonth: monthParts(payMonth()).m } }}
@@ -102,133 +107,17 @@
     </div>
   }
 
-  @if (rows().length === 0) {
-    <section class="card empty">
-      <p>{{ 'premiumList.empty' | transloco }}</p>
-    </section>
-  } @else {
-    <div class="card table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th rowspan="2" [attr.aria-sort]="ariaSort('number')">
-              <button type="button" class="sort" (click)="sortBy('number')">
-                {{ 'employee.field.employeeNumber' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('number') }}</span>
-              </button>
-            </th>
-            <th rowspan="2" [attr.aria-sort]="ariaSort('name')">
-              <button type="button" class="sort" (click)="sortBy('name')">
-                {{ 'employee.field.name' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('name') }}</span>
-              </button>
-            </th>
-            <th rowspan="2" class="num">{{ 'premiumList.col.standard' | transloco }}</th>
-            <th colspan="3" class="group-head">{{ 'premium.col.employee' | transloco }}</th>
-            <th rowspan="2" class="num" [attr.aria-sort]="ariaSort('employer')">
-              <button type="button" class="sort" (click)="sortBy('employer')">
-                {{ 'premium.col.employer' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('employer') }}</span>
-              </button>
-              <span class="th-note">{{ 'premiumList.employerNote' | transloco }}</span>
-            </th>
-            <th rowspan="2" class="num">{{ 'premium.col.total' | transloco }}</th>
-            @if (showContribution()) {
-              <th rowspan="2" class="num contribution">
-                {{ 'premiumList.col.contribution' | transloco }}
-              </th>
-            }
-            <th rowspan="2"><span class="sr-only">{{ 'premiumList.col.calc' | transloco }}</span></th>
-          </tr>
-          <tr>
-            <th class="num part-head">{{ 'premiumList.col.health' | transloco }}</th>
-            <th class="num part-head">{{ 'premiumList.col.pension' | transloco }}</th>
-            <th class="num" [attr.aria-sort]="ariaSort('employee')">
-              <button type="button" class="sort" (click)="sortBy('employee')">
-                {{ 'premiumList.col.sum' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('employee') }}</span>
-              </button>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (r of sortedRows(); track r.employee.id) {
-            <tr [class.problem]="r.state !== 'ok' && r.state !== 'exempt'">
-              <td class="mono">{{ r.employee.employeeNumber ?? '—' }}</td>
-              <td>
-                <a
-                  class="name"
-                  [routerLink]="['/o', context.current()?.id, 'employees', r.employee.id]"
-                >
-                  {{ r.employee.lastName }} {{ r.employee.firstName }}
-                </a>
-                @for (c of r.changes; track c) {
-                  <span class="badge badge-change">{{
-                    'premiumList.change.' + c | transloco
-                  }}</span>
-                }
-                @if (r.employee.multipleOffices) {
-                  <span class="badge badge-warn" [title]="'premiumList.multipleOfficesNote' | transloco">{{ 'premiumList.multipleOffices' | transloco }}</span>
-                }
-                @if (advances().get(r.employee.id); as amt) {
-                  <span class="badge badge-warn" [title]="'premiumList.advance.note' | transloco">{{ 'premiumList.advance.badge' | transloco: { amount: yen(amt) } }}</span>
-                }
-              </td>
-              @if (r.state === 'ok' || r.state === 'exempt') {
-                <td class="num std">
-                  @let sv = standardOf(r);
-                  @if (sv?.kind === 'split') {
-                    <span class="std-line"><span class="std-label">{{ 'premiumList.std.health' | transloco }}</span>{{ yen($any(sv).health) }}</span>
-                    <span class="std-line"><span class="std-label">{{ 'premiumList.std.pension' | transloco }}</span>{{ yen($any(sv).pension) }}</span>
-                  } @else if (sv) {
-                    {{ yen($any(sv).yen) }}
-                  } @else {
-                    —
-                  }
-                </td>
-              }
-              @if (r.state === 'ok') {
-                <td class="num">{{ yen(r.healthEmployeeYen) }}</td>
-                <td class="num">{{ r.pension ? yen(r.pensionEmployeeYen) : '—' }}</td>
-                <td class="num strong">{{ yen(r.result!.employeeYen) }}</td>
-                <td class="num">{{ milli(r.premiumEmployerMilli) }}</td>
-                <td class="num">{{ milli(r.premiumTotalMilli) }}</td>
-                @if (showContribution()) {
-                  <td class="num contribution">
-                    {{ r.contributionMilli ? milli(r.contributionMilli) : '—' }}
-                  </td>
-                }
-              } @else if (r.state === 'exempt') {
-                <td [attr.colspan]="showContribution() ? 6 : 5" class="muted">
-                  <span class="badge badge-care">{{ 'premiumList.exempt' | transloco }}</span>
-                  {{ 'premium.exempt' | transloco }}
-                </td>
-              } @else {
-                <td [attr.colspan]="showContribution() ? 7 : 6" class="warn">
-                  {{ missingKey(r) | transloco }}
-                </td>
-              }
-              <td class="calc">
-                @if (r.state === 'ok' || r.state === 'exempt') {
-                  <!-- その人のページで、この月の計算の根拠を開く -->
-                  <a
-                    [routerLink]="['/o', context.current()?.id, 'employees', r.employee.id]"
-                    [queryParams]="{ tab: 'insurance', month: month() }"
-                    >{{ 'premiumList.calc' | transloco }} ›</a
-                  >
-                }
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-    @if (hasMultipleOffices()) {
-      <p class="hint">{{ 'premiumList.multipleOfficesNote' | transloco }}</p>
-    }
-    @if (advances().size > 0) {
-      <p class="hint">{{ 'premiumList.advance.note' | transloco }}</p>
-    }
-
-    <!-- 事業所の合計 -->
-    <section class="card totals">
-      <h2>{{ 'premiumList.totalsTitle' | transloco }}</h2>
+  @if (rows().length > 0) {
+    <!-- 事業所の合計（表の上。ふだんは1行の帯だけ。内訳は開いて見る。11/13） -->
+    <details class="card totals">
+      <summary class="totals-strip">
+        <span class="strip-title">{{ 'premiumList.totalsTitle' | transloco }}</span>
+        <span class="strip-item"><small>{{ 'premiumList.strip.count' | transloco }}</small><strong>{{ rows().length - problems().length }}</strong></span>
+        <span class="strip-item"><small>{{ 'premiumList.col.employeeSum' | transloco }}</small><strong>{{ yen(employeeTotalYen()) }}</strong></span>
+        <span class="strip-item"><small>{{ 'premiumList.col.employerSum' | transloco }}</small><strong>{{ yen(employerTotalYen()) }}</strong></span>
+        <span class="strip-item main"><small>{{ 'premiumList.col.payment' | transloco }}</small><strong>{{ yen(grandTotalYen()) }}</strong></span>
+        <span class="strip-open">{{ 'premiumList.strip.open' | transloco }}</span>
+      </summary>
       @if (problems().length > 0) {
         <p class="warn">
           {{ 'premiumList.totalsExcluded' | transloco: { count: problems().length } }}
@@ -338,7 +227,163 @@
           }}</a>
         </p>
       }
+    </details>
+  }
+
+  @if (rows().length === 0) {
+    <section class="card empty">
+      <p>{{ 'premiumList.empty' | transloco }}</p>
     </section>
+  } @else {
+    <p class="legend">{{ (options().healthRounding === 'combined' ? 'premiumList.healthLegend' : 'premiumList.healthLegendSeparate') | transloco }}</p>
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th rowspan="2" [attr.aria-sort]="ariaSort('number')">
+              <button type="button" class="sort" (click)="sortBy('number')">
+                {{ 'employee.field.employeeNumber' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('number') }}</span>
+              </button>
+            </th>
+            <th rowspan="2" [attr.aria-sort]="ariaSort('name')">
+              <button type="button" class="sort" (click)="sortBy('name')">
+                {{ 'employee.field.name' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('name') }}</span>
+              </button>
+            </th>
+            <th rowspan="2" class="num">{{ 'premiumList.col.standard' | transloco }}</th>
+            <th [attr.colspan]="showParts() ? 6 : 3" class="group-head">{{ 'premium.col.employee' | transloco }}</th>
+            <th rowspan="2" class="num" [attr.aria-sort]="ariaSort('employer')">
+              <button type="button" class="sort" (click)="sortBy('employer')">
+                {{ 'premium.col.employer' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('employer') }}</span>
+              </button>
+              <span class="th-note">{{ 'premiumList.employerNote' | transloco }}</span>
+            </th>
+            <th rowspan="2" class="num">{{ 'premium.col.total' | transloco }}</th>
+            @if (showContribution()) {
+              <th rowspan="2" class="num contribution">
+                {{ 'premiumList.col.contribution' | transloco }}
+              </th>
+            }
+            <th rowspan="2"><span class="sr-only">{{ 'premiumList.col.calc' | transloco }}</span></th>
+          </tr>
+          <tr>
+            @if (showParts()) {
+              @for (p of healthPartKeys; track p) {
+                <th class="num part-head sub">
+                  {{ 'premium.part.' + p | transloco }}
+                  @if (options().healthRounding === 'combined') { <span class="th-note">{{ 'premiumList.partsNote' | transloco }}</span> }
+                </th>
+              }
+            }
+            <th class="num part-head">{{ 'premiumList.col.health' | transloco }}</th>
+            <th class="num part-head">{{ 'premiumList.col.pension' | transloco }}</th>
+            <th class="num" [attr.aria-sort]="ariaSort('employee')">
+              <button type="button" class="sort" (click)="sortBy('employee')">
+                {{ 'premiumList.col.sum' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('employee') }}</span>
+              </button>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of sortedRows(); track r.employee.id) {
+            <tr [class.problem]="r.state !== 'ok' && r.state !== 'exempt'" [class.open]="openId() === r.employee.id">
+              <td class="mono">{{ r.employee.employeeNumber ?? '—' }}</td>
+              <td>
+                <a
+                  class="name"
+                  [routerLink]="['/o', context.current()?.id, 'employees', r.employee.id]"
+                >
+                  {{ r.employee.lastName }} {{ r.employee.firstName }}
+                </a>
+                @for (c of r.changes; track c) {
+                  <span class="badge badge-change">{{
+                    'premiumList.change.' + c | transloco
+                  }}</span>
+                }
+                @if (r.employee.multipleOffices) {
+                  <span class="badge badge-warn" [title]="'premiumList.multipleOfficesNote' | transloco">{{ 'premiumList.multipleOffices' | transloco }}</span>
+                }
+                @if (advances().get(r.employee.id); as amt) {
+                  <span class="badge badge-warn" [title]="'premiumList.advance.note' | transloco">{{ 'premiumList.advance.badge' | transloco: { amount: yen(amt) } }}</span>
+                }
+              </td>
+              @if (r.state === 'ok' || r.state === 'exempt') {
+                <td class="num std">
+                  @let sv = standardOf(r);
+                  @if (sv?.kind === 'split') {
+                    <span class="std-line"><span class="std-label">{{ 'premiumList.std.health' | transloco }}</span>{{ yen($any(sv).health) }}</span>
+                    <span class="std-line"><span class="std-label">{{ 'premiumList.std.pension' | transloco }}</span>{{ yen($any(sv).pension) }}</span>
+                  } @else if (sv) {
+                    {{ yen($any(sv).yen) }}
+                  } @else {
+                    —
+                  }
+                </td>
+              }
+              @if (r.state === 'ok') {
+                @if (showParts()) {
+                  @for (p of healthPartKeys; track p) {
+                    <td class="num sub">{{ partEmployee(r, p) }}</td>
+                  }
+                }
+                <td class="num">{{ yen(r.healthEmployeeYen) }}</td>
+                <td class="num">{{ r.pension ? yen(r.pensionEmployeeYen) : '—' }}</td>
+                <td class="num strong">{{ yen(r.result!.employeeYen) }}</td>
+                <td class="num">{{ milli(r.premiumEmployerMilli) }}</td>
+                <td class="num">{{ milli(r.premiumTotalMilli) }}</td>
+                @if (showContribution()) {
+                  <td class="num contribution">
+                    {{ r.contributionMilli ? milli(r.contributionMilli) : '—' }}
+                  </td>
+                }
+              } @else if (r.state === 'exempt') {
+                <td [attr.colspan]="(showContribution() ? 6 : 5) + (showParts() ? 3 : 0)" class="muted">
+                  <span class="badge badge-care">{{ 'premiumList.exempt' | transloco }}</span>
+                  {{ 'premium.exempt' | transloco }}
+                </td>
+              } @else {
+                <td [attr.colspan]="(showContribution() ? 7 : 6) + (showParts() ? 3 : 0)" class="warn">
+                  {{ missingKey(r) | transloco }}
+                </td>
+              }
+              <td class="calc">
+                @if (r.result) {
+                  <!-- 計算の根拠を、この行のすぐ下に開く（ページは移らない。11/13） -->
+                  <button
+                    type="button"
+                    class="link-btn"
+                    [attr.aria-expanded]="openId() === r.employee.id"
+                    (click)="toggleOpen(r.employee.id)"
+                  >
+                    {{ 'premiumList.calc' | transloco }} {{ openId() === r.employee.id ? '▴' : '▾' }}
+                  </button>
+                }
+              </td>
+            </tr>
+            @if (openId() === r.employee.id && r.result) {
+              <tr class="detail-row">
+                <td [attr.colspan]="colCount()">
+                  <app-premium-breakdown [result]="r.result" />
+                  <a
+                    class="to-employee"
+                    [routerLink]="['/o', context.current()?.id, 'employees', r.employee.id]"
+                    [queryParams]="{ tab: 'insurance', month: month() }"
+                    >{{ 'premiumList.toEmployee' | transloco }} ›</a
+                  >
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (hasMultipleOffices()) {
+      <p class="hint">{{ 'premiumList.multipleOfficesNote' | transloco }}</p>
+    }
+    @if (advances().size > 0) {
+      <p class="hint">{{ 'premiumList.advance.note' | transloco }}</p>
+    }
+
   }
 
   <!-- 給与ソフトとの役割分担：天引きの計算は給与ソフト。ここは材料を渡し、控除額を検算する -->

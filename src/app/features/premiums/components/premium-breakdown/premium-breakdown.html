@@ -1,0 +1,27 @@
+@for (g of result().groups; track $index) {
+  @if (isContribution(g)) {
+    <div class="contribution-head">{{ 'premium.contributionNote' | transloco }}</div>
+  }
+  <div class="group" [class.contribution]="isContribution(g)">
+    @for (l of g.lines; track l.part) {
+      <div class="line">
+        <span class="part">{{ 'premium.part.' + l.part | transloco }}</span>
+        <span class="formula">
+          {{ 'premium.formula' | transloco: { base: yen(l.base), grade: l.grade, rate: lineRate(l), total: milli(l.totalMilli) } }}
+        </span>
+        <span class="rate-note">
+          {{ 'premium.rateNote' | transloco: { employee: pct(l.rate.employee), employer: pct(l.rate.employer), from: l.rate.from } }}
+        </span>
+      </div>
+    }
+    <div class="group-sum">
+      {{ 'premium.groupSum' | transloco: { before: employeeBefore(g), after: yen(g.employeeYen), employer: milli(g.employerMilli) } }}
+    </div>
+  </div>
+}
+@for (m of result().missing; track m.part) {
+  <div class="line warn">
+    <span class="part">{{ 'premium.part.' + m.part | transloco }}</span>
+    <span>{{ 'premium.missing.' + m.reason | transloco }}</span>
+  </div>
+}

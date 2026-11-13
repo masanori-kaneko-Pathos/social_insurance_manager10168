@@ -45,7 +45,7 @@ h1 {
 
 .first h2 {
   margin: 0 0 var(--space-xs);
-  font-size: var(--font-lg, 1.15rem);
+  font-size: var(--font-lg);
 }
 
 .first p {
@@ -61,7 +61,7 @@ h1 {
 
 .flow h2 {
   margin: 0 0 var(--space-sm);
-  font-size: var(--font-md, 1rem);
+  font-size: var(--font-md);
 }
 
 .flow ol {

@@ -197,9 +197,16 @@ th.part-head {
   color: var(--color-text-sub);
 }
 
-td.calc a {
+td.calc .link-btn {
+  padding: 0;
+  background: none;
+  border: 0;
+  font: inherit;
   font-size: var(--font-xs);
+  color: var(--color-primary);
+  text-decoration: underline;
   white-space: nowrap;
+  cursor: pointer;
 }
 
 .sr-only {
@@ -457,4 +464,139 @@ td.calc a {
 .dept-head {
   margin: var(--space-lg) 0 var(--space-sm);
   font-size: 15px;
+}
+
+/* ===== 11/13：合計を表の上に・内訳の列・行の下に開く根拠・出力のメニュー ===== */
+
+/* 事業所の合計：ふだんは1行の帯 */
+details.totals {
+  margin-bottom: var(--space-md);
+  padding: 0;
+}
+
+.totals-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-xs) var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  cursor: pointer;
+  list-style: none;
+}
+
+.totals-strip::-webkit-details-marker {
+  display: none;
+}
+
+.strip-title {
+  font-weight: 600;
+}
+
+.strip-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.strip-item small {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.strip-item.main strong {
+  font-size: var(--font-lg);
+}
+
+.strip-open {
+  margin-left: auto;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+details.totals[open] .strip-open {
+  visibility: hidden;
+}
+
+details.totals > :not(summary) {
+  margin-left: var(--space-lg);
+  margin-right: var(--space-lg);
+}
+
+details.totals[open] {
+  padding-bottom: var(--space-md);
+}
+
+/* 「健康保険等」の説明 */
+.legend {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+/* 内訳の列は少し薄く */
+td.sub,
+th.sub {
+  color: var(--color-text-sub);
+}
+
+/* 行の下に開く根拠 */
+tr.open td {
+  background: var(--color-highlight-soft);
+}
+
+.detail-row td {
+  padding: var(--space-sm) var(--space-lg) var(--space-md);
+  background: var(--color-bg);
+  white-space: normal;
+}
+
+.to-employee {
+  display: inline-block;
+  margin-top: var(--space-xs);
+  font-size: var(--font-sm);
+}
+
+/* 出力のメニュー */
+details.menu {
+  position: relative;
+  display: inline-block;
+}
+
+details.menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+details.menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.menu-list {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 10em;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-xs) 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.12);
+}
+
+.menu-list button {
+  padding: var(--space-xs) var(--space-md);
+  text-align: left;
+  background: none;
+  border: 0;
+  font: inherit;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.menu-list button:hover {
+  background: var(--color-hover);
 }

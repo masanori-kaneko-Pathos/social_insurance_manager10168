@@ -1070,7 +1070,7 @@
     "col": {
       "healthStd": "Health std.",
       "pensionStd": "Pension std.",
-      "health": "Health insurance, long-term care & child support",
+      "health": "Health etc.",
       "pension": "Employees’ Pension Insurance",
       "sum": "Total",
       "payment": "Payment",
@@ -1139,7 +1139,18 @@
       "employer": "Employer share",
       "total": "Total",
       "hint": "An estimate for allocating labor costs by department. The employer share is only determined for the whole office, so the same calculation (total rounded down − employee share) is applied per department. The sum of departments may differ from the office total by a few yen."
-    }
+    },
+    "healthLegend": "\"Health etc.\" = health insurance + long-term care + child-rearing support (the employee share is rounded once in total).",
+    "showParts": "Show breakdown of Health etc.",
+    "hideParts": "Hide breakdown of Health etc.",
+    "partsNote": "Reference, before rounding",
+    "export": "Export",
+    "toEmployee": "See all premiums for this person",
+    "strip": {
+      "count": "People",
+      "open": "See breakdown ▾"
+    },
+    "healthLegendSeparate": "\"Health etc.\" = health insurance + long-term care + child-rearing support (the employee share is rounded for each)."
   },
   "rateDialog": {
     "title": "Health insurance rates",

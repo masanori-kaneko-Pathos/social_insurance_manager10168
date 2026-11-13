@@ -6,7 +6,7 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { map } from 'rxjs';
 import { Employee } from '../../../../core/models/employee';
 import { Office } from '../../../../core/models/office';
-import { OfficeTotal } from '../../../../core/models/premium';
+import { OfficeTotal, PremiumPart } from '../../../../core/models/premium';
 import { RemunerationDoc } from '../../../../core/models/remuneration';
 import { todayLocal, shiftMonth, toYearMonth, YearMonth } from '../../../../shared/utils/date';
 import { EmployeeService } from '../../../employees/employee.service';
@@ -26,6 +26,7 @@ import { noRates, pickRates, RateTables } from '../../../rates/logic/pick-rates'
 import { RateService } from '../../../rates/rate.service';
 import { healthPartTotals, officeTotals } from '../../logic/premium-core';
 import { buildPremiumRow, PremiumRow } from '../../logic/premium-rows';
+import { PremiumBreakdown } from '../../components/premium-breakdown/premium-breakdown';
 import { formatMilli } from '../../logic/rounding';
 import { BonusPayment } from '../../../../core/models/bonus';
 import { BonusService } from '../../bonus.service';
@@ -63,7 +64,7 @@ interface ListItem extends PremiumRow {
 
 @Component({
   selector: 'app-premium-list',
-  imports: [ColumnMapper, MonthPicker, ReviewBox, RouterLink, TranslocoPipe],
+  imports: [ColumnMapper, MonthPicker, PremiumBreakdown, ReviewBox, RouterLink, TranslocoPipe],
   templateUrl: './premium-list.html',
   styleUrl: './premium-list.css',
 })
@@ -106,6 +107,45 @@ export class PremiumList {
     this.route.queryParamMap.pipe(map((p) => p.get('contribution') === '1')),
     { initialValue: false },
   );
+
+  /** 本人負担の「健康保険等」を、健保・介護・支援金の3列に分けて見せるか（URL の ?parts=1） */
+  readonly showParts = toSignal(this.route.queryParamMap.pipe(map((p) => p.get('parts') === '1')), {
+    initialValue: false,
+  });
+
+  /** 計算の根拠を開いている人（行の下に開く。1人ずつ） */
+  readonly openId = signal<string | null>(null);
+
+  toggleOpen(id: string): void {
+    this.openId.update((cur) => (cur === id ? null : id));
+  }
+
+  /** 内訳の3列 */
+  readonly healthPartKeys: readonly PremiumPart[] = ['health', 'care', 'childSupport'];
+
+  /** 表の列の数（行の下に開く欄・説明の行の colspan） */
+  readonly colCount = computed(() => 9 + (this.showContribution() ? 1 : 0) + (this.showParts() ? 3 : 0));
+
+  /**
+   * 本人負担の内訳（1つの保険の分）
+   * 合算して端数処理する事業所では、保険ごとの額は決まらないので、端数処理の前の額（銭まで）を参考に出す
+   */
+  partEmployee(r: PremiumRow, part: PremiumPart): string {
+    for (const g of r.result?.groups ?? []) {
+      const line = g.lines.find((l) => l.part === part);
+      if (!line) continue;
+      return g.lines.length === 1 ? this.yen(g.employeeYen) : formatMilli(line.employeeMilli);
+    }
+    return '—';
+  }
+
+  toggleParts(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { parts: this.showParts() ? null : 1 },
+      queryParamsHandling: 'merge',
+    });
+  }
 
   // ===== 箱 =====
   private readonly employees = signal<Employee[]>([]);
