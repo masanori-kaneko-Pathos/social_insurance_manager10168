@@ -62,7 +62,8 @@ export function defaultListOptions(): PersonListOptions {
     employment: 'all',
     payType: 'all',
     entry: 'all',
-    sort: 'kana',
+    // 並びの初期値は社員番号の順（どの画面も同じ。11/13）
+    sort: 'number',
     dir: 'asc',
     filter: emptyFilter(),
     size: PAGE_SIZE,

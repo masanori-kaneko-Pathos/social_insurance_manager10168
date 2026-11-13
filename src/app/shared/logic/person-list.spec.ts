@@ -47,7 +47,8 @@ describe('person-list', () => {
   it('並べ方（社員番号は数の順・入社日）', () => {
     expect(run({ sort: 'number' })).toEqual(['鈴木', '佐藤', '山田']);
     expect(run({ sort: 'hire' })).toEqual(['佐藤', '山田', '鈴木']);
-    expect(run({})).toEqual(['佐藤', '鈴木', '山田']);
+    expect(run({ sort: 'kana' })).toEqual(['佐藤', '鈴木', '山田']);
+    expect(run({})).toEqual(['鈴木', '佐藤', '山田']);
     expect(run({ sort: 'number', dir: 'desc' })).toEqual(['山田', '佐藤', '鈴木']);
   });
 

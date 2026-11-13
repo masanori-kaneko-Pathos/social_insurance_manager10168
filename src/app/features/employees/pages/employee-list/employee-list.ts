@@ -1,8 +1,8 @@
-import { Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, signal, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { ContractDoc } from '../../../../core/models/contract';
+import { ContractDoc, EmploymentType } from '../../../../core/models/contract';
 import { Employee } from '../../../../core/models/employee';
 import { CriteriaDoc } from '../../../../core/models/master';
 import { ageAt, todayLocal, toYearMonth } from '../../../../shared/utils/date';
@@ -74,6 +74,9 @@ export class EmployeeList {
 
   readonly statuses = STATUSES;
   readonly sortKeys = SORT_KEYS;
+  /** 見出しの前半（社員番号・氏名）と後半（年齢・入社日）。あいだに部署・雇用形態の列を入れる */
+  readonly leadKeys: readonly SortKey[] = ['number', 'name'];
+  readonly tailKeys: readonly SortKey[] = ['age', 'hire'];
   readonly options = {
     coverage: COVERAGE_OPTIONS,
     category: CATEGORY_OPTIONS,
@@ -218,6 +221,29 @@ export class EmployeeList {
     return out;
   });
 
+  // ===== 雇用形態の列（今のページの人の契約だけ読む。読んだ契約はログイン中は覚えている。11/13） =====
+  private readonly pageContracts = signal<Map<string, ContractDoc[]>>(new Map());
+
+  /** 基準日の雇用形態（undefined ＝ まだ読んでいない、null ＝ 契約なし） */
+  employmentOf(e: Employee): EmploymentType | null | undefined {
+    const list = this.contracts()?.get(e.id) ?? this.pageContracts().get(e.id);
+    if (!list) return undefined;
+    return contractAt(list, this.asOf())?.employmentType ?? null;
+  }
+
+  private async loadPageContracts(officeId: string, ids: readonly string[]): Promise<void> {
+    try {
+      const lists = await Promise.all(ids.map((id) => this.contractsApi.list(officeId, id)));
+      this.pageContracts.update((cur) => {
+        const next = new Map(cur);
+        ids.forEach((id, i) => next.set(id, lists[i]));
+        return next;
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
   setPage(p: number): void {
     this.setQuery({ page: p > 1 ? String(p) : null });
   }
@@ -238,6 +264,18 @@ export class EmployeeList {
       const officeId = this.context.current()?.id;
       if (officeId) this.load(officeId);
     });
+    // 今のページの人の契約を読む（雇用形態の列。まだ読んでいない人だけ）
+    effect(() => {
+      const officeId = this.context.current()?.id;
+      const ids = this.pagedSections().flatMap((s) => s.items.map((e) => e.id));
+      if (!officeId || ids.length === 0) return;
+      untracked(() => {
+        const all = this.contracts();
+        const have = this.pageContracts();
+        const todo = ids.filter((id) => !all?.has(id) && !have.has(id));
+        if (todo.length > 0) void this.loadPageContracts(officeId, todo);
+      });
+    });
     // 区分・雇用形態で絞り込むときだけ、契約を読む
     effect(() => {
       const officeId = this.context.current()?.id;
@@ -250,6 +288,7 @@ export class EmployeeList {
   private async load(officeId: string): Promise<void> {
     this.loading.set(true);
     this.contracts.set(null);
+    this.pageContracts.set(new Map());
     try {
       this.employees.set(await this.employeesApi.list(officeId));
     } catch (err) {

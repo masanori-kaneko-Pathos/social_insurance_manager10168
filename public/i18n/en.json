@@ -305,7 +305,8 @@
       },
       "asOf": "As of",
       "asOfNote": "This list is as of {{date}} (employment status, category, coverage and age on that date). Check each employee's values on that date (name, address, etc.) in their \"History\" tab.",
-      "asOfReset": "Back to today"
+      "asOfReset": "Back to today",
+      "employment": "Employment"
     },
     "status": {
       "active": "Active",

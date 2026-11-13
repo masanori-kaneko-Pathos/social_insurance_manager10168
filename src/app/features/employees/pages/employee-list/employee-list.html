@@ -162,7 +162,19 @@
         <thead>
           <tr>
             <!-- 見出しを押すと並び替え（もう一度押すと逆順） -->
-            @for (k of sortKeys; track k) {
+            @for (k of leadKeys; track k) {
+              <th [class.num]="k === 'age'" [attr.aria-sort]="ariaSort(k)">
+                <button type="button" class="sort" [class.on]="sortKey() === k" (click)="sortBy(k)">
+                  {{ 'employee.list.sort.' + k | transloco }}
+                  <!-- デフォルト（社員番号の昇順）のときは矢印を薄く出す -->
+                  <span class="arrow" [class.default]="isDefaultSort()" aria-hidden="true">{{ sortKey() === k ? (sortDir() === 'asc' ? '▲' : '▼') : '' }}</span>
+                </button>
+              </th>
+            }
+            <!-- 所属（どこの人か）→ 働き方（どんな契約か）→ 年齢・入社日（11/13） -->
+            <th>{{ 'employee.field.department' | transloco }}</th>
+            <th>{{ 'employee.list.employment' | transloco }}</th>
+            @for (k of tailKeys; track k) {
               <th [class.num]="k === 'age'" [attr.aria-sort]="ariaSort(k)">
                 <button type="button" class="sort" [class.on]="sortKey() === k" (click)="sortBy(k)">
                   {{ 'employee.list.sort.' + k | transloco }}
@@ -181,7 +193,7 @@
         <tbody>
           @if (sec.label) {
             <tr class="section-row">
-              <th [attr.colspan]="context.isAdmin() ? 6 : 5" scope="rowgroup">{{ sec.label }}</th>
+              <th [attr.colspan]="context.isAdmin() ? 8 : 7" scope="rowgroup">{{ sec.label }}</th>
             </tr>
           }
           @for (e of sec.items; track e.id) {
@@ -196,6 +208,20 @@
                     @if (e.foreign?.alias; as a) { （{{ a.last }} {{ a.first }}） }
                   </span>
                 </span>
+              </td>
+              <td>
+                {{ deptName(e) ?? '—' }}
+                @if (e.org?.position; as pos) { <span class="person-kana">{{ pos }}</span> }
+              </td>
+              <td>
+                @let em = employmentOf(e);
+                @if (em === undefined) {
+                  <span class="muted">…</span>
+                } @else if (em) {
+                  {{ 'contract.employmentType.' + em | transloco }}
+                } @else {
+                  <span class="muted">—</span>
+                }
               </td>
               <td class="num">{{ age(e) }}</td>
               <td class="mono">{{ e.hireDate }}</td>
