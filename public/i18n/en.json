@@ -225,8 +225,8 @@
       "toMyNumber": "Go to My Number",
       "toRenew": "Register the next contract (renew)",
       "toRetire": "Enter the retirement date (do not renew)",
-      "taskDone": "Filed",
-      "taskChecked": "Checked",
+      "taskDone": "Done",
+      "taskChecked": "Done",
       "taskFields": "Changed items:",
       "taskField": {
         "name": "Name",
@@ -2895,9 +2895,9 @@
       "loss": "No insurance is enrolled on this date."
     },
     "button": {
-      "acquire": "Filed Application to Enroll",
-      "loss": "Filed Coverage-end Report",
-      "category": "Filed category change",
+      "acquire": "Review",
+      "loss": "Review",
+      "category": "Review",
       "early": "Register in advance"
     },
     "grade": "Grade {{grade}} ({{standard}} yen)",
@@ -2911,7 +2911,8 @@
       "submittedOn": "Invalid date.",
       "load": "Could not load the grade tables or SMR.",
       "save": "Could not save. Please try again."
-    }
+    },
+    "done": "Done"
   },
   "bell": {
     "label": "Notifications",
@@ -3182,8 +3183,8 @@
       "urgency": "Urgency",
       "kind": "Procedure",
       "who": "Employee",
-      "date": "Date",
-      "deadline": "Filing due",
+      "date": "Occurred",
+      "deadline": "Due",
       "actions": "Actions"
     },
     "urgency": {
@@ -3194,7 +3195,7 @@
       "info": "Check"
     },
     "ageOn": "Age {{age}}, {{date}}",
-    "overBy": "{{n}} day(s) overdue",
+    "overBy": "{{n}} days ago",
     "today": "Due today",
     "daysLeft": "{{n}} day(s) left",
     "asap": "As soon as possible",

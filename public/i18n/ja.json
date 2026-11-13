@@ -225,8 +225,8 @@
       "toMyNumber": "マイナンバーへ",
       "toRenew": "次の契約を登録する（更新）",
       "toRetire": "退職日を入れる（更新しない）",
-      "taskDone": "届を出した",
-      "taskChecked": "確認した",
+      "taskDone": "完了",
+      "taskChecked": "完了",
       "taskFields": "変わった項目：",
       "taskField": {
         "name": "氏名",
@@ -2895,9 +2895,9 @@
       "loss": "この日に加入している保険がありません。"
     },
     "button": {
-      "acquire": "資格取得届を出した",
-      "loss": "資格喪失届を出した",
-      "category": "区分変更届を出した",
+      "acquire": "確認",
+      "loss": "確認",
+      "category": "確認",
       "early": "先に登録する"
     },
     "grade": "{{grade}}級（{{standard}}円）",
@@ -2911,7 +2911,8 @@
       "submittedOn": "日付の形が正しくありません。",
       "load": "等級表・標準報酬を読み込めませんでした。",
       "save": "保存できませんでした。もう一度お試しください。"
-    }
+    },
+    "done": "完了"
   },
   "bell": {
     "label": "お知らせ",
@@ -3182,8 +3183,8 @@
       "urgency": "急ぎ",
       "kind": "手続き",
       "who": "従業員",
-      "date": "日",
-      "deadline": "届出の期限",
+      "date": "発生日",
+      "deadline": "期限",
       "actions": "操作"
     },
     "urgency": {
@@ -3194,7 +3195,7 @@
       "info": "確認"
     },
     "ageOn": "{{age}}歳・{{date}}",
-    "overBy": "{{n}}日過ぎています",
+    "overBy": "{{n}}日前",
     "today": "今日まで",
     "daysLeft": "あと{{n}}日",
     "asap": "速やかに",
