@@ -1147,10 +1147,10 @@
     "export": "出力",
     "toEmployee": "この人の保険料をすべて見る",
     "strip": {
-      "count": "人数",
-      "open": "内訳を見る ▾"
+      "count": "人数"
     },
-    "healthLegendSeparate": "「健康保険等」＝ 健康保険料＋介護保険料＋子ども・子育て支援金（本人負担はそれぞれ端数処理）。"
+    "healthLegendSeparate": "「健康保険等」＝ 健康保険料＋介護保険料＋子ども・子育て支援金（本人負担はそれぞれ端数処理）。",
+    "breakdown": "内訳"
   },
   "rateDialog": {
     "title": "健康保険の料率",
@@ -3663,12 +3663,16 @@
     "invited": "ほかの事業所から招待を受けた場合は、届いたメールのリンクから参加してください。"
   },
   "pager": {
-    "range": "{{from}}〜{{to}}人目 ／ {{total}}人",
-    "none": "0人",
+    "totalPrefix": "全",
+    "totalSuffix": "人中",
+    "showing": "{{from}}〜{{to}}人を表示",
+    "none": "該当する人はいません",
     "label": "ページ",
-    "prev": "前のページ",
-    "next": "次のページ",
-    "size": "表示",
-    "sizeOpt": "{{n}}人"
+    "prev": "前へ",
+    "next": "次へ",
+    "size": "1ページの表示人数",
+    "sizeOpt": "{{n}}人",
+    "where": "{{total}}人中 {{from}}〜{{to}}人（{{pages}}ページ中 {{page}}ページ目）",
+    "toTop": "上へ戻る"
   }
 }

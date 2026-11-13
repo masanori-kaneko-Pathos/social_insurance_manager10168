@@ -85,7 +85,8 @@
 
     <!-- 探す・絞る・並べる・ページ（入れた額は、ページを移っても保存するまで残る。合計は全員分） -->
     <app-person-list-bar
-      [(options)]="listOptions"
+      [departments]="context.current()?.departments ?? []"
+    [(options)]="listOptions"
       [(page)]="page"
       [total]="filtered().length"
       [pages]="shown().pages"
@@ -192,7 +193,7 @@
         </tbody>
       </table>
     </div>
-    <app-pager [total]="filtered().length" [(page)]="page" [size]="listOptions().size" [showSize]="false" />
+    <app-pager variant="bottom" [total]="filtered().length" [(page)]="page" [size]="listOptions().size" />
 
     <!-- この支給の合計 -->
     <section class="card totals">

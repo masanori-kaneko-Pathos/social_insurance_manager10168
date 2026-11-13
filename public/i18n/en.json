@@ -1147,10 +1147,10 @@
     "export": "Export",
     "toEmployee": "See all premiums for this person",
     "strip": {
-      "count": "People",
-      "open": "See breakdown ▾"
+      "count": "People"
     },
-    "healthLegendSeparate": "\"Health etc.\" = health insurance + long-term care + child-rearing support (the employee share is rounded for each)."
+    "healthLegendSeparate": "\"Health etc.\" = health insurance + long-term care + child-rearing support (the employee share is rounded for each).",
+    "breakdown": "Details"
   },
   "rateDialog": {
     "title": "Health insurance rates",
@@ -3663,12 +3663,16 @@
     "invited": "If another office invited you, join from the link in the email you received."
   },
   "pager": {
-    "range": "{{from}}–{{to}} of {{total}}",
-    "none": "No one",
+    "totalPrefix": "",
+    "totalSuffix": " people,",
+    "showing": "showing {{from}}–{{to}}",
+    "none": "No one matches",
     "label": "Pages",
-    "prev": "Previous page",
-    "next": "Next page",
-    "size": "Show",
-    "sizeOpt": "{{n}} per page"
+    "prev": "Prev",
+    "next": "Next",
+    "size": "Per page",
+    "sizeOpt": "{{n}}",
+    "where": "{{from}}–{{to}} of {{total}} (page {{page}} of {{pages}})",
+    "toTop": "Back to top"
   }
 }

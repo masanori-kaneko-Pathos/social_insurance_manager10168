@@ -123,7 +123,9 @@ export class EmployeeList {
   readonly isDefaultSort = computed(() => this.sortKey() === 'number' && this.sortDir() === 'asc');
   readonly filter = computed<EmployeeFilter>(() => filterFromQuery((k) => this.params().get(k)));
   /** 使っている条件の数（在籍は「在籍中」以外を選んだら1つと数える） */
-  readonly filterCount = computed(() => activeCount(this.filter()) + (this.status() === 'active' ? 0 : 1));
+  readonly filterCount = computed(
+    () => activeCount(this.filter()) + (this.status() === 'active' ? 0 : 1) + (this.dept() ? 1 : 0),
+  );
 
   /** フィルターのパネル（外を押す・Esc で閉じる） */
   readonly filterOpen = signal(false);
@@ -192,9 +194,9 @@ export class EmployeeList {
     }
     return [{ label: '', items: sortEmployees(this.filtered(), this.sortKey(), this.sortDir()) }];
   });
-  // ===== ページ（URL の page・size。並べ替え・絞り込みのあとで切り分ける。11/13） =====
+  // ===== ページ（URL の page・per。並べ替え・絞り込みのあとで切り分ける。11/13） =====
   readonly pageSize = computed<PageSize>(() => {
-    const n = Number(this.params().get('size'));
+    const n = Number(this.params().get('per'));
     return (PAGE_SIZES as readonly number[]).includes(n) ? (n as PageSize) : PAGE_SIZE;
   });
   readonly pageCount = computed(() => Math.max(1, Math.ceil(this.filtered().length / this.pageSize())));
@@ -220,8 +222,9 @@ export class EmployeeList {
     this.setQuery({ page: p > 1 ? String(p) : null });
   }
 
-  setPageSize(n: PageSize): void {
-    this.setQuery({ size: n === PAGE_SIZE ? null : String(n) });
+  /** 表示人数を変えた（先頭の1人が入るページへ。URL は1回だけ書き換える） */
+  setPer(e: { size: PageSize; page: number }): void {
+    this.setQuery({ per: e.size === PAGE_SIZE ? null : String(e.size), page: e.page > 1 ? String(e.page) : null });
   }
 
   /** ローマ字の列に並ぶ人がいるときだけ「姓／名」の切り替えを出す */
@@ -322,7 +325,7 @@ export class EmployeeList {
 
   /** 条件をクリア（在籍も「在籍中」に戻す） */
   clearFilter(): void {
-    this.setQuery({ ...filterToQuery(emptyFilter()), status: null });
+    this.setQuery({ ...filterToQuery(emptyFilter()), status: null, dept: null });
   }
 
   onDocumentClick(event: MouseEvent): void {
@@ -331,21 +334,13 @@ export class EmployeeList {
   }
 
   /**
-   * 見出しを押すたびに回す
-   * - 氏名・年齢・入社日：デフォルト → 昇順 → 降順 → デフォルト
-   * - 社員番号：デフォルト（＝社員番号の昇順）→ 降順 → デフォルト
+   * 見出しを押す：別の列なら昇順、同じ列なら昇順 ⇔ 降順（11/13）
+   * 押した列で並ぶ。社員番号の順に戻したいときは「社員番号」を押す（社員番号の昇順は URL から消す）
    */
   sortBy(key: SortKey): void {
-    const same = this.sortKey() === key;
-    let next: { sort: SortKey; dir: SortDir } | null; // null ＝ デフォルト
-    if (key === 'number') {
-      next = this.isDefaultSort() ? { sort: 'number', dir: 'desc' } : null;
-    } else if (!same) {
-      next = { sort: key, dir: 'asc' };
-    } else {
-      next = this.sortDir() === 'asc' ? { sort: key, dir: 'desc' } : null;
-    }
-    this.setQuery(next ? { sort: next.sort, dir: next.dir === 'asc' ? null : 'desc' } : { sort: null, dir: null });
+    const dir: SortDir = this.sortKey() === key && this.sortDir() === 'asc' ? 'desc' : 'asc';
+    const isDefault = key === 'number' && dir === 'asc';
+    this.setQuery(isDefault ? { sort: null, dir: null } : { sort: key, dir: dir === 'asc' ? null : 'desc' });
   }
 
   ariaSort(key: SortKey): 'ascending' | 'descending' | 'none' {

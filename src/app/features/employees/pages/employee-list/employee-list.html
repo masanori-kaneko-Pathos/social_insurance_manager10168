@@ -20,19 +20,6 @@
       <span>{{ 'employee.list.asOf' | transloco }}</span>
       <input class="input" type="date" [value]="asOf()" (change)="setAsOf($any($event.target).value)" />
     </label>
-    @if (departments().length > 0) {
-      <!-- 部署で絞る -->
-      <label class="as-of">
-        <span>{{ 'employee.field.department' | transloco }}</span>
-        <select class="input" [value]="dept()" (change)="setDept($any($event.target).value)">
-          <option value="">{{ 'employee.org.allDepartments' | transloco }}</option>
-          @for (d of departments(); track d.id) {
-            <option [value]="d.id" [selected]="d.id === dept()">{{ d.name }}</option>
-          }
-          <option value="none" [selected]="dept() === 'none'">{{ 'employee.org.noDepartment' | transloco }}</option>
-        </select>
-      </label>
-    }
     <!-- フィルター（複数の条件を組み合わせる。選んだらすぐ反映） -->
     <div class="filter-wrap" #filterWrap>
       <button
@@ -58,6 +45,18 @@
               {{ 'employee.filter.clear' | transloco }}
             </button>
           </div>
+
+          @if (departments().length > 0) {
+            <!-- 部署（事業所の設定で登録した部署。11/13 にパネルの中へ） -->
+            <fieldset>
+              <legend>{{ 'employee.field.department' | transloco }}</legend>
+              <label class="opt"><input type="radio" name="dept" [checked]="dept() === ''" (change)="setDept('')" />{{ 'employee.org.allDepartments' | transloco }}</label>
+              @for (d of departments(); track d.id) {
+                <label class="opt"><input type="radio" name="dept" [checked]="dept() === d.id" (change)="setDept(d.id)" />{{ d.name }}</label>
+              }
+              <label class="opt"><input type="radio" name="dept" [checked]="dept() === 'none'" (change)="setDept('none')" />{{ 'employee.org.noDepartment' | transloco }}</label>
+            </fieldset>
+          }
 
           <fieldset>
             <legend>{{ 'employee.filter.status' | transloco }}</legend>
@@ -157,7 +156,7 @@
   } @else if (filtered().length === 0) {
     <p class="muted">{{ 'employee.list.noMatch' | transloco }}</p>
   } @else {
-    <app-pager class="pager-top" [total]="filtered().length" [page]="page()" (pageChange)="setPage($event)" [size]="pageSize()" (sizeChange)="setPageSize($event)" />
+    <app-pager class="pager-top" variant="top" [total]="filtered().length" [page]="page()" [size]="pageSize()" (resized)="setPer($event)" />
     <div class="card table-wrap">
       <table>
         <thead>
@@ -187,6 +186,7 @@
           }
           @for (e of sec.items; track e.id) {
             <tr [class.retired]="isRetired(e)">
+              <td class="mono">{{ e.employeeNumber ?? '—' }}</td>
               <td>
                 <!-- 氏名とフリガナを横に並べる（行を1段にする。長い名前は折り返す。11/13） -->
                 <span class="person">
@@ -197,7 +197,6 @@
                   </span>
                 </span>
               </td>
-              <td class="mono">{{ e.employeeNumber ?? '—' }}</td>
               <td class="num">{{ age(e) }}</td>
               <td class="mono">{{ e.hireDate }}</td>
               <td>
@@ -217,5 +216,5 @@
         }
       </table>
     </div>
-    <app-pager class="pager-bottom" [total]="filtered().length" [page]="page()" (pageChange)="setPage($event)" [size]="pageSize()" [showSize]="false" />
+    <app-pager class="pager-bottom" variant="bottom" [total]="filtered().length" [page]="page()" (pageChange)="setPage($event)" [size]="pageSize()" />
   }

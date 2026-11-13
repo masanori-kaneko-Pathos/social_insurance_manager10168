@@ -4,7 +4,8 @@
 import type { Employee } from '../../../core/models/employee';
 import { sortKeyOf } from './name-index';
 
-export const SORT_KEYS = ['name', 'number', 'age', 'hire'] as const;
+// 表の列の順でもある（社員番号 → 氏名 → 年齢 → 入社日。11/13）
+export const SORT_KEYS = ['number', 'name', 'age', 'hire'] as const;
 export type SortKey = (typeof SORT_KEYS)[number];
 export type SortDir = 'asc' | 'desc';
 

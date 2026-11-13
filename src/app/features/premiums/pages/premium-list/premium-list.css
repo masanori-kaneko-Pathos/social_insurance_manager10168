@@ -303,10 +303,6 @@ td.calc .link-btn {
 }
 
 /* ===== 納付の突き合わせ ===== */
-.notice {
-  margin-top: var(--space-md);
-}
-
 .notice-head {
   display: flex;
   align-items: center;
@@ -397,12 +393,8 @@ td.calc .link-btn {
 }
 
 /* ===== 給与ソフトとの役割分担 ===== */
-.soft {
-  margin-top: var(--space-md);
-}
-
 .soft h2 {
-  margin: 0 0 var(--space-xs);
+  margin: 0;
 }
 
 .soft-actions {
@@ -508,15 +500,6 @@ details.totals {
   font-size: var(--font-lg);
 }
 
-.strip-open {
-  margin-left: auto;
-  font-size: var(--font-xs);
-  color: var(--color-text-sub);
-}
-
-details.totals[open] .strip-open {
-  visibility: hidden;
-}
 
 details.totals > :not(summary) {
   margin-left: var(--space-lg);
@@ -599,4 +582,103 @@ details.menu > summary::-webkit-details-marker {
 
 .menu-list button:hover {
   background: var(--color-hover);
+}
+
+/* ===== 開いてしまう欄（合計・突き合わせ・検算）：見出しの右に「内訳 ▽／△」、開閉はなめらかに（11/13） ===== */
+.totals-strip .fold-toggle,
+.fold-head .fold-toggle {
+  margin-left: auto;
+  font-size: var(--font-sm);
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+details:not([open]) > summary .when-open,
+details[open] > summary .when-closed {
+  display: none;
+}
+
+details.fold {
+  padding: 0;
+  margin-bottom: var(--space-md);
+}
+
+.fold-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  cursor: pointer;
+  list-style: none;
+}
+
+.fold-head::-webkit-details-marker {
+  display: none;
+}
+
+.fold-head h2 {
+  margin: 0;
+  font-size: var(--font-md);
+}
+
+details.fold > :not(summary) {
+  margin-left: var(--space-lg);
+  margin-right: var(--space-lg);
+}
+
+details.fold[open] {
+  padding-bottom: var(--space-md);
+}
+
+/* 開閉のアニメーション（対応するブラウザだけ。Chrome・Edge 131 以降。ほかはすぐ開く） */
+details.totals,
+details.fold {
+  interpolate-size: allow-keywords;
+}
+
+details.totals::details-content,
+details.fold::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition:
+    block-size var(--dur-base, 200ms) var(--ease-out),
+    content-visibility var(--dur-base, 200ms) var(--ease-out) allow-discrete;
+}
+
+details.totals[open]::details-content,
+details.fold[open]::details-content {
+  block-size: auto;
+}
+
+/* 行の下に開く内訳 */
+.detail-enter {
+  animation: detail-in var(--dur-base, 200ms) var(--ease-out);
+}
+
+.detail-leave {
+  animation: detail-in var(--dur-fast) var(--ease-out) reverse forwards;
+}
+
+@keyframes detail-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  details.totals::details-content,
+  details.fold::details-content {
+    transition: none;
+  }
+
+  .detail-enter,
+  .detail-leave {
+    animation: none;
+  }
 }

@@ -26,6 +26,7 @@
 
   <!-- 探す・状態で絞る・並べる・ページ（選んだ人はページを移っても残る） -->
   <app-person-list-bar
+    [departments]="context.current()?.departments ?? []"
     [(options)]="listOptions"
     [(page)]="page"
     [total]="filtered().length"
@@ -122,5 +123,5 @@
       </tbody>
     </table>
   </div>
-  <app-pager [total]="filtered().length" [(page)]="page" [size]="listOptions().size" [showSize]="false" />
+  <app-pager variant="bottom" [total]="filtered().length" [(page)]="page" [size]="listOptions().size" />
 }

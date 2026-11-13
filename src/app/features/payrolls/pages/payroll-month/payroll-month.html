@@ -79,6 +79,7 @@
 
   <!-- 探す・絞る・並べる・ページ（入れた値は、ページを移っても保存するまで残る） -->
   <app-person-list-bar
+    [departments]="context.current()?.departments ?? []"
     [(options)]="listOptions"
     [(page)]="page"
     [total]="filtered().length"
@@ -220,7 +221,7 @@
       </tbody>
     </table>
   </div>
-  <app-pager [total]="filtered().length" [(page)]="page" [size]="listOptions().size" [showSize]="false" />
+  <app-pager variant="bottom" [total]="filtered().length" [(page)]="page" [size]="listOptions().size" />
 
   @if (errorKey(); as key) {
     <div class="alert alert-danger">{{ key | transloco }}</div>

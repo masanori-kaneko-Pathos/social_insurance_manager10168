@@ -53,6 +53,17 @@ const ORDERS: Record<ListField, readonly string[]> = {
             <!-- この画面だけの条件（マイページの状態など） -->
             <ng-content />
 
+            @if (departments().length > 0) {
+              <fieldset>
+                <legend>{{ 'employee.field.department' | transloco }}</legend>
+                <label class="opt"><input type="radio" name="dept" [checked]="options().dept === ''" (change)="set('dept', '')" />{{ 'employee.org.allDepartments' | transloco }}</label>
+                @for (d of departments(); track d.id) {
+                  <label class="opt"><input type="radio" name="dept" [checked]="options().dept === d.id" (change)="set('dept', d.id)" />{{ d.name }}</label>
+                }
+                <label class="opt"><input type="radio" name="dept" [checked]="options().dept === 'none'" (change)="set('dept', 'none')" />{{ 'employee.org.noDepartment' | transloco }}</label>
+              </fieldset>
+            }
+
             @if (showEntry()) {
               <fieldset>
                 <legend>{{ 'personList.entry' | transloco }}</legend>
@@ -128,7 +139,7 @@ const ORDERS: Record<ListField, readonly string[]> = {
         (input)="set('query', $any($event.target).value)"
       />
     </div>
-    <app-pager [total]="total()" [page]="page()" (pageChange)="page.set($event)" [size]="options().size" (sizeChange)="set('size', $event)" />
+    <app-pager variant="top" [total]="total()" [page]="page()" (pageChange)="page.set($event)" [size]="options().size" (resized)="onResized($event)" />
   `,
   styles: `
     :host { display: block; margin-bottom: var(--space-sm); }
@@ -150,6 +161,8 @@ export class PersonListBar {
   readonly showContract = input(true);
   /** 「入れたかどうか」の欄を出すか */
   readonly showEntry = input(true);
+  /** 事業所の部署（事業所の設定で登録したもの。なければ部署の条件は出さない） */
+  readonly departments = input<readonly { id: string; name: string }[]>([]);
   /** 画面だけの条件を使っている数（ボタンの数に足す） */
   readonly extraCount = input(0);
 
@@ -168,6 +181,12 @@ export class PersonListBar {
   set<K extends keyof PersonListOptions>(key: K, value: PersonListOptions[K]): void {
     this.options.set({ ...this.options(), [key]: value });
     this.page.set(1);
+  }
+
+  /** 表示人数を変えた（先頭の1人が入るページへ） */
+  onResized(e: { size: PersonListOptions['size']; page: number }): void {
+    this.options.set({ ...this.options(), size: e.size });
+    this.page.set(e.page);
   }
 
   setFilter(patch: Partial<EmployeeFilter>): void {
@@ -190,7 +209,7 @@ export class PersonListBar {
 
   /** 条件をクリア（探す言葉・並び・表示人数はそのまま） */
   clear(): void {
-    this.options.set({ ...this.options(), filter: emptyFilter(), employment: 'all', payType: 'all', entry: 'all' });
+    this.options.set({ ...this.options(), filter: emptyFilter(), employment: 'all', payType: 'all', entry: 'all', dept: '' });
     this.page.set(1);
   }
 

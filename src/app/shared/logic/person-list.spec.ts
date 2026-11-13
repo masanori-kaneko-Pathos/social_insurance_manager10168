@@ -13,6 +13,7 @@ const P = (n: string, last: string, kana: string, hire = '2020-04-01'): PersonLi
   pension: { enrolled: false } as PersonLike['pension'],
   sex: null,
   foreign: null,
+  org: null,
 });
 
 interface Row {

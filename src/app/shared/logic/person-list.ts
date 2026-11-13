@@ -35,6 +35,7 @@ export type PersonLike = Pick<
   | 'pension'
   | 'sex'
   | 'foreign'
+  | 'org'
 >;
 
 export interface PersonListOptions {
@@ -51,6 +52,8 @@ export interface PersonListOptions {
   filter: EmployeeFilter;
   /** 1ページの人数 */
   size: PageSize;
+  /** 部署（'' ＝ すべて、'none' ＝ 部署なし、それ以外は部署の ID） */
+  dept: string;
 }
 
 export function defaultListOptions(): PersonListOptions {
@@ -63,6 +66,7 @@ export function defaultListOptions(): PersonListOptions {
     dir: 'asc',
     filter: emptyFilter(),
     size: PAGE_SIZE,
+    dept: '',
   };
 }
 
@@ -72,7 +76,8 @@ export function listFilterCount(o: PersonListOptions): number {
     activeCount(o.filter) +
     (o.employment !== 'all' ? 1 : 0) +
     (o.payType !== 'all' ? 1 : 0) +
-    (o.entry !== 'all' ? 1 : 0)
+    (o.entry !== 'all' ? 1 : 0) +
+    (o.dept ? 1 : 0)
   );
 }
 
@@ -114,6 +119,10 @@ export function filterAndSort<T>(
     const p = getPerson(r);
     if (!matchesQuery(p, opts.query)) return false;
     if (useFilter && !matchesFilter(p, opts.filter, ctx)) return false;
+    if (opts.dept) {
+      const d = p.org?.departmentId ?? null;
+      if (opts.dept === 'none' ? d !== null : d !== opts.dept) return false;
+    }
     const c = getContract(r);
     if (opts.employment !== 'all' && c?.employmentType !== opts.employment) return false;
     if (opts.payType !== 'all' && c?.payType !== opts.payType) return false;

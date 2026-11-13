@@ -116,7 +116,7 @@
         <span class="strip-item"><small>{{ 'premiumList.col.employeeSum' | transloco }}</small><strong>{{ yen(employeeTotalYen()) }}</strong></span>
         <span class="strip-item"><small>{{ 'premiumList.col.employerSum' | transloco }}</small><strong>{{ yen(employerTotalYen()) }}</strong></span>
         <span class="strip-item main"><small>{{ 'premiumList.col.payment' | transloco }}</small><strong>{{ yen(grandTotalYen()) }}</strong></span>
-        <span class="strip-open">{{ 'premiumList.strip.open' | transloco }}</span>
+        <span class="fold-toggle"><span class="when-closed">{{ 'premiumList.breakdown' | transloco }} ▽</span><span class="when-open">{{ 'premiumList.breakdown' | transloco }} △</span></span>
       </summary>
       @if (problems().length > 0) {
         <p class="warn">
@@ -230,13 +230,187 @@
     </details>
   }
 
+  <!-- この月の確認（突き合わせ・検算）。下までスクロールしないと気づかない、をなくすため上に置く。ふだんは閉じる（11/13） -->
+  <!-- 毎月の納付額の突き合わせ：年金事務所の告知額とアプリの合計（月額＋その月の賞与） -->
+  @if (rows().length > 0) {
+    @let nc = noticeCheck();
+    <details class="card notice fold">
+      <summary class="fold-head notice-head">
+        <h2>{{ 'premiumNotice.title' | transloco }}</h2>
+        <span class="status s-{{ nc.status }}">{{ 'premiumNotice.status.' + nc.status | transloco }}</span>
+        <span class="fold-toggle"><span class="when-closed">{{ 'premiumList.breakdown' | transloco }} ▽</span><span class="when-open">{{ 'premiumList.breakdown' | transloco }} △</span></span>
+      </summary>
+      <p class="hint">
+        {{ 'premiumNotice.lead' | transloco: { arrival: arrival(), due: dueDate() } }}
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th class="num">{{ 'premiumNotice.col.app' | transloco }}</th>
+            <th class="num">{{ 'premiumNotice.col.notice' | transloco }}</th>
+            <th class="num">{{ 'premiumNotice.col.diff' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of nc.lines; track l.category) {
+            <tr>
+              <th scope="row">{{ 'premiumList.category.' + l.category | transloco }}</th>
+              <td class="num">{{ yen(l.app) }}</td>
+              <td class="num">
+                <input
+                  class="input num notice-input"
+                  inputmode="numeric"
+                  [value]="noticeText()[l.category]"
+                  [disabled]="!context.isAdmin()"
+                  (input)="setNoticeText(l.category, $any($event.target).value)"
+                  [attr.aria-label]="('premiumList.category.' + l.category | transloco) + ' ' + ('premiumNotice.col.notice' | transloco)"
+                />
+              </td>
+              <td class="num" [class.diff-cell]="l.diff">{{ l.diff == null ? '—' : (l.diff > 0 ? '+' : '') + yen(l.diff) }}</td>
+            </tr>
+          }
+          <tr class="grand-total">
+            <th scope="row">{{ 'premiumList.grandTotal' | transloco }}</th>
+            <td class="num strong">{{ yen(nc.appTotal) }}</td>
+            <td class="num strong">{{ nc.noticeTotal == null ? '—' : yen(nc.noticeTotal) }}</td>
+            <td class="num strong" [class.diff-cell]="nc.diffTotal">{{ nc.diffTotal == null ? '—' : (nc.diffTotal > 0 ? '+' : '') + yen(nc.diffTotal) }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      @if (nc.status === 'diff' || nc.status === 'rounding' || noticeReasons().size > 0) {
+        <fieldset class="reasons">
+          <legend>{{ 'premiumNotice.reasonsTitle' | transloco }}</legend>
+          @for (r of diffReasons; track r) {
+            <label class="check">
+              <input type="checkbox" [checked]="noticeReasons().has(r)" [disabled]="!context.isAdmin()" (change)="toggleReason(r)" />
+              {{ 'premiumNotice.reason.' + r | transloco }}
+              @if (r === 'excluded' && problems().length > 0) {
+                <span class="badge badge-warn">{{ 'premiumNotice.excludedNow' | transloco: { count: problems().length } }}</span>
+              }
+            </label>
+          }
+        </fieldset>
+      }
+      <div class="field">
+        <label for="notice-note">{{ 'premiumNotice.note' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
+        <input id="notice-note" class="input" maxlength="500" [value]="noticeNote()" [disabled]="!context.isAdmin()"
+               (input)="noticeNote.set($any($event.target).value); noticeSaved.set(false)" />
+      </div>
+      @if (noticeError(); as k) {
+        <div class="alert alert-danger">{{ k | transloco }}</div>
+      }
+      @if (context.isAdmin()) {
+        <div class="notice-actions">
+          <button type="button" class="btn btn-primary" [disabled]="noticeSaving()" (click)="saveNotice()">
+            {{ (noticeSaving() ? 'common.saving' : 'premiumNotice.save') | transloco }}
+          </button>
+          @if (noticeSaved()) {
+            <span class="ok" role="status">{{ 'common.saved' | transloco }}</span>
+          }
+        </div>
+      }
+      <p class="hint">{{ 'premiumNotice.hint' | transloco }}</p>
+      <!-- 納める前に、作った人とは別の人が確かめる -->
+      @if (nc.status !== 'notEntered') {
+        <app-review-box class="review" [target]="noticeReviewId(month())" />
+      }
+    </details>
+  }
+
+  <!-- 給与ソフトとの役割分担：天引きの計算は給与ソフト。ここは材料を渡し、控除額を検算する -->
+  @if (context.isAdmin() && rows().length > 0) {
+    <details class="card soft fold">
+      <summary class="fold-head">
+        <h2>{{ 'payrollSoft.title' | transloco }}</h2>
+        <span class="fold-toggle"><span class="when-closed">{{ 'premiumList.breakdown' | transloco }} ▽</span><span class="when-open">{{ 'premiumList.breakdown' | transloco }} △</span></span>
+      </summary>
+      <p class="hint">{{ 'payrollSoft.lead' | transloco }}</p>
+      <p class="soft-actions">
+        <button type="button" class="btn btn-small" (click)="exportForSoftware()">
+          {{ 'payrollSoft.export' | transloco }}
+        </button>
+        <label class="btn btn-small">
+          {{ 'payrollSoft.check' | transloco }}
+          <input type="file" class="file-hidden" [accept]="importAccept" (change)="onDeductionFile($event)" />
+        </label>
+        <span class="muted">{{ 'payrollSoft.exportNote' | transloco: { payMonth: monthParts(payMonth()).m } }}</span>
+      </p>
+      @if (deductionError(); as e) {
+        <p class="error" role="alert">{{ e | transloco }}</p>
+      }
+      @if (deductionFile(); as f) {
+        <app-column-mapper
+          [tables]="f.tables"
+          [spec]="deductionSpec"
+          (confirmed)="onDeductionMapped($event)"
+          (cancelled)="cancelDeduction()"
+        />
+      }
+      @if (deductionResult(); as res) {
+        <div class="soft-result" role="status">
+          <p>
+            {{ 'payrollSoft.result' | transloco: { file: res.fileName, match: deductionMatchCount(), other: res.rows.length - deductionMatchCount() } }}
+            @if (res.month !== month()) {
+              <span class="muted">{{ 'payrollSoft.otherMonth' | transloco: { month: res.month } }}</span>
+            }
+          </p>
+          @if (deductionRows().length > 0) {
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{{ 'payrollSoft.col.name' | transloco }}</th>
+                    <th class="num">{{ 'payrollSoft.col.appHealth' | transloco }}</th>
+                    <th class="num">{{ 'payrollSoft.col.softHealth' | transloco }}</th>
+                    <th class="num">{{ 'payrollSoft.col.appPension' | transloco }}</th>
+                    <th class="num">{{ 'payrollSoft.col.softPension' | transloco }}</th>
+                    <th class="num">{{ 'payrollSoft.col.diff' | transloco }}</th>
+                    <th>{{ 'payrollSoft.col.status' | transloco }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (d of deductionRows(); track $index) {
+                    <tr>
+                      <td>{{ nameOf(d) }}</td>
+                      <td class="num">{{ d.app ? yen(d.app.health) : '—' }}</td>
+                      <td class="num">{{ d.soft?.health != null ? yen(d.soft!.health!) : '—' }}</td>
+                      <td class="num">{{ d.app ? yen(d.app.pension) : '—' }}</td>
+                      <td class="num">{{ d.soft?.pension != null ? yen(d.soft!.pension!) : '—' }}</td>
+                      <td class="num">{{ d.diff != null ? (d.diff > 0 ? '+' : '') + yen(d.diff) : '—' }}</td>
+                      <td><span class="status s-{{ d.status }}">{{ 'payrollSoft.status.' + d.status | transloco }}</span></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+          <p class="soft-actions">
+            @if (deductionMatchCount() > 0) {
+              <button type="button" class="btn btn-small" (click)="showAllDeductions.set(!showAllDeductions())">
+                {{ (showAllDeductions() ? 'payrollSoft.hideMatch' : 'payrollSoft.showAll') | transloco }}
+              </button>
+            }
+            <button type="button" class="btn btn-small" (click)="closeDeduction()">
+              {{ 'payrollSoft.close' | transloco }}
+            </button>
+          </p>
+          <p class="hint">{{ 'payrollSoft.diffHint' | transloco }}</p>
+        </div>
+      }
+    </details>
+  }
+
+
   @if (rows().length === 0) {
     <section class="card empty">
       <p>{{ 'premiumList.empty' | transloco }}</p>
     </section>
   } @else {
     <app-person-list-bar
-      [(options)]="listOptions"
+      [departments]="context.current()?.departments ?? []"
+    [(options)]="listOptions"
       [(page)]="page"
       [total]="filteredRows().length"
       [showContract]="false"
@@ -362,7 +536,7 @@
                     [attr.aria-expanded]="openId() === r.employee.id"
                     (click)="toggleOpen(r.employee.id)"
                   >
-                    {{ 'premiumList.calc' | transloco }} {{ openId() === r.employee.id ? '▴' : '▾' }}
+                    {{ 'premiumList.breakdown' | transloco }} {{ openId() === r.employee.id ? '△' : '▽' }}
                   </button>
                 }
               </td>
@@ -370,6 +544,7 @@
             @if (openId() === r.employee.id && r.result) {
               <tr class="detail-row">
                 <td [attr.colspan]="colCount()">
+                  <div class="detail-body" animate.enter="detail-enter" animate.leave="detail-leave">
                   <app-premium-breakdown [result]="r.result" />
                   <a
                     class="to-employee"
@@ -377,6 +552,7 @@
                     [queryParams]="{ tab: 'insurance', month: month() }"
                     >{{ 'premiumList.toEmployee' | transloco }} ›</a
                   >
+                  </div>
                 </td>
               </tr>
             }
@@ -384,7 +560,7 @@
         </tbody>
       </table>
     </div>
-    <app-pager [total]="filteredRows().length" [(page)]="page" [size]="listOptions().size" [showSize]="false" />
+    <app-pager variant="bottom" [total]="filteredRows().length" [(page)]="page" [size]="listOptions().size" />
     @if (hasMultipleOffices()) {
       <p class="hint">{{ 'premiumList.multipleOfficesNote' | transloco }}</p>
     }
@@ -394,170 +570,4 @@
 
   }
 
-  <!-- 給与ソフトとの役割分担：天引きの計算は給与ソフト。ここは材料を渡し、控除額を検算する -->
-  @if (context.isAdmin() && rows().length > 0) {
-    <section class="card soft">
-      <h2>{{ 'payrollSoft.title' | transloco }}</h2>
-      <p class="hint">{{ 'payrollSoft.lead' | transloco }}</p>
-      <p class="soft-actions">
-        <button type="button" class="btn btn-small" (click)="exportForSoftware()">
-          {{ 'payrollSoft.export' | transloco }}
-        </button>
-        <label class="btn btn-small">
-          {{ 'payrollSoft.check' | transloco }}
-          <input type="file" class="file-hidden" [accept]="importAccept" (change)="onDeductionFile($event)" />
-        </label>
-        <span class="muted">{{ 'payrollSoft.exportNote' | transloco: { payMonth: monthParts(payMonth()).m } }}</span>
-      </p>
-      @if (deductionError(); as e) {
-        <p class="error" role="alert">{{ e | transloco }}</p>
-      }
-      @if (deductionFile(); as f) {
-        <app-column-mapper
-          [tables]="f.tables"
-          [spec]="deductionSpec"
-          (confirmed)="onDeductionMapped($event)"
-          (cancelled)="cancelDeduction()"
-        />
-      }
-      @if (deductionResult(); as res) {
-        <div class="soft-result" role="status">
-          <p>
-            {{ 'payrollSoft.result' | transloco: { file: res.fileName, match: deductionMatchCount(), other: res.rows.length - deductionMatchCount() } }}
-            @if (res.month !== month()) {
-              <span class="muted">{{ 'payrollSoft.otherMonth' | transloco: { month: res.month } }}</span>
-            }
-          </p>
-          @if (deductionRows().length > 0) {
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>{{ 'payrollSoft.col.name' | transloco }}</th>
-                    <th class="num">{{ 'payrollSoft.col.appHealth' | transloco }}</th>
-                    <th class="num">{{ 'payrollSoft.col.softHealth' | transloco }}</th>
-                    <th class="num">{{ 'payrollSoft.col.appPension' | transloco }}</th>
-                    <th class="num">{{ 'payrollSoft.col.softPension' | transloco }}</th>
-                    <th class="num">{{ 'payrollSoft.col.diff' | transloco }}</th>
-                    <th>{{ 'payrollSoft.col.status' | transloco }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (d of deductionRows(); track $index) {
-                    <tr>
-                      <td>{{ nameOf(d) }}</td>
-                      <td class="num">{{ d.app ? yen(d.app.health) : '—' }}</td>
-                      <td class="num">{{ d.soft?.health != null ? yen(d.soft!.health!) : '—' }}</td>
-                      <td class="num">{{ d.app ? yen(d.app.pension) : '—' }}</td>
-                      <td class="num">{{ d.soft?.pension != null ? yen(d.soft!.pension!) : '—' }}</td>
-                      <td class="num">{{ d.diff != null ? (d.diff > 0 ? '+' : '') + yen(d.diff) : '—' }}</td>
-                      <td><span class="status s-{{ d.status }}">{{ 'payrollSoft.status.' + d.status | transloco }}</span></td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
-          <p class="soft-actions">
-            @if (deductionMatchCount() > 0) {
-              <button type="button" class="btn btn-small" (click)="showAllDeductions.set(!showAllDeductions())">
-                {{ (showAllDeductions() ? 'payrollSoft.hideMatch' : 'payrollSoft.showAll') | transloco }}
-              </button>
-            }
-            <button type="button" class="btn btn-small" (click)="closeDeduction()">
-              {{ 'payrollSoft.close' | transloco }}
-            </button>
-          </p>
-          <p class="hint">{{ 'payrollSoft.diffHint' | transloco }}</p>
-        </div>
-      }
-    </section>
-  }
-
-  <!-- 毎月の納付額の突き合わせ：年金事務所の告知額とアプリの合計（月額＋その月の賞与） -->
-  @if (rows().length > 0) {
-    @let nc = noticeCheck();
-    <section class="card notice">
-      <div class="notice-head">
-        <h2>{{ 'premiumNotice.title' | transloco }}</h2>
-        <span class="status s-{{ nc.status }}">{{ 'premiumNotice.status.' + nc.status | transloco }}</span>
-      </div>
-      <p class="hint">
-        {{ 'premiumNotice.lead' | transloco: { arrival: arrival(), due: dueDate() } }}
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th></th>
-            <th class="num">{{ 'premiumNotice.col.app' | transloco }}</th>
-            <th class="num">{{ 'premiumNotice.col.notice' | transloco }}</th>
-            <th class="num">{{ 'premiumNotice.col.diff' | transloco }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (l of nc.lines; track l.category) {
-            <tr>
-              <th scope="row">{{ 'premiumList.category.' + l.category | transloco }}</th>
-              <td class="num">{{ yen(l.app) }}</td>
-              <td class="num">
-                <input
-                  class="input num notice-input"
-                  inputmode="numeric"
-                  [value]="noticeText()[l.category]"
-                  [disabled]="!context.isAdmin()"
-                  (input)="setNoticeText(l.category, $any($event.target).value)"
-                  [attr.aria-label]="('premiumList.category.' + l.category | transloco) + ' ' + ('premiumNotice.col.notice' | transloco)"
-                />
-              </td>
-              <td class="num" [class.diff-cell]="l.diff">{{ l.diff == null ? '—' : (l.diff > 0 ? '+' : '') + yen(l.diff) }}</td>
-            </tr>
-          }
-          <tr class="grand-total">
-            <th scope="row">{{ 'premiumList.grandTotal' | transloco }}</th>
-            <td class="num strong">{{ yen(nc.appTotal) }}</td>
-            <td class="num strong">{{ nc.noticeTotal == null ? '—' : yen(nc.noticeTotal) }}</td>
-            <td class="num strong" [class.diff-cell]="nc.diffTotal">{{ nc.diffTotal == null ? '—' : (nc.diffTotal > 0 ? '+' : '') + yen(nc.diffTotal) }}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      @if (nc.status === 'diff' || nc.status === 'rounding' || noticeReasons().size > 0) {
-        <fieldset class="reasons">
-          <legend>{{ 'premiumNotice.reasonsTitle' | transloco }}</legend>
-          @for (r of diffReasons; track r) {
-            <label class="check">
-              <input type="checkbox" [checked]="noticeReasons().has(r)" [disabled]="!context.isAdmin()" (change)="toggleReason(r)" />
-              {{ 'premiumNotice.reason.' + r | transloco }}
-              @if (r === 'excluded' && problems().length > 0) {
-                <span class="badge badge-warn">{{ 'premiumNotice.excludedNow' | transloco: { count: problems().length } }}</span>
-              }
-            </label>
-          }
-        </fieldset>
-      }
-      <div class="field">
-        <label for="notice-note">{{ 'premiumNotice.note' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
-        <input id="notice-note" class="input" maxlength="500" [value]="noticeNote()" [disabled]="!context.isAdmin()"
-               (input)="noticeNote.set($any($event.target).value); noticeSaved.set(false)" />
-      </div>
-      @if (noticeError(); as k) {
-        <div class="alert alert-danger">{{ k | transloco }}</div>
-      }
-      @if (context.isAdmin()) {
-        <div class="notice-actions">
-          <button type="button" class="btn btn-primary" [disabled]="noticeSaving()" (click)="saveNotice()">
-            {{ (noticeSaving() ? 'common.saving' : 'premiumNotice.save') | transloco }}
-          </button>
-          @if (noticeSaved()) {
-            <span class="ok" role="status">{{ 'common.saved' | transloco }}</span>
-          }
-        </div>
-      }
-      <p class="hint">{{ 'premiumNotice.hint' | transloco }}</p>
-      <!-- 納める前に、作った人とは別の人が確かめる -->
-      @if (nc.status !== 'notEntered') {
-        <app-review-box class="review" [target]="noticeReviewId(month())" />
-      }
-    </section>
-  }
 }
