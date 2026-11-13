@@ -876,6 +876,22 @@ service cloud.firestore {
         allow delete: if false;
       }
 
+      // ----- 給与の実績の月の索引（ID ＝ 支払った月。その月に実績が入っている人の ID。11/13） -----
+      // 月の一覧で「入力済み・入れ忘れ」を数えるだけのために、実績を全部読まずに済ませる
+      match /payrollMonths/{month} {
+        function validPayrollMonth(d) {
+          return d.keys().hasAll(['ids', 'updatedAt']) && d.keys().hasOnly(['ids', 'complete', 'updatedAt'])
+            && isMonth(month)
+            && d.ids is list && d.ids.size() <= 20000
+            && (!('complete' in d) || d.complete is bool)
+            && d.updatedAt == request.time;
+        }
+
+        allow read: if isMember(officeId);
+        allow create, update: if isAdmin(officeId) && validPayrollMonth(request.resource.data);
+        allow delete: if false;
+      }
+
       match /premiumNotices/{month} {
         function validNotice(d) {
           return exactKeys(d, ['month', 'health', 'pension', 'childContribution', 'reasons', 'note',

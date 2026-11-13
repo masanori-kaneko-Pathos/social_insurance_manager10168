@@ -1,12 +1,16 @@
 import { Injectable, inject } from '@angular/core';
 import {
+  arrayRemove,
+  arrayUnion,
   collection,
   collectionGroup,
   doc,
   query,
   serverTimestamp,
+  setDoc,
   where,
   writeBatch,
+  WriteBatch,
 } from 'firebase/firestore';
 import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { db } from '../../core/firebase';
@@ -21,8 +25,11 @@ function inputOf(p: PayrollInput | null | undefined): Record<string, unknown> | 
   return { cash, fixed, inKind, retro, days, absentDays, workMinutes, prorated, state };
 }
 
-/** 1回の書き込みに入れる人数（1人 ＝ 実績1件 ＋ 履歴1件。batch の上限は500件） */
-const PER_BATCH = 250;
+/**
+ * 1回の書き込みに入れる人数（1人 ＝ 実績1件 ＋ 履歴1件。batch の上限は500件）
+ * 月ごとの索引（payrollMonths）も同じ束に入るので、その分（月の数）を空けておく
+ */
+const PER_BATCH = 230;
 
 /** 1人分の書き込み。input が null なら消す */
 export interface PayrollChange {
@@ -53,6 +60,13 @@ export class PartialSaveError extends Error {
   }
 }
 
+/** 月の索引：その月に実績が入っている人（offices/{id}/payrollMonths/{YYYY-MM}） */
+export interface PayrollMonthIndex {
+  ids: string[];
+  /** 実績を全部読んで作った索引か（false・なし ＝ 書き込みで足しただけで、前からある分が抜けているかもしれない） */
+  complete?: boolean;
+}
+
 /**
  * 給与の実績（従業員の下。1人 × 1か月 ＝ 1件。ドキュメントIDは支払った月）
  * 事業所の全員分は collectionGroup で読む（そのために officeId・employeeId・paidMonth を文書に入れている）
@@ -63,6 +77,61 @@ export class PayrollService {
 
   private col(officeId: string, employeeId: string) {
     return collection(db, 'offices', officeId, 'employees', employeeId, 'payrolls');
+  }
+
+  private indexRef(officeId: string, paidMonth: string) {
+    return doc(db, 'offices', officeId, 'payrollMonths', paidMonth);
+  }
+
+  /**
+   * 月の索引に「入った人」を足す（同じ束に入れる。arrayUnion なので何度足しても1つ）
+   * 消した人は束の外で外す（同じ文書に2回書くのを避けるため。消すのはまれ）
+   */
+  private addToIndex(batch: WriteBatch, officeId: string, added: ReadonlyMap<string, string[]>): void {
+    for (const [month, ids] of added) {
+      if (ids.length === 0) continue;
+      batch.set(this.indexRef(officeId, month), { ids: arrayUnion(...ids), updatedAt: serverTimestamp() }, { merge: true });
+    }
+  }
+
+  private async removeFromIndex(officeId: string, paidMonth: string, ids: readonly string[]): Promise<void> {
+    if (ids.length === 0) return;
+    await setDoc(
+      this.indexRef(officeId, paidMonth),
+      { ids: arrayRemove(...ids), updatedAt: serverTimestamp() },
+      { merge: true },
+    );
+  }
+
+  /**
+   * 月ごとの「入力済みの人」（月の一覧で使う。11/13）
+   * 全員の全部を読む（1年で約1万回）代わりに、月ごとの索引を1件ずつ読む（12か月で12回）
+   * 索引がまだない月だけ、その月の実績を1回読んで索引を作る（管理者のときだけ保存。最初の1回だけかかる）
+   */
+  async savedIdsByMonth(officeId: string, months: readonly string[], canWrite: boolean): Promise<Map<string, Set<string>>> {
+    const out = new Map<string, Set<string>>();
+    await Promise.all(
+      months.map(async (m) => {
+        const snap = await countedGetDoc(this.indexRef(officeId, m));
+        const index = snap.exists() ? (snap.data() as PayrollMonthIndex) : null;
+        if (index?.complete === true) {
+          out.set(m, new Set(index.ids));
+          return;
+        }
+        const docs = await countedGetDocs(
+          query(collectionGroup(db, 'payrolls'), where('officeId', '==', officeId), where('paidMonth', '==', m)),
+        );
+        const ids = docs.docs.map((d) => d.data()['employeeId'] as string);
+        out.set(m, new Set(ids));
+        if (canWrite) {
+          // 作れなくても一覧は出せるので、失敗は記録だけ
+          await setDoc(this.indexRef(officeId, m), { ids, complete: true, updatedAt: serverTimestamp() }).catch((err) =>
+            console.error(err),
+          );
+        }
+      }),
+    );
+    return out;
   }
 
   private strip(data: Record<string, unknown>): Payroll {
@@ -119,6 +188,11 @@ export class PayrollService {
     for (let i = 0; i < changes.length; i += PER_BATCH) {
       await this.saveMonthChunk(officeId, paidMonth, changes.slice(i, i + PER_BATCH));
     }
+    await this.removeFromIndex(
+      officeId,
+      paidMonth,
+      changes.filter((c) => c.input === null && c.exists).map((c) => c.employeeId),
+    );
   }
 
   private async saveMonthChunk(officeId: string, paidMonth: string, changes: readonly PayrollChange[]): Promise<void> {
@@ -143,6 +217,8 @@ export class PayrollService {
         });
       }
     }
+    const added = changes.filter((c) => c.input !== null).map((c) => c.employeeId);
+    this.addToIndex(batch, officeId, new Map([[paidMonth, added]]));
     await batch.commit();
   }
 
@@ -159,7 +235,10 @@ export class PayrollService {
     let done = 0;
     for (let i = 0; i < writes.length; i += SIZE) {
       const batch = writeBatch(db);
+      const added = new Map<string, string[]>();
       for (const w of writes.slice(i, i + SIZE)) {
+        if (!added.has(w.paidMonth)) added.set(w.paidMonth, []);
+        added.get(w.paidMonth)!.push(w.employeeId);
         const ref = doc(this.col(officeId, w.employeeId), w.paidMonth);
         const h = summarize(inputOf(w.before), inputOf(w.input));
         if (h) this.history.addTo(batch, officeId, w.employeeId, `payrolls/${w.paidMonth}`, [h]);
@@ -176,6 +255,7 @@ export class PayrollService {
           });
         }
       }
+      this.addToIndex(batch, officeId, added);
       try {
         await batch.commit();
       } catch (err) {

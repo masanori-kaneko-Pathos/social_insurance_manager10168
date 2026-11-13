@@ -1,13 +1,12 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { map } from 'rxjs';
 import { Employee } from '../../../../core/models/employee';
-import { Payroll } from '../../../../core/models/payroll';
 import { EmployeeService } from '../../../employees/employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
-import { latestPaidMonth, missingPayrolls, Period, payrollRows, periodOf } from '../../logic/payroll-rows';
+import { employedDuring, insuredDuring, latestPaidMonth, Period, periodOf } from '../../logic/payroll-rows';
 import { payrollOf } from '../../../office/office-settings';
 import { shiftMonth, todayLocal } from '../../../../shared/utils/date';
 import { PayrollService } from '../../payroll.service';
@@ -40,7 +39,8 @@ export class PayrollList {
   readonly context = inject(OfficeContext);
 
   private readonly employees = signal<Employee[]>([]);
-  private readonly payrolls = signal<Payroll[]>([]);
+  /** 月 → その月に実績が入っている人（月の索引。読んだ月だけ入る） */
+  private readonly savedIds = signal<ReadonlyMap<string, ReadonlySet<string>>>(new Map());
   readonly loading = signal(true);
   readonly errorKey = signal<string | null>(null);
 
@@ -59,28 +59,27 @@ export class PayrollList {
     return to && MONTH_RE.test(to) ? to : shiftMonth(this.latest(), 1);
   });
 
+  /** 表に出す12か月（上が新しい） */
+  private readonly months = computed(() => Array.from({ length: 12 }, (_, i) => shiftMonth(this.top(), -i)));
+
   readonly rows = computed<MonthRow[]>(() => {
     const office = this.context.current();
     if (!office || !this.latest()) return [];
     const schedule = payrollOf(office);
     const employees = this.employees();
-    const byMonth = new Map<string, Map<string, Payroll>>();
-    for (const p of this.payrolls()) {
-      if (!byMonth.has(p.paidMonth)) byMonth.set(p.paidMonth, new Map());
-      byMonth.get(p.paidMonth)!.set(p.employeeId, p);
-    }
-    return Array.from({ length: 12 }, (_, i) => {
-      const month = shiftMonth(this.top(), -i);
+    const savedIds = this.savedIds();
+    return this.months().map((month) => {
       const period = periodOf(month, schedule);
-      const saved = byMonth.get(month) ?? new Map<string, Payroll>();
-      const rows = payrollRows(employees, period, saved);
+      const saved = savedIds.get(month) ?? new Set<string>();
+      const employed = employees.filter((e) => employedDuring(e, period));
       const future = month > this.latest();
       return {
         month,
         period,
-        employed: rows.length,
-        saved: rows.filter((r) => r.saved).length,
-        missing: future ? 0 : missingPayrolls(employees, period, saved).length,
+        employed: employed.length,
+        saved: employed.filter((e) => saved.has(e.id)).length,
+        // 入れ忘れ：その期間に加入していて、実績がない人
+        missing: future ? 0 : employed.filter((e) => insuredDuring(e, period) && !saved.has(e.id)).length,
         future,
       };
     });
@@ -92,20 +91,28 @@ export class PayrollList {
   readonly nextTo = computed(() => shiftMonth(this.top(), 12));
 
   constructor() {
-    this.load();
+    // 前の1年・次の1年に移ったら、まだ読んでいない月の索引だけ読む
+    effect(() => {
+      const months = this.months();
+      // 読み込みの中で触る値（読んだ月など）で、この effect が回り直さないように untracked
+      if (months.length > 0 && this.latest()) untracked(() => this.load(months));
+    });
   }
 
-  private async load(): Promise<void> {
+  /**
+   * 従業員（最初の1回）と、月ごとの索引を読む（11/13）
+   * 前は事業所の実績を全部読んでいた（約1,000人 × 12か月 ＝ 1万回以上）。今は1か月 ＝ 1回
+   */
+  private async load(months: readonly string[]): Promise<void> {
     const office = this.context.current();
     if (!office) return;
+    const todo = months.filter((m) => !this.savedIds().has(m));
     try {
-      const employees = await this.employeesApi.list(office.id);
-      const payrolls = await this.payrollApi.listOfOffice(
-        office.id,
-        employees.map((e) => e.id),
-      );
-      this.employees.set(employees);
-      this.payrolls.set(payrolls);
+      if (this.employees().length === 0) this.employees.set(await this.employeesApi.list(office.id));
+      if (todo.length > 0) {
+        const got = await this.payrollApi.savedIdsByMonth(office.id, todo, this.context.isAdmin());
+        this.savedIds.update((cur) => new Map([...cur, ...got]));
+      }
     } catch (err) {
       console.error(err);
       this.errorKey.set('payroll.error.load');
