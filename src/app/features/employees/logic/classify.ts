@@ -263,6 +263,12 @@ export function reasonParams(c: Pick<Classification, 'nums'>): Record<string, st
     days: n.monthlyDays,
     std: hm(n.stdWeeklyMinutes),
     stdDays: n.stdMonthlyDays ?? '',
+    // 4分の3の線（「40:00 のうち 20:00」だと、何と比べたか分かりにくいので、線そのものも出す。11/13）
+    stdQ: n.stdWeeklyMinutes === null ? '' : hm(Math.ceil((n.stdWeeklyMinutes * 3) / 4)),
+    stdDaysQ:
+      n.stdMonthlyDays === null
+        ? ''
+        : String(Math.round(n.stdMonthlyDays * 0.75 * 100) / 100),
     minHours: hm(n.minWeeklyMinutes),
     wage: yen(n.scheduledWage),
     wageMin: yen(n.wageMin),

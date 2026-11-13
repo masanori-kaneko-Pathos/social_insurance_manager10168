@@ -1806,9 +1806,9 @@
       "noCriteria": "Coverage criteria (masterCriteria) are not registered."
     },
     "below": {
-      "hours": "Weekly hours are below 3/4 of a regular worker ({{work}} of {{std}}).",
-      "days": "Monthly days are below 3/4 of a regular worker ({{days}} of {{stdDays}} days).",
-      "both": "Weekly hours ({{work}} of {{std}}) and monthly days ({{days}} of {{stdDays}} days) are both below 3/4 of a regular worker."
+      "hours": "Weekly hours {{work}} are below three quarters ({{stdQ}}) of a regular worker ({{std}}).",
+      "days": "Monthly days {{days}} are below three quarters ({{stdDaysQ}}) of a regular worker ({{stdDays}}).",
+      "both": "Weekly hours {{work}} (three quarters: {{stdQ}}) and monthly days {{days}} (three quarters: {{stdDaysQ}}) are both below three quarters of a regular worker ({{std}}, {{stdDays}} days)."
     },
     "fold": {
       "inKind": "Enter the expected in-kind amount (housing, meals, etc.)"
