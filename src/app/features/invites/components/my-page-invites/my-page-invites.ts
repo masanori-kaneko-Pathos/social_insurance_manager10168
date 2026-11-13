@@ -1,7 +1,10 @@
-import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, OnInit, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { ContractDoc, EMPLOYMENT_TYPES } from '../../../../core/models/contract';
 import { Employee } from '../../../../core/models/employee';
+import { ContractService } from '../../../employees/contract.service';
+import { contractAt } from '../../../employees/logic/contract-form-model';
 import { Invite } from '../../../../core/models/office-records';
 import { Pager } from '../../../../shared/components/pager/pager';
 import { PersonListBar } from '../../../../shared/components/person-list-bar/person-list-bar';
@@ -53,6 +56,7 @@ interface Result {
 export class MyPageInvites implements OnInit {
   private readonly invitesApi = inject(InviteService);
   private readonly employeesApi = inject(EmployeeService);
+  private readonly contractsApi = inject(ContractService);
   private readonly transloco = inject(TranslocoService);
   readonly context = inject(OfficeContext);
 
@@ -109,7 +113,13 @@ export class MyPageInvites implements OnInit {
   readonly filtered = computed(() => {
     const st = this.statusFilter();
     const rows = st === 'all' ? this.rows() : this.rows().filter((r) => r.status === st);
-    return filterAndSort(rows, this.listOptions(), (r) => r.employee, () => null, () => false);
+    return filterAndSort(rows, this.listOptions(), (r) => r.employee, (r) => this.contractOf(r.employee), () => false, {
+      dept: (r) => this.deptName(r.employee) ?? '',
+      employment: (r) => {
+        const t = this.contractOf(r.employee)?.employmentType;
+        return t ? String(EMPLOYMENT_TYPES.indexOf(t)) : '';
+      },
+    });
   });
   readonly shown = computed(() => pageOf(this.filtered(), this.page(), this.listOptions().size));
 
@@ -126,6 +136,43 @@ export class MyPageInvites implements OnInit {
 
   ngOnInit(): void {
     this.load();
+  }
+
+  // ===== 部署・雇用形態（ほかの表と同じく見せて、絞り込み・並べ替えにも使う。11/13） =====
+  /** 従業員 → 契約（読んだ契約はログイン中は覚えているので、ホームを開いたあとなら読み込みは増えない） */
+  private readonly contracts = signal<Map<string, ContractDoc[]>>(new Map());
+
+  private readonly contractsEffect = effect(() => {
+    const officeId = this.context.current()?.id;
+    const list = this.employees();
+    if (!officeId || list.length === 0) return;
+    untracked(() => void this.loadContracts(officeId, list));
+  });
+
+  private async loadContracts(officeId: string, list: readonly Employee[]): Promise<void> {
+    try {
+      const lists = await Promise.all(list.map((e) => this.contractsApi.list(officeId, e.id)));
+      this.contracts.set(new Map(list.map((e, i) => [e.id, lists[i]])));
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  /** 今日の契約（入社前の人は、入社日の契約） */
+  contractOf(e: Employee): ContractDoc | null {
+    const list = this.contracts().get(e.id);
+    if (!list) return null;
+    return contractAt(list, e.hireDate > this.today ? e.hireDate : this.today);
+  }
+
+  deptName(e: Employee): string | null {
+    const id = e.org?.departmentId;
+    return id ? (this.context.current()?.departments?.find((d) => d.id === id)?.name ?? null) : null;
+  }
+
+  /** 入社前の人（マイページだけ先に作ってもらい、入社前の手続きの依頼に答えてもらえる） */
+  isBeforeHire(e: Employee): boolean {
+    return e.hireDate > this.today;
   }
 
   private async load(): Promise<void> {

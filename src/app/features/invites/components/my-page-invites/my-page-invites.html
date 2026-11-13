@@ -31,7 +31,6 @@
     [(page)]="page"
     [total]="filtered().length"
     [pages]="shown().pages"
-    [showContract]="false"
     [showEntry]="false"
     [extraCount]="statusFilter() === 'all' ? 0 : 1"
   >
@@ -79,7 +78,10 @@
               [attr.aria-label]="'myPages.selectAll' | transloco"
             />
           </th>
-          <th><app-sort-header key="kana" [(options)]="listOptions" [(page)]="page">{{ 'myPages.col.employee' | transloco }}</app-sort-header></th>
+          <th><app-sort-header key="number" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.employeeNumber' | transloco }}</app-sort-header></th>
+          <th><app-sort-header key="kana" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.name' | transloco }}</app-sort-header></th>
+          <th><app-sort-header key="dept" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.department' | transloco }}</app-sort-header></th>
+          <th><app-sort-header key="employment" [(options)]="listOptions" [(page)]="page">{{ 'employee.list.employment' | transloco }}</app-sort-header></th>
           <th>{{ 'myPages.col.status' | transloco }}</th>
           <th>{{ 'myPages.col.detail' | transloco }}</th>
           <th></th>
@@ -98,10 +100,20 @@
                 />
               }
             </td>
+            <td class="mono">{{ r.employee.employeeNumber ?? '—' }}</td>
             <td>
-              <a [routerLink]="['/o', context.current()?.id, 'employees', r.employee.id]">
-                @if (r.employee.employeeNumber; as no) { <span class="emp-no">{{ no }}</span> }{{ nameOf(r.employee) }}
-              </a>
+              <a class="person-name" [routerLink]="['/o', context.current()?.id, 'employees', r.employee.id]">{{ nameOf(r.employee) }}</a>
+              @if (isBeforeHire(r.employee)) {
+                <span class="badge-before" [title]="'myPages.beforeHireTitle' | transloco">{{ 'myPages.beforeHire' | transloco: { date: r.employee.hireDate } }}</span>
+              }
+            </td>
+            <td class="org dept" [attr.title]="deptName(r.employee)">{{ deptName(r.employee) ?? '—' }}</td>
+            <td class="org">
+              @if (contractOf(r.employee)?.employmentType; as t) {
+                {{ 'contract.employmentType.' + t | transloco }}
+              } @else {
+                <span class="muted">—</span>
+              }
             </td>
             <td><span class="st st-{{ r.status }}">{{ 'myPages.status.' + r.status | transloco }}</span></td>
             <td class="sub">
@@ -118,7 +130,7 @@
             </td>
           </tr>
         } @empty {
-          <tr><td colspan="5" class="muted">{{ (rows().length === 0 ? 'myPages.empty' : 'myPages.noMatch') | transloco }}</td></tr>
+          <tr><td colspan="8" class="muted">{{ (rows().length === 0 ? 'myPages.empty' : 'myPages.noMatch') | transloco }}</td></tr>
         }
       </tbody>
     </table>

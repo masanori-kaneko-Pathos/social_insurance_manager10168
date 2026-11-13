@@ -118,3 +118,32 @@ td a {
   gap: var(--space-sm);
   margin-bottom: var(--space-sm);
 }
+
+/* 社員番号・部署・雇用形態の列（ほかの表と同じ。11/13） */
+td.mono {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-sub);
+}
+
+td.org {
+  font-size: var(--font-sm);
+  white-space: nowrap;
+}
+
+td.dept {
+  max-width: 9em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 入社前の印 */
+.badge-before {
+  display: inline-block;
+  margin-left: var(--space-xs);
+  padding: 0 6px;
+  font-size: var(--font-xs);
+  color: var(--color-text);
+  background: var(--color-highlight);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}

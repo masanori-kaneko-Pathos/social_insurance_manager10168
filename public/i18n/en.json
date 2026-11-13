@@ -3258,7 +3258,9 @@
     "allStatus": "My Page: all",
     "selectFiltered": "Select everyone selectable that matches ({{count}})",
     "clearSelection": "Clear selection",
-    "noMatch": "No employees match the conditions."
+    "noMatch": "No employees match the conditions.",
+    "beforeHire": "Before joining ({{date}})",
+    "beforeHireTitle": "People who have not joined yet can be invited too. They can answer pre-joining requests from My Page."
   },
   "monthPicker": {
     "pick": "Pick a month",

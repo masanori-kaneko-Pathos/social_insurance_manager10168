@@ -3258,7 +3258,9 @@
     "allStatus": "マイページ：すべて",
     "selectFiltered": "条件に合う選べる人をすべて選ぶ（{{count}}人）",
     "clearSelection": "選択を外す",
-    "noMatch": "条件に合う従業員がいません。"
+    "noMatch": "条件に合う従業員がいません。",
+    "beforeHire": "入社前（{{date}} 入社）",
+    "beforeHireTitle": "まだ入社していない人も招待できます。マイページから、入社前の手続きの依頼に答えてもらえます。"
   },
   "monthPicker": {
     "pick": "月を選ぶ",
