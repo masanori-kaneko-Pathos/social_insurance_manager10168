@@ -1368,8 +1368,8 @@
     "emptyMonth": "No employees were employed during this pay period.",
     "futureMonth": "The pay day for this month has not come yet.",
     "readonly": "View only. Only administrators can enter records.",
-    "showAll": "Show more columns",
-    "showBasic": "Amount paid in money only",
+    "showAll": "Show more input fields",
+    "showBasic": "Show fewer input fields",
     "fillEmptyDays": "Fill empty days for salaried employees",
     "candidate": "Use {{days}}",
     "candidateTitle": "Calendar days employed minus days absent (for monthly salary)",
@@ -1447,7 +1447,15 @@
     "monthPick": "Paid {{y}}-{{m}}",
     "workedDays": "Enter days worked",
     "workedDaysTitle": "For hourly or daily pay, base days are the days actually worked, including paid leave.",
-    "toMonthList": "Months"
+    "toMonthList": "Months",
+    "bulk": {
+      "title": "Fill in for the {{n}} people shown",
+      "emptyOnly": "Only where empty",
+      "daysUnit": "days",
+      "apply": "Fill in",
+      "candidate": "Fill monthly-paid people with the suggestion (calendar days − absences)",
+      "note": "Hourly and daily-paid people are skipped for suggestions. Press Save to keep the values."
+    }
   },
   "regular": {
     "title": "Annual SMR determination {{year}} (定時決定, teiji kettei)",

@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -67,6 +67,10 @@ const MONTH_RE = /^[0-9]{4}-(0[1-9]|1[0-2])$/;
   imports: [EnterNext, HalfWidthDigits, InKindCalculator, MonthPicker, Pager, PersonListBar, ReactiveFormsModule, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './payroll-month.html',
   styleUrl: './payroll-month.css',
+  host: {
+    '(document:click)': 'onDocumentClick($event)',
+    '(document:keydown.escape)': 'bulkOpen.set(false)',
+  },
 })
 export class PayrollMonth {
   private readonly fb = inject(FormBuilder).nonNullable;
@@ -285,11 +289,43 @@ export class PayrollMonth {
     if (c !== null) v.form.controls.days.setValue(String(c));
   }
 
-  /** 日数が空欄の行に、まとめて候補を入れる */
-  fillEmptyDays(): void {
-    for (const v of this.views()) {
-      if (v.form.controls.days.value.trim() === '') this.fillCandidate(v);
-    }
+  // ===== 支払基礎日数をまとめて入れる（見出しの窓。絞り込んだ人全員、ページをまたいで。11/13） =====
+  readonly bulkOpen = signal(false);
+  readonly bulkDays = signal('');
+  /** 空欄の人だけに入れる（初期値。入れた値を上書きしないように） */
+  readonly bulkEmptyOnly = signal(true);
+  private readonly bulkWrap = viewChild<ElementRef<HTMLElement>>('bulkWrap');
+
+  readonly bulkDaysOk = computed(() => {
+    const t = this.bulkDays().normalize('NFKC').trim();
+    return /^\d{1,2}$/.test(t) && Number(t) <= this.periodDays();
+  });
+
+  toggleBulk(): void {
+    this.bulkOpen.update((v) => !v);
+  }
+
+  private bulkTargets(): ViewRow[] {
+    return this.filtered().filter((v) => !this.bulkEmptyOnly() || v.form.controls.days.value.trim() === '');
+  }
+
+  /** 同じ日数を入れる（例：正社員で絞って 30） */
+  applyBulkDays(): void {
+    if (!this.bulkDaysOk()) return;
+    const d = String(Number(this.bulkDays().normalize('NFKC').trim()));
+    for (const v of this.bulkTargets()) v.form.controls.days.setValue(d);
+    this.bulkOpen.set(false);
+  }
+
+  /** 月給・日給月給の人に、候補（在籍した暦日数 − 欠勤日数）を入れる。時給・日給の人には入れない */
+  applyBulkCandidate(): void {
+    for (const v of this.bulkTargets()) this.fillCandidate(v);
+    this.bulkOpen.set(false);
+  }
+
+  onDocumentClick(event: MouseEvent): void {
+    const el = this.bulkWrap()?.nativeElement;
+    if (this.bulkOpen() && el && !el.contains(event.target as Node)) this.bulkOpen.set(false);
   }
 
   /** 隠れた列に保存済みの値がある（すべての列を出していないときの印） */

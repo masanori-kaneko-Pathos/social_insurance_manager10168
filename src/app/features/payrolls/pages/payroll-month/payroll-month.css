@@ -89,11 +89,11 @@ input.num {
 }
 
 .w-money {
-  width: 9em;
+  width: 7.5em; /* 99,999,999 まで入る幅（11/13 に 9em から詰めた） */
 }
 
 .w-days {
-  width: 4em;
+  width: 3.5em;
 }
 
 .w-hours {
@@ -228,4 +228,81 @@ td.mono {
 td.org {
   font-size: var(--font-sm);
   white-space: nowrap;
+}
+
+/* 部署の名前が長いときは「…」で切る（全部は title で出る） */
+td.dept {
+  max-width: 9em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== 支払基礎日数をまとめて入れる窓（見出し） ===== */
+.days-th {
+  position: relative;
+}
+
+.bulk-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.bulk-btn {
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.bulk-btn:hover {
+  color: var(--color-text);
+  text-decoration: underline;
+}
+
+.bulk-panel {
+  position: absolute;
+  top: calc(100% + var(--space-xs));
+  right: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  width: 300px;
+  padding: var(--space-md);
+  font-size: var(--font-sm);
+  font-weight: 400;
+  text-align: left;
+  white-space: normal;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popover);
+}
+
+.bulk-title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.bulk-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.bulk-note {
+  margin: 0;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.bulk-panel .opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
