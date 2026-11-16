@@ -18,7 +18,7 @@ export type IconName =
   | 'userPlus' // 従業員を登録
   | 'upload' // 出力する（箱から外へ）
   | 'download' // 取り込む（箱の中へ。11/16）
-  | 'transfer' // インポート／エクスポート（上下の矢印。11/16）
+  | 'folder' // インポート／エクスポート（フォルダ。上下の矢印は「随時改定の候補」と重なるため。11/16）
   | 'admin'; // 管理者（鍵）
 
 /**
@@ -116,9 +116,10 @@ export type IconName =
           <path d="M2 10.5v3h12v-3" />
           <path d="M8 2.5V10M5 7l3 3 3-3" />
         }
-        @case ('transfer') {
-          <path d="M5 2.5v10.5M2.5 10.5 5 13l2.5-2.5" />
-          <path d="M11 13.5V3M8.5 5.5 11 3l2.5 2.5" />
+        @case ('folder') {
+          <path
+            d="M1.5 4a1 1 0 0 1 1-1h3.2l1.5 1.5h6.3a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1z"
+          />
         }
         @case ('admin') {
           <circle cx="5.5" cy="8" r="3" />

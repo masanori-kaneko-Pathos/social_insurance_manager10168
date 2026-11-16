@@ -440,6 +440,9 @@ h1 {
   background: var(--color-surface);
   color: var(--color-text);
   box-shadow: var(--shadow-popover);
+  /* 中身が長いときは、窓ではなく中だけ動かす（窓にスクロールバーが付くと、右の角が四角く見えるため。11/16） */
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
 }
 
 .import-dialog[open] {
@@ -462,6 +465,8 @@ h1 {
 }
 
 .import-dialog .dialog-body {
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
   padding: var(--space-lg);
 }
 

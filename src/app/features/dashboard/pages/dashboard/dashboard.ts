@@ -253,7 +253,7 @@ export class Dashboard {
       { key: 'payroll', icon: 'payroll', link: [...o, 'payrolls', this.payMonth()] },
       { key: 'premiums', icon: 'premium', link: [...o, 'premiums'] },
       { key: 'addEmployee', icon: 'userPlus', link: [...o, 'employees', 'new'] },
-      { key: 'import', icon: 'transfer', link: [], action: 'import' },
+      { key: 'import', icon: 'folder', link: [], action: 'import' },
       { key: 'request', icon: 'request', link: [...o, 'requests', 'new'] },
       { key: 'bonus', icon: 'bonus', link: [...o, 'bonuses', 'new'] },
     ];
