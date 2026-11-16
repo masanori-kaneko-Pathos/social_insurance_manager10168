@@ -255,7 +255,7 @@ export function decideRegular(x: RegularInput): RegularResult {
     .sort()[0];
   if (acquired >= `${y}-06-01`) return { ...base, excluded: 'acquiredFromJune' };
 
-  // 7〜9月に随時改定・休業終了時改定がある人は対象外（健保法41条3項。○ 条文の確認はこれから）
+  // 7〜9月に随時改定・休業終了時改定がある人は対象外（◎ 健保法41条3項「改定され、又は改定されるべき」。反映前の候補は画面の札で知らせる。11/16 に条文を確認）
   const irregular = x.remunerations.some(
     (r) =>
       (r.reason === 'irregular' || r.reason === 'leaveEnd') && r.from >= `${y}-07` && r.from <= `${y}-09`,

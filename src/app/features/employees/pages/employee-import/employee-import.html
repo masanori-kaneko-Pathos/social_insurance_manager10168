@@ -170,12 +170,48 @@
         </div>
       }
 
-      @for (e of pv.plan.errors; track e.line) {
-        <div class="alert alert-danger">
-          {{
-            'employeeCsv.planError.' + e.code
-              | transloco: { line: e.line, number: e.employeeNumber }
-          }}
+      <!-- 社員番号が重なった行：その場で別の番号に直せる（11/16） -->
+      @if (pv.plan.errors.length > 0) {
+        <div class="card dup-card">
+          <h3>{{ 'employeeCsv.dup.title' | transloco: { n: pv.plan.errors.length } }}</h3>
+          <p class="sub">
+            {{ 'employeeCsv.dup.lead' | transloco }}
+            @if (numberSuggestion(); as next) {
+              {{ 'employeeCsv.dup.suggest' | transloco: { next: next } }}
+            }
+          </p>
+          <table class="dup-table">
+            <thead>
+              <tr>
+                <th class="num">{{ 'employeeCsv.dup.line' | transloco }}</th>
+                <th>{{ 'employeeCsv.dup.reason' | transloco }}</th>
+                <th>{{ 'employee.field.employeeNumber' | transloco }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (e of pv.plan.errors; track e.line) {
+                <tr>
+                  <td class="num">{{ e.line }}</td>
+                  <td>{{ 'employeeCsv.dup.code.' + e.code | transloco: { number: e.employeeNumber } }}</td>
+                  <td>
+                    <input
+                      class="input fix-input"
+                      [class.changed]="edits().has(editKey(e.line, 'employeeNumber'))"
+                      [value]="numberEdit(e.line, e.employeeNumber)"
+                      (input)="setEdit(e.line, 'employeeNumber', $any($event.target).value)"
+                      (keydown.enter)="applyEdits()"
+                      [attr.aria-label]="e.line + ' ' + ('employee.field.employeeNumber' | transloco)"
+                    />
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          <div class="actions">
+            <button type="button" class="btn btn-small btn-primary" [disabled]="edits().size === 0 || saving()" (click)="applyEdits()">
+              {{ 'employeeCsv.applyEdits' | transloco: { n: edits().size } }}
+            </button>
+          </div>
         </div>
       }
 

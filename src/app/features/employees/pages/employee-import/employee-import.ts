@@ -24,6 +24,7 @@ import {
   EmployeeCsvRead,
   ImportItem,
   ImportPlan,
+  nextEmployeeNumber,
   planImport,
   readEmployeeCsv,
 } from '../../logic/employee-csv';
@@ -41,6 +42,8 @@ interface Preview {
   encoding: CsvEncoding | null; // Excel・PDF は null
   read: EmployeeCsvRead;
   plan: ImportPlan;
+  /** 登録済みの社員番号（重なったときの空き番号の例を出すため。11/16） */
+  existingNumbers: string[];
   /** 読んだ表（うちの見出し）。画面で直すとき・エラーの行を書き出すときに使う */
   table: string[][];
 }
@@ -171,6 +174,23 @@ export class EmployeeImport {
     downloadCsv(`employees-errors-${todayLocal()}.csv`, [header, ...rows]);
   }
 
+  /**
+   * 社員番号が重なった行を、画面で別の番号に直す（11/16）
+   * 直した番号は、ほかの列の直しと同じく「直した内容で確かめ直す」で表に入れて読み直す
+   */
+  numberEdit(line: number, current: string): string {
+    return this.edits().get(this.editKey(line, 'employeeNumber')) ?? current;
+  }
+
+  /** 空いている番号の例（登録済み・ファイルの中・画面で直した番号のどれとも重ならない） */
+  readonly numberSuggestion = computed(() => {
+    const p = this.preview();
+    if (!p) return null;
+    const inFile = p.read.rows.map((r) => r.values.employeeNumber ?? '');
+    const edited = [...this.edits().entries()].filter(([k]) => k.endsWith('|employeeNumber')).map(([, v]) => v);
+    return nextEmployeeNumber([...p.existingNumbers, ...inFile, ...edited]);
+  });
+
   readonly rowErrors = computed(
     () => this.preview()?.read.rows.filter((r) => r.errors.length > 0) ?? [],
   );
@@ -256,6 +276,7 @@ export class EmployeeImport {
         this.rates.grades(),
       ]);
       const read = readEmployeeCsv(table);
+      const existingNumbers = existing.map((e) => e.employeeNumber ?? '').filter(Boolean);
       const plan = planImport(read.rows, {
         office: {
           standardHours: office.standardHours ?? null,
@@ -263,10 +284,10 @@ export class EmployeeImport {
         },
         criteria,
         gradeTables,
-        existingNumbers: new Set(existing.map((e) => e.employeeNumber ?? '').filter(Boolean)),
+        existingNumbers: new Set(existingNumbers),
         departments: office.departments ?? [],
       });
-      this.preview.set({ fileName: file.fileName, encoding: file.encoding, read, plan, table });
+      this.preview.set({ fileName: file.fileName, encoding: file.encoding, read, plan, table, existingNumbers });
       this.skipErrors.set(false);
     } catch (err) {
       console.error(err);

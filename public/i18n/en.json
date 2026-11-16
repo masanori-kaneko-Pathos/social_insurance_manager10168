@@ -2264,7 +2264,18 @@
     "manyErrors": "With many errors, export the error rows, fix them in Excel and import that file again. The \"Error\" column on the right says what to fix.",
     "errorColumn": "Error",
     "nextDependents": "Import dependents",
-    "nextPayrolls": "Import pay records"
+    "nextPayrolls": "Import pay records",
+    "dup": {
+      "title": "Rows with duplicate employee numbers ({{n}})",
+      "lead": "These rows are not imported. Change the number and press \"Check again with fixes\" to import them.",
+      "suggest": "Next free number, for example: {{next}}",
+      "line": "Row",
+      "reason": "Reason",
+      "code": {
+        "duplicateInFile": "{{number}} appears more than once in the file",
+        "alreadyExists": "{{number}} is already registered"
+      }
+    }
   },
   "historyCsv": {
     "modeLabel": "What to import",

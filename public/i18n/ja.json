@@ -2264,7 +2264,18 @@
     "manyErrors": "エラーが多いときは、「エラーの行だけ書き出す」で Excel で直して、そのファイルを取り込み直すのが早いです。右端の「エラー」の列に、直す所が書いてあります。",
     "errorColumn": "エラー",
     "nextDependents": "扶養家族を取り込む",
-    "nextPayrolls": "給与の実績を取り込む"
+    "nextPayrolls": "給与の実績を取り込む",
+    "dup": {
+      "title": "社員番号が重なっている行（{{n}}行）",
+      "lead": "この行は取り込みません。別の番号に直して「直した内容で確かめ直す」を押すと、取り込めるようになります。",
+      "suggest": "空いている番号の例：{{next}}",
+      "line": "行",
+      "reason": "理由",
+      "code": {
+        "duplicateInFile": "{{number}} がファイルの中で重なっている",
+        "alreadyExists": "{{number}} はもう登録されている"
+      }
+    }
   },
   "historyCsv": {
     "modeLabel": "取り込むもの",

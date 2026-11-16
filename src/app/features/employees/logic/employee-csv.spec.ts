@@ -2,6 +2,7 @@ import type { GradeTableDoc } from '../../../core/models/rates';
 import { HEALTH_ROWS, PENSION_ROWS } from '../../payrolls/logic/grades.fixture';
 import {
   EMPLOYEE_CSV_HEADERS,
+  nextEmployeeNumber,
   employeeCsvTemplate,
   ImportContext,
   planImport,
@@ -155,5 +156,17 @@ describe('planImport：契約から加入と標準報酬を出す', () => {
     const it0 = plan([BASE], { ...CTX, office: { standardHours: null } }).items[0];
     expect(it0.warnings).toEqual(['unknownCategory']);
     expect(it0.employee.health.enrolled).toBeFalse();
+  });
+});
+
+describe('nextEmployeeNumber（重なったときの空き番号の例。11/16）', () => {
+  it('いちばん多い形の、いちばん大きい数字の次（桁はそろえる）', () => {
+    expect(nextEmployeeNumber(['T0001', 'T0042', 'T0007', 'A1'])).toBe('T0043');
+    expect(nextEmployeeNumber(['12', '9'])).toBe('13');
+    expect(nextEmployeeNumber(['T0999'])).toBe('T1000');
+  });
+  it('数字で終わる番号がなければ null', () => {
+    expect(nextEmployeeNumber(['ABC', ''])).toBeNull();
+    expect(nextEmployeeNumber([])).toBeNull();
   });
 });

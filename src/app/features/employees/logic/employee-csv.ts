@@ -742,3 +742,31 @@ export const EMPLOYEE_TABLE_SPEC: OurTableSpec<EmployeeImportKey, EmployeeColumn
   outHeader: (c) => EMPLOYEE_CSV_HEADERS[c],
   finish: finishEmployeeRow,
 };
+
+/**
+ * 空いている社員番号の例（取り込みで番号が重なったときの候補。11/16）
+ * いちばん多い「英字の頭＋数字」の形を見て、いちばん大きい数字の次を返す（桁数はそろえる）。形がなければ null
+ * 例：T0001・T0042 があれば T0043
+ */
+export function nextEmployeeNumber(taken: Iterable<string>): string | null {
+  let best: { prefix: string; width: number; max: number } | null = null;
+  const groups = new Map<string, { prefix: string; width: number; max: number; count: number }>();
+  for (const n of taken) {
+    const m = /^(.*?)(\d+)$/.exec(n);
+    if (!m) continue;
+    const key = `${m[1]}|${m[2].length}`;
+    const g = groups.get(key) ?? { prefix: m[1], width: m[2].length, max: 0, count: 0 };
+    g.max = Math.max(g.max, Number(m[2]));
+    g.count += 1;
+    groups.set(key, g);
+  }
+  let bestCount = 0;
+  for (const g of groups.values()) {
+    if (g.count > bestCount) {
+      best = g;
+      bestCount = g.count;
+    }
+  }
+  if (!best) return null;
+  return best.prefix + String(best.max + 1).padStart(best.width, '0');
+}

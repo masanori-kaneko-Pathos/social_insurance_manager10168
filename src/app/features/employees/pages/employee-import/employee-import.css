@@ -192,3 +192,27 @@ progress {
   border-color: var(--color-primary);
   background: var(--color-highlight-soft);
 }
+
+/* 社員番号が重なった行を直す欄（11/16） */
+.dup-card {
+  margin: var(--space-sm) 0;
+  border: 1px solid var(--color-danger-text);
+}
+
+.dup-card h3 {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-md);
+  color: var(--color-danger-text);
+}
+
+.dup-table {
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+.dup-table th,
+.dup-table td {
+  padding: 4px var(--space-sm);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
