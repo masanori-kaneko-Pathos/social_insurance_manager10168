@@ -68,6 +68,16 @@ describe('buildPremiumRow：一覧の1行', () => {
     expect(row('2025-09', A, remA).changes).toEqual(['grade']);
   });
 
+  it('届出なしの一斉改定の行から始まる月は cap（等級変更の代わり。11/16）', () => {
+    const rems: RemunerationLike[] = [
+      rem('2025-09', [40, 830000], [32, 650000]),
+      { ...rem('2027-09', [40, 830000], [33, 680000]), capRevised: ['pension'] },
+    ];
+    expect(row('2027-09', A, rems).changes).toEqual(['cap']);
+    expect(row('2027-09', A, rems).pension).toEqual({ grade: 33, standard: 680000 });
+    expect(row('2027-10', A, rems).changes).toEqual([]);
+  });
+
   it('料率が変わった月は rate（2026年3月分：令和8年度の料率）', () => {
     expect(row('2026-03', A, remA).changes).toEqual(['rate']);
   });

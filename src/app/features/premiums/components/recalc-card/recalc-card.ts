@@ -11,6 +11,7 @@ import { RemunerationService } from '../../../employees/remuneration.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import { everKumiai, premiumOf, ratesForOffice } from '../../../office/office-settings';
 import { RateTables } from '../../../rates/logic/pick-rates';
+import { withCapRevisions } from '../../../rates/logic/cap-revision';
 import { RateService } from '../../../rates/rate.service';
 import { formatMilli } from '../../logic/rounding';
 import { periodOf, recalc, RecalcResult } from '../../logic/recalc';
@@ -96,7 +97,8 @@ export class RecalcCard implements OnInit {
       ]);
       this.tables = tables;
       this.gradeTables = grades;
-      this.remunerations = rems;
+      // 等級の上限が上がった月は、届出なしの一斉改定の行を足す（訂正前・訂正後の両方に効く。11/16）
+      this.remunerations = withCapRevisions(rems, grades);
       this.saved.set(saved);
     } catch (err) {
       console.error(err);

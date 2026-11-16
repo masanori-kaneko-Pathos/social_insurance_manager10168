@@ -27,6 +27,8 @@ export interface RemunerationLike {
   from: string;
   health: StandardRemuneration;
   pension: StandardRemuneration;
+  /** 届出なしの一斉改定（等級の上限が上がった月）で足した行の印（cap-revision.ts。11/16） */
+  capRevised?: readonly ('health' | 'pension')[];
 }
 
 export interface MonthlyInput {

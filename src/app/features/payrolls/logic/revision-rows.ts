@@ -22,6 +22,7 @@ import {
 import { contractAt } from '../../employees/logic/contract-form-model';
 import { coverageForMonth } from '../../employees/logic/coverage';
 import { pickGradeTable } from '../../rates/logic/grade';
+import { withCapRevisions } from '../../rates/logic/cap-revision';
 import { findStartMonths, IrregularResult, judgeIrregular } from './irregular';
 import { judgeLeaveEnd, LeaveEndResult } from './leave-end';
 import { PaySchedule, periodOf } from './payroll-rows';
@@ -100,6 +101,8 @@ export function revisionItems(p: RevisionPerson, ctx: RevisionContext): Revision
     pension: pickGradeTable(ctx.gradeTables, 'pension', m)?.grades ?? [],
   });
   const reflected = (revisedFrom: string) => p.remunerations.some((r) => r.from === revisedFrom);
+  // 今の等級は、届出なしの一斉改定（等級の上限が上がった月）も入れて比べる。反映済みかは保存した行だけで見る（11/16）
+  const remunerations = withCapRevisions(p.remunerations, ctx.gradeTables);
 
   const items: RevisionItem[] = [];
 
@@ -109,7 +112,7 @@ export function revisionItems(p: RevisionPerson, ctx: RevisionContext): Revision
       leave,
       allLeaves: e.leaves,
       payrolls: p.payrolls,
-      remunerations: p.remunerations,
+      remunerations,
       gradesAt,
       minDaysAt,
       partAt,
@@ -126,7 +129,7 @@ export function revisionItems(p: RevisionPerson, ctx: RevisionContext): Revision
     const r = judgeIrregular({
       start,
       payrolls: p.payrolls,
-      remunerations: p.remunerations,
+      remunerations,
       gradesAt,
       minDaysAt,
       pensionAt,

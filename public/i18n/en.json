@@ -1018,6 +1018,12 @@
     "selectGrade": "Select a grade",
     "gradeLabel": "Grade {{grade}}  JPY {{standard}}",
     "gradeShort": "G{{grade}}",
+    "cap": {
+      "reason": "Cap raised",
+      "badge": "No filing",
+      "note": "The top pension grade was raised, so the pension office revised this without a filing (a revision notice is sent to the company). The monthly remuneration stays as last decided.",
+      "noEdit": "Calculated automatically"
+    },
     "autoHint": "The grade is chosen from the monthly pay. If it differs from the official notice, select it again.",
     "manualHint": "Differs from the grade for this pay (the selected grade will be saved)",
     "confirmDelete": "Delete",
@@ -1124,6 +1130,7 @@
     "change": {
       "new": "New",
       "grade": "Grade",
+      "cap": "Cap raised",
       "rate": "Rate",
       "other": "Changed",
       "careStart": "Care starts",
@@ -1200,6 +1207,7 @@
     },
     "changeNote": {
       "careStart": "Turned 40: long-term care premium applies from this month (paid together with health insurance).",
+      "cap": "The top pension grade was raised, so the pension office revised the standard monthly remuneration without a filing (a revision notice is sent to the company). Calculated with the new grade from this month.",
       "careEnd": "Turned 65 (or became exempt): long-term care premium no longer applies from this month."
     },
     "exportScope": {

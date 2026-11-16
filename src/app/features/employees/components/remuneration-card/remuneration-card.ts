@@ -15,6 +15,7 @@ import { OfficeContext } from '../../../office/office-context.service';
 import { decideStandard, parseYen, pickGradeTable } from '../../../rates/logic/grade';
 import { formatYen } from '../../../../shared/utils/number';
 import { latest } from '../../../rates/logic/pick-rates';
+import { CapMark, withCapRevisions } from '../../../rates/logic/cap-revision';
 import { RateService } from '../../../rates/rate.service';
 import { RemunerationService } from '../../remuneration.service';
 
@@ -72,7 +73,14 @@ export class RemunerationCard implements OnInit {
   });
 
   /** 今月に使われている行（一覧で目立たせる） */
-  readonly currentFrom = computed(() => latest(this.rows(), this.thisMonth)?.from ?? null);
+  /**
+   * 表に並べる履歴（新しい順）。等級の上限が上がった月の、届出なしの一斉改定の行も足す（11/16）
+   * 足した行は保存していないので、編集・削除はできない
+   */
+  readonly history = computed<(RemunerationDoc & CapMark)[]>(() =>
+    withCapRevisions(this.rows(), this.gradeTables()).sort((a, b) => b.from.localeCompare(a.from)),
+  );
+  readonly currentFrom = computed(() => latest(this.history(), this.thisMonth)?.from ?? null);
 
   /** フォームの適用開始月で使う等級表（等級の選択肢になる） */
   readonly tableFor = computed(() => ({

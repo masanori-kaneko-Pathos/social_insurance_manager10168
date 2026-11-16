@@ -25,6 +25,7 @@ import {
   premiumOf,
 } from '../../../office/office-settings';
 import { noRates, pickRates, RateTables } from '../../../rates/logic/pick-rates';
+import { withCapRevisions } from '../../../rates/logic/cap-revision';
 import { formatPercent } from '../../../rates/logic/rate-format';
 import { RateService } from '../../../rates/rate.service';
 import { calcMonthly } from '../../logic/calc-monthly';
@@ -156,14 +157,16 @@ export class PremiumCard implements OnInit {
     this.errorKey.set(null);
     try {
       const adjusting = !!adjustmentOfficeOf(office);
-      const [tables, rems, contracts, criteria] = await Promise.all([
+      const [tables, rems, contracts, criteria, gradeTables] = await Promise.all([
         this.rates.tablesFor(office.id, everKumiai(office)),
         this.remApi.list(office.id, this.employee().id),
         adjusting ? this.contractApi.list(office.id, this.employee().id) : Promise.resolve([] as ContractDoc[]),
         adjusting ? this.criteriaApi.list() : Promise.resolve([] as CriteriaDoc[]),
+        this.rates.grades(),
       ]);
       this.tables.set(tables);
-      this.remunerations.set(rems);
+      // 等級の上限が上がった月は、届出なしの一斉改定の行を足して計算する（保存はしない。11/16）
+      this.remunerations.set(withCapRevisions(rems, gradeTables));
       this.contracts.set(contracts);
       this.criteria.set(criteria);
     } catch (err) {

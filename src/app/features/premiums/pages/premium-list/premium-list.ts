@@ -23,6 +23,7 @@ import {
   ratesForOffice,
 } from '../../../office/office-settings';
 import { noRates, pickRates, RateTables } from '../../../rates/logic/pick-rates';
+import { withCapRevisions } from '../../../rates/logic/cap-revision';
 import { RateService } from '../../../rates/rate.service';
 import { healthPartTotals, officeTotals } from '../../logic/premium-core';
 import { buildPremiumRow, PremiumRow } from '../../logic/premium-rows';
@@ -518,14 +519,16 @@ export class PremiumList {
     this.loading.set(true);
     this.errorKey.set(null);
     try {
-      const [employees, tables, bonusPayments] = await Promise.all([
+      const [employees, tables, bonusPayments, gradeTables] = await Promise.all([
         this.employeesApi.list(officeId),
         this.rates.tablesFor(officeId, everKumiai(office)),
         this.bonusApi.list(officeId),
+        this.rates.grades(),
       ]);
       // 報酬の履歴は従業員ごとに分かれているので、人数分を並行で読む
+      // 等級の上限が上がった月は、届出なしの一斉改定の行を足して計算する（保存はしない。11/16）
       const lists = await Promise.all(employees.map((e) => this.remApi.list(officeId, e.id)));
-      this.remunerations.set(new Map(employees.map((e, i) => [e.id, lists[i]])));
+      this.remunerations.set(new Map(employees.map((e, i) => [e.id, withCapRevisions(lists[i], gradeTables)])));
       // 保険料調整制度を使っているときだけ、契約（短時間労働者かの判定）と加入の基準を読む（ログイン中は覚えている）
       if (office.premiumAdjustment?.since) {
         const [contracts, criteria] = await Promise.all([

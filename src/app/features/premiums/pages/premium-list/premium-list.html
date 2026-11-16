@@ -481,7 +481,7 @@
                   {{ r.employee.lastName }} {{ r.employee.firstName }}
                 </a>
                 @for (c of r.changes; track c) {
-                  <span class="badge badge-change" [attr.title]="c === 'careStart' || c === 'careEnd' ? ('premiumList.changeNote.' + c | transloco) : null">{{
+                  <span class="badge badge-change" [attr.title]="c === 'careStart' || c === 'careEnd' || c === 'cap' ? ('premiumList.changeNote.' + c | transloco) : null">{{
                     'premiumList.change.' + c | transloco
                   }}</span>
                 }

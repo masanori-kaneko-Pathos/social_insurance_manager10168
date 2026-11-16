@@ -106,7 +106,7 @@
   <!-- 履歴 -->
   @if (loading()) {
     <p class="muted">{{ 'common.loading' | transloco }}</p>
-  } @else if (rows().length === 0) {
+  } @else if (history().length === 0) {
     <p class="muted">{{ 'remuneration.empty' | transloco }}</p>
   } @else {
     <div class="table-wrap">
@@ -126,7 +126,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (r of rows(); track r.from) {
+          @for (r of history(); track r.from) {
             <tr [class.current]="r.from === currentFrom()">
               <td class="mono">
                 {{ r.from }}〜
@@ -134,7 +134,14 @@
                   <span class="badge">{{ 'remuneration.current' | transloco }}</span>
                 }
               </td>
-              <td>{{ 'remuneration.reason.' + r.reason | transloco }}</td>
+              <td>
+                @if (r.capRevised) {
+                  {{ 'remuneration.cap.reason' | transloco }}
+                  <span class="badge" [title]="'remuneration.cap.note' | transloco">{{ 'remuneration.cap.badge' | transloco }}</span>
+                } @else {
+                  {{ 'remuneration.reason.' + r.reason | transloco }}
+                }
+              </td>
               <td class="num">{{ yen(r.monthlyAmount) }}</td>
               <td class="num">
                 <span class="grade">{{
@@ -150,7 +157,9 @@
               </td>
               @if (context.isAdmin()) {
                 <td class="row-actions">
-                  @if (confirmingDelete() === r.from) {
+                  @if (r.capRevised) {
+                    <span class="muted">{{ 'remuneration.cap.noEdit' | transloco }}</span>
+                  } @else if (confirmingDelete() === r.from) {
                     <button
                       type="button"
                       class="link danger"

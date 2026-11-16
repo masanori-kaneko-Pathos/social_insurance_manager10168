@@ -22,7 +22,8 @@ export type RowState = 'ok' | 'none' | 'missing' | 'error' | 'exempt';
 
 /** 前の月から変わった理由 */
 /** careStart・careEnd：介護分が始まった（40歳）・終わった（65歳・適用除外）月。前は 'care' 1つで、始まりか終わりか分からなかった（11/16） */
-export type ChangeReason = 'new' | 'grade' | 'careStart' | 'careEnd' | 'rate' | 'other';
+/** cap：等級の上限が上がったときの、届出なしの一斉改定（11/16） */
+export type ChangeReason = 'new' | 'grade' | 'cap' | 'careStart' | 'careEnd' | 'rate' | 'other';
 
 export interface PremiumRow extends PremiumSplit {
   state: RowState;
@@ -146,6 +147,13 @@ export function buildPremiumRow(input: RowInput): PremiumRow {
     pensionEmployeeYen: groups
       .filter((g) => g.parts.includes('pension'))
       .reduce((s, g) => s + g.employeeYen, 0),
-    changes: changesBetween(prev, cur),
+    changes: capChanges(input, changesBetween(prev, cur)),
   };
+}
+
+/** その月から一斉改定の行が効いていれば、「等級変更」を「上限の改定」に言いかえる */
+function capChanges(input: RowInput, changes: ChangeReason[]): ChangeReason[] {
+  const rem = latest(input.remunerations, input.month);
+  if (!rem?.capRevised || rem.from !== input.month) return changes;
+  return changes.map((c) => (c === 'grade' ? 'cap' : c));
 }

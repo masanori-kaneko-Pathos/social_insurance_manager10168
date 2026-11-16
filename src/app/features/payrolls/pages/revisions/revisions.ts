@@ -26,6 +26,7 @@ import {
 import { PayrollService } from '../../payroll.service';
 import { RevisionService } from '../../revision.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { withCapRevisions } from '../../../rates/logic/cap-revision';
 
 interface View {
   key: string; // 行の目印（従業員ID・種類・起算月）
@@ -127,6 +128,8 @@ export class RevisionsPage {
           },
           ctx,
         );
+        // 反映するとき、改定しない保険の今の等級に、届出なしの一斉改定の分も入れる（11/16）
+        const withCap = withCapRevisions(remunerations, tables);
         for (const item of items) {
           const start = item.type === 'leaveEnd' ? item.result.startMonth : item.result.start.month;
           views.push({
@@ -134,7 +137,7 @@ export class RevisionsPage {
             employee: e,
             item,
             group: groupOf(item),
-            remunerations,
+            remunerations: withCap,
           });
         }
       }

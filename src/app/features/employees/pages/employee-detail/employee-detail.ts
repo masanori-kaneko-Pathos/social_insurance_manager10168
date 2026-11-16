@@ -32,6 +32,8 @@ import { PremiumCard } from '../../../premiums/components/premium-card/premium-c
 import { RecalcCard } from '../../../premiums/components/recalc-card/recalc-card';
 import { calcMonthly } from '../../../premiums/logic/calc-monthly';
 import { noRates, pickRates, RateTables } from '../../../rates/logic/pick-rates';
+import { withCapRevisions } from '../../../rates/logic/cap-revision';
+import { adjustmentForEmployee } from '../../../premiums/logic/adjustment-office';
 import { RateService } from '../../../rates/rate.service';
 import { CareExemptionCard } from '../../components/care-exemption-card/care-exemption-card';
 import { OverseasCard } from '../../components/overseas-card/overseas-card';
@@ -207,7 +209,15 @@ export class EmployeeDetail {
       const month = this.thisMonth;
       const insurer = insurerFor(office, month);
       const rates = insurer ? pickRates(insurer, tables, month) : noRates(month);
-      const r = calcMonthly({ month, employee: e, remunerations: rems, rates, options: premiumOf(office) });
+      // 保険料調整制度を使っている事業所では、下の保険料のカードと同じく軽減後の額（11/16）
+      const contracts = this.contracts();
+      const criteria = this.criteria();
+      const since = office.premiumAdjustment?.since;
+      const adjustment =
+        since && contracts && criteria
+          ? adjustmentForEmployee({ ...office, since, standardHours: office.standardHours ?? null }, e, contracts, criteria, rems)(month)
+          : null;
+      const r = calcMonthly({ month, employee: e, remunerations: rems, rates, options: premiumOf(office), adjustment });
       if (r.exempt) return 'exempt';
       return r.missing.length > 0 ? null : r.employeeYen;
     } catch (err) {
@@ -281,7 +291,10 @@ export class EmployeeDetail {
     await Promise.all([
       settle(this.contractsApi.list(office.id, id), (v) => this.contracts.set(v)),
       settle(this.criteriaApi.list(), (v) => this.criteria.set(v)),
-      settle(this.remApi.list(office.id, id), (v) => this.remunerations.set(v)),
+      // 等級の上限が上がった月は、届出なしの一斉改定の行を足す（保存はしない。11/16）
+      settle(Promise.all([this.remApi.list(office.id, id), this.rates.grades()]), ([v, g]) =>
+        this.remunerations.set(withCapRevisions(v, g)),
+      ),
       settle(this.rates.tablesFor(office.id, everKumiai(office)), (v) => this.tables.set(v)),
     ]);
   }
