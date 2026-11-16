@@ -217,3 +217,44 @@ td.mono {
   padding: 0 var(--space-xs);
   font-size: 14px;
 }
+
+/* ===== エラーを画面で直す（11/16。従業員の取り込みと同じ見た目） ===== */
+.fix-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  margin: var(--space-sm) 0;
+}
+
+.fix-bar .opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-sm);
+}
+
+.fix-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-sm);
+}
+
+.fix-field {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.fix-input {
+  width: 9em;
+  padding: 2px 6px;
+  font-size: var(--font-sm);
+}
+
+.fix-input.changed {
+  border-color: var(--color-primary);
+  background: var(--color-highlight-soft);
+}

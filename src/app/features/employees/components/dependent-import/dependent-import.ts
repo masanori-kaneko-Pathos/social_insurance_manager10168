@@ -15,15 +15,21 @@ import {
   dependentCsvTemplate,
   DependentImportRow,
   DEPENDENT_CSV_HEADERS,
+  DependentColumn,
+  dependentFixColumns,
   personKey,
   planDependentImport,
 } from '../../logic/dependent-csv';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { applyCellEdits, cellKey, cellOf, errorRowsTable } from '../../../../shared/import/row-fix';
+import { TranslocoService } from '@jsverse/transloco';
 
 interface Preview {
   fileName: string;
   encoding: CsvEncoding | null;
   rows: DependentImportRow[];
+  /** 読んだ表（うちの見出し）。画面で直すとき・エラーの行を書き出すときに使う（11/16） */
+  table: string[][];
 }
 
 /** 同時に書く人数（1人 ＝ 扶養家族1件 ＋ 変更履歴1件） */
@@ -62,8 +68,58 @@ export class DependentImport {
   readonly skipRows = computed(() => this.preview()?.rows.filter((r) => r.skip) ?? []);
   readonly warnCount = computed(() => this.addRows().filter((r) => r.warnings.length > 0).length);
   readonly canImport = computed(
-    () => this.context.isAdmin() && !this.saving() && this.errorRows().length === 0 && this.addRows().length > 0,
+    () =>
+      this.context.isAdmin() &&
+      !this.saving() &&
+      (this.errorRows().length === 0 || this.skipErrors()) &&
+      this.addRows().length > 0,
   );
+
+  // ===== エラーの直し方（11/16。従業員の取り込みと同じ型）：画面で直す／エラーの行だけ書き出す／エラーの行を除いて取り込む =====
+  private readonly transloco = inject(TranslocoService);
+  readonly edits = signal<Map<string, string>>(new Map());
+  readonly skipErrors = signal(false);
+  readonly cellKey = cellKey;
+
+  fixColumns(r: DependentImportRow): DependentColumn[] {
+    return dependentFixColumns(r.errors);
+  }
+
+  editValue(line: number, column: DependentColumn): string {
+    const t = this.preview()?.table ?? [];
+    return this.edits().get(cellKey(line, column)) ?? cellOf(t, line, [this.headers[column]]);
+  }
+
+  setEdit(line: number, column: string, value: string): void {
+    this.edits.update((m) => new Map(m).set(cellKey(line, column), value));
+  }
+
+  /** 直した値を表に入れて、確認をやり直す */
+  async applyEdits(): Promise<void> {
+    const p = this.preview();
+    if (!p || this.edits().size === 0) return;
+    const table = applyCellEdits(p.table, this.edits(), (c) => [this.headers[c as DependentColumn] ?? c]);
+    this.edits.set(new Map());
+    await this.showPreview(table);
+  }
+
+  /** エラーの行だけを書き出す（右端に「エラー」の列） */
+  exportErrorRows(): void {
+    const p = this.preview();
+    if (!p) return;
+    const messages = new Map(
+      this.errorRows().map((r) => [
+        r.line,
+        r.errors
+          .map((e) => {
+            const t = this.errorText(e);
+            return `${this.fieldLabel(t.field)}${t.field ? '：' : ''}${this.transloco.translate(t.key)}`;
+          })
+          .join(' ／ '),
+      ]),
+    );
+    downloadCsv(`dependents-errors-${todayLocal()}.csv`, errorRowsTable(p.table, messages, this.transloco.translate('employeeCsv.errorColumn')));
+  }
 
   downloadTemplate(): void {
     downloadCsv('dependents-template.csv', dependentCsvTemplate());
@@ -110,6 +166,8 @@ export class DependentImport {
     this.preview.set(null);
     this.doneCount.set(null);
     this.errorKey.set(null);
+    this.edits.set(new Map());
+    this.skipErrors.set(false);
   }
 
   private async showPreview(table: string[][]): Promise<void> {
@@ -134,7 +192,7 @@ export class DependentImport {
         ids.map((id, i) => [id, new Set(lists[i].map((d) => personKey(d.lastName, d.firstName, d.birthDate)))]),
       );
       const rows = planDependentImport(table, targets, existing, today);
-      this.preview.set({ fileName: file.fileName, encoding: file.encoding, rows });
+      this.preview.set({ fileName: file.fileName, encoding: file.encoding, rows, table: table.map((r) => [...r]) });
     } catch (err) {
       console.error(err);
       this.errorKey.set(errorKeyOf(err, 'employeeCsv.error.read'));

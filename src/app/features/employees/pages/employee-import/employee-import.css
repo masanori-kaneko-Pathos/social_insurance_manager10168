@@ -216,3 +216,23 @@ progress {
   text-align: left;
   border-bottom: 1px solid var(--color-border);
 }
+
+/* 扶養家族・給与の実績の取り込み：エラーの行の中で直す欄（11/16） */
+.fix-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+.fix-field {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.fix-field .fix-input {
+  width: 9em;
+}

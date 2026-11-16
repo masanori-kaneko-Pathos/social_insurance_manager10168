@@ -507,3 +507,34 @@ export const PAYROLL_TABLE_SPEC: OurTableSpec<PayrollColumn, PayrollColumn> = {
   out: PAYROLL_COLUMNS,
   outHeader: (c) => PAYROLL_HEADERS.ja[c],
 };
+
+/** エラーのコード → 画面で直す欄（11/16。取り込み画面の「その場で直す」） */
+export const PAYROLL_FIX: Readonly<Record<string, readonly PayrollColumn[]>> = {
+  noEmployeeNumber: ['employeeNumber', 'name'],
+  unknownEmployee: ['employeeNumber'],
+  ambiguousEmployee: ['employeeNumber'],
+  unknownName: ['employeeNumber', 'name'],
+  ambiguousName: ['employeeNumber', 'name'],
+  badMonth: ['paidMonth'],
+  notEmployed: ['paidMonth'],
+  duplicate: ['employeeNumber', 'paidMonth'],
+  badProrated: ['prorated'],
+  badState: ['state'],
+  unreadable: ['cash', 'fixed', 'inKind', 'retro'],
+  notInteger: ['cash', 'fixed', 'inKind', 'retro'],
+  tooLarge: ['cash', 'fixed', 'inKind', 'retro'],
+  cashRequired: ['cash'],
+  fixedRequired: ['fixed'],
+  daysRequired: ['days'],
+  fixedOverCash: ['cash', 'fixed'],
+  retroOverTotal: ['retro'],
+  daysOutOfRange: ['days'],
+  absentOutOfRange: ['absentDays'],
+  minutesOutOfRange: ['hours'],
+};
+
+/** その列として受け付ける見出し（日本語・英語） */
+export function payrollLabels(column: string): string[] {
+  const c = column as PayrollColumn;
+  return PAYROLL_HEADERS.ja[c] ? [PAYROLL_HEADERS.ja[c], PAYROLL_HEADERS.en[c]] : [column];
+}

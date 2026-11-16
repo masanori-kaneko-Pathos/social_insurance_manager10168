@@ -1626,7 +1626,7 @@
       "missingColumns": "Required columns are missing:",
       "columnsHint": "Available column headers: {{cols}}",
       "zeroPadded": "For {{n}} rows whose employee number lost its leading zeros, the zeros were restored for matching (Excel can drop them).",
-      "hasErrors": "Some rows have problems, so nothing can be imported. Fix the CSV and choose it again (nothing was saved).",
+      "hasErrors": "Some rows have problems. Fix them below and press \"Check again with fixes\", or import without the error rows.",
       "moreErrors": "{{n}} more rows have problems.",
       "moreItems": "{{n}} more",
       "nothing": "There is nothing to import (all rows match saved records or are blank).",
@@ -1678,7 +1678,7 @@
     "hint": {
       "columns": "Columns are read by header name (any order; unknown columns are ignored). Required: employee number, month paid, paid in money, fixed wages, payment basis days. Rows without an employee number are matched by name.",
       "excel": "CSV files saved by Excel (Shift_JIS) can be read as is, including months Excel turned into dates like 2026/10/1 and employee numbers that lost leading zeros.",
-      "allOrNothing": "If any row has a problem, nothing is saved. Records are saved in groups of 500."
+      "allOrNothing": "If some rows have problems, fix them here or choose \"Import without error rows\". Saving is done in batches of 500."
     },
     "error": {
       "load": "Could not load employees or payroll records.",
@@ -3863,7 +3863,7 @@
     "lead": "If you keep the template headers, the file is read without mapping columns. Exports from other software can be read by mapping columns.",
     "columnsHint": "Required: employee number, relationship (spouse, eldest son, father, etc.), surname, surname in katakana, birth date, date became dependent. Blank income is 0 yen; blank occupation becomes \"under junior high\" for age 15 or younger and \"none\" otherwise. Overseas exception, contract-based income, relationship check, eligibility certificate and spouse phone are entered on the dependent screen.",
     "summary": "Add {{add}} · skip {{skip}} · errors {{error}} rows (with notes {{warn}})",
-    "hasErrors": "{{n}} rows have errors. Fix them and choose the file again.",
+    "hasErrors": "{{n}} rows have errors. Fix them here, or import without the error rows.",
     "import": "Import {{n}} people",
     "add": "Add",
     "done": "Imported {{n}} dependents.",
@@ -3906,5 +3906,8 @@
       "fromBeforeBirth": "Start date is before the birth date",
       "reasonMismatch": "Reason does not match the relationship"
     }
+  },
+  "importFix": {
+    "fix": "Fix here"
   }
 }

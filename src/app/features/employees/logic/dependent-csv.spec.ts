@@ -1,4 +1,4 @@
-import { DEPENDENT_COLUMNS, DEPENDENT_CSV_HEADERS, personKey, planDependentImport } from './dependent-csv';
+import { DEPENDENT_COLUMNS, DEPENDENT_CSV_HEADERS, dependentFixColumns, personKey, planDependentImport } from './dependent-csv';
 
 const HEAD = DEPENDENT_COLUMNS.map((c) => DEPENDENT_CSV_HEADERS[c]);
 const row = (x: Partial<Record<(typeof DEPENDENT_COLUMNS)[number], string>>) => DEPENDENT_COLUMNS.map((c) => x[c] ?? '');
@@ -38,5 +38,13 @@ describe('扶養家族の取り込み', () => {
     const [r] = run([row({ ...BASE, relationship: '叔父', lastName: '山田', firstName: '次郎', firstNameKana: 'ジロウ', birthDate: '1960-01-01', annualIncome: '0' })]);
     expect(r.input?.relationship).toBe('other');
     expect(r.input?.relationshipNote).toBe('叔父');
+  });
+});
+
+describe('dependentFixColumns（エラー → 直す欄。11/16）', () => {
+  it('コードから直す欄を決める（画面と同じチェックは field.欄.コード）', () => {
+    expect(dependentFixColumns(['employeeNotFound', 'date'])).toEqual(['employeeNumber', 'birthDate', 'from', 'to']);
+    expect(dependentFixColumns(['field.address.required', 'field.address.tooLong'])).toEqual(['address']);
+    expect(dependentFixColumns(['field.unknownField.x', 'nothing'])).toEqual([]);
   });
 });

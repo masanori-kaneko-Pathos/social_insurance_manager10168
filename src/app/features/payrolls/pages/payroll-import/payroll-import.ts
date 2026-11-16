@@ -16,8 +16,10 @@ import {
   CsvLang,
   ImportItem,
   ImportRead,
+  PAYROLL_FIX,
   PAYROLL_HEADERS,
   PAYROLL_IMPORT_FIELDS,
+  payrollLabels,
   PAYROLL_TABLE_SPEC,
   payrollFileName,
   readPayrollCsv,
@@ -25,6 +27,7 @@ import {
 import { monthsBetween, shiftMonth, todayLocal } from '../../../../shared/utils/date';
 import { latestPaidMonth } from '../../logic/payroll-rows';
 import { payrollOf, premiumMonthOfPay } from '../../../office/office-settings';
+import { applyCellEdits, cellKey, cellOf, columnsForCodes, errorRowsTable } from '../../../../shared/import/row-fix';
 import { PartialSaveError, PayrollService } from '../../payroll.service';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
@@ -112,7 +115,7 @@ export class PayrollImport {
       !!p &&
       this.context.isAdmin() &&
       p.read.missingColumns.length === 0 &&
-      p.read.errors.length === 0 &&
+      (p.read.errors.length === 0 || this.skipErrors()) &&
       this.writes().length > 0 &&
       !this.saving()
     );
@@ -223,6 +226,51 @@ export class PayrollImport {
     this.errorKey.set(null);
     this.inKindMissing.set('zero');
     this.lastTable = null;
+    this.edits.set(new Map());
+    this.skipErrors.set(false);
+  }
+
+  // ===== エラーの直し方（11/16。従業員の取り込みと同じ型）：画面で直す／エラーの行だけ書き出す／エラーの行を除いて取り込む =====
+  readonly edits = signal<Map<string, string>>(new Map());
+  readonly skipErrors = signal(false);
+  readonly cellKey = cellKey;
+
+  fixColumns(codes: readonly string[]): string[] {
+    return columnsForCodes(codes, PAYROLL_FIX);
+  }
+
+  /** 列の名前（画面の言葉） */
+  columnName(c: string): string {
+    return this.transloco.translate('payrollCsv.col.' + c);
+  }
+
+  editValue(line: number, column: string): string {
+    return this.edits().get(cellKey(line, column)) ?? cellOf(this.lastTable ?? [], line, payrollLabels(column));
+  }
+
+  setEdit(line: number, column: string, value: string): void {
+    this.edits.update((m) => new Map(m).set(cellKey(line, column), value));
+  }
+
+  /** 直した値を表に入れて、確認をやり直す */
+  applyEdits(): void {
+    if (!this.lastTable || this.edits().size === 0) return;
+    const table = applyCellEdits(this.lastTable, this.edits(), payrollLabels);
+    this.edits.set(new Map());
+    this.showPreview(table);
+  }
+
+  /** エラーの行だけを書き出す（右端に「エラー」の列。Excel で直して取り込み直す） */
+  exportErrorRows(): void {
+    const p = this.preview();
+    if (!p || !this.lastTable) return;
+    const messages = new Map(
+      p.read.errors.map((e) => [e.line, this.errorKeys(e.codes).map((k) => this.transloco.translate(k)).join(' ／ ')]),
+    );
+    downloadCsv(
+      `payrolls-errors-${todayLocal()}.csv`,
+      errorRowsTable(this.lastTable, messages, this.transloco.translate('employeeCsv.errorColumn')),
+    );
   }
 
   /** うちの見出しの表 → 読み取り（今までの確認画面） */

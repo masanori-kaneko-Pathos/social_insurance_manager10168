@@ -330,3 +330,28 @@ export function planDependentImport(
   });
   return out;
 }
+
+/** エラーのコード → 画面で直す欄（11/16。取り込み画面の「その場で直す」） */
+const DEPENDENT_FIX: Readonly<Record<string, readonly DependentColumn[]>> = {
+  employeeNotFound: ['employeeNumber'],
+  relationship: ['relationship'],
+  date: ['birthDate', 'from', 'to'],
+  sex: ['sex'],
+  yesNo: ['livingTogether', 'disabled'],
+  occupation: ['occupation'],
+  startReason: ['startReason'],
+  endReason: ['endReason'],
+};
+
+export function dependentFixColumns(codes: readonly string[]): DependentColumn[] {
+  const out: DependentColumn[] = [];
+  for (const c of codes) {
+    const cols: readonly string[] = c.startsWith('field.') ? [c.split('.')[1]] : (DEPENDENT_FIX[c] ?? []);
+    for (const col of cols) {
+      if ((DEPENDENT_COLUMNS as readonly string[]).includes(col) && !out.includes(col as DependentColumn)) {
+        out.push(col as DependentColumn);
+      }
+    }
+  }
+  return out;
+}
