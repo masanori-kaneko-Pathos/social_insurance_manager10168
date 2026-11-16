@@ -22,6 +22,8 @@ export interface Slip {
   total: { employeeYen: number; employerMilli: Milli; totalMilli: Milli };
   /** 拠出金（会社だけ）。かからない月は null */
   contribution: { employerMilli: Milli } | null;
+  /** 保険料調整制度で本人分から引いた額の合計（0.001円単位。なければ 0。11/16） */
+  reductionMilli: Milli;
 }
 
 export function premiumSlip(result: PremiumResult): Slip {
@@ -30,6 +32,7 @@ export function premiumSlip(result: PremiumResult): Slip {
   let employerMilli = 0;
   let totalMilli = 0;
   let contributionMilli: Milli | null = null;
+  const reductionMilli = result.groups.flatMap((g) => g.lines).reduce((s, l) => s + (l.reductionMilli ?? 0), 0);
 
   for (const g of result.groups) {
     if (g.parts.includes('childContribution')) {
@@ -70,5 +73,5 @@ export function premiumSlip(result: PremiumResult): Slip {
     });
   }
   const contribution = contributionMilli === null ? null : { employerMilli: contributionMilli };
-  return { rows, total: { employeeYen, employerMilli, totalMilli }, contribution };
+  return { rows, total: { employeeYen, employerMilli, totalMilli }, contribution, reductionMilli };
 }

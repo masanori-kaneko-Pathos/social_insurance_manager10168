@@ -25,7 +25,11 @@ import {
 } from '../../core/models/office';
 
 /** 従業員に見せてよい分だけを抜き出す */
-function forEmployees(o: Pick<OfficeDoc, (typeof FOR_EMPLOYEES_KEYS)[number]>) {
+function forEmployees(
+  o: Pick<OfficeDoc, (typeof FOR_EMPLOYEES_KEYS)[number]> &
+    Partial<Pick<OfficeDoc, 'premiumAdjustment' | 'standardHours' | 'specificApplication'>>,
+) {
+  const since = o.premiumAdjustment?.since ?? null;
   return {
     name: o.name,
     prefecture: o.prefecture,
@@ -33,6 +37,10 @@ function forEmployees(o: Pick<OfficeDoc, (typeof FOR_EMPLOYEES_KEYS)[number]>) {
     // 古いデータで履歴・設定がないときも、計算と同じ初期値で埋める（ルールが1行以上を求めるため）
     insurerHistory: insurerHistoryOf(o),
     premium: premiumOf(o),
+    // 保険料調整制度を使っているときだけ、本人の保険料の軽減を計算するための設定を写す（11/16）
+    ...(since && o.specificApplication
+      ? { adjustment: { since, standardHours: o.standardHours ?? null, specificApplication: o.specificApplication } }
+      : {}),
   };
 }
 

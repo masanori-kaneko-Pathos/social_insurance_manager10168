@@ -979,6 +979,21 @@
     },
     "toc": {
       "label": "Contents"
+    },
+    "adjustment": {
+      "title": "Premium adjustment scheme",
+      "on": "Use the premium adjustment scheme (the start request has been filed with the pension office)",
+      "since": "Start month",
+      "sinceRequired": "Enter the start month.",
+      "eligible": {
+        "voluntary": "Eligible: became a voluntary specified office in or after October 2026. File the request by the end of {{deadline}}.",
+        "expansion": "Eligible: became a specified office through the expansion from October 2027. File the request by the end of {{deadline}}."
+      },
+      "notEligible": {
+        "before": "Not eligible: already a specified office before October 2026 (or covered at 51 or more).",
+        "notSpecific": "Available once the office becomes a specified or voluntary specified office."
+      },
+      "hint": "Lowers the employee share of health and pension premiums for short-time workers with a standard monthly remuneration of 126,000 yen or less, with the employer temporarily paying more (3 years in total; half in the third year). The extra is deducted from premiums three months later. Long-term care, child support and bonuses are excluded. For union health insurance, only pension is calculated."
     }
   },
   "remuneration": {
@@ -1075,7 +1090,9 @@
       "rounded": "After rounding (combined)",
       "sum": "Total",
       "contributionNote": "* The contribution is employer-only and not in the total",
-      "formulaTitle": "Calculation (standard remuneration × rate, rounding)"
+      "formulaTitle": "Calculation (standard remuneration × rate, rounding)",
+      "adjustment": "* The premium adjustment scheme lowers the employee share by {{n}} yen (the employer pays it for now; it is deducted from premiums three months later)",
+      "lineAdjustment": "adjustment lowers the employee share by {{n}} yen"
     }
   },
   "premiumList": {
@@ -1188,6 +1205,10 @@
     "exportScope": {
       "all": "Exports everyone ({{n}})",
       "filtered": "Exports the {{n}} filtered people in the on-screen order (office totals included)"
+    },
+    "adjustment": {
+      "refund": "Premium adjustment refund (reduction for {{month}}, returned to the employer)",
+      "net": "Payment after the refund (compare with the payment notice)"
     }
   },
   "rateDialog": {

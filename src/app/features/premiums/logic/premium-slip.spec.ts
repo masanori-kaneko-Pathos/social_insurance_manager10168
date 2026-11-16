@@ -50,3 +50,11 @@ describe('premiumSlip（給与明細の形。11/16）', () => {
     expect(s.contribution).toBeNull();
   });
 });
+
+describe('premiumSlip：保険料調整制度の軽減（11/16）', () => {
+  it('行の reductionMilli を足す（なければ 0）', () => {
+    const l = { ...line('pension', 17934000, 5380200), reductionMilli: 3586800 };
+    expect(premiumSlip(result([group([l], 5380)])).reductionMilli).toBe(3586800);
+    expect(premiumSlip(result([health])).reductionMilli).toBe(0);
+  });
+});

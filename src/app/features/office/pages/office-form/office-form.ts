@@ -76,6 +76,7 @@ import {
   toCoverageForm,
   toggleMonth,
 } from '../../logic/office-form-model';
+import { adjustmentOfficeStatus } from '../../../premiums/logic/adjustment-office';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 /** 法人番号を入れたら法人名も必須 */
 function corporateNameRequired(g: AbstractControl): ValidationErrors | null {
@@ -189,6 +190,9 @@ export class OfficeForm {
         housing: [false],
         meals: [false],
       }),
+      // 保険料調整制度（編集のときだけ。使う・使い始めた月。11/16）
+      adjustmentOn: [false],
+      adjustmentSince: [''],
     },
     { validators: [corporateNameRequired, kumiaiNameRequired] },
   );
@@ -293,6 +297,21 @@ export class OfficeForm {
 
   readonly coverageValue = computed<CoverageFormValue>(() => this.value().coverage);
   readonly coverageErrs = computed(() => coverageErrors(this.coverageValue()));
+
+  // ===== 保険料調整制度（11/16） =====
+  /** 今の「特定適用事業所」の選び方から、使える事業所か・申出の期限 */
+  readonly adjustmentStatus = computed(() => {
+    const c = this.coverageValue();
+    return adjustmentOfficeStatus(
+      c.specific === 'none' ? null : { since: c.specificSince || null, voluntary: c.specific === 'voluntary' },
+    );
+  });
+  readonly adjustmentOnNow = computed(() => this.value().adjustmentOn);
+  /** 使うにしたのに、使い始めた月が入っていない */
+  readonly adjustmentSinceMissing = computed(() => {
+    const v = this.value();
+    return v.adjustmentOn && !MONTH.test(v.adjustmentSince);
+  });
 
   /** 加入の基準（masterCriteria）と、今月の基準 */
   readonly criteriaRows = signal<CriteriaDoc[] | null>(null);
@@ -475,6 +494,8 @@ export class OfficeForm {
       healthRounding: premium.healthRounding,
       changeFrom: '',
       coverage: toCoverageForm(o),
+      adjustmentOn: !!o.premiumAdjustment?.since,
+      adjustmentSince: o.premiumAdjustment?.since ?? '',
     });
     this.openNameEn.set(!!o.nameEn);
     this.openGroup.set(!!o.groupName);
@@ -708,6 +729,7 @@ export class OfficeForm {
       this.form.invalid ||
       !coverage ||
       this.standardMissing().length > 0 ||
+      (this.isEdit && this.adjustmentSinceMissing()) ||
       (this.insurerChanged() && !MONTH.test(changeFrom.value))
     ) {
       this.form.markAllAsTouched();
@@ -758,7 +780,12 @@ export class OfficeForm {
         const history = this.insurerChanged()
           ? withInsurerChange(insurerHistoryOf(office), { from: changeFrom.value, ...period })
           : insurerHistoryOf(office);
-        const input: OfficeInput = { ...base, insurerHistory: history };
+        const input: OfficeInput = {
+          ...base,
+          insurerHistory: history,
+          // 保険料調整制度は編集のときだけ書く（作るときの項目の決まりを変えないため）
+          premiumAdjustment: v.adjustmentOn && MONTH.test(v.adjustmentSince) ? { since: v.adjustmentSince } : null,
+        };
         await this.offices.update(office.id, input, this.tasksOf(this.pendingChanges()));
         await this.saveDepartments(office.id);
         this.changeFactDate.set(todayLocal());

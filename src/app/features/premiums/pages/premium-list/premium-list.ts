@@ -26,8 +26,15 @@ import { noRates, pickRates, RateTables } from '../../../rates/logic/pick-rates'
 import { RateService } from '../../../rates/rate.service';
 import { healthPartTotals, officeTotals } from '../../logic/premium-core';
 import { buildPremiumRow, PremiumRow } from '../../logic/premium-rows';
+import { calcMonthly } from '../../logic/calc-monthly';
 import { PremiumBreakdown } from '../../components/premium-breakdown/premium-breakdown';
 import { Pager } from '../../../../shared/components/pager/pager';
+import { ContractDoc } from '../../../../core/models/contract';
+import { CriteriaDoc } from '../../../../core/models/master';
+import { ContractService } from '../../../employees/contract.service';
+import { CriteriaService } from '../../../office/criteria.service';
+import { AdjustmentOffice, adjustmentForEmployee } from '../../logic/adjustment-office';
+import { AdjustmentInput, refundYen } from '../../logic/premium-adjustment';
 import { CloseOnOutside } from '../../../../shared/directives/close-on-outside';
 import { PersonListBar } from '../../../../shared/components/person-list-bar/person-list-bar';
 import { defaultListOptions, filterAndSort, listFilterCount, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
@@ -81,6 +88,8 @@ export class PremiumList {
   private readonly rates = inject(RateService);
   private readonly bonusApi = inject(BonusService);
   private readonly payrollApi = inject(PayrollService);
+  private readonly contractApi = inject(ContractService);
+  private readonly criteriaApi = inject(CriteriaService);
   private readonly noticeApi = inject(PremiumNoticeService);
   private readonly transloco = inject(TranslocoService);
   readonly context = inject(OfficeContext);
@@ -157,7 +166,30 @@ export class PremiumList {
   private readonly remunerations = signal<Map<string, RemunerationDoc[]>>(new Map());
   private readonly tables = signal<RateTables | null>(null);
   private readonly bonusPayments = signal<BonusPayment[]>([]);
+  /** 保険料調整制度のための契約・加入の基準（使っている事業所だけ読む。11/16） */
+  private readonly contracts = signal<Map<string, ContractDoc[]>>(new Map());
+  private readonly criteria = signal<CriteriaDoc[]>([]);
   readonly loading = signal(true);
+
+  /** 保険料調整制度の設定（使っていなければ null） */
+  private readonly adjustmentOffice = computed<AdjustmentOffice | null>(() => {
+    const o = this.context.current();
+    if (!o?.premiumAdjustment?.since) return null;
+    return { ...o, since: o.premiumAdjustment.since, standardHours: o.standardHours ?? null };
+  });
+
+  /** 1人分の「月 → 軽減割合」 */
+  private adjustmentOf(employee: Employee): ((m: YearMonth) => AdjustmentInput | null) | undefined {
+    const ao = this.adjustmentOffice();
+    if (!ao) return undefined;
+    return adjustmentForEmployee(
+      ao,
+      employee,
+      this.contracts().get(employee.id) ?? [],
+      this.criteria(),
+      this.remunerations().get(employee.id) ?? [],
+    );
+  }
   readonly errorKey = signal<string | null>(null);
 
   /** 全員分の行（月・データが変わると自動で計算し直す） */
@@ -180,8 +212,51 @@ export class PremiumList {
         remunerations: this.remunerations().get(employee.id) ?? [],
         ratesFor,
         options,
+        adjustmentFor: this.adjustmentOf(employee),
       }),
     }));
+  });
+
+  /**
+   * 保険料調整制度：3か月前の分の軽減額（会社が多く払った分）。今月の納付額から差し引かれる（11/16）
+   * 健保・厚年べつ（円。1人ごとに小数点第一位を四捨五入して足す）
+   */
+  readonly adjustmentRefund = computed<{ month: YearMonth; health: number; pension: number } | null>(() => {
+    const ao = this.adjustmentOffice();
+    const tables = this.tables();
+    const office = this.context.current();
+    if (!ao || !tables || !office) return null;
+    const m = shiftMonth(this.month(), -3);
+    const ratesFor = (x: YearMonth) => {
+      const insurer = insurerFor(office, x);
+      return insurer ? pickRates(insurer, tables, x) : noRates(x);
+    };
+    let health = 0;
+    let pension = 0;
+    for (const employee of this.employees()) {
+      const f = this.adjustmentOf(employee);
+      if (!f || !f(m)) continue;
+      try {
+        const r = calcMonthly({
+          month: m,
+          employee,
+          remunerations: this.remunerations().get(employee.id) ?? [],
+          rates: ratesFor(m),
+          options: this.options(),
+          adjustment: f(m),
+        });
+        for (const g of r.groups) {
+          for (const l of g.lines) {
+            if (!l.reductionMilli) continue;
+            if (l.part === 'pension') pension += refundYen(l.reductionMilli);
+            else health += refundYen(l.reductionMilli);
+          }
+        }
+      } catch {
+        // その月が計算できない人は数えない（一覧の上の警告で分かる）
+      }
+    }
+    return health + pension > 0 ? { month: m, health, pension } : null;
   });
 
   /** 表に出す人（その月に加入していない人は隠す） */
@@ -368,7 +443,17 @@ export class PremiumList {
   /** 比べるアプリの合計：月額 ＋ その月に払った賞与 */
   private readonly appTotals = computed(() => {
     const b = this.bonusSummary();
-    return b ? b.rows.find((r) => r.key === 'sum')!.totals : this.totals();
+    const base = b ? b.rows.find((r) => r.key === 'sum')!.totals : this.totals();
+    // 保険料調整制度：3か月前の軽減額は、告知額から差し引かれている（11/16）
+    const r = this.adjustmentRefund();
+    if (!r) return base;
+    return base.map((t) =>
+      t.category === 'health'
+        ? { ...t, totalYen: t.totalYen - r.health }
+        : t.category === 'pension'
+          ? { ...t, totalYen: t.totalYen - r.pension }
+          : t,
+    );
   });
 
   /** 入力の告知額（読めない・空は null） */
@@ -441,6 +526,15 @@ export class PremiumList {
       // 報酬の履歴は従業員ごとに分かれているので、人数分を並行で読む
       const lists = await Promise.all(employees.map((e) => this.remApi.list(officeId, e.id)));
       this.remunerations.set(new Map(employees.map((e, i) => [e.id, lists[i]])));
+      // 保険料調整制度を使っているときだけ、契約（短時間労働者かの判定）と加入の基準を読む（ログイン中は覚えている）
+      if (office.premiumAdjustment?.since) {
+        const [contracts, criteria] = await Promise.all([
+          Promise.all(employees.map((e) => this.contractApi.list(officeId, e.id))),
+          this.criteriaApi.list(),
+        ]);
+        this.contracts.set(new Map(employees.map((e, i) => [e.id, contracts[i]])));
+        this.criteria.set(criteria);
+      }
       this.employees.set(employees);
       this.tables.set(tables);
       this.bonusPayments.set(bonusPayments);

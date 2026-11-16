@@ -563,6 +563,31 @@
         {{ 'office.coverage.field.pensionFund' | transloco }}
       </label>
       <span class="hint">{{ 'office.coverage.hint.pensionFund' | transloco }}</span>
+
+      <!-- 保険料調整制度（2026年10月〜。編集のときだけ。11/16） -->
+      @if (isEdit) {
+        @let st = adjustmentStatus();
+        <h3>{{ 'office.adjustment.title' | transloco }}</h3>
+        <label class="check">
+          <input type="checkbox" formControlName="adjustmentOn" />
+          {{ 'office.adjustment.on' | transloco }}
+        </label>
+        @if (adjustmentOnNow()) {
+          <div class="field since">
+            <label for="adjustmentSince">{{ 'office.adjustment.since' | transloco }}<span class="req" aria-hidden="true">※</span></label>
+            <input id="adjustmentSince" class="input" type="month" formControlName="adjustmentSince" [class.is-invalid]="submitTried() && adjustmentSinceMissing()" />
+            @if (submitTried() && adjustmentSinceMissing()) {
+              <span class="field-error">{{ 'office.adjustment.sinceRequired' | transloco }}</span>
+            }
+          </div>
+        }
+        @if (st.eligible) {
+          <p class="hint">{{ 'office.adjustment.eligible.' + st.basis | transloco: { deadline: st.deadline } }}</p>
+        } @else {
+          <p class="hint">{{ 'office.adjustment.notEligible.' + st.reason | transloco }}</p>
+        }
+        <span class="hint">{{ 'office.adjustment.hint' | transloco }}</span>
+      }
     </section>
 
     <!-- 給与と保険料の計算 -->

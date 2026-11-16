@@ -87,12 +87,19 @@ export interface OfficeDoc {
   pensionFund: boolean; // 厚生年金基金に加入（取得届の種別「基金」）
   inKind: InKindProvided;
   bonusMonths: number[]; // 賞与の支払予定月（1〜12）
+  /** 保険料調整制度（2026年10月〜）を使い始めた月。使っていなければ null・なし（11/16。設定の画面の編集だけが書く） */
+  premiumAdjustment?: PremiumAdjustment | null;
   memberUids: string[];
   memberRoles: Record<string, OfficeRole>;
   /** 代表（管理者の中の1人。作った人から始まり、交代できる）。古い事業所にはない → 名簿の最初の人 */
   ownerUid?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+}
+
+/** 保険料調整制度：申出をして使い始めた月（'YYYY-MM'） */
+export interface PremiumAdjustment {
+  since: string;
 }
 
 export interface Office extends OfficeDoc {
@@ -130,6 +137,12 @@ export interface OfficeForEmployeesDoc {
   healthInsurer: HealthInsurer;
   insurerHistory: InsurerPeriod[];
   premium: PremiumSettings;
+  /** 保険料調整制度を使っているときだけ：軽減の計算に要る設定の写し（11/16。前の写しにはない） */
+  adjustment?: {
+    since: string;
+    standardHours: StandardHours | null;
+    specificApplication: SpecificApplication;
+  } | null;
   updatedAt: Timestamp;
 }
 

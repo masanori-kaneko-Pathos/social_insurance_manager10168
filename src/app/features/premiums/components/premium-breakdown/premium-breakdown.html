@@ -47,6 +47,10 @@
 @if (slip().contribution) {
   <p class="slip-note">{{ 'premium.slip.contributionNote' | transloco }}</p>
 }
+@if (slip().reductionMilli > 0) {
+  <!-- 保険料調整制度：本人分を軽くした額（会社が一時的に多く払う。11/16） -->
+  <p class="slip-note">{{ 'premium.slip.adjustment' | transloco: { n: milli(slip().reductionMilli) } }}</p>
+}
 
 </div>
 
@@ -66,6 +70,9 @@
         </span>
         <span class="rate-note">
           {{ 'premium.rateNote' | transloco: { employee: pct(l.rate.employee), employer: pct(l.rate.employer), from: l.rate.from } }}
+          @if (l.reductionMilli) {
+            ・{{ 'premium.slip.lineAdjustment' | transloco: { n: milli(l.reductionMilli) } }}
+          }
         </span>
       </div>
     }

@@ -267,7 +267,10 @@ service cloud.firestore {
         && d.pensionFund is bool
         && d.inKind is map && exactKeys(d.inKind, ['housing', 'meals'])
         && d.inKind.housing is bool && d.inKind.meals is bool
-        && validBonusMonths(d.bonusMonths);
+        && validBonusMonths(d.bonusMonths)
+        // 保険料調整制度を使い始めた月（任意。11/16 より前の文書にはない。作るときは書かず、設定の保存で足す）
+        && (!('premiumAdjustment' in d) || d.premiumAdjustment == null
+            || (d.premiumAdjustment is map && exactKeys(d.premiumAdjustment, ['since']) && isMonth(d.premiumAdjustment.since)));
     }
 
     match /offices/{officeId} {
@@ -681,7 +684,11 @@ service cloud.firestore {
         allow write: if signedIn()
           && getAfter(/databases/$(database)/documents/offices/$(officeId)).data.memberRoles[request.auth.uid] == 'admin'
           && docId == 'forEmployees'
-          && exactKeys(request.resource.data, ['name', 'prefecture', 'healthInsurer', 'insurerHistory', 'premium', 'updatedAt'])
+          // adjustment（保険料調整制度の設定の写し）は任意。11/16 より前の写しにはない
+          && request.resource.data.keys().hasAll(['name', 'prefecture', 'healthInsurer', 'insurerHistory', 'premium', 'updatedAt'])
+          && request.resource.data.keys().hasOnly(['name', 'prefecture', 'healthInsurer', 'insurerHistory', 'premium', 'adjustment', 'updatedAt'])
+          && (!('adjustment' in request.resource.data) || request.resource.data.adjustment == null
+              || (request.resource.data.adjustment is map && isMonth(request.resource.data.adjustment.since)))
           && str(request.resource.data.name, 100)
           && request.resource.data.prefecture is string
           && request.resource.data.healthInsurer is map

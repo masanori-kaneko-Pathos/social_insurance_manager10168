@@ -153,6 +153,21 @@
             <td class="num strong">{{ yen(employerTotalYen()) }}</td>
             <td class="num strong">{{ yen(grandTotalYen()) }}</td>
           </tr>
+          <!-- 保険料調整制度：3か月前の軽減額が、この月の納付額から差し引かれる（11/16） -->
+          @if (adjustmentRefund(); as rf) {
+            <tr class="sub-row">
+              <th scope="row">{{ 'premiumList.adjustment.refund' | transloco: { month: rf.month } }}</th>
+              <td></td>
+              <td></td>
+              <td class="num">−{{ yen(rf.health + rf.pension) }}</td>
+            </tr>
+            <tr class="grand-total">
+              <th scope="row">{{ 'premiumList.adjustment.net' | transloco }}</th>
+              <td></td>
+              <td></td>
+              <td class="num strong">{{ yen(grandTotalYen() - rf.health - rf.pension) }}</td>
+            </tr>
+          }
         </tbody>
       </table>
       <p class="hint">{{ 'premiumList.totalsHint' | transloco }}</p>

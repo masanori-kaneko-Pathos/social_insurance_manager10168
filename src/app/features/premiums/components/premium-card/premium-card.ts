@@ -1,7 +1,12 @@
 import { Component, OnInit, computed, effect, inject, input, signal } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
-import { Office } from '../../../../core/models/office';
+import { Office, OfficeForEmployeesDoc } from '../../../../core/models/office';
+import { ContractDoc } from '../../../../core/models/contract';
+import { CriteriaDoc } from '../../../../core/models/master';
+import { ContractService } from '../../../employees/contract.service';
+import { CriteriaService } from '../../../office/criteria.service';
+import { AdjustmentOffice, adjustmentForEmployee } from '../../logic/adjustment-office';
 import {
   PremiumGroup,
   PremiumLine,
@@ -29,7 +34,22 @@ import { PremiumBreakdown } from '../premium-breakdown/premium-breakdown';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /** 保険料の計算に要る事業所の設定（事業所の文書そのものか、従業員向けに写したもの） */
-export type OfficeForPremium = Pick<Office, 'id' | 'prefecture' | 'healthInsurer' | 'insurerHistory' | 'premium'>;
+export type OfficeForPremium = Pick<Office, 'id' | 'prefecture' | 'healthInsurer' | 'insurerHistory' | 'premium'> &
+  Partial<Pick<Office, 'premiumAdjustment' | 'standardHours' | 'specificApplication'>> & {
+    /** 従業員向けの写しの、保険料調整制度の設定（11/16） */
+    adjustment?: OfficeForEmployeesDoc['adjustment'];
+  };
+
+/** 保険料調整制度の設定（事業所の文書か、従業員向けの写しから。使っていなければ null） */
+function adjustmentOfficeOf(o: OfficeForPremium): AdjustmentOffice | null {
+  if (o.adjustment?.since) {
+    return { ...o, since: o.adjustment.since, standardHours: o.adjustment.standardHours, specificApplication: o.adjustment.specificApplication };
+  }
+  if (o.premiumAdjustment?.since && o.specificApplication) {
+    return { ...o, since: o.premiumAdjustment.since, standardHours: o.standardHours ?? null, specificApplication: o.specificApplication };
+  }
+  return null;
+}
 
 /** 1か月分の行（計算でエラーが出た月は result を null にする） */
 interface MonthRow {
@@ -49,6 +69,8 @@ type RowState = 'ok' | 'none' | 'missing' | 'error' | 'exempt';
 export class PremiumCard implements OnInit {
   private readonly rates = inject(RateService);
   private readonly remApi = inject(RemunerationService);
+  private readonly contractApi = inject(ContractService);
+  private readonly criteriaApi = inject(CriteriaService);
   readonly context = inject(OfficeContext);
 
   readonly employee = input.required<Employee>();
@@ -75,6 +97,16 @@ export class PremiumCard implements OnInit {
   // ===== 箱 =====
   private readonly tables = signal<RateTables | null>(null);
   private readonly remunerations = signal<RemunerationDoc[]>([]);
+  /** 保険料調整制度のための契約・加入の基準（使っている事業所だけ読む。11/16） */
+  private readonly contracts = signal<ContractDoc[]>([]);
+  private readonly criteria = signal<CriteriaDoc[]>([]);
+  /** 月 → 軽減割合（保険料調整制度。使っていなければいつも null） */
+  private readonly adjustmentFor = computed(() => {
+    const office = this.officeNow();
+    const ao = office ? adjustmentOfficeOf(office) : null;
+    if (!ao) return () => null;
+    return adjustmentForEmployee(ao, this.employee(), this.contracts(), this.criteria(), this.remunerations());
+  });
   readonly loading = signal(true);
   readonly errorKey = signal<string | null>(null);
   readonly openMonth = signal<YearMonth | null>(null);
@@ -92,7 +124,7 @@ export class PremiumCard implements OnInit {
         // その月の保険者・都道府県で料率を選ぶ（移転や組合健保への切り替えの前の月は、前の料率）
         const insurer = insurerFor(office, month);
         const rates = insurer ? pickRates(insurer, tables, month) : noRates(month);
-        const result = calcMonthly({ month, employee, remunerations, rates, options });
+        const result = calcMonthly({ month, employee, remunerations, rates, options, adjustment: this.adjustmentFor()(month) });
         return { month, result, error: false };
       } catch (err) {
         console.error(err); // データの間違い（折半できない料率など）。画面は止めずにその月だけ「エラー」にする
@@ -123,12 +155,17 @@ export class PremiumCard implements OnInit {
     this.loading.set(true);
     this.errorKey.set(null);
     try {
-      const [tables, rems] = await Promise.all([
+      const adjusting = !!adjustmentOfficeOf(office);
+      const [tables, rems, contracts, criteria] = await Promise.all([
         this.rates.tablesFor(office.id, everKumiai(office)),
         this.remApi.list(office.id, this.employee().id),
+        adjusting ? this.contractApi.list(office.id, this.employee().id) : Promise.resolve([] as ContractDoc[]),
+        adjusting ? this.criteriaApi.list() : Promise.resolve([] as CriteriaDoc[]),
       ]);
       this.tables.set(tables);
       this.remunerations.set(rems);
+      this.contracts.set(contracts);
+      this.criteria.set(criteria);
     } catch (err) {
       console.error(err);
       this.errorKey.set(errorKeyOf(err, 'premium.error.load'));
