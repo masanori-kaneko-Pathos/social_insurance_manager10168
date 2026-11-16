@@ -3947,18 +3947,18 @@
   "special": {
     "title": "Special revision (medical care, childcare or nursing care)",
     "open": "Register",
-    "lead": "When pay drops sharply because someone works fewer days or hours for medical care, childcare or nursing care, the standard monthly remuneration can be revised at their request from the month after the reduced pay was first paid (for pay from {{start}}). Unlike an ordinary revision, it does not wait three months. It is revised the same way when pay recovers.",
+    "lead": "When someone's pay drops sharply because work is adjusted (shorter hours, less overtime) to balance it with medical care, childcare or nursing care, and the standard monthly remuneration is expected to stay at least two grades lower for three months or more, it can be revised with the employee's written consent from the month after the filing month, using the pay of the filing month (for pay from {{start}}). Unlike an ordinary revision, it does not wait three months. When the adjustment ends and the grade rises by two or more, file promptly to revise it back.",
     "field": {
       "employee": "Employee",
       "direction": "Pay change",
       "reason": "Reason",
       "firstMonth": {
-        "down": "Month the reduced pay was first paid",
-        "up": "Month the recovered pay was first paid"
+        "down": "First month of reduced pay (= filing month)",
+        "up": "First month of increased pay"
       },
       "amount": "Pay that month (money + in kind)",
       "days": "Payment basis days",
-      "requestedOn": "Date of the employee's request (consent)"
+      "filedOn": "Filing date"
     },
     "choose": "Select",
     "direction": {
@@ -3973,29 +3973,32 @@
     "yen": " yen",
     "noPayroll": "No payroll record for that month. Import the payroll first.",
     "daysHint": {
-      "down": "Include the days taken off for medical care, childcare or nursing care.",
+      "down": "Include days not worked because of the adjustment (paid or not). The two previous months must also meet the threshold.",
       "up": "Do not count unpaid days (the usual way)."
     },
     "minDays": "At least {{n}} days are needed.",
-    "ended": "Confirmed that the medical care, childcare or nursing care has ended",
+    "ended": "Confirmed that the work adjustment has ended (or been reduced)",
     "revisedFrom": "Revised from {{m}}",
-    "delayed": "The request came after the revision month, so it is revised from the request month ({{m}}) without going back.",
     "exists": "A standard remuneration from {{m}} already exists. It is not overwritten; check the history first.",
     "status": {
       "candidate": "Eligible for revision.",
       "beforeStart": "Special revisions apply to pay from January 2027.",
+      "notFiledMonth": "The first month of reduced pay is the filing month. It cannot go back to an earlier month, so the filing month's pay is used.",
+      "noConsent": "Get the employee's written consent (statement and consent form) before registering.",
       "noPay": "A month with no pay (fully absent) cannot be used.",
       "shortDays": "Not enough payment basis days.",
-      "shortInsured": "Not eligible: insured for less than three months.",
-      "lost": "Not eligible: not insured in the revision month (loses coverage the next month).",
+      "priorMissing": "No payroll records for the two months before the filing month. Import them first (all three months must meet the payment basis days).",
+      "priorShortDays": "One of the two months before the filing month does not meet the payment basis days.",
+      "shortInsured": "Not eligible: insured for less than three months including the first month.",
+      "lost": "Not eligible: loses coverage the month after the first month (no premium is charged that month).",
       "noStandard": "No current standard remuneration is registered.",
-      "notEnded": "Confirm that the care has ended before registering.",
+      "notEnded": "Confirm that the work adjustment has ended (or been reduced) before registering.",
       "noDown": "Only people who had a special revision when pay dropped can use it when pay recovers.",
       "opposite": "The grade moves the opposite way. Check the pay change.",
       "noGradeDiff": "Less than two grades from the current grade, so no revision."
     },
     "reflect": "Apply",
-    "note": "Applying saves the standard remuneration from the revision month (reason: special revision) and a record. Health insurance and pension are filed together (it appears under the monthly change notification in Filings). Keep the employee's request (consent) for two years. People revised in July–September are excluded from that year's annual determination.",
+    "note": "Applying saves the standard remuneration from the revision month (reason: special revision) and a record. It appears in the monthly change list in Filings in the special-revision layout (first month in the third row). Health insurance and pension are filed at the same time (also to the health insurance society if any). Attach the statement and consent form every time, and keep it with the supporting documents for two years from the filing date. People revised in July–September are excluded from that year's annual determination.",
     "registered": "Applied special revisions ({{n}})",
     "col": {
       "from": "From",
@@ -4005,6 +4008,8 @@
     "saved": "The special revision was applied.",
     "error": {
       "save": "Could not apply the special revision."
-    }
+    },
+    "consent": "Obtained the employee's written consent (statement and consent form)",
+    "retro": "(excluding retroactive pay of {{n}} yen)"
   }
 }

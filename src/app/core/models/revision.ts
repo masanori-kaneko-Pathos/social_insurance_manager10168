@@ -136,11 +136,13 @@ export interface SpecialRevisionDoc {
   revisedFrom: string; // 改定月（＝ ドキュメントID）
   direction: 'down' | 'up'; // 下がった／戻った
   reason: SpecialRevisionReason;
-  firstMonth: string; // 下がった（戻った）報酬を最初に払った月
-  monthlyAmount: number; // その月の報酬（通貨＋現物）
-  days: number; // 支払基礎日数（下がったときは療養等で休んだ日も含む）
-  requestedOn: string; // 本人から申出（同意）を受けた日
-  ended: boolean; // 戻ったとき：療養等が終わったのを確かめた（下がったときは false）
+  firstMonth: string; // 報酬減（増）となった初月（支払った月）
+  monthlyAmount: number; // 初月の報酬（通貨＋現物 − 遡及支払額）
+  days: number; // 支払基礎日数（下がったときは就労調整で勤務しなかった日も含む）
+  retro: number; // ⑧遡及支払額（初月に払った前の月の分。monthlyAmount はこれを除いた ⑯修正平均額）
+  filedOn: string; // 届出の日（下がったときは初月のうち。遡れない）
+  consent: boolean; // 下がったとき：本人の書面の同意を得た（申立書兼同意書。戻ったときは false）
+  ended: boolean; // 戻ったとき：就労調整が終わった（縮小した）のを確かめた（下がったときは false）
   health: StandardRemuneration;
   pension: StandardRemuneration;
   createdAt: Timestamp;

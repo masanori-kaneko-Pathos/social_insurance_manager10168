@@ -40,6 +40,7 @@ import {
   firstPaidInMonth,
   irregularRemarks,
   specialRemarks,
+  specialRow,
   lossesIn,
   lossRow,
   regularRemarks,
@@ -273,7 +274,7 @@ export class FilingsPage {
     ]);
     const decisions = all.filter((d) => d.revisedFrom >= this.from() && d.revisedFrom <= this.to());
     const byId = new Map(this.employees!.map((e) => [e.id, e]));
-    // 特例改定：1か月分の報酬で決めるので、最初の月だけ（支払基礎日数は記録した日数。下がったときは休んだ日も含む）
+    // 特例改定：初月の1か月分だけ（月額変更届（特例改定用）。支払基礎日数は記録した日数。下がったときは勤務しなかった日も含む）
     const specialRows = Promise.all(
       specials
         .filter((d) => d.revisedFrom >= this.from() && d.revisedFrom <= this.to() && byId.has(d.employeeId))
@@ -287,7 +288,7 @@ export class FilingsPage {
           const p = map.get(e.id);
           if (p) payrolls.set(d.firstMonth, { ...p, days: d.days });
           const prev = standardAt(rems, shiftMonth(d.revisedFrom, -1));
-          return revisionRow('irregular', {
+          return specialRow({
             employee: e,
             month: d.revisedFrom,
             firstMonth: d.firstMonth,
@@ -296,8 +297,8 @@ export class FilingsPage {
             raise: { month: d.firstMonth, direction: d.direction },
             total: d.monthlyAmount,
             average: d.monthlyAmount,
-            corrected: null,
-            remarks: specialRemarks({ employee: e, revisedFrom: d.revisedFrom, direction: d.direction, reason: d.reason }),
+            corrected: d.monthlyAmount,
+            remarks: specialRemarks({ employee: e, revisedFrom: d.revisedFrom, direction: d.direction }),
           });
         }),
     );

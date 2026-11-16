@@ -12,6 +12,7 @@ import {
   regularRemarks,
   revisionRow,
   specialRemarks,
+  specialRow,
   toCells,
 } from './filing-rows';
 
@@ -152,15 +153,40 @@ describe('月額変更届・算定基礎届', () => {
   });
 });
 
-describe('特例改定の備考（11/16）', () => {
-  it('下がったとき・戻ったとき。理由を書く', () => {
+describe('特例改定（11/16）', () => {
+  it('備考は様式どおり（下がったとき・戻ったとき）', () => {
     const e = emp({ birthDate: '1990-01-01' });
-    expect(specialRemarks({ employee: e, revisedFrom: '2027-04', direction: 'down', reason: 'medical' })).toEqual([
-      '6．その他（特例改定・療養）',
+    expect(specialRemarks({ employee: e, revisedFrom: '2027-04', direction: 'down' })).toEqual([
+      '6．その他（特例改定（申立書兼同意書１.ⅰに該当））',
     ]);
-    expect(specialRemarks({ employee: e, revisedFrom: '2027-09', direction: 'up', reason: 'nursing' })).toEqual([
-      '6．その他（特例改定・終了・介護）',
+    expect(specialRemarks({ employee: e, revisedFrom: '2027-09', direction: 'up' })).toEqual([
+      '6．その他（報酬回復（申立書兼同意書1.ⅳに該当））',
     ]);
+  });
+
+  it('初月は3か月目の欄に。総計・平均は空、修正平均は遡及を除いた額', () => {
+    const p = new Map([pay('2027-03', 180000, 18)]);
+    const r = specialRow({
+      employee: emp({ birthDate: '1990-01-01' }),
+      month: '2027-04',
+      firstMonth: '2027-03',
+      payrolls: p,
+      previous: { health: 300000, pension: 300000, from: '2026-09' },
+      raise: { month: '2027-03', direction: 'down' },
+      total: 180000,
+      average: 180000,
+      corrected: 180000,
+      remarks: [],
+    });
+    expect(r['m1Month']).toBe('1月');
+    expect(r['m1Days']).toBe('');
+    expect(r['m3Month']).toBe('3月');
+    expect(r['m3Days']).toBe('18日');
+    expect(r['m3Total']).toBe('180,000');
+    expect(r['sum']).toBe('');
+    expect(r['average']).toBe('');
+    expect(r['corrected']).toBe('180,000');
+    expect(r['raise']).toBe('3月 2．降給');
   });
 });
 

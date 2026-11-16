@@ -645,7 +645,7 @@ service cloud.firestore {
         match /specialRevisions/{revisedFrom} {
           function validSpecial(d) {
             return exactKeys(d, ['officeId', 'employeeId', 'revisedFrom', 'direction', 'reason', 'firstMonth',
-                                 'monthlyAmount', 'days', 'requestedOn', 'ended', 'health', 'pension',
+                                 'monthlyAmount', 'days', 'retro', 'filedOn', 'consent', 'ended', 'health', 'pension',
                                  'createdAt', 'updatedAt'])
               && d.officeId == officeId && d.employeeId == employeeId
               && d.revisedFrom == revisedFrom && isMonth(revisedFrom) && isMonth(d.firstMonth)
@@ -653,7 +653,9 @@ service cloud.firestore {
               && d.direction in ['down', 'up'] && d.reason in ['medical', 'childcare', 'nursing']
               && yen(d.monthlyAmount) && d.monthlyAmount > 0
               && d.days is int && d.days >= 0 && d.days <= 31
-              && isDate(d.requestedOn) && d.ended is bool
+              && yen(d.retro) && isDate(d.filedOn) && d.consent is bool && d.ended is bool
+              // 下がったときは、本人の同意があって、初月のうちに届ける（遡れない。保保発0731第4号 ※1）
+              && (d.direction == 'up' || (d.consent && d.filedOn[0:7] == d.firstMonth))
               && std(d.health) && std(d.pension);
           }
 

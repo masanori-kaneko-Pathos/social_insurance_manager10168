@@ -50,14 +50,29 @@
       </div>
 
       <div class="field">
-        <label for="sp-month">{{ 'special.field.firstMonth.' + direction() | transloco }}</label>
-        <input id="sp-month" class="input" type="month" [min]="startMonth" [value]="firstMonth()" (change)="setMonth($any($event.target).value)" />
+        <label for="sp-filed">{{ 'special.field.filedOn' | transloco }}</label>
+        <input id="sp-filed" class="input" type="date" [value]="filedOn()" (change)="setFiledOn($any($event.target).value)" />
       </div>
+
+      @if (direction() === 'down') {
+        <div class="field">
+          <span class="label">{{ 'special.field.firstMonth.down' | transloco }}</span>
+          <span class="value mono">{{ firstMonth() || '—' }}</span>
+        </div>
+      } @else {
+        <div class="field">
+          <label for="sp-month">{{ 'special.field.firstMonth.up' | transloco }}</label>
+          <input id="sp-month" class="input" type="month" [min]="startMonth" [value]="upMonth()" (change)="setUpMonth($any($event.target).value)" />
+        </div>
+      }
 
       <div class="field">
         <span class="label">{{ 'special.field.amount' | transloco }}</span>
         @if (amount(); as a) {
-          <span class="value mono">{{ yen(a) }}{{ 'special.yen' | transloco }}</span>
+          <span class="value mono">
+            {{ yen(a) }}{{ 'special.yen' | transloco }}
+            @if (retro() > 0) { <span class="sub">{{ 'special.retro' | transloco: { n: yen(retro()) } }}</span> }
+          </span>
         } @else if (person() && firstMonth()) {
           <span class="value warn">{{ 'special.noPayroll' | transloco }}</span>
         } @else {
@@ -74,12 +89,12 @@
         </span>
       </div>
 
-      <div class="field">
-        <label for="sp-requested">{{ 'special.field.requestedOn' | transloco }}</label>
-        <input id="sp-requested" class="input" type="date" [value]="requestedOn()" (change)="requestedOn.set($any($event.target).value)" />
-      </div>
-
-      @if (direction() === 'up') {
+      @if (direction() === 'down') {
+        <label class="check">
+          <input type="checkbox" [checked]="consent()" (change)="consent.set($any($event.target).checked)" />
+          {{ 'special.consent' | transloco }}
+        </label>
+      } @else {
         <label class="check">
           <input type="checkbox" [checked]="ended()" (change)="ended.set($any($event.target).checked)" />
           {{ 'special.ended' | transloco }}
@@ -90,9 +105,6 @@
     @if (result(); as r) {
       <div class="result">
         <p class="span mono">{{ 'special.revisedFrom' | transloco: { m: r.revisedFrom } }}</p>
-        @if (r.delayed) {
-          <p class="warn">{{ 'special.delayed' | transloco: { m: r.revisedFrom } }}</p>
-        }
         @if (r.health || r.pension) {
           <div class="judge">
             @for (j of [{ key: 'health', x: r.health }, { key: 'pension', x: r.pension }]; track j.key) {

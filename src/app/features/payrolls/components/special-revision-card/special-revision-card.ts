@@ -61,11 +61,21 @@ export class SpecialRevisionCard {
   readonly employeeId = signal('');
   readonly direction = signal<SpecialDirection>('down');
   readonly reason = signal<SpecialReason>('medical');
-  readonly firstMonth = signal('');
+  /** 戻ったとき：報酬増となった初月（下がったときは届出の月が初月になるので使わない） */
+  readonly upMonth = signal('');
   /** 支払基礎日数（空なら給与の実績の日数を使う） */
   readonly daysInput = signal('');
-  readonly requestedOn = signal(this.today);
+  readonly filedOn = signal(this.today);
+  readonly consent = signal(false);
   readonly ended = signal(false);
+
+  /**
+   * 報酬減（増）となった初月
+   * 下がったとき：事業主が届け出た月（保保発0731第4号 ※1）。前の月には遡れないので、届出の日から決める
+   */
+  readonly firstMonth = computed(() =>
+    this.direction() === 'down' ? (DATE.test(this.filedOn()) ? this.filedOn().slice(0, 7) : '') : this.upMonth(),
+  );
   readonly saving = signal(false);
   readonly errorKey = signal<string | null>(null);
   readonly savedKey = signal<string | null>(null);
@@ -82,9 +92,12 @@ export class SpecialRevisionCard {
     const m = this.firstMonth();
     return p && MONTH.test(m) ? (p.payrolls.get(m) ?? null) : null;
   });
+  /** ⑧遡及支払額（初月に払った前の月の分） */
+  readonly retro = computed(() => this.payroll()?.retro ?? 0);
+  /** ⑯修正平均額：初月の合計から遡及支払額を除いた額。これで等級を決める */
   readonly amount = computed(() => {
     const p = this.payroll();
-    return p ? payTotal(p) : null;
+    return p ? payTotal(p) - p.retro : null;
   });
   readonly days = computed<number | null>(() => {
     const s = this.daysInput().trim();
@@ -99,15 +112,17 @@ export class SpecialRevisionCard {
     const m = this.firstMonth();
     const amount = this.amount();
     const days = this.days();
-    if (!p || !MONTH.test(m) || amount === null || days === null || !DATE.test(this.requestedOn())) return null;
+    if (!p || !MONTH.test(m) || amount === null || days === null || !DATE.test(this.filedOn())) return null;
     const tables = this.gradeTables();
     return judgeSpecial({
       direction: this.direction(),
       firstMonth: m,
       amount,
       days,
-      minDays: p.minDaysAt(m),
-      requestedOn: this.requestedOn(),
+      minDaysAt: p.minDaysAt,
+      daysAt: (month) => p.payrolls.get(month)?.days ?? null,
+      filedOn: this.filedOn(),
+      consent: this.consent(),
       ended: this.ended(),
       downMonths: this.stored().filter((r) => r.reason === 'special').map((r) => r.from),
       employee: p.employee,
@@ -151,15 +166,21 @@ export class SpecialRevisionCard {
     this.daysInput.set('');
   }
 
-  setMonth(m: string): void {
-    this.firstMonth.set(m);
+  setUpMonth(m: string): void {
+    this.upMonth.set(m);
     this.daysInput.set('');
+  }
+
+  setFiledOn(d: string): void {
+    this.filedOn.set(d);
+    if (this.direction() === 'down') this.daysInput.set('');
   }
 
   setDirection(d: SpecialDirection): void {
     this.direction.set(d);
     this.daysInput.set('');
-    if (d === 'down') this.ended.set(false);
+    this.consent.set(false);
+    this.ended.set(false);
   }
 
   async save(): Promise<void> {
@@ -180,7 +201,9 @@ export class SpecialRevisionCard {
       firstMonth: this.firstMonth(),
       monthlyAmount,
       days: this.days()!,
-      requestedOn: this.requestedOn(),
+      retro: this.retro(),
+      filedOn: this.filedOn(),
+      consent: this.direction() === 'down' && this.consent(),
       ended: this.direction() === 'up' && this.ended(),
       health,
       pension,
@@ -191,8 +214,9 @@ export class SpecialRevisionCard {
     try {
       await this.api.reflectSpecial(record, remuneration);
       this.savedKey.set('special.saved');
-      this.firstMonth.set('');
+      this.upMonth.set('');
       this.daysInput.set('');
+      this.consent.set(false);
       this.ended.set(false);
       this.saved.emit();
     } catch (err) {
