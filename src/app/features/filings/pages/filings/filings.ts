@@ -203,7 +203,7 @@ export class FilingsPage {
         const date = acquiredDateOf(e)!;
         const c = contractAt(contracts, date);
         const category = classify(
-          { birthDate: e.birthDate, optInDate: e.optInDate, optOutDate: e.optOutDate ?? null, contracts },
+          { birthDate: e.birthDate, optInDate: e.optInDate, optOutDate: e.optOutDate ?? null, contracts, officer: e.org?.officer ?? null },
           { standardHours: office.standardHours ?? null, specificApplication: office.specificApplication },
           criteria,
           date,

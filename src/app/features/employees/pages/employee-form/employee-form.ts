@@ -453,7 +453,13 @@ export class EmployeeForm {
     const today = todayLocal();
     const date = v.hireDate && v.hireDate > today ? v.hireDate : today;
     const c = classify(
-      { birthDate: v.birthDate, optInDate: v.optInDate || null, optOutDate: v.optOutDate || null, contracts: [contract] },
+      {
+        birthDate: v.birthDate,
+        optInDate: v.optInDate || null,
+        optOutDate: v.optOutDate || null,
+        contracts: [contract],
+        officer: orgOf(this.form.controls.org.getRawValue())?.officer ?? null, // 役員は役員の判定で（11/16）
+      },
       { standardHours: office.standardHours ?? null, specificApplication: office.specificApplication },
       this.criteria(),
       date,

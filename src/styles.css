@@ -802,3 +802,9 @@ a:where(:link, :visited):hover {
     animation: none !important;
   }
 }
+
+/* 日本語の改行を文節の区切りにする（11/16）
+   lang="ja" のときだけ効く。対応していないブラウザは今までどおり（どこでも折り返す） */
+:lang(ja) :is(h1, h2, h3, .btn, .tile, .lead, .hint, label, legend) {
+  word-break: auto-phrase;
+}

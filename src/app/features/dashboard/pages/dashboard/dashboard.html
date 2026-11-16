@@ -346,6 +346,9 @@
                           @case ('noContract') {
                             <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'employment' }">{{ 'dashboard.todo.toContract' | transloco }} →</a>
                           }
+                          @case ('officerCheck') {
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId, 'edit']">{{ 'dashboard.todo.toOfficer' | transloco }} →</a>
+                          }
                           @case ('lose') {
                             <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'employment' }">{{ 'dashboard.todo.toContractCheck' | transloco }} →</a>
                           }

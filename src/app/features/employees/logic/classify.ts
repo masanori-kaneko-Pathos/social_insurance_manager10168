@@ -12,12 +12,18 @@
  * 根拠：健康保険法3条1項2・4・5・9号、厚生年金保険法12条・13条、
  *       日本年金機構「適用事業所と被保険者」、令和4年10月施行分の Q&A 集（問2・4〜9）
  * 年齢（70歳で厚年、75歳で健保を喪失）は coverage.ts が見る。ここでは特定減額特例の「70歳未満」だけ見る
+ *
+ * 役員（11/16）：雇用契約ではなく、役員の判定（officer.ts）で決める。4分の3基準・短時間労働者の決まりは使わない
+ * - 代表・常勤 → 通常の加入（regular）／非常勤 → 6項目で加入・対象外、決まらなければ判定できない
+ * - 役員報酬が 0円（その日の契約の所定内賃金が 0円）なら被保険者になれない
  */
 import { Contract } from '../../../core/models/contract';
 import { CriteriaDoc } from '../../../core/models/master';
 import { DateStr, monthsPeriodEnd, toYearMonth } from '../../../shared/utils/date';
 import { formatHours, formatYen } from '../../../shared/utils/number';
 import { contractAt, isShortPeriod } from './contract-form-model';
+import type { OfficerInfo } from '../../../core/models/employee';
+import { judgeOfficer } from './officer';
 import {
   ageReachDate,
   criteriaAt,
@@ -45,6 +51,8 @@ export interface ClassifyPerson {
   optInDate: DateStr | null; // 特定減額特例：加入の申出日
   optOutDate?: DateStr | null; // 特定減額特例：喪失の申出日
   contracts: ClassifyContract[];
+  /** 役員なら（役員でなければ null・省略）。従業員の org.officer をそのまま渡す */
+  officer?: OfficerInfo | null;
 }
 
 export interface ClassifyOffice {
@@ -75,6 +83,11 @@ export type ClassifyReason =
   | 'shortTerm' // 2か月以内の契約で、更新の見込みがない
   | 'seasonal' // 季節的業務（4か月以内）
   | 'temporaryBusiness' // 臨時的事業（6か月以内）
+  // 役員（11/16）
+  | 'officerEnroll' // 代表・常勤の役員、または非常勤で加入の方向が多い
+  | 'officerExclude' // 非常勤で除外の方向が多い
+  | 'officerNoPay' // 役員報酬がない
+  | 'officerUnclear' // 非常勤で、6項目の答えが足りない・半々（人が判断）
   // 判定できない
   | 'noContract'
   | 'noStandard' // 事業所の所定が空
@@ -220,6 +233,7 @@ export function classify(
   date: DateStr,
 ): Classification {
   const current = contractAt(p.contracts, date);
+  if (p.officer) return classifyOfficer(p.officer, current?.scheduledWage ?? null, current?.from ?? null);
   if (!current) {
     return {
       category: 'unknown',
@@ -245,6 +259,22 @@ export function classify(
   return excluded
     ? { ...work, category: 'excluded', reason: excluded, contractFrom: current.from }
     : { ...work, contractFrom: current.from };
+}
+
+/** 役員の区分（報酬は、その日の契約の所定内賃金。契約がなければ「報酬あり」とみなす） */
+function classifyOfficer(officer: OfficerInfo, monthlyPay: number | null, contractFrom: DateStr | null): Classification {
+  const j = judgeOfficer(officer, monthlyPay);
+  const base = { contractFrom, below: null, nums: null };
+  switch (j.candidate) {
+    case 'enroll':
+      return { ...base, category: 'regular', reason: 'officerEnroll' };
+    case 'exclude':
+      return { ...base, category: 'excluded', reason: 'officerExclude' };
+    case 'noPay':
+      return { ...base, category: 'excluded', reason: 'officerNoPay' };
+    default:
+      return { ...base, category: 'unknown', reason: 'officerUnclear' };
+  }
 }
 
 // ===== 4. 画面に出す数字 =====

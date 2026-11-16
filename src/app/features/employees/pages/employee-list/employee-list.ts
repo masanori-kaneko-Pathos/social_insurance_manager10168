@@ -158,7 +158,13 @@ export class EmployeeList {
       this.employees().map((e) => [
         e.id,
         classify(
-          { birthDate: e.birthDate, optInDate: e.optInDate, optOutDate: e.optOutDate ?? null, contracts: map.get(e.id) ?? [] },
+          {
+            birthDate: e.birthDate,
+            optInDate: e.optInDate,
+            optOutDate: e.optOutDate ?? null,
+            contracts: map.get(e.id) ?? [],
+            officer: e.org?.officer ?? null,
+          },
           office,
           this.criteria(),
           this.asOf(),

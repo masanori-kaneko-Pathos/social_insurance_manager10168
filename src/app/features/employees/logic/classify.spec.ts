@@ -80,9 +80,7 @@ describe('classify：働き方', () => {
   it('週20時間未満・昼間の学生は対象外。夜間・通信・休学中は加入', () => {
     expect(at(person([part({ weeklyMinutes: 1199 })]), '2026-11-01')).toBe('excluded:under20h');
     expect(at(person([part({ student: 'daytime' })]), '2026-11-01')).toBe('excluded:student');
-    expect(at(person([part({ student: 'other' })]), '2026-11-01')).toBe(
-      'shortTime:shortTimeRequirements',
-    );
+    expect(at(person([part({ student: 'other' })]), '2026-11-01')).toBe('shortTime:shortTimeRequirements');
   });
   it('賃金要件は 2026-09 まで（8.8万円未満は対象外）', () => {
     const low = person([part({ scheduledWage: 80000 })]);
@@ -104,18 +102,12 @@ describe('classify：特定減額特例対象者（R2）', () => {
     expect(at(p, '2027-01-01')).toBe('excluded:reducedWage');
   });
   it('所定内賃金が8.8万円以上・許可がない人は、ふつうの短時間労働者', () => {
-    expect(at(person([{ ...reduced, scheduledWage: 88000 }]), '2026-11-01')).toBe(
-      'shortTime:shortTimeRequirements',
-    );
-    expect(at(person([{ ...reduced, minimumWageReduction: false }]), '2026-11-01')).toBe(
-      'shortTime:shortTimeRequirements',
-    );
+    expect(at(person([{ ...reduced, scheduledWage: 88000 }]), '2026-11-01')).toBe('shortTime:shortTimeRequirements');
+    expect(at(person([{ ...reduced, minimumWageReduction: false }]), '2026-11-01')).toBe('shortTime:shortTimeRequirements');
   });
   it('70歳以上は特定減額特例の対象ではない', () => {
     // 1956-08-01 生まれ：70歳到達日は 2026-07-31
-    expect(at(person([reduced], { birthDate: '1956-08-01' }), '2026-11-01')).toBe(
-      'shortTime:shortTimeRequirements',
-    );
+    expect(at(person([reduced], { birthDate: '1956-08-01' }), '2026-11-01')).toBe('shortTime:shortTimeRequirements');
   });
 });
 
@@ -133,12 +125,8 @@ describe('classify：2か月以内の契約（Q&A 問2・4〜9、健保法3条1�
     expect(at(renewed, '2026-10-15')).toBe('regular:threeQuarters');
   });
   it('「更新する場合がある」・同様の契約の実績 → 最初から加入（問2）', () => {
-    expect(at(person([short({ renewal: 'possible' })]), '2026-08-01')).toBe(
-      'regular:threeQuarters',
-    );
-    expect(at(person([short({ renewalPrecedent: true })]), '2026-08-01')).toBe(
-      'regular:threeQuarters',
-    );
+    expect(at(person([short({ renewal: 'possible' })]), '2026-08-01')).toBe('regular:threeQuarters');
+    expect(at(person([short({ renewalPrecedent: true })]), '2026-08-01')).toBe('regular:threeQuarters');
   });
   it('労使が超えて使わないと合意していれば対象外（問2 ただし書き）', () => {
     const c = short({ renewal: 'possible', noExtensionAgreed: true });
@@ -150,19 +138,12 @@ describe('classify：2か月以内の契約（Q&A 問2・4〜9、健保法3条1�
     expect(at(p, '2026-08-20')).toBe('regular:threeQuarters');
   });
   it('一度加入したら、更新しないことになっても期間の途中で外れない（問7）', () => {
-    const p = person([
-      short({ renewal: 'possible' }),
-      short({ from: '2026-08-20', renewal: 'none' }),
-    ]);
+    const p = person([short({ renewal: 'possible' }), short({ from: '2026-08-20', renewal: 'none' })]);
     expect(at(p, '2026-08-25')).toBe('regular:threeQuarters');
   });
   it('2か月は暦月で数える（8/15〜10/14 は2か月以内、10/15 までなら超える）', () => {
-    expect(at(person([short({ from: '2026-08-15', periodEnd: '2026-10-14' })]), '2026-09-01')).toBe(
-      'excluded:shortTerm',
-    );
-    expect(at(person([short({ from: '2026-08-15', periodEnd: '2026-10-15' })]), '2026-09-01')).toBe(
-      'regular:threeQuarters',
-    );
+    expect(at(person([short({ from: '2026-08-15', periodEnd: '2026-10-14' })]), '2026-09-01')).toBe('excluded:shortTerm');
+    expect(at(person([short({ from: '2026-08-15', periodEnd: '2026-10-15' })]), '2026-09-01')).toBe('regular:threeQuarters');
   });
   it('要件を満たさない働き方から変わったときは、変わった日からの契約で判断（問9）', () => {
     const p = person([
@@ -184,40 +165,25 @@ describe('classify：日雇い・季節的業務・臨時的事業', () => {
   it('季節的業務は4か月以内なら対象外、超える予定なら最初から加入', () => {
     const c = full({ from: '2026-04-01', specialEmployment: 'seasonal' });
     expect(at(person([{ ...c, periodEnd: '2026-07-31' }]), '2026-04-01')).toBe('excluded:seasonal');
-    expect(at(person([{ ...c, periodEnd: '2026-08-01' }]), '2026-04-01')).toBe(
-      'regular:threeQuarters',
-    );
+    expect(at(person([{ ...c, periodEnd: '2026-08-01' }]), '2026-04-01')).toBe('regular:threeQuarters');
   });
   it('臨時的事業は6か月以内なら対象外', () => {
     const c = full({ from: '2026-04-01', specialEmployment: 'temporaryBusiness' });
-    expect(at(person([{ ...c, periodEnd: '2026-09-30' }]), '2026-04-01')).toBe(
-      'excluded:temporaryBusiness',
-    );
-    expect(at(person([{ ...c, periodEnd: '2026-10-01' }]), '2026-04-01')).toBe(
-      'regular:threeQuarters',
-    );
+    expect(at(person([{ ...c, periodEnd: '2026-09-30' }]), '2026-04-01')).toBe('excluded:temporaryBusiness');
+    expect(at(person([{ ...c, periodEnd: '2026-10-01' }]), '2026-04-01')).toBe('regular:threeQuarters');
   });
 });
 
 describe('classify：理由に出す数字（below・nums・reasonParams）', () => {
-  const run = (c: ClassifyContract, date = '2026-11-01') =>
-    classify(person([c]), OFFICE, CRITERIA, date);
+  const run = (c: ClassifyContract, date = '2026-11-01') => classify(person([c]), OFFICE, CRITERIA, date);
 
   it('4分の3以上なら below は null、数字は契約と事業所の所定', () => {
     const r = run(full({ weeklyMinutes: 1920, monthlyDays: 16 }));
     expect(r.reason).toBe('threeQuarters');
     expect(r.below).toBeNull();
     expect(reasonParams(r)).toEqual({
-      work: '32:00',
-      days: 16,
-      std: '40:00',
-      stdDays: 20,
-      stdQ: '30:00',
-      stdDaysQ: '15',
-      minHours: '20:00',
-      wage: '250,000',
-      wageMin: '',
-      reducedWageMin: '88,000',
+      work: '32:00', days: 16, std: '40:00', stdDays: 20, stdQ: '30:00', stdDaysQ: '15',
+      minHours: '20:00', wage: '250,000', wageMin: '', reducedWageMin: '88,000',
     });
   });
   it('日数だけ足りない（週30時間・月14日）', () => {
@@ -258,5 +224,28 @@ describe('classify：理由に出す数字（below・nums・reasonParams）', ()
     const r = classify(person([]), OFFICE, CRITERIA, '2026-11-01');
     expect(r.nums).toBeNull();
     expect(reasonParams(r)).toEqual({});
+  });
+});
+
+describe('classify：役員（11/16）', () => {
+  const checks = (v: boolean | null) => ({
+    attendance: v, fewOtherJobs: v, boardMeetings: v, supervision: v, beyondAdvice: v, fairPay: v,
+  });
+  it('代表・常勤は契約がなくても加入（4分の3基準は使わない）', () => {
+    expect(at(person([], { officer: { type: 'representative', checks: checks(null) } }), '2026-11-16')).toBe('regular:officerEnroll');
+    // 週20時間の契約でも、常勤の役員なら短時間労働者の決まりは使わない
+    expect(at(person([part()], { officer: { type: 'fullTime', checks: checks(null) } }), '2026-11-16')).toBe('regular:officerEnroll');
+  });
+  it('非常勤は6項目：加入の方向が多い・除外の方向が多い・決まらない', () => {
+    expect(at(person([], { officer: { type: 'partTime', checks: checks(true) } }), '2026-11-16')).toBe('regular:officerEnroll');
+    expect(at(person([], { officer: { type: 'partTime', checks: checks(false) } }), '2026-11-16')).toBe('excluded:officerExclude');
+    expect(at(person([], { officer: { type: 'partTime', checks: checks(null) } }), '2026-11-16')).toBe('unknown:officerUnclear');
+  });
+  it('役員報酬が0円（契約の所定内賃金が0円）なら被保険者になれない', () => {
+    const p = person([full({ scheduledWage: 0 })], { officer: { type: 'representative', checks: checks(null) } });
+    expect(at(p, '2026-11-16')).toBe('excluded:officerNoPay');
+  });
+  it('役員でなければ今までどおり（契約がなければ判定できない）', () => {
+    expect(at(person([], { officer: null }), '2026-11-16')).toBe('unknown:noContract');
   });
 });

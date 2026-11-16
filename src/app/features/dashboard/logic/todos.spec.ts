@@ -66,6 +66,12 @@ describe('personTodos', () => {
     expect(todos({ retireDate: '2026-09-30' })).toEqual([]);
     expect(todos({ hireDate: '2026-12-01' })).toEqual([]);
   });
+  it('役員：契約がなくても noContract は出さない。非常勤で決まらなければ officerCheck（11/16）', () => {
+    const c = (v: boolean | null) => ({ attendance: v, fewOtherJobs: v, boardMeetings: v, supervision: v, beyondAdvice: v, fairPay: v });
+    expect(todos({ contracts: [], org: { officer: { type: 'partTime', checks: c(null) } } }).map((x) => x.kind)).toEqual(['officerCheck']);
+    // 代表は加入の候補。すでに加入していれば何も出ない
+    expect(todos({ contracts: [], org: { officer: { type: 'representative', checks: c(null) } } })).toEqual([]);
+  });
   it('事業所の所定がないときは、1人ずつは出さない（事業所の問題として呼ぶ側で出す）', () => {
     expect(personTodos(person({}), { standardHours: null }, CRITERIA, TODAY)).toEqual([]);
   });

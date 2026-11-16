@@ -675,6 +675,7 @@ export class OfficeForm {
           hireDate: e.hireDate,
           retireDate: e.retireDate,
           contracts: await this.contracts.list(o.id, e.id),
+          org: e.org ?? null,
         })),
       );
       this.people.set(people);

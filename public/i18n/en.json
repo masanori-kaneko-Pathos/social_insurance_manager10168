@@ -152,7 +152,8 @@
         "name": "Name change notification",
         "dependentChange": "Dependent change notification",
         "overseasCertificate": "Overseas certificate expiry",
-        "overseasPayAbroad": "Coverage check for overseas assignment"
+        "overseasPayAbroad": "Coverage check for overseas assignment",
+        "officerCheck": "Check officer coverage"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. An Application to Enroll in EPI / EHI (資格取得届) is needed.",
@@ -197,7 +198,8 @@
         "overseasCertificate": "The Japanese certificate of coverage for the assignment in {{country}} expires on {{date}}. To continue the assignment, apply for an extension before it expires (the other country must approve). Otherwise, the employee returns to Japan or switches to the local system (if the Japanese company stops paying salary, a loss-of-coverage notification is also needed in Japan). Once the extension certificate is issued, enter the new end date and this item disappears.",
         "overseasPayAbroad": "Assigned to {{country}} since {{date}} and paid only by the overseas company, but still insured in Japan. If the Japanese company bears no salary (such as a family allowance at home), the employment relationship is regarded as ended and a loss-of-coverage notification is needed (the loss date is usually the start of the assignment). If you confirm that the Japanese company bears salary and coverage continues, dismiss with \"Checked\".",
         "myNumberCheckFamily": "{{family}} family member number(s) have been submitted. Show all digits in the family My Number section, check them, and approve or return.",
-        "myNumberDisposeFamily": "{{family}} family member number(s) also remain. Dispose of them as well."
+        "myNumberDisposeFamily": "{{family}} family member number(s) also remain. Dispose of them as well.",
+        "officerCheck": "Coverage of a part-time officer cannot be decided. Answer the six items (regular attendance, other jobs, board meetings and so on)."
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -258,7 +260,8 @@
       "toEmployee": "Go to the employee page",
       "toDependents": "Go to the dependents card",
       "toOverseas": "View overseas assignment",
-      "toLoss": "Enter the loss-of-coverage date"
+      "toLoss": "Enter the loss-of-coverage date",
+      "toOfficer": "Answer the officer items"
     }
   },
   "nav": {
@@ -1905,7 +1908,11 @@
       "temporaryBusiness": "Temporary business planned for 6 months or less, so not insured.",
       "noContract": "No employment contract in effect today.",
       "noStandard": "The full-time schedule in office settings is blank, so the 3/4 rule cannot be judged.",
-      "noCriteria": "Coverage criteria (masterCriteria) are not registered."
+      "noCriteria": "Coverage criteria (masterCriteria) are not registered.",
+      "officerEnroll": "Insured as a company officer paid by the corporation for taking part in management (representative, full-time, or part-time with most items pointing to coverage). The three-quarters rule for employment contracts is not used.",
+      "officerExclude": "Not insured: a part-time officer with most of the six items pointing away from coverage.",
+      "officerNoPay": "Cannot be insured: no officer pay (scheduled wage is 0).",
+      "officerUnclear": "A part-time officer. The six items are unanswered or evenly split, so coverage cannot be decided (answer them under Officer when editing the employee)."
     },
     "below": {
       "hours": "Weekly hours {{work}} are below three quarters ({{stdQ}}) of a regular worker ({{std}}).",

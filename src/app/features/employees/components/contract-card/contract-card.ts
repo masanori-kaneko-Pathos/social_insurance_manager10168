@@ -88,6 +88,7 @@ export class ContractCard implements OnInit {
         optInDate: e.optInDate,
         optOutDate: e.optOutDate ?? null, // 11/9 より前のデータにはない
         contracts: this.rows(),
+        officer: e.org?.officer ?? null, // 役員は契約ではなく役員の判定で（11/16）
       },
       {
         standardHours: office.standardHours ?? null,

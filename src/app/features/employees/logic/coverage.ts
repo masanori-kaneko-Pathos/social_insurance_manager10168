@@ -14,6 +14,8 @@ import {
 } from '../../../shared/utils/date';
 import { careExemptMonth, CareExemptionLike } from './care-exemption';
 import { contractAt } from './contract-form-model';
+import type { OfficerInfo } from '../../../core/models/employee';
+import { judgeOfficer } from './officer';
 
 export interface Enrollment {
   enrolled: boolean;
@@ -228,7 +230,9 @@ export interface HeadcountTarget {
   birthDate: DateStr;
   hireDate: DateStr;
   retireDate: DateStr | null;
-  contracts: (WorkSchedule & { from: DateStr })[];
+  contracts: (WorkSchedule & { from: DateStr; scheduledWage?: number })[];
+  /** 役員は4分の3基準ではなく、役員の判定で加入の候補なら数える（11/16） */
+  org?: { officer: OfficerInfo | null } | null;
 }
 
 export interface Headcount {
@@ -241,6 +245,7 @@ export interface Headcount {
  * - その月に在籍している（入社の月 〜 退職の月）
  * - 70歳未満（70歳到達の月より前。厚年の資格がある人）
  * - その月の末日に効いている契約が、4分の3基準を満たす（短時間労働者は数えない）
+ * - 役員は、役員の判定で加入の候補なら数える（契約がなくてもよい。11/16）
  * 事業所の所定がなければ数えられないので null
  */
 export function countHeadcount(
@@ -257,6 +262,11 @@ export function countHeadcount(
     if (p.retireDate && toYearMonth(p.retireDate) < month) continue;
     if (month >= toYearMonth(ageReachDate(p.birthDate, 70))) continue;
     const contract = contractAt(p.contracts, monthEnd);
+    const officer = p.org?.officer;
+    if (officer) {
+      if (judgeOfficer(officer, contract?.scheduledWage ?? null).candidate === 'enroll') counted++;
+      continue;
+    }
     if (!contract) {
       noContract++;
       continue;

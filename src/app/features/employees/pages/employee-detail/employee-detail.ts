@@ -184,7 +184,7 @@ export class EmployeeDetail {
     if (!e || !office || !contracts || !criteria) return null;
     if (e.retireDate && e.retireDate < this.today) return null;
     return classify(
-      { birthDate: e.birthDate, optInDate: e.optInDate, optOutDate: e.optOutDate ?? null, contracts },
+      { birthDate: e.birthDate, optInDate: e.optInDate, optOutDate: e.optOutDate ?? null, contracts, officer: e.org?.officer ?? null },
       office,
       criteria,
       this.today,
@@ -254,7 +254,8 @@ export class EmployeeDetail {
     const contracts = this.contracts();
     if (!e || !contracts || !this.remunerations()) return [];
     return missingInfo(e, {
-      hasContract: contracts.length > 0,
+      // 役員は雇用契約がなくてよい（役員の判定で区分を決める。11/16）
+      hasContract: contracts.length > 0 || !!e.org?.officer,
       remunerationNow: !!this.remunerationNow(),
       address: this.context.isAdmin() ? e.contact.address : undefined,
       today: this.today,

@@ -98,7 +98,7 @@ export function urgencyOf(
     return 'soon';
   }
   if (note === 'asap' || kind === 'requests') return 'now';
-  if (kind === 'noContract' || kind === 'office') return 'missing';
+  if (kind === 'noContract' || kind === 'officerCheck' || kind === 'office') return 'missing';
   return 'info';
 }
 

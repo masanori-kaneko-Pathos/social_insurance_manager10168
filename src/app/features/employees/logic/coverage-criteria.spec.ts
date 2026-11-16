@@ -64,6 +64,19 @@ describe('countHeadcount：企業規模の人数', () => {
     ...p,
   });
 
+  it('役員は契約がなくても、加入の候補なら数える。非常勤で決まらない人は数えない（11/16）', () => {
+    const c = (v: boolean | null) => ({ attendance: v, fewOtherJobs: v, boardMeetings: v, supervision: v, beyondAdvice: v, fairPay: v });
+    const r = countHeadcount(
+      [
+        person({ contracts: [], org: { officer: { type: 'representative', checks: c(null) } } }),
+        person({ contracts: [], org: { officer: { type: 'partTime', checks: c(null) } } }),
+      ],
+      STD,
+      '2026-11',
+    );
+    expect(r).toEqual({ counted: 1, noContract: 0 });
+  });
+
   it('フルタイムは数え、短時間労働者は数えない', () => {
     const r = countHeadcount([person({}), person({ contracts: [part()] })], STD, '2026-11');
     expect(r).toEqual({ counted: 1, noContract: 0 });

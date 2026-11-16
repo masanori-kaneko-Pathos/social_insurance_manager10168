@@ -10,7 +10,7 @@
 // - certificateEnd：この先 horizon 日以内に適用証明書が切れる → 翌日から日本の保険に加入（資格取得届）
 // 年齢による喪失（70歳・75歳）は年齢到達の一覧で扱うので、ここでは見ない
 
-import type { EnrollmentDoc } from '../../../core/models/employee';
+import type { EnrollmentDoc, OfficerInfo } from '../../../core/models/employee';
 import { addDays, DateStr } from '../../../shared/utils/date';
 import { CertificateLike, exemptOn } from '../../employees/logic/agreement';
 import {
@@ -29,7 +29,8 @@ export type TodoKind =
   | 'certificateEnd'
   | 'upcoming'
   | 'categoryChange'
-  | 'noContract';
+  | 'noContract'
+  | 'officerCheck'; // 非常勤の役員の加入を確かめる（11/16）
 
 export interface TodoPerson {
   id: string;
@@ -43,6 +44,8 @@ export interface TodoPerson {
   contracts: ClassifyContract[];
   /** 社会保障協定の適用証明書（外国籍の人だけ。なければ null） */
   certificate?: CertificateLike | null;
+  /** 部署・役職・役員（役員は契約ではなく役員の判定で区分を決める。11/16） */
+  org?: { officer: OfficerInfo | null } | null;
 }
 
 export interface Todo {
@@ -93,6 +96,7 @@ export function personTodos(
     optInDate: p.optInDate,
     optOutDate: p.optOutDate ?? null,
     contracts: p.contracts,
+    officer: p.org?.officer ?? null,
   };
   const at = (d: DateStr) => classify(person, office, criteria, d);
   const now = at(today);
@@ -100,6 +104,10 @@ export function personTodos(
   if (now.reason === 'noStandard' || now.reason === 'noCriteria') return [];
   if (now.reason === 'noContract') {
     return [{ kind: 'noContract', employeeId: p.id, today: now, date: null, next: null }];
+  }
+  // 非常勤の役員で、6項目の答えが足りない・半々：人が判断する（11/16）
+  if (now.reason === 'officerUnclear') {
+    return [{ kind: 'officerCheck', employeeId: p.id, today: now, date: null, next: null }];
   }
 
   const todos: Todo[] = [];
@@ -183,6 +191,7 @@ const ORDER: Record<TodoKind, number> = {
   upcoming: 4,
   categoryChange: 5,
   noContract: 6,
+  officerCheck: 7,
 };
 
 export function sortTodos(todos: Todo[]): Todo[] {
