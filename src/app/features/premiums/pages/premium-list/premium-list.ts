@@ -28,6 +28,7 @@ import { healthPartTotals, officeTotals } from '../../logic/premium-core';
 import { buildPremiumRow, PremiumRow } from '../../logic/premium-rows';
 import { PremiumBreakdown } from '../../components/premium-breakdown/premium-breakdown';
 import { Pager } from '../../../../shared/components/pager/pager';
+import { CloseOnOutside } from '../../../../shared/directives/close-on-outside';
 import { PersonListBar } from '../../../../shared/components/person-list-bar/person-list-bar';
 import { defaultListOptions, filterAndSort, listFilterCount, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
 import { formatMilli } from '../../logic/rounding';
@@ -67,7 +68,7 @@ interface ListItem extends PremiumRow {
 
 @Component({
   selector: 'app-premium-list',
-  imports: [ColumnMapper, MonthPicker, Pager, PersonListBar, PremiumBreakdown, ReviewBox, RouterLink, TranslocoPipe],
+  imports: [CloseOnOutside, ColumnMapper, MonthPicker, Pager, PersonListBar, PremiumBreakdown, ReviewBox, RouterLink, TranslocoPipe],
   templateUrl: './premium-list.html',
   styleUrl: './premium-list.css',
 })
@@ -613,6 +614,7 @@ export class PremiumList {
 
   closeDeduction(): void {
     this.deductionResult.set(null);
+    this.deductionError.set(null);
   }
 
   /** 表に出す行（初期は差がある人・照合できない人だけ） */

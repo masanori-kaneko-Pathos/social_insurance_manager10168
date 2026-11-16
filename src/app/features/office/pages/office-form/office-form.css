@@ -392,6 +392,10 @@ h3 {
   border-left-color: var(--color-primary);
 }
 
+.toc a.toc-part:first-child {
+  margin-top: 0;
+}
+
 .toc a.toc-part {
   margin-top: var(--space-sm);
   font-weight: 600;

@@ -54,7 +54,7 @@
     }
     @if (context.isAdmin() && rows().length > 0) {
       <!-- 出力は1つのボタンにまとめる（開くと CSV・Excel を選ぶ） -->
-      <details class="menu">
+      <details class="menu" appCloseOnOutside>
         <summary class="btn btn-small">{{ 'premiumList.export' | transloco }} ▾</summary>
         <div class="menu-list" role="menu">
           <!-- 何人分を出すか（絞り込んでいれば絞り込んだ人だけ。11/16） -->
@@ -63,8 +63,18 @@
           }}</p>
           <button type="button" role="menuitem" (click)="exportCsv()">{{ 'premiumList.exportCsv' | transloco }}</button>
           <button type="button" role="menuitem" (click)="exportXlsx()">{{ 'premiumList.exportXlsx' | transloco }}</button>
+          <!-- 給与ソフトに渡す材料（11/16 に「給与ソフトとの分担」の欄から移した） -->
+          <button type="button" role="menuitem" class="menu-sep" (click)="exportForSoftware()">
+            {{ 'payrollSoft.export' | transloco }}
+            <small>{{ 'payrollSoft.exportNote' | transloco: { payMonth: monthParts(payMonth()).m } }}</small>
+          </button>
         </div>
       </details>
+      <!-- 給与ソフトで控除した額を読み込んで、差がある人だけ出す（結果は下に開く） -->
+      <label class="btn btn-small" [title]="'payrollSoft.checkHint' | transloco">
+        {{ 'payrollSoft.check' | transloco }}
+        <input type="file" class="file-hidden" [accept]="importAccept" (change)="onDeductionFile($event)" />
+      </label>
     }
   </div>
   @if (advanceReady()) {
@@ -304,24 +314,11 @@
     </details>
   }
 
-  <!-- 給与ソフトとの役割分担：天引きの計算は給与ソフト。ここは材料を渡し、控除額を検算する -->
-  @if (context.isAdmin() && rows().length > 0) {
-    <details class="card soft fold">
-      <summary class="fold-head">
-        <h2>{{ 'payrollSoft.title' | transloco }}</h2>
-        <span class="fold-toggle"><span class="when-closed">{{ 'premiumList.breakdown' | transloco }} ▽</span><span class="when-open">{{ 'premiumList.breakdown' | transloco }} △</span></span>
-      </summary>
-      <p class="hint">{{ 'payrollSoft.lead' | transloco }}</p>
-      <p class="soft-actions">
-        <button type="button" class="btn btn-small" (click)="exportForSoftware()">
-          {{ 'payrollSoft.export' | transloco }}
-        </button>
-        <label class="btn btn-small">
-          {{ 'payrollSoft.check' | transloco }}
-          <input type="file" class="file-hidden" [accept]="importAccept" (change)="onDeductionFile($event)" />
-        </label>
-        <span class="muted">{{ 'payrollSoft.exportNote' | transloco: { payMonth: monthParts(payMonth()).m } }}</span>
-      </p>
+  <!-- 控除額の検算（上の「控除額を検算する」でファイルを選んだときだけ開く。11/16） -->
+  @if (context.isAdmin() && (deductionError() || deductionFile() || deductionResult())) {
+    <section class="card soft">
+      <h2>{{ 'payrollSoft.checkTitle' | transloco }}</h2>
+      <p class="hint">{{ 'payrollSoft.checkLead' | transloco }}</p>
       @if (deductionError(); as e) {
         <p class="error" role="alert">{{ e | transloco }}</p>
       }
@@ -384,7 +381,7 @@
           <p class="hint">{{ 'payrollSoft.diffHint' | transloco }}</p>
         </div>
       }
-    </details>
+    </section>
   }
 
 

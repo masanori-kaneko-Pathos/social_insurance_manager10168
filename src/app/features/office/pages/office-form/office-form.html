@@ -2,7 +2,6 @@
   <!-- 目次（設定の画面だけ。押すとその欄へ。11/13） -->
   @if (isEdit) {
     <nav class="toc" [attr.aria-label]="'office.toc.label' | transloco">
-      <p class="toc-title">{{ 'office.toc.label' | transloco }}</p>
       @for (t of toc(); track t.id) {
         <a [href]="'#' + t.id" [class.sub]="t.sub" [class.toc-part]="t.part" (click)="jump($event, t.id)">{{ t.key | transloco }}</a>
       }
@@ -11,7 +10,7 @@
 <div class="page">
   @if (isEdit) {
     <a class="back" [routerLink]="['/o', office()?.id]">← {{ 'common.back' | transloco }}</a>
-    <h1>{{ 'office.form.titleEdit' | transloco }}</h1>
+    <h1 id="sec-top">{{ 'office.form.titleEdit' | transloco }}</h1>
     <p class="lead">
       {{ (readOnly ? 'office.form.readOnly' : 'office.form.leadEdit') | transloco }}
     </p>

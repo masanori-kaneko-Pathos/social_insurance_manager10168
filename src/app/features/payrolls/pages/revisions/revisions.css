@@ -177,3 +177,49 @@ h2 {
   font-size: var(--font-sm);
   color: var(--color-warning-text);
 }
+
+/* ===== 11/16：1人分を横に並べる（月の表 → 平均と判定 → 反映するボタンを右端に） ===== */
+.item {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) auto;
+  column-gap: var(--space-xl);
+  align-items: start;
+}
+
+.item > * {
+  grid-column: 1 / -1;
+}
+
+.item > .months-table {
+  grid-column: 1;
+  margin: 0;
+}
+
+.item > .result-col {
+  grid-column: 2;
+  align-self: center;
+}
+
+.item > .actions {
+  grid-column: 3;
+  grid-row: 2;
+  align-self: center;
+  justify-content: flex-end;
+  margin-top: 0;
+}
+
+.result-col .avg {
+  margin-top: 0;
+}
+
+/* 狭い画面では今までどおり縦に */
+@media (max-width: 900px) {
+  .item {
+    display: block;
+  }
+
+  .item > .actions {
+    margin-top: var(--space-sm);
+    justify-content: flex-start;
+  }
+}

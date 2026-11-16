@@ -1071,7 +1071,7 @@
       "rounded": "After rounding (combined)",
       "sum": "Total",
       "contributionNote": "The child-rearing contribution is not a premium; only the employer pays it, so it is not in the total.",
-      "formula": "Show the calculation"
+      "formulaTitle": "Calculation (standard remuneration × rate, rounding)"
     }
   },
   "premiumList": {
@@ -1521,9 +1521,9 @@
     "retro": "retro {{n}}",
     "noRecord": "Not entered",
     "skip": {
-      "shortDays": "Excluded (under 17 days)",
-      "partialAcquisition": "Excluded (joined mid-period)",
-      "suspended": "Excluded (leave of absence)"
+      "shortDays": "* under 17 days",
+      "partialAcquisition": "* joined mid-month",
+      "suspended": "* on leave"
     },
     "corrected": "Corrected average (excluding retro pay)",
     "grade": "G{{h}} / G{{p}}",
@@ -1584,10 +1584,17 @@
       "all": "Set the standard monthly remuneration from Sep. {{year}} for {{n}} people as shown ({{changed}} change grade).\n\n- The premium list uses the new amounts from September\n- Reflect people who use the annual average individually first\n\nContinue?"
     },
     "pending": {
-      "candidate": "Irregular revision first ({{m}})",
-      "waiting": "Irregular revision pending ({{m}})",
-      "note": "People with an irregular revision in Jul.–Sep. are excluded from the regular decision. Reflect it first under Revision candidates."
-    }
+      "candidate": "Irregular first",
+      "waiting": "Irregular pending",
+      "note": "People with an irregular revision in Jul.–Sep. are excluded from the regular decision. Reflect it first under Revision candidates.",
+      "month": "An irregular revision applies from month {{m}}."
+    },
+    "entryState": {
+      "all": "Reflected: all",
+      "empty": "Not yet reflected",
+      "filled": "Reflected"
+    },
+    "skipNote": "Months marked * are left out of the average. Under 17 days: fewer than 17 payment-basis days (pay is lower than usual, so including it would understate remuneration). Joined mid-month: not a full month's pay. On leave: no pay during leave."
   },
   "payrollCsv": {
     "title": "Payroll records CSV",
@@ -3537,7 +3544,7 @@
   "payrollSoft": {
     "title": "Split with payroll software",
     "lead": "Payroll software calculates the deductions. This app keeps the master record of grades, rates and filings, hands the inputs to the payroll software, and cross-checks the deductions it calculated.",
-    "export": "CSV for payroll software",
+    "export": "CSV for payroll software (standard remuneration, employee share)",
     "exportNote": "Deducted from wages paid in month {{payMonth}}",
     "fileLabel": "for-payroll-software",
     "check": "Check deductions",
@@ -3565,7 +3572,10 @@
     },
     "error": {
       "read": "Could not read the file"
-    }
+    },
+    "checkHint": "Choose the deduction file (CSV/Excel) from your payroll software to list only people whose amounts differ from this app.",
+    "checkTitle": "Deduction check",
+    "checkLead": "Compares the premiums your payroll software deducted with the employee share calculated here. Payroll software does the deduction; this app checks the correct amount."
   },
   "myNumber": {
     "title": "My Number",

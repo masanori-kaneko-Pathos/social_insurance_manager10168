@@ -237,3 +237,20 @@ button.link {
   font-size: var(--font-xs);
   color: var(--color-text-sub);
 }
+
+/* ===== 11/16：月の列を詰める・札を小さく ===== */
+/* 数字の列は中身の幅に縮める（余った幅は氏名と結果の列へ） */
+th.month,
+th.fit {
+  width: 1%;
+}
+
+.emp-no {
+  color: var(--color-text-sub);
+  font-variant-numeric: tabular-nums;
+}
+
+td.result-chips > a.badge {
+  font-size: 11px;
+  padding: 0 4px;
+}

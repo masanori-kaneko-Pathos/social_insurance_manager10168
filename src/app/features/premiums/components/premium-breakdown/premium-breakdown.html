@@ -1,4 +1,7 @@
-<!-- 給与明細の形（11/16）。本人分は、まとめて端数処理する単位の下の行が「引かれる額」 -->
+<!-- 左に給与明細の形、右に計算式（下に広げると縦に長くなりすぎるので横に並べる。狭い画面では縦に。11/16） -->
+<div class="columns">
+<div class="slip-side">
+<!-- 給与明細の形。本人分は、まとめて端数処理する単位の下の行が「引かれる額」 -->
 <table class="slip">
   <thead>
     <tr>
@@ -45,9 +48,11 @@
   <p class="slip-note">{{ 'premium.slip.contributionNote' | transloco }}</p>
 }
 
-<!-- 計算式（等級・料率・端数処理）。ふだんは閉じておく -->
-<details class="formula-fold">
-  <summary>{{ 'premium.slip.formula' | transloco }}</summary>
+</div>
+
+<!-- 計算式（等級・料率・端数処理） -->
+<div class="formula-side">
+  <p class="formula-title">{{ 'premium.slip.formulaTitle' | transloco }}</p>
 @for (g of result().groups; track $index) {
   @if (isContribution(g)) {
     <div class="contribution-head">{{ 'premium.contributionNote' | transloco }}</div>
@@ -58,14 +63,6 @@
         <span class="part">{{ 'premium.part.' + l.part | transloco }}</span>
         <span class="formula">
           {{ 'premium.formula' | transloco: { base: yen(l.base), grade: l.grade, rate: lineRate(l), total: milli(l.totalMilli) } }}
-        </span>
-        <!-- 保険ごとの本人分・会社分（端数処理の前。給与明細に保険ごとに書くときの材料。11/13） -->
-        <span class="split">
-          @if (isContribution(g)) {
-            {{ 'premium.lineEmployerOnly' | transloco: { employer: milli(l.totalMilli - l.employeeMilli) } }}
-          } @else {
-            {{ 'premium.lineSplit' | transloco: { employee: milli(l.employeeMilli), employer: milli(l.totalMilli - l.employeeMilli) } }}
-          }
         </span>
         <span class="rate-note">
           {{ 'premium.rateNote' | transloco: { employee: pct(l.rate.employee), employer: pct(l.rate.employer), from: l.rate.from } }}
@@ -83,4 +80,5 @@
     <span>{{ 'premium.missing.' + m.reason | transloco }}</span>
   </div>
 }
-</details>
+</div>
+</div>

@@ -37,25 +37,35 @@
   @if (targets().length === 0) {
     <section class="card empty"><p>{{ 'regular.empty' | transloco }}</p></section>
   } @else {
+    <!-- 探す・絞る・並べる・ページ（ほかの人の表と同じ。11/16） -->
+    <app-person-list-bar
+      [departments]="context.current()?.departments ?? []"
+      [(options)]="listOptions"
+      [(page)]="page"
+      [total]="filtered().length"
+      entryKey="regular.entryState."
+    />
     <div class="card table-wrap">
       <table>
         <thead>
           <tr>
-            <th>{{ 'regular.col.employee' | transloco }}</th>
-            <th class="num">{{ 'regular.col.month' | transloco: { m: 4 } }}</th>
-            <th class="num">{{ 'regular.col.month' | transloco: { m: 5 } }}</th>
-            <th class="num">{{ 'regular.col.month' | transloco: { m: 6 } }}</th>
-            <th class="num">{{ 'regular.col.average' | transloco }}</th>
-            <th class="num">{{ 'regular.col.current' | transloco }}</th>
-            <th class="num">{{ 'regular.col.next' | transloco }}</th>
+            <th><app-sort-header key="number" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.employeeNumber' | transloco }}</app-sort-header></th>
+            <th><app-sort-header key="kana" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.name' | transloco }}</app-sort-header></th>
+            <th class="num month">{{ 'regular.col.month' | transloco: { m: 4 } }}</th>
+            <th class="num month">{{ 'regular.col.month' | transloco: { m: 5 } }}</th>
+            <th class="num month">{{ 'regular.col.month' | transloco: { m: 6 } }}</th>
+            <th class="num fit">{{ 'regular.col.average' | transloco }}</th>
+            <th class="num fit">{{ 'regular.col.current' | transloco }}</th>
+            <th class="num fit">{{ 'regular.col.next' | transloco }}</th>
             <th>{{ 'regular.col.result' | transloco }}</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
-          @for (v of targets(); track v.employee.id) {
+          @for (v of shown().rows; track v.employee.id) {
             @let r = v.result;
             <tr>
+              <td class="emp-no">{{ v.employee.employeeNumber ?? '' }}</td>
               <td>
                 <a class="name" [routerLink]="['/o', context.current()?.id, 'employees', v.employee.id]">
                   {{ name(v.employee) }}
@@ -130,8 +140,8 @@
                 <!-- 7〜9月改定の随時改定が残っている人：先に改定の候補で反映する（その人は算定基礎届から外れる） -->
                 @if (v.pending; as pd) {
                   <a class="badge badge-warn" [routerLink]="['/o', context.current()?.id, 'revisions']"
-                    [title]="'regular.pending.note' | transloco">
-                    {{ 'regular.pending.' + pd.status | transloco: { m: monthNum(pd.revisedFrom) } }}
+                    [title]="('regular.pending.month' | transloco: { m: monthNum(pd.revisedFrom) }) + ' ' + ('regular.pending.note' | transloco)">
+                    {{ 'regular.pending.' + pd.status | transloco }}
                   </a>
                 }
               </td>
@@ -150,7 +160,7 @@
 
             @if (openAnnual() === v.employee.id && r.annual; as a) {
               <tr class="annual-row">
-                <td colspan="9">
+                <td colspan="10">
                   <div class="annual">
                     <h3>{{ 'regular.annual.title' | transloco }}</h3>
                     <div class="annual-months">
@@ -200,6 +210,8 @@
         </tbody>
       </table>
     </div>
+    <app-pager variant="bottom" [total]="filtered().length" [(page)]="page" [size]="listOptions().size" />
+    <p class="sub skip-note">{{ 'regular.skipNote' | transloco }}</p>
 
     @if (errorKey(); as key) {
       <div class="alert alert-danger">{{ key | transloco }}</div>

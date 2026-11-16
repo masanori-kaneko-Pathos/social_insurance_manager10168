@@ -25,6 +25,7 @@ import { RateService } from '../../../rates/rate.service';
 import { calcMonthly } from '../../logic/calc-monthly';
 import { splitContribution } from '../../logic/premium-core';
 import { formatMilli } from '../../logic/rounding';
+import { PremiumBreakdown } from '../premium-breakdown/premium-breakdown';
 
 /** 保険料の計算に要る事業所の設定（事業所の文書そのものか、従業員向けに写したもの） */
 export type OfficeForPremium = Pick<Office, 'id' | 'prefecture' | 'healthInsurer' | 'insurerHistory' | 'premium'>;
@@ -40,7 +41,7 @@ type RowState = 'ok' | 'none' | 'missing' | 'error' | 'exempt';
 
 @Component({
   selector: 'app-premium-card',
-  imports: [TranslocoPipe],
+  imports: [PremiumBreakdown, TranslocoPipe],
   templateUrl: './premium-card.html',
   styleUrl: './premium-card.css',
 })

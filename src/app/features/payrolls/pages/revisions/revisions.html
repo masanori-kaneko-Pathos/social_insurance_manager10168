@@ -64,6 +64,8 @@
       </tbody>
     </table>
 
+    <!-- 平均と判定（表の右に並べる。11/16） -->
+    <div class="result-col">
     @if (v.item.result.average; as a) {
       <p class="avg">
         {{ 'revision.average' | transloco: { n: yen(a.average) } }}
@@ -93,6 +95,8 @@
         }
       </div>
     }
+
+    </div>
 
     <!-- 年間平均（保険者算定）：ふつうの候補のうち、A と B に2等級以上の差がある人 -->
     @if (v.group === 'candidate' && annualOf(v); as a) {

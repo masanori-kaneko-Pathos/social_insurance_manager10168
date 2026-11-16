@@ -30,6 +30,12 @@ import { PayrollService } from '../../payroll.service';
 import { RegularService } from '../../regular.service';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
+import { Pager } from '../../../../shared/components/pager/pager';
+import { PersonListBar } from '../../../../shared/components/person-list-bar/person-list-bar';
+import { SortHeader } from '../../../../shared/components/sort-header/sort-header';
+import { defaultListOptions, filterAndSort, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
+import { ContractDoc } from '../../../../core/models/contract';
+import { contractAt } from '../../../employees/logic/contract-form-model';
 interface View {
   employee: Employee;
   result: RegularResult;
@@ -55,7 +61,7 @@ interface Checks {
 
 @Component({
   selector: 'app-regular',
-  imports: [HalfWidthDigits, RouterLink, TranslocoPipe],
+  imports: [HalfWidthDigits, Pager, PersonListBar, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './regular.html',
   styleUrl: './regular.css',
 })
@@ -85,6 +91,36 @@ export class RegularPage {
 
   readonly targets = computed(() => this.views().filter((v) => v.result.status !== 'excluded'));
   readonly excluded = computed(() => this.views().filter((v) => v.result.status === 'excluded'));
+
+  // ===== 探す・絞る・並べる・ページ（ほかの人の表と同じ決まり。11/16） =====
+  readonly listOptions = signal<PersonListOptions>(defaultListOptions());
+  readonly page = signal(1);
+  /** 従業員ごとの契約（雇用形態で絞る・随時改定の日数の基準に使う） */
+  readonly contracts = signal<ReadonlyMap<string, ContractDoc[]>>(new Map());
+
+  /** 7月1日（算定基礎届の基準日）に効いている契約 */
+  private contractOf(v: View): ContractDoc | null {
+    const list = this.contracts().get(v.employee.id);
+    return list ? contractAt(list, `${this.year()}-07-01`) : null;
+  }
+
+  readonly filtered = computed(() =>
+    filterAndSort(
+      this.targets(),
+      this.listOptions(),
+      (v) => v.employee,
+      (v) => this.contractOf(v),
+      (v) => v.septemberExists, // 「入れたかどうか」＝ 9月分を反映したか
+      { dept: (v) => this.deptName(v.employee) ?? '' },
+    ),
+  );
+  readonly shown = computed(() => pageOf(this.filtered(), this.page(), this.listOptions().size));
+
+  /** 部署の名前（なし ＝ null） */
+  deptName(e: Employee): string | null {
+    const id = e.org?.departmentId;
+    return id ? (this.context.current()?.departments?.find((d) => d.id === id)?.name ?? null) : null;
+  }
 
   readonly summary = computed(() => {
     const t = this.targets();
@@ -148,6 +184,7 @@ export class RegularPage {
         this.regularApi.decisions(office.id, ids, year),
         Promise.all(ids.map((id) => this.contractApi.list(office.id, id))),
       ]);
+      this.contracts.set(new Map(ids.map((id, i) => [id, contracts[i]])));
       const byEmployee = new Map<string, Map<string, Payroll>>();
       for (const p of payrolls) {
         if (!byEmployee.has(p.employeeId)) byEmployee.set(p.employeeId, new Map());

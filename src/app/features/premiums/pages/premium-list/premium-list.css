@@ -560,7 +560,8 @@ details.menu > summary::-webkit-details-marker {
   z-index: 10;
   top: calc(100% + 4px);
   left: 0;
-  min-width: 10em;
+  /* 絞り込んだときの説明が改行だらけにならない幅（11/16） */
+  min-width: 18em;
   display: flex;
   flex-direction: column;
   padding: var(--space-xs) 0;
@@ -584,11 +585,23 @@ details.menu > summary::-webkit-details-marker {
   background: var(--color-hover);
 }
 
+/* 給与ソフト向け CSV（区切り線の下。説明を2行目に。11/16） */
+.menu-list button.menu-sep {
+  margin-top: var(--space-xs);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border);
+}
+
+.menu-list button small {
+  display: block;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
 /* 出力の範囲（何人分か）。11/16 */
 .menu-note {
   margin: 0;
   padding: var(--space-xs) var(--space-md);
-  max-width: 22em;
   font-size: var(--font-xs);
   color: var(--color-text-sub);
   border-bottom: 1px solid var(--color-border);

@@ -67,17 +67,37 @@
   color: var(--color-text-sub);
 }
 
-.formula-fold {
-  margin-top: var(--space-sm);
+.columns {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-md) var(--space-xl);
+  align-items: start;
 }
 
-.formula-fold > summary {
-  width: fit-content;
+.formula-side {
+  padding-left: var(--space-lg);
   font-size: var(--font-sm);
+  border-left: 1px solid var(--color-border-strong);
+}
+
+.formula-title {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-xs);
   color: var(--color-text-sub);
-  text-decoration: underline;
-  text-decoration-color: var(--color-accent-sub);
-  cursor: pointer;
+}
+
+/* 狭い画面では、計算式を明細の下に */
+@media (max-width: 1100px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .formula-side {
+    padding-left: 0;
+    padding-top: var(--space-sm);
+    border-left: 0;
+    border-top: 1px solid var(--color-border-strong);
+  }
 }
 
 .warn {

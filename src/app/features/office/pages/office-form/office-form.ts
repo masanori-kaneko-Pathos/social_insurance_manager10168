@@ -328,13 +328,17 @@ export class OfficeForm {
   /** 「既存の事業所をコピー」の選ぶ欄 */
   readonly copyOpen = signal(false);
 
-  /** 目次（設定の画面だけ）。part ＝ 「社会保険に関する設定」の区切り、sub ＝ その中の欄 */
+  /**
+   * 目次（設定の画面だけ）。part ＝ 大きな区切り（「事業所の設定」「社会保険に関する設定」）、sub ＝ その中の欄
+   * 「目次」の見出しは出さず、2つの区切りを同じ大きさで並べる（11/16）
+   */
   readonly toc = computed(() => {
     const items: { id: string; key: string; sub?: boolean; part?: boolean }[] = [
-      { id: 'sec-basic', key: 'office.section.basic' },
-      { id: 'sec-filing', key: 'office.section.filing' },
-      { id: 'sec-departments', key: 'office.department.title' },
-      { id: 'sec-location', key: 'office.section.location' },
+      { id: 'sec-top', key: 'office.form.titleEdit', part: true },
+      { id: 'sec-basic', key: 'office.section.basic', sub: true },
+      { id: 'sec-filing', key: 'office.section.filing', sub: true },
+      { id: 'sec-departments', key: 'office.department.title', sub: true },
+      { id: 'sec-location', key: 'office.section.location', sub: true },
       { id: 'sec-insurance', key: 'office.part.insurance', part: true },
       { id: 'sec-insurer', key: 'office.section.insurer', sub: true },
       { id: 'sec-history', key: 'office.section.history', sub: true },
