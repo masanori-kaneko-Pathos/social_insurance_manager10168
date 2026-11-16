@@ -13,6 +13,8 @@ import { CriteriaService } from '../../../office/criteria.service';
 import { payrollOf } from '../../../office/office-settings';
 import { latestPaidMonth } from '../../../payrolls/logic/payroll-rows';
 import { PayrollService } from '../../../payrolls/payroll.service';
+import { adjustmentOfficeStatus } from '../../../premiums/logic/adjustment-office';
+import { RateService } from '../../../rates/rate.service';
 import { IconName, Icon } from '../../../../shared/components/icon/icon';
 import { OfficeContext } from '../../../office/office-context.service';
 import { RequestService } from '../../../requests/request.service';
@@ -40,6 +42,7 @@ import { FilingTaskService } from '../../../filings/filing-task.service';
 import { daysLeft, filterRows, kindsIn, RowView, TABLE_LIMIT, toRows } from '../../logic/todo-table';
 import { personTodos } from '../../logic/todos';
 import {
+  adjustmentDeadlineTodo,
   cardReturnTodo,
   contractEndTodo,
   retireGuideTodo,
@@ -47,6 +50,9 @@ import {
   myNumberTodos,
   overseasCertificateTodo,
   overseasPayAbroadTodo,
+  RATES_NOTICE_FROM,
+  RATES_NOTICE_TO,
+  ratesMissingTodo,
   residenceTodo,
   specificOfficeTodo,
   workPermitTodo,
@@ -109,6 +115,7 @@ export class Dashboard {
   private readonly payrollApi = inject(PayrollService);
   private readonly contractsApi = inject(ContractService);
   private readonly criteriaApi = inject(CriteriaService);
+  private readonly ratesApi = inject(RateService);
   private readonly requestsApi = inject(RequestService);
   private readonly myNumbersApi = inject(MyNumberService);
   private readonly api = inject(TodoService);
@@ -156,6 +163,9 @@ export class Dashboard {
   private readonly myNumberIndex = signal<ReadonlyMap<string, MyNumberEntry>>(new Map());
   /** 家族の番号の状態（従業員ID → 家族ID → 状態） */
   private readonly familyIndex = signal<ReadonlyMap<string, ReadonlyMap<string, MyNumberEntry>>>(new Map());
+
+  /** 今の保険者の料率の「何月分から」（2〜4月だけ読む。それ以外の月は null のまま＝読まない） */
+  private readonly rateFroms = signal<string[] | null>(null);
 
   private readonly byId = computed(() => new Map(this.employees().map((e) => [e.id, e])));
 
@@ -210,11 +220,20 @@ export class Dashboard {
       criteria,
       this.thisMonth,
     );
+    const froms = this.rateFroms();
+    const ratesMissing = froms ? ratesMissingTodo(o.healthInsurer.type, froms, this.today) : null;
+    const adjustment = adjustmentDeadlineTodo(
+      adjustmentOfficeStatus(o.specificApplication).deadline,
+      !!o.premiumAdjustment?.since,
+      this.today,
+    );
     const items: BoardItem[] = [
       ...todos.map(todoItem),
       ...extras.map(extraItem),
       ...myNumberTodos(this.employees(), this.myNumberIndex(), this.today, this.familyIndex()).map(extraItem),
       ...(specific ? [extraItem(specific)] : []),
+      ...(ratesMissing ? [extraItem(ratesMissing)] : []),
+      ...(adjustment ? [extraItem(adjustment)] : []),
       ...ageItems(this.employees(), this.thisMonth, shiftMonth(this.thisMonth, 1), this.today),
       ...this.officeIssues().map(officeItem),
       ...this.tasks().map(taskItem),
@@ -390,6 +409,26 @@ export class Dashboard {
     });
   }
 
+  /**
+   * 来年度の料率があるか（2〜4月だけ読む。読めなくても To-do は出せるので、失敗は記録だけ）
+   * 協会けんぽは料率マスタ（ログイン中は覚えている）、組合健保は事業所の料率
+   */
+  private async loadRateFroms(officeId: string): Promise<void> {
+    this.rateFroms.set(null); // 事業所を切り替えたときに、前の事業所の分を残さない
+    const month = Number(this.today.slice(5, 7));
+    const o = this.office();
+    if (!o || o.id !== officeId || month < RATES_NOTICE_FROM || month > RATES_NOTICE_TO) return;
+    try {
+      const froms =
+        o.healthInsurer.type === 'kumiai'
+          ? (await this.ratesApi.kumiaiList(officeId)).map((r) => r.from)
+          : (await this.ratesApi.master()).filter((r) => r.kind === 'kyokaiHealth').map((r) => r.from);
+      this.rateFroms.set(froms);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
   /** 材料をまとめて読む（契約は在籍している人の分だけ） */
   private async load(officeId: string): Promise<void> {
     this.loading.set(true);
@@ -406,6 +445,7 @@ export class Dashboard {
       this.criteria.set(criteria);
       this.contracts.set(new Map(active.map((e, i) => [e.id, lists[i]])));
       this.dismissalDocs.set(dismissals);
+      void this.loadRateFroms(officeId);
     } catch (err) {
       console.error(err);
       this.errorKey.set('dashboard.todo.error');

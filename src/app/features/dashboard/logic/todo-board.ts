@@ -67,6 +67,8 @@ export const BOARD_ORDER: readonly BoardKind[] = [
   'age',
   'lumpSum',
   'specificOffice',
+  'adjustmentDeadline',
+  'ratesMissing',
   'myNumberDispose',
   'addressKumiai',
   'noContract',
@@ -99,6 +101,8 @@ export const SECTION_OF: Record<BoardKind, Section> = {
   residence: 'soon',
   lumpSum: 'soon',
   specificOffice: 'soon',
+  adjustmentDeadline: 'soon',
+  ratesMissing: 'soon',
   myNumberDispose: 'soon',
   noContract: 'missing',
   officerCheck: 'missing',
@@ -115,6 +119,8 @@ export const DISMISSABLE: ReadonlySet<BoardKind> = new Set<BoardKind>([
   'workPermit', // 長期休業期間（1日8時間まで）など、確かめたうえで続ける場合
   'lumpSum', // 本人に案内したら消す
   'specificOffice', // 事業所の設定を確かめたら消す
+  'adjustmentDeadline', // 制度を使わないと決めたら消す（申し出て設定に入れれば、そもそも出なくなる）
+  'ratesMissing', // 料率が変わらない組合など。料率を登録すれば、そもそも出なくなる
   'retireGuide', // 本人に案内したら消す
   'cardReturn', // 回収した（または回収不能届を書いた）ら消す
   'contractEnd', // 同じ条件のまま自動で更新する場合など。次の契約か退職日を入れれば、そもそも出なくなる

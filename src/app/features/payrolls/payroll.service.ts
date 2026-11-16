@@ -149,7 +149,25 @@ export class PayrollService {
   }
 
   /**
-   * 事業所の全員の全部（月の一覧・定時決定で使う）
+   * 事業所の全員の、選んだ月の分だけ（定時決定・CSV の取り込みと出力で使う。11/16）
+   * 全部を読むと、年数がたつほど読み込みが増える（1000人 × 5年 ＝ 6万回）。画面で使う月は決まっているので、その月だけ読む
+   * in は1回に30個までなので、30か月ずつに分ける
+   */
+  async listOfOfficeMonths(officeId: string, employeeIds: readonly string[], months: readonly string[]): Promise<Payroll[]> {
+    const ids = new Set(employeeIds);
+    const unique = [...new Set(months)];
+    const chunks: string[][] = [];
+    for (let i = 0; i < unique.length; i += 30) chunks.push(unique.slice(i, i + 30));
+    const snaps = await Promise.all(
+      chunks.map((c) =>
+        countedGetDocs(query(collectionGroup(db, 'payrolls'), where('officeId', '==', officeId), where('paidMonth', 'in', c))),
+      ),
+    );
+    return snaps.flatMap((snap) => snap.docs.map((d) => this.strip(d.data()))).filter((p) => ids.has(p.employeeId));
+  }
+
+  /**
+   * 事業所の全員の全部（今は使っていない。月を選べる listOfOfficeMonths を使う）
    * collectionGroup の問い合わせ1回で読む（文書に officeId を入れてある。11/11 に人数分の読み込みから切り替え）
    * 渡した人の分だけ返す（退職者を除くなど、呼ぶ側の絞り込みはそのまま）
    */

@@ -19,6 +19,9 @@
 // - overseasCertificate：海外勤務の日本の適用証明書が6か月以内に切れる（帰任が期限までなら出さない）
 //   延長するなら相手国の承認が要る。延長しないなら帰任するか、相手国の保険に切り替える
 // - overseasPayAbroad：海外の会社だけが給与を払う海外勤務なのに、日本の保険に入っている（資格喪失の候補）
+// - ratesMissing：2〜4月になっても、その年の3月分からの健康保険の料率が登録されていない（11/16）
+//   協会けんぽは料率マスタ（アプリ側で入れる）、組合健保は事業所が入れる料率。料率が変わらない組合は「確認した」で消す
+// - adjustmentDeadline：保険料調整制度を使える事業所なのに申出がまだで、申出の期限（月の末日）が90日以内（11/16）
 
 import { addDays, DateStr, daysInMonth, monthsBetween, shiftMonth, toYearMonth, YearMonth } from '../../../shared/utils/date';
 import { contractAt } from '../../employees/logic/contract-form-model';
@@ -38,7 +41,9 @@ export type ExtraKind =
   | 'cardReturn'
   | 'retireGuide'
   | 'overseasCertificate'
-  | 'overseasPayAbroad';
+  | 'overseasPayAbroad'
+  | 'ratesMissing'
+  | 'adjustmentDeadline';
 
 export interface ExtraTodo {
   kind: ExtraKind;
@@ -135,6 +140,41 @@ export function specificOfficeTodo(
     date: null,
     params: { count, min: sizeMin, how: manual != null ? 'manual' : 'app' },
   };
+}
+
+/** 来年度の料率を知らせ始める月・やめる月（協会けんぽの料率は2月上旬に決まり、3月分から変わる） */
+export const RATES_NOTICE_FROM = 2;
+export const RATES_NOTICE_TO = 4;
+
+/**
+ * 2〜4月になっても、その年の3月分からの健康保険の料率がない
+ * rateFroms：今の保険者の料率の「何月分から」（協会けんぽ：料率マスタの kyokaiHealth、組合健保：事業所が入れた料率）
+ * 日付は3月1日（鍵に入るので、確認済みにしても次の年にまた出る）
+ */
+export function ratesMissingTodo(insurer: 'kyokai' | 'kumiai', rateFroms: readonly YearMonth[], today: DateStr): ExtraTodo | null {
+  const month = Number(today.slice(5, 7));
+  if (month < RATES_NOTICE_FROM || month > RATES_NOTICE_TO) return null;
+  const target = `${today.slice(0, 4)}-03`;
+  if (rateFroms.some((f) => f >= target)) return null;
+  return { kind: 'ratesMissing', employeeId: null, date: `${target}-01`, params: { insurer, year: today.slice(0, 4) } };
+}
+
+export const ADJUSTMENT_DEADLINE_DAYS = 90;
+
+/**
+ * 保険料調整制度：使える事業所で、申出がまだで、申出の期限（deadlineMonth の末日）が90日以内
+ * 期限を過ぎたら出さない（もう申し出られない）
+ */
+export function adjustmentDeadlineTodo(
+  deadlineMonth: YearMonth | null,
+  using: boolean,
+  today: DateStr,
+  days = ADJUSTMENT_DEADLINE_DAYS,
+): ExtraTodo | null {
+  if (!deadlineMonth || using) return null;
+  const date = `${deadlineMonth}-${String(daysInMonth(deadlineMonth)).padStart(2, '0')}`;
+  if (date < today || date > addDays(today, days)) return null;
+  return { kind: 'adjustmentDeadline', employeeId: null, date, params: { date } };
 }
 
 /** マイナンバー：チェック待ち・廃棄の時期（状態の一覧は管理者だけが読める） */

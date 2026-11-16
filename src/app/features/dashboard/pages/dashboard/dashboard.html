@@ -301,6 +301,12 @@
                             {{ 'dashboard.todo.text.specificOffice' | transloco: it.extra!.params }}
                             {{ 'dashboard.todo.text.specificOfficeHow.' + it.extra!.params['how'] | transloco }}
                           }
+                          @case ('ratesMissing') {
+                            {{ 'dashboard.todo.text.ratesMissing.' + it.extra!.params['insurer'] | transloco: it.extra!.params }}
+                          }
+                          @case ('adjustmentDeadline') {
+                            {{ 'dashboard.todo.text.adjustmentDeadline' | transloco: it.extra!.params }}
+                          }
                           @default {
                             {{
                               'dashboard.todo.text.' + it.kind
@@ -374,6 +380,14 @@
                           }
                           @case ('specificOffice') {
                             <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>
+                          }
+                          @case ('adjustmentDeadline') {
+                            <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>
+                          }
+                          @case ('ratesMissing') {
+                            @if (it.extra!.params['insurer'] === 'kumiai') {
+                              <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>
+                            }
                           }
                           @case ('officeNameAddress') {
                             <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>

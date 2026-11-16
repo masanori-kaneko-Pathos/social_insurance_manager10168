@@ -1,3 +1,4 @@
+import { adjustmentDeadlineTodo, ratesMissingTodo } from './extra-todos';
 import { cardReturnTodo, contractEndTodo, isShortTerm, myNumberTodos, noticeRequired, retireGuideTodo, voluntaryEligible } from './extra-todos';
 import {
   ExtraPerson,
@@ -192,5 +193,37 @@ describe('retireGuideTodo：退職する人への案内', () => {
     expect(retireGuideTodo({ ...p, retireReason: 'death' }, 'kyokai', TODAY)).toBeNull();
     expect(retireGuideTodo({ ...p, retireReason: 'transfer' }, 'kyokai', TODAY)).toBeNull();
     expect(retireGuideTodo({ ...p, retireDate: '2026-10-11' }, 'kyokai', TODAY)).toBeNull();
+  });
+});
+
+describe('ratesMissingTodo：来年度の料率がまだ（11/16）', () => {
+  it('2〜4月で、その年の3月分からの料率がなければ出す', () => {
+    const t = ratesMissingTodo('kyokai', ['2025-03', '2026-03'], '2027-02-01');
+    expect(t?.date).toBe('2027-03-01');
+    expect(t?.params).toEqual({ insurer: 'kyokai', year: '2027' });
+    expect(ratesMissingTodo('kumiai', [], '2027-04-30')?.kind).toBe('ratesMissing');
+  });
+  it('3月分（4月分から変わる組合は4月分）からの料率があれば出さない', () => {
+    expect(ratesMissingTodo('kyokai', ['2026-03', '2027-03'], '2027-02-10')).toBeNull();
+    expect(ratesMissingTodo('kumiai', ['2027-04'], '2027-03-10')).toBeNull();
+  });
+  it('1月・5月以後は出さない', () => {
+    expect(ratesMissingTodo('kyokai', ['2026-03'], '2027-01-31')).toBeNull();
+    expect(ratesMissingTodo('kyokai', ['2026-03'], '2027-05-01')).toBeNull();
+  });
+});
+
+describe('adjustmentDeadlineTodo：保険料調整制度の申出の期限（11/16）', () => {
+  it('期限の月の末日が90日以内なら出す。91日先は出さない', () => {
+    expect(adjustmentDeadlineTodo('2028-09', false, '2028-07-02')?.date).toBe('2028-09-30');
+    expect(adjustmentDeadlineTodo('2028-09', false, '2028-07-01')).toBeNull();
+  });
+  it('期限の当日までは出す。過ぎたら出さない', () => {
+    expect(adjustmentDeadlineTodo('2028-09', false, '2028-09-30')).not.toBeNull();
+    expect(adjustmentDeadlineTodo('2028-09', false, '2028-10-01')).toBeNull();
+  });
+  it('もう使っている・対象でない事業所は出さない', () => {
+    expect(adjustmentDeadlineTodo('2028-09', true, '2028-09-01')).toBeNull();
+    expect(adjustmentDeadlineTodo(null, false, '2028-09-01')).toBeNull();
   });
 });

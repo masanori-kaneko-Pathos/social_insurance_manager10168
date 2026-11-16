@@ -153,7 +153,9 @@
         "dependentChange": "Dependent change notification",
         "overseasCertificate": "Overseas certificate expiry",
         "overseasPayAbroad": "Coverage check for overseas assignment",
-        "officerCheck": "Check officer coverage"
+        "officerCheck": "Check officer coverage",
+        "ratesMissing": "Next year's rates",
+        "adjustmentDeadline": "Premium adjustment deadline"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. An Application to Enroll in EPI / EHI (資格取得届) is needed.",
@@ -199,7 +201,12 @@
         "overseasPayAbroad": "Assigned to {{country}} since {{date}} and paid only by the overseas company, but still insured in Japan. If the Japanese company bears no salary (such as a family allowance at home), the employment relationship is regarded as ended and a loss-of-coverage notification is needed (the loss date is usually the start of the assignment). If you confirm that the Japanese company bears salary and coverage continues, dismiss with \"Checked\".",
         "myNumberCheckFamily": "{{family}} family member number(s) have been submitted. Show all digits in the family My Number section, check them, and approve or return.",
         "myNumberDisposeFamily": "{{family}} family member number(s) also remain. Dispose of them as well.",
-        "officerCheck": "Coverage of a part-time officer cannot be decided. Answer the six items (regular attendance, other jobs, board meetings and so on)."
+        "officerCheck": "Coverage of a part-time officer cannot be decided. Answer the six items (regular attendance, other jobs, board meetings and so on).",
+        "ratesMissing": {
+          "kyokai": "The Kyokai Kenpo rates from March {{year}} are not registered in the app yet. Until they are, premiums from March are calculated with the previous year's rates (the rates are decided around February each year and apply from March premiums, paid in April). Please check them against the notice from Kyokai Kenpo. Once checked, you can hide this with \"Checked\".",
+          "kumiai": "The health insurance society's rates from March {{year}} are not registered yet. When the rate notice arrives from the society, register it from \"Insurer and location history\" in the office settings (the month of revision differs by society). If the rates do not change, you can hide this with \"Checked\"."
+        },
+        "adjustmentDeadline": "The deadline to apply for the premium adjustment scheme ({{date}}) is approaching. To use it, submit the application to the pension office by the deadline and tick \"Use the premium adjustment scheme\" in the office settings. If you decide not to use it, you can hide this with \"Checked\"."
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",

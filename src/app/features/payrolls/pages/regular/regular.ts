@@ -37,6 +37,7 @@ import { defaultListOptions, filterAndSort, pageOf, PersonListOptions } from '..
 import { ContractDoc } from '../../../../core/models/contract';
 import { contractAt } from '../../../employees/logic/contract-form-model';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { monthsBetween } from '../../../../shared/utils/date';
 interface View {
   employee: Employee;
   result: RegularResult;
@@ -180,7 +181,8 @@ export class RegularPage {
       const ids = employees.map((e) => e.id);
       // 契約は、随時改定の支払基礎日数の基準（短時間は11日）を決めるため。ログイン中は覚えている（11/16）
       const [payrolls, remunerations, decisions, contracts] = await Promise.all([
-        this.payrollApi.listOfOffice(office.id, ids),
+        // 使うのは前年1月〜当年12月（年間平均は前年7月から、随時改定の年間平均は起算月の前9か月まで見る）。全部は読まない（11/16）
+        this.payrollApi.listOfOfficeMonths(office.id, ids, monthsBetween(`${year - 1}-01`, `${year}-12`)),
         Promise.all(ids.map((id) => this.remunerationApi.list(office.id, id))),
         this.regularApi.decisions(office.id, ids, year),
         Promise.all(ids.map((id) => this.contractApi.list(office.id, id))),

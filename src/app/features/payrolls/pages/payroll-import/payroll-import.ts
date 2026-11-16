@@ -77,7 +77,9 @@ export class PayrollImport {
   readonly showItems = SHOW_ITEMS;
 
   private employees: Employee[] = [];
-  private saved = new Map<string, Payroll>(); // 'employeeId|paidMonth' → 保存済み
+  private saved = new Map<string, Payroll>(); // 'employeeId|paidMonth' → 保存済み（読んだ月の分だけ）
+  /** 保存済みの実績をもう読んだ月（全部は読まず、出力する月・ファイルにある月だけ読む。11/16） */
+  private loadedMonths = new Set<string>();
 
   readonly loading = signal(true);
   readonly errorKey = signal<string | null>(null);
@@ -134,11 +136,9 @@ export class PayrollImport {
     this.loading.set(true);
     try {
       this.employees = await this.employeesApi.list(office.id);
-      const payrolls = await this.payrollApi.listOfOffice(
-        office.id,
-        this.employees.map((e) => e.id),
-      );
-      this.saved = new Map(payrolls.map((p) => [`${p.employeeId}|${p.paidMonth}`, p]));
+      // 保存済みの実績は、ここでは読まない（使う月が決まってから ensureMonths で読む）
+      this.saved = new Map();
+      this.loadedMonths = new Set();
     } catch (err) {
       console.error(err);
       this.errorKey.set(errorKeyOf(err, 'payrollCsv.error.load'));
@@ -147,13 +147,26 @@ export class PayrollImport {
     }
   }
 
+  /** 保存済みの実績を、まだ読んでいない月の分だけ読む */
+  private async ensureMonths(officeId: string, months: readonly string[]): Promise<void> {
+    const missing = [...new Set(months)].filter((m) => !this.loadedMonths.has(m));
+    if (missing.length === 0) return;
+    const payrolls = await this.payrollApi.listOfOfficeMonths(
+      officeId,
+      this.employees.map((e) => e.id),
+      missing,
+    );
+    for (const p of payrolls) this.saved.set(`${p.employeeId}|${p.paidMonth}`, p);
+    for (const m of missing) this.loadedMonths.add(m);
+  }
+
   private lang(): CsvLang {
     return this.transloco.getActiveLang() === 'en' ? 'en' : 'ja';
   }
 
   // ===== 書き出し =====
 
-  exportCsv(): void {
+  async exportCsv(): Promise<void> {
     const office = this.context.current();
     if (!office || !this.context.isAdmin()) return;
     this.exportErrorKey.set(null);
@@ -164,6 +177,13 @@ export class PayrollImport {
     const months = monthsBetween(this.from, this.to);
     if (months.length > MAX_MONTHS) {
       this.exportErrorKey.set('payrollCsv.error.tooLong');
+      return;
+    }
+    try {
+      await this.ensureMonths(office.id, months);
+    } catch (err) {
+      console.error(err);
+      this.exportErrorKey.set(errorKeyOf(err, 'payrollCsv.error.load'));
       return;
     }
     const lang = this.lang();
@@ -284,13 +304,25 @@ export class PayrollImport {
     if (this.lastTable) this.showPreview(this.lastTable);
   }
 
-  private showPreview(table: string[][]): void {
+  private async showPreview(table: string[][]): Promise<void> {
     this.lastTable = table;
     const office = this.context.current();
     const file = this.loaded();
     if (!office || !file) return;
     try {
       const read = readPayrollCsv(table, this.employees, payrollOf(office), { inKindMissing: this.inKindMissing() });
+      // 「新規・上書き・変わらない」を数えるために、ファイルにある月の保存済みの実績だけ読む
+      try {
+        await this.ensureMonths(
+          office.id,
+          read.items.map((it) => it.paidMonth),
+        );
+      } catch (err) {
+        console.error(err);
+        this.errorKey.set(errorKeyOf(err, 'payrollCsv.error.load'));
+        return;
+      }
+      if (this.lastTable !== table) return; // 読んでいる間に別のファイルに変わった
       this.preview.set({ fileName: file.fileName, encoding: file.encoding, read, ...classifyImport(read.items, this.saved) });
     } catch (err) {
       console.error(err);
