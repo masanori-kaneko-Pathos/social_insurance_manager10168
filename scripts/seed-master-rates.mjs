@@ -1,6 +1,7 @@
 /**
- * 料率マスタ（seed/master-rates.json）と等級表（seed/master-grades.json）を
+ * 料率マスタ（seed/master-rates.json と seed/master-rates-*.json）と等級表（seed/master-grades.json）を
  * Firestore の masterRates / masterGrades に書き込む
+ * 過去の分は別のファイル（master-rates-2020.json など）に分けて置ける。全部まとめてチェックする（同じ ID があれば止める。11/16）
  *
  * 使い方（プロジェクトのフォルダで）:
  *   node scripts/seed-master-rates.mjs --dry-run   … 中身のチェックと一覧の表示だけ（書き込まない）
@@ -9,11 +10,15 @@
  * 書き込みには、事前に `gcloud auth application-default login` が必要。
  * アプリからは masterRates / masterGrades に書けない（ルールで禁止）ので、書けるのはこのスクリプトだけ。
  */
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 
 const PROJECT_ID = 'kensyu10168';
 const DATABASE_ID = 'socialinsurance-db';
-const FILE = new URL('../seed/master-rates.json', import.meta.url);
+const SEED_DIR = new URL('../seed/', import.meta.url);
+/** master-rates.json と master-rates-○○.json（名前の順） */
+const RATE_FILES = readdirSync(SEED_DIR)
+  .filter((n) => /^master-rates(-[\w-]+)?\.json$/.test(n))
+  .sort();
 const GRADES_FILE = new URL('../seed/master-grades.json', import.meta.url);
 
 const PREF_NAMES = ['北海道', '青森', '岩手', '宮城', '秋田', '山形', '福島', '茨城', '栃木', '群馬', '埼玉', '千葉', '東京', '神奈川', '新潟', '富山', '石川', '福井', '山梨', '長野', '岐阜', '静岡', '愛知', '三重', '滋賀', '京都', '大阪', '兵庫', '奈良', '和歌山', '鳥取', '島根', '岡山', '広島', '山口', '徳島', '香川', '愛媛', '高知', '福岡', '佐賀', '長崎', '熊本', '大分', '宮崎', '鹿児島', '沖縄'];
@@ -114,7 +119,8 @@ async function write(docs, grades) {
   console.log(`\n${DATABASE_ID} に書き込みました：masterRates ${docs.length} 件、masterGrades ${grades.length} 件`);
 }
 
-const docs = JSON.parse(readFileSync(FILE, 'utf8'));
+const docs = RATE_FILES.flatMap((n) => JSON.parse(readFileSync(new URL(n, SEED_DIR), 'utf8')));
+console.log(`読んだ料率のファイル：${RATE_FILES.join('、')}`);
 const grades = JSON.parse(readFileSync(GRADES_FILE, 'utf8'));
 const errors = [...validate(docs), ...validateGrades(grades)];
 if (errors.length) {
