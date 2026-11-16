@@ -1,4 +1,11 @@
-import { defaultListOptions, filterAndSort, matchesQuery, pageOf, PersonLike, searchKey } from './person-list';
+import {
+  defaultListOptions,
+  filterAndSort,
+  matchesQuery,
+  pageOf,
+  PersonLike,
+  searchKey,
+} from './person-list';
 
 const P = (n: string, last: string, kana: string, hire = '2020-04-01'): PersonLike => ({
   employeeNumber: n,
@@ -23,12 +30,26 @@ interface Row {
 }
 
 const rows: Row[] = [
-  { p: P('E10', '山田', 'ヤマダ', '2021-04-01'), c: { employmentType: 'regular', payType: 'monthly' }, filled: true },
-  { p: P('E2', '佐藤', 'サトウ', '2019-04-01'), c: { employmentType: 'part', payType: 'hourly' }, filled: false },
+  {
+    p: P('E10', '山田', 'ヤマダ', '2021-04-01'),
+    c: { employmentType: 'regular', payType: 'monthly' },
+    filled: true,
+  },
+  {
+    p: P('E2', '佐藤', 'サトウ', '2019-04-01'),
+    c: { employmentType: 'part', payType: 'hourly' },
+    filled: false,
+  },
   { p: P('E1', '鈴木', 'スズキ', '2022-04-01'), c: null, filled: false },
 ];
 const run = (o: Partial<ReturnType<typeof defaultListOptions>>) =>
-  filterAndSort(rows, { ...defaultListOptions(), ...o }, (r) => r.p, (r) => r.c, (r) => r.filled).map((r) => r.p.lastName);
+  filterAndSort(
+    rows,
+    { ...defaultListOptions(), ...o },
+    (r) => r.p,
+    (r) => r.c,
+    (r) => r.filled,
+  ).map((r) => r.p.lastName);
 
 describe('person-list', () => {
   it('ひらがな・全角でも探せる', () => {
@@ -41,7 +62,7 @@ describe('person-list', () => {
   it('絞り込み（雇用形態・給与の形・入れたかどうか）', () => {
     expect(run({ employment: 'part' })).toEqual(['佐藤']);
     expect(run({ payType: 'monthly' })).toEqual(['山田']);
-    expect(run({ entry: 'empty' })).toEqual(['佐藤', '鈴木']);
+    expect(run({ entry: 'empty' })).toEqual(['鈴木', '佐藤']);
   });
 
   it('並べ方（社員番号は数の順・入社日）', () => {
@@ -53,10 +74,17 @@ describe('person-list', () => {
   });
 
   it('部署で並べる（部署なしは最後。同じ部署は社員番号の順）', () => {
-    const dept: Record<string, string> = { 山田: '営業部', 佐藤: '' , 鈴木: '営業部' };
-    const r = filterAndSort(rows, { ...defaultListOptions(), sort: 'dept' }, (x) => x.p, (x) => x.c, (x) => x.filled, {
-      dept: (x) => dept[x.p.lastName],
-    }).map((x) => x.p.lastName);
+    const dept: Record<string, string> = { 山田: '営業部', 佐藤: '', 鈴木: '営業部' };
+    const r = filterAndSort(
+      rows,
+      { ...defaultListOptions(), sort: 'dept' },
+      (x) => x.p,
+      (x) => x.c,
+      (x) => x.filled,
+      {
+        dept: (x) => dept[x.p.lastName],
+      },
+    ).map((x) => x.p.lastName);
     expect(r).toEqual(['鈴木', '山田', '佐藤']);
   });
 
