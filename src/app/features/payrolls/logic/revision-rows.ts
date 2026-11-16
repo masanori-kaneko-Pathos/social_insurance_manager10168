@@ -136,3 +136,25 @@ export function groupOf(item: RevisionItem): RevisionGroup {
 export function revisionFromMonth(thisMonth: string): string {
   return shiftMonth(thisMonth, -24);
 }
+
+/**
+ * 定時決定の年に、7・8・9月改定の随時改定（休業終了時改定を含む）がまだ反映されずに残っているか（11/16）
+ * - 実務の順番：先に7月改定などの月額変更届 → その人は算定基礎届を出さない（定時決定から外れる）
+ * - decideRegular は「反映済みの改定」でしか外せないので、反映前の候補をここで拾って画面に知らせる
+ * - candidate（3か月そろって改定に当たる）は定時決定の反映を止める。waiting（月がそろうのを待っている）は知らせるだけ
+ * いちばん早い改定月を返す（なければ null）
+ */
+export function pendingSummerRevision(
+  items: readonly RevisionItem[],
+  year: number,
+): { revisedFrom: string; status: 'candidate' | 'waiting' } | null {
+  const hits = items
+    .filter((i) => !i.reflected)
+    .filter((i) => i.result.revisedFrom >= `${year}-07` && i.result.revisedFrom <= `${year}-09`)
+    .flatMap((i) => {
+      const g = groupOf(i);
+      return g === 'candidate' || g === 'waiting' ? [{ revisedFrom: i.result.revisedFrom, status: g }] : [];
+    })
+    .sort((a, b) => (a.status === b.status ? a.revisedFrom.localeCompare(b.revisedFrom) : a.status === 'candidate' ? -1 : 1));
+  return hits[0] ?? null;
+}

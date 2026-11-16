@@ -23,6 +23,10 @@
     <div class="alert alert-success">
       {{ 'dependentCsv.done' | transloco: { n: doneCount() } }}
       <a [routerLink]="['/o', context.current()?.id, 'employees']">{{ 'employeeCsv.toList' | transloco }}</a>
+      <span class="next-steps">
+        {{ 'common.next' | transloco }}
+        <a [routerLink]="['/o', context.current()?.id, 'payrolls', 'import']">{{ 'employeeCsv.nextPayrolls' | transloco }} ›</a>
+      </span>
     </div>
   }
   @if (progress(); as p) {

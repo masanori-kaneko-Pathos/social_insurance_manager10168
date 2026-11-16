@@ -58,6 +58,16 @@
       <div class="alert alert-success">
         {{ 'payrollCsv.import.done' | transloco: { n: doneCount() } }}
         <a [routerLink]="['/o', context.current()?.id, 'payrolls']">{{ 'payrollCsv.import.toList' | transloco }}</a>
+        <!-- 次の一歩：いちばん新しい給与から控除する保険料・改定の候補（11/16） -->
+        @if (doneMonth(); as m) {
+          <span class="next-steps">
+            {{ 'common.next' | transloco }}
+            <a [routerLink]="['/o', context.current()?.id, 'premiums']" [queryParams]="{ month: premiumMonth(m) }">{{
+              'payroll.next.premiums' | transloco: { paid: monthLabel(m), month: monthLabel(premiumMonth(m)) }
+            }} ›</a>
+            <a [routerLink]="['/o', context.current()?.id, 'revisions']">{{ 'payroll.next.revisions' | transloco }} ›</a>
+          </span>
+        }
       </div>
     }
     @if (partial(); as p) {

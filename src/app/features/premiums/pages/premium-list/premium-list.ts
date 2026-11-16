@@ -29,7 +29,7 @@ import { buildPremiumRow, PremiumRow } from '../../logic/premium-rows';
 import { PremiumBreakdown } from '../../components/premium-breakdown/premium-breakdown';
 import { Pager } from '../../../../shared/components/pager/pager';
 import { PersonListBar } from '../../../../shared/components/person-list-bar/person-list-bar';
-import { defaultListOptions, filterAndSort, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
+import { defaultListOptions, filterAndSort, listFilterCount, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
 import { formatMilli } from '../../logic/rounding';
 import { BonusPayment } from '../../../../core/models/bonus';
 import { BonusService } from '../../bonus.service';
@@ -475,13 +475,28 @@ export class PremiumList {
 
   // ===== 書き出し（CSV・Excel） =====
 
-  /** 今見ている月の一覧の表（CSV と xlsx で同じ中身。画面に出ている人だけ。賞与は含まない） */
+  /** 絞り込み・探す を使っているか（使っていれば、出力は絞り込んだ人だけ＋小計。11/16） */
+  readonly isFiltered = computed(() => {
+    const o = this.listOptions();
+    return listFilterCount(o) > 0 || o.query.trim() !== '';
+  });
+
+  /** 出力の窓に出す人数（絞り込んでいれば絞り込んだ人、なければ全員） */
+  readonly exportCount = computed(() => this.filteredRows().length);
+
+  /**
+   * 今見ている月の一覧の表（CSV と xlsx で同じ中身。賞与は含まない）
+   * 画面の絞り込み・並べ替えのとおり（ページ送りには関係なく、絞り込んだ人全員）。11/16
+   * 合計は事業所全体の分を別に書く（絞り込んだ表を納付額と取り違えないように）
+   */
   private exportTable(): { name: string; rows: string[][] } | null {
     const office = this.context.current();
     if (!office || !this.context.isAdmin()) return null;
     const t = (key: string) => this.transloco.translate(key);
     const lang = this.transloco.getActiveLang() === 'en' ? 'en' : 'ja';
-    const rows: PremiumCsvRow[] = this.rows().map((r) => ({
+    const dept = office.departments?.find((d) => d.id === this.listOptions().dept)?.name ?? '';
+    const subset = this.isFiltered() ? { note: dept } : null;
+    const rows: PremiumCsvRow[] = this.filteredRows().map((r) => ({
       employeeNumber: r.employee.employeeNumber ?? null,
       name: `${r.employee.lastName} ${r.employee.firstName}`,
       state: r.state as PremiumCsvRow['state'],
@@ -505,7 +520,7 @@ export class PremiumList {
     }));
     return {
       name: safeFileName(premiumFileName(office.name, this.month(), todayLocal(), lang)),
-      rows: buildPremiumCsv(rows, totals, lang),
+      rows: buildPremiumCsv(rows, totals, lang, subset),
     };
   }
 

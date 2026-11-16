@@ -47,7 +47,20 @@ describe('buildPremiumCsv', () => {
     expect(rows[2][13]).toBe('産休・育休のため免除（0円）');
     expect(rows[3]).toEqual([]);
     expect(rows[4][0]).toBe('事業所の合計');
-    expect(rows[rows.length - 1]).toEqual(['納付額の合計', '', '97716', '', '']);
+    expect(rows[4]).toEqual(['事業所の合計', '', '本人負担の合計', '会社負担', '納付額']);
+    expect(rows[5]).toEqual(['健康保険料', '', '17136', '17136', '34272']);
+    expect(rows[rows.length - 1]).toEqual(['納付額の合計', '', '', '', '97716']);
+  });
+
+  it('絞り込んで出力すると、人の行のすぐ下に小計、合計は「全員分」と書く', () => {
+    const exempt: PremiumCsvRow = { ...ICHIRO, state: 'exempt' };
+    const rows = buildPremiumCsv([ICHIRO, ICHIRO, exempt], [], 'ja', { note: '営業部' });
+    // 免除の人は人数には入るが、金額には足さない
+    expect(rows[4]).toEqual([
+      '', '絞り込んだ人の小計（3人・営業部）', '', '', '', '', '', '34272', '62220', '96492', '96492', '192984', '2448', '',
+    ]);
+    expect(rows[5]).toEqual([]);
+    expect(rows[6][0]).toBe('事業所全体の合計（絞り込みに関係なく全員分）');
   });
 
   it('CSV にして読み戻せる（空行は空の1列）', () => {

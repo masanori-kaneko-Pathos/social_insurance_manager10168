@@ -584,6 +584,16 @@ details.menu > summary::-webkit-details-marker {
   background: var(--color-hover);
 }
 
+/* 出力の範囲（何人分か）。11/16 */
+.menu-note {
+  margin: 0;
+  padding: var(--space-xs) var(--space-md);
+  max-width: 22em;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+  border-bottom: 1px solid var(--color-border);
+}
+
 /* ===== 開いてしまう欄（合計・突き合わせ・検算）：見出しの右に「内訳 ▽／△」、開閉はなめらかに（11/13） ===== */
 .totals-strip .fold-toggle,
 .fold-head .fold-toggle {

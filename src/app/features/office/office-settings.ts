@@ -137,3 +137,12 @@ export function withInsurerChange(
 export function deductionPayMonth(month: YearMonth, payroll: PayrollSettings): YearMonth {
   return payroll.deduction === 'next' ? shiftMonth(month, 1) : month;
 }
+
+/**
+ * deductionPayMonth の逆：その月に払う給与から控除するのは、何月分の保険料か（11/16）
+ * 翌月控除なら前の月の分（11月25日払いの給与から10月分）、当月控除なら同じ月の分
+ * 給与の取り込み・入力のあとの「この給与から控除する保険料を見る」で使う
+ */
+export function premiumMonthOfPay(paidMonth: YearMonth, payroll: PayrollSettings): YearMonth {
+  return payroll.deduction === 'next' ? shiftMonth(paidMonth, -1) : paidMonth;
+}

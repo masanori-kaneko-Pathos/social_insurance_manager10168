@@ -58,6 +58,12 @@
         <a [routerLink]="['/o', context.current()?.id, 'employees']">{{
           'employeeCsv.toList' | transloco
         }}</a>
+        <!-- 次の一歩（従業員 → 扶養家族 → 給与の実績 の順。11/16） -->
+        <span class="next-steps">
+          {{ 'common.next' | transloco }}
+          <button type="button" class="link" (click)="goDependents()">{{ 'employeeCsv.nextDependents' | transloco }} ›</button>
+          <a [routerLink]="['/o', context.current()?.id, 'payrolls', 'import']">{{ 'employeeCsv.nextPayrolls' | transloco }} ›</a>
+        </span>
       </div>
     }
     @if (myNumberFailed() > 0) {

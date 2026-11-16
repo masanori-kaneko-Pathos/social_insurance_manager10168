@@ -3,6 +3,83 @@
   white-space: normal;
 }
 
+/* ===== 給与明細の形（11/16） ===== */
+.slip {
+  width: auto;
+  min-width: 26em;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.slip th,
+.slip td {
+  padding: 3px var(--space-md) 3px 0;
+  border: 0;
+  background: none;
+}
+
+.slip thead th {
+  font-size: var(--font-xs);
+  font-weight: 500;
+  color: var(--color-text-sub);
+}
+
+.slip tbody th {
+  font-weight: 400;
+  text-align: left;
+  color: var(--color-text-sub);
+}
+
+.slip .num {
+  text-align: right;
+}
+
+.slip tr.rounded th,
+.slip tr.rounded td {
+  padding-bottom: 6px;
+  font-weight: 600;
+  border-bottom: 1px dashed var(--color-border-strong);
+}
+
+.slip tr.rounded th {
+  font-size: var(--font-xs);
+  color: var(--color-text);
+}
+
+.slip tr.sum th,
+.slip tr.sum td {
+  padding-top: 6px;
+  font-weight: 700;
+  color: var(--color-text-strong, var(--color-text));
+  border-top: 2px solid var(--color-border-strong);
+}
+
+.slip tr.contribution th,
+.slip tr.contribution td {
+  font-size: var(--font-xs);
+  font-weight: 400;
+  color: var(--color-text-sub);
+}
+
+.slip-note {
+  margin: 2px 0 0;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.formula-fold {
+  margin-top: var(--space-sm);
+}
+
+.formula-fold > summary {
+  width: fit-content;
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent-sub);
+  cursor: pointer;
+}
+
 .warn {
   color: var(--color-warning-text);
 }

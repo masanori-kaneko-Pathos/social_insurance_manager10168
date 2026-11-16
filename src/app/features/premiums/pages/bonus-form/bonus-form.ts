@@ -38,6 +38,7 @@ import { SortHeader } from '../../../../shared/components/sort-header/sort-heade
 import { defaultListOptions, filterAndSort, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
 import { ContractDoc } from '../../../../core/models/contract';
 import { ContractService } from '../../../employees/contract.service';
+import { ToastService } from '../../../../shared/services/toast.service';
 import { contractAt } from '../../../employees/logic/contract-form-model';
 const DATE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 /** 新規の支給を計算の中で区別するための仮の ID */
@@ -58,6 +59,7 @@ interface FormRow extends BonusRow {
 export class BonusForm {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
   private readonly employeesApi = inject(EmployeeService);
   private readonly bonusApi = inject(BonusService);
   private readonly rates = inject(RateService);
@@ -321,6 +323,8 @@ export class BonusForm {
       if (this.bonusId) await this.bonusApi.update(office.id, this.bonusId, input);
       else await this.bonusApi.create(office.id, input);
       await this.router.navigate(['/o', office.id, 'bonuses']);
+      // 一覧に戻ったあとに知らせる（保存の知らせはトーストにそろえる。11/16）
+      this.toast.show('bonus.savedToast', 5000);
     } catch (err) {
       console.error(err);
       this.saveErrorKey.set('bonus.error.save');
@@ -342,6 +346,7 @@ export class BonusForm {
     try {
       await this.bonusApi.delete(office.id, this.bonusId);
       await this.router.navigate(['/o', office.id, 'bonuses']);
+      this.toast.show('common.deleted');
     } catch (err) {
       console.error(err);
       this.saveErrorKey.set('bonus.error.save');

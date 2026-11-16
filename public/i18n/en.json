@@ -18,7 +18,9 @@
     "saved": "Saved",
     "requiredNote": "Items marked ※ are required.",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "next": "Next:",
+    "deleted": "Deleted"
   },
   "auth": {
     "password": {
@@ -1061,7 +1063,16 @@
     "exempt": "Exempt (maternity/childcare leave)",
     "employerHint": "The employer share per person is an estimate (total minus employee share). The office pays the sum of all totals, rounded down to the yen.",
     "lineSplit": "of which employee {{employee}} yen · employer {{employer}} yen",
-    "lineEmployerOnly": "of which employer {{employer}} yen"
+    "lineEmployerOnly": "of which employer {{employer}} yen",
+    "slip": {
+      "employee": "Employee",
+      "employer": "Employer (est.)",
+      "total": "Total",
+      "rounded": "After rounding (combined)",
+      "sum": "Total",
+      "contributionNote": "The child-rearing contribution is not a premium; only the employer pays it, so it is not in the total.",
+      "formula": "Show the calculation"
+    }
   },
   "premiumList": {
     "title": "Premiums",
@@ -1075,7 +1086,7 @@
     "problemTitle": "{{count}} employee(s) could not be calculated and are not included in the totals.",
     "empty": "No one is insured this month.",
     "care": "Care",
-    "exportCsv": "Export CSV",
+    "exportCsv": "Export as CSV",
     "col": {
       "healthStd": "Health std.",
       "pensionStd": "Pension std.",
@@ -1092,9 +1103,10 @@
     "change": {
       "new": "New",
       "grade": "Grade",
-      "care": "Care",
       "rate": "Rate",
-      "other": "Changed"
+      "other": "Changed",
+      "careStart": "Care starts",
+      "careEnd": "Care ends"
     },
     "category": {
       "health": "Health insurance, long-term care insurance and child and child care support contribution",
@@ -1140,7 +1152,7 @@
       "badge": "Advance {{amount}} yen",
       "note": "\"Advance\" means the pay (cash) in the deduction month is less than the employee's share, so it cannot be fully deducted. The company pays it in advance and collects it from the employee later. The amount is an estimate: share minus pay."
     },
-    "exportXlsx": "Export Excel",
+    "exportXlsx": "Export as Excel",
     "dept": {
       "title": "Subtotals by department",
       "count": "People",
@@ -1164,6 +1176,14 @@
       "show": "Show in the table",
       "contribution": "Child-rearing contribution column",
       "advance": "Check advances (people whose pay cannot cover the deduction)"
+    },
+    "changeNote": {
+      "careStart": "Turned 40: long-term care premium applies from this month (paid together with health insurance).",
+      "careEnd": "Turned 65 (or became exempt): long-term care premium no longer applies from this month."
+    },
+    "exportScope": {
+      "all": "Exports everyone ({{n}})",
+      "filtered": "Exports the {{n}} filtered people in the on-screen order (office totals included)"
     }
   },
   "rateDialog": {
@@ -1274,7 +1294,8 @@
       "ambiguous": "Several people share the name: {{list}} (use an employee number column)",
       "badAmount": "Amount could not be read: {{list}}",
       "errorRead": "The file could not be read."
-    }
+    },
+    "savedToast": "Bonus saved. See its premiums under \"Bonus\" in the premium list."
   },
   "leave": {
     "title": "Leave",
@@ -1468,6 +1489,10 @@
       "apply": "Fill in",
       "candidate": "Fill monthly-paid people with the suggestion (calendar days − absences)",
       "note": "Hourly and daily-paid people are skipped for suggestions. Press Save to keep the values."
+    },
+    "next": {
+      "premiums": "See the premiums deducted from the {{paid}} pay (for month {{month}})",
+      "revisions": "Check revision candidates"
     }
   },
   "regular": {
@@ -1529,7 +1554,6 @@
       "keep": "Applied (unchanged)"
     },
     "manual": "September entered manually",
-    "reflect": "Apply to September",
     "reflectAll": "Apply all ({{n}})",
     "reflectAllHint": "For annual-average cases, apply them individually first (Apply all uses the usual method).",
     "saved": "Applied to the September standard remuneration for {{n}} employee(s).",
@@ -1550,6 +1574,19 @@
       "save": "Could not apply. Please try again later.",
       "badYear": "The year is not valid.",
       "noGrades": "There is no grade table for September of this year."
+    },
+    "reflectChange": "Revise from Sep.",
+    "reflectKeep": "Confirm as is",
+    "confirm": {
+      "change": "Change {{name}}'s standard monthly remuneration from {{before}} to {{after}} yen (health insurance) starting Sep. {{year}}.\n\n- The premium list uses the new amount from September\n- It appears in the filings list (notification of base remuneration)\n- You can correct it later in the employee's \"Pay and standard remuneration\" tab\n\nContinue?",
+      "new": "Set {{name}}'s standard monthly remuneration to {{after}} yen (health insurance) from Sep. {{year}}.\n\n- The premium list uses this amount from September\n- You can correct it later in the employee's \"Pay and standard remuneration\" tab\n\nContinue?",
+      "keep": "{{name}}'s standard monthly remuneration stays at {{before}} yen (health insurance) for Sep. {{year}}.\n\nConfirm and keep a record? Premiums do not change.",
+      "all": "Set the standard monthly remuneration from Sep. {{year}} for {{n}} people as shown ({{changed}} change grade).\n\n- The premium list uses the new amounts from September\n- Reflect people who use the annual average individually first\n\nContinue?"
+    },
+    "pending": {
+      "candidate": "Irregular revision first ({{m}})",
+      "waiting": "Irregular revision pending ({{m}})",
+      "note": "People with an irregular revision in Jul.–Sep. are excluded from the regular decision. Reflect it first under Revision candidates."
     }
   },
   "payrollCsv": {
@@ -2070,7 +2107,7 @@
     "col": {
       "month": "Paid month",
       "days": "Base days",
-      "amount": "Pay (money + in kind)",
+      "amount": "Remuneration",
       "retro": "Retroactive pay"
     },
     "minDays": "min {{n}}",
@@ -2214,7 +2251,9 @@
     "exportErrors": "Export only rows with errors",
     "skipErrors": "Import without the rows with errors",
     "manyErrors": "With many errors, export the error rows, fix them in Excel and import that file again. The \"Error\" column on the right says what to fix.",
-    "errorColumn": "Error"
+    "errorColumn": "Error",
+    "nextDependents": "Import dependents",
+    "nextPayrolls": "Import pay records"
   },
   "historyCsv": {
     "modeLabel": "What to import",

@@ -245,3 +245,12 @@
   color: var(--color-primary-strong, var(--color-text));
   text-decoration: underline;
 }
+
+/* ページの切り替え（View Transitions。11/16）：ヘッダーとサイドバーは動かさず、本文だけ薄く入れ替える */
+.app-header {
+  view-transition-name: app-header;
+}
+
+.side-nav {
+  view-transition-name: side-nav;
+}

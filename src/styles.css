@@ -767,3 +767,38 @@ a:where(:link, :visited):hover {
   color: var(--color-text-sub);
 }
 
+/* ===== 11/16：次の一歩のリンク（取り込み・保存のあと） ===== */
+.next-steps {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-xs) var(--space-md);
+  margin-left: var(--space-md);
+}
+
+.next-steps button.link {
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent-sub);
+  cursor: pointer;
+}
+
+/* ページの切り替え（View Transitions）。本文だけ短く重ねて入れ替える */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--dur-base);
+  animation-timing-function: var(--ease-out);
+}
+
+/* 動きを減らす設定の人には動かさない */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

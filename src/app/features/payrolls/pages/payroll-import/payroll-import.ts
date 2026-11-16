@@ -24,7 +24,7 @@ import {
 } from '../../logic/payroll-csv';
 import { monthsBetween, shiftMonth, todayLocal } from '../../../../shared/utils/date';
 import { latestPaidMonth } from '../../logic/payroll-rows';
-import { payrollOf } from '../../../office/office-settings';
+import { payrollOf, premiumMonthOfPay } from '../../../office/office-settings';
 import { PartialSaveError, PayrollService } from '../../payroll.service';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
@@ -97,6 +97,8 @@ export class PayrollImport {
   readonly saving = signal(false);
   readonly progress = signal<{ done: number; total: number } | null>(null);
   readonly doneCount = signal<number | null>(null);
+  /** 取り込んだいちばん新しい支払月（次の一歩のリンク用。11/16） */
+  readonly doneMonth = signal<string | null>(null);
   readonly partial = signal<{ done: number; total: number } | null>(null);
 
   readonly writes = computed(() => {
@@ -215,6 +217,7 @@ export class PayrollImport {
     this.mapping.set(false);
     this.preview.set(null);
     this.doneCount.set(null);
+    this.doneMonth.set(null);
     this.partial.set(null);
     this.errorKey.set(null);
     this.inKindMissing.set('zero');
@@ -268,6 +271,7 @@ export class PayrollImport {
       );
       this.reset();
       this.doneCount.set(writes.length);
+      this.doneMonth.set(writes.reduce<string | null>((m, w) => (m === null || w.paidMonth > m ? w.paidMonth : m), null));
     } catch (err) {
       console.error(err);
       if (err instanceof PartialSaveError && err.done > 0) {
@@ -288,4 +292,15 @@ export class PayrollImport {
   }
 
   readonly yen = (n: number) => n.toLocaleString('ja-JP');
+
+  /** その月に払う給与から控除するのは何月分の保険料か（事業所の控除方法による） */
+  premiumMonth(paidMonth: string): string {
+    const office = this.context.current();
+    return office ? premiumMonthOfPay(paidMonth, payrollOf(office)) : paidMonth;
+  }
+
+  /** '2026-11' → 11月 */
+  monthLabel(ym: string): number {
+    return Number(ym.slice(5, 7));
+  }
 }

@@ -107,7 +107,8 @@
                   —
                 }
               </td>
-              <td>
+              <!-- 札は縦に積む（横に並べるとボタンの列が押し出されて見切れる。11/16） -->
+              <td class="result-chips">
                 @switch (r.status) {
                   @case ('decided') {
                     <span class="badge" [class.badge-up]="r.change === 'up'" [class.badge-down]="r.change === 'down'">
@@ -126,6 +127,13 @@
                     <span class="badge badge-info">{{ 'regular.annual.badge' | transloco }}</span>
                   </button>
                 }
+                <!-- 7〜9月改定の随時改定が残っている人：先に改定の候補で反映する（その人は算定基礎届から外れる） -->
+                @if (v.pending; as pd) {
+                  <a class="badge badge-warn" [routerLink]="['/o', context.current()?.id, 'revisions']"
+                    [title]="'regular.pending.note' | transloco">
+                    {{ 'regular.pending.' + pd.status | transloco: { m: monthNum(pd.revisedFrom) } }}
+                  </a>
+                }
               </td>
               <td>
                 @if (v.septemberExists) {
@@ -134,7 +142,7 @@
                   </span>
                 } @else if (canReflect(v)) {
                   <button type="button" class="btn btn-small" (click)="reflect(v)" [disabled]="saving()">
-                    {{ 'regular.reflect' | transloco }}
+                    {{ (changes(v) ? 'regular.reflectChange' : 'regular.reflectKeep') | transloco }}
                   </button>
                 }
               </td>

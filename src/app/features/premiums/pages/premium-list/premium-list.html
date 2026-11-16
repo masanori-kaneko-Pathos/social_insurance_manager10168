@@ -57,6 +57,10 @@
       <details class="menu">
         <summary class="btn btn-small">{{ 'premiumList.export' | transloco }} ▾</summary>
         <div class="menu-list" role="menu">
+          <!-- 何人分を出すか（絞り込んでいれば絞り込んだ人だけ。11/16） -->
+          <p class="menu-note">{{
+            (isFiltered() ? 'premiumList.exportScope.filtered' : 'premiumList.exportScope.all') | transloco: { n: exportCount() }
+          }}</p>
           <button type="button" role="menuitem" (click)="exportCsv()">{{ 'premiumList.exportCsv' | transloco }}</button>
           <button type="button" role="menuitem" (click)="exportXlsx()">{{ 'premiumList.exportXlsx' | transloco }}</button>
         </div>
@@ -108,36 +112,36 @@
         <thead>
           <tr>
             <th></th>
-            <th class="num">{{ 'premiumList.col.payment' | transloco }}</th>
             <th class="num">{{ 'premiumList.col.employeeSum' | transloco }}</th>
             <th class="num">{{ 'premiumList.col.employerSum' | transloco }}</th>
+            <th class="num">{{ 'premiumList.col.payment' | transloco }}</th>
           </tr>
         </thead>
         <tbody>
           @for (t of totals(); track t.category) {
             <tr>
               <th scope="row">{{ 'premiumList.category.' + t.category | transloco }}</th>
-              <td class="num strong">{{ yen(t.totalYen) }}</td>
               <td class="num">{{ yen(t.employeeYen) }}</td>
               <td class="num">{{ yen(t.employerYen) }}</td>
+              <td class="num strong">{{ yen(t.totalYen) }}</td>
             </tr>
             <!-- 健康保険料の内訳（全額だけ。本人負担は合算して端数処理するので、保険ごとには決まらない） -->
             @if (t.category === 'health') {
               @for (p of healthParts(); track p.part) {
                 <tr class="sub-row">
                   <th scope="row">{{ 'premiumList.part.' + p.part | transloco }}</th>
+                  <td></td>
+                  <td></td>
                   <td class="num">{{ yen(p.totalYen) }}</td>
-                  <td></td>
-                  <td></td>
                 </tr>
               }
             }
           }
           <tr class="grand-total">
             <th scope="row">{{ 'premiumList.grandTotal' | transloco }}</th>
-            <td class="num strong">{{ yen(grandTotalYen()) }}</td>
             <td class="num strong">{{ yen(employeeTotalYen()) }}</td>
             <td class="num strong">{{ yen(employerTotalYen()) }}</td>
+            <td class="num strong">{{ yen(grandTotalYen()) }}</td>
           </tr>
         </tbody>
       </table>
@@ -465,7 +469,7 @@
                   {{ r.employee.lastName }} {{ r.employee.firstName }}
                 </a>
                 @for (c of r.changes; track c) {
-                  <span class="badge badge-change">{{
+                  <span class="badge badge-change" [attr.title]="c === 'careStart' || c === 'careEnd' ? ('premiumList.changeNote.' + c | transloco) : null">{{
                     'premiumList.change.' + c | transloco
                   }}</span>
                 }

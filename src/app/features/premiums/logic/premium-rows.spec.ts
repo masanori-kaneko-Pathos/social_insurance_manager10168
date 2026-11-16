@@ -76,11 +76,18 @@ describe('buildPremiumRow：一覧の1行', () => {
     expect(row('2026-04', A, remA).changes).toEqual(['rate']);
   });
 
-  it('介護が始まった月は care（テスト二郎 B の2026年11月分）', () => {
+  it('介護が始まった月は careStart（テスト二郎 B の2026年11月分）', () => {
     const B = person('1986-12-01', '2025-04-01');
     const r = row('2026-11', B, [rem('2025-04', [5, 98000], [2, 98000])]);
     expect(r.care).toBe(true);
-    expect(r.changes).toEqual(['care']);
+    expect(r.changes).toEqual(['careStart']);
+  });
+
+  it('介護が終わった月は careEnd（65歳の到達日 2026-12-01 → 12月分から介護なし）', () => {
+    const S = person('1961-12-02', '2020-04-01');
+    const r = row('2026-12', S, [rem('2020-04', [24, 340000], [21, 340000])]);
+    expect(r.care).toBe(false);
+    expect(r.changes).toEqual(['careEnd']);
   });
 
   it('加入した最初の月は new', () => {

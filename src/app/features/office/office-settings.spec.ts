@@ -7,6 +7,7 @@ import {
   insurerFor,
   insurerHistoryOf,
   payrollOf,
+  premiumMonthOfPay,
   premiumOf,
   withInsurerChange,
   kumiaiRun,
@@ -169,5 +170,14 @@ describe('kumiaiRun / spanOf / insurerFor の kumiaiSince', () => {
     expect(insurerFor(office, '2025-12')?.kumiaiSince).toBe('2025-04');
     expect(insurerFor(office, '2026-05')?.kumiaiSince).toBeUndefined();
     expect(insurerFor(office, '2026-11')?.kumiaiSince).toBe('2026-10');
+  });
+});
+
+describe('premiumMonthOfPay（給与から控除するのは何月分か。11/16）', () => {
+  const pay = (deduction: 'current' | 'next') => ({ closingDay: 31, payDay: 25, payMonth: 'next' as const, deduction });
+  it('翌月控除なら前の月の分、当月控除なら同じ月の分', () => {
+    expect(premiumMonthOfPay('2026-11', pay('next'))).toBe('2026-10');
+    expect(premiumMonthOfPay('2026-01', pay('next'))).toBe('2025-12');
+    expect(premiumMonthOfPay('2026-11', pay('current'))).toBe('2026-11');
   });
 });

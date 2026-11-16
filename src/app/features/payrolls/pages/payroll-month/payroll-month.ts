@@ -27,7 +27,7 @@ import {
   payrollRows,
   periodOf,
 } from '../../logic/payroll-rows';
-import { payrollOf } from '../../../office/office-settings';
+import { payrollOf, premiumMonthOfPay } from '../../../office/office-settings';
 import { MonthPicker } from '../../../../shared/components/month-picker/month-picker';
 import { shiftMonth, daysInclusive, daysInMonth, todayLocal, toYearMonth } from '../../../../shared/utils/date';
 import { PayrollChange, PayrollService } from '../../payroll.service';
@@ -115,6 +115,13 @@ export class PayrollMonth {
       this.router.navigate(['/o', officeId, 'payrolls', month], { queryParamsHandling: 'preserve' });
     }
   }
+
+  /** この月に払う給与から控除する保険料の月（次の一歩のリンク用。11/16） */
+  readonly premiumMonth = computed(() => {
+    const office = this.context.current();
+    return office && this.month() ? premiumMonthOfPay(this.month(), payrollOf(office)) : this.month();
+  });
+  readonly monthNum = (ym: string) => Number(ym.slice(5, 7));
 
   readonly prevMonth = computed(() => (this.month() ? shiftMonth(this.month(), -1) : ''));
   readonly nextMonth = computed(() => (this.month() ? shiftMonth(this.month(), 1) : ''));

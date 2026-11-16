@@ -2,7 +2,7 @@ import { emptyPayrollInput, Payroll } from '../../../core/models/payroll';
 import type { GradeTableDoc } from '../../../core/models/rates';
 import { HEALTH_ROWS, PENSION_ROWS, healthGradeOf, pensionGradeOf } from './grades.fixture';
 import type { Remuneration } from './regular';
-import { groupOf, RevisionContext, RevisionPerson, revisionItems } from './revision-rows';
+import { groupOf, pendingSummerRevision, RevisionContext, RevisionItem, RevisionPerson, revisionItems } from './revision-rows';
 
 const TABLES = [
   { kind: 'health', from: '2024-03', grades: HEALTH_ROWS },
@@ -93,5 +93,28 @@ describe('revisionItems：月ごとの区分で支払基礎日数の基準を決
     const off = { enrolled: false, acquiredDate: null, lostDate: null, lossReason: null };
     p.employee = { ...p.employee, health: off, pension: off };
     expect(revisionItems(p, CTX)).toEqual([]);
+  });
+});
+
+describe('pendingSummerRevision：定時決定の前に、7〜9月改定の随時改定が残っていないか（11/16）', () => {
+  const item = (revisedFrom: string, status: string, reflected = false): RevisionItem =>
+    ({ type: 'irregular', employeeId: 'e', reflected, result: { revisedFrom, status } }) as never;
+
+  it('7月改定の候補が反映前なら candidate', () => {
+    expect(pendingSummerRevision([item('2026-07', 'candidate')], 2026)).toEqual({ revisedFrom: '2026-07', status: 'candidate' });
+  });
+  it('反映済み・10月改定・6月改定・該当しないものは拾わない', () => {
+    expect(
+      pendingSummerRevision(
+        [item('2026-07', 'candidate', true), item('2026-10', 'candidate'), item('2026-06', 'candidate'), item('2026-08', 'notTarget')],
+        2026,
+      ),
+    ).toBeNull();
+  });
+  it('候補と待ちがあれば候補を先に（同じなら早い月）', () => {
+    expect(pendingSummerRevision([item('2026-08', 'waiting'), item('2026-09', 'candidate'), item('2026-07', 'waiting')], 2026))
+      .toEqual({ revisedFrom: '2026-09', status: 'candidate' });
+    expect(pendingSummerRevision([item('2026-09', 'waiting'), item('2026-08', 'waiting')], 2026))
+      .toEqual({ revisedFrom: '2026-08', status: 'waiting' });
   });
 });

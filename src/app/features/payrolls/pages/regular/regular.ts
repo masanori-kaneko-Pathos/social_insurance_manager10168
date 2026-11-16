@@ -1,7 +1,7 @@
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
 import { Payroll } from '../../../../core/models/payroll';
 import { RegularDecision, RegularMethod } from '../../../../core/models/revision';
@@ -10,7 +10,9 @@ import {
   RemunerationInput,
   StandardRemuneration,
 } from '../../../../core/models/remuneration';
+import { ContractService } from '../../../employees/contract.service';
 import { EmployeeService } from '../../../employees/employee.service';
+import { CriteriaService } from '../../../office/criteria.service';
 import { RemunerationService } from '../../../employees/remuneration.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import { gradeOf, pickGradeTable } from '../../../rates/logic/grade';
@@ -23,6 +25,7 @@ import {
   RegularResult,
   remunerationAt,
 } from '../../logic/regular';
+import { pendingSummerRevision, revisionItems } from '../../logic/revision-rows';
 import { PayrollService } from '../../payroll.service';
 import { RegularService } from '../../regular.service';
 
@@ -35,6 +38,8 @@ interface View {
   /** 9月分の標準報酬がもうある（反映済み、または手で入れた） */
   septemberExists: boolean;
   remunerations: RemunerationDoc[];
+  /** 7〜9月改定の随時改定（休業終了時改定を含む）がまだ反映されていない（11/16）。candidate なら定時決定の反映を止める */
+  pending: { revisedFrom: string; status: 'candidate' | 'waiting' } | null;
 }
 
 interface ReflectItem {
@@ -60,8 +65,11 @@ export class RegularPage {
   private readonly remunerationApi = inject(RemunerationService);
   private readonly regularApi = inject(RegularService);
   private readonly rates = inject(RateService);
+  private readonly contractApi = inject(ContractService);
+  private readonly criteriaApi = inject(CriteriaService);
   private readonly route = inject(ActivatedRoute);
   readonly context = inject(OfficeContext);
+  private readonly transloco = inject(TranslocoService);
 
   readonly year = signal(0);
   readonly views = signal<View[]>([]);
@@ -115,9 +123,10 @@ export class RegularPage {
     }
     this.year.set(year);
     try {
-      const [all, tables] = await Promise.all([
+      const [all, tables, criteria] = await Promise.all([
         this.employeesApi.list(office.id),
         this.rates.grades(),
+        this.criteriaApi.list(),
       ]);
       const health = pickGradeTable(tables, 'health', `${year}-09`);
       const pension = pickGradeTable(tables, 'pension', `${year}-09`);
@@ -132,10 +141,12 @@ export class RegularPage {
         (e) => e.hireDate <= `${year}-07-01` && (e.retireDate == null || e.retireDate >= `${year}-04-01`),
       );
       const ids = employees.map((e) => e.id);
-      const [payrolls, remunerations, decisions] = await Promise.all([
+      // 契約は、随時改定の支払基礎日数の基準（短時間は11日）を決めるため。ログイン中は覚えている（11/16）
+      const [payrolls, remunerations, decisions, contracts] = await Promise.all([
         this.payrollApi.listOfOffice(office.id, ids),
         Promise.all(ids.map((id) => this.remunerationApi.list(office.id, id))),
         this.regularApi.decisions(office.id, ids, year),
+        Promise.all(ids.map((id) => this.contractApi.list(office.id, id))),
       ]);
       const byEmployee = new Map<string, Map<string, Payroll>>();
       for (const p of payrolls) {
@@ -143,9 +154,17 @@ export class RegularPage {
         byEmployee.get(p.employeeId)!.set(p.paidMonth, p);
       }
       const schedule = payrollOf(office);
+      const revisionCtx = {
+        office: { standardHours: office.standardHours ?? null, specificApplication: office.specificApplication },
+        criteria,
+        schedule,
+        gradeTables: tables,
+        fromMonth: `${year}-01`,
+      };
       this.views.set(
         employees.map((employee, i) => {
           const rems = remunerations[i];
+          const own = byEmployee.get(employee.id) ?? new Map<string, Payroll>();
           return {
             employee,
             result: decideRegular({
@@ -159,6 +178,10 @@ export class RegularPage {
             decision: decisions.get(employee.id) ?? null,
             septemberExists: rems.some((r) => r.from === `${year}-09`),
             remunerations: rems,
+            pending: pendingSummerRevision(
+              revisionItems({ employee, contracts: contracts[i], payrolls: own, remunerations: rems }, revisionCtx),
+              year,
+            ),
           };
         }),
       );
@@ -175,6 +198,7 @@ export class RegularPage {
     return (
       this.context.isAdmin() &&
       !v.septemberExists &&
+      v.pending?.status !== 'candidate' &&
       (r.status === 'decided' || (r.status === 'keep' && r.current != null))
     );
   }
@@ -267,27 +291,59 @@ export class RegularPage {
     }
   }
 
+  /** 9月分から等級が変わるか（ボタンの文言：変わる →「9月分から改定」、同じ →「据え置きで確定」。11/16） */
+  changes(v: View): boolean {
+    const r = v.result;
+    if (r.status !== 'decided' || !r.next) return false;
+    if (!r.current) return true;
+    return r.next.health.standard !== r.current.health.standard
+      || (r.next.pension?.standard ?? null) !== (r.current.pension?.standard ?? null);
+  }
+
+  /** 押す前の確かめ：何がどう変わるか（標準報酬の履歴に9月分を足す → 保険料一覧の9月分から新しい額。11/16） */
+  private confirmFor(v: View, method: 'normal' | 'annual'): boolean {
+    const r = v.result;
+    const y = this.year();
+    const name = this.name(v.employee);
+    const before = r.current ? this.yen(r.current.health.standard) : null;
+    const next = method === 'annual' ? r.annual?.next : r.next;
+    const after = next ? this.yen(next.health.standard) : before;
+    const key =
+      r.status === 'keep' || (method === 'normal' && !this.changes(v))
+        ? 'regular.confirm.keep'
+        : before === null
+          ? 'regular.confirm.new'
+          : 'regular.confirm.change';
+    return window.confirm(this.transloco.translate(key, { name, year: y, before, after }));
+  }
+
   reflect(v: View): Promise<void> {
-    if (!this.canReflect(v)) return Promise.resolve();
+    if (!this.canReflect(v) || !this.confirmFor(v, 'normal')) return Promise.resolve();
     return this.write([this.build(v, v.result.status === 'keep' ? 'keep' : 'normal')]);
   }
 
   reflectAnnual(v: View): Promise<void> {
-    if (!this.canReflectAnnual(v)) return Promise.resolve();
+    if (!this.canReflectAnnual(v) || !this.confirmFor(v, 'annual')) return Promise.resolve();
     return this.write([this.build(v, 'annual')]);
   }
 
   /** 年間平均の候補の人は、通常の方法で反映する（年間平均にしたい人は先に個別に反映する） */
   reflectAll(): Promise<void> {
-    return this.write(
-      this.reflectable().map((v) => this.build(v, v.result.status === 'keep' ? 'keep' : 'normal')),
+    const list = this.reflectable();
+    const changed = list.filter((v) => this.changes(v)).length;
+    const ok = window.confirm(
+      this.transloco.translate('regular.confirm.all', { n: list.length, changed, year: this.year() }),
     );
+    if (!ok) return Promise.resolve();
+    return this.write(list.map((v) => this.build(v, v.result.status === 'keep' ? 'keep' : 'normal')));
   }
 
   // ===== 表示 =====
 
   readonly name = (e: Employee) => `${e.lastName} ${e.firstName}`;
   readonly yen = (n: number) => n.toLocaleString('ja-JP');
+  /** '2026-07' → 7 */
+  readonly monthNum = (ym: string) => Number(ym.slice(5, 7));
   readonly monthLabel = (m: string) => `${Number(m.slice(5, 7))}`;
   readonly diffLabel = (d: number | null) => (d == null ? '—' : d > 0 ? `+${d}` : String(d));
 }

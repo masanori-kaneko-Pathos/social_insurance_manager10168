@@ -350,9 +350,10 @@ h3 {
 .layout.with-toc {
   display: grid;
   grid-template-columns: 11em minmax(0, 760px);
-  justify-content: center;
-  gap: var(--space-lg);
-  padding-left: var(--space-lg);
+  /* 目次はサイドバーのすぐ横に（真ん中に寄せると、目次と本文の間が空きすぎる。11/16） */
+  justify-content: start;
+  gap: var(--space-xl);
+  padding-left: var(--space-sm);
 }
 
 .layout.with-toc .page {
@@ -367,7 +368,8 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-top: calc(var(--space-xl) + 4.5em);
+  /* 「戻る」の高さから始める（見出しの下まで下げない。11/16） */
+  margin-top: var(--space-sm);
   font-size: var(--font-sm);
 }
 
@@ -390,7 +392,7 @@ h3 {
   border-left-color: var(--color-primary);
 }
 
-.toc a.part {
+.toc a.toc-part {
   margin-top: var(--space-sm);
   font-weight: 600;
   color: var(--color-text);

@@ -4,7 +4,7 @@
     <nav class="toc" [attr.aria-label]="'office.toc.label' | transloco">
       <p class="toc-title">{{ 'office.toc.label' | transloco }}</p>
       @for (t of toc(); track t.id) {
-        <a [href]="'#' + t.id" [class.sub]="t.sub" [class.part]="t.part" (click)="jump($event, t.id)">{{ t.key | transloco }}</a>
+        <a [href]="'#' + t.id" [class.sub]="t.sub" [class.toc-part]="t.part" (click)="jump($event, t.id)">{{ t.key | transloco }}</a>
       }
     </nav>
   }

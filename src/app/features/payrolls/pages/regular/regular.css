@@ -149,6 +149,29 @@ td.num {
   color: var(--color-text-sub);
 }
 
+/* 結果の札は縦に積む（ボタンの列が見切れないように。11/16） */
+td.result-chips {
+  vertical-align: top;
+}
+
+td.result-chips > .badge,
+td.result-chips > button.link,
+td.result-chips > a.badge {
+  display: block;
+  width: fit-content;
+  margin: 0 0 4px;
+  white-space: nowrap;
+}
+
+a.badge {
+  text-decoration: none;
+}
+
+/* 反映のボタンは折り返さない */
+td:last-child .btn-small {
+  white-space: nowrap;
+}
+
 button.link {
   padding: 0;
   border: none;

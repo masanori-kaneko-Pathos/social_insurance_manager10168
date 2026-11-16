@@ -39,12 +39,29 @@ const HEAD: Record<CsvLang, string[]> = {
   ],
 };
 
+// 列の順は画面と同じ「本人 → 会社 → 納付額（右端）」（11/16）
 const TOTAL_HEAD: Record<CsvLang, string[]> = {
-  ja: ['事業所の合計', '', '納付額', '本人負担の合計', '会社負担'],
-  en: ['Office totals', '', 'Payment', 'Employee total', 'Employer'],
+  ja: ['事業所の合計', '', '本人負担の合計', '会社負担', '納付額'],
+  en: ['Office totals', '', 'Employee total', 'Employer', 'Payment'],
+};
+
+/** 絞り込んで出力したときの見出し（事業所の合計は、絞り込みに関係なく全員分） */
+const TOTAL_HEAD_ALL: Record<CsvLang, string> = {
+  ja: '事業所全体の合計（絞り込みに関係なく全員分）',
+  en: 'Office totals (everyone, regardless of filters)',
+};
+
+const SUBTOTAL: Record<CsvLang, (n: number, note: string) => string> = {
+  ja: (n, note) => `絞り込んだ人の小計（${n}人${note ? '・' + note : ''}）`,
+  en: (n, note) => `Subtotal of filtered people (${n}${note ? ', ' + note : ''})`,
 };
 
 const GRAND: Record<CsvLang, string> = { ja: '納付額の合計', en: 'Total payment' };
+
+/** 絞り込んで出力するとき：何で絞ったか（部署名など。空なら人数だけ） */
+export interface PremiumCsvSubset {
+  note: string;
+}
 
 /** 0.001円単位 → '16745.5'（小数は必要な分だけ。カンマなし） */
 export function milliText(m: number): string {
@@ -59,6 +76,7 @@ export function buildPremiumCsv(
   rows: readonly PremiumCsvRow[],
   totals: readonly PremiumCsvTotal[],
   lang: CsvLang,
+  subset: PremiumCsvSubset | null = null,
 ): string[][] {
   const out: string[][] = [HEAD[lang]];
   for (const r of rows) {
@@ -82,12 +100,27 @@ export function buildPremiumCsv(
         : ['', '', '', '', '', ''];
     out.push([r.employeeNumber ?? '', r.name, ...std, ...money, r.note]);
   }
-  out.push([]);
-  out.push(TOTAL_HEAD[lang]);
-  for (const t of totals) {
-    out.push([t.label, '', String(t.totalYen), String(t.employeeYen), String(t.employerYen)]);
+  // 絞り込んだ人の小計（人の行と同じ列に。計算できた人だけ足す）
+  if (subset) {
+    const ok = rows.filter((r) => r.state === 'ok');
+    const sum = (f: (r: PremiumCsvRow) => number) => ok.reduce((s, r) => s + f(r), 0);
+    out.push([
+      '', SUBTOTAL[lang](rows.length, subset.note), '', '', '', '', '',
+      String(sum((r) => r.healthEmployeeYen)),
+      String(sum((r) => r.pensionEmployeeYen)),
+      String(sum((r) => r.employeeYen)),
+      milliText(sum((r) => r.employerMilli)),
+      milliText(sum((r) => r.totalMilli)),
+      milliText(sum((r) => r.contributionMilli)),
+      '',
+    ]);
   }
-  out.push([GRAND[lang], '', String(totals.reduce((s, t) => s + t.totalYen, 0)), '', '']);
+  out.push([]);
+  out.push(subset ? [TOTAL_HEAD_ALL[lang], ...TOTAL_HEAD[lang].slice(1)] : TOTAL_HEAD[lang]);
+  for (const t of totals) {
+    out.push([t.label, '', String(t.employeeYen), String(t.employerYen), String(t.totalYen)]);
+  }
+  out.push([GRAND[lang], '', '', '', String(totals.reduce((s, t) => s + t.totalYen, 0))]);
   return out;
 }
 

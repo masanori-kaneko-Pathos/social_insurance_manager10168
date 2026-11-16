@@ -1,3 +1,53 @@
+<!-- 給与明細の形（11/16）。本人分は、まとめて端数処理する単位の下の行が「引かれる額」 -->
+<table class="slip">
+  <thead>
+    <tr>
+      <th></th>
+      <th class="num">{{ 'premium.slip.employee' | transloco }}</th>
+      <th class="num">{{ 'premium.slip.employer' | transloco }}</th>
+      <th class="num">{{ 'premium.slip.total' | transloco }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (row of slip().rows; track $index) {
+      <tr [class.rounded]="row.kind === 'rounded'">
+        <th scope="row">
+          @if (row.kind === 'rounded') {
+            {{ 'premium.slip.rounded' | transloco }}
+          } @else {
+            {{ 'premium.part.' + row.parts[0] | transloco }}
+          }
+        </th>
+        <td class="num">{{ milli(row.employeeMilli) }}</td>
+        <td class="num">{{ milli(row.employerMilli) }}</td>
+        <td class="num">{{ milli(row.totalMilli) }}</td>
+      </tr>
+    }
+  </tbody>
+  <tfoot>
+    <tr class="sum">
+      <th scope="row">{{ 'premium.slip.sum' | transloco }}</th>
+      <td class="num">{{ yen(slip().total.employeeYen) }}</td>
+      <td class="num">{{ milli(slip().total.employerMilli) }}</td>
+      <td class="num">{{ milli(slip().total.totalMilli) }}</td>
+    </tr>
+    @if (slip().contribution; as c) {
+      <tr class="contribution">
+        <th scope="row">{{ 'premium.part.childContribution' | transloco }}</th>
+        <td class="num">—</td>
+        <td class="num">{{ milli(c.employerMilli) }}</td>
+        <td class="num">{{ milli(c.employerMilli) }}</td>
+      </tr>
+    }
+  </tfoot>
+</table>
+@if (slip().contribution) {
+  <p class="slip-note">{{ 'premium.slip.contributionNote' | transloco }}</p>
+}
+
+<!-- 計算式（等級・料率・端数処理）。ふだんは閉じておく -->
+<details class="formula-fold">
+  <summary>{{ 'premium.slip.formula' | transloco }}</summary>
 @for (g of result().groups; track $index) {
   @if (isContribution(g)) {
     <div class="contribution-head">{{ 'premium.contributionNote' | transloco }}</div>
@@ -33,3 +83,4 @@
     <span>{{ 'premium.missing.' + m.reason | transloco }}</span>
   </div>
 }
+</details>

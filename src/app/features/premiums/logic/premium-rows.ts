@@ -20,7 +20,8 @@ import { PremiumSplit, splitContribution } from './premium-core';
 export type RowState = 'ok' | 'none' | 'missing' | 'error' | 'exempt';
 
 /** 前の月から変わった理由 */
-export type ChangeReason = 'new' | 'grade' | 'care' | 'rate' | 'other';
+/** careStart・careEnd：介護分が始まった（40歳）・終わった（65歳・適用除外）月。前は 'care' 1つで、始まりか終わりか分からなかった（11/16） */
+export type ChangeReason = 'new' | 'grade' | 'careStart' | 'careEnd' | 'rate' | 'other';
 
 export interface PremiumRow extends PremiumSplit {
   state: RowState;
@@ -89,7 +90,8 @@ export function changesBetween(
     const b = after.get(part);
     if (!a || !b) {
       // 保険料の種類が増えた・減った
-      reasons.add(part === 'care' ? 'care' : part === 'childSupport' ? 'rate' : 'other');
+      if (part === 'care') reasons.add(b ? 'careStart' : 'careEnd');
+      else reasons.add(part === 'childSupport' ? 'rate' : 'other');
     } else {
       if (a.base !== b.base || a.grade !== b.grade) reasons.add('grade');
       if (a.rate.from !== b.rate.from) reasons.add('rate');

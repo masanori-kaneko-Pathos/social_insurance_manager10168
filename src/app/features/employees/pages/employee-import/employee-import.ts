@@ -74,6 +74,13 @@ export class EmployeeImport {
       ? (this.route.snapshot.queryParamMap.get('mode') as ImportMode)
       : 'employees',
   );
+  /** 従業員を取り込んだあと「次は扶養家族」：同じ画面のまま、取り込む種類を切り替える（11/16） */
+  goDependents(): void {
+    this.doneCount.set(null);
+    this.mode.set('dependents');
+    window.scrollTo({ top: 0 });
+  }
+
   readonly headers = EMPLOYEE_CSV_HEADERS;
   readonly accept = IMPORT_ACCEPT;
   readonly tableSpec = EMPLOYEE_TABLE_SPEC;
