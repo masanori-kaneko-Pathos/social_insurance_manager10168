@@ -222,6 +222,9 @@
     <p class="hint">{{ 'revision.hint.priority' | transloco }}</p>
   </section>
 
+  <!-- 特例改定（令和9年1月から。本人の申出が要るので、候補には出さず担当者が登録する。11/16） -->
+  <app-special-revision-card [people]="specialPeople()" [gradeTables]="gradeTables()" (saved)="reload()" />
+
   @if (g.waiting.length > 0) {
     <section class="card">
       <h2>{{ 'revision.group.waiting' | transloco: { n: g.waiting.length } }}</h2>

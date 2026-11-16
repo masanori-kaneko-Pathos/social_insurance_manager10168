@@ -415,7 +415,7 @@ service cloud.firestore {
           function validRemuneration(d) {
             return exactKeys(d, ['from', 'reason', 'monthlyAmount', 'health', 'pension', 'createdAt', 'updatedAt'])
               && d.from == remMonth && isMonth(remMonth)
-              && d.reason in ['acquisition', 'regular', 'irregular', 'leaveEnd', 'other']
+              && d.reason in ['acquisition', 'regular', 'irregular', 'leaveEnd', 'special', 'other']
               && yen(d.monthlyAmount)
               && std(d.health) && std(d.pension);
           }
@@ -638,6 +638,28 @@ service cloud.firestore {
           allow read: if isMember(officeId);
           allow create: if isAdmin(officeId) && validLeaveEnd(request.resource.data) && created(request.resource.data);
           allow update: if isAdmin(officeId) && validLeaveEnd(request.resource.data) && updated(request.resource.data);
+          allow delete: if isAdmin(officeId);
+        }
+
+        // ----- 特例改定の記録（ID ＝ 改定月。令和9年1月から。11/16） -----
+        match /specialRevisions/{revisedFrom} {
+          function validSpecial(d) {
+            return exactKeys(d, ['officeId', 'employeeId', 'revisedFrom', 'direction', 'reason', 'firstMonth',
+                                 'monthlyAmount', 'days', 'requestedOn', 'ended', 'health', 'pension',
+                                 'createdAt', 'updatedAt'])
+              && d.officeId == officeId && d.employeeId == employeeId
+              && d.revisedFrom == revisedFrom && isMonth(revisedFrom) && isMonth(d.firstMonth)
+              && d.firstMonth >= '2027-01' && d.firstMonth < revisedFrom
+              && d.direction in ['down', 'up'] && d.reason in ['medical', 'childcare', 'nursing']
+              && yen(d.monthlyAmount) && d.monthlyAmount > 0
+              && d.days is int && d.days >= 0 && d.days <= 31
+              && isDate(d.requestedOn) && d.ended is bool
+              && std(d.health) && std(d.pension);
+          }
+
+          allow read: if isMember(officeId);
+          allow create: if isAdmin(officeId) && validSpecial(request.resource.data) && created(request.resource.data);
+          allow update: if isAdmin(officeId) && validSpecial(request.resource.data) && updated(request.resource.data);
           allow delete: if isAdmin(officeId);
         }
 

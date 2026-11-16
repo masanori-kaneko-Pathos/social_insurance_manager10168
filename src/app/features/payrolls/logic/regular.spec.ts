@@ -226,6 +226,13 @@ describe('decideRegular：対象外', () => {
     ];
     expect(decideRegular(input({ remunerations: rem })).excluded).toBe('irregular');
   });
+  it('7月に特例改定がある（11/16）', () => {
+    const rem: Remuneration[] = [
+      ...ICHIRO_REM,
+      { ...ICHIRO_REM[0], from: '2027-07', reason: 'special' },
+    ];
+    expect(decideRegular(input({ remunerations: rem })).excluded).toBe('irregular');
+  });
 });
 
 describe('decideRegular：厚年の資格がない人（70歳以上など）', () => {

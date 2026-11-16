@@ -11,6 +11,7 @@ import {
   lossRow,
   regularRemarks,
   revisionRow,
+  specialRemarks,
   toCells,
 } from './filing-rows';
 
@@ -147,6 +148,18 @@ describe('月額変更届・算定基礎届', () => {
     expect(irregularRemarks({ employee: e, revisedFrom: '2026-07', annual: true, reasonNote: '基本額の変更' })).toEqual([
       '4．昇給・降給の理由（基本額の変更）',
       '6．その他（年間平均）',
+    ]);
+  });
+});
+
+describe('特例改定の備考（11/16）', () => {
+  it('下がったとき・戻ったとき。理由を書く', () => {
+    const e = emp({ birthDate: '1990-01-01' });
+    expect(specialRemarks({ employee: e, revisedFrom: '2027-04', direction: 'down', reason: 'medical' })).toEqual([
+      '6．その他（特例改定・療養）',
+    ]);
+    expect(specialRemarks({ employee: e, revisedFrom: '2027-09', direction: 'up', reason: 'nursing' })).toEqual([
+      '6．その他（特例改定・終了・介護）',
     ]);
   });
 });

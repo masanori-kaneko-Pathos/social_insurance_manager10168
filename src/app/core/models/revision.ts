@@ -124,3 +124,27 @@ export interface LeaveEndDecisionDoc {
 }
 
 export type LeaveEndDecision = Omit<LeaveEndDecisionDoc, 'createdAt' | 'updatedAt'>;
+
+// ===== 特例改定 offices/{o}/employees/{e}/specialRevisions/{改定月} =====
+// 令和9年1月から。療養・育児・介護で報酬が急に下がった（戻った）人を、本人の申出で1か月分の報酬から改定する（11/16）
+
+export type SpecialRevisionReason = 'medical' | 'childcare' | 'nursing'; // 療養／育児／介護
+
+export interface SpecialRevisionDoc {
+  officeId: string;
+  employeeId: string;
+  revisedFrom: string; // 改定月（＝ ドキュメントID）
+  direction: 'down' | 'up'; // 下がった／戻った
+  reason: SpecialRevisionReason;
+  firstMonth: string; // 下がった（戻った）報酬を最初に払った月
+  monthlyAmount: number; // その月の報酬（通貨＋現物）
+  days: number; // 支払基礎日数（下がったときは療養等で休んだ日も含む）
+  requestedOn: string; // 本人から申出（同意）を受けた日
+  ended: boolean; // 戻ったとき：療養等が終わったのを確かめた（下がったときは false）
+  health: StandardRemuneration;
+  pension: StandardRemuneration;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export type SpecialRevision = Omit<SpecialRevisionDoc, 'createdAt' | 'updatedAt'>;

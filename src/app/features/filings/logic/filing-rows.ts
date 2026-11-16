@@ -295,6 +295,28 @@ export function irregularRemarks(x: {
   ].filter((s): s is string => !!s);
 }
 
+/** 特例改定の理由（届の備考に書く言い方） */
+const SPECIAL_REASON_LABEL = { medical: '療養', childcare: '育児', nursing: '介護' } as const;
+
+/**
+ * 特例改定（令和9年1月から）を月額変更届に載せるときの備考（11/16）
+ * △ 届の様式・備考の書き方は、施行に合わせて年金機構が示すものを確かめる（今は「6．その他」に書く）
+ */
+export function specialRemarks(x: {
+  employee: FilingEmployee;
+  revisedFrom: YearMonth;
+  direction: 'down' | 'up';
+  reason: keyof typeof SPECIAL_REASON_LABEL;
+}): string[] {
+  const e = x.employee;
+  const what = x.direction === 'down' ? '' : '・終了';
+  return [
+    over70(e.birthDate, `${x.revisedFrom}-01`) && '1．70歳以上被用者月額変更',
+    e.multipleOffices && '2．二以上勤務',
+    `6．その他（特例改定${what}・${SPECIAL_REASON_LABEL[x.reason]}）`,
+  ].filter((s): s is string => !!s);
+}
+
 // ===== 賞与支払届 =====
 
 export interface BonusRowInput {

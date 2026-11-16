@@ -85,6 +85,7 @@ const REASON: Dict<RemunerationReason> = {
   随時改定: 'irregular', 随時: 'irregular', 月変: 'irregular', 月額変更: 'irregular', 月額変更届: 'irregular', irregular: 'irregular',
   休業終了: 'leaveEnd', 産前産後休業終了時改定: 'leaveEnd', 育児休業等終了時改定: 'leaveEnd', 産休終了: 'leaveEnd',
   育休終了: 'leaveEnd', leaveEnd: 'leaveEnd',
+  特例改定: 'special', special: 'special',
   その他: 'other', other: 'other',
 };
 

@@ -5,7 +5,7 @@ import { collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore
 import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { db } from '../../core/firebase';
 import { RemunerationInput } from '../../core/models/remuneration';
-import { IrregularDecision, LeaveEndDecision } from '../../core/models/revision';
+import { IrregularDecision, LeaveEndDecision, SpecialRevision } from '../../core/models/revision';
 
 /**
  * 随時改定・休業終了時改定の反映
@@ -21,12 +21,13 @@ export class RevisionService {
   }
 
   private async reflect(
-    kind: 'irregularDecisions' | 'leaveEndDecisions',
-    d: IrregularDecision | LeaveEndDecision,
+    kind: 'irregularDecisions' | 'leaveEndDecisions' | 'specialRevisions',
+    d: IrregularDecision | LeaveEndDecision | SpecialRevision,
     r: RemunerationInput,
   ): Promise<void> {
     const base = this.emp(d.officeId, d.employeeId);
-    const decRef = doc(collection(db, ...base, kind), d.startMonth);
+    // 随時改定・休業終了時改定は起算月、特例改定は改定月がID
+    const decRef = doc(collection(db, ...base, kind), 'startMonth' in d ? d.startMonth : d.revisedFrom);
     // 同じ起算月の記録が前に残っていたら更新（作成日時は変えない。ルールで確かめている）
     const exists = (await countedGetDoc(decRef)).exists();
     const batch = writeBatch(db);
@@ -60,5 +61,23 @@ export class RevisionService {
 
   reflectLeaveEnd(d: LeaveEndDecision, r: RemunerationInput): Promise<void> {
     return this.reflect('leaveEndDecisions', d, r);
+  }
+
+  /** 特例改定：記録と、改定月からの標準報酬を同時に書く（11/16） */
+  reflectSpecial(d: SpecialRevision, r: RemunerationInput): Promise<void> {
+    return this.reflect('specialRevisions', d, r);
+  }
+
+  /** 特例改定の記録（届書の一覧で使う。渡した人の分だけ、1人1回の問い合わせ） */
+  async specialRevisions(officeId: string, employeeIds: readonly string[]): Promise<SpecialRevision[]> {
+    const lists = await Promise.all(
+      employeeIds.map((id) => countedGetDocs(collection(db, ...this.emp(officeId, id), 'specialRevisions'))),
+    );
+    return lists.flatMap((snap) =>
+      snap.docs.map((d) => {
+        const { createdAt: _c, updatedAt: _u, ...rest } = d.data();
+        return rest as unknown as SpecialRevision;
+      }),
+    );
   }
 }

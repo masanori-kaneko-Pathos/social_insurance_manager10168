@@ -1,13 +1,14 @@
 import { Timestamp } from 'firebase/firestore';
 
 /** 標準報酬月額が決まった理由 */
-export type RemunerationReason = 'acquisition' | 'regular' | 'irregular' | 'leaveEnd' | 'other';
+export type RemunerationReason = 'acquisition' | 'regular' | 'irregular' | 'leaveEnd' | 'special' | 'other';
 
 export const REMUNERATION_REASONS: RemunerationReason[] = [
   'acquisition',
   'regular',
   'irregular',
   'leaveEnd', // 産前産後休業終了時改定・育児休業等終了時改定（どちらかは leaveEndDecisions で分かる）
+  'special', // 特例改定（令和9年1月から。療養・育児・介護で報酬が急に下がった・戻った。specialRevisions で分かる）
   'other',
 ];
 

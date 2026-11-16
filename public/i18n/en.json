@@ -1013,7 +1013,8 @@
       "regular": "Annual SMR determination (定時決定)",
       "irregular": "SMR revision after a pay change (随時改定)",
       "other": "Other",
-      "leaveEnd": "Revision after maternity/childcare leave (産休・育休終了時改定)"
+      "leaveEnd": "Revision after maternity/childcare leave (産休・育休終了時改定)",
+      "special": "Special revision (medical care, childcare or nursing care)"
     },
     "selectGrade": "Select a grade",
     "gradeLabel": "Grade {{grade}}  JPY {{standard}}",
@@ -1594,11 +1595,11 @@
     "excluded": {
       "notInsured": "Not insured on July 1",
       "acquiredFromJune": "Coverage started on or after June 1 (keeps the amount set on enrollment)",
-      "irregular": "Has an SMR revision after a pay change in July–September"
+      "irregular": "Has an SMR revision (after a pay change or a special revision) in July–September"
     },
     "hint": {
       "rule": "Uses the average pay (paid in money + in kind) paid in April, May and June. Months with fewer than 17 payment basis days, the month of joining mid-period and months of leave of absence are excluded. If all three are excluded, the previous amount stays.",
-      "days": "The thresholds for short-time workers (11 days) and part-timers (15 days) are not supported yet (17 days is used for everyone).",
+      "days": "Payment basis days: 11 for short-time workers; part-timers use 15 when no month reaches 17 (the category is judged monthly from the contract).",
       "reflect": "Applying saves the standard remuneration from September (reason: annual SMR determination) and a record of how it was decided. Existing September entries are not overwritten.",
       "notice": "If the official notice differs, correct it in Standard monthly remuneration on the employee page."
     },
@@ -3942,5 +3943,68 @@
   },
   "importFix": {
     "fix": "Fix here"
+  },
+  "special": {
+    "title": "Special revision (medical care, childcare or nursing care)",
+    "open": "Register",
+    "lead": "When pay drops sharply because someone works fewer days or hours for medical care, childcare or nursing care, the standard monthly remuneration can be revised at their request from the month after the reduced pay was first paid (for pay from {{start}}). Unlike an ordinary revision, it does not wait three months. It is revised the same way when pay recovers.",
+    "field": {
+      "employee": "Employee",
+      "direction": "Pay change",
+      "reason": "Reason",
+      "firstMonth": {
+        "down": "Month the reduced pay was first paid",
+        "up": "Month the recovered pay was first paid"
+      },
+      "amount": "Pay that month (money + in kind)",
+      "days": "Payment basis days",
+      "requestedOn": "Date of the employee's request (consent)"
+    },
+    "choose": "Select",
+    "direction": {
+      "down": "Dropped",
+      "up": "Recovered (care ended)"
+    },
+    "reason": {
+      "medical": "Medical care",
+      "childcare": "Childcare",
+      "nursing": "Nursing care"
+    },
+    "yen": " yen",
+    "noPayroll": "No payroll record for that month. Import the payroll first.",
+    "daysHint": {
+      "down": "Include the days taken off for medical care, childcare or nursing care.",
+      "up": "Do not count unpaid days (the usual way)."
+    },
+    "minDays": "At least {{n}} days are needed.",
+    "ended": "Confirmed that the medical care, childcare or nursing care has ended",
+    "revisedFrom": "Revised from {{m}}",
+    "delayed": "The request came after the revision month, so it is revised from the request month ({{m}}) without going back.",
+    "exists": "A standard remuneration from {{m}} already exists. It is not overwritten; check the history first.",
+    "status": {
+      "candidate": "Eligible for revision.",
+      "beforeStart": "Special revisions apply to pay from January 2027.",
+      "noPay": "A month with no pay (fully absent) cannot be used.",
+      "shortDays": "Not enough payment basis days.",
+      "shortInsured": "Not eligible: insured for less than three months.",
+      "lost": "Not eligible: not insured in the revision month (loses coverage the next month).",
+      "noStandard": "No current standard remuneration is registered.",
+      "notEnded": "Confirm that the care has ended before registering.",
+      "noDown": "Only people who had a special revision when pay dropped can use it when pay recovers.",
+      "opposite": "The grade moves the opposite way. Check the pay change.",
+      "noGradeDiff": "Less than two grades from the current grade, so no revision."
+    },
+    "reflect": "Apply",
+    "note": "Applying saves the standard remuneration from the revision month (reason: special revision) and a record. Health insurance and pension are filed together (it appears under the monthly change notification in Filings). Keep the employee's request (consent) for two years. People revised in July–September are excluded from that year's annual determination.",
+    "registered": "Applied special revisions ({{n}})",
+    "col": {
+      "from": "From",
+      "employee": "Employee",
+      "amount": "Monthly amount"
+    },
+    "saved": "The special revision was applied.",
+    "error": {
+      "save": "Could not apply the special revision."
+    }
   }
 }

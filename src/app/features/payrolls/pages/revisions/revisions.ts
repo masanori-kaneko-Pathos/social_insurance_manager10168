@@ -17,6 +17,7 @@ import { RateService } from '../../../rates/rate.service';
 import { AnnualJudgement, IrregularAnnual } from '../../logic/irregular';
 import { InsuranceJudgement, standardAt } from '../../logic/revision-base';
 import {
+  dayRulesOf,
   groupOf,
   RevisionGroup,
   RevisionItem,
@@ -27,6 +28,8 @@ import { PayrollService } from '../../payroll.service';
 import { RevisionService } from '../../revision.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { withCapRevisions } from '../../../rates/logic/cap-revision';
+import { GradeTableDoc } from '../../../../core/models/rates';
+import { SpecialPerson, SpecialRevisionCard } from '../../components/special-revision-card/special-revision-card';
 
 interface View {
   key: string; // 行の目印（従業員ID・種類・起算月）
@@ -43,7 +46,7 @@ interface View {
  */
 @Component({
   selector: 'app-revisions',
-  imports: [NgTemplateOutlet, RouterLink, TranslocoPipe],
+  imports: [NgTemplateOutlet, RouterLink, TranslocoPipe, SpecialRevisionCard],
   templateUrl: './revisions.html',
   styleUrl: './revisions.css',
 })
@@ -61,6 +64,9 @@ export class RevisionsPage {
   readonly fromMonth = revisionFromMonth(toYearMonth(this.today));
 
   readonly views = signal<View[]>([]);
+  /** 特例改定のカードに渡す材料（同じ読み込みを使い回す。11/16） */
+  readonly specialPeople = signal<SpecialPerson[]>([]);
+  readonly gradeTables = signal<GradeTableDoc[]>([]);
   readonly loading = signal(true);
   readonly saving = signal<string | null>(null);
   readonly errorKey = signal<string | null>(null);
@@ -87,10 +93,15 @@ export class RevisionsPage {
     this.load();
   }
 
-  private async load(): Promise<void> {
+  /** 特例改定を反映したあと：画面を出したまま読み直す（カードの「反映しました」を消さない） */
+  reload(): void {
+    void this.load(true);
+  }
+
+  private async load(quiet = false): Promise<void> {
     const office = this.context.current();
     if (!office) return;
-    this.loading.set(true);
+    if (!quiet) this.loading.set(true);
     this.errorKey.set(null);
     try {
       const [all, tables, criteria] = await Promise.all([
@@ -118,18 +129,18 @@ export class RevisionsPage {
         fromMonth: this.fromMonth,
       };
       const views: View[] = [];
+      const special: SpecialPerson[] = [];
       for (const { e, payrolls, remunerations, contracts } of perPerson) {
-        const items = revisionItems(
-          {
-            employee: e,
-            contracts,
-            payrolls: new Map(payrolls.map((p: Payroll): [string, Payroll] => [p.paidMonth, p])),
-            remunerations,
-          },
-          ctx,
-        );
+        const byMonth = new Map(payrolls.map((p: Payroll): [string, Payroll] => [p.paidMonth, p]));
+        const items = revisionItems({ employee: e, contracts, payrolls: byMonth, remunerations }, ctx);
         // 反映するとき、改定しない保険の今の等級に、届出なしの一斉改定の分も入れる（11/16）
         const withCap = withCapRevisions(remunerations, tables);
+        special.push({
+          employee: e,
+          payrolls: byMonth,
+          remunerations: withCap,
+          minDaysAt: dayRulesOf({ employee: e, contracts }, ctx).minDaysAt,
+        });
         for (const item of items) {
           const start = item.type === 'leaveEnd' ? item.result.startMonth : item.result.start.month;
           views.push({
@@ -148,6 +159,8 @@ export class RevisionsPage {
           (a.item.type === b.item.type ? 0 : a.item.type === 'leaveEnd' ? -1 : 1),
       );
       this.views.set(views);
+      this.specialPeople.set(special);
+      this.gradeTables.set(tables);
     } catch (err) {
       console.error(err);
       this.errorKey.set(errorKeyOf(err, 'revision.error.load'));

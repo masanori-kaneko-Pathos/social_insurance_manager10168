@@ -1,0 +1,153 @@
+<section class="card special">
+  <div class="head">
+    <h2>{{ 'special.title' | transloco }}</h2>
+    @if (context.isAdmin()) {
+      <button type="button" class="btn" [attr.aria-expanded]="open()" (click)="toggle()">
+        {{ (open() ? 'common.close' : 'special.open') | transloco }}
+      </button>
+    }
+  </div>
+  <p class="hint">{{ 'special.lead' | transloco: { start: startMonth } }}</p>
+
+  @if (savedKey(); as s) {
+    <div class="alert alert-success" role="status">{{ s | transloco }}</div>
+  }
+  @if (errorKey(); as e) {
+    <div class="alert alert-danger">{{ e | transloco }}</div>
+  }
+
+  @if (open()) {
+    <div class="form">
+      <div class="field">
+        <label for="sp-employee">{{ 'special.field.employee' | transloco }}</label>
+        <select id="sp-employee" class="input" [value]="employeeId()" (change)="setEmployee($any($event.target).value)">
+          <option value="">{{ 'special.choose' | transloco }}</option>
+          @for (p of choices(); track p.employee.id) {
+            <option [value]="p.employee.id">{{ p.employee.employeeNumber ? p.employee.employeeNumber + '　' : '' }}{{ name(p.employee) }}</option>
+          }
+        </select>
+      </div>
+
+      <fieldset class="field">
+        <legend>{{ 'special.field.direction' | transloco }}</legend>
+        <div class="radios">
+          @for (d of ['down', 'up']; track d) {
+            <label class="radio">
+              <input type="radio" name="sp-direction" [checked]="direction() === d" (change)="setDirection($any(d))" />
+              {{ 'special.direction.' + d | transloco }}
+            </label>
+          }
+        </div>
+      </fieldset>
+
+      <div class="field">
+        <label for="sp-reason">{{ 'special.field.reason' | transloco }}</label>
+        <select id="sp-reason" class="input" [value]="reason()" (change)="reason.set($any($event.target).value)">
+          @for (r of reasons; track r) {
+            <option [value]="r">{{ 'special.reason.' + r | transloco }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="sp-month">{{ 'special.field.firstMonth.' + direction() | transloco }}</label>
+        <input id="sp-month" class="input" type="month" [min]="startMonth" [value]="firstMonth()" (change)="setMonth($any($event.target).value)" />
+      </div>
+
+      <div class="field">
+        <span class="label">{{ 'special.field.amount' | transloco }}</span>
+        @if (amount(); as a) {
+          <span class="value mono">{{ yen(a) }}{{ 'special.yen' | transloco }}</span>
+        } @else if (person() && firstMonth()) {
+          <span class="value warn">{{ 'special.noPayroll' | transloco }}</span>
+        } @else {
+          <span class="value sub">—</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="sp-days">{{ 'special.field.days' | transloco }}</label>
+        <input id="sp-days" class="input days" inputmode="numeric" [value]="days() ?? ''" (input)="daysInput.set($any($event.target).value)" />
+        <span class="hint">
+          {{ 'special.daysHint.' + direction() | transloco }}
+          @if (minDays(); as n) { {{ 'special.minDays' | transloco: { n: n } }} }
+        </span>
+      </div>
+
+      <div class="field">
+        <label for="sp-requested">{{ 'special.field.requestedOn' | transloco }}</label>
+        <input id="sp-requested" class="input" type="date" [value]="requestedOn()" (change)="requestedOn.set($any($event.target).value)" />
+      </div>
+
+      @if (direction() === 'up') {
+        <label class="check">
+          <input type="checkbox" [checked]="ended()" (change)="ended.set($any($event.target).checked)" />
+          {{ 'special.ended' | transloco }}
+        </label>
+      }
+    </div>
+
+    @if (result(); as r) {
+      <div class="result">
+        <p class="span mono">{{ 'special.revisedFrom' | transloco: { m: r.revisedFrom } }}</p>
+        @if (r.delayed) {
+          <p class="warn">{{ 'special.delayed' | transloco: { m: r.revisedFrom } }}</p>
+        }
+        @if (r.health || r.pension) {
+          <div class="judge">
+            @for (j of [{ key: 'health', x: r.health }, { key: 'pension', x: r.pension }]; track j.key) {
+              @if (j.x; as x) {
+                <span class="ins" [class.revise]="x.revise">
+                  {{ 'revision.ins.' + j.key | transloco }}：
+                  <span class="mono">{{ x.before.grade }}級 {{ yen(x.before.standard) }} → {{ x.after.grade }}級 {{ yen(x.after.standard) }}</span>
+                  （{{ diffLabel(x.diff) }}）
+                  @if (x.special) { <span class="badge">{{ 'revision.special' | transloco }}</span> }
+                  {{ (x.revise ? 'revision.revise' : 'revision.keep') | transloco }}
+                </span>
+              }
+            }
+          </div>
+        }
+        @if (r.status !== 'candidate') {
+          <p class="why">{{ 'special.status.' + r.status | transloco }}</p>
+        }
+        @if (exists()) {
+          <p class="why">{{ 'special.exists' | transloco: { m: r.revisedFrom } }}</p>
+        }
+      </div>
+    }
+
+    <div class="actions">
+      <button type="button" class="btn btn-primary" [disabled]="!canSave()" (click)="save()">
+        {{ (saving() ? 'revision.saving' : 'special.reflect') | transloco }}
+      </button>
+    </div>
+    <p class="hint">{{ 'special.note' | transloco }}</p>
+  }
+
+  @if (registered().length > 0) {
+    <h3>{{ 'special.registered' | transloco: { n: registered().length } }}</h3>
+    <table class="list">
+      <thead>
+        <tr>
+          <th>{{ 'special.col.from' | transloco }}</th>
+          <th>{{ 'special.col.employee' | transloco }}</th>
+          <th class="num">{{ 'special.col.amount' | transloco }}</th>
+          <th class="num">{{ 'revision.ins.health' | transloco }}</th>
+          <th class="num">{{ 'revision.ins.pension' | transloco }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (x of registered(); track x.employee.id + x.r.from) {
+          <tr>
+            <td class="mono">{{ x.r.from }}〜</td>
+            <td><a [routerLink]="['/o', context.current()?.id, 'employees', x.employee.id]">{{ name(x.employee) }}</a></td>
+            <td class="num mono">{{ yen(x.r.monthlyAmount) }}</td>
+            <td class="num mono">{{ x.r.health.grade }}級 {{ yen(x.r.health.standard) }}</td>
+            <td class="num mono">{{ x.r.pension.grade }}級 {{ yen(x.r.pension.standard) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

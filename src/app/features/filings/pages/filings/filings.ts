@@ -39,6 +39,7 @@ import {
   FilingRow,
   firstPaidInMonth,
   irregularRemarks,
+  specialRemarks,
   lossesIn,
   lossRow,
   regularRemarks,
@@ -263,12 +264,44 @@ export class FilingsPage {
     });
   }
 
-  /** 月額変更届：改定月が期間内の随時改定の記録。3か月の実績と標準報酬を、その人の分だけ読む */
+  /** 月額変更届：改定月が期間内の随時改定・特例改定の記録。実績と標準報酬を、その人の分だけ読む */
   private async irregularRows(officeId: string): Promise<FilingRow[]> {
-    const all = await this.revisionApi.irregularDecisions(officeId, this.employees!.map((e) => e.id));
+    const ids = this.employees!.map((e) => e.id);
+    const [all, specials] = await Promise.all([
+      this.revisionApi.irregularDecisions(officeId, ids),
+      this.revisionApi.specialRevisions(officeId, ids),
+    ]);
     const decisions = all.filter((d) => d.revisedFrom >= this.from() && d.revisedFrom <= this.to());
     const byId = new Map(this.employees!.map((e) => [e.id, e]));
-    return Promise.all(
+    // 特例改定：1か月分の報酬で決めるので、最初の月だけ（支払基礎日数は記録した日数。下がったときは休んだ日も含む）
+    const specialRows = Promise.all(
+      specials
+        .filter((d) => d.revisedFrom >= this.from() && d.revisedFrom <= this.to() && byId.has(d.employeeId))
+        .map(async (d) => {
+          const e = byId.get(d.employeeId)!;
+          const [map, rems] = await Promise.all([
+            this.payrollApi.month(officeId, [e.id], d.firstMonth),
+            this.remunerationsApi.list(officeId, e.id),
+          ]);
+          const payrolls = new Map<string, Payroll>();
+          const p = map.get(e.id);
+          if (p) payrolls.set(d.firstMonth, { ...p, days: d.days });
+          const prev = standardAt(rems, shiftMonth(d.revisedFrom, -1));
+          return revisionRow('irregular', {
+            employee: e,
+            month: d.revisedFrom,
+            firstMonth: d.firstMonth,
+            payrolls,
+            previous: prev ? { health: prev.health.standard, pension: prev.pension.standard, from: prev.from } : null,
+            raise: { month: d.firstMonth, direction: d.direction },
+            total: d.monthlyAmount,
+            average: d.monthlyAmount,
+            corrected: null,
+            remarks: specialRemarks({ employee: e, revisedFrom: d.revisedFrom, direction: d.direction, reason: d.reason }),
+          });
+        }),
+    );
+    const irregularRows = Promise.all(
       decisions
         .filter((d) => byId.has(d.employeeId))
         .map(async (d) => {
@@ -303,6 +336,8 @@ export class FilingsPage {
           });
         }),
     );
+    const [a, b] = await Promise.all([irregularRows, specialRows]);
+    return [...a, ...b];
   }
 
   /** 賞与支払届：支払日が期間内の支給。支払日に資格がある人だけ（1回の問い合わせ） */
