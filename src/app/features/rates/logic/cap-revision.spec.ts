@@ -78,6 +78,18 @@ describe('withCapRevisions（等級の上限が上がったときの一斉改定
     expect(out.map((r) => r.from).sort()).toEqual(['2025-09', '2027-09', '2028-01']);
   });
 
+  it('下に等級が足されて番号がずれただけ（2016-10 の厚年 30級→31級。上限は62万円のまま）は改定しない', () => {
+    const P30 = [{ grade: 1, standard: 98000, min: 0 }, { grade: 30, standard: 620000, min: 605000 }];
+    const P31 = [{ grade: 1, standard: 88000, min: 0 }, { grade: 2, standard: 98000, min: 93000 }, { grade: 31, standard: 620000, min: 605000 }];
+    const tables: GradeTableDoc[] = [
+      HEALTH,
+      { kind: 'pension', from: '2009-03', source: 'test', grades: P30 },
+      { kind: 'pension', from: '2016-10', source: 'test', grades: P31 },
+    ];
+    const r = { ...rem('2015-09', 700000, 32), pension: { grade: 30, standard: 620000 } };
+    expect(withCapRevisions([r], tables).length).toBe(1);
+  });
+
   it('報酬の履歴がなければ空のまま。元の配列は変えない', () => {
     expect(withCapRevisions([], TABLES)).toEqual([]);
     const src = [rem('2025-09', 670000, 32)];

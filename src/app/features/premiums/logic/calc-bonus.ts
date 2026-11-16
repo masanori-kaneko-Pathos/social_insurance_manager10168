@@ -7,7 +7,7 @@
  *   ・同月得喪：資格取得日〜資格喪失日の前日に払った賞与はかかる
  *   ・資格喪失日以降に払った賞与：かからない（累計にも入らない）
  *   70歳（厚年）・75歳（健保）で資格を失う月も同じ扱い
- * - 上限：健保・介護・支援金は年度（4月〜翌3月）の累計573万円、厚年・拠出金は同じ月の合計150万円
+ * - 上限：健保・介護・支援金は年度（4月〜翌3月）の累計573万円（平成27年度までは540万円）、厚年・拠出金は同じ月の合計150万円
  * - 転職した人：同じ年度・同じ保険者の前の事業所の標準賞与額（本人の累計申出で保険者から知らされた額）も、健保の累計に入れる（11/16）
  */
 import {
@@ -24,7 +24,14 @@ import { DateStr, fiscalYearOf, toYearMonth } from '../../../shared/utils/date';
 import { makeGroups, makeLine, withTotals } from './premium-core';
 import { exemptBonus, LeaveHolder } from '../../employees/logic/leave';
 
-export const HEALTH_BONUS_CAP_PER_YEAR = 5_730_000; // 健保：年度の累計
+export const HEALTH_BONUS_CAP_PER_YEAR = 5_730_000; // 健保：年度の累計（平成28年度から）
+/** 平成27年度までの健保の年度の上限（平成28年4月に540万円→573万円。過去の料率を入れたので年度で分ける。11/16） */
+export const HEALTH_BONUS_CAP_PER_YEAR_BEFORE_2016 = 5_400_000;
+
+/** その年度（4月始まり）の健保の標準賞与額の上限 */
+export function healthBonusCapOf(fiscalYear: number): number {
+  return fiscalYear >= 2016 ? HEALTH_BONUS_CAP_PER_YEAR : HEALTH_BONUS_CAP_PER_YEAR_BEFORE_2016;
+}
 export const PENSION_BONUS_CAP_PER_MONTH = 1_500_000; // 厚年：同じ月の合計
 
 export interface EmployeeBonus {
@@ -118,7 +125,7 @@ export function calcBonuses(input: BonusInput): BonusPremiumResult[] {
     const priorHealth = priorHealthOf(employee, year);
     if (healthStatus !== 'none') {
       const before = healthCumByYear.get(year) ?? priorHealth;
-      healthBase = Math.min(standardBonus, Math.max(0, HEALTH_BONUS_CAP_PER_YEAR - before));
+      healthBase = Math.min(standardBonus, Math.max(0, healthBonusCapOf(year) - before));
       healthCumByYear.set(year, before + standardBonus);
     }
 

@@ -98,6 +98,15 @@ describe('calcBonuses：上限', () => {
     expect(rs.map((r) => r.healthBase)).toEqual([3000000, 2500000, 230000, 1000000]);
   });
 
+  it('平成27年度までは健保の年度の上限が540万円（11/16）', () => {
+    const old = person('1980-05-15', '2010-04-01');
+    const rs = calc(old, [
+      { paidDate: '2015-07-10', amount: 6000000 },
+      { paidDate: '2016-07-08', amount: 6000000 },
+    ]);
+    expect(rs.map((r) => r.healthBase)).toEqual([5400000, 5730000]);
+  });
+
   it('厚年は1回150万円まで', () => {
     const [r] = calc(AGE30, [{ paidDate: '2026-12-10', amount: 2000000 }]);
     expect(r.pensionBase).toBe(1500000);

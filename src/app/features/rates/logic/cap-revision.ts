@@ -7,6 +7,10 @@
  * 届出なしで年金事務所が標準報酬を改定し、「標準報酬改定通知書」が会社に届く
  * （2020-09 の31級→32級と同じ仕組み。厚年法20条2項）。
  *
+ * 健保も同じ（2016-04 に47級→50級。上限が121万円→139万円）。
+ * 一番上かどうか・上がったかは、等級の番号ではなく標準報酬月額で比べる
+ * （2016-10 に厚年の下に88千円の等級が足され、番号が1つずつずれた。上限は62万円のままなので改定ではない）
+ *
  * 保存してある報酬の履歴は書き換えない。計算に使うときだけ、改定の月から始まる行を足す。
  * - 新しい等級表の月から決まった行（定時決定など）がある人は、その行がもう新しい表で決まっているので何もしない
  * - 一番上でない人・報酬月額が新しい下限に届かない人も何もしない
@@ -35,9 +39,9 @@ export interface CapMark {
 
 const KINDS: CapKind[] = ['health', 'pension'];
 
-/** 等級表の一番上の等級 */
-function topGrade(t: GradeTableDoc): number {
-  return t.grades.reduce((m, r) => Math.max(m, r.grade), 0);
+/** 等級表の一番上の標準報酬月額 */
+function topStandard(t: GradeTableDoc): number {
+  return t.grades.reduce((m, r) => Math.max(m, r.standard), 0);
 }
 
 /**
@@ -63,9 +67,9 @@ export function withCapRevisions<T extends CapRevisable>(
       const next = tables.find((t) => t.kind === kind && t.from === month);
       const prev = pickGradeTable([...tables], kind, shiftMonth(month, -1));
       if (!next || !prev) continue;
-      if (base[kind].grade !== topGrade(prev)) continue;
+      if (base[kind].standard !== topStandard(prev)) continue;
       const after = gradeOf(next.grades, amount);
-      if (after.grade > base[kind].grade) revised[kind] = after;
+      if (after.standard > base[kind].standard) revised[kind] = after;
     }
     const kinds = KINDS.filter((k) => revised[k]);
     if (kinds.length === 0) continue;
