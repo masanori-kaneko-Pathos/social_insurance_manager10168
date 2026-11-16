@@ -316,6 +316,7 @@ export class Dashboard {
   readonly exportChoices = computed<ImportChoice[]>(() => {
     const o = ['/o', this.office()?.id ?? ''];
     return [
+      { key: 'employees', icon: 'people', link: [...o, 'employees'] },
       { key: 'premiums', icon: 'premium', link: [...o, 'premiums'] },
       { key: 'payrolls', icon: 'payroll', link: [...o, 'payrolls', 'import'] },
       { key: 'filings', icon: 'filing', link: [...o, 'filings'] },

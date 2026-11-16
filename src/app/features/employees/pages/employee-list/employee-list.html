@@ -2,11 +2,17 @@
     <h1>{{ 'employee.list.title' | transloco }}</h1>
     @if (context.isAdmin()) {
       <span class="head-actions">
+        <button type="button" class="btn" [disabled]="exporting() || loading() || exportCount() === 0" [title]="'employee.list.exportNote' | transloco" (click)="exportCsv()">
+          {{ (exporting() ? 'employee.list.exporting' : 'employee.list.export') | transloco: { n: exportCount() } }}
+        </button>
         <a class="btn" routerLink="import">{{ 'employee.list.import' | transloco }}</a>
         <a class="btn btn-primary" routerLink="new">{{ 'employee.list.add' | transloco }}</a>
       </span>
     }
   </div>
+  @if (exportErrorKey(); as e) {
+    <div class="alert alert-danger">{{ e | transloco }}</div>
+  }
   
   @if (isPast()) {
     <div class="alert as-of-note" role="status">

@@ -33,6 +33,10 @@ import { deptSortKey, groupByName, matchesName, NameSection, RomanBy } from '../
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { Pager } from '../../../../shared/components/pager/pager';
 import { PAGE_SIZE, PAGE_SIZES, PageSize } from '../../../../shared/logic/person-list';
+import { downloadCsv } from '../../../../shared/csv/csv';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { RemunerationService } from '../../remuneration.service';
+import { employeeExportTable } from '../../logic/employee-export';
 type StatusFilter = 'active' | 'retired' | 'all';
 const STATUSES: readonly StatusFilter[] = ['active', 'retired', 'all'];
 
@@ -63,6 +67,7 @@ export class EmployeeList {
   private readonly employeesApi = inject(EmployeeService);
   private readonly contractsApi = inject(ContractService);
   private readonly criteriaApi = inject(CriteriaService);
+  private readonly remApi = inject(RemunerationService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   readonly context = inject(OfficeContext);
@@ -331,6 +336,42 @@ export class EmployeeList {
       console.error(err);
     } finally {
       this.categoryLoading.set(false);
+    }
+  }
+
+  // ===== 書き出し（11/16）：絞り込み・並び順のとおり、取り込みと同じ列で =====
+  readonly exporting = signal(false);
+  readonly exportErrorKey = signal<string | null>(null);
+  /** 書き出す人（絞り込みと並び順のとおり。ページで切らない） */
+  readonly exportCount = computed(() => this.sections().reduce((n, s) => n + s.items.length, 0));
+
+  async exportCsv(): Promise<void> {
+    const officeId = this.context.current()?.id;
+    if (!officeId || this.exporting() || !this.context.isAdmin()) return;
+    const list = this.sections().flatMap((s) => s.items);
+    this.exporting.set(true);
+    this.exportErrorKey.set(null);
+    try {
+      // 契約・標準報酬は人ごとに読む（ログイン中は覚えているので、2回目からは増えない）
+      const [contracts, rems] = await Promise.all([
+        Promise.all(list.map((e) => this.contracts()?.get(e.id) ?? this.contractsApi.list(officeId, e.id))),
+        Promise.all(list.map((e) => this.remApi.list(officeId, e.id))),
+      ]);
+      const depts = this.departments();
+      const table = employeeExportTable(
+        list.map((employee, i) => ({
+          employee,
+          contract: contractAt(contracts[i], this.asOf()),
+          remunerations: rems[i],
+        })),
+        (id) => depts.find((d) => d.id === id)?.name ?? null,
+      );
+      downloadCsv(`employees_${this.asOf()}.csv`, table);
+    } catch (err) {
+      console.error(err);
+      this.exportErrorKey.set(errorKeyOf(err, 'employee.list.exportError'));
+    } finally {
+      this.exporting.set(false);
     }
   }
 

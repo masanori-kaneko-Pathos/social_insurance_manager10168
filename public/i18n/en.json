@@ -314,7 +314,11 @@
       "asOf": "As of",
       "asOfNote": "This list is as of {{date}} (employment status, category, coverage and age on that date). Check each employee's values on that date (name, address, etc.) in their \"History\" tab.",
       "asOfReset": "Back to today",
-      "employment": "Employment"
+      "employment": "Employment",
+      "export": "Export CSV ({{n}})",
+      "exporting": "Exporting…",
+      "exportNote": "Exports in the same columns as the employee import, following your filters and order (contracts as of the reference date; My Number is not included). Importing cannot overwrite people already registered.",
+      "exportError": "Could not export."
     },
     "status": {
       "active": "Active",
@@ -3359,6 +3363,10 @@
       }
     },
     "export": {
+      "employees": {
+        "title": "Employee list",
+        "body": "CSV in the same columns as the import, following your filters and order. For handing over to another office or as a backup."
+      },
       "premiums": {
         "title": "Premium list",
         "body": "Monthly employee/employer shares (CSV, Excel) and CSV for payroll software."
