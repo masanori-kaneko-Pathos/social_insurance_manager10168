@@ -56,10 +56,16 @@ export type RevisionItem =
 
 const PART_TYPES = ['part', 'arbeit'];
 
-export function revisionItems(p: RevisionPerson, ctx: RevisionContext): RevisionItem[] {
+/**
+ * 支払基礎日数の基準を、支払月ごとに出す（随時改定・休業終了時改定・定時決定で共通。11/16 に切り出した）
+ * - minDaysAt：その月の区分が短時間労働者なら11日、ほかは17日
+ * - partAt：その月、4分の3以上で働くパート・アルバイト（短時間就労者）か（17日の月がなければ15日で読み替える）
+ */
+export function dayRulesOf(
+  p: Pick<RevisionPerson, 'employee' | 'contracts'>,
+  ctx: Pick<RevisionContext, 'office' | 'criteria' | 'schedule'>,
+): { minDaysAt: (paidMonth: string) => number; partAt: (paidMonth: string) => boolean } {
   const e = p.employee;
-  if (!e.health.enrolled && !e.pension.enrolled) return [];
-
   const person = {
     birthDate: e.birthDate,
     optInDate: e.optInDate,
@@ -80,6 +86,14 @@ export function revisionItems(p: RevisionPerson, ctx: RevisionContext): Revision
     const contract = contractAt(p.contracts, date);
     return c.category === 'regular' && !!contract && PART_TYPES.includes(contract.employmentType);
   };
+  return { minDaysAt, partAt };
+}
+
+export function revisionItems(p: RevisionPerson, ctx: RevisionContext): RevisionItem[] {
+  const e = p.employee;
+  if (!e.health.enrolled && !e.pension.enrolled) return [];
+
+  const { minDaysAt, partAt } = dayRulesOf(p, ctx);
   const pensionAt = (m: string) => coverageForMonth(e, m).pension;
   const gradesAt = (m: string): GradeRows => ({
     health: pickGradeTable(ctx.gradeTables, 'health', m)?.grades ?? [],

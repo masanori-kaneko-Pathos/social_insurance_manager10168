@@ -432,7 +432,8 @@ h1 {
 
 /* ===== 取り込みの入口の窓 ===== */
 .import-dialog {
-  width: min(520px, calc(100vw - 32px));
+  /* 取り込む・出力するの2列（11/16） */
+  width: min(880px, calc(100vw - 32px));
   padding: 0;
   border: none;
   border-radius: var(--radius-lg);
@@ -522,4 +523,26 @@ h1 {
 .choice .arrow {
   font-size: var(--font-lg);
   color: var(--color-text-sub);
+}
+
+/* ===== インポート／エクスポートの窓（11/16） ===== */
+.io-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-lg);
+  margin-top: var(--space-sm);
+}
+
+.io-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-md);
+}
+
+@media (max-width: 720px) {
+  .io-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

@@ -249,6 +249,10 @@
 /* ページの切り替え（View Transitions。11/16）：ヘッダーとサイドバーは動かさず、本文だけ薄く入れ替える */
 .app-header {
   view-transition-name: app-header;
+  /* view-transition-name を付けるとヘッダーが1枚の層になる。本文（アイコンを拡大したタイルなど）より上に重ねて、
+     アカウントのメニューが本文の下にもぐらないようにする（11/16） */
+  position: relative;
+  z-index: 30;
 }
 
 .side-nav {

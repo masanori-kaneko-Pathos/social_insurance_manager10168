@@ -321,3 +321,47 @@ describe('regularYearOf', () => {
     expect(regularYearOf('2027-05')).toBe(2026);
   });
 });
+
+describe('decideRegular：支払基礎日数の基準（年金機構「定時決定」5・6。R47。11/16）', () => {
+  const months = (d4: number, d5: number, d6: number) =>
+    new Map([pay('2027-04', 300000, d4), pay('2027-05', 330000, d5), pay('2027-06', 360000, d6)]);
+
+  it('一般：17日以上の月だけ（16日の月は外す）', () => {
+    const r = decideRegular(input({ payrolls: months(20, 16, 20) }));
+    expect(r.months.map((m) => m.used)).toEqual([true, false, true]);
+    expect(r.months[1].skip).toBe('shortDays');
+    expect(r.months[1].minDays).toBe(17);
+    expect(r.average).toBe(330000);
+  });
+
+  it('特定適用事業所の短時間労働者：11日以上の月を使う', () => {
+    const r = decideRegular(input({ payrolls: months(12, 10, 11), minDaysAt: () => 11 }));
+    expect(r.months.map((m) => m.used)).toEqual([true, false, true]);
+    expect(r.months[1].minDays).toBe(11);
+    expect(r.average).toBe(330000);
+  });
+
+  it('パート：17日以上の月が1か月でもあれば、その月だけ', () => {
+    const r = decideRegular(input({ payrolls: months(17, 15, 16), partAt: () => true }));
+    expect(r.months.map((m) => m.used)).toEqual([true, false, false]);
+    expect(r.average).toBe(300000);
+  });
+
+  it('パート：17日以上がなければ、15日以上17日未満の月', () => {
+    const r = decideRegular(input({ payrolls: months(16, 14, 15), partAt: () => true }));
+    expect(r.months.map((m) => m.used)).toEqual([true, false, true]);
+    expect(r.months[1].minDays).toBe(15);
+    expect(r.average).toBe(330000);
+    expect(r.status).toBe('decided');
+  });
+
+  it('パート：どれも15日未満なら従前のまま（keep）', () => {
+    const r = decideRegular(input({ payrolls: months(14, 14, 10), partAt: () => true }));
+    expect(r.status).toBe('keep');
+    expect(r.next).toEqual(r.current);
+  });
+
+  it('パートでない人に15日の読み替えはしない', () => {
+    expect(decideRegular(input({ payrolls: months(16, 15, 16) })).status).toBe('keep');
+  });
+});

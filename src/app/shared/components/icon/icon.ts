@@ -16,7 +16,9 @@ export type IconName =
   | 'help'
   | 'request' // 依頼・申請（封筒）
   | 'userPlus' // 従業員を登録
-  | 'upload' // ファイルから取り込む
+  | 'upload' // 出力する（箱から外へ）
+  | 'download' // 取り込む（箱の中へ。11/16）
+  | 'transfer' // インポート／エクスポート（上下の矢印。11/16）
   | 'admin'; // 管理者（鍵）
 
 /**
@@ -109,6 +111,14 @@ export type IconName =
         @case ('upload') {
           <path d="M2 10.5v3h12v-3" />
           <path d="M8 10V2.5M5 5.5l3-3 3 3" />
+        }
+        @case ('download') {
+          <path d="M2 10.5v3h12v-3" />
+          <path d="M8 2.5V10M5 7l3 3 3-3" />
+        }
+        @case ('transfer') {
+          <path d="M5 2.5v10.5M2.5 10.5 5 13l2.5-2.5" />
+          <path d="M11 13.5V3M8.5 5.5 11 3l2.5 2.5" />
         }
         @case ('admin') {
           <circle cx="5.5" cy="8" r="3" />

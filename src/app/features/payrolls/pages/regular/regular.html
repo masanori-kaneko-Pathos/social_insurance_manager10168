@@ -87,7 +87,7 @@
                     </a>
                   }
                   @if (m.skip && m.skip !== 'noRecord') {
-                    <div class="skip">{{ 'regular.skip.' + m.skip | transloco }}</div>
+                    <div class="skip">{{ 'regular.skip.' + m.skip | transloco: { n: m.minDays } }}</div>
                   }
                 </td>
               }

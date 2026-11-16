@@ -5,7 +5,8 @@
 // - 「被保険者報酬月額算定基礎届」の手続概要：対象から除く人、保険者算定の①〜⑤
 //   （遡及の差額・低額の休職給・途中入社月・年間平均）
 // - 「保険者算定（年間平均）の手続きについて」：要件、対象となる場合（3月までの資格取得、1等級差の例外）
-// ※ 支払基礎日数は今は17日だけ（短時間労働者11日・パート15日は雇用契約の区分ができたら足す）
+// - 支払基礎日数（日本年金機構「定時決定」5・6。R47）：一般は17日以上の月。特定適用事業所の短時間労働者は11日以上の月。
+//   短時間就労者（パート）は17日以上の月 → なければ15日以上の月 → なければ従前（11/16 に入れた）
 // ※ 一時帰休（休業手当）の特例はまだ入れていない
 
 import type { GradeRow } from '../../../core/models/rates';
@@ -14,6 +15,7 @@ import { payTotal, type Payroll } from '../../../core/models/payroll';
 import { gradeOf } from '../../rates/logic/grade';
 import { PayrollEmployee, PaySchedule, periodOf } from './payroll-rows';
 import { shiftMonth } from '../../../shared/utils/date';
+import { MIN_DAYS_PART_FALLBACK } from './revision-base';
 
 export const REGULAR_MIN_DAYS = 17;
 
@@ -39,6 +41,8 @@ export interface MonthUse {
   skip: MonthSkip | null;
   /** 通貨＋現物 */
   amount: number;
+  /** この月の支払基礎日数の基準（17・11、パートの読み替えで15）。11/16 */
+  minDays: number;
 }
 
 export type RegularStatus =
@@ -131,19 +135,42 @@ function useMonth(
   payroll: Payroll | undefined,
   acquiredDate: string | null,
   schedule: PaySchedule,
+  minDays: number = REGULAR_MIN_DAYS,
 ): MonthUse {
-  if (!payroll) return { month, payroll: null, used: false, skip: 'noRecord', amount: 0 };
+  if (!payroll) return { month, payroll: null, used: false, skip: 'noRecord', amount: 0, minDays };
   const amount = payTotal(payroll);
   const p = periodOf(month, schedule);
   let skip: MonthSkip | null = null;
   if (acquiredDate != null && acquiredDate > p.start && acquiredDate <= p.end) {
     skip = 'partialAcquisition'; // 保険者算定⑤
-  } else if (payroll.days < REGULAR_MIN_DAYS) {
+  } else if (payroll.days < minDays) {
     skip = 'shortDays';
   } else if (payroll.state === 'suspended') {
     skip = 'suspended'; // 保険者算定②（低額の休職給の月は除く）
   }
-  return { month, payroll, used: skip === null, skip, amount };
+  return { month, payroll, used: skip === null, skip, amount, minDays };
+}
+
+/**
+ * 3か月（年間平均なら12か月）の使える月を決める
+ * パートで基準（17日）以上の月が1か月もなければ、15日以上の月を使う（日数だけで外れた月を15日で見直す）
+ */
+function useMonths(
+  list: string[],
+  x: RegularInput,
+  acquired: string | null,
+): MonthUse[] {
+  const minDaysAt = x.minDaysAt ?? (() => REGULAR_MIN_DAYS);
+  const months = list.map((m) => useMonth(m, x.payrolls.get(m), acquired, x.schedule, minDaysAt(m)));
+  const partAt = x.partAt;
+  if (!partAt || months.some((m) => m.used) || !months.every((m) => m.skip === 'noRecord' || partAt(m.month))) {
+    return months;
+  }
+  return months.map((m) =>
+    m.skip === 'shortDays'
+      ? useMonth(m.month, x.payrolls.get(m.month), acquired, x.schedule, MIN_DAYS_PART_FALLBACK)
+      : m,
+  );
 }
 
 /** 平均（1円未満切り捨て）。withoutRetro なら遡及支払額を引く */
@@ -193,6 +220,10 @@ export interface RegularInput {
   /** 9月分に使う等級表 */
   grades: GradeRows;
   schedule: PaySchedule;
+  /** その支払月の支払基礎日数の基準（特定適用事業所の短時間労働者は11日）。省くと17日 */
+  minDaysAt?: (paidMonth: string) => number;
+  /** その支払月、短時間就労者（4分の3以上のパート・アルバイト）か。省くとパートの読み替えをしない */
+  partAt?: (paidMonth: string) => boolean;
 }
 
 export function decideRegular(x: RegularInput): RegularResult {
@@ -238,9 +269,7 @@ export function decideRegular(x: RegularInput): RegularResult {
     : null;
 
   // --- 4・5・6月 ---
-  const months = ['04', '05', '06'].map((m) =>
-    useMonth(`${y}-${m}`, x.payrolls.get(`${y}-${m}`), acquired, x.schedule),
-  );
+  const months = useMonths(['04', '05', '06'].map((m) => `${y}-${m}`), x, acquired);
   const usedCount = months.filter((m) => m.used).length;
   const withMonths = { ...base, excluded: null, months, usedCount, current };
 
@@ -263,10 +292,11 @@ export function decideRegular(x: RegularInput): RegularResult {
         : 'same';
 
   // --- 年間平均（前年7月〜当年6月） ---
-  const annualMonths = Array.from({ length: 12 }, (_, i) => {
-    const m = shiftMonth(`${y - 1}-07`, i);
-    return useMonth(m, x.payrolls.get(m), acquired, x.schedule);
-  });
+  const annualMonths = useMonths(
+    Array.from({ length: 12 }, (_, i) => shiftMonth(`${y - 1}-07`, i)),
+    x,
+    acquired,
+  );
   const annualUsed = annualMonths.filter((m) => m.used).length;
   // 年間平均の対象は「当年3月までに資格取得した人」
   const annualEligible = acquired <= `${y}-03-31`;

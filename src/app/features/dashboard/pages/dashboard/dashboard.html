@@ -51,18 +51,40 @@
       <h2 id="import-dialog-title">{{ 'home.import.title' | transloco }}</h2>
       <button type="button" class="close-btn" (click)="closeImport()" [attr.aria-label]="'common.close' | transloco">×</button>
     </header>
-    <p class="lead">{{ 'home.import.lead' | transloco }}</p>
-    <div class="choices">
-      @for (c of importChoices(); track c.key) {
-        <a class="choice" [routerLink]="c.link" [queryParams]="c.params ?? null" (click)="closeImport()">
-          <app-icon [name]="c.icon" />
-          <span class="choice-text">
-            <strong>{{ 'home.import.' + c.key + '.title' | transloco }}</strong>
-            <span class="sub">{{ 'home.import.' + c.key + '.body' | transloco }}</span>
-          </span>
-          <span class="arrow" aria-hidden="true">›</span>
-        </a>
-      }
+    <!-- 左：取り込む（インポート）、右：出力する（エクスポート）。11/16 -->
+    <div class="io-columns">
+      <section>
+        <h3 class="io-head"><app-icon name="download" />{{ 'home.import.importTitle' | transloco }}</h3>
+        <p class="lead">{{ 'home.import.lead' | transloco }}</p>
+        <div class="choices">
+          @for (c of importChoices(); track c.key) {
+            <a class="choice" [routerLink]="c.link" [queryParams]="c.params ?? null" (click)="closeImport()">
+              <app-icon [name]="c.icon" />
+              <span class="choice-text">
+                <strong>{{ 'home.import.' + c.key + '.title' | transloco }}</strong>
+                <span class="sub">{{ 'home.import.' + c.key + '.body' | transloco }}</span>
+              </span>
+              <span class="arrow" aria-hidden="true">›</span>
+            </a>
+          }
+        </div>
+      </section>
+      <section>
+        <h3 class="io-head"><app-icon name="upload" />{{ 'home.import.exportTitle' | transloco }}</h3>
+        <p class="lead">{{ 'home.import.exportLead' | transloco }}</p>
+        <div class="choices">
+          @for (c of exportChoices(); track c.key) {
+            <a class="choice" [routerLink]="c.link" (click)="closeImport()">
+              <app-icon [name]="c.icon" />
+              <span class="choice-text">
+                <strong>{{ 'home.export.' + c.key + '.title' | transloco }}</strong>
+                <span class="sub">{{ 'home.export.' + c.key + '.body' | transloco }}</span>
+              </span>
+              <span class="arrow" aria-hidden="true">›</span>
+            </a>
+          }
+        </div>
+      </section>
     </div>
   </div>
 </dialog>

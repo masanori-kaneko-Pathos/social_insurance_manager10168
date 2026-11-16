@@ -25,7 +25,7 @@ import {
   RegularResult,
   remunerationAt,
 } from '../../logic/regular';
-import { pendingSummerRevision, revisionItems } from '../../logic/revision-rows';
+import { dayRulesOf, pendingSummerRevision, revisionItems } from '../../logic/revision-rows';
 import { PayrollService } from '../../payroll.service';
 import { RegularService } from '../../regular.service';
 
@@ -211,6 +211,8 @@ export class RegularPage {
               remunerations: rems,
               grades: this.grades!,
               schedule,
+              // 短時間労働者は11日、パートは17日 → 15日（R47。11/16）
+              ...dayRulesOf({ employee, contracts: contracts[i] }, revisionCtx),
             }),
             decision: decisions.get(employee.id) ?? null,
             septemberExists: rems.some((r) => r.from === `${year}-09`),

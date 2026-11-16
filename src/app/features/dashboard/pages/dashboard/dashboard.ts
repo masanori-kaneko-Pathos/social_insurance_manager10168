@@ -77,8 +77,9 @@ interface StartStep {
 }
 
 /** 取り込みの入口で選ぶもの */
+/** インポート／エクスポートの窓の1行（11/16 に出力も足した） */
 interface ImportChoice {
-  key: 'employees' | 'dependents' | 'payrolls' | 'bonus';
+  key: string;
   icon: IconName;
   link: (string | number)[];
   params?: Record<string, string>;
@@ -252,7 +253,7 @@ export class Dashboard {
       { key: 'payroll', icon: 'payroll', link: [...o, 'payrolls', this.payMonth()] },
       { key: 'premiums', icon: 'premium', link: [...o, 'premiums'] },
       { key: 'addEmployee', icon: 'userPlus', link: [...o, 'employees', 'new'] },
-      { key: 'import', icon: 'upload', link: [], action: 'import' },
+      { key: 'import', icon: 'transfer', link: [], action: 'import' },
       { key: 'request', icon: 'request', link: [...o, 'requests', 'new'] },
       { key: 'bonus', icon: 'bonus', link: [...o, 'bonuses', 'new'] },
     ];
@@ -299,13 +300,26 @@ export class Dashboard {
 
   // ===== 取り込みの入口（何を取り込むかを選ぶ窓。11/13） =====
   private readonly importDialog = viewChild<ElementRef<HTMLDialogElement>>('importDialog');
+  /** 取り込む（インポート） */
   readonly importChoices = computed<ImportChoice[]>(() => {
     const o = ['/o', this.office()?.id ?? ''];
     return [
       { key: 'employees', icon: 'people', link: [...o, 'employees', 'import'] },
       { key: 'dependents', icon: 'people', link: [...o, 'employees', 'import'], params: { mode: 'dependents' } },
+      { key: 'history', icon: 'revision', link: [...o, 'employees', 'import'], params: { mode: 'contract' } },
       { key: 'payrolls', icon: 'payroll', link: [...o, 'payrolls', 'import'] },
       { key: 'bonus', icon: 'bonus', link: [...o, 'bonuses', 'new'] },
+    ];
+  });
+
+  /** 出力する（エクスポート）。それぞれの画面の「出力」へ案内する（11/16） */
+  readonly exportChoices = computed<ImportChoice[]>(() => {
+    const o = ['/o', this.office()?.id ?? ''];
+    return [
+      { key: 'premiums', icon: 'premium', link: [...o, 'premiums'] },
+      { key: 'payrolls', icon: 'payroll', link: [...o, 'payrolls', 'import'] },
+      { key: 'filings', icon: 'filing', link: [...o, 'filings'] },
+      { key: 'myNumbers', icon: 'admin', link: [...o, 'employees', 'import'] },
     ];
   });
 
