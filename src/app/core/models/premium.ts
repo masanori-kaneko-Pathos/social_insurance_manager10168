@@ -82,6 +82,8 @@ export interface BonusPremiumResult extends PremiumResult {
   /** 健保：charged＝保険料がかかる／counted＝かからないが累計には入る（喪失月）／none */
   healthStatus: 'charged' | 'counted' | 'none';
   pensionStatus: 'charged' | 'none';
+  /** その年度の、前の事業所の健保の標準賞与額（累計に足した額。なければ 0。11/16） */
+  priorHealth?: number;
 }
 
 /** 事業所の合計（納付額・本人負担の合計・会社負担） */

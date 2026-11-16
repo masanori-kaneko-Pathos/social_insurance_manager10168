@@ -295,6 +295,11 @@ export interface EmployeeDoc {
   updatedAt: Timestamp;
   /** 部署・役職・役員（11/12 に足した。前の文書にはない） */
   org?: EmployeeOrg | null;
+  /**
+   * 前の事業所で決まった健保の標準賞与額の累計（年度 'YYYY' → 円。11/16）
+   * 同じ年度・同じ保険者で転職した人が、保険者に累計の申出をして知らされた額。年度の上限573万円の累計に足す
+   */
+  priorBonusTotals?: Record<string, number> | null;
 }
 
 export interface Employee extends EmployeeDoc {

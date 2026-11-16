@@ -339,7 +339,7 @@ service cloud.firestore {
       }
 
       function validEmployee(d, old) {
-        return d.keys().size() <= 35
+        return d.keys().size() <= 36
           && d.keys().hasAll(['lastName', 'lastNameKana', 'birthDate', 'hireDate', 'health', 'pension',
                               'foreign', 'leaves', 'userUid', 'createdAt', 'updatedAt'])
           // 氏名・番号
@@ -366,6 +366,9 @@ service cloud.firestore {
           && (!('careExemptions' in d) || (d.careExemptions is list && d.careExemptions.size() <= 10))
           // 海外勤務（11/12。前の文書にはない）：配列で件数まで
           && (!('overseas' in d) || (d.overseas is list && d.overseas.size() <= 10))
+          // 前の事業所の健保の標準賞与額の累計（任意。11/16。年度 → 円。中身はアプリで確かめる）
+          && (!('priorBonusTotals' in d) || d.priorBonusTotals == null
+              || (d.priorBonusTotals is map && d.priorBonusTotals.size() <= 10))
           && (d.userUid == null || d.userUid is string)
           // 部署・役職・役員（任意。11/12 より前の文書にはない）
           && (!('org' in d) || d.org == null || unchanged(d, old, 'org')

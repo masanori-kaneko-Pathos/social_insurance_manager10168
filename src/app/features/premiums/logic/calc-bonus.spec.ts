@@ -122,6 +122,21 @@ describe('calcBonuses：上限', () => {
     expect(rs[1].healthBase).toBe(0);
     expect(rs[1].groups[0].totalMilli).toBe(0);
   });
+
+  it('転職した人：前の事業所の分（同じ年度・同じ保険者）も累計に入る。厚年には関係ない（11/16）', () => {
+    const moved = { ...AGE30, priorBonusTotals: { '2026': 4000000, '2025': 5730000 } };
+    const rs = calcBonuses({
+      employee: moved,
+      bonuses: [
+        { paidDate: '2026-12-10', amount: 2000000 }, // 前の 400万 ＋ 200万 → 健保は 173万円まで
+        { paidDate: '2027-06-30', amount: 1000000 }, // 2027年度は前の分がない
+      ],
+      ratesFor: ratesFor('13'),
+    });
+    expect(rs.map((r) => r.healthBase)).toEqual([1730000, 1000000]);
+    expect(rs.map((r) => r.priorHealth)).toEqual([4000000, 0]);
+    expect(rs[0].pensionBase).toBe(1500000);
+  });
 });
 
 describe('calcBonuses：支払日による例外', () => {

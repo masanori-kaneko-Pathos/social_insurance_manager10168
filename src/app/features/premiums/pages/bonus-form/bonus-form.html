@@ -192,6 +192,9 @@
                                 pension: yen(r.result!.pensionBase),
                               }
                       }}</span>
+                      @if (r.result!.priorHealth) {
+                        <span class="sub">{{ 'bonus.priorIncluded' | transloco: { n: yen(r.result!.priorHealth!) } }}</span>
+                      }
                     }
                   </td>
                   <td class="num">{{ yen(r.healthEmployeeYen) }}</td>

@@ -60,4 +60,45 @@
       </table>
     </div>
   }
+
+  <!-- 転職した人：前の事業所の健保の標準賞与額（同じ年度・同じ保険者。11/16） -->
+  @if (context.isAdmin() || priors().length > 0) {
+    <div class="prior">
+      <h3>{{ 'bonus.prior.title' | transloco }}</h3>
+      @if (priors().length > 0) {
+        <ul class="prior-list">
+          @for (p of priors(); track p.year) {
+            <li>
+              <span class="mono">{{ 'bonus.prior.row' | transloco: { year: p.year, amount: yen(p.amount) } }}</span>
+              @if (context.isAdmin()) {
+                <button type="button" class="link danger" [disabled]="priorSaving()" (click)="savePrior(p.year)">{{ 'common.delete' | transloco }}</button>
+              }
+            </li>
+          }
+        </ul>
+      }
+      @if (context.isAdmin()) {
+        @if (priorOpen()) {
+          <div class="prior-form">
+            <label>
+              {{ 'bonus.prior.year' | transloco }}
+              <input class="input year" inputmode="numeric" [value]="priorYear()" (input)="priorYear.set($any($event.target).value)" />
+            </label>
+            <label>
+              {{ 'bonus.prior.amount' | transloco }}
+              <input class="input amount" inputmode="numeric" [value]="priorAmount()" (input)="priorAmount.set($any($event.target).value)" />
+            </label>
+            <button type="button" class="btn btn-primary btn-small" [disabled]="!priorValid() || priorSaving()" (click)="savePrior()">{{ 'common.save' | transloco }}</button>
+            <button type="button" class="link" (click)="priorOpen.set(false)">{{ 'common.cancel' | transloco }}</button>
+          </div>
+        } @else {
+          <button type="button" class="link" (click)="priorOpen.set(true)">{{ 'bonus.prior.add' | transloco }}</button>
+        }
+        <p class="hint">{{ 'bonus.prior.hint' | transloco }}</p>
+      }
+      @if (priorErrorKey(); as k) {
+        <div class="alert alert-danger">{{ k | transloco }}</div>
+      }
+    </div>
+  }
 </section>

@@ -224,6 +224,13 @@ export class EmployeeService {
     await this.history.write(officeId, employeeId, 'employee', ref, 'update', { careExemptions });
   }
 
+  /** 前の事業所の健保の標準賞与額の累計（年度 → 円。空なら null にする。11/16） */
+  async updatePriorBonusTotals(officeId: string, employeeId: string, totals: Record<string, number>): Promise<void> {
+    const ref = doc(this.col(officeId), employeeId);
+    const priorBonusTotals = Object.keys(totals).length > 0 ? totals : null;
+    await this.history.write(officeId, employeeId, 'employee', ref, 'update', { priorBonusTotals });
+  }
+
   /** 海外勤務（従業員の文書の配列。To-do で全員分を読むので、別の入れ物にしない） */
   async updateOverseas(officeId: string, employeeId: string, overseas: Overseas[]): Promise<void> {
     const ref = doc(this.col(officeId), employeeId);

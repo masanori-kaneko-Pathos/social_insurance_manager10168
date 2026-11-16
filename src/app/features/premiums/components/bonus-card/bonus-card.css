@@ -63,3 +63,55 @@ td.num {
   border: 1px solid var(--color-warning-border);
   border-radius: var(--radius-sm);
 }
+
+/* 前の事業所の分（11/16） */
+.prior {
+  margin-top: var(--space-md);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border);
+}
+
+.prior h3 {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-md);
+}
+
+.prior-list {
+  margin: 0 0 var(--space-xs);
+  padding: 0;
+  list-style: none;
+}
+
+.prior-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-sm);
+}
+
+.prior-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-sm);
+  font-size: var(--font-sm);
+}
+
+.prior-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.prior-form .year {
+  width: 6em;
+}
+
+.prior-form .amount {
+  width: 10em;
+}
+
+.prior .hint {
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}

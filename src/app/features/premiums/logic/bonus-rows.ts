@@ -12,7 +12,7 @@ import {
 import { RatesForMonth } from '../../../core/models/rates';
 import { CoverageInput, healthLostDate, pensionLostDate } from '../../employees/logic/coverage';
 import { DateStr, YearMonth } from '../../../shared/utils/date';
-import { EmployeeBonus, bonusStatus, calcBonuses } from './calc-bonus';
+import { EmployeeBonus, bonusStatus, calcBonuses, PriorBonusHolder } from './calc-bonus';
 import { PremiumSplit, splitContribution } from './premium-core';
 import { LeaveHolder } from '../../employees/logic/leave';
 
@@ -23,7 +23,7 @@ export interface BonusPaymentLike {
   amounts: Record<string, number>;
 }
 
-export type BonusEmployee = CoverageInput & LeaveHolder & { id: string };
+export type BonusEmployee = CoverageInput & LeaveHolder & PriorBonusHolder & { id: string };
 
 export interface BonusContext {
   ratesFor: (month: YearMonth) => RatesForMonth;

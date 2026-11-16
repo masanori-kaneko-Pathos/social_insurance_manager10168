@@ -1343,7 +1343,17 @@
       "badAmount": "Amount could not be read: {{list}}",
       "errorRead": "The file could not be read."
     },
-    "savedToast": "Bonus saved. See its premiums under \"Bonus\" in the premium list."
+    "savedToast": "Bonus saved. See its premiums under \"Bonus\" in the premium list.",
+    "prior": {
+      "title": "Standard bonus from a previous employer (health insurance yearly total)",
+      "row": "FY{{year}}: {{amount}} yen",
+      "year": "Fiscal year",
+      "amount": "Total standard bonus (yen)",
+      "add": "+ Add the previous employer's amount",
+      "hint": "Only for people who received bonuses from a previous employer in the same fiscal year under the same insurer. Enter the amount notified by the insurer after the employee's request; it is added to the yearly total for the 5.73 million yen cap (health, care and support). Pension (1.5 million yen per month) is not affected.",
+      "error": "Could not save the previous employer's amount."
+    },
+    "priorIncluded": "(yearly total including {{n}} yen from the previous employer)"
   },
   "leave": {
     "title": "Leave",

@@ -8,7 +8,7 @@
  *   ・資格喪失日以降に払った賞与：かからない（累計にも入らない）
  *   70歳（厚年）・75歳（健保）で資格を失う月も同じ扱い
  * - 上限：健保・介護・支援金は年度（4月〜翌3月）の累計573万円、厚年・拠出金は同じ月の合計150万円
- * 未対応：育休・産休中の賞与の免除（休業のデータができてから）
+ * - 転職した人：同じ年度・同じ保険者の前の事業所の標準賞与額（本人の累計申出で保険者から知らされた額）も、健保の累計に入れる（11/16）
  */
 import {
   BonusPremiumResult,
@@ -32,8 +32,19 @@ export interface EmployeeBonus {
   amount: number; // 賞与額（円）
 }
 
+/** 前の事業所の健保の標準賞与額の累計（年度 'YYYY' → 円）を持つ人 */
+export interface PriorBonusHolder {
+  priorBonusTotals?: Record<string, number> | null;
+}
+
+/** その年度の、前の事業所の分（なければ 0） */
+export function priorHealthOf(e: PriorBonusHolder, fiscalYear: number): number {
+  const v = e.priorBonusTotals?.[String(fiscalYear)];
+  return typeof v === 'number' && Number.isSafeInteger(v) && v > 0 ? v : 0;
+}
+
 export interface BonusInput {
-  employee: CoverageInput & LeaveHolder;
+  employee: CoverageInput & LeaveHolder & PriorBonusHolder;
   /** その従業員の賞与（年度の累計を出すため、同じ年度の分は全部渡す） */
   bonuses: EmployeeBonus[];
   /** 月 → その月の料率（pickRates を包んだ関数） */
@@ -103,9 +114,10 @@ export function calcBonuses(input: BonusInput): BonusPremiumResult[] {
 
     // 健保：年度の累計573万円（喪失月の賞与も累計には入る）
     let healthBase = 0;
+    const year = fiscalYearOf(month);
+    const priorHealth = priorHealthOf(employee, year);
     if (healthStatus !== 'none') {
-      const year = fiscalYearOf(month);
-      const before = healthCumByYear.get(year) ?? 0;
+      const before = healthCumByYear.get(year) ?? priorHealth;
       healthBase = Math.min(standardBonus, Math.max(0, HEALTH_BONUS_CAP_PER_YEAR - before));
       healthCumByYear.set(year, before + standardBonus);
     }
@@ -152,6 +164,7 @@ export function calcBonuses(input: BonusInput): BonusPremiumResult[] {
       healthStatus,
       pensionStatus,
       exempt,
+      priorHealth,
     };
   });
 }
