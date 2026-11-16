@@ -210,9 +210,12 @@ service cloud.firestore {
     }
 
     function validPremiumSettings(p) {
-      return p is map && exactKeys(p, ['method', 'healthRounding'])
+      // agreementRounding：労使協定（特約）の端数処理。あってもなくてもよい（11/16 に足した。前のデータにはない）
+      return p is map && p.keys().hasAll(['method', 'healthRounding'])
+        && p.keys().hasOnly(['method', 'healthRounding', 'agreementRounding'])
         && p.method in ['payroll', 'cash']
-        && p.healthRounding in ['combined', 'separate'];
+        && p.healthRounding in ['combined', 'separate']
+        && (!('agreementRounding' in p) || p.agreementRounding == null || p.agreementRounding in ['half', 'floor', 'ceil']);
     }
 
     // ルールには繰り返しがないので、履歴の1行ずつは確かめられない。

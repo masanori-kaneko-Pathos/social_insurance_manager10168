@@ -41,7 +41,7 @@
     <span class="muted">
       {{ 'premium.method.' + options().method | transloco }}・{{
         'premium.rounding.' + options().healthRounding | transloco
-      }}
+      }}@if (options().agreementRounding; as a) {・{{ 'premium.agreement.' + a | transloco }}}
     </span>
     {{ 'premiumList.summary' | transloco: { count: rows().length } }}
     @if (hiddenCount() > 0) {

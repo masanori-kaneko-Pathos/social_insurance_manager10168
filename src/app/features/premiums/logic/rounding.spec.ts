@@ -53,3 +53,18 @@ describe('floorYen / formatMilli', () => {
     expect(formatMilli(66700)).toBe('66.7');
   });
 });
+
+describe('roundEmployee：労使協定（特約）の端数処理（11/16）', () => {
+  it('四捨五入：50銭ちょうどは切り上げ（給与控除でも）', () => {
+    expect(roundEmployee(12345500, 'payroll', 'half')).toBe(12346);
+    expect(roundEmployee(12345499, 'payroll', 'half')).toBe(12345);
+  });
+  it('切り捨て・切り上げ', () => {
+    expect(roundEmployee(12345999, 'payroll', 'floor')).toBe(12345);
+    expect(roundEmployee(12345001, 'cash', 'ceil')).toBe(12346);
+    expect(roundEmployee(12345000, 'cash', 'ceil')).toBe(12345); // 端数がなければそのまま
+  });
+  it('協定なし（null）は法律どおり', () => {
+    expect(roundEmployee(12345500, 'payroll', null)).toBe(12345);
+  });
+});

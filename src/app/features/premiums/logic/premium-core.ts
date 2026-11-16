@@ -33,7 +33,7 @@ export function makeLine(
 function makeGroup(lines: PremiumLine[], options: PremiumOptions): PremiumGroup {
   const totalMilli = lines.reduce((s, l) => s + l.totalMilli, 0);
   const employeeMilli = lines.reduce((s, l) => s + l.employeeMilli, 0);
-  const employeeYen = roundEmployee(employeeMilli, options.method);
+  const employeeYen = roundEmployee(employeeMilli, options.method, options.agreementRounding ?? null);
   return {
     parts: lines.map((l) => l.part),
     lines,

@@ -4,7 +4,7 @@
     <span class="note">
       {{ 'premium.method.' + options().method | transloco }}・{{
         'premium.rounding.' + options().healthRounding | transloco
-      }}
+      }}@if (options().agreementRounding; as a) {・{{ 'premium.agreement.' + a | transloco }}}
     </span>
   </div>
 

@@ -787,7 +787,8 @@
       "method": "Employee share collected by",
       "healthRounding": "Rounding of health, care and child care support",
       "nameEn": "Office name in English",
-      "groupName": "Group label"
+      "groupName": "Group label",
+      "agreementRounding": "Rounding of the employee share (labor-management agreement)"
     },
     "insurer": {
       "kyokai": "Japan Health Insurance Association (Kyokai Kenpo)",
@@ -803,7 +804,8 @@
       "method": "Per-employee settings (e.g. cash for employees on leave) are coming later.",
       "healthRounding": "There is no official guidance, so both are available. The method once published by the ministry is 'together'.",
       "nameEn": "Enter the English name if there is one.",
-      "groupName": "Offices with the same label are listed together in the office menu. Example: Kanto sites, Head office and plant"
+      "groupName": "Offices with the same label are listed together in the office menu. Example: Kanto sites, Head office and plant",
+      "agreementRounding": "Usually \"No agreement\". If the company and employees have a special agreement, the employee share is rounded that way (the same for the Japan Health Insurance Association, health insurance societies and pension). The company's payment stays the total rounded down to the yen."
     },
     "postal": {
       "search": "Find address",
@@ -994,6 +996,9 @@
         "notSpecific": "Available once the office becomes a specified or voluntary specified office."
       },
       "hint": "Lowers the employee share of health and pension premiums for short-time workers with a standard monthly remuneration of 126,000 yen or less, with the employer temporarily paying more (3 years in total; half in the third year). The extra is deducted from premiums three months later. Long-term care, child support and bonuses are excluded. For union health insurance, only pension is calculated."
+    },
+    "agreementRounding": {
+      "none": "No agreement (statutory rule)"
     }
   },
   "remuneration": {
@@ -1100,6 +1105,11 @@
       "formulaTitle": "Calculation (standard remuneration × rate, rounding)",
       "adjustment": "* The premium adjustment scheme lowers the employee share by {{n}} yen (the employer pays it for now; it is deducted from premiums three months later)",
       "lineAdjustment": "adjustment lowers the employee share by {{n}} yen"
+    },
+    "agreement": {
+      "half": "Agreement: round half up",
+      "floor": "Agreement: round down",
+      "ceil": "Agreement: round up"
     }
   },
   "premiumList": {

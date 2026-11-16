@@ -165,6 +165,18 @@ describe('calcMonthly：本人負担と会社負担', () => {
     expect(separate.groups[1].employeeYen).toBe(126);
   });
 
+  it('労使協定で四捨五入：東京7級の個別は 5,418円 ＋ 127円（給与控除でも50銭は切り上げ。11/16）', () => {
+    const r = calcMonthly({
+      month: '2026-11',
+      employee: AGE30,
+      remunerations: [rem('2024-04', [7, 110000], [4, 110000])],
+      rates: rates('13', '2026-11'),
+      options: { method: 'payroll', healthRounding: 'separate', agreementRounding: 'half' },
+    });
+    expect(r.groups[0].employeeYen).toBe(5418);
+    expect(r.groups[1].employeeYen).toBe(127);
+  });
+
   it('現金払いは 50銭ちょうどで切り上げ（佐賀1級の健保だけ：3,059.5円 → 3,060円）', () => {
     const base = {
       month: '2026-03',

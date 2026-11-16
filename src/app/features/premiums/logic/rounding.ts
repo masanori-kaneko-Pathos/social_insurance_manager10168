@@ -2,7 +2,7 @@
  * 金額の計算と端数処理（整数だけで計算する）
  * 金額は 1/1000円 を 1 とする整数（Milli）、料率は 0.0001% を 1 とする整数（RateMicro）。
  */
-import { CollectionMethod, Milli } from '../../../core/models/premium';
+import { AgreementRounding, CollectionMethod, Milli } from '../../../core/models/premium';
 import { RateMicro } from '../../../core/models/rates';
 
 const MILLI_PER_YEN = 1000;
@@ -39,13 +39,18 @@ export function yenToMilli(yen: number): Milli {
  * 本人負担の端数処理（Milli → 円）
  * - payroll（給与・賞与から控除）：50銭以下は切り捨て、50銭を超えたら切り上げ
  * - cash（本人が現金で払う）　　　：50銭未満は切り捨て、50銭以上は切り上げ
+ * - 労使協定（特約）があれば、そちらが先：half 四捨五入／floor 切り捨て／ceil 切り上げ（11/16）
  * 割り算は「割り切れる形」にしてから行う（商と余りに分ける）。
  */
-export function roundEmployee(milli: Milli, method: CollectionMethod): number {
+export function roundEmployee(milli: Milli, method: CollectionMethod, agreement: AgreementRounding | null = null): number {
   assertSafe(milli, '本人負担');
   const rest = milli % MILLI_PER_YEN; // 1円未満の部分
   const yen = (milli - rest) / MILLI_PER_YEN; // 割り切れる割り算なので正確
-  const roundUp = method === 'payroll' ? rest > HALF_YEN : rest >= HALF_YEN;
+  const roundUp =
+    agreement === 'half' ? rest >= HALF_YEN
+    : agreement === 'floor' ? false
+    : agreement === 'ceil' ? rest > 0
+    : method === 'payroll' ? rest > HALF_YEN : rest >= HALF_YEN;
   return roundUp ? yen + 1 : yen;
 }
 

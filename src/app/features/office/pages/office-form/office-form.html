@@ -724,6 +724,17 @@
         </div>
         <span class="hint">{{ 'office.hint.healthRounding' | transloco }}</span>
       </div>
+
+      <div class="field">
+        <label for="agreementRounding">{{ 'office.field.agreementRounding' | transloco }}</label>
+        <select id="agreementRounding" class="input" formControlName="agreementRounding">
+          <option value="">{{ 'office.agreementRounding.none' | transloco }}</option>
+          @for (a of agreementRoundings; track a) {
+            <option [value]="a">{{ 'premium.agreement.' + a | transloco }}</option>
+          }
+        </select>
+        <span class="hint">{{ 'office.hint.agreementRounding' | transloco }}</span>
+      </div>
     </section>
 
 

@@ -13,9 +13,18 @@ export type CollectionMethod = 'payroll' | 'cash';
 /** 健保・介護・支援金の端数処理：合算してから1回／それぞれ別々に */
 export type HealthRounding = 'combined' | 'separate';
 
+/**
+ * 労使協定（特約）による本人負担の端数処理（11/16）
+ * 協会けんぽ・年金機構の保険料額表の注「事業主と被保険者間で特約がある場合には、特約に基づき端数処理をすることができます」
+ * half：四捨五入（50銭以上切り上げ）／floor：切り捨て／ceil：切り上げ。null・省略 ＝ 法律どおり（集め方で決まる）
+ */
+export type AgreementRounding = 'half' | 'floor' | 'ceil';
+export const AGREEMENT_ROUNDINGS: readonly AgreementRounding[] = ['half', 'floor', 'ceil'];
+
 export interface PremiumOptions {
   method: CollectionMethod;
   healthRounding: HealthRounding;
+  agreementRounding?: AgreementRounding | null;
 }
 
 export const DEFAULT_PREMIUM_OPTIONS: PremiumOptions = {

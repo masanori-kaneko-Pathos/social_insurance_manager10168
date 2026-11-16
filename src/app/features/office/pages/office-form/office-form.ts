@@ -24,7 +24,7 @@ import {
   PayrollSettings,
   Department,
 } from '../../../../core/models/office';
-import { CollectionMethod, HealthRounding } from '../../../../core/models/premium';
+import { AGREEMENT_ROUNDINGS, AgreementRounding, CollectionMethod, HealthRounding } from '../../../../core/models/premium';
 import { PostalCodeService } from '../../../../shared/services/postal-code.service';
 import { corporateNumberValidator } from '../../../../shared/validators/corporate-number';
 import { OfficeService } from '../../office.service';
@@ -124,6 +124,7 @@ const emptyToNull = (v: string) => (v.trim() ? v.trim() : null);
   styleUrl: './office-form.css',
 })
 export class OfficeForm {
+  readonly agreementRoundings = AGREEMENT_ROUNDINGS;
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
@@ -175,6 +176,8 @@ export class OfficeForm {
       deduction: [DEFAULT_PAYROLL.deduction as PayrollSettings['deduction']],
       method: [DEFAULT_PREMIUM.method as CollectionMethod],
       healthRounding: [DEFAULT_PREMIUM.healthRounding as HealthRounding],
+      // 労使協定（特約）の端数処理（'' ＝ 法律どおり。11/16）
+      agreementRounding: ['' as AgreementRounding | ''],
       // 編集で保険者・都道府県を変えたときの「何月分から」
       changeFrom: [''],
       // 社会保険の適用・賞与の支払予定月・現物（形は logic/office-form-model.ts の CoverageFormValue）
@@ -492,6 +495,7 @@ export class OfficeForm {
       deduction: payroll.deduction,
       method: premium.method,
       healthRounding: premium.healthRounding,
+      agreementRounding: premium.agreementRounding ?? '',
       changeFrom: '',
       coverage: toCoverageForm(o),
       adjustmentOn: !!o.premiumAdjustment?.since,
@@ -584,6 +588,7 @@ export class OfficeForm {
       deduction: payroll.deduction,
       method: premium.method,
       healthRounding: premium.healthRounding,
+      agreementRounding: premium.agreementRounding ?? '',
     });
     // 所定と特定適用事業所は法人単位で同じことが多いので写す（人数・基金・賞与・現物は事業所ごと）
     const cov = toCoverageForm(o);
@@ -769,7 +774,7 @@ export class OfficeForm {
         payDay: Number(v.payDay),
         deduction: v.deduction,
       },
-      premium: { method: v.method, healthRounding: v.healthRounding },
+      premium: { method: v.method, healthRounding: v.healthRounding, agreementRounding: v.agreementRounding || null },
       ...coverage,
     };
 
