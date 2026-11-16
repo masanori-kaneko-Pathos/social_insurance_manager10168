@@ -352,23 +352,24 @@ export class OfficeForm {
   readonly copyOpen = signal(false);
 
   /**
-   * 目次（設定の画面だけ）。part ＝ 大きな区切り（「事業所の設定」「社会保険に関する設定」）、sub ＝ その中の欄
+   * 目次。part ＝ 大きな区切り（「事業所の設定」「社会保険に関する設定」）、sub ＝ その中の欄
    * 「目次」の見出しは出さず、2つの区切りを同じ大きさで並べる（11/16）
+   * はじめの登録でも出す（保険者・所在地の履歴と削除は、編集の画面にしかないので出さない。11/16）
    */
   readonly toc = computed(() => {
     const items: { id: string; key: string; sub?: boolean; part?: boolean }[] = [
-      { id: 'sec-top', key: 'office.form.titleEdit', part: true },
+      { id: 'sec-top', key: this.isEdit ? 'office.form.titleEdit' : 'office.form.titleNew', part: true },
       { id: 'sec-basic', key: 'office.section.basic', sub: true },
       { id: 'sec-filing', key: 'office.section.filing', sub: true },
       { id: 'sec-departments', key: 'office.department.title', sub: true },
       { id: 'sec-location', key: 'office.section.location', sub: true },
       { id: 'sec-insurance', key: 'office.part.insurance', part: true },
       { id: 'sec-insurer', key: 'office.section.insurer', sub: true },
-      { id: 'sec-history', key: 'office.section.history', sub: true },
+      ...(this.isEdit ? [{ id: 'sec-history', key: 'office.section.history', sub: true }] : []),
       { id: 'sec-coverage', key: 'office.section.coverage', sub: true },
       { id: 'sec-payroll', key: 'office.section.payroll', sub: true },
     ];
-    if (this.isOwner()) items.push({ id: 'sec-delete', key: 'office.delete.title' });
+    if (this.isEdit && this.isOwner()) items.push({ id: 'sec-delete', key: 'office.delete.title' });
     return items;
   });
 

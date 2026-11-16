@@ -227,3 +227,9 @@ td .field-error {
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* 保存するボタンを表の上にも（取り込みの画面と同じ。11/16） */
+.actions.top {
+  justify-content: flex-end;
+  margin: 0 0 var(--space-sm);
+}

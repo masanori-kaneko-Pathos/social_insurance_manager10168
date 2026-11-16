@@ -10,7 +10,9 @@ import {
   RequestType,
 } from '../../../../core/models/office-records';
 import { DATE_RE, todayLocal } from '../../../../shared/utils/date';
-import { toKatakana } from '../../../../shared/utils/text';
+import { PersonListBar } from '../../../../shared/components/person-list-bar/person-list-bar';
+import { SortHeader } from '../../../../shared/components/sort-header/sort-header';
+import { defaultListOptions, filterAndSort, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
 import { EmployeeService } from '../../../employees/employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import { customQuestion, fieldQuestion, REQUEST_FIELDS, RequestField, templateQuestions } from '../../logic/request-model';
@@ -26,7 +28,7 @@ const MAX_QUESTIONS = 50;
  */
 @Component({
   selector: 'app-request-new',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [PersonListBar, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './request-new.html',
   styleUrl: '../requests.css',
 })
@@ -59,15 +61,30 @@ export class RequestNew {
   // ===== あて先 =====
   readonly employees = signal<Employee[]>([]);
   readonly selected = signal<ReadonlySet<string>>(new Set());
-  readonly search = signal('');
+  /** 探す・絞る・並べる・ページ（ほかの人の並ぶ表と同じ帯と見出し。11/16） */
+  readonly listOptions = signal<PersonListOptions>(defaultListOptions());
+  readonly page = signal(1);
+  /** この画面だけの条件：マイページのあり・なし */
+  readonly accountFilter = signal<'all' | 'linked' | 'none'>('all');
+  /** 絞り込みに合う人（全ページ。「すべて選ぶ」はこの人たち） */
   readonly visible = computed(() => {
-    const q = toKatakana(this.search().trim());
-    return this.employees().filter((e) => {
-      if (!q) return true;
-      const text = `${e.lastName}${e.firstName}${e.lastNameKana}${e.firstNameKana}${e.employeeNumber ?? ''}`;
-      return toKatakana(text).includes(q);
+    const a = this.accountFilter();
+    const rows = this.employees().filter((e) => a === 'all' || (a === 'linked' ? !!e.userUid : !e.userUid));
+    return filterAndSort(rows, this.listOptions(), (e) => e, () => null, () => false, {
+      dept: (e) => this.deptName(e) ?? '',
     });
   });
+  readonly shown = computed(() => pageOf(this.visible(), this.page(), this.listOptions().size));
+
+  deptName(e: Employee): string | null {
+    const id = e.org?.departmentId;
+    return id ? (this.context.current()?.departments?.find((d) => d.id === id)?.name ?? null) : null;
+  }
+
+  setAccountFilter(v: 'all' | 'linked' | 'none'): void {
+    this.accountFilter.set(v);
+    this.page.set(1);
+  }
   readonly selectedNoAccount = computed(
     () => this.employees().filter((e) => this.selected().has(e.id) && !e.userUid).length,
   );

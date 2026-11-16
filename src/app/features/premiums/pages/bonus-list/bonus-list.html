@@ -23,6 +23,7 @@
           <th>{{ 'bonus.col.paidDate' | transloco }}</th>
           <th>{{ 'bonus.col.title' | transloco }}</th>
           <th class="num">{{ 'bonus.col.people' | transloco }}</th>
+          <th class="num">{{ 'bonus.col.amountTotal' | transloco }}</th>
           <th class="num">{{ 'bonus.col.payment' | transloco }}</th>
           <th class="toggle-col"></th>
         </tr>
@@ -40,6 +41,7 @@
             </td>
             <td>{{ r.payment.title ?? '—' }}</td>
             <td class="num">{{ 'bonus.peopleCount' | transloco: { count: r.people } }}</td>
+            <td class="num">{{ yen(r.amountYen) }}</td>
             <td class="num">
               {{ yen(r.totalYen) }}
               @if (r.problems > 0) {
@@ -59,11 +61,12 @@
           </tr>
           @if (openId() === r.payment.id) {
             <tr class="detail">
-              <td colspan="5">
+              <td colspan="6">
                 <table class="people">
                   <thead>
                     <tr>
-                      <th>{{ 'bonus.col.employee' | transloco }}</th>
+                      <th><app-sort-header key="number" [(options)]="peopleOptions">{{ 'employee.field.employeeNumber' | transloco }}</app-sort-header></th>
+                      <th><app-sort-header key="kana" [(options)]="peopleOptions">{{ 'employee.field.name' | transloco }}</app-sort-header></th>
                       <th class="num">{{ 'bonus.col.amount' | transloco }}</th>
                       <th class="num">{{ 'bonus.col.standard' | transloco }}</th>
                       <th class="num">{{ 'premium.col.employee' | transloco }}</th>
@@ -72,11 +75,11 @@
                   <tbody>
                     @for (p of people(); track p.employee.id) {
                       <tr>
+                        <td class="mono">{{ p.employee.employeeNumber ?? '' }}</td>
                         <td>
                           <a [routerLink]="['/o', context.current()?.id, 'employees', p.employee.id]">
                             {{ nameOf(p.employee) }}
                           </a>
-                          <span class="sub">{{ p.employee.employeeNumber }}</span>
                         </td>
                         <td class="num">{{ yen(p.amount) }}</td>
                         @switch (p.row.state) {
@@ -107,6 +110,15 @@
                       </tr>
                     }
                   </tbody>
+                  <tfoot>
+                    @let t = peopleTotals();
+                    <tr class="total">
+                      <th colspan="2">{{ 'bonus.total' | transloco }}</th>
+                      <td class="num">{{ yen(t.amount) }}</td>
+                      <td class="num">{{ yen(t.standard) }}</td>
+                      <td class="num strong">{{ yen(t.employee) }}</td>
+                    </tr>
+                  </tfoot>
                 </table>
               </td>
             </tr>

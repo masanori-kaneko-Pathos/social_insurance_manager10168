@@ -129,3 +129,14 @@ td.wrap {
   padding: 2px var(--space-sm);
   font-size: var(--font-sm);
 }
+
+/* 1人ずつの表の合計（11/16） */
+.people tfoot .total th,
+.people tfoot .total td {
+  border-top: 2px solid var(--color-border-strong);
+  font-weight: 600;
+}
+
+.people tfoot .total th {
+  text-align: left;
+}

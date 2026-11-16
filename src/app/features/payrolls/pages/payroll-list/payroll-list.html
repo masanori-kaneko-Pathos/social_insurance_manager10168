@@ -28,9 +28,21 @@
       {{ 'payroll.toRevisions' | transloco }} →
     </a>
   </p>
+  <!-- 前の12か月・年と月を選ぶ・次の12か月（いちばん早い入社の月より前と、実績のない先の月へは進まない。11/16） -->
   <div class="pager">
-    <a [routerLink]="[]" [queryParams]="{ to: prevTo() }">{{ 'payroll.prevYear' | transloco }}</a>
-    <a [routerLink]="[]" [queryParams]="{ to: nextTo() }">{{ 'payroll.nextYear' | transloco }}</a>
+    @if (canPrev()) {
+      <a [routerLink]="[]" [queryParams]="{ to: prevTo() }">{{ 'payroll.prevYear' | transloco }}</a>
+    } @else {
+      <span class="disabled">{{ 'payroll.prevYear' | transloco }}</span>
+    }
+    <app-month-picker [value]="top()" [today]="thisMonth" (picked)="goMonth($event)">
+      {{ 'payroll.listRange' | transloco: { fromY: monthLabel(bottom()).y, fromM: monthLabel(bottom()).m, toY: monthLabel(top()).y, toM: monthLabel(top()).m } }}
+    </app-month-picker>
+    @if (canNext()) {
+      <a [routerLink]="[]" [queryParams]="{ to: nextTo() }">{{ 'payroll.nextYear' | transloco }}</a>
+    } @else {
+      <span class="disabled">{{ 'payroll.nextYear' | transloco }}</span>
+    }
   </div>
   <div class="card table-wrap">
     <table>

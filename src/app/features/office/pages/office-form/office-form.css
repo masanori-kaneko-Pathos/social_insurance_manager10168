@@ -422,3 +422,11 @@ h3 {
     display: none;
   }
 }
+
+/* はじめの登録（サイドバーのない画面）は、目次と本文をまとめて真ん中に（11/16） */
+@media (min-width: 1001px) {
+  .layout.with-toc.standalone {
+    justify-content: center;
+    padding-left: 0;
+  }
+}

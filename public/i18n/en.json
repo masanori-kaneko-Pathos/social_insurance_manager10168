@@ -1300,7 +1300,8 @@
       "payment": "Payment",
       "amount": "Bonus amount",
       "standard": "Standard Bonus Amount (SBA) (標準賞与額)",
-      "employee": "Employee"
+      "employee": "Employee",
+      "amountTotal": "Total bonus"
     },
     "peopleCount": "{{count}}",
     "hasProblems": "Some can't be calculated",
@@ -1339,12 +1340,15 @@
     "closePeople": "Close",
     "import": {
       "button": "Import from file",
-      "note": "A CSV or Excel file with employee number (or name) and bonus amount. Amounts are only filled in; press Save to keep them.",
+      "note": "A file (CSV or Excel) with employee numbers (or names) and bonus amounts. If it has a paid date column, the paid date is filled in too (you can read the file before choosing the date). It only fills the inputs; press Save to store them.",
       "result": "Filled in bonus amounts for {{count}} people from {{file}}. Check them before saving.",
       "notFound": "Not found: {{list}} (includes people not covered on this pay date)",
       "ambiguous": "Several people share the name: {{list}} (use an employee number column)",
       "badAmount": "Amount could not be read: {{list}}",
-      "errorRead": "The file could not be read."
+      "errorRead": "The file could not be read.",
+      "dateSet": "The paid date from the file ({{date}}) was filled in.",
+      "dateDiffers": "The paid date in the file ({{file}}) differs from the one entered ({{date}}). The entered date was kept; correct it if needed.",
+      "dateMany": "The file has several paid dates ({{list}}). One registration has one paid date, so choose it yourself (all amounts were read)."
     },
     "savedToast": "Bonus saved. See its premiums under \"Bonus\" in the premium list.",
     "prior": {
@@ -1356,7 +1360,9 @@
       "hint": "Only for people who received bonuses from a previous employer in the same fiscal year under the same insurer. Enter the amount notified by the insurer after the employee's request; it is added to the yearly total for the 5.73 million yen cap (health, care and support). Pension (1.5 million yen per month) is not affected.",
       "error": "Could not save the previous employer's amount."
     },
-    "priorIncluded": "(yearly total including {{n}} yen from the previous employer)"
+    "priorIncluded": "(yearly total including {{n}} yen from the previous employer)",
+    "total": "Total",
+    "amountTotal": "Total bonus {{n}} yen"
   },
   "leave": {
     "title": "Leave",
@@ -1554,7 +1560,8 @@
     "next": {
       "premiums": "See the premiums deducted from the {{paid}} pay (for month {{month}})",
       "revisions": "Check revision candidates"
-    }
+    },
+    "listRange": "{{fromM}}/{{fromY}} – {{toM}}/{{toY}}"
   },
   "regular": {
     "title": "Annual SMR determination {{year}} (定時決定, teiji kettei)",
@@ -2896,7 +2903,14 @@
       "reject": "Could not return.",
       "delete": "Could not delete.",
       "notFound": "Request not found."
-    }
+    },
+    "accountFilter": {
+      "title": "My Page",
+      "all": "All",
+      "linked": "Has My Page",
+      "none": "No My Page"
+    },
+    "noMatch": "No one matches."
   },
   "me": {
     "title": "My Page",

@@ -266,3 +266,42 @@ textarea.input {
 .list-lead {
   margin: 0 0 var(--space-md);
 }
+
+/* 新しい依頼：あて先の表（ほかの人の並ぶ表と同じ形。11/16） */
+.people-table {
+  width: 100%;
+  font-size: var(--font-sm);
+}
+
+.people-table tbody tr {
+  cursor: pointer;
+}
+
+.people-table tbody tr:hover {
+  background: var(--color-hover);
+}
+
+.people-table tr.on {
+  background: var(--color-highlight-soft);
+}
+
+.people-table .check {
+  width: 2.5em;
+}
+
+.people-table .mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.people-table .sub {
+  color: var(--color-text-sub);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

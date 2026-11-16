@@ -95,16 +95,19 @@ export const routes: Routes = [
         children: [
           {
             path: '',
+            data: { wide: true }, // 広い画面では表を横に伸ばす（11/16）
             loadComponent: () =>
               import('./features/dashboard/pages/dashboard/dashboard').then((m) => m.Dashboard),
           },
           {
             path: 'ages',
+            data: { wide: true }, // 広い画面では表を横に伸ばす（11/16）
             loadComponent: () =>
               import('./features/dashboard/pages/age-list/age-list').then((m) => m.AgeList),
           },
           {
             path: 'employees',
+            data: { wide: true }, // 広い画面では表を横に伸ばす（11/16）
             loadComponent: () =>
               import('./features/employees/pages/employee-list/employee-list').then(
                 (m) => m.EmployeeList,
@@ -140,6 +143,7 @@ export const routes: Routes = [
           },
           {
             path: 'premiums',
+            data: { wide: true }, // 広い画面では表を横に伸ばす（11/16）
             loadComponent: () =>
               import('./features/premiums/pages/premium-list/premium-list').then(
                 (m) => m.PremiumList,
@@ -147,21 +151,25 @@ export const routes: Routes = [
           },
           {
             path: 'bonuses',
+            data: { wide: true }, // 広い画面では表を横に伸ばす（11/16）
             loadComponent: () =>
               import('./features/premiums/pages/bonus-list/bonus-list').then((m) => m.BonusList),
           },
           {
             path: 'bonuses/new',
+            data: { wide: true }, // 広い画面では表を横に伸ばす（11/16）
             loadComponent: () =>
               import('./features/premiums/pages/bonus-form/bonus-form').then((m) => m.BonusForm),
           },
           {
             path: 'bonuses/:bonusId',
+            data: { wide: true }, // 広い画面では表を横に伸ばす（11/16）
             loadComponent: () =>
               import('./features/premiums/pages/bonus-form/bonus-form').then((m) => m.BonusForm),
           },
           {
             path: 'payrolls',
+            data: { wide: true }, // 広い画面では表を横に伸ばす（11/16）
             loadComponent: () =>
               import('./features/payrolls/pages/payroll-list/payroll-list').then(
                 (m) => m.PayrollList,
@@ -176,6 +184,7 @@ export const routes: Routes = [
           },
           {
             path: 'payrolls/:month',
+            data: { wide: true }, // 広い画面では表を横に伸ばす（11/16）
             loadComponent: () =>
               import('./features/payrolls/pages/payroll-month/payroll-month').then(
                 (m) => m.PayrollMonth,
@@ -188,21 +197,25 @@ export const routes: Routes = [
           },
           {
             path: 'filings',
+            data: { wide: true }, // 広い画面では表を横に伸ばす（11/16）
             loadComponent: () =>
               import('./features/filings/pages/filings/filings').then((m) => m.FilingsPage),
           },
           {
             path: 'regular/:year',
+            data: { wide: true }, // 広い画面では表を横に伸ばす（11/16）
             loadComponent: () =>
               import('./features/payrolls/pages/regular/regular').then((m) => m.RegularPage),
           },
           {
             path: 'revisions',
+            data: { wide: true }, // 広い画面では表を横に伸ばす（11/16）
             loadComponent: () =>
               import('./features/payrolls/pages/revisions/revisions').then((m) => m.RevisionsPage),
           },
           {
             path: 'requests',
+            data: { wide: true }, // 広い画面では表を横に伸ばす（11/16）
             loadComponent: () =>
               import('./features/requests/pages/request-list/request-list').then((m) => m.RequestList),
           },

@@ -1,16 +1,18 @@
 // 賞与の額をファイルから読み込む（11/13）
 // 給与ソフトなどから書き出した「社員番号（または氏名）と賞与額」の表を、賞与の登録画面の入力欄に流し込む
 // 保存はしない（画面で確かめてから「保存する」）。Angular・Firebase に依存しない純粋な関数
+// 支払日の列があれば読む（支払日を決める前に取り込めるように。11/16）
 
 import type { ImportField, OurTableSpec } from '../../../shared/import/column-map';
 
-export const BONUS_IMPORT_KEYS = ['employeeNumber', 'name', 'amount'] as const;
+export const BONUS_IMPORT_KEYS = ['employeeNumber', 'name', 'amount', 'paidDate'] as const;
 export type BonusImportKey = (typeof BONUS_IMPORT_KEYS)[number];
 
 const HEADERS: Record<BonusImportKey, string> = {
   employeeNumber: '社員番号',
   name: '氏名',
   amount: '賞与額',
+  paidDate: '支払日',
 };
 
 export const BONUS_IMPORT_FIELDS: readonly ImportField<BonusImportKey>[] = [
@@ -28,6 +30,12 @@ export const BONUS_IMPORT_FIELDS: readonly ImportField<BonusImportKey>[] = [
     words: ['賞与', '賞与支給額', '支給額', '賞与金額', '総支給額', 'Bonus', 'Amount'],
     kind: 'number',
     required: true,
+  },
+  {
+    key: 'paidDate',
+    header: HEADERS.paidDate,
+    words: ['支給日', '賞与支給日', '支払年月日', '支給年月日', 'Paid date', 'Payment date'],
+    kind: 'date',
   },
 ];
 
@@ -53,6 +61,16 @@ export interface BonusImportResult {
   ambiguous: string[];
   /** 金額が読めなかった行 */
   badAmount: string[];
+  /** ファイルの支払日（読めた日付の重複なし。古い順。支払日の列がなければ空） */
+  paidDates: string[];
+}
+
+/** 'YYYY-MM-DD'（normalizeValue の 'date' で直したあと）。読めなければ null */
+function dateOf(s: string): string | null {
+  const t = s.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) return null;
+  const d = new Date(`${t}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === t ? t : null;
 }
 
 const nameKey = (s: string) => s.normalize('NFKC').replace(/\s+/g, '');
@@ -81,13 +99,16 @@ export function matchBonusRows(table: readonly (readonly string[])[], targets: r
     const k = nameKey(`${t.lastName}${t.firstName}`);
     byName.set(k, [...(byName.get(k) ?? []), t]);
   }
-  const out: BonusImportResult = { amounts: new Map(), notFound: [], ambiguous: [], badAmount: [] };
+  const out: BonusImportResult = { amounts: new Map(), notFound: [], ambiguous: [], badAmount: [], paidDates: [] };
+  const dates = new Set<string>();
   for (const r of rows) {
     const get = (k: BonusImportKey) => (col(k) >= 0 ? (r[col(k)] ?? '') : '').trim();
     const no = get('employeeNumber');
     const name = get('name');
     if (!no && !name) continue;
     const label = no || name;
+    const d = dateOf(get('paidDate'));
+    if (d) dates.add(d);
     let target: BonusTarget | null = no ? (byNo.get(noKey(no)) ?? null) : null;
     if (!target && name) {
       const list = byName.get(nameKey(name)) ?? [];
@@ -108,5 +129,6 @@ export function matchBonusRows(table: readonly (readonly string[])[], targets: r
     }
     out.amounts.set(target.id, amount);
   }
+  out.paidDates = [...dates].sort();
   return out;
 }

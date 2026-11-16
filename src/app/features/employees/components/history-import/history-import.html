@@ -165,7 +165,7 @@
 
     <div class="actions">
       <button type="button" class="btn" (click)="clear()" [disabled]="saving()">{{ 'common.cancel' | transloco }}</button>
-      <button type="button" class="btn btn-solid" (click)="importCsv()" [disabled]="!canImport()">
+      <button type="button" class="btn btn-primary" (click)="importCsv()" [disabled]="!canImport()">
         {{ 'historyCsv.import' | transloco: { n: pv.plan.items.length } }}
       </button>
     </div>

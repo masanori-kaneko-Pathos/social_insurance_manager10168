@@ -51,6 +51,13 @@ interface FormRow extends BonusRow {
   employee: Employee;
 }
 
+/** 取り込んだファイルの支払日についての知らせ（11/16） */
+interface DateNote {
+  key: string;
+  params: Record<string, string>;
+  warn: boolean;
+}
+
 @Component({
   selector: 'app-bonus-form',
   imports: [ColumnMapper, EnterNext, HalfWidthDigits, Pager, PersonListBar, RouterLink, SortHeader, TranslocoPipe],
@@ -120,6 +127,8 @@ export class BonusForm {
   });
 
   readonly peopleCount = computed(() => Object.keys(this.amounts()).length);
+  /** 入れた賞与額の合計（11/16） */
+  readonly amountTotal = computed(() => Object.values(this.amounts()).reduce((s, n) => s + n, 0));
 
   /** ほかの支給と支払日が同じ（計算結果を支払日で突き合わせるので、禁止） */
   readonly duplicateDate = computed(
@@ -245,7 +254,7 @@ export class BonusForm {
   readonly importSpec = BONUS_IMPORT_SPEC;
   /** 読んだファイル（列を合わせている間） */
   readonly importFile = signal<{ name: string; tables: SheetTable[] } | null>(null);
-  readonly importResult = signal<(BonusImportResult & { fileName: string }) | null>(null);
+  readonly importResult = signal<(BonusImportResult & { fileName: string; dateNote: DateNote | null }) | null>(null);
   readonly importError = signal<string | null>(null);
 
   async onImportFile(event: Event): Promise<void> {
@@ -264,15 +273,34 @@ export class BonusForm {
     }
   }
 
-  /** 列を合わせ終わった → その支払日に対象の人に結んで、入力欄に入れる */
+  /**
+   * 列を合わせ終わった → 従業員に結んで、入力欄に入れる
+   * - ファイルに支払日の列があり、日付が1つだけなら：支払日が空ならその日を入れる。違う日が入っていれば知らせる（入っている日を使う）
+   * - 支払日が決まっていれば、その日に対象になりうる人に結ぶ。決まっていなければ全員に結ぶ（11/16）
+   */
   onImportMapped(table: string[][]): void {
     const file = this.importFile();
     this.importFile.set(null);
-    const targets = this.rows().map((r) => ({
-      id: r.employee.id,
-      employeeNumber: r.employee.employeeNumber ?? null,
-      lastName: r.employee.lastName,
-      firstName: r.employee.firstName,
+    // 先に日付だけ読む（結ぶ相手を決めるため）
+    const fileDates = matchBonusRows(table, []).paidDates;
+    let dateNote: DateNote | null = null;
+    if (fileDates.length === 1) {
+      const d = fileDates[0];
+      if (!this.dateOk()) {
+        this.paidDate.set(d);
+        dateNote = { key: 'bonus.import.dateSet', params: { date: d }, warn: false };
+      } else if (d !== this.paidDate()) {
+        dateNote = { key: 'bonus.import.dateDiffers', params: { file: d, date: this.paidDate() }, warn: true };
+      }
+    } else if (fileDates.length > 1) {
+      dateNote = { key: 'bonus.import.dateMany', params: { list: fileDates.join('、') }, warn: true };
+    }
+    const people = this.dateOk() ? this.rows().map((r) => r.employee) : this.employees();
+    const targets = people.map((e) => ({
+      id: e.id,
+      employeeNumber: e.employeeNumber ?? null,
+      lastName: e.lastName,
+      firstName: e.firstName,
     }));
     const result = matchBonusRows(table, targets);
     this.amountTexts.update((cur) => {
@@ -280,7 +308,7 @@ export class BonusForm {
       for (const [id, n] of result.amounts) next[id] = formatYen(n);
       return next;
     });
-    this.importResult.set({ ...result, fileName: file?.name ?? '' });
+    this.importResult.set({ ...result, fileName: file?.name ?? '', dateNote });
   }
 
   cancelImport(): void {

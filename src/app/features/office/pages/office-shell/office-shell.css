@@ -258,3 +258,12 @@
 .side-nav {
   view-transition-name: side-nav;
 }
+
+/* ===== 11/16：表が主役の画面（ホーム・一覧）は、広い画面で横に伸ばす。入力の画面は 1080px のまま ===== */
+.shell-main.wide {
+  max-width: 1680px;
+}
+
+.shell-body.nav-collapsed .shell-main.wide {
+  max-width: calc(1680px + 140px);
+}

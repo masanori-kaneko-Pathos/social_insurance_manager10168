@@ -228,7 +228,7 @@
         <!-- 取り込むボタンは表の上にも（人数が多くても、下まで行かずに押せる。11/13） -->
         <div class="actions top">
           <button type="button" class="btn" (click)="clear()" [disabled]="saving()">{{ 'common.cancel' | transloco }}</button>
-          <button type="button" class="btn btn-solid" (click)="importCsv()" [disabled]="!canImport()">
+          <button type="button" class="btn btn-primary" (click)="importCsv()" [disabled]="!canImport()">
             {{ 'employeeCsv.import' | transloco: { n: pv.plan.items.length } }}
           </button>
         </div>
@@ -316,7 +316,7 @@
         </button>
         <button
           type="button"
-          class="btn btn-solid"
+          class="btn btn-primary"
           (click)="importCsv()"
           [disabled]="!canImport()"
         >

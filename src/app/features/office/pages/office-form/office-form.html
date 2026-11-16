@@ -1,12 +1,10 @@
-<div class="layout" [class.with-toc]="isEdit">
-  <!-- 目次（設定の画面だけ。押すとその欄へ。11/13） -->
-  @if (isEdit) {
-    <nav class="toc" [attr.aria-label]="'office.toc.label' | transloco">
-      @for (t of toc(); track t.id) {
-        <a [href]="'#' + t.id" [class.sub]="t.sub" [class.toc-part]="t.part" (click)="jump($event, t.id)">{{ t.key | transloco }}</a>
-      }
-    </nav>
-  }
+<div class="layout with-toc" [class.standalone]="!isEdit">
+  <!-- 目次（押すとその欄へ。11/13。はじめの登録の画面にも出す。11/16） -->
+  <nav class="toc" [attr.aria-label]="'office.toc.label' | transloco">
+    @for (t of toc(); track t.id) {
+      <a [href]="'#' + t.id" [class.sub]="t.sub" [class.toc-part]="t.part" (click)="jump($event, t.id)">{{ t.key | transloco }}</a>
+    }
+  </nav>
 <div class="page">
   @if (isEdit) {
     <a class="back" [routerLink]="['/o', office()?.id]">← {{ 'common.back' | transloco }}</a>
@@ -17,7 +15,7 @@
   } @else {
     <a class="back" routerLink="/">← {{ 'common.back' | transloco }}</a>
     <div class="title-row">
-      <h1>{{ 'office.form.titleNew' | transloco }}</h1>
+      <h1 id="sec-top">{{ 'office.form.titleNew' | transloco }}</h1>
       <!-- 既存の事業所をコピー（押したときだけ選ぶ欄を出す） -->
       @if (myOffices().length > 0) {
         <div class="copy-menu">

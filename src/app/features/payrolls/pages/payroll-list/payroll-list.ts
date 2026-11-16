@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { map } from 'rxjs';
 import { Employee } from '../../../../core/models/employee';
@@ -8,7 +8,8 @@ import { EmployeeService } from '../../../employees/employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import { employedDuring, insuredDuring, latestPaidMonth, Period, periodOf } from '../../logic/payroll-rows';
 import { payrollOf } from '../../../office/office-settings';
-import { shiftMonth, todayLocal } from '../../../../shared/utils/date';
+import { shiftMonth, todayLocal, toYearMonth, YearMonth } from '../../../../shared/utils/date';
+import { MonthPicker } from '../../../../shared/components/month-picker/month-picker';
 import { PayrollService } from '../../payroll.service';
 import { regularYearOf } from '../../logic/regular';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
@@ -29,7 +30,7 @@ const MONTH_RE = /^[0-9]{4}-(0[1-9]|1[0-2])$/;
 
 @Component({
   selector: 'app-payroll-list',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [MonthPicker, RouterLink, TranslocoPipe],
   templateUrl: './payroll-list.html',
   styleUrl: './payroll-list.css',
 })
@@ -37,6 +38,7 @@ export class PayrollList {
   private readonly employeesApi = inject(EmployeeService);
   private readonly payrollApi = inject(PayrollService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   readonly context = inject(OfficeContext);
 
   private readonly employees = signal<Employee[]>([]);
@@ -55,10 +57,29 @@ export class PayrollList {
   private readonly toParam = toSignal(this.route.queryParamMap.pipe(map((q) => q.get('to'))), {
     initialValue: null,
   });
+  /** いちばん新しく見せられる月（最新の月の翌月。それより先は実績がないので進めない。11/16） */
+  readonly lastTop = computed(() => shiftMonth(this.latest(), 1));
+  /** いちばん古い月（いちばん早い入社の月。それより前は在籍している人がいないので戻らない） */
+  readonly firstMonth = computed(() => {
+    const hires = this.employees().map((e) => toYearMonth(e.hireDate)).sort();
+    return hires[0] ?? this.lastTop();
+  });
   readonly top = computed(() => {
     const to = this.toParam();
-    return to && MONTH_RE.test(to) ? to : shiftMonth(this.latest(), 1);
+    const want = to && MONTH_RE.test(to) ? to : this.lastTop();
+    return this.clampTop(want);
   });
+
+  /** いちばん上の月を、見せられる範囲に収める（表の12か月が、いちばん古い月を含むところまで） */
+  private clampTop(m: YearMonth): YearMonth {
+    const max = this.lastTop();
+    if (m > max) return max;
+    // 従業員を読み終わるまでは、古い側は収めない（読む前に URL の月を書き換えてしまわないように）
+    if (this.employees().length === 0) return m;
+    const floor = shiftMonth(this.firstMonth(), 11);
+    const min = floor < max ? floor : max;
+    return m < min ? min : m;
+  }
 
   /** 表に出す12か月（上が新しい） */
   private readonly months = computed(() => Array.from({ length: 12 }, (_, i) => shiftMonth(this.top(), -i)));
@@ -86,10 +107,25 @@ export class PayrollList {
     });
   });
 
-  readonly prevTo = computed(() => shiftMonth(this.top(), -12));
+  readonly prevTo = computed(() => this.clampTop(shiftMonth(this.top(), -12)));
+  readonly canPrev = computed(() => this.prevTo() < this.top());
   /** 定時決定の年（6月払いが済んでいれば今年） */
   readonly regularYear = computed(() => (this.latest() ? regularYearOf(this.latest()) : 0));
-  readonly nextTo = computed(() => shiftMonth(this.top(), 12));
+  readonly nextTo = computed(() => this.clampTop(shiftMonth(this.top(), 12)));
+  readonly canNext = computed(() => this.nextTo() > this.top());
+  /** 表のいちばん古い月（見出しに「○年○月〜○年○月」と出す） */
+  readonly bottom = computed(() => shiftMonth(this.top(), -11));
+  readonly thisMonth = toYearMonth(todayLocal());
+
+  /** 年と月を選んだ → その月をいちばん上にする（選んだ月が表に入るように） */
+  goMonth(m: YearMonth): void {
+    const to = this.clampTop(m);
+    void this.router.navigate([], { relativeTo: this.route, queryParams: { to: to === this.lastTop() ? null : to } });
+  }
+
+  monthLabel(m: string): { y: string; m: number } {
+    return { y: m.slice(0, 4), m: Number(m.slice(5)) };
+  }
 
   constructor() {
     // 前の1年・次の1年に移ったら、まだ読んでいない月の索引だけ読む

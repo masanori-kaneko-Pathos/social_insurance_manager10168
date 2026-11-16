@@ -117,3 +117,14 @@ tr.future td {
   flex-wrap: wrap;
   gap: var(--space-md);
 }
+
+/* 前・次・年と月を選ぶ（11/16） */
+.pager {
+  align-items: center;
+}
+
+.pager .disabled {
+  color: var(--color-text-sub);
+  opacity: 0.5;
+  cursor: default;
+}

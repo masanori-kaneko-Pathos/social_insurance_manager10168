@@ -111,21 +111,57 @@
 <!-- 2. あて先 -->
 <section class="card">
   <h2>{{ 'request.step.to' | transloco }}</h2>
+  <!-- 探す・絞る・並べる・ページ（ほかの人の並ぶ表と同じ。選んだ人はページを移っても残る。11/16） -->
+  <app-person-list-bar
+    [departments]="context.current()?.departments ?? []"
+    [(options)]="listOptions"
+    [(page)]="page"
+    [total]="visible().length"
+    [showEntry]="false"
+    [showContract]="false"
+    [extraCount]="accountFilter() === 'all' ? 0 : 1"
+    (cleared)="setAccountFilter('all')"
+  >
+    <fieldset>
+      <legend>{{ 'request.accountFilter.title' | transloco }}</legend>
+      @for (a of ['all', 'linked', 'none']; track a) {
+        <label class="opt"><input type="radio" name="rq-account" [checked]="accountFilter() === a" (change)="setAccountFilter($any(a))" />{{ 'request.accountFilter.' + a | transloco }}</label>
+      }
+    </fieldset>
+  </app-person-list-bar>
   <div class="people-tools">
-    <input class="input" type="search" [placeholder]="'request.searchPeople' | transloco" [value]="search()"
-           (input)="search.set($any($event.target).value)" />
     <button type="button" class="link" (click)="selectVisible(true)">{{ 'request.selectAll' | transloco }}</button>
     <button type="button" class="link" (click)="selectVisible(false)">{{ 'request.clearAll' | transloco }}</button>
     <span class="hint">{{ 'request.selectedCount' | transloco: { count: selected().size } }}</span>
   </div>
-  <div class="people">
-    @for (e of visible(); track e.id) {
-      <label>
-        <input type="checkbox" [checked]="selected().has(e.id)" (change)="toggle(e.id)" />
-        <span>{{ e.employeeNumber ?? '' }} {{ nameOf(e) }}</span>
-        @if (!e.userUid) { <span class="badge">{{ 'request.noAccount' | transloco }}</span> }
-      </label>
-    }
+  <div class="table-wrap">
+    <table class="people-table">
+      <thead>
+        <tr>
+          <th class="check"><span class="sr-only">{{ 'request.selectAll' | transloco }}</span></th>
+          <th><app-sort-header key="number" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.employeeNumber' | transloco }}</app-sort-header></th>
+          <th><app-sort-header key="kana" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.name' | transloco }}</app-sort-header></th>
+          <th><app-sort-header key="dept" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.department' | transloco }}</app-sort-header></th>
+          <th>{{ 'request.accountFilter.title' | transloco }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of shown().rows; track e.id) {
+          <tr [class.on]="selected().has(e.id)" (click)="toggle(e.id)">
+            <td class="check"><input type="checkbox" [checked]="selected().has(e.id)" (click)="$event.stopPropagation()" (change)="toggle(e.id)" [attr.aria-label]="nameOf(e)" /></td>
+            <td class="mono">{{ e.employeeNumber ?? '' }}</td>
+            <td>{{ nameOf(e) }}</td>
+            <td>{{ deptName(e) ?? '—' }}</td>
+            <td>
+              @if (e.userUid) { <span class="sub">{{ 'request.accountFilter.linked' | transloco }}</span> }
+              @else { <span class="badge">{{ 'request.noAccount' | transloco }}</span> }
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="5" class="sub">{{ 'request.noMatch' | transloco }}</td></tr>
+        }
+      </tbody>
+    </table>
   </div>
   @if (selectedNoAccount() > 0) {
     <p class="hint warn">{{ 'request.noAccountWarn' | transloco: { count: selectedNoAccount() } }}</p>

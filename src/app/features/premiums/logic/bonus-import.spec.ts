@@ -25,4 +25,19 @@ describe('bonus-import', () => {
     expect(r.badAmount).toEqual(['L0002']);
     expect(r.amounts.size).toBe(0);
   });
+
+  it('支払日の列があれば、読めた日付を重複なしで返す（11/16）', () => {
+    const r = matchBonusRows(
+      [
+        ['社員番号', '氏名', '賞与額', '支払日'],
+        ['L0001', '', '500000', '2026-12-10'],
+        ['L0002', '', '300000', '2026-12-10'],
+        ['', '鈴木 一郎', '100000', 'よめない'],
+      ],
+      people,
+    );
+    expect(r.paidDates).toEqual(['2026-12-10']);
+    expect(r.amounts.size).toBe(3);
+    expect(matchBonusRows([head, ['L0001', '', '1']], people).paidDates).toEqual([]);
+  });
 });
