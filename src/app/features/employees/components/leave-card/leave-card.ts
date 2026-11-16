@@ -23,6 +23,7 @@ import {
   overlaps,
   toLeaveForm,
 } from '../../logic/leave-form-model';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 const NEW = 'new';
 /** ルールの上限と同じ */
@@ -194,7 +195,7 @@ export class LeaveCard {
       this.changed.emit();
     } catch (err) {
       console.error(err);
-      this.errorKey.set('leave.error.save');
+      this.errorKey.set(errorKeyOf(err, 'leave.error.save'));
     } finally {
       this.saving.set(false);
     }

@@ -28,6 +28,7 @@ import { payrollOf, premiumMonthOfPay } from '../../../office/office-settings';
 import { PartialSaveError, PayrollService } from '../../payroll.service';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 /** 書き出せる期間の上限（月数） */
 const MAX_MONTHS = 24;
 /** 確認画面に出すエラーの行数 */
@@ -137,7 +138,7 @@ export class PayrollImport {
       this.saved = new Map(payrolls.map((p) => [`${p.employeeId}|${p.paidMonth}`, p]));
     } catch (err) {
       console.error(err);
-      this.errorKey.set('payrollCsv.error.load');
+      this.errorKey.set(errorKeyOf(err, 'payrollCsv.error.load'));
     } finally {
       this.loading.set(false);
     }
@@ -245,7 +246,7 @@ export class PayrollImport {
       this.preview.set({ fileName: file.fileName, encoding: file.encoding, read, ...classifyImport(read.items, this.saved) });
     } catch (err) {
       console.error(err);
-      this.errorKey.set('payrollCsv.error.read');
+      this.errorKey.set(errorKeyOf(err, 'payrollCsv.error.read'));
     }
   }
 

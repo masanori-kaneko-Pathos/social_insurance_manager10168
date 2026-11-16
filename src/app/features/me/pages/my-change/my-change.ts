@@ -14,6 +14,7 @@ import { RequestService } from '../../../requests/request.service';
 import { familyQuestions, nameQuestions } from '../../../requests/logic/life-events';
 import { MeHeader } from '../../components/me-header/me-header';
 import { MeContext } from '../../me-context.service';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /** 項目のまとまり（選ぶ画面で見出しをつける） */
 const GROUPS: { key: string; fields: RequestField[] }[] = [
@@ -111,7 +112,7 @@ export class MyChange implements OnInit {
       await this.router.navigate(['/me', 'requests', id]);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('me.error.submit');
+      this.errorKey.set(errorKeyOf(err, 'me.error.submit'));
     } finally {
       this.sending.set(false);
     }

@@ -11,6 +11,7 @@ import { payrollOf } from '../../../office/office-settings';
 import { shiftMonth, todayLocal } from '../../../../shared/utils/date';
 import { PayrollService } from '../../payroll.service';
 import { regularYearOf } from '../../logic/regular';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 interface MonthRow {
   month: string;
@@ -115,7 +116,7 @@ export class PayrollList {
       }
     } catch (err) {
       console.error(err);
-      this.errorKey.set('payroll.error.load');
+      this.errorKey.set(errorKeyOf(err, 'payroll.error.load'));
     } finally {
       this.loading.set(false);
     }

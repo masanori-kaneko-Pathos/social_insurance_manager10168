@@ -76,6 +76,7 @@ import {
   toCoverageForm,
   toggleMonth,
 } from '../../logic/office-form-model';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 /** 法人番号を入れたら法人名も必須 */
 function corporateNameRequired(g: AbstractControl): ValidationErrors | null {
   const num = (g.get('corporateNumber')?.value ?? '').trim();
@@ -785,7 +786,7 @@ export class OfficeForm {
       }
     } catch (err) {
       console.error(err);
-      this.errorKey.set('office.error.save');
+      this.errorKey.set(errorKeyOf(err, 'office.error.save'));
     } finally {
       this.submitting.set(false);
     }

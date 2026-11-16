@@ -45,6 +45,7 @@ import {
   revisionRow,
   toCells,
 } from '../../logic/filing-rows';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /**
  * 届書の一覧：様式と期間を選んで「表示」→ 表で確かめて CSV に書き出す
@@ -171,7 +172,7 @@ export class FilingsPage {
       this.result.set({ kind, period: this.periodText(), rows });
     } catch (err) {
       console.error(err);
-      this.errorKey.set('filing.error.load');
+      this.errorKey.set(errorKeyOf(err, 'filing.error.load'));
     } finally {
       this.loading.set(false);
     }
@@ -387,7 +388,7 @@ export class FilingsPage {
       }));
     } catch (err) {
       console.error(err);
-      this.errorKey.set('filing.error.nenkin');
+      this.errorKey.set(errorKeyOf(err, 'filing.error.nenkin'));
     } finally {
       this.exportingNenkin.set(false);
     }

@@ -59,6 +59,7 @@ import {
   standardView,
   StandardView,
 } from '../../logic/premium-list-view';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -422,7 +423,7 @@ export class PremiumList {
       this.noticeSaved.set(true);
     } catch (err) {
       console.error(err);
-      this.noticeError.set('premiumNotice.error.save');
+      this.noticeError.set(errorKeyOf(err, 'premiumNotice.error.save'));
     } finally {
       this.noticeSaving.set(false);
     }
@@ -445,7 +446,7 @@ export class PremiumList {
       this.bonusPayments.set(bonusPayments);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('premiumList.error.load');
+      this.errorKey.set(errorKeyOf(err, 'premiumList.error.load'));
     } finally {
       this.loading.set(false);
     }

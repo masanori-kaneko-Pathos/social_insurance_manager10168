@@ -25,6 +25,7 @@ import {
   splitForInvite,
   usableInviteOf,
 } from '../../logic/my-page-status';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 interface Row {
   employee: Employee;
@@ -338,7 +339,7 @@ export class MyPageInvites implements OnInit {
       this.invites.set(await this.invitesApi.listEmployeeInvites(officeId));
     } catch (err) {
       console.error(err);
-      this.errorKey.set('myPages.error.load');
+      this.errorKey.set(errorKeyOf(err, 'myPages.error.load'));
     } finally {
       this.loading.set(false);
     }
@@ -431,7 +432,7 @@ export class MyPageInvites implements OnInit {
       this.result.set({ made: made.length, noEmail: noEmail.map((e) => this.nameOf(e)) });
     } catch (err) {
       console.error(err);
-      this.errorKey.set('myPages.error.create');
+      this.errorKey.set(errorKeyOf(err, 'myPages.error.create'));
     } finally {
       this.working.set(false);
     }

@@ -17,6 +17,7 @@ import { OfficeContext } from '../../../office/office-context.service';
 import { adminActions, disposalDate, formatMyNumber, hasNumber, myNumberProblem, normalizeMyNumber } from '../../logic/my-number';
 import { myNumberReason, MyNumberService } from '../../my-number.service';
 import { PasswordGate } from '../password-gate/password-gate';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /** 開いている入力（null ＝ 閉じている） */
 type Mode = 'set' | 'return' | 'refuse' | 'dispose' | 'view' | null;
@@ -104,7 +105,7 @@ export class MyNumberCard {
       );
     } catch (err) {
       console.error(err);
-      this.errorKey.set('myNumber.error.load');
+      this.errorKey.set(errorKeyOf(err, 'myNumber.error.load'));
     } finally {
       this.loading.set(false);
     }
@@ -215,7 +216,7 @@ export class MyNumberCard {
       this.logs.set(all.filter((l) => (l.dependentId ?? null) === dependentId));
     } catch (err) {
       console.error(err);
-      this.errorKey.set('myNumber.error.logs');
+      this.errorKey.set(errorKeyOf(err, 'myNumber.error.logs'));
     }
   }
 

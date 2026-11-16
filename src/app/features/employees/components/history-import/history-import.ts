@@ -27,6 +27,7 @@ import {
   REMUNERATION_HISTORY_FIELDS,
   REMUNERATION_HISTORY_SPEC,
 } from '../../logic/history-csv';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 interface Preview {
   fileName: string;
@@ -148,7 +149,7 @@ export class HistoryImport {
       this.preview.set({ fileName: file.fileName, encoding: file.encoding, read, plan });
     } catch (err) {
       console.error(err);
-      this.errorKey.set('employeeCsv.error.read');
+      this.errorKey.set(errorKeyOf(err, 'employeeCsv.error.read'));
     }
   }
 

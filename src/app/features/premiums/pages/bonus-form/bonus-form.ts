@@ -40,6 +40,7 @@ import { ContractDoc } from '../../../../core/models/contract';
 import { ContractService } from '../../../employees/contract.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { contractAt } from '../../../employees/logic/contract-form-model';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 const DATE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 /** 新規の支給を計算の中で区別するための仮の ID */
 const NEW_ID = '__new__';
@@ -231,7 +232,7 @@ export class BonusForm {
       }
     } catch (err) {
       console.error(err);
-      this.loadErrorKey.set('bonus.error.load');
+      this.loadErrorKey.set(errorKeyOf(err, 'bonus.error.load'));
     } finally {
       this.loading.set(false);
     }
@@ -327,7 +328,7 @@ export class BonusForm {
       this.toast.show('bonus.savedToast', 5000);
     } catch (err) {
       console.error(err);
-      this.saveErrorKey.set('bonus.error.save');
+      this.saveErrorKey.set(errorKeyOf(err, 'bonus.error.save'));
     } finally {
       this.saving.set(false);
     }
@@ -349,7 +350,7 @@ export class BonusForm {
       this.toast.show('common.deleted');
     } catch (err) {
       console.error(err);
-      this.saveErrorKey.set('bonus.error.save');
+      this.saveErrorKey.set(errorKeyOf(err, 'bonus.error.save'));
     } finally {
       this.saving.set(false);
     }

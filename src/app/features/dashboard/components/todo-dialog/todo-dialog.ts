@@ -30,6 +30,7 @@ import {
   buildSave,
 } from '../../logic/todo-actions';
 import { TodoService } from '../../todo.service';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /**
  * To-do をその場で片づける窓（資格取得届・資格喪失届・区分変更届）
@@ -126,7 +127,7 @@ export class TodoDialog implements OnInit {
       }
     } catch (err) {
       console.error(err);
-      this.errorKey.set('todoAction.error.load');
+      this.errorKey.set(errorKeyOf(err, 'todoAction.error.load'));
     } finally {
       this.loading.set(false);
     }
@@ -166,7 +167,7 @@ export class TodoDialog implements OnInit {
       this.close();
     } catch (err) {
       console.error(err);
-      this.errorKey.set('todoAction.error.save');
+      this.errorKey.set(errorKeyOf(err, 'todoAction.error.save'));
     } finally {
       this.saving.set(false);
     }

@@ -36,6 +36,7 @@ import { SortHeader } from '../../../../shared/components/sort-header/sort-heade
 import { defaultListOptions, filterAndSort, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
 import { ContractDoc } from '../../../../core/models/contract';
 import { contractAt } from '../../../employees/logic/contract-form-model';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 interface View {
   employee: Employee;
   result: RegularResult;
@@ -226,7 +227,7 @@ export class RegularPage {
       );
     } catch (err) {
       console.error(err);
-      this.errorKey.set('regular.error.load');
+      this.errorKey.set(errorKeyOf(err, 'regular.error.load'));
     } finally {
       this.loading.set(false);
     }
@@ -324,7 +325,7 @@ export class RegularPage {
       this.savedCount.set(n);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('regular.error.save');
+      this.errorKey.set(errorKeyOf(err, 'regular.error.save'));
     } finally {
       this.saving.set(false);
     }

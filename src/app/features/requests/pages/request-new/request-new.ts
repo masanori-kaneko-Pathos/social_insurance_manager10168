@@ -15,6 +15,7 @@ import { EmployeeService } from '../../../employees/employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import { customQuestion, fieldQuestion, REQUEST_FIELDS, RequestField, templateQuestions } from '../../logic/request-model';
 import { RequestService } from '../../request.service';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /** ルールの上限と同じ */
 const MAX_QUESTIONS = 50;
@@ -105,7 +106,7 @@ export class RequestNew {
       if (pre && list.some((e) => e.id === pre)) this.selected.set(new Set([pre]));
     } catch (err) {
       console.error(err);
-      this.errorKey.set('request.error.load');
+      this.errorKey.set(errorKeyOf(err, 'request.error.load'));
     }
   }
 
@@ -209,7 +210,7 @@ export class RequestNew {
       await this.router.navigate(['/o', officeId, 'requests'], { queryParams: { status: 'open' } });
     } catch (err) {
       console.error(err);
-      this.errorKey.set('request.error.send');
+      this.errorKey.set(errorKeyOf(err, 'request.error.send'));
     } finally {
       this.sending.set(false);
     }

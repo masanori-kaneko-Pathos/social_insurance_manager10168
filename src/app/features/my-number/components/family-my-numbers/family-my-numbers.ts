@@ -7,6 +7,7 @@ import { DependentService } from '../../../employees/dependent.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import { MyNumberService } from '../../my-number.service';
 import { MyNumberCard } from '../my-number-card/my-number-card';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /**
  * 家族（被扶養者）のマイナンバー（管理者だけ。11/12）
@@ -75,7 +76,7 @@ export class FamilyMyNumbers {
       this.selfStatus.set(self?.status ?? null);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('myNumber.error.load');
+      this.errorKey.set(errorKeyOf(err, 'myNumber.error.load'));
     }
   }
 }

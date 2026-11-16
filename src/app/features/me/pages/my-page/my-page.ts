@@ -12,6 +12,7 @@ import { FamilyMyNumberSubmit } from '../../../my-number/components/family-my-nu
 import { MeHeader } from '../../components/me-header/me-header';
 import { MeContext } from '../../me-context.service';
 import { MeInboxService } from '../../me-inbox.service';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /** 保険料を並べる月数（今月を含めて） */
 const PREMIUM_MONTHS = 6;
@@ -74,7 +75,7 @@ export class MyPage implements OnInit {
       this.requests.set(await this.requestsApi.listFor(ref.officeId, ref.employeeId));
     } catch (err) {
       console.error(err);
-      this.listError.set('me.error.lists');
+      this.listError.set(errorKeyOf(err, 'me.error.lists'));
     }
   }
 

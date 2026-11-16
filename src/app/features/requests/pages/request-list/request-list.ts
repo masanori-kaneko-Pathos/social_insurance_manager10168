@@ -10,6 +10,7 @@ import { OfficeContext } from '../../../office/office-context.service';
 import { MyPageInvites } from '../../../invites/components/my-page-invites/my-page-invites';
 import { sortRequests } from '../../logic/request-model';
 import { RequestService } from '../../request.service';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 type Filter = RequestStatus | 'all';
 
@@ -72,7 +73,7 @@ export class RequestList {
       this.employees.set(new Map(employees.map((e) => [e.id, e])));
     } catch (err) {
       console.error(err);
-      this.errorKey.set('request.error.load');
+      this.errorKey.set(errorKeyOf(err, 'request.error.load'));
     } finally {
       this.loading.set(false);
     }

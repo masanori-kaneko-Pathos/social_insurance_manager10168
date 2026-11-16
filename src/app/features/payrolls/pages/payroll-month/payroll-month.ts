@@ -40,6 +40,7 @@ import { Pager } from '../../../../shared/components/pager/pager';
 import { SortHeader } from '../../../../shared/components/sort-header/sort-header';
 import { defaultListOptions, filterAndSort, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
 import { ContractDoc, EMPLOYMENT_TYPES } from '../../../../core/models/contract';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 type RowForm = FormGroup<{
   cash: FormControl<string>;
   fixed: FormControl<string>;
@@ -248,7 +249,7 @@ export class PayrollMonth {
       void this.loadContracts(office.id, employees);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('payroll.error.load');
+      this.errorKey.set(errorKeyOf(err, 'payroll.error.load'));
     } finally {
       this.loading.set(false);
     }
@@ -379,7 +380,7 @@ export class PayrollMonth {
       this.savedCount.set(changes.length);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('payroll.error.save');
+      this.errorKey.set(errorKeyOf(err, 'payroll.error.save'));
     } finally {
       this.saving.set(false);
     }

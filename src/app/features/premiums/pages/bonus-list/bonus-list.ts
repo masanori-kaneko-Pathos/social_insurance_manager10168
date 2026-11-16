@@ -11,6 +11,7 @@ import { RateService } from '../../../rates/rate.service';
 import { BonusService } from '../../bonus.service';
 import { BonusRow, buildBonusRow, collectBonusResults } from '../../logic/bonus-rows';
 import { officeTotals } from '../../logic/premium-core';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /** 開いた支給の、1人ずつの行 */
 interface PersonRow {
@@ -115,7 +116,7 @@ export class BonusList {
       this.tables.set(tables);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('bonus.error.load');
+      this.errorKey.set(errorKeyOf(err, 'bonus.error.load'));
     } finally {
       this.loading.set(false);
     }

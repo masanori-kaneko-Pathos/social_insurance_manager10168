@@ -26,6 +26,7 @@ import { calcMonthly } from '../../logic/calc-monthly';
 import { splitContribution } from '../../logic/premium-core';
 import { formatMilli } from '../../logic/rounding';
 import { PremiumBreakdown } from '../premium-breakdown/premium-breakdown';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /** 保険料の計算に要る事業所の設定（事業所の文書そのものか、従業員向けに写したもの） */
 export type OfficeForPremium = Pick<Office, 'id' | 'prefecture' | 'healthInsurer' | 'insurerHistory' | 'premium'>;
@@ -130,7 +131,7 @@ export class PremiumCard implements OnInit {
       this.remunerations.set(rems);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('premium.error.load');
+      this.errorKey.set(errorKeyOf(err, 'premium.error.load'));
     } finally {
       this.loading.set(false);
     }

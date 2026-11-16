@@ -9,6 +9,7 @@ import { joinUrl } from '../../../invites/logic/invite';
 import { OfficeContext } from '../../../office/office-context.service';
 import { OfficeService } from '../../../office/office.service';
 import { MemberAction, MemberService, MemberView, reasonOf } from '../../member.service';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -64,7 +65,7 @@ export class MembersPage implements OnInit {
       this.invites.set(invites);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('members.error.load');
+      this.errorKey.set(errorKeyOf(err, 'members.error.load'));
     } finally {
       this.loading.set(false);
     }
@@ -113,7 +114,7 @@ export class MembersPage implements OnInit {
       this.email.set('');
     } catch (err) {
       console.error(err);
-      this.errorKey.set('members.error.invite');
+      this.errorKey.set(errorKeyOf(err, 'members.error.invite'));
     } finally {
       this.busy.set(null);
     }
@@ -129,7 +130,7 @@ export class MembersPage implements OnInit {
       if (this.created()?.code === i.code) this.created.set(null);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('members.error.revoke');
+      this.errorKey.set(errorKeyOf(err, 'members.error.revoke'));
     } finally {
       this.busy.set(null);
     }

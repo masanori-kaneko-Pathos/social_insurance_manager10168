@@ -25,6 +25,7 @@ import {
 } from '../../logic/revision-rows';
 import { PayrollService } from '../../payroll.service';
 import { RevisionService } from '../../revision.service';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 interface View {
   key: string; // 行の目印（従業員ID・種類・起算月）
@@ -146,7 +147,7 @@ export class RevisionsPage {
       this.views.set(views);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('revision.error.load');
+      this.errorKey.set(errorKeyOf(err, 'revision.error.load'));
     } finally {
       this.loading.set(false);
     }
@@ -276,7 +277,7 @@ export class RevisionsPage {
       this.savedKey.set('revision.saved');
     } catch (err) {
       console.error(err);
-      this.errorKey.set('revision.error.save');
+      this.errorKey.set(errorKeyOf(err, 'revision.error.save'));
     } finally {
       this.saving.set(null);
     }

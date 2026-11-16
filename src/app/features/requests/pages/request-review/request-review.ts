@@ -8,6 +8,7 @@ import { OfficeContext } from '../../../office/office-context.service';
 import { AnswerView } from '../../components/answer-view/answer-view';
 import { currentValue, planApply, REQUEST_FIELDS } from '../../logic/request-model';
 import { RequestService } from '../../request.service';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /**
  * 依頼・申請の確認：今の値と答えを並べ、承認（従業員の情報に書き込む）か差し戻し（理由つき）
@@ -69,7 +70,7 @@ export class RequestReview {
       if (r) this.employee.set(await this.employeesApi.getFull(officeId, r.employeeId));
     } catch (err) {
       console.error(err);
-      this.errorKey.set('request.error.load');
+      this.errorKey.set(errorKeyOf(err, 'request.error.load'));
     } finally {
       this.loading.set(false);
     }
@@ -87,7 +88,7 @@ export class RequestReview {
       await this.load(officeId, r.id);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('request.error.approve');
+      this.errorKey.set(errorKeyOf(err, 'request.error.approve'));
     } finally {
       this.working.set(false);
     }
@@ -106,7 +107,7 @@ export class RequestReview {
       await this.load(officeId, r.id);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('request.error.reject');
+      this.errorKey.set(errorKeyOf(err, 'request.error.reject'));
     } finally {
       this.working.set(false);
     }
@@ -122,7 +123,7 @@ export class RequestReview {
       await this.router.navigate(['/o', officeId, 'requests']);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('request.error.delete');
+      this.errorKey.set(errorKeyOf(err, 'request.error.delete'));
       this.working.set(false);
     }
   }

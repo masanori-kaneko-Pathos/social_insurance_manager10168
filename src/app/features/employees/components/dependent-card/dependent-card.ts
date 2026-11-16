@@ -39,6 +39,7 @@ import {
   startReasonsOf,
   toDependentForm,
 } from '../../logic/dependent-form-model';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /**
  * 扶養家族（被扶養者（異動）届・第3号被保険者関係届の材料）
@@ -161,7 +162,7 @@ export class DependentCard implements OnInit {
       );
     } catch (err) {
       console.error(err);
-      this.errorKey.set('dependent.error.load');
+      this.errorKey.set(errorKeyOf(err, 'dependent.error.load'));
     } finally {
       this.loading.set(false);
     }
@@ -218,7 +219,7 @@ export class DependentCard implements OnInit {
       this.changed.emit(); // 詳細画面が従業員を読み直す → insuredIncome も変わる
     } catch (err) {
       console.error(err);
-      this.errorKey.set('dependent.error.save');
+      this.errorKey.set(errorKeyOf(err, 'dependent.error.save'));
     } finally {
       this.saving.set(false);
     }
@@ -274,7 +275,7 @@ export class DependentCard implements OnInit {
       await this.load();
     } catch (err) {
       console.error(err);
-      this.errorKey.set('dependent.error.save');
+      this.errorKey.set(errorKeyOf(err, 'dependent.error.save'));
     } finally {
       this.saving.set(false);
     }
@@ -290,7 +291,7 @@ export class DependentCard implements OnInit {
       await this.load();
     } catch (err) {
       console.error(err);
-      this.errorKey.set('dependent.error.delete');
+      this.errorKey.set(errorKeyOf(err, 'dependent.error.delete'));
     } finally {
       this.saving.set(false);
     }

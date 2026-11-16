@@ -20,7 +20,11 @@
     "yes": "Yes",
     "no": "No",
     "next": "Next:",
-    "deleted": "Deleted"
+    "deleted": "Deleted",
+    "error": {
+      "permission": "You do not have permission for this. If your role has changed, reload the page. If it continues, ask an administrator of the office.",
+      "offline": "Could not reach the server. Check your internet connection and try again."
+    }
   },
   "auth": {
     "password": {

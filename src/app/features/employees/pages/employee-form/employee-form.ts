@@ -66,6 +66,7 @@ import { addressChanges } from '../../logic/address-filing';
 import { OFFICER_CHECKS, OFFICER_TYPES } from '../../../../core/models/employee';
 import { orgOf } from '../../logic/employee-form-model';
 import { judgeOfficer, OfficerJudgement } from '../../logic/officer';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 const NOT_BLANK = Validators.pattern(/\S/);
 
 /** 全角を半角にしてから形式を見る（空欄は通す） */
@@ -641,7 +642,7 @@ export class EmployeeForm {
       this.syncCert();
     } catch (err) {
       console.error(err);
-      this.errorKey.set('employee.error.load');
+      this.errorKey.set(errorKeyOf(err, 'employee.error.load'));
     } finally {
       this.loading.set(false);
     }
@@ -738,7 +739,7 @@ export class EmployeeForm {
       await this.router.navigate(['/o', officeId, 'employees', id]);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('employee.error.save');
+      this.errorKey.set(errorKeyOf(err, 'employee.error.save'));
     } finally {
       this.submitting.set(false);
     }

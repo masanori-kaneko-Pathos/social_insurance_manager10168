@@ -11,6 +11,7 @@ import { formatHours } from '../../../../shared/utils/number';
 import { employedDuring, latestPaidMonth, periodOf, suggestDays } from '../../logic/payroll-rows';
 import { payrollOf } from '../../../office/office-settings';
 import { PayrollService } from '../../payroll.service';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /**
  * 従業員の詳細：給与の実績（直近12件）
@@ -53,7 +54,7 @@ export class PayrollCard {
       this.all.set(await this.api.listOfEmployee(office.id, employeeId));
     } catch (err) {
       console.error(err);
-      this.errorKey.set('payroll.error.load');
+      this.errorKey.set(errorKeyOf(err, 'payroll.error.load'));
     } finally {
       this.loading.set(false);
     }

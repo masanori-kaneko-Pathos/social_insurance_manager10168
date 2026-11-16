@@ -21,6 +21,7 @@ import {
   overseasWarnings,
   toOverseasForm,
 } from '../../logic/overseas';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 const NEW = 'new';
 /** ルールの上限と同じ */
@@ -174,7 +175,7 @@ export class OverseasCard {
       this.changed.emit();
     } catch (err) {
       console.error(err);
-      this.errorKey.set('overseas.error.save');
+      this.errorKey.set(errorKeyOf(err, 'overseas.error.save'));
     } finally {
       this.saving.set(false);
     }

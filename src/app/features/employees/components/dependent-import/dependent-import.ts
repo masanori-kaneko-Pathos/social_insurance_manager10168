@@ -18,6 +18,7 @@ import {
   personKey,
   planDependentImport,
 } from '../../logic/dependent-csv';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 interface Preview {
   fileName: string;
@@ -136,7 +137,7 @@ export class DependentImport {
       this.preview.set({ fileName: file.fileName, encoding: file.encoding, rows });
     } catch (err) {
       console.error(err);
-      this.errorKey.set('employeeCsv.error.read');
+      this.errorKey.set(errorKeyOf(err, 'employeeCsv.error.read'));
     }
   }
 
@@ -162,7 +163,7 @@ export class DependentImport {
       this.loaded.set(null);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('dependentCsv.error.save');
+      this.errorKey.set(errorKeyOf(err, 'dependentCsv.error.save'));
       this.doneCount.set(done);
     } finally {
       this.saving.set(false);

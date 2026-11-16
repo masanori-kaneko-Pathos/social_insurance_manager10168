@@ -19,6 +19,7 @@ import { RateService } from '../../../rates/rate.service';
 import { RemunerationService } from '../../remuneration.service';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 type Kind = 'health' | 'pension';
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -122,7 +123,7 @@ export class RemunerationCard implements OnInit {
       this.gradeTables.set(tables);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('remuneration.error.load');
+      this.errorKey.set(errorKeyOf(err, 'remuneration.error.load'));
     } finally {
       this.loading.set(false);
     }
@@ -236,7 +237,7 @@ export class RemunerationCard implements OnInit {
       this.changed.emit();
     } catch (err) {
       console.error(err);
-      this.errorKey.set('remuneration.error.save');
+      this.errorKey.set(errorKeyOf(err, 'remuneration.error.save'));
     } finally {
       this.saving.set(false);
     }
@@ -253,7 +254,7 @@ export class RemunerationCard implements OnInit {
       this.changed.emit();
     } catch (err) {
       console.error(err);
-      this.errorKey.set('remuneration.error.save');
+      this.errorKey.set(errorKeyOf(err, 'remuneration.error.save'));
     } finally {
       this.saving.set(false);
     }

@@ -5,6 +5,7 @@ import { EmployeeFull } from '../../core/models/employee';
 import { OfficeForEmployeesDoc } from '../../core/models/office';
 import { EmployeeService } from '../employees/employee.service';
 import { OfficeService } from '../office/office.service';
+import { errorKeyOf } from '../../shared/utils/error-key';
 
 export type MyOffice = OfficeForEmployeesDoc & { id: string };
 
@@ -46,7 +47,7 @@ export class MeContext {
       if (!employee) this.errorKey.set('me.error.noEmployee');
     } catch (err) {
       console.error(err);
-      this.errorKey.set('me.error.load');
+      this.errorKey.set(errorKeyOf(err, 'me.error.load'));
     } finally {
       this.loading.set(false);
     }

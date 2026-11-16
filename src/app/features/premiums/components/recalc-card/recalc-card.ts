@@ -15,6 +15,7 @@ import { RateService } from '../../../rates/rate.service';
 import { formatMilli } from '../../logic/rounding';
 import { periodOf, recalc, RecalcResult } from '../../logic/recalc';
 import { RecalcService } from '../../recalc.service';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /** 画面の1行：何月から・何月まで（空 ＝ 今も）・報酬月額（「加入していない」なら null） */
 interface PeriodRow {
@@ -99,7 +100,7 @@ export class RecalcCard implements OnInit {
       this.saved.set(saved);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('recalc.error.load');
+      this.errorKey.set(errorKeyOf(err, 'recalc.error.load'));
     } finally {
       this.loading.set(false);
     }
@@ -228,7 +229,7 @@ export class RecalcCard implements OnInit {
       this.saved.set(await this.api.list(office.id, this.employee().id));
     } catch (err) {
       console.error(err);
-      this.formError.set('recalc.error.save');
+      this.formError.set(errorKeyOf(err, 'recalc.error.save'));
     } finally {
       this.saving.set(false);
     }
@@ -242,7 +243,7 @@ export class RecalcCard implements OnInit {
       this.saved.update((list) => list.filter((x) => x.id !== id));
     } catch (err) {
       console.error(err);
-      this.errorKey.set('recalc.error.delete');
+      this.errorKey.set(errorKeyOf(err, 'recalc.error.delete'));
     }
   }
 

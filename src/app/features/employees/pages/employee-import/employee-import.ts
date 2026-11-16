@@ -30,6 +30,7 @@ import {
 import { reasonParams } from '../../logic/classify';
 import { DependentImport } from '../../components/dependent-import/dependent-import';
 import { HistoryImport } from '../../components/history-import/history-import';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /** 何を取り込むか：従業員（1行1人）／扶養家族（1行1人。11/13）／契約の履歴／標準報酬の履歴（登録済みの人に足す） */
 export type ImportMode = 'employees' | 'dependents' | 'contract' | 'remuneration';
@@ -269,7 +270,7 @@ export class EmployeeImport {
       this.skipErrors.set(false);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('employeeCsv.error.read');
+      this.errorKey.set(errorKeyOf(err, 'employeeCsv.error.read'));
     }
   }
 

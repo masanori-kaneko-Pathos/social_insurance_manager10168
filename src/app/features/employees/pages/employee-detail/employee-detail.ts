@@ -54,6 +54,7 @@ import {
 } from '../../logic/employee-overview';
 import { exemptMonth } from '../../logic/leave';
 import { RemunerationService } from '../../remuneration.service';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 type Mode = 'fiscal' | 'calendar' | 'last12';
 /** 「＋登録」のメニューから足すカード（中身がないときは出さない） */
@@ -263,7 +264,7 @@ export class EmployeeDetail {
       else this.errorKey.set('employee.error.notFound');
     } catch (err) {
       console.error(err);
-      this.errorKey.set('employee.error.load');
+      this.errorKey.set(errorKeyOf(err, 'employee.error.load'));
     } finally {
       this.loading.set(false);
     }

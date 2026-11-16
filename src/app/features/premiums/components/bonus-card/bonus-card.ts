@@ -9,6 +9,7 @@ import { RateTables } from '../../../rates/logic/pick-rates';
 import { RateService } from '../../../rates/rate.service';
 import { BonusService } from '../../bonus.service';
 import { BonusRow, buildBonusRow } from '../../logic/bonus-rows';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 interface CardRow extends BonusRow {
   payment: BonusPayment;
@@ -67,7 +68,7 @@ export class BonusCard implements OnInit {
       this.tables.set(tables);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('bonus.error.load');
+      this.errorKey.set(errorKeyOf(err, 'bonus.error.load'));
     } finally {
       this.loading.set(false);
     }

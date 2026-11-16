@@ -8,6 +8,7 @@ import { sortRequests } from '../../../requests/logic/request-model';
 import { RequestService } from '../../../requests/request.service';
 import { InviteService } from '../../invite.service';
 import { inviteState, inviteUrl } from '../../logic/invite';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -75,7 +76,7 @@ export class MyPageCard implements OnInit {
       this.requests.set(requests);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('myPageCard.error.load');
+      this.errorKey.set(errorKeyOf(err, 'myPageCard.error.load'));
     } finally {
       this.loading.set(false);
     }
@@ -91,7 +92,7 @@ export class MyPageCard implements OnInit {
       this.list.update((l) => [inv, ...l]);
     } catch (err) {
       console.error(err);
-      this.errorKey.set('myPageCard.error.create');
+      this.errorKey.set(errorKeyOf(err, 'myPageCard.error.create'));
     } finally {
       this.working.set(false);
     }
@@ -106,7 +107,7 @@ export class MyPageCard implements OnInit {
       this.list.update((l) => l.filter((i) => i.code !== code));
     } catch (err) {
       console.error(err);
-      this.errorKey.set('myPageCard.error.revoke');
+      this.errorKey.set(errorKeyOf(err, 'myPageCard.error.revoke'));
     } finally {
       this.working.set(false);
     }

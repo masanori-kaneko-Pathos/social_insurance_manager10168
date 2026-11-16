@@ -14,6 +14,7 @@ import {
 import { RequestService } from '../../../requests/request.service';
 import { MeHeader } from '../../components/me-header/me-header';
 import { MeContext } from '../../me-context.service';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /** マイページ：依頼に答える（まだ・差し戻し）／出したものを見る */
 @Component({
@@ -60,7 +61,7 @@ export class MyRequest implements OnInit {
       this.answers.set({ ...(r?.answers ?? {}) }); // 差し戻しのときは、前の答えから直せる
     } catch (err) {
       console.error(err);
-      this.errorKey.set('me.error.request');
+      this.errorKey.set(errorKeyOf(err, 'me.error.request'));
     } finally {
       this.loading.set(false);
     }
@@ -81,7 +82,7 @@ export class MyRequest implements OnInit {
       await this.reload();
     } catch (err) {
       console.error(err);
-      this.errorKey.set('me.error.submit');
+      this.errorKey.set(errorKeyOf(err, 'me.error.submit'));
     } finally {
       this.sending.set(false);
     }

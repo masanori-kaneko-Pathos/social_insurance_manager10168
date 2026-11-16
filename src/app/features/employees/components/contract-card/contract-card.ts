@@ -21,6 +21,7 @@ import {
 import { ContractFields } from '../contract-fields/contract-fields';
 import { ImportFileError } from '../../../../shared/import/parse';
 import { ContractCandidate, ContractPdfRead, readContractText } from '../../logic/contract-pdf';
+import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /** 契約書の PDF の上限（読み取りの部品と同じ 5MB） */
 const MAX_PDF_BYTES = 5 * 1024 * 1024;
@@ -130,7 +131,7 @@ export class ContractCard implements OnInit {
       this.rows.set(await this.api.list(officeId, this.employee().id));
     } catch (err) {
       console.error(err);
-      this.errorKey.set('contract.error.load');
+      this.errorKey.set(errorKeyOf(err, 'contract.error.load'));
     } finally {
       this.loading.set(false);
     }
@@ -264,7 +265,7 @@ export class ContractCard implements OnInit {
       this.changed.emit();
     } catch (err) {
       console.error(err);
-      this.errorKey.set('contract.error.save');
+      this.errorKey.set(errorKeyOf(err, 'contract.error.save'));
     } finally {
       this.saving.set(false);
     }
@@ -281,7 +282,7 @@ export class ContractCard implements OnInit {
       this.changed.emit();
     } catch (err) {
       console.error(err);
-      this.errorKey.set('contract.error.delete');
+      this.errorKey.set(errorKeyOf(err, 'contract.error.delete'));
     } finally {
       this.saving.set(false);
     }
