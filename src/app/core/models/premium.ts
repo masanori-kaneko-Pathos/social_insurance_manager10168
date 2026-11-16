@@ -33,7 +33,9 @@ export interface PremiumLine {
   grade: number | null; // 等級（賞与は null）
   rate: PickedRate; // 使った料率（本人分・会社分・いつからの率か）
   totalMilli: Milli; // 全額（本人分＋会社分）
-  employeeMilli: Milli; // 本人分（端数処理の前）
+  employeeMilli: Milli; // 本人分（端数処理の前。保険料調整制度で軽減したあとの額）
+  /** 保険料調整制度で本人分から引いた額（0.001円単位。会社が一時的に多く払う。なければ省く。11/16） */
+  reductionMilli?: Milli;
 }
 
 /** 端数処理をまとめて行う単位（合算なら 健保＋介護＋支援金 で1つ） */

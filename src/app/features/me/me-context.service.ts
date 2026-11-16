@@ -45,11 +45,23 @@ export class MeContext {
       this.employee.set(employee);
       this.loadedFor = uid;
       if (!employee) this.errorKey.set('me.error.noEmployee');
+      else await this.syncName(employee);
     } catch (err) {
       console.error(err);
       this.errorKey.set(errorKeyOf(err, 'me.error.load'));
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /**
+   * 表示名は会社が登録した氏名にそろえる（11/16）
+   * 従業員は招待で登録するときに表示名を入れない（会社が氏名を決めているので、入れてもらう意味がない）。
+   * 登録の直後や、会社が氏名を直したあとに、マイページを開いたときに合わせる（失敗しても画面は止めない）
+   */
+  private async syncName(e: EmployeeFull): Promise<void> {
+    const name = `${e.lastName} ${e.firstName}`.trim().slice(0, 50);
+    if (!name || this.auth.profile()?.displayName === name) return;
+    await this.auth.changeDisplayName(name).catch((err) => console.error(err));
   }
 }

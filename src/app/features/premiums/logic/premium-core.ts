@@ -12,6 +12,7 @@ import {
 } from '../../../core/models/premium';
 import { PickedRate } from '../../../core/models/rates';
 import { floorYen, milliOf, roundEmployee, yenToMilli } from './rounding';
+import { reductionMilli, RatioBp } from './premium-adjustment';
 
 /** 1つの保険料の計算過程 */
 export function makeLine(
@@ -19,15 +20,14 @@ export function makeLine(
   base: number,
   grade: number | null,
   rate: PickedRate,
+  /** 保険料調整制度の軽減割合（健保・厚年だけ。省くと 0。11/16） */
+  adjustBp: RatioBp = 0,
 ): PremiumLine {
-  return {
-    part,
-    base,
-    grade,
-    rate,
-    totalMilli: milliOf(base, rate.employee + rate.employer),
-    employeeMilli: milliOf(base, rate.employee),
-  };
+  const totalMilli = milliOf(base, rate.employee + rate.employer);
+  const employeeMilli = milliOf(base, rate.employee);
+  if (adjustBp <= 0) return { part, base, grade, rate, totalMilli, employeeMilli };
+  const reduction = Math.min(employeeMilli, reductionMilli(totalMilli, adjustBp));
+  return { part, base, grade, rate, totalMilli, employeeMilli: employeeMilli - reduction, reductionMilli: reduction };
 }
 
 function makeGroup(lines: PremiumLine[], options: PremiumOptions): PremiumGroup {

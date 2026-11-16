@@ -48,15 +48,6 @@
 
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <div class="field">
-          <label for="displayName">{{ 'auth.field.displayName' | transloco }}</label>
-          <input id="displayName" class="input" type="text" formControlName="displayName" autocomplete="name"
-                 [class.is-invalid]="showError('displayName')" />
-          @if (showError('displayName')) {
-            <span class="field-error">{{ 'auth.validation.required' | transloco }}</span>
-          }
-        </div>
-
-        <div class="field">
           <label for="email">{{ 'auth.field.email' | transloco }}</label>
           <input id="email" class="input" type="email" formControlName="email" autocomplete="email"
                  [class.is-invalid]="showError('email')" />

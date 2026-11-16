@@ -20,7 +20,7 @@ function passwordMatch(group: AbstractControl): ValidationErrors | null {
   return pw && confirm && pw !== confirm ? { passwordMismatch: true } : null;
 }
 
-type FieldName = 'displayName' | 'email' | 'password' | 'passwordConfirm';
+type FieldName = 'email' | 'password' | 'passwordConfirm';
 
 /**
  * 招待のリンクから開く画面：従業員のマイページのアカウントを作る（/invite/:officeId/:code）
@@ -70,7 +70,6 @@ export class InviteAccept {
 
   readonly form = this.fb.nonNullable.group(
     {
-      displayName: ['', [Validators.required, Validators.pattern(/\S/), Validators.maxLength(50)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.pattern(PASSWORD_RULE)]],
       passwordConfirm: ['', [Validators.required]],
@@ -117,9 +116,10 @@ export class InviteAccept {
       this.form.markAllAsTouched();
       return;
     }
-    const { displayName, email, password } = this.form.getRawValue();
+    const { email, password } = this.form.getRawValue();
     await this.run(async () => {
-      await this.auth.createAuthUser(email.trim(), password, displayName.trim());
+      // 表示名は入れてもらわない（会社が登録した氏名を、マイページを開いたときに入れる。11/16）。それまではアドレスの @ の前
+      await this.auth.createAuthUser(email.trim(), password, placeholderName(email));
       const inv = await this.invites.get(this.officeId, this.code);
       this.invite.set(inv);
       if (!inv) throw new InviteRejected('notFound');
@@ -151,7 +151,7 @@ export class InviteAccept {
   private async finish(): Promise<void> {
     const user = this.auth.user();
     if (!user) return;
-    const name = user.displayName || this.form.getRawValue().displayName.trim() || (user.email ?? '');
+    const name = user.displayName || placeholderName(user.email ?? '');
     await this.invites.accept(this.officeId, this.code, user, name, this.language.lang() as Lang);
     await this.auth.reloadProfile();
     await this.router.navigateByUrl('/me');
@@ -177,4 +177,9 @@ function errorKeyOf(err: unknown): string {
   if (err instanceof InviteRejected) return `invite.error.${err.reason}`;
   if ((err as { code?: string })?.code === 'permission-denied') return 'invite.error.denied';
   return toAuthErrorKey(err);
+}
+
+/** 氏名が入るまでの仮の表示名（アドレスの @ の前。users のルールで空は不可、50文字まで） */
+function placeholderName(email: string): string {
+  return (email.trim().split('@')[0] || email.trim() || '-').slice(0, 50);
 }

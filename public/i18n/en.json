@@ -191,8 +191,8 @@
         "retireNoVoluntary": "Voluntary continuation is not possible because the person was not continuously covered for 2 months. Guide them to National Health Insurance or becoming a family member's dependent. For pension, if there is no next employer, enroll in the National Pension at the municipality. Dismiss with \"Checked\" after explaining.",
         "name": "The name changed on {{date}} (the registered name has been updated). Automatic updates via the link between My Number and the basic pension number may not apply to this person, so check whether the \"Insured person name change notification\" is needed and, if so, file it promptly.",
         "dependentChange": {
-          "increase": "A family member was reported as joining on {{date}}. Check whether they qualify as a dependent; if so, register them on the dependents card and file the \"Dependent (change) notification\" within 5 days (for a spouse, the National Pension category 3 notification uses the same form).",
-          "decrease": "A family member was reported as leaving on {{date}} (they may no longer be a dependent). Enter the end date on the dependents card and file the \"Dependent (change) notification\" within 5 days. Collect the eligibility certificate if one was issued."
+          "increase": "On {{date}}, the employee applied saying a family member may become a dependent. Check eligibility; if so, register them on the dependents card and file the Dependent Change Report within 5 days (for a spouse, the National Pension Category 3 notification uses the same form).",
+          "decrease": "On {{date}}, the employee applied saying a dependent may no longer qualify. Enter the end date on the dependents card and file the Dependent Change Report within 5 days. Collect the eligibility certificate if one was issued."
         },
         "overseasCertificate": "The Japanese certificate of coverage for the assignment in {{country}} expires on {{date}}. To continue the assignment, apply for an extension before it expires (the other country must approve). Otherwise, the employee returns to Japan or switches to the local system (if the Japanese company stops paying salary, a loss-of-coverage notification is also needed in Japan). Once the extension certificate is issued, enter the new end date and this item disappears.",
         "overseasPayAbroad": "Assigned to {{country}} since {{date}} and paid only by the overseas company, but still insured in Japan. If the Japanese company bears no salary (such as a family allowance at home), the employment relationship is regarded as ended and a loss-of-coverage notification is needed (the loss date is usually the start of the assignment). If you confirm that the Japanese company bears salary and coverage continues, dismiss with \"Checked\".",
@@ -2861,7 +2861,7 @@
     "premiumHint": "Premiums are calculated as standard monthly remuneration (grade) × rate. Click a month to see the formula. If it differs from the payroll deduction, ask the person in charge.",
     "noOfficeCopy": "Premiums are not ready yet (ask the person in charge to save the office settings once).",
     "profile": "My information",
-    "fixInfo": "Apply when something changes",
+    "fixInfo": "Apply for a change",
     "name": "Name",
     "health": "Health insurance",
     "pension": "Employees' pension",
@@ -2910,16 +2910,19 @@
       "firstKana": "New given name in katakana (leave empty if unchanged)",
       "date": "Date of change"
     },
-    "familyChanged": "A family member joined or left (marriage, birth, employment, etc.)",
+    "familyChanged": "Change in family information (marriage, birth, employment, moving out, etc.)",
     "familyChangedHint": "The company checks income and living arrangements before adding or removing dependents. The company may ask you for documents or information later.",
     "family": {
-      "kind": "Joined / left",
-      "increase": "Joined",
-      "decrease": "Left",
+      "kind": "What changed",
+      "increase": "A family member may become a dependent (marriage, birth, etc.)",
+      "decrease": "A dependent may no longer qualify (employment, moving out, death, etc.)",
       "name": "Family member's name",
       "relation": "Relationship (spouse, child, etc.)",
       "date": "Date (marriage, birth, employment, etc.)",
       "note": "Note (optional)"
+    },
+    "wholeChange": {
+      "bankAccount": "Change the salary account (enter everything from the bank name)"
     }
   },
   "todoAction": {
@@ -3220,7 +3223,8 @@
         "owner": "You are the owner of an office, so you cannot delete your account. Transfer the owner role first.",
         "employee": "Employee accounts cannot be deleted."
       }
-    }
+    },
+    "employeeNameNote": "Your My Page name is the name registered by your employer. If your name changes, request the change from \"Request a change\" on My Page."
   },
   "home": {
     "menuTitle": "Frequently used",

@@ -13,8 +13,13 @@
     @for (g of groups; track g.key) {
       <h3>{{ 'me.group.' + g.key | transloco }}</h3>
       <div class="fields">
-        @for (f of g.fields; track f) {
-          <label class="check"><input type="checkbox" [checked]="chosen().has(f)" (change)="toggle(f)" />{{ 'request.field.' + f | transloco }}</label>
+        @if (g.whole) {
+          <!-- 口座は1つずつではなく、まとめて変える（銀行名から全部入れる。11/16） -->
+          <label class="check"><input type="checkbox" [checked]="allChosen(g.fields)" (change)="toggleAll(g.fields, $any($event.target).checked)" />{{ 'me.wholeChange.' + g.key | transloco }}</label>
+        } @else {
+          @for (f of g.fields; track f) {
+            <label class="check"><input type="checkbox" [checked]="chosen().has(f)" (change)="toggle(f)" />{{ 'request.field.' + f | transloco }}</label>
+          }
         }
       </div>
     }

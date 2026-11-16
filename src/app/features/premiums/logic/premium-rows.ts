@@ -15,6 +15,7 @@ import { shiftMonth, YearMonth } from '../../../shared/utils/date';
 import { LeaveHolder } from '../../employees/logic/leave';
 import { latest } from '../../rates/logic/pick-rates';
 import { calcMonthly, RemunerationLike } from './calc-monthly';
+import { AdjustmentInput } from './premium-adjustment';
 import { PremiumSplit, splitContribution } from './premium-core';
 
 export type RowState = 'ok' | 'none' | 'missing' | 'error' | 'exempt';
@@ -40,6 +41,8 @@ export interface RowInput {
   remunerations: RemunerationLike[];
   ratesFor: (month: YearMonth) => RatesForMonth;
   options: PremiumOptions;
+  /** 保険料調整制度の軽減割合（月ごと。省くと軽減なし。11/16） */
+  adjustmentFor?: (month: YearMonth) => AdjustmentInput | null;
 }
 
 const HEALTH_PARTS: PremiumPart[] = ['health', 'care', 'childSupport'];
@@ -55,6 +58,7 @@ function calcSafe(
       remunerations: input.remunerations,
       rates: input.ratesFor(month),
       options: input.options,
+      adjustment: input.adjustmentFor?.(month) ?? null,
     });
     if (result.exempt) return { state: 'exempt', result };
     if (result.missing.length > 0) return { state: 'missing', result };

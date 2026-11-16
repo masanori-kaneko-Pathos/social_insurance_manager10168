@@ -20,6 +20,7 @@ import { CoverageInput, coverageForMonth } from '../../employees/logic/coverage'
 import { latest } from '../../rates/logic/pick-rates';
 import { makeGroups, makeLine, withTotals } from './premium-core';
 import { exemptMonth, LeaveHolder } from '../../employees/logic/leave';
+import { AdjustmentInput } from './premium-adjustment';
 
 /** 報酬の履歴のうち、計算に使う部分（RemunerationDoc をそのまま渡せる） */
 export interface RemunerationLike {
@@ -34,6 +35,8 @@ export interface MonthlyInput {
   remunerations: RemunerationLike[];
   rates: RatesForMonth; // その月の料率（pickRates の結果）
   options?: PremiumOptions;
+  /** 保険料調整制度の軽減割合（対象の月だけ。省くと軽減なし。11/16） */
+  adjustment?: AdjustmentInput | null;
 }
 
 export function calcMonthly(input: MonthlyInput): PremiumResult {
@@ -56,10 +59,11 @@ export function calcMonthly(input: MonthlyInput): PremiumResult {
     std: StandardRemuneration | undefined,
     rate: PickedRate | null,
   ) => {
+    const adjustBp = part === 'health' ? (input.adjustment?.health ?? 0) : part === 'pension' ? (input.adjustment?.pension ?? 0) : 0;
     if (!std) missing.push({ part, reason: 'noRemuneration' });
     else if (!rate) missing.push({ part, reason: 'noRate' });
     else if (rate.employee + rate.employer > 0)
-      lines.push(makeLine(part, std.standard, std.grade, rate));
+      lines.push(makeLine(part, std.standard, std.grade, rate, adjustBp));
   };
 
   if (coverage.health) {

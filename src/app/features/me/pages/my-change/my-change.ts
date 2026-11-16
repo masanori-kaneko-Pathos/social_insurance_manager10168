@@ -16,11 +16,14 @@ import { MeHeader } from '../../components/me-header/me-header';
 import { MeContext } from '../../me-context.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 
-/** 項目のまとまり（選ぶ画面で見出しをつける） */
-const GROUPS: { key: string; fields: RequestField[] }[] = [
+/**
+ * 項目のまとまり（選ぶ画面で見出しをつける）
+ * whole：1つずつ選ばせず、まとめて変える（口座は「口座番号だけ」のような変え方はしないので、銀行名から全部入れてもらう。11/16）
+ */
+const GROUPS: { key: string; fields: RequestField[]; whole?: boolean }[] = [
   { key: 'contact', fields: REQUEST_FIELDS.filter((f) => f.startsWith('contact.')) },
   { key: 'commute', fields: REQUEST_FIELDS.filter((f) => f.startsWith('commute.')) },
-  { key: 'bankAccount', fields: REQUEST_FIELDS.filter((f) => f.startsWith('bankAccount.')) },
+  { key: 'bankAccount', fields: REQUEST_FIELDS.filter((f) => f.startsWith('bankAccount.')), whole: true },
 ];
 
 /** マイページ：自分から変更を申請する（変える項目を選んで、新しい値を入れる） */
@@ -82,6 +85,23 @@ export class MyChange implements OnInit {
 
   async ngOnInit(): Promise<void> {
     await this.me.load();
+  }
+
+  /** まとめて変えるまとまり（口座）：全部選んでいるか */
+  allChosen(fields: readonly RequestField[]): boolean {
+    return fields.every((f) => this.chosen().has(f));
+  }
+
+  /** まとめて選ぶ・外す */
+  toggleAll(fields: readonly RequestField[], on: boolean): void {
+    this.chosen.update((s) => {
+      const next = new Set(s);
+      for (const f of fields) {
+        if (on) next.add(f);
+        else next.delete(f);
+      }
+      return next;
+    });
   }
 
   toggle(f: RequestField): void {

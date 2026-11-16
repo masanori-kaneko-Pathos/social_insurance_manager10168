@@ -1,6 +1,10 @@
-<!-- 表示名 -->
+<!-- 表示名（従業員は、会社が登録した氏名を使う。11/16） -->
 <section class="card">
   <h2>{{ 'accountPage.nameTitle' | transloco }}</h2>
+  @if (employee()) {
+    <p>{{ profileName() }}</p>
+    <p class="hint">{{ 'accountPage.employeeNameNote' | transloco }}</p>
+  } @else {
   <form [formGroup]="nameForm" (ngSubmit)="saveName()" novalidate>
     <div class="field">
       <label for="acDisplayName">{{ 'auth.field.displayName' | transloco }}</label>
@@ -18,6 +22,7 @@
     }
     <button class="btn btn-solid" type="submit" [disabled]="busy() !== null">{{ 'common.save' | transloco }}</button>
   </form>
+  }
 </section>
 
 <!-- パスワード（ふだんは閉じておき、「パスワードを変更する」で開く） -->

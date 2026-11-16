@@ -36,6 +36,8 @@ export class AccountSettings {
   readonly auth = inject(AuthService);
   /** 従業員のマイページのとき（会社の記録の連絡先メールとは別、と添える） */
   readonly employee = input(false);
+  /** 今の表示名（従業員は会社が登録した氏名。マイページを開いたときに合わせてある） */
+  readonly profileName = computed(() => this.auth.profile()?.displayName ?? '');
 
   readonly busy = signal<Section | null>(null);
   readonly done = signal<Section | null>(null);
