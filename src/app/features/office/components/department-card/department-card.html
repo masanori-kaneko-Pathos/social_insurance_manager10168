@@ -8,10 +8,10 @@
     @for (d of list(); track d.id) {
       <li>
         @if (editing() === d.id) {
-          <input class="input" [value]="editName()" (input)="editName.set($any($event.target).value)" (keydown.enter)="$event.preventDefault(); rename(d.id)" maxlength="40"
+          <input class="input" [value]="editName()" (input)="editName.set($any($event.target).value)" (keydown.enter)="toKana($event, editKanaInput)" maxlength="40"
                  [attr.aria-label]="'office.department.newName' | transloco" />
           <span class="kana-label">{{ 'office.department.kana' | transloco }}</span>
-          <input class="input kana" [value]="editKana()" (input)="editKana.set($any($event.target).value)" (keydown.enter)="$event.preventDefault(); rename(d.id)" maxlength="60"
+          <input #editKanaInput class="input kana" [value]="editKana()" (input)="editKana.set($any($event.target).value)" (keydown.enter)="onKanaEnter($event) && rename(d.id)" maxlength="60"
                  [attr.aria-label]="'office.department.kana' | transloco" />
           <button type="button" class="btn btn-small btn-solid" (click)="rename(d.id)">{{ 'common.save' | transloco }}</button>
           <button type="button" class="btn btn-small" (click)="editing.set(null)">{{ 'common.cancel' | transloco }}</button>
@@ -33,11 +33,11 @@
     <div class="dept-add">
       <label class="field">
         <span class="label">{{ 'office.department.newName' | transloco }}</span>
-        <input class="input" [value]="newName()" (input)="newName.set($any($event.target).value)" (keydown.enter)="$event.preventDefault(); add()" maxlength="40" />
+        <input class="input" [value]="newName()" (input)="newName.set($any($event.target).value)" (keydown.enter)="toKana($event, newKanaInput)" maxlength="40" />
       </label>
       <label class="field">
         <span class="label">{{ 'office.department.kana' | transloco }}</span>
-        <input class="input" [value]="newKana()" (input)="newKana.set($any($event.target).value)" (keydown.enter)="$event.preventDefault(); add()" maxlength="60" />
+        <input #newKanaInput class="input" [value]="newKana()" (input)="newKana.set($any($event.target).value)" (keydown.enter)="onKanaEnter($event) && add()" maxlength="60" />
       </label>
       <button type="button" class="btn" (click)="add()">＋ {{ 'office.department.add' | transloco }}</button>
     </div>

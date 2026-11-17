@@ -55,4 +55,27 @@ export class DepartmentCard {
     if (!window.confirm(`${d.name}`)) return;
     this.list.set(removeDepartment(this.list(), d.id));
   }
+
+  // ===== Enter の流れ（11/17）：部署名で変換を確定 → Enter で読みの欄へ → 読みで Enter → 登録 =====
+  // 変換の確定の Enter（isComposing）は何もしない（日本語入力の確定で登録されてしまわないように）
+
+  /** 部署名の欄で Enter：読みの欄へ移る */
+  toKana(e: Event, kana: HTMLInputElement): void {
+    if (composing(e)) return;
+    e.preventDefault();
+    kana.focus();
+  }
+
+  /** 読みの欄で Enter：登録してよいか（変換の確定なら false） */
+  onKanaEnter(e: Event): boolean {
+    if (composing(e)) return false;
+    e.preventDefault();
+    return true;
+  }
+}
+
+/** 日本語入力の変換中の Enter か（Safari は isComposing が false のことがあるので keyCode 229 も見る） */
+function composing(e: Event): boolean {
+  const k = e as KeyboardEvent;
+  return k.isComposing || k.keyCode === 229;
 }

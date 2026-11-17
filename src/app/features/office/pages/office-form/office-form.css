@@ -430,3 +430,43 @@ h3 {
     padding-left: 0;
   }
 }
+
+/* ===== 組合の最初の料率（組合の名前の下。11/17） ===== */
+.first-rates {
+  margin: var(--space-md) 0 0;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.first-rates legend {
+  padding: 0 var(--space-xs);
+  font-weight: 600;
+}
+
+.first-rates .from .input {
+  max-width: 200px;
+}
+
+.rate-grid {
+  border-collapse: collapse;
+  margin-top: var(--space-sm);
+}
+
+.rate-grid th,
+.rate-grid td {
+  padding: var(--space-xs) var(--space-sm) var(--space-xs) 0;
+  text-align: left;
+  font-weight: normal;
+  white-space: nowrap;
+}
+
+.rate-grid thead th {
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.rate-grid .input.num {
+  width: 110px;
+  text-align: right;
+}

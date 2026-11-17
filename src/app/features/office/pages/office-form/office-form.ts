@@ -42,6 +42,9 @@ import {
   withInsurerChange,
 } from '../../office-settings';
 import { RateDialog, RateDialogTarget } from '../../../rates/components/rate-dialog/rate-dialog';
+import { RateService } from '../../../rates/rate.service';
+import { parseSplit } from '../../../rates/logic/rate-format';
+import type { KumiaiRateInput } from '../../../../core/models/rates';
 import { ToastService } from '../../../../shared/services/toast.service';
 
 
@@ -138,6 +141,7 @@ export class OfficeForm {
   private readonly criteria = inject(CriteriaService);
   private readonly employees = inject(EmployeeService);
   private readonly contracts = inject(ContractService);
+  private readonly rates = inject(RateService);
   readonly context = inject(OfficeContext);
 
   readonly prefectures = PREFECTURES;
@@ -151,7 +155,7 @@ export class OfficeForm {
   readonly readOnly = this.isEdit && !this.context.isAdmin();
 
   /** 保存していない入力があれば、画面を離れる前に確かめる（11/17） */
-  private readonly unsaved = watchUnsaved(() => this.form.dirty);
+  private readonly unsaved = watchUnsaved(() => this.form.dirty || this.firstRates.dirty);
   readonly form = this.fb.nonNullable.group(
     {
       name: ['', [Validators.required, NOT_BLANK, Validators.maxLength(100)]],
@@ -271,6 +275,58 @@ export class OfficeForm {
 
   /** 料率の窓（開いていなければ null） */
   readonly rateTarget = signal<RateDialogTarget | null>(null);
+
+  // ===== 組合の最初の料率（11/17）：組合の名前と同じときに入れられるように =====
+  // 新規登録で組合を選んだとき・編集で組合に切り替えるときに出す。空なら入れない（あとで料率の窓から）
+  // 単位は %（‰ や CSV・PDF で入れるときは、保存したあと履歴の「料率を見る」から）
+  readonly firstRates = this.fb.nonNullable.group({
+    from: [''],
+    health: this.fb.nonNullable.group({ total: [''], employee: [''], employer: [''] }),
+    care: this.fb.nonNullable.group({ total: [''], employee: [''], employer: [''] }),
+    childSupport: this.fb.nonNullable.group({ total: ['0.230'], employee: ['0.115'], employer: ['0.115'] }),
+  });
+  readonly firstRateKinds = ['health', 'care', 'childSupport'] as const;
+  readonly firstRateErrors = signal<Partial<Record<'from' | 'health' | 'care' | 'childSupport', string>>>({});
+  readonly firstRatesFrom = signal('');
+
+  /** 最初の料率の欄を出すか：組合を選んでいて、新規登録か、編集で保険者を変えるとき */
+  readonly showFirstRates = computed(
+    () => this.insurerType() === 'kumiai' && (!this.isEdit || this.insurerChanged()),
+  );
+
+  /** 支援金は2026年4月分から（それより前から入れるときは0にするので、欄を出さない） */
+  readonly firstRatesNeedChildSupport = computed(() => {
+    const f = this.firstRatesFrom();
+    return !/^\d{4}-\d{2}$/.test(f) || f >= '2026-04';
+  });
+
+  /**
+   * 最初の料率を読む。何も入れていなければ null（入れない）。間違いがあれば errors に入れて false
+   * 編集で切り替えるときは、何月分からが切り替えの月より前だとだめ
+   */
+  private readFirstRates(): KumiaiRateInput | null | false {
+    if (!this.showFirstRates()) return null;
+    const v = this.firstRates.getRawValue();
+    const blank = (g: { total: string; employee: string; employer: string }) => !g.total.trim() && !g.employee.trim() && !g.employer.trim();
+    if (!v.from.trim() && blank(v.health) && blank(v.care)) {
+      this.firstRateErrors.set({});
+      return null;
+    }
+    const errors: Partial<Record<'from' | 'health' | 'care' | 'childSupport', string>> = {};
+    const changeFrom = this.form.controls.changeFrom.value;
+    if (!MONTH.test(v.from)) errors.from = 'office.firstRates.error.from';
+    else if (this.isEdit && MONTH.test(changeFrom) && v.from < changeFrom) errors.from = 'office.firstRates.error.beforeChange';
+    const health = parseSplit(v.health, 'percent');
+    const care = parseSplit(v.care, 'percent');
+    const needCs = !MONTH.test(v.from) || v.from >= '2026-04';
+    const cs = needCs ? parseSplit(v.childSupport, 'percent') : ({ ok: true, split: { employee: 0, employer: 0 } } as const);
+    if (!health.ok) errors.health = `rateDialog.error.${health.error}`;
+    if (!care.ok) errors.care = `rateDialog.error.${care.error}`;
+    if (!cs.ok) errors.childSupport = `rateDialog.error.${cs.error}`;
+    this.firstRateErrors.set(errors);
+    if (Object.keys(errors).length > 0 || !health.ok || !care.ok || !cs.ok) return false;
+    return { from: v.from, health: health.split, care: care.split, childSupport: cs.split };
+  }
 
   /** 健康保険の欄の近道：保存済みの今の保険者が組合健保で、フォームで保険者を変えていないとき */
   readonly showKumiaiShortcut = computed(
@@ -437,6 +493,11 @@ export class OfficeForm {
   readonly errorKey = signal<string | null>(null);
 
   constructor() {
+    // 組合の最初の料率：何月分からを見て支援金の欄を出し分ける。編集で切り替えるときは、切り替える月を初めに入れておく
+    this.firstRates.controls.from.valueChanges.subscribe((v) => this.firstRatesFrom.set(v));
+    this.form.controls.changeFrom.valueChanges.subscribe((v) => {
+      if (!this.firstRates.controls.from.dirty) this.firstRates.controls.from.setValue(v);
+    });
     this.criteria
       .list()
       .then((rows) => this.criteriaRows.set(rows))
@@ -752,7 +813,8 @@ export class OfficeForm {
       !coverage ||
       this.standardMissing().length > 0 ||
       (this.isEdit && this.adjustmentSinceMissing()) ||
-      (this.insurerChanged() && !MONTH.test(changeFrom.value))
+      (this.insurerChanged() && !MONTH.test(changeFrom.value)) ||
+      this.readFirstRates() === false
     ) {
       this.form.markAllAsTouched();
       // 帯の件数が出たあとで、最初のエラーの欄まで動かす
@@ -808,8 +870,11 @@ export class OfficeForm {
           // 保険料調整制度は編集のときだけ書く（作るときの項目の決まりを変えないため）
           premiumAdjustment: v.adjustmentOn && MONTH.test(v.adjustmentSince) ? { since: v.adjustmentSince } : null,
         };
+        const firstRate = this.readFirstRates();
         await this.offices.update(office.id, input, this.tasksOf(this.pendingChanges()));
         await this.saveDepartments(office.id);
+        if (firstRate) await this.rates.createKumiai(office.id, firstRate);
+        this.firstRates.reset();
         this.changeFactDate.set(todayLocal());
         const fresh = await this.offices.get(office.id);
         if (fresh) {
@@ -827,9 +892,12 @@ export class OfficeForm {
           ...base,
           insurerHistory: [{ from: FROM_THE_START, ...period }],
         };
+        const firstRate = this.readFirstRates();
         const officeId = await this.offices.create(uid, input);
         // 部署は作ったあとに足す（作るときの項目の決まりを変えないため）
         await this.saveDepartments(officeId);
+        // 組合の最初の料率（入れていれば）。事業所ができてからでないと書けない
+        if (firstRate) await this.rates.createKumiai(officeId, firstRate);
         await this.profiles.load(uid); // currentOfficeId を最新にする
         await this.context.refresh(uid); // 切り替えの一覧にすぐ反映
         this.unsaved.release();

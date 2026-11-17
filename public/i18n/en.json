@@ -852,7 +852,7 @@
       "nameEn": "Enter the English name if there is one.",
       "groupName": "Offices with the same label are listed together in the office menu. Example: Kanto sites, Head office and plant",
       "agreementRounding": "Usually \"No agreement\". If the company and employees have a special agreement, the employee share is rounded that way (the same for the Japan Health Insurance Association, health insurance societies and pension). The company's payment stays the total rounded down to the yen.",
-      "kumiaiRatesNext": "After you register, a window opens to enter the society's rates (you can also import them as CSV)."
+      "kumiaiRatesNext": "You can enter the rates below (or later in the rates window)."
     },
     "postal": {
       "search": "Find address",
@@ -1047,6 +1047,15 @@
     },
     "agreementRounding": {
       "none": "No agreement (statutory rule)"
+    },
+    "firstRates": {
+      "title": "Society's rates (first period)",
+      "lead": "Enter the rates from the notice sent by the health insurance society. You can leave this empty and enter them later with \"View rates\" in the insurer and location history (per mille, CSV and PDF are available there).",
+      "fromHint": "If you also calculate premiums for past payroll, choose a month before the earliest one.",
+      "error": {
+        "from": "Select the month the rates apply from.",
+        "beforeChange": "This cannot be before the month of the change."
+      }
     }
   },
   "remuneration": {
