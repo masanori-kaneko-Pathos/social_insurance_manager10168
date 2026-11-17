@@ -96,6 +96,7 @@ export function employeeExportRow(x: EmployeeExportItem, deptName: (id: string) 
     nationality: f ? f.nationality : '',
     romanLastName: f?.romanLastName ?? '',
     romanFirstName: f?.romanFirstName ?? '',
+    romanMiddleName: f?.romanMiddleName ?? '',
     leave1Kind: l1Kind,
     leave1Start: l1Start,
     leave1End: l1End,

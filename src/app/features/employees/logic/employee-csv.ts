@@ -71,6 +71,7 @@ export const EMPLOYEE_CSV_HEADERS = {
   nationality: '国籍',
   romanLastName: 'ローマ字の姓',
   romanFirstName: 'ローマ字の名',
+  romanMiddleName: 'ローマ字のミドルネーム', // 11/17
   leave1Kind: '休業1_種類',
   leave1Start: '休業1_開始日',
   leave1End: '休業1_終了日',
@@ -382,6 +383,7 @@ function readRow(line: number, v: Partial<Record<EmployeeColumn, string>>): Empl
   const romanOk = (s: string) => s === '' || PATTERNS.roman.test(toHalfWidth(s));
   if (!romanOk(get('romanLastName'))) err('romanLastName', 'roman');
   if (!romanOk(get('romanFirstName'))) err('romanFirstName', 'roman');
+  if (!romanOk(get('romanMiddleName'))) err('romanMiddleName', 'roman');
 
   if (get('basicPensionNumber') && !PATTERNS.basicPensionNumber.test(toHalfWidth(get('basicPensionNumber')))) {
     err('basicPensionNumber', 'pensionNumber');
@@ -433,6 +435,7 @@ function readRow(line: number, v: Partial<Record<EmployeeColumn, string>>): Empl
       nationality,
       romanLastName: get('romanLastName'),
       romanFirstName: get('romanFirstName'),
+      romanMiddleName: get('romanMiddleName'),
       // ローマ字がない外国籍の人（漢字の国など）は、姓・名を漢字氏名として使う
       ...(get('romanLastName')
         ? {}
@@ -671,6 +674,7 @@ export const EMPLOYEE_WORDS: Partial<Record<EmployeeImportKey, readonly string[]
   periodEnd: ['契約終了日', '雇用期間終了日', '契約満了日', '契約期間の終わり'],
   renewal: ['契約更新の有無', '更新の有無'],
   nationality: ['国籍・地域', 'nationality'],
+  romanMiddleName: ['ミドルネーム', 'middle name'],
   note: ['備考'],
 };
 

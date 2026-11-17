@@ -1,4 +1,6 @@
 [
+  { "from": "2016-10", "sizeMin": 501, "weeklyMinutesMin": 1200, "wageMin": 88000, "reducedWageMin": null, "source": "日本年金機構「短時間労働者に対する適用拡大」（2016年10月〜 被保険者数501人以上。賃金要件 月8.8万円以上）" },
+  { "from": "2022-10", "sizeMin": 101, "weeklyMinutesMin": 1200, "wageMin": 88000, "reducedWageMin": null, "source": "日本年金機構「短時間労働者に対する適用拡大」（2022年10月〜 101人以上）" },
   { "from": "2024-10", "sizeMin": 51, "weeklyMinutesMin": 1200, "wageMin": 88000, "reducedWageMin": null, "source": "日本年金機構「短時間労働者に対する適用拡大」（2024年10月〜 51人以上）" },
   { "from": "2026-10", "sizeMin": 51, "weeklyMinutesMin": 1200, "wageMin": null, "reducedWageMin": 88000, "source": "日本年金機構「短時間労働者に対する適用拡大」（2026年10月 賃金要件の撤廃・特定減額特例対象者）" },
   { "from": "2027-10", "sizeMin": 36, "weeklyMinutesMin": 1200, "wageMin": null, "reducedWageMin": 88000, "source": "日本年金機構「短時間労働者に対する適用拡大」（2027年10月〜 36人以上）" },
