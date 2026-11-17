@@ -39,7 +39,6 @@ import { CareExemptionCard } from '../../components/care-exemption-card/care-exe
 import { OverseasCard } from '../../components/overseas-card/overseas-card';
 import { ContractCard } from '../../components/contract-card/contract-card';
 import { DependentCard } from '../../components/dependent-card/dependent-card';
-import { EmployeeDeleteCard } from '../../components/employee-delete-card/employee-delete-card';
 import { HistoryCard } from '../../components/history-card/history-card';
 import { LeaveCard } from '../../components/leave-card/leave-card';
 import { RemunerationCard } from '../../components/remuneration-card/remuneration-card';
@@ -61,7 +60,7 @@ import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 type Mode = 'fiscal' | 'calendar' | 'last12';
 /** 「＋登録」のメニューから足すカード（中身がないときは出さない） */
-type AddKind = 'leave' | 'care' | 'overseas';
+type AddKind = 'leave' | 'care' | 'overseas' | 'dependent';
 
 /**
  * 従業員のページ（GitHub 風のタブ）
@@ -76,7 +75,6 @@ type AddKind = 'leave' | 'care' | 'overseas';
     RemunerationCard,
     ContractCard,
     DependentCard,
-    EmployeeDeleteCard,
     PremiumCard,
     BonusCard,
     LeaveCard,
@@ -143,6 +141,7 @@ export class EmployeeDetail {
   private readonly leaveCard = viewChild(LeaveCard);
   private readonly careCard = viewChild(CareExemptionCard);
   private readonly overseasCard = viewChild(OverseasCard);
+  private readonly dependentCard = viewChild(DependentCard);
 
   readonly modes: Mode[] = ['fiscal', 'calendar', 'last12'];
   readonly kinds = ['health', 'care', 'pension'] as const;
@@ -343,15 +342,24 @@ export class EmployeeDetail {
   async add(kind: AddKind, menu: HTMLDetailsElement): Promise<void> {
     menu.open = false;
     this.adding.set(kind);
+    // 扶養家族は本人の情報のタブ、ほかは雇用・契約のタブ（11/17 に扶養家族も足した）
     await this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { tab: 'employment' },
+      queryParams: { tab: kind === 'dependent' ? 'person' : 'employment' },
       queryParamsHandling: 'merge',
     });
     // カードが画面に出てから追加の欄を開く
-    setTimeout(() =>
-      (kind === 'leave' ? this.leaveCard() : kind === 'care' ? this.careCard() : this.overseasCard())?.startAdd(),
-    );
+    setTimeout(() => {
+      const card =
+        kind === 'leave'
+          ? this.leaveCard()
+          : kind === 'care'
+            ? this.careCard()
+            : kind === 'overseas'
+              ? this.overseasCard()
+              : this.dependentCard();
+      card?.startAdd();
+    });
   }
 
   // ===== 月ごとの加入状況の操作 =====

@@ -26,6 +26,7 @@
               <button type="button" (click)="add('leave', addMenu)">{{ 'leave.add' | transloco }}</button>
               <button type="button" (click)="add('care', addMenu)">{{ 'careExemption.add' | transloco }}</button>
               <button type="button" (click)="add('overseas', addMenu)">{{ 'overseas.add' | transloco }}</button>
+              <button type="button" (click)="add('dependent', addMenu)">{{ 'dependent.add' | transloco }}</button>
             </div>
           </details>
           <a class="btn" [routerLink]="['edit']">{{ 'common.edit' | transloco }}</a>
@@ -181,10 +182,6 @@
         @if (showCare(e)) {
           <app-care-exemption-card [employee]="e" (changed)="reloadEmployee()" />
         }
-        <!-- 登録の取り消し（間違えて登録した人。管理者だけ。退職は退職日で。11/17） -->
-        @if (context.isAdmin()) {
-          <app-employee-delete-card [employee]="e" />
-        }
       }
 
       @case ('insurance') {
@@ -276,6 +273,10 @@
         <section class="card">
           <h2>{{ 'employee.section.more' | transloco }}</h2>
           <dl class="info">
+            <div>
+              <dt>{{ 'employee.field.birthDate' | transloco }}</dt>
+              <dd class="mono">{{ e.birthDate }}（{{ 'employee.detail.age' | transloco: { age: age(e) } }}）</dd>
+            </div>
             <div>
               <dt>{{ 'employee.field.sex' | transloco }}</dt>
               <dd>{{ e.sex ? ('employee.sex.' + e.sex | transloco) : '—' }}</dd>

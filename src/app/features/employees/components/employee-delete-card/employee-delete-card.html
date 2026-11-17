@@ -2,7 +2,7 @@
   <h2>{{ 'employee.delete.title' | transloco }}</h2>
   <p class="hint">{{ 'employee.delete.lead' | transloco }}</p>
   @if (!open()) {
-    <button type="button" class="btn danger" (click)="open.set(true)">{{ 'employee.delete.open' | transloco }}</button>
+    <button type="button" class="btn btn-small danger" (click)="open.set(true)">{{ 'employee.delete.open' | transloco }}</button>
   } @else {
     <ul class="hint list">
       <li>{{ 'employee.delete.removes' | transloco }}</li>

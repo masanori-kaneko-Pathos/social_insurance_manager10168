@@ -22,6 +22,7 @@ import {
   SEXES,
 } from '../../../../core/models/employee';
 import type { Employee } from '../../../../core/models/employee';
+import { EmployeeDeleteCard } from '../../components/employee-delete-card/employee-delete-card';
 import { addDays, todayLocal } from '../../../../shared/utils/date';
 import { toHalfWidth } from '../../../../shared/utils/text';
 import { OfficeContext } from '../../../office/office-context.service';
@@ -152,7 +153,7 @@ const PATTERN_KEYS: Record<string, string> = {
 
 @Component({
   selector: 'app-employee-form',
-  imports: [EnterNext, ContractFields, HalfWidthDigits, ReactiveFormsModule, RouterLink, TranslocoPipe],
+  imports: [EnterNext, ContractFields, EmployeeDeleteCard, HalfWidthDigits, ReactiveFormsModule, RouterLink, TranslocoPipe],
   templateUrl: './employee-form.html',
   styleUrl: './employee-form.css',
 })
@@ -656,6 +657,35 @@ export class EmployeeForm {
     this.lastAutoLost = value;
   }
 
+  // ===== 目次（編集のときだけ。事業所の設定と同じ。11/17） =====
+  /** 読み込んだ従業員（削除の欄に渡す） */
+  readonly loadedEmployee = signal<Employee | null>(null);
+
+  /** 外国籍の欄は、外国籍のときだけ（フォームの値で決まるので、毎回作る） */
+  toc(): { id: string; key: string; sub?: boolean; part?: boolean }[] {
+    const items: { id: string; key: string; sub?: boolean; part?: boolean }[] = [
+      { id: 'sec-top', key: 'employee.form.titleEdit', part: true },
+      { id: 'sec-basic', key: 'employee.section.basic', sub: true },
+      ...(this.isForeign() ? [{ id: 'sec-foreign', key: 'employee.section.foreign', sub: true }] : []),
+      { id: 'sec-employment', key: 'employee.section.employment', sub: true },
+      { id: 'sec-insurance', key: 'employee.section.insurance', sub: true },
+      { id: 'sec-numbers', key: 'employee.section.numbers', sub: true },
+      { id: 'sec-contact', key: 'employee.section.contact', sub: true },
+      { id: 'sec-commute', key: 'employee.section.commute', sub: true },
+      { id: 'sec-bank', key: 'employee.section.bank', sub: true },
+      { id: 'sec-collection', key: 'employee.section.collection', sub: true },
+      { id: 'sec-org', key: 'employee.section.org', sub: true },
+    ];
+    if (this.loadedEmployee()) items.push({ id: 'sec-delete', key: 'employee.delete.title' });
+    return items;
+  }
+
+  /** 目次から、その欄へなめらかに動かす（URL の # は変えない） */
+  jump(event: Event, id: string): void {
+    event.preventDefault();
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   private async loadForEdit(): Promise<void> {
     const officeId = this.context.current()?.id;
     if (!officeId || !this.employeeId) return;
@@ -673,6 +703,7 @@ export class EmployeeForm {
       this.extraPhones.set(e.contact.otherPhones?.length ?? 0);
       this.secondEmergency.set((e.contact.emergencyContacts?.length ?? 0) >= 2);
       this.loadedContact = e.contact;
+      this.loadedEmployee.set(e);
       this.addressChanged.set(false);
       this.syncCert();
     } catch (err) {

@@ -296,3 +296,65 @@ h3 {
 .title-row .btn {
   text-decoration: none;
 }
+
+/* ===== 目次（編集のときだけ。事業所の設定と同じ。左に貼り付き、押すとその欄へ。11/17） ===== */
+.layout.with-toc {
+  display: grid;
+  grid-template-columns: 11em minmax(0, 760px);
+  justify-content: start;
+  gap: var(--space-xl);
+  padding-left: var(--space-sm);
+}
+
+.toc {
+  position: sticky;
+  top: var(--space-lg);
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--space-sm);
+  font-size: var(--font-sm);
+}
+
+.toc a {
+  padding: 4px var(--space-sm);
+  color: var(--color-text-sub);
+  text-decoration: none;
+  border-left: 2px solid var(--color-border);
+}
+
+.toc a:hover {
+  color: var(--color-text);
+  border-left-color: var(--color-primary);
+}
+
+.toc a.toc-part {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.toc a.sub {
+  padding-left: calc(var(--space-sm) + 0.8em);
+}
+
+.page [id^='sec-'] {
+  scroll-margin-top: var(--space-lg);
+}
+
+@media (max-width: 1000px) {
+  .layout.with-toc {
+    display: block;
+    padding-left: 0;
+  }
+
+  .toc {
+    display: none;
+  }
+}
+
+/* 削除の欄は本文の幅に合わせる */
+app-employee-delete-card {
+  display: block;
+  max-width: 760px;
+}

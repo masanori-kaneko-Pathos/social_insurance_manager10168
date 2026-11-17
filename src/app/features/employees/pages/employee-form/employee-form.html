@@ -1,6 +1,16 @@
+<div class="layout" [class.with-toc]="isEdit">
+  <!-- 目次（編集のときだけ。事業所の設定と同じ。押すとその欄へ。11/17） -->
+  @if (isEdit) {
+    <nav class="toc" [attr.aria-label]="'office.toc.label' | transloco">
+      @for (t of toc(); track t.id) {
+        <a [href]="'#' + t.id" [class.sub]="t.sub" [class.toc-part]="t.part" (click)="jump($event, t.id)">{{ t.key | transloco }}</a>
+      }
+    </nav>
+  }
+<div class="page">
 <a class="back" routerLink="..">← {{ 'employee.list.title' | transloco }}</a>
 <div class="title-row">
-  <h1>{{ (isEdit ? 'employee.form.titleEdit' : 'employee.form.titleNew') | transloco }}</h1>
+  <h1 id="sec-top">{{ (isEdit ? 'employee.form.titleEdit' : 'employee.form.titleNew') | transloco }}</h1>
   <!-- 何人もまとめて入れるなら、ファイルから（11/12） -->
   @if (!isEdit) {
     <a class="btn" [routerLink]="['/o', context.current()?.id, 'import']" [queryParams]="{ kind: 'employees', from: 'employees' }">{{ 'employee.form.toImport' | transloco }}</a>
@@ -45,7 +55,7 @@
 
     @if (show('basic')) {
       <!-- 基本情報 -->
-      <section class="card">
+      <section id="sec-basic" class="card">
         <h2>{{ 'employee.section.basic' | transloco }}</h2>
 
         <!-- 最初に国籍を選ぶ（外国籍なら氏名の欄が変わる） -->
@@ -253,7 +263,7 @@
 
     <!-- 外国人の情報 -->
     @if (isForeign() && show('foreign')) {
-      <section class="card">
+      <section id="sec-foreign" class="card">
         <h2>{{ 'employee.section.foreign' | transloco }}</h2>
         <div formGroupName="foreign">
           <div class="grid">
@@ -409,7 +419,7 @@
 
     @if (show('employment')) {
       <!-- 在籍期間 -->
-      <section class="card">
+      <section id="sec-employment" class="card">
         <h2>{{ 'employee.section.employment' | transloco }}</h2>
         <div class="grid">
           <div class="field">
@@ -446,7 +456,7 @@
       </section>
 
       <!-- 社会保険 -->
-      <section class="card">
+      <section id="sec-insurance" class="card">
         <h2>{{ 'employee.section.insurance' | transloco }}</h2>
         <p class="hint section-hint">{{ 'employee.hint.autoDates' | transloco }}</p>
 
@@ -531,7 +541,7 @@
       </section>
 
       <!-- 届出の番号 -->
-      <section class="card">
+      <section id="sec-numbers" class="card">
         <h2>{{ 'employee.section.numbers' | transloco }}</h2>
         <p class="hint section-hint">{{ 'employee.hint.numbers' | transloco }}</p>
         <div class="grid">
@@ -626,7 +636,7 @@
 
     @if (show('private')) {
       <!-- 連絡先 -->
-      <section class="card" formGroupName="contact">
+      <section id="sec-contact" class="card" formGroupName="contact">
         <h2>{{ 'employee.section.contact' | transloco }}</h2>
         <div class="grid">
           <div class="field">
@@ -788,7 +798,7 @@
       </section>
 
       <!-- 通勤 -->
-      <section class="card" formGroupName="commute">
+      <section id="sec-commute" class="card" formGroupName="commute">
         <h2>{{ 'employee.section.commute' | transloco }}</h2>
         <div class="grid">
           <div class="field">
@@ -803,7 +813,7 @@
       </section>
 
       <!-- 給与の口座 -->
-      <section class="card" formGroupName="bankAccount">
+      <section id="sec-bank" class="card" formGroupName="bankAccount">
         <h2>{{ 'employee.section.bank' | transloco }}</h2>
         <div class="grid">
           <div class="field">
@@ -850,7 +860,7 @@
 
     @if (show('employment')) {
       <!-- 保険料の集め方 -->
-      <section class="card">
+      <section id="sec-collection" class="card">
         <h2>{{ 'employee.section.collection' | transloco }}</h2>
         <div class="grid">
           <div class="field">
@@ -869,7 +879,7 @@
       </section>
 
       <!-- 部署・役職・役員 -->
-      <section class="card" formGroupName="org">
+      <section id="sec-org" class="card" formGroupName="org">
         <h2>{{ 'employee.section.org' | transloco }}</h2>
         <div class="grid">
           <div class="field">
@@ -941,4 +951,11 @@
       }
     </div>
   </form>
+
+  <!-- 従業員の削除（編集の一番下に小さく。事業所の設定と同じ。雇用・契約のタブから移した。11/17） -->
+  @if (isEdit && loadedEmployee(); as e) {
+    <app-employee-delete-card id="sec-delete" [employee]="e" />
+  }
 }
+</div>
+</div>

@@ -1,12 +1,18 @@
 /* 登録の取り消し（事業所の削除と同じ見た目。11/17） */
 .danger-zone {
   border: 1px solid var(--color-danger-text);
-  margin-top: var(--space-lg);
+  margin-top: var(--space-xl);
+  padding: var(--space-sm) var(--space-md); /* 編集の一番下に小さく（11/17） */
 }
 
 .danger-zone h2 {
-  margin: 0 0 var(--space-xs);
-  font-size: var(--font-md);
+  margin: 0 0 2px;
+  font-size: var(--font-sm);
+  color: var(--color-danger-text);
+}
+
+.danger-zone .hint {
+  font-size: var(--font-xs);
 }
 
 .btn.danger {
