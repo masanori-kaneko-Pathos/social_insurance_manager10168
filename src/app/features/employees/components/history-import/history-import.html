@@ -104,6 +104,7 @@
                 <th>{{ 'historyCsv.col.reason' | transloco }}</th>
                 <th>{{ 'historyCsv.col.standard' | transloco }}</th>
               }
+              <th class="act-col"></th>
             </tr>
           </thead>
           <tbody>
@@ -133,11 +134,9 @@
                       @for (w of it.warnings; track w) {
                         <br /><span class="badge">{{ 'historyCsv.warning.' + w | transloco: it.computed ?? {} }}</span>
                       }
-                      @if (x.issue; as is) {
-                        <app-fix-button [issue]="is" [fix]="fix" />
-                      }
                     </td>
                   }
+                  <td class="act-col"><button type="button" class="btn btn-small" [class.btn-primary]="!!x.issue" [disabled]="fix.busy()" (click)="fix.openLine(x.line)">{{ 'importFix.check' | transloco }}</button></td>
                 </tr>
               } @else if (x.issue; as is) {
                 <tr app-issue-row [issue]="is" [fix]="fix" [cols]="issueCols()"></tr>

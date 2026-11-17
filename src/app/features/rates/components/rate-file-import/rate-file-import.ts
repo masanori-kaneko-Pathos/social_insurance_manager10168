@@ -17,7 +17,7 @@ import {
   recheckRateCsv,
 } from '../../logic/rate-csv';
 import { formatRate, RateUnit } from '../../logic/rate-format';
-import { FixButton, IssueRow } from '../../../../shared/components/import-issues/issue-row';
+import { IssueRow } from '../../../../shared/components/import-issues/issue-row';
 
 type Kind = 'health' | 'care' | 'childSupport';
 
@@ -29,7 +29,7 @@ type Kind = 'health' | 'care' | 'childSupport';
  */
 @Component({
   selector: 'app-rate-file-import',
-  imports: [FixButton, IssueRow, ImportIssues, TranslocoPipe],
+  imports: [IssueRow, ImportIssues, TranslocoPipe],
   templateUrl: './rate-file-import.html',
   styleUrl: './rate-file-import.css',
 })

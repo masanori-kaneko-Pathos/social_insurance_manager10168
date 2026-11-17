@@ -71,6 +71,7 @@
               <th class="num">{{ 'premium.part.' + kind | transloco }}</th>
             }
             <th>{{ 'rateDialog.csv.col.result' | transloco }}</th>
+            <th class="act-col"></th>
           </tr>
         </thead>
         <tbody>
@@ -104,13 +105,11 @@
                   } @else {
                     {{ 'rateDialog.csv.status.' + r.status | transloco }}
                   }
-                  @if (x.issue; as is) {
-                    <app-fix-button [issue]="is" [fix]="fix" />
-                  }
                 </td>
+                <td class="act-col"><button type="button" class="btn btn-small" [class.btn-primary]="!!x.issue" [disabled]="fix.busy()" (click)="fix.openLine(x.line)">{{ 'importFix.check' | transloco }}</button></td>
               </tr>
             } @else if (x.issue; as is) {
-              <tr app-issue-row [issue]="is" [fix]="fix" [span]="4"></tr>
+              <tr app-issue-row [issue]="is" [fix]="fix" [span]="5"></tr>
             }
           }
         </tbody>

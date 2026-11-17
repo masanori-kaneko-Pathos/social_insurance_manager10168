@@ -27,7 +27,7 @@ import { ImportFix, ImportIssue, ImportIssues } from '../../../../shared/compone
 import { TranslocoService } from '@jsverse/transloco';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { DEPENDENT_FIX_FIELDS } from '../../logic/import-fix-fields';
-import { FixButton, IssueRow } from '../../../../shared/components/import-issues/issue-row';
+import { IssueRow } from '../../../../shared/components/import-issues/issue-row';
 import { ImportSteps } from '../../../../shared/components/import-steps/import-steps';
 
 interface Preview {
@@ -48,7 +48,7 @@ const PARALLEL = 8;
  */
 @Component({
   selector: 'app-dependent-import',
-  imports: [FixButton, IssueRow, ImportSteps, ImportPicker, ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
+  imports: [IssueRow, ImportSteps, ImportPicker, ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
   templateUrl: './dependent-import.html',
   styleUrl: '../../pages/employee-import/employee-import.css',
 })

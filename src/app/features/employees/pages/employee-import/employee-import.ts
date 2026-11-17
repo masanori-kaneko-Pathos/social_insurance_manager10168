@@ -45,7 +45,7 @@ import { PersonDiff, samePersonDiffs } from '../../logic/employee-csv';
 import type { Employee } from '../../../../core/models/employee';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { EMPLOYEE_FIX_FIELDS } from '../../logic/import-fix-fields';
-import { FixButton, IssueRow } from '../../../../shared/components/import-issues/issue-row';
+import { IssueRow } from '../../../../shared/components/import-issues/issue-row';
 import { ImportSteps } from '../../../../shared/components/import-steps/import-steps';
 
 /**
@@ -101,7 +101,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-employee-import',
-  imports: [FixButton, IssueRow, ImportSteps, ImportPicker, PayrollImport, BonusImport, AbroadImport, ColumnMapper, DependentImport, HistoryImport, ImportIssues, PasswordGate, RouterLink, TranslocoPipe],
+  imports: [IssueRow, ImportSteps, ImportPicker, PayrollImport, BonusImport, AbroadImport, ColumnMapper, DependentImport, HistoryImport, ImportIssues, PasswordGate, RouterLink, TranslocoPipe],
   templateUrl: './employee-import.html',
   styleUrl: './employee-import.css',
 })

@@ -175,6 +175,7 @@
                     <th class="num">{{ 'payroll.col.fixed' | transloco }}</th>
                     <th class="num">{{ 'payroll.col.days' | transloco }}</th>
                     <th></th>
+                    <th class="act-col"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -192,10 +193,8 @@
                           @if (pv.updated.includes(it)) {
                             <span class="badge badge-warn">{{ 'payrollCsv.overwrite' | transloco }}</span>
                           }
-                          @if (x.issue; as is) {
-                            <app-fix-button [issue]="is" [fix]="fix" />
-                          }
                         </td>
+                        <td class="act-col"><button type="button" class="btn btn-small" [class.btn-primary]="!!x.issue" [disabled]="fix.busy()" (click)="fix.openLine(x.line)">{{ 'importFix.check' | transloco }}</button></td>
                       </tr>
                     } @else if (x.issue; as is) {
                       <tr app-issue-row [issue]="is" [fix]="fix" [cols]="issueCols()"></tr>

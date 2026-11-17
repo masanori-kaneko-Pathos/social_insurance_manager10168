@@ -257,3 +257,26 @@ progress {
 .pick-col input {
   accent-color: var(--color-primary);
 }
+
+/* 取り込みの表：1行を横に並べ、枠の中で縦にも横にもスクロール（11/17） */
+.table-wrap.scroll,
+.table-wrap {
+  overflow: auto;
+}
+
+.table-wrap table td,
+.table-wrap table th {
+  white-space: nowrap;
+}
+
+/* 行の番号と次の列がくっつかないように */
+.pick-col + td,
+.pick-col + th {
+  padding-right: var(--space-md);
+}
+
+/* 右端の「確認」 */
+.act-col {
+  text-align: right;
+  white-space: nowrap;
+}

@@ -68,6 +68,7 @@
               <th>{{ 'abroadCsv.col.employee' | transloco }}</th>
               <th>{{ 'abroadCsv.col.what.' + kind() | transloco }}</th>
               <th>{{ 'abroadCsv.col.result' | transloco }}</th>
+              <th class="act-col"></th>
             </tr>
           </thead>
           <tbody>
@@ -92,13 +93,11 @@
                         <br /><span class="badge">{{ (w === 'replace' ? 'abroadCsv.replace' : kind() === 'certificate' ? 'employee.agreement.warning.' + w : 'overseas.warning.' + w) | transloco }}</span>
                       }
                     }
-                    @if (x.issue; as is) {
-                      <app-fix-button [issue]="is" [fix]="fix" />
-                    }
                   </td>
+                  <td class="act-col"><button type="button" class="btn btn-small" [class.btn-primary]="!!x.issue" [disabled]="fix.busy()" (click)="fix.openLine(x.line)">{{ 'importFix.check' | transloco }}</button></td>
                 </tr>
               } @else if (x.issue; as is) {
-                <tr app-issue-row [issue]="is" [fix]="fix" [span]="3"></tr>
+                <tr app-issue-row [issue]="is" [fix]="fix" [span]="4"></tr>
               }
             }
           </tbody>

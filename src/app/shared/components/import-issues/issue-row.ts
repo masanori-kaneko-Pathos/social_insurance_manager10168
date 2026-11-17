@@ -28,12 +28,14 @@ import { ImportIssue, ImportIssues } from './import-issues';
             @for (v of extra(); track v.header) {
               <span class="issue-value">{{ v.header }}：<b>{{ v.value || ('importFix.blank' | transloco) }}</b></span>
             }
-            <button type="button" class="btn btn-small btn-primary fix-btn" [disabled]="fix().busy()" (click)="fix().edit(issue())">
-              {{ 'importFix.fix' | transloco }}
-            </button>
           }
         </td>
       }
+      <td class="act-col">
+        <button type="button" class="btn btn-small btn-primary" [disabled]="fix().busy()" (click)="fix().edit(issue())">
+          {{ 'importFix.check' | transloco }}
+        </button>
+      </td>
     } @else {
       <td [attr.colspan]="span()" class="issue-cell">
         <span class="issue-sum">{{ fix().summary(issue()) }}</span>
@@ -43,9 +45,9 @@ import { ImportIssue, ImportIssues } from './import-issues';
           }
         </span>
       </td>
-      <td class="issue-act">
+      <td class="act-col">
         <button type="button" class="btn btn-small btn-primary" [disabled]="fix().busy()" (click)="fix().edit(issue())">
-          {{ 'importFix.fix' | transloco }}
+          {{ 'importFix.check' | transloco }}
         </button>
       </td>
     }
@@ -66,8 +68,13 @@ import { ImportIssue, ImportIssues } from './import-issues';
     .cell-value.bad {
       color: var(--color-danger-text);
       font-weight: 700;
-      text-decoration: underline wavy var(--color-danger-text);
-      text-underline-offset: 3px;
+    }
+    td.num {
+      padding-right: var(--space-md);
+    }
+    .act-col {
+      text-align: right;
+      white-space: nowrap;
     }
     .issue-sum {
       display: block;
@@ -87,14 +94,6 @@ import { ImportIssue, ImportIssues } from './import-issues';
       border-radius: var(--radius-sm);
       background: var(--color-surface);
       font-size: var(--font-sm);
-    }
-    .fix-btn {
-      display: block;
-      margin-top: 4px;
-    }
-    .issue-act {
-      text-align: right;
-      white-space: nowrap;
     }
   `,
 })
@@ -126,24 +125,4 @@ export class IssueRow {
       .headers.filter((h) => !shown.some((s) => headerKey(s) === headerKey(h)))
       .map((h) => ({ header: h, value: this.fix().valueOf(this.rec(), h) }));
   });
-}
-
-/** 読めた行の中の「直す」（その行に問題もあるとき） */
-@Component({
-  selector: 'app-fix-button',
-  imports: [TranslocoPipe],
-  template: `
-    <button type="button" class="btn btn-small btn-primary fix-btn" [disabled]="fix().busy()" (click)="fix().edit(issue())">
-      {{ 'importFix.fix' | transloco }}
-    </button>
-  `,
-  styles: `
-    .fix-btn {
-      margin-top: 4px;
-    }
-  `,
-})
-export class FixButton {
-  readonly issue = input.required<ImportIssue>();
-  readonly fix = input.required<ImportIssues>();
 }

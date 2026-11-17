@@ -77,6 +77,7 @@
             <th>{{ 'bonusCsv.col.title' | transloco }}</th>
             <th class="num">{{ 'bonusCsv.col.amount' | transloco }}</th>
             <th>{{ 'bonusCsv.col.result' | transloco }}</th>
+            <th class="act-col"></th>
           </tr>
         </thead>
         <tbody>
@@ -106,13 +107,11 @@
                       <br /><span class="badge">{{ 'bonusCsv.warning.' + w | transloco }}</span>
                     }
                   }
-                  @if (x.issue; as is) {
-                    <app-fix-button [issue]="is" [fix]="fix" />
-                  }
                 </td>
+                <td class="act-col"><button type="button" class="btn btn-small" [class.btn-primary]="!!x.issue" [disabled]="fix.busy()" (click)="fix.openLine(x.line)">{{ 'importFix.check' | transloco }}</button></td>
               </tr>
             } @else if (x.issue; as is) {
-              <tr app-issue-row [issue]="is" [fix]="fix" [span]="5"></tr>
+              <tr app-issue-row [issue]="is" [fix]="fix" [span]="6"></tr>
             }
           }
         </tbody>

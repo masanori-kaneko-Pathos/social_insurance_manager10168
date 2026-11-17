@@ -35,7 +35,7 @@ import {
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { CONTRACT_HISTORY_FIX_FIELDS, REMUNERATION_HISTORY_FIX_FIELDS } from '../../logic/import-fix-fields';
-import { FixButton, IssueRow } from '../../../../shared/components/import-issues/issue-row';
+import { IssueRow } from '../../../../shared/components/import-issues/issue-row';
 import { ImportSteps } from '../../../../shared/components/import-steps/import-steps';
 
 interface Preview {
@@ -54,7 +54,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-history-import',
-  imports: [FixButton, IssueRow, ImportSteps, ImportPicker, ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
+  imports: [IssueRow, ImportSteps, ImportPicker, ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
   templateUrl: './history-import.html',
   styleUrl: '../../pages/employee-import/employee-import.css',
 })

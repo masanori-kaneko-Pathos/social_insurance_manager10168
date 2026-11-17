@@ -4086,11 +4086,11 @@
   },
   "importFix": {
     "fix": "Fix",
-    "banner": "{{n}} rows have problems and are unchecked, so they will not be imported. Use \"Fix\" on a red row to include it.",
+    "banner": "{{n}} rows have problems and are unchecked, so they will not be imported. Use \"Check\" on a red row to fix and include it.",
     "line": "Line",
     "content": "Content",
     "problem": "Problem",
-    "dialogTitle": "Fix line {{line}}",
+    "dialogTitle": "Line {{line}}",
     "otherColumns": "Other columns ({{n}})",
     "neighbors": "Other rows with the same employee number ({{n}})",
     "apply": "Fix",
@@ -4102,7 +4102,8 @@
     "onlyIssues": "Show only rows with problems",
     "keep": "Import line {{line}}",
     "keepAll": "Import all rows",
-    "notKept": "Not imported (has problems)"
+    "notKept": "Not imported (has problems)",
+    "check": "Check"
   },
   "special": {
     "title": "Special revision (medical care, childcare or nursing care)",

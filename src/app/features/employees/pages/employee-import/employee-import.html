@@ -195,6 +195,7 @@
                 <th>{{ 'employeeCsv.col.enrolled' | transloco }}</th>
                 <th>{{ 'employeeCsv.col.standard' | transloco }}</th>
                 <th>{{ 'employeeCsv.col.leaves' | transloco }}</th>
+                <th class="act-col"></th>
               </tr>
             </thead>
             <tbody>
@@ -221,16 +222,11 @@
                       }
                     </td>
                     <td>
-                      <strong>{{
+                      <!-- 区分は名前だけ（理由は、名前に重ねると出る。表を横に詰めるため。11/17） -->
+                      @let p = reasonParams(it.classification);
+                      <strong [attr.title]="(it.classification.below ? ('contract.below.' + it.classification.below | transloco: p) + ' ' : '') + ('contract.reason.' + it.classification.reason | transloco: p)">{{
                         'contract.category.' + it.classification.category | transloco
                       }}</strong>
-                      @let p = reasonParams(it.classification);
-                      <br /><span class="sub">
-                        @if (it.classification.below) {
-                          {{ 'contract.below.' + it.classification.below | transloco: p }}
-                        }
-                        {{ 'contract.reason.' + it.classification.reason | transloco: p }}
-                      </span>
                     </td>
                     <td>
                       {{ 'employeeCsv.ins.health' | transloco }}
@@ -253,10 +249,8 @@
                         —
                       }
                     </td>
-                    <td class="num">{{ it.leaves.length || '—' }}  @if (x.issue; as is) {
-                    <td class="num">{{ it.leaves.length || '—' }}    <app-fix-button [issue]="is" [fix]="fix" />
-                    <td class="num">{{ it.leaves.length || '—' }}  }
                     <td class="num">{{ it.leaves.length || '—' }}</td>
+                    <td class="act-col"><button type="button" class="btn btn-small" [class.btn-primary]="!!x.issue" [disabled]="fix.busy()" (click)="fix.openLine(x.line)">{{ 'importFix.check' | transloco }}</button></td>
                   </tr>
                 } @else if (x.issue; as is) {
                   <tr app-issue-row [issue]="is" [fix]="fix" [cols]="issueCols"></tr>

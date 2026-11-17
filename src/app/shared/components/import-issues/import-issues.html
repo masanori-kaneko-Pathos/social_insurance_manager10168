@@ -51,7 +51,7 @@
         }
       </div>
 
-      <details class="others">
+      <details class="others" [open]="fields().problem.length === 0">
         <summary>{{ 'importFix.otherColumns' | transloco: { n: fields().other.length } }}</summary>
         <div class="grid">
           @for (h of fields().other; track h) {

@@ -235,6 +235,11 @@ export class ImportIssues {
   });
   readonly neighborHeaders = computed(() => (this.table()[0] ?? []).map((h) => h.replace(/^﻿/, '').trim()).filter(Boolean));
 
+  /** 表の「確認」：問題のある行は問題の列を上に、ない行は全部の列を開いて見せる（11/17） */
+  openLine(line: number): void {
+    this.edit(this.issueOf(line) ?? { line, messages: [], headers: [] });
+  }
+
   edit(it: ImportIssue): void {
     this.open.set(it);
     this.values.set(rowRecord(this.table(), it.line));
@@ -242,7 +247,7 @@ export class ImportIssues {
       () => {
         const d = this.dialog()?.nativeElement;
         if (d && !d.open) d.showModal();
-        d?.querySelector<HTMLElement>('.problem')?.focus();
+        (d?.querySelector<HTMLElement>('.problem') ?? d?.querySelector<HTMLElement>('.others input, .others .pick-box'))?.focus();
       },
       { injector: this.injector },
     );

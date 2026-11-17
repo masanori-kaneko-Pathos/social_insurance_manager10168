@@ -24,7 +24,7 @@ import {
 } from '../../logic/abroad-csv';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { CERTIFICATE_FIX_FIELDS, OVERSEAS_FIX_FIELDS } from '../../logic/import-fix-fields';
-import { FixButton, IssueRow } from '../../../../shared/components/import-issues/issue-row';
+import { IssueRow } from '../../../../shared/components/import-issues/issue-row';
 import { ImportSteps } from '../../../../shared/components/import-steps/import-steps';
 
 interface Preview {
@@ -42,7 +42,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-abroad-import',
-  imports: [FixButton, IssueRow, ImportSteps, ImportPicker, ImportIssues, RouterLink, TranslocoPipe],
+  imports: [IssueRow, ImportSteps, ImportPicker, ImportIssues, RouterLink, TranslocoPipe],
   templateUrl: './abroad-import.html',
   styleUrl: '../../pages/employee-import/employee-import.css',
 })
