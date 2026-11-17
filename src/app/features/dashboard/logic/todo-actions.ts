@@ -211,7 +211,8 @@ export function actionErrors(
     const month = toYearMonth(v.date);
     const has = (kind: 'health' | 'pension', g: string) =>
       !!pickGradeTable([...tables], kind, month)?.grades.some((row) => String(row.grade) === g);
-    if (!has('health', v.healthGrade) || !has('pension', v.pensionGrade)) e.healthGrade = 'grade';
+    // 厚生年金を取得しない（70歳以上など）なら、厚生年金の等級は選ばせない（報酬月額から自動で入れて持つ。11/16）
+    if (!has('health', v.healthGrade) || (v.pension && !has('pension', v.pensionGrade))) e.healthGrade = 'grade';
   } else {
     // 協定は取得日と同じ日も受け付ける（資格を取らなかった扱い）。ほかは取得日より後
     const before = (en: EnrollmentDoc) =>
@@ -279,8 +280,13 @@ export function buildSave(
     const row = (kind: 'health' | 'pension', g: string) =>
       pickGradeTable([...tables], kind, month)?.grades.find((x) => String(x.grade) === g) ?? null;
     const h = row('health', v.healthGrade);
-    const pe = row('pension', v.pensionGrade);
     const amount = parseYen(v.amount);
+    // 厚生年金を取得しないときは、報酬月額から出した等級を入れておく（保険料には使わない）
+    const pe = v.pension
+      ? row('pension', v.pensionGrade)
+      : amount === null
+        ? null
+        : decideStandard([...tables], month, amount).pension;
     if (!h || !pe || amount === null) return null;
     remuneration = {
       from: month,

@@ -12,6 +12,7 @@ import {
 } from '../../../../core/models/remuneration';
 import { todayLocal, toYearMonth } from '../../../../shared/utils/date';
 import { OfficeContext } from '../../../office/office-context.service';
+import { pensionGradeNeeded } from '../../logic/coverage';
 import { decideStandard, parseYen, pickGradeTable } from '../../../rates/logic/grade';
 import { formatYen } from '../../../../shared/utils/number';
 import { latest } from '../../../rates/logic/pick-rates';
@@ -98,6 +99,15 @@ export class RemunerationCard implements OnInit {
 
   /** 直前に自動で選んだ等級（手で選び直したかの判定に使う） */
   private lastAuto: Record<Kind, string> = { health: '', pension: '' };
+
+  /**
+   * 厚生年金の等級を選ばせない月か（70歳以上・厚生年金に入っていない。11/16）
+   * 等級は報酬月額から自動で入れて保存する（記録の形は同じ）。保険料には使わない
+   */
+  pensionOff(month: string): boolean {
+    return MONTH.test(month) && !pensionGradeNeeded(this.employee(), month);
+  }
+  readonly formPensionOff = computed(() => this.pensionOff(this.formMonth()));
 
   constructor() {
     this.form.controls.from.valueChanges.subscribe((v) => {

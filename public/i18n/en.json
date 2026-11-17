@@ -1067,7 +1067,8 @@
     },
     "hint": {
       "amount": "Yen. Commas are optional."
-    }
+    },
+    "pensionOff": "No employees' pension coverage in this month (age 70 or over, etc.), so no pension grade is chosen. Only health insurance premiums are calculated."
   },
   "premium": {
     "title": "Premiums (monthly)",
@@ -1285,6 +1286,48 @@
       "filled": "Filled {{n}} field(s). Check the values, then press Save.",
       "pickHint": "Numbers found in the PDF. Click one to put it in the highlighted field.",
       "selectFirst": "Numbers found in the PDF. Click the field first, then click a number."
+    },
+    "csv": {
+      "choose": "Import CSV",
+      "export": "Export CSV",
+      "template": "Download template",
+      "hint": "You can enter several years of rates at once. One row per \"from\" month, with total, employee and employer for health insurance, long-term care insurance and the child support levy (total may be blank). The unit column is % or ‰. You can edit an exported file in Excel and import it as is.",
+      "previewTitle": "Check {{file}}",
+      "missing": "Required columns are missing: {{cols}}",
+      "empty": "There are no rows to import.",
+      "count": "New {{c}} · Overwrite {{u}} · Unchanged {{s}} · Errors {{e}}",
+      "col": {
+        "line": "Line",
+        "result": "Result"
+      },
+      "status": {
+        "new": "New",
+        "update": "Overwrite",
+        "same": "Unchanged"
+      },
+      "import": "Import (new {{c}}, overwrite {{u}})",
+      "skipErrors": "Rows with errors are not imported. Fix them and reload the file, or import without them.",
+      "done": "Saved {{n}} rate rows.",
+      "readError": "Could not read the file. Please check that it is a CSV or Excel file.",
+      "saveError": "Could not save (nothing was saved). Please try again later.",
+      "error": {
+        "month": "Cannot read the month (use 2026-04)",
+        "outOfRange": "The month is outside the period with this society",
+        "duplicate": "The same month appears earlier in the file",
+        "unit": "The unit must be % or ‰",
+        "health_format": "Cannot read the health insurance rate",
+        "health_tooHigh": "The health insurance rate exceeds 30%",
+        "health_mismatch": "Health insurance total does not equal employee + employer",
+        "health_required": "The health insurance rate is blank",
+        "care_format": "Cannot read the long-term care rate",
+        "care_tooHigh": "The long-term care rate exceeds 30%",
+        "care_mismatch": "Long-term care total does not equal employee + employer",
+        "care_required": "The long-term care rate is blank (enter 0 if none)",
+        "childSupport_format": "Cannot read the child support levy rate",
+        "childSupport_tooHigh": "The child support levy rate exceeds 30%",
+        "childSupport_mismatch": "Child support levy total does not equal employee + employer",
+        "childSupport_required": "From April 2026, the child support levy rate is required"
+      }
     }
   },
   "bonus": {

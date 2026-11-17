@@ -180,7 +180,87 @@
           <button type="button" class="btn btn-primary" (click)="startNew()">
             {{ 'rateDialog.add' | transloco }}
           </button>
+          <label class="btn">
+            {{ 'rateDialog.csv.choose' | transloco }}
+            <input type="file" accept=".csv,.tsv,.txt,.xlsx,.xls,text/csv" hidden (change)="readCsv($event)" />
+          </label>
+          <button type="button" class="btn" (click)="downloadCsv()">
+            {{ (kumiaiRows().length ? 'rateDialog.csv.export' : 'rateDialog.csv.template') | transloco }}
+          </button>
         </div>
+        <p class="hint">{{ 'rateDialog.csv.hint' | transloco }}</p>
+
+        @if (csvDone(); as n) {
+          <div class="alert alert-success" role="status">{{ 'rateDialog.csv.done' | transloco: { n: n } }}</div>
+        }
+        @if (csvError(); as key) {
+          <div class="alert alert-danger" role="alert">{{ key | transloco }}</div>
+        }
+        @if (csvFile(); as file) {
+          <section class="csv-preview">
+            <h3>{{ 'rateDialog.csv.previewTitle' | transloco: { file: file } }}</h3>
+            @if (csvMissing().length) {
+              <p class="warn-box">{{ 'rateDialog.csv.missing' | transloco: { cols: csvMissing().join('・') } }}</p>
+            } @else if (csvRows().length === 0) {
+              <p class="warn-box">{{ 'rateDialog.csv.empty' | transloco }}</p>
+            } @else {
+              <p>
+                {{ 'rateDialog.csv.count' | transloco: { c: csvCount().new, u: csvCount().update, s: csvCount().same, e: csvCount().error } }}
+              </p>
+              <table class="rates">
+                <thead>
+                  <tr>
+                    <th>{{ 'rateDialog.csv.col.line' | transloco }}</th>
+                    <th>{{ 'rateDialog.from' | transloco }}</th>
+                    @for (kind of kinds; track kind) {
+                      <th class="num">{{ 'premium.part.' + kind | transloco }}</th>
+                    }
+                    <th>{{ 'rateDialog.csv.col.result' | transloco }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (r of csvRows(); track r.line) {
+                    <tr [class.row-error]="r.status === 'error'">
+                      <td>{{ r.line }}</td>
+                      <td>{{ r.from }}</td>
+                      @for (kind of kinds; track kind) {
+                        <td class="num">
+                          @if (r.input; as k) {
+                            {{ show(totalOf(k[kind])) }}
+                            <span class="sub">{{ 'rateDialog.splitNote' | transloco: { employee: show(k[kind].employee), employer: show(k[kind].employer) } }}</span>
+                          }
+                        </td>
+                      }
+                      <td>
+                        @if (r.status === 'error') {
+                          @for (e of r.errors; track e) {
+                            <span class="field-error">{{ csvErrorKey(e) | transloco }}</span>
+                          }
+                        } @else {
+                          {{ 'rateDialog.csv.status.' + r.status | transloco }}
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+              <div class="actions">
+                <button type="button" class="btn" (click)="clearCsv()">{{ 'common.cancel' | transloco }}</button>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  [disabled]="csvSaving() || csvCount().new + csvCount().update === 0"
+                  (click)="importCsv()"
+                >
+                  {{ 'rateDialog.csv.import' | transloco: { c: csvCount().new, u: csvCount().update } }}
+                </button>
+              </div>
+              @if (csvCount().error) {
+                <p class="hint">{{ 'rateDialog.csv.skipErrors' | transloco }}</p>
+              }
+            }
+          </section>
+        }
       }
 
       <!-- 入力欄（追加・編集） -->

@@ -82,6 +82,8 @@ export class TodoDialog implements OnInit {
   private readonly value = signal<ActionFormValue>(this.form.getRawValue());
 
   readonly mode = computed(() => this.request().mode);
+  /** 厚生年金を取得しない（70歳以上など）なら、厚生年金の等級は選ばせない（11/16） */
+  readonly pensionChosen = computed(() => this.value().pension);
   readonly month = computed(() => (DATE_RE.test(this.value().date) ? toYearMonth(this.value().date) : ''));
   /** 取得月の標準報酬がもうある（報酬月額と等級は入れない） */
   readonly monthSaved = computed(() => this.savedMonths().includes(this.month()));

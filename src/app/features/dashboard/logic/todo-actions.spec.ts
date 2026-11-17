@@ -117,6 +117,10 @@ describe('actionErrors', () => {
   it('等級表にない等級', () => {
     expect(actionErrors({ ...ok, pensionGrade: '99' }, r, person(), TABLES).healthGrade).toBe('grade');
   });
+  it('厚生年金を取得しないなら、厚生年金の等級は空でよい（70歳以上など。11/17）', () => {
+    expect(actionErrors({ ...ok, pension: false, pensionGrade: '' }, r, person(), TABLES)).toEqual({});
+    expect(actionErrors({ ...ok, pensionGrade: '' }, r, person(), TABLES).healthGrade).toBe('grade');
+  });
   it('喪失日が取得日以前', () => {
     const p = person({ health: on('2026-04-01'), pension: on('2026-04-01') });
     const lr = actionFor(item('lose', null), p, CONTRACTS, TODAY)!;
@@ -139,6 +143,11 @@ describe('buildSave', () => {
       pension: { grade: 3, standard: 104000 },
     });
     expect(s.filing).toEqual({ type: 'acquisition', subject: '2026-10-01', submittedOn: TODAY });
+  });
+  it('厚生年金を取得しないときは、厚年の等級を報酬月額から入れて持つ（11/17）', () => {
+    const r = actionFor(item('acquire', '2026-10-01'), person(), CONTRACTS, TODAY)!;
+    const v = { ...actionForm(r, TODAY), healthGrade: '6', pension: false, pensionGrade: '' };
+    expect(buildSave(v, r, person(), TABLES, [])!.remuneration?.pension).toEqual({ grade: 3, standard: 104000 });
   });
   it('その月の標準報酬がもうあれば上書きしない', () => {
     const r = actionFor(item('acquire', '2026-10-01'), person(), CONTRACTS, TODAY)!;

@@ -94,6 +94,22 @@ export function healthLostDate(input: CoverageInput): DateStr | null {
   return earlier(input.health.lostDate, birthdayAt(input.birthDate, 75));
 }
 
+/**
+ * その月からの標準報酬に、厚生年金の等級が要るか（11/16）
+ * 厚生年金に入っていない人・70歳到達（や喪失）の月以後は、厚生年金の保険料がかからないので要らない
+ * ※ 記録の形は変えない（等級は報酬月額から自動で入れて持つ）。画面で選ばせないだけ
+ */
+export function pensionGradeNeeded(input: Pick<CoverageInput, 'birthDate' | 'pension'>, month: YearMonth): boolean {
+  if (!input.pension.enrolled) return false;
+  const lost = earlier(input.pension.lostDate, ageReachDate(input.birthDate, 70));
+  if (!lost) return true;
+  // 同じ月に取得して喪失した月は、その月の保険料がかかる
+  if (input.pension.acquiredDate && toYearMonth(input.pension.acquiredDate) === toYearMonth(lost) && month === toYearMonth(lost)) {
+    return input.pension.acquiredDate < lost;
+  }
+  return month < toYearMonth(lost);
+}
+
 export function coverageForMonth(input: CoverageInput, month: YearMonth): MonthlyCoverage {
   const health =
     input.health.enrolled &&

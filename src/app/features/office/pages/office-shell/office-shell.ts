@@ -1,7 +1,5 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { ActivatedRoute, NavigationEnd, Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { filter, map, startWith } from 'rxjs';
+import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { OfficeSwitcher } from '../../components/office-switcher/office-switcher';
 import { AccountMenu } from '../../components/account-menu/account-menu';
@@ -27,7 +25,16 @@ function readCollapsed(): boolean {
 
 @Component({
   selector: 'app-office-shell',
-  imports: [RouterOutlet, TranslocoPipe, OfficeSwitcher, AccountMenu, RouterLink, RouterLinkActive, Icon, Bell],
+  imports: [
+    RouterOutlet,
+    TranslocoPipe,
+    OfficeSwitcher,
+    AccountMenu,
+    RouterLink,
+    RouterLinkActive,
+    Icon,
+    Bell,
+  ],
   templateUrl: './office-shell.html',
   styleUrl: './office-shell.css',
 })
@@ -35,26 +42,6 @@ export class OfficeShell {
   readonly context = inject(OfficeContext);
   readonly badge = inject(TodoBadgeService);
   readonly toast = inject(ToastService);
-
-  private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
-
-  /**
-   * 表が主役の画面（ホーム・一覧など）か。ルートの data.wide で決める（11/16）
-   * 広い画面では本文の幅の上限を広げて、表を横に伸ばす（入力の画面は今の幅のまま）
-   */
-  readonly wide = toSignal(
-    this.router.events.pipe(
-      filter((e) => e instanceof NavigationEnd),
-      startWith(null),
-      map(() => {
-        let r = this.route;
-        while (r.firstChild) r = r.firstChild;
-        return r.snapshot.data['wide'] === true;
-      }),
-    ),
-    { initialValue: false },
-  );
 
   /** サイドバーをしまっているか（ブラウザに覚えさせる。しまうとアイコンだけ） */
   readonly navCollapsed = signal(readCollapsed());

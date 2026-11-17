@@ -1,210 +1,210 @@
 .app-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-md);
-    height: 56px;
-    padding: 0 var(--space-lg);
-    color: var(--color-header-text);
-    background: var(--color-header-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  height: 56px;
+  padding: 0 var(--space-lg);
+  color: var(--color-header-text);
+  background: var(--color-header-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.header-left,
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  min-width: 0;
+}
+
+.app-name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 左上の□：サイドバーをしまう・出すボタン（押せる範囲は広く、見た目は小さな四角のまま） */
+.nav-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-left: -6px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.nav-toggle::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--color-primary);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.nav-toggle:hover {
+  background: var(--color-hover);
+}
+
+.nav-toggle:hover::before {
+  transform: scale(1.2);
+}
+
+.nav-toggle:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.shell-body {
+  display: flex;
+  min-height: calc(100vh - 56px);
+}
+
+.side-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+  width: 200px;
+  padding: var(--space-lg) var(--space-sm);
+  /* ヘッダーと同じ地（ダークでは、いちばん後ろの黒に近い灰色。カードだけが焦げ茶で浮く） */
+  background: var(--color-header-bg);
+  border-right: 1px solid var(--color-border);
+  /* ページを下へ動かしても、サイドバーは画面に貼りついたまま（長いときはサイドバーの中だけ動く） */
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.side-nav a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.side-nav a app-icon {
+  opacity: 0.75;
+}
+
+.side-nav a.active app-icon {
+  opacity: 1;
+  color: var(--color-text);
+}
+
+/* まとまりの見出し（小さく・薄く） */
+.nav-sep {
+  display: block;
+  height: 1px;
+  margin: var(--space-sm) var(--space-md);
+  background: var(--color-border);
+}
+
+.side-nav a:hover {
+  background: var(--color-bg);
+}
+
+/* 今いる場所：オレンジの線で囲み、地は選択中の色（ダークでは焦げ茶）、文字は本文の色 */
+.side-nav a.active {
+  color: var(--color-text);
+  background: var(--color-highlight);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+  font-weight: 600;
+}
+
+/* ===== しまったとき：アイコンだけ（押せばそのメニューへ。名前は指したときに出る） ===== */
+.side-nav {
+  transition:
+    width var(--dur-base) var(--ease-out),
+    padding var(--dur-base) var(--ease-out);
+}
+
+.side-nav.collapsed {
+  width: 60px;
+  padding-left: var(--space-xs);
+  padding-right: var(--space-xs);
+}
+
+.side-nav.collapsed a {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.side-nav.collapsed .label {
+  display: none;
+}
+
+.side-nav.collapsed .nav-sep {
+  margin-left: var(--space-xs);
+  margin-right: var(--space-xs);
+}
+
+.shell-main {
+  flex: 1;
+  min-width: 0;
+  max-width: 1080px;
+  padding: var(--space-xl) var(--space-lg);
+  transition: max-width var(--dur-base) var(--ease-out);
+}
+
+/* サイドバーをしまったら、空いた幅（200px → 60px の差）だけ本文を広げる（左に詰めるだけにしない） */
+.shell-body.nav-collapsed .shell-main {
+  max-width: calc(1080px + 140px);
+}
+
+@media (max-width: 720px) {
+  .shell-body {
+    flex-direction: column;
+  }
+
+  .side-nav {
+    position: static;
+    height: auto;
+    flex-direction: row;
+    width: auto;
+    padding: var(--space-sm);
+    overflow-x: auto;
+    border-right: 0;
     border-bottom: 1px solid var(--color-border);
   }
-  
-  .header-left,
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: var(--space-md);
-    min-width: 0;
-  }
-  
-  .app-name {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  
-  /* 左上の□：サイドバーをしまう・出すボタン（押せる範囲は広く、見た目は小さな四角のまま） */
-  .nav-toggle {
-    display: inline-grid;
-    place-items: center;
-    width: 28px;
-    height: 28px;
-    margin-left: -6px;
-    padding: 0;
-    background: none;
-    border: none;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-  }
 
-  .nav-toggle::before {
-    content: '';
-    width: 10px;
-    height: 10px;
-    border-radius: 2px;
-    background: var(--color-primary);
-    transition: transform var(--dur-base) var(--ease-out);
-  }
-
-  .nav-toggle:hover {
-    background: var(--color-hover);
-  }
-
-  .nav-toggle:hover::before {
-    transform: scale(1.2);
-  }
-
-  .nav-toggle:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 1px;
-  }
-  
-  .shell-body {
-    display: flex;
-    min-height: calc(100vh - 56px);
-  }
-  
-  .side-nav {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
-    flex-shrink: 0;
-    width: 200px;
-    padding: var(--space-lg) var(--space-sm);
-    /* ヘッダーと同じ地（ダークでは、いちばん後ろの黒に近い灰色。カードだけが焦げ茶で浮く） */
-    background: var(--color-header-bg);
-    border-right: 1px solid var(--color-border);
-    /* ページを下へ動かしても、サイドバーは画面に貼りついたまま（長いときはサイドバーの中だけ動く） */
-    position: sticky;
-    top: 0;
-    align-self: flex-start;
-    height: 100vh;
-    overflow-y: auto;
-  }
-  
-  .side-nav a {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    padding: var(--space-sm) var(--space-md);
-    font-size: var(--font-sm);
-    color: var(--color-text-sub);
-    text-decoration: none;
-    border-radius: var(--radius-sm);
-    transition: background-color var(--dur-fast) var(--ease-out);
-  }
-  
-  .side-nav a app-icon {
-    opacity: 0.75;
-  }
-
-  .side-nav a.active app-icon {
-    opacity: 1;
-    color: var(--color-text);
-  }
-
-  /* まとまりの見出し（小さく・薄く） */
+  /* 横に並べるときは、まとまりの見出しを出さない */
   .nav-sep {
-    display: block;
-    height: 1px;
-    margin: var(--space-sm) var(--space-md);
-    background: var(--color-border);
-  }
-
-  .side-nav a:hover {
-    background: var(--color-bg);
-  }
-  
-  /* 今いる場所：オレンジの線で囲み、地は選択中の色（ダークでは焦げ茶）、文字は本文の色 */
-  .side-nav a.active {
-    color: var(--color-text);
-    background: var(--color-highlight);
-    box-shadow: inset 0 0 0 1px var(--color-primary);
-    font-weight: 600;
-  }
-
-  /* ===== しまったとき：アイコンだけ（押せばそのメニューへ。名前は指したときに出る） ===== */
-  .side-nav {
-    transition:
-      width var(--dur-base) var(--ease-out),
-      padding var(--dur-base) var(--ease-out);
-  }
-
-  .side-nav.collapsed {
-    width: 60px;
-    padding-left: var(--space-xs);
-    padding-right: var(--space-xs);
-  }
-
-  .side-nav.collapsed a {
-    justify-content: center;
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  .side-nav.collapsed .label {
     display: none;
   }
 
-  .side-nav.collapsed .nav-sep {
-    margin-left: var(--space-xs);
-    margin-right: var(--space-xs);
-  }
-  
-  .shell-main {
-    flex: 1;
-    min-width: 0;
-    max-width: 1080px;
-    padding: var(--space-xl) var(--space-lg);
-    transition: max-width var(--dur-base) var(--ease-out);
+  .side-nav a {
+    white-space: nowrap;
   }
 
-  /* サイドバーをしまったら、空いた幅（200px → 60px の差）だけ本文を広げる（左に詰めるだけにしない） */
-  .shell-body.nav-collapsed .shell-main {
-    max-width: calc(1080px + 140px);
+  /* 狭い画面では横に並べるので、しまう動きはなし（名前も出す） */
+  .side-nav.collapsed {
+    width: auto;
   }
-  
-  @media (max-width: 720px) {
-    .shell-body {
-      flex-direction: column;
-    }
-  
-    .side-nav {
-      position: static;
-      height: auto;
-      flex-direction: row;
-      width: auto;
-      padding: var(--space-sm);
-      overflow-x: auto;
-      border-right: 0;
-      border-bottom: 1px solid var(--color-border);
-    }
 
-    /* 横に並べるときは、まとまりの見出しを出さない */
-    .nav-sep {
-      display: none;
-    }
-
-    .side-nav a {
-      white-space: nowrap;
-    }
-
-    /* 狭い画面では横に並べるので、しまう動きはなし（名前も出す） */
-    .side-nav.collapsed {
-      width: auto;
-    }
-
-    .side-nav.collapsed .label {
-      display: inline;
-    }
-
-    .nav-toggle {
-      display: none;
-    }
+  .side-nav.collapsed .label {
+    display: inline;
   }
+
+  .nav-toggle {
+    display: none;
+  }
+}
 /* 印刷：ヘッダーとサイドバーを隠して、本文だけを紙いっぱいに（届書の一覧など） */
 @media print {
   .app-header,
@@ -244,26 +244,4 @@
 .app-home:hover {
   color: var(--color-primary-strong, var(--color-text));
   text-decoration: underline;
-}
-
-/* ページの切り替え（View Transitions。11/16）：ヘッダーとサイドバーは動かさず、本文だけ薄く入れ替える */
-.app-header {
-  view-transition-name: app-header;
-  /* view-transition-name を付けるとヘッダーが1枚の層になる。本文（アイコンを拡大したタイルなど）より上に重ねて、
-     アカウントのメニューが本文の下にもぐらないようにする（11/16） */
-  position: relative;
-  z-index: 30;
-}
-
-.side-nav {
-  view-transition-name: side-nav;
-}
-
-/* ===== 11/16：表が主役の画面（ホーム・一覧）は、広い画面で横に伸ばす。入力の画面は 1080px のまま ===== */
-.shell-main.wide {
-  max-width: 1680px;
-}
-
-.shell-body.nav-collapsed .shell-main.wide {
-  max-width: calc(1680px + 140px);
 }

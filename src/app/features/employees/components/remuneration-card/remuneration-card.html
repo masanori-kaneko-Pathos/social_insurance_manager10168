@@ -59,7 +59,7 @@
 
       <div class="grid">
         @for (k of kinds; track k) {
-          <div class="field">
+          <div class="field" [hidden]="k === 'pension' && formPensionOff()">
             <label [for]="'rem-' + k">{{ 'remuneration.field.' + k | transloco }}</label>
             <select
               [id]="'rem-' + k"
@@ -86,6 +86,9 @@
           </div>
         }
       </div>
+      @if (formPensionOff()) {
+        <p class="hint">{{ 'remuneration.pensionOff' | transloco }}</p>
+      }
       @if (autoStatus(); as key) {
         <p class="hint warn">{{ key | transloco }}</p>
       } @else {
@@ -150,10 +153,14 @@
                 {{ yen(r.health.standard) }}
               </td>
               <td class="num">
-                <span class="grade">{{
-                  'remuneration.gradeShort' | transloco: { grade: r.pension.grade }
-                }}</span>
-                {{ yen(r.pension.standard) }}
+                @if (pensionOff(r.from)) {
+                  <span class="muted" [title]="'remuneration.pensionOff' | transloco">—</span>
+                } @else {
+                  <span class="grade">{{
+                    'remuneration.gradeShort' | transloco: { grade: r.pension.grade }
+                  }}</span>
+                  {{ yen(r.pension.standard) }}
+                }
               </td>
               @if (context.isAdmin()) {
                 <td class="row-actions">

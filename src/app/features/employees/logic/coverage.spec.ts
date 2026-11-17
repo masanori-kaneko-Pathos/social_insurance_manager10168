@@ -1,3 +1,4 @@
+import { pensionGradeNeeded } from './coverage';
 import { CoverageInput, ageReachDate, coverageForMonth, defaultEnrollmentDates, emptyReason, isChargedMonth } from './coverage';
 import { monthsOfFiscalYear, fiscalYearOf } from '../../../shared/utils/date';
 
@@ -186,5 +187,26 @@ describe('emptyReason：表の月がすべて空のときの理由', () => {
   });
   it('月がなければ null', () => {
     expect(emptyReason(employee('1990-05-15', '2027-04-01'), [])).toBeNull();
+  });
+});
+
+describe('pensionGradeNeeded：厚生年金の等級が要る月か（11/16）', () => {
+  const p = (birthDate: string, enrolled = true, acquiredDate: string | null = '2020-04-01', lostDate: string | null = null) => ({
+    birthDate,
+    pension: { enrolled, acquiredDate, lostDate },
+  });
+  it('70歳到達（誕生日の前日）の月より前は要る。到達の月からは要らない', () => {
+    // 1957-05-15 生まれ → 到達は 2027-05-14
+    expect(pensionGradeNeeded(p('1957-05-15'), '2027-04')).toBeTrue();
+    expect(pensionGradeNeeded(p('1957-05-15'), '2027-05')).toBeFalse();
+    expect(pensionGradeNeeded(p('1957-05-15'), '2027-09')).toBeFalse();
+  });
+  it('厚生年金に入っていない人は要らない', () => {
+    expect(pensionGradeNeeded(p('1990-01-01', false, null), '2026-09')).toBeFalse();
+  });
+  it('喪失した月からは要らない。同じ月に取得して喪失した月は要る', () => {
+    expect(pensionGradeNeeded(p('1990-01-01', true, '2020-04-01', '2026-10-01'), '2026-09')).toBeTrue();
+    expect(pensionGradeNeeded(p('1990-01-01', true, '2020-04-01', '2026-10-01'), '2026-10')).toBeFalse();
+    expect(pensionGradeNeeded(p('1990-01-01', true, '2026-10-01', '2026-10-21'), '2026-10')).toBeTrue();
   });
 });

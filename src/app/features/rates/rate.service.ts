@@ -6,6 +6,7 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  writeBatch,
 } from 'firebase/firestore';
 import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { db } from '../../core/firebase';
@@ -85,6 +86,20 @@ export class RateService {
       ...input,
       updatedAt: serverTimestamp(),
     });
+  }
+
+  /**
+   * CSV から、まとめて登録・上書き（11/17）
+   * 全部書けるか、何も書かないか（1回の書き込みは500件まで。料率は多くても数十行）
+   */
+  async saveKumiaiMany(officeId: string, items: readonly { input: KumiaiRateInput; exists: boolean }[]): Promise<void> {
+    const batch = writeBatch(db);
+    for (const { input, exists } of items) {
+      const ref = doc(this.kumiaiCol(officeId), input.from);
+      if (exists) batch.update(ref, { ...input, updatedAt: serverTimestamp() });
+      else batch.set(ref, { ...input, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+    }
+    await batch.commit();
   }
 
   async deleteKumiai(officeId: string, from: string): Promise<void> {

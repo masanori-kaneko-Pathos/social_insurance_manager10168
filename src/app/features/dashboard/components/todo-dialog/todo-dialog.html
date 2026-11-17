@@ -86,7 +86,7 @@
                   }
                 </select>
               </div>
-              <div class="field">
+              <div class="field" [hidden]="!pensionChosen()">
                 <label for="td-pg">{{ 'remuneration.field.pension' | transloco }}</label>
                 <select id="td-pg" class="input" formControlName="pensionGrade">
                   <option value="">{{ 'common.select' | transloco }}</option>

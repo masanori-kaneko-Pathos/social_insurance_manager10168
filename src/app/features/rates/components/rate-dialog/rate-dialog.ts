@@ -32,6 +32,10 @@ import {
   RateUnit,
 } from '../../logic/rate-format';
 import { RateService } from '../../rate.service';
+import { downloadCsv, safeFileName } from '../../../../shared/csv/csv';
+import { readTables } from '../../../../shared/import/parse';
+import { todayLocal } from '../../../../shared/utils/date';
+import { RateCsvRow, readRateCsv, rateCsvTable, RATE_CSV_HEADERS, RateCsvColumn } from '../../logic/rate-csv';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 /** 窓で扱う期間と保険者（開く側で、保存済みの履歴から作る） */
@@ -132,6 +136,19 @@ export class RateDialog implements OnInit {
   readonly pdfFilled = signal<number | null>(null);
   /** 最後に選んだ欄（候補を押すと、ここに入る） */
   readonly targetField = signal<{ kind: Kind; field: (typeof FIELDS)[number] } | null>(null);
+
+  // ===== CSV でまとめて入れる・出す（11/17） =====
+  readonly csvFile = signal<string | null>(null);
+  readonly csvRows = signal<RateCsvRow[]>([]);
+  readonly csvMissing = signal<string[]>([]);
+  readonly csvError = signal<string | null>(null);
+  readonly csvSaving = signal(false);
+  readonly csvDone = signal<number | null>(null);
+  readonly csvCount = computed(() => {
+    const c = { new: 0, update: 0, same: 0, error: 0 };
+    for (const r of this.csvRows()) c[r.status]++;
+    return c;
+  });
 
   readonly form = this.fb.nonNullable.group({
     from: [''],
@@ -361,6 +378,65 @@ export class RateDialog implements OnInit {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  /** 保存済みの料率を CSV で出す（なければ例の1行のひな形） */
+  downloadCsv(): void {
+    const t = this.target();
+    const name = t.insurer.kumiaiName || '健康保険組合';
+    downloadCsv(safeFileName(`料率_${name}_${todayLocal()}.csv`), rateCsvTable(this.kumiaiRows(), this.unit()));
+  }
+
+  async readCsv(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    this.clearCsv();
+    try {
+      const { tables } = await readTables(file);
+      const result = readRateCsv(tables[0].rows, { range: this.range(), existing: this.kumiaiAll() });
+      this.csvFile.set(file.name);
+      this.csvMissing.set(result.missing.map((c: RateCsvColumn) => RATE_CSV_HEADERS[c]));
+      this.csvRows.set(result.rows);
+    } catch (err) {
+      console.error(err);
+      this.csvError.set(err instanceof ImportFileError ? `importMap.error.${err.code}` : 'rateDialog.csv.readError');
+    }
+  }
+
+  clearCsv(): void {
+    this.csvFile.set(null);
+    this.csvRows.set([]);
+    this.csvMissing.set([]);
+    this.csvError.set(null);
+    this.csvDone.set(null);
+  }
+
+  /** 新規・上書きの行だけ書く（エラーの行・変わらない行は飛ばす） */
+  async importCsv(): Promise<void> {
+    if (!this.editable() || this.csvSaving()) return;
+    const items = this.csvRows()
+      .filter((r) => (r.status === 'new' || r.status === 'update') && r.input)
+      .map((r) => ({ input: r.input!, exists: r.status === 'update' }));
+    if (!items.length) return;
+    this.csvSaving.set(true);
+    this.csvError.set(null);
+    try {
+      await this.rates.saveKumiaiMany(this.target().officeId, items);
+      this.kumiaiAll.set(await this.rates.kumiaiList(this.target().officeId));
+      this.clearCsv();
+      this.csvDone.set(items.length);
+    } catch (err) {
+      console.error(err);
+      this.csvError.set('rateDialog.csv.saveError');
+    } finally {
+      this.csvSaving.set(false);
+    }
+  }
+
+  csvErrorKey(code: string): string {
+    return `rateDialog.csv.error.${code.replace('.', '_')}`;
   }
 
   /** 1回目で確認の表示、2回目で削除 */
