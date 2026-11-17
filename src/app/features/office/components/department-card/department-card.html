@@ -33,13 +33,13 @@
     <div class="dept-add">
       <label class="field">
         <span class="label">{{ 'office.department.newName' | transloco }}</span>
-        <input class="input" [value]="newName()" (input)="newName.set($any($event.target).value)" (keydown.enter)="toKana($event, newKanaInput)" maxlength="40" />
+        <input #newNameInput class="input" [value]="newName()" (input)="newName.set($any($event.target).value)" (keydown.enter)="toKana($event, newKanaInput)" maxlength="40" />
       </label>
       <label class="field">
         <span class="label">{{ 'office.department.kana' | transloco }}</span>
-        <input #newKanaInput class="input" [value]="newKana()" (input)="newKana.set($any($event.target).value)" (keydown.enter)="onKanaEnter($event) && add()" maxlength="60" />
+        <input #newKanaInput class="input" [value]="newKana()" (input)="newKana.set($any($event.target).value)" (keydown.enter)="onKanaEnter($event) && add() && newNameInput.focus()" maxlength="60" />
       </label>
-      <button type="button" class="btn" (click)="add()">＋ {{ 'office.department.add' | transloco }}</button>
+      <button type="button" class="btn" (click)="add() && newNameInput.focus()">＋ {{ 'office.department.add' | transloco }}</button>
     </div>
   }
 </section>
