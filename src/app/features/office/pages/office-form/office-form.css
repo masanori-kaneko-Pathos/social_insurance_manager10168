@@ -433,6 +433,8 @@ h3 {
 
 /* ===== 組合の最初の料率（組合の名前の下。11/17） ===== */
 .first-rates {
+  /* 枠は中身より細くなれないのがブラウザの決まり。0 にして、はみ出さないようにする（11/17） */
+  min-width: 0;
   margin: var(--space-md) 0 0;
   padding: var(--space-md);
   border: 1px solid var(--color-border);
@@ -471,15 +473,3 @@ h3 {
   text-align: right;
 }
 
-.rate-file {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm);
-  margin: var(--space-sm) 0;
-}
-
-.file-rows {
-  max-height: 40vh;
-  overflow: auto;
-}

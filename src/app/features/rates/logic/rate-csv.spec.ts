@@ -1,4 +1,4 @@
-import { readRateCsv, readRateMonth, rateCsvTable, RATE_CSV_COLUMNS, RATE_CSV_HEADERS } from './rate-csv';
+import { readRateCsv, readRateMonth, rateCsvTable, rateEditsOf, rateErrorColumns, rateFixTable, recheckRateCsv, RATE_CSV_COLUMNS, RATE_CSV_HEADERS } from './rate-csv';
 import type { KumiaiRateInput } from '../../../core/models/rates';
 
 const H = RATE_CSV_COLUMNS.map((c) => RATE_CSV_HEADERS[c]);
@@ -111,5 +111,35 @@ describe('rateCsvTable：出力', () => {
   });
   it('保存済みがなければ例の1行', () => {
     expect(rateCsvTable([]).length).toBe(2);
+  });
+});
+
+describe('共通の窓で直す（11/17）', () => {
+  const H = RATE_CSV_COLUMNS.map((c) => RATE_CSV_HEADERS[c]);
+  const ctx = { range: { from: '2020-01', to: null }, existing: [] };
+  const table = [
+    H,
+    ['2024-04', '%', '9.2', '4.6', '4.6', '1.8', '0.9', '0.9', '', '', ''],
+    ['', '', '', '', '', '', '', '', '', '', ''],
+    ['2025-03', '%', '9.9', '4.6', '4.6', '1.8', '0.9', '0.9', '', '', ''],
+  ];
+
+  it('エラー → 直す列', () => {
+    expect(rateErrorColumns(['month', 'health.mismatch'])).toEqual(['from', 'health_total', 'health_employee', 'health_employer']);
+    expect(rateErrorColumns(['unit'])).toEqual(['unit']);
+  });
+
+  it('表の行の番号の位置に置き、直した値で確かめ直すとエラーが消える', () => {
+    const { rows } = readRateCsv(table, ctx);
+    const bad = rows.find((r) => r.status === 'error')!;
+    expect(bad.line).toBe(4);
+    const fix = rateFixTable(rows);
+    expect(fix[3][0]).toBe('2025-03');
+    expect(fix[2].every((v) => v === '')).toBe(true);
+    const edits = rateEditsOf({ [RATE_CSV_HEADERS.health_total]: '9.2', 知らない列: 'x' });
+    expect(edits).toEqual({ health_total: '9.2' });
+    const again = recheckRateCsv(rows, new Map([[bad.line, edits]]), ctx);
+    expect(again.rows.every((r) => r.status === 'new')).toBe(true);
+    expect(again.rows.map((r) => r.line)).toEqual([2, 4]);
   });
 });

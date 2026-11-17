@@ -321,28 +321,6 @@
   text-overflow: ellipsis;
 }
 
-/* CSV の確認（11/17） */
-.csv-preview {
-  margin-top: 1rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--color-border);
-}
-.csv-preview h3 {
-  font-size: 1rem;
-  margin: 0 0 0.5rem;
-}
-.csv-preview .sub {
-  display: block;
-  font-size: 0.8em;
-  opacity: 0.75;
-}
-.csv-preview .row-error td {
-  background: var(--color-danger-bg, #fdeceb);
-}
-.csv-preview .field-error {
-  display: block;
-}
-
 /* 支援金の施行前の月（11/17） */
 .not-yet {
   color: var(--color-text-sub);

@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
@@ -24,12 +24,7 @@ import {
   PayrollSettings,
   Department,
 } from '../../../../core/models/office';
-import {
-  AGREEMENT_ROUNDINGS,
-  AgreementRounding,
-  CollectionMethod,
-  HealthRounding,
-} from '../../../../core/models/premium';
+import { AGREEMENT_ROUNDINGS, AgreementRounding, CollectionMethod, HealthRounding } from '../../../../core/models/premium';
 import { PostalCodeService } from '../../../../shared/services/postal-code.service';
 import { corporateNumberValidator } from '../../../../shared/validators/corporate-number';
 import { OfficeService } from '../../office.service';
@@ -48,13 +43,14 @@ import {
 } from '../../office-settings';
 import { RateDialog, RateDialogTarget } from '../../../rates/components/rate-dialog/rate-dialog';
 import { RateService } from '../../../rates/rate.service';
-import { formatRate, formatRateInput, parseSplit } from '../../../rates/logic/rate-format';
-import { RateCsvRow, readRateFile } from '../../../rates/logic/rate-csv';
+import { formatRateInput, parseSplit } from '../../../rates/logic/rate-format';
+import { RateFileImport } from '../../../rates/components/rate-file-import/rate-file-import';
 import { findRates, guessFill } from '../../../rates/logic/rate-pdf';
-import { ImportFileError, MAX_FILE_BYTES, readTables } from '../../../../shared/import/parse';
+import { ImportFileError, MAX_FILE_BYTES } from '../../../../shared/import/parse';
 import { EnterNext } from '../../../../shared/directives/enter-next';
-import type { KumiaiRateInput } from '../../../../core/models/rates';
+import type { KumiaiRateInput, MonthRange } from '../../../../core/models/rates';
 import { ToastService } from '../../../../shared/services/toast.service';
+
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { CriteriaDoc } from '../../../../core/models/master';
@@ -131,16 +127,7 @@ const emptyToNull = (v: string) => (v.trim() ? v.trim() : null);
 
 @Component({
   selector: 'app-office-form',
-  imports: [
-    DepartmentCard,
-    EnterNext,
-    HalfWidthDigits,
-    PasswordGate,
-    ReactiveFormsModule,
-    RouterLink,
-    TranslocoPipe,
-    RateDialog,
-  ],
+  imports: [DepartmentCard, EnterNext, HalfWidthDigits, PasswordGate, ReactiveFormsModule, RouterLink, TranslocoPipe, RateDialog, RateFileImport],
   templateUrl: './office-form.html',
   styleUrl: './office-form.css',
 })
@@ -172,7 +159,7 @@ export class OfficeForm {
   readonly readOnly = this.isEdit && !this.context.isAdmin();
 
   /** 保存していない入力があれば、画面を離れる前に確かめる（11/17） */
-  private readonly unsaved = watchUnsaved(() => this.form.dirty || this.firstRates.dirty);
+  private readonly unsaved = watchUnsaved(() => this.form.dirty || this.firstRates.dirty || this.ratesLoaded());
   readonly form = this.fb.nonNullable.group(
     {
       name: ['', [Validators.required, NOT_BLANK, Validators.maxLength(100)]],
@@ -278,12 +265,7 @@ export class OfficeForm {
     const factDate = this.changeFactDate() || todayLocal();
     const tasks: FilingTaskInput[] = [];
     if (c.nameAddress.length > 0) {
-      tasks.push({
-        kind: 'officeNameAddress',
-        employeeId: null,
-        factDate,
-        fields: [...c.nameAddress],
-      });
+      tasks.push({ kind: 'officeNameAddress', employeeId: null, factDate, fields: [...c.nameAddress] });
     }
     if (c.relation.length > 0) {
       tasks.push({ kind: 'officeRelation', employeeId: null, factDate, fields: [...c.relation] });
@@ -305,16 +287,10 @@ export class OfficeForm {
     from: [''],
     health: this.fb.nonNullable.group({ total: [''], employee: [''], employer: [''] }),
     care: this.fb.nonNullable.group({ total: [''], employee: [''], employer: [''] }),
-    childSupport: this.fb.nonNullable.group({
-      total: ['0.230'],
-      employee: ['0.115'],
-      employer: ['0.115'],
-    }),
+    childSupport: this.fb.nonNullable.group({ total: ['0.230'], employee: ['0.115'], employer: ['0.115'] }),
   });
   readonly firstRateKinds = ['health', 'care', 'childSupport'] as const;
-  readonly firstRateErrors = signal<
-    Partial<Record<'from' | 'health' | 'care' | 'childSupport', string>>
-  >({});
+  readonly firstRateErrors = signal<Partial<Record<'from' | 'health' | 'care' | 'childSupport', string>>>({});
   readonly firstRatesFrom = signal('');
 
   /** 最初の料率の欄を出すか：組合を選んでいて、新規登録か、編集で保険者を変えるとき */
@@ -322,101 +298,61 @@ export class OfficeForm {
     () => this.insurerType() === 'kumiai' && (!this.isEdit || this.insurerChanged()),
   );
 
-  // ----- ファイルから（CSV・Excel・組合の保険料額表・PDF）。保存のときに、手で入れた分と一緒に書く（11/17） -----
-  readonly fileName = signal<string | null>(null);
-  readonly fileRows = signal<RateCsvRow[]>([]);
-  readonly fileMissing = signal(false);
-  readonly fileError = signal<string | null>(null);
-  readonly fileFilled = signal<number | null>(null); // PDF：欄に入れた数
-  /** 取り込める行（エラーのない行）。切り替えの月より前の行は除く */
-  readonly fileOk = computed(() =>
-    this.fileRows().filter(
-      (r) => r.input && r.status !== 'error' && this.inFirstRange(r.input.from),
-    ),
-  );
-  readonly fileBad = computed(() =>
-    this.fileRows().filter(
-      (r) => !r.input || r.status === 'error' || !this.inFirstRange(r.input.from),
-    ),
-  );
+  // ----- ファイルから（共通の部品 app-rate-file-import。保存のとき、ファイルの行か、手で入れた分を書く。11/17） -----
+  private readonly rateImport = viewChild(RateFileImport);
+  /** ファイルを読み込んでいる間は、手で入れる欄をしまう */
+  readonly ratesLoaded = computed(() => !!this.rateImport()?.loaded());
+  readonly pdfError = signal<string | null>(null);
+  readonly pdfFilled = signal<number | null>(null); // PDF：欄に入れた数
 
-  private firstRangeFrom(): string {
-    return this.isEdit ? this.form.controls.changeFrom.value : FROM_THE_START;
-  }
+  /** ファイルの行の期間：新規登録は最初から、編集で切り替えるときは切り替える月から（前の月はエラーにする） */
+  readonly ratesRange = computed<MonthRange>(() => {
+    const f = this.firstRatesFrom();
+    return { from: this.isEdit && MONTH.test(f) ? f : FROM_THE_START, to: null };
+  });
 
-  private inFirstRange(month: string): boolean {
-    const f = this.firstRangeFrom();
-    return !MONTH.test(f) || month >= f;
-  }
-
-  pct(rate: number): string {
-    return formatRate(rate, 'percent');
-  }
-
-  csvErrorKey(code: string): string {
-    return `rateDialog.csv.error.${code.replace('.', '_')}`;
-  }
-
-  /** 料率のファイルを読む。CSV・Excel は何年分でも。PDF は通知の値を下の欄に入れる */
-  async readRatesFile(event: Event): Promise<void> {
-    const el = event.target as HTMLInputElement;
-    const file = el.files?.[0];
-    el.value = '';
-    if (!file) return;
-    this.clearRatesFile();
+  /** PDF：通知の値を、手で入れる欄に入れる（空の欄だけ） */
+  async readRatesPdf(file: File): Promise<void> {
+    this.pdfError.set(null);
+    this.pdfFilled.set(null);
     try {
       if (file.size > MAX_FILE_BYTES) throw new ImportFileError('tooBig');
-      if (/\.pdf$/i.test(file.name)) {
-        const { readPdfLines } = await import('../../../../shared/import/pdf');
-        const cands = findRates(await readPdfLines(await file.arrayBuffer()));
-        let filled = 0;
-        for (const [key, rate] of Object.entries(guessFill(cands))) {
-          const [kind, field] = key.split('.') as [
-            'health' | 'care' | 'childSupport',
-            'total' | 'employee' | 'employer',
-          ];
-          const c = this.firstRates.controls[kind]?.controls[field];
-          if (c && c.value.trim() === '' && rate !== undefined) {
-            c.setValue(formatRateInput(rate, 'percent'));
-            c.markAsDirty();
-            filled++;
-          }
+      const { readPdfLines } = await import('../../../../shared/import/pdf');
+      const cands = findRates(await readPdfLines(await file.arrayBuffer()));
+      let filled = 0;
+      for (const [key, rate] of Object.entries(guessFill(cands))) {
+        const [kind, field] = key.split('.') as ['health' | 'care' | 'childSupport', 'total' | 'employee' | 'employer'];
+        const c = this.firstRates.controls[kind]?.controls[field];
+        if (c && c.value.trim() === '' && rate !== undefined) {
+          c.setValue(formatRateInput(rate, 'percent'));
+          c.markAsDirty();
+          filled++;
         }
-        this.fileName.set(file.name);
-        this.fileFilled.set(filled);
-        if (!filled) this.fileError.set('rateDialog.pdf.none');
-        return;
       }
-      const { tables } = await readTables(file);
-      const result = readRateFile(tables[0].rows, {
-        range: { from: FROM_THE_START, to: null },
-        existing: [],
-      });
-      this.fileName.set(file.name);
-      this.fileMissing.set(result.missing.length > 0 && result.rows.length === 0);
-      this.fileRows.set(result.rows);
-      this.firstRates.markAsDirty();
+      this.pdfFilled.set(filled);
+      if (!filled) this.pdfError.set('rateDialog.pdf.none');
     } catch (err) {
       console.error(err);
-      this.fileError.set(
-        err instanceof ImportFileError ? `importMap.error.${err.code}` : 'rateDialog.csv.readError',
-      );
+      this.pdfError.set(err instanceof ImportFileError ? `importMap.error.${err.code}` : 'rateDialog.csv.readError');
     }
   }
 
   clearRatesFile(): void {
-    this.fileName.set(null);
-    this.fileRows.set([]);
-    this.fileMissing.set(false);
-    this.fileError.set(null);
-    this.fileFilled.set(null);
+    this.rateImport()?.clear();
+    this.pdfError.set(null);
+    this.pdfFilled.set(null);
   }
 
-  /** 保存のときに書く料率：ファイルの行 ＋ 手で入れた分（同じ月はファイルが先） */
+  /** 保存のときに書く料率：ファイルを読み込んでいればファイルの行、なければ手で入れた分 */
   private ratesToWrite(manual: KumiaiRateInput | null): KumiaiRateInput[] {
-    const list = this.fileOk().map((r) => r.input!);
-    if (manual && !list.some((x) => x.from === manual.from)) list.push(manual);
-    return list.sort((a, b) => a.from.localeCompare(b.from));
+    const imp = this.rateImport();
+    if (this.ratesLoaded() && imp) return imp.toSave().map((x) => x.input).sort((a, b) => a.from.localeCompare(b.from));
+    return manual ? [manual] : [];
+  }
+
+  /** ファイルにエラーの行が残っていて、除いて取り込むにもしていない */
+  private ratesBlocked(): boolean {
+    return this.showFirstRates() && this.ratesLoaded() && !!this.rateImport()?.blocked();
   }
 
   /** 支援金は2026年4月分から（それより前から入れるときは0にするので、欄を出さない） */
@@ -430,12 +366,14 @@ export class OfficeForm {
    * 編集で切り替えるときは、何月分からが切り替えの月より前だとだめ
    */
   private readFirstRates(): KumiaiRateInput | null | false {
-    if (!this.showFirstRates()) return null;
+    if (!this.showFirstRates() || this.ratesLoaded()) {
+      this.firstRateErrors.set({});
+      return null;
+    }
     const raw = this.firstRates.getRawValue();
     // 編集で切り替えるときは、何月分からは「変更を適用する月」と同じ（欄を2つにしない）
     const v = this.isEdit ? { ...raw, from: this.form.controls.changeFrom.value } : raw;
-    const blank = (g: { total: string; employee: string; employer: string }) =>
-      !g.total.trim() && !g.employee.trim() && !g.employer.trim();
+    const blank = (g: { total: string; employee: string; employer: string }) => !g.total.trim() && !g.employee.trim() && !g.employer.trim();
     if ((this.isEdit || !v.from.trim()) && blank(v.health) && blank(v.care)) {
       this.firstRateErrors.set({});
       return null;
@@ -445,9 +383,7 @@ export class OfficeForm {
     const health = parseSplit(v.health, 'percent');
     const care = parseSplit(v.care, 'percent');
     const needCs = !MONTH.test(v.from) || v.from >= '2026-04';
-    const cs = needCs
-      ? parseSplit(v.childSupport, 'percent')
-      : ({ ok: true, split: { employee: 0, employer: 0 } } as const);
+    const cs = needCs ? parseSplit(v.childSupport, 'percent') : ({ ok: true, split: { employee: 0, employer: 0 } } as const);
     if (!health.ok) errors.health = `rateDialog.error.${health.error}`;
     if (!care.ok) errors.care = `rateDialog.error.${care.error}`;
     if (!cs.ok) errors.childSupport = `rateDialog.error.${cs.error}`;
@@ -493,9 +429,7 @@ export class OfficeForm {
   readonly adjustmentStatus = computed(() => {
     const c = this.coverageValue();
     return adjustmentOfficeStatus(
-      c.specific === 'none'
-        ? null
-        : { since: c.specificSince || null, voluntary: c.specific === 'voluntary' },
+      c.specific === 'none' ? null : { since: c.specificSince || null, voluntary: c.specific === 'voluntary' },
     );
   });
   readonly adjustmentOnNow = computed(() => this.value().adjustmentOn);
@@ -547,11 +481,7 @@ export class OfficeForm {
    */
   readonly toc = computed(() => {
     const items: { id: string; key: string; sub?: boolean; part?: boolean }[] = [
-      {
-        id: 'sec-top',
-        key: this.isEdit ? 'office.form.titleEdit' : 'office.form.titleNew',
-        part: true,
-      },
+      { id: 'sec-top', key: this.isEdit ? 'office.form.titleEdit' : 'office.form.titleNew', part: true },
       { id: 'sec-basic', key: 'office.section.basic', sub: true },
       { id: 'sec-filing', key: 'office.section.filing', sub: true },
       { id: 'sec-departments', key: 'office.department.title', sub: true },
@@ -595,9 +525,7 @@ export class OfficeForm {
   readonly deleteName = signal('');
   readonly deleting = signal(false);
   readonly deleteError = signal<string | null>(null);
-  readonly deleteNameOk = computed(
-    () => this.deleteName().trim() === (this.office()?.name ?? '').trim(),
-  );
+  readonly deleteNameOk = computed(() => this.deleteName().trim() === (this.office()?.name ?? '').trim());
 
   async deleteOffice(): Promise<void> {
     const o = this.office();
@@ -829,9 +757,7 @@ export class OfficeForm {
     const min = this.criteriaNow()?.sizeMin ?? null;
     const typed = parseNat(this.coverageValue().insuredCount);
     const n = typed ?? this.headcount()?.counted ?? null;
-    return min !== null && n !== null && n >= min && this.coverageValue().specific === 'none'
-      ? min
-      : null;
+    return min !== null && n !== null && n >= min && this.coverageValue().specific === 'none' ? min : null;
   });
 
   /** 足りない・正しくない項目の数（「登録する」を押したあとだけ。下の帯に出す） */
@@ -839,29 +765,11 @@ export class OfficeForm {
     if (!this.submitTried()) return 0;
     this.value(); // 入れ直すたびに数え直す
     const fields: Field[] = [
-      'name',
-      'corporateName',
-      'corporateNumber',
-      'ownerName',
-      'postalCode',
-      'prefecture',
-      'address',
-      'kumiaiName',
-      'officeSymbol',
-      'officeNumber',
-      'employeeCount',
-      'changeFrom',
+      'name', 'corporateName', 'corporateNumber', 'ownerName', 'postalCode', 'prefecture', 'address',
+      'kumiaiName', 'officeSymbol', 'officeNumber', 'employeeCount', 'changeFrom',
     ];
-    const coverage: (keyof CoverageFormValue)[] = [
-      'hours',
-      'monthlyDays',
-      'specificSince',
-      'insuredCount',
-    ];
-    return (
-      fields.filter((f) => this.errorOf(f)).length +
-      coverage.filter((c) => this.coverageErrorOf(c)).length
-    );
+    const coverage: (keyof CoverageFormValue)[] = ['hours', 'monthlyDays', 'specificSince', 'insuredCount'];
+    return fields.filter((f) => this.errorOf(f)).length + coverage.filter((c) => this.coverageErrorOf(c)).length;
   });
 
   /** 下の帯のエラーを押したら、最初のエラーの欄へ */
@@ -986,9 +894,15 @@ export class OfficeForm {
       this.standardMissing().length > 0 ||
       (this.isEdit && this.adjustmentSinceMissing()) ||
       (this.insurerChanged() && !MONTH.test(changeFrom.value)) ||
-      this.readFirstRates() === false
+      this.readFirstRates() === false ||
+      this.ratesBlocked()
     ) {
       this.form.markAllAsTouched();
+      // 料率のファイルにエラーの行が残っているときは、その部品まで動かす
+      if (this.ratesBlocked()) {
+        this.rateImport()?.showBlocked();
+        return;
+      }
       // 帯の件数が出たあとで、最初のエラーの欄まで動かす
       setTimeout(() => this.scrollToError());
       return;
@@ -1025,11 +939,7 @@ export class OfficeForm {
         payDay: Number(v.payDay),
         deduction: v.deduction,
       },
-      premium: {
-        method: v.method,
-        healthRounding: v.healthRounding,
-        agreementRounding: v.agreementRounding || null,
-      },
+      premium: { method: v.method, healthRounding: v.healthRounding, agreementRounding: v.agreementRounding || null },
       ...coverage,
     };
 
@@ -1044,14 +954,12 @@ export class OfficeForm {
           ...base,
           insurerHistory: history,
           // 保険料調整制度は編集のときだけ書く（作るときの項目の決まりを変えないため）
-          premiumAdjustment:
-            v.adjustmentOn && MONTH.test(v.adjustmentSince) ? { since: v.adjustmentSince } : null,
+          premiumAdjustment: v.adjustmentOn && MONTH.test(v.adjustmentSince) ? { since: v.adjustmentSince } : null,
         };
         const firstRate = this.readFirstRates();
         await this.offices.update(office.id, input, this.tasksOf(this.pendingChanges()));
         await this.saveDepartments(office.id);
-        for (const r of this.ratesToWrite(firstRate || null))
-          await this.rates.createKumiai(office.id, r);
+        for (const r of this.ratesToWrite(firstRate || null)) await this.rates.createKumiai(office.id, r);
         this.firstRates.reset();
         this.clearRatesFile();
         this.changeFactDate.set(todayLocal());
@@ -1076,8 +984,7 @@ export class OfficeForm {
         // 部署は作ったあとに足す（作るときの項目の決まりを変えないため）
         await this.saveDepartments(officeId);
         // 組合の最初の料率（入れていれば）。事業所ができてからでないと書けない
-        for (const r of this.ratesToWrite(firstRate || null))
-          await this.rates.createKumiai(officeId, r);
+        for (const r of this.ratesToWrite(firstRate || null)) await this.rates.createKumiai(officeId, r);
         await this.profiles.load(uid); // currentOfficeId を最新にする
         await this.context.refresh(uid); // 切り替えの一覧にすぐ反映
         this.unsaved.release();

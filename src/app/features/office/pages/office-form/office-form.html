@@ -328,94 +328,56 @@
           <fieldset class="first-rates" [formGroup]="firstRates">
             <legend>{{ 'office.firstRates.title' | transloco }}</legend>
             <p class="hint">{{ 'office.firstRates.lead' | transloco }}</p>
-            <div class="rate-file">
-              <label class="btn btn-small">
-                {{ 'office.firstRates.file' | transloco }}
-                <input type="file" accept=".csv,.txt,.xlsx,.xls,.pdf" hidden (change)="readRatesFile($event)" />
-              </label>
-              <span class="hint">{{ 'office.firstRates.fileHint' | transloco }}</span>
-            </div>
-            @if (fileError(); as e) {
+            <!-- ファイルから（ほかの取り込みと同じ部品。11/17） -->
+            <app-rate-file-import
+              [range]="ratesRange()"
+              [acceptPdf]="true"
+              [busy]="submitting()"
+              noteKey="rateImport.willSave"
+              (pdf)="readRatesPdf($event)"
+            />
+            @if (pdfError(); as e) {
               <p class="field-error" role="alert">{{ e | transloco }}</p>
             }
-            @if (fileFilled(); as n) {
+            @if (pdfFilled(); as n) {
               <p class="hint">{{ 'rateDialog.pdf.filled' | transloco: { n: n } }}</p>
             }
-            @if (fileMissing()) {
-              <p class="field-error">{{ 'office.firstRates.fileNoRows' | transloco }}</p>
-            }
-            @if (fileRows().length > 0) {
-              <p class="hint">{{ 'office.firstRates.fileRead' | transloco: { file: fileName(), ok: fileOk().length, bad: fileBad().length } }}
-                <button type="button" class="btn btn-small" (click)="clearRatesFile()">{{ 'office.firstRates.fileClear' | transloco }}</button>
-              </p>
-              <div class="table-wrap file-rows">
-                <table class="rate-grid">
-                  <thead>
-                    <tr>
-                      <th>{{ 'rateDialog.from' | transloco }}</th>
-                      @for (k of firstRateKinds; track k) {
-                        <th>{{ 'premium.part.' + k | transloco }}</th>
-                      }
-                      <th>{{ 'rateDialog.csv.col.result' | transloco }}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (r of fileRows(); track r.line) {
-                      <tr>
-                        <td class="mono">{{ r.from }}</td>
-                        @for (k of firstRateKinds; track k) {
-                          <td class="mono">{{ r.input ? pct(r.input[k].employee + r.input[k].employer) : '' }}</td>
-                        }
-                        <td>
-                          @if (r.status === 'error') {
-                            @for (e of r.errors; track e) {
-                              <span class="field-error">{{ csvErrorKey(e) | transloco }}</span>
-                            }
-                          } @else if (r.input && !fileOk().includes(r)) {
-                            <span class="field-error">{{ 'office.firstRates.beforeChange' | transloco }}</span>
-                          } @else {
-                            {{ 'office.firstRates.willSave' | transloco }}
-                          }
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
+            <!-- 手で入れる欄（ファイルを読み込んでいる間はしまう） -->
+            @if (!ratesLoaded()) {
+              <div class="field from">
+                <label for="firstRatesFrom">{{ 'rateDialog.from' | transloco }}</label>
+                <input id="firstRatesFrom" class="input" type="month" formControlName="from" [class.is-invalid]="firstRateErrors().from" />
+                <span class="hint">{{ 'office.firstRates.fromHint' | transloco }}</span>
+                @if (firstRateErrors().from; as e) {
+                  <span class="field-error">{{ e | transloco }}</span>
+                }
               </div>
-            }
-            <div class="field from">
-              <label for="firstRatesFrom">{{ 'rateDialog.from' | transloco }}</label>
-              <input id="firstRatesFrom" class="input" type="month" formControlName="from" [class.is-invalid]="firstRateErrors().from" />
-              <span class="hint">{{ 'office.firstRates.fromHint' | transloco }}</span>
-              @if (firstRateErrors().from; as e) {
-                <span class="field-error">{{ e | transloco }}</span>
-              }
-            </div>
-            <table class="rate-grid">
-              <thead>
-                <tr>
-                  <th></th>
-                  <th>{{ 'rateDialog.total' | transloco }}（%）</th>
-                  <th>{{ 'rateDialog.employee' | transloco }}（%）</th>
-                  <th>{{ 'rateDialog.employer' | transloco }}（%）</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (k of firstRateKinds; track k) {
-                  @if (k !== 'childSupport' || firstRatesNeedChildSupport()) {
-                    <tr [formGroupName]="k">
-                      <th scope="row">{{ 'premium.part.' + k | transloco }}</th>
-                      <td><input class="input num" inputmode="decimal" formControlName="total" [id]="'firstRate-' + k" [attr.aria-label]="('premium.part.' + k | transloco) + ' ' + ('rateDialog.total' | transloco)" /></td>
-                      <td><input class="input num" inputmode="decimal" formControlName="employee" [attr.aria-label]="('premium.part.' + k | transloco) + ' ' + ('rateDialog.employee' | transloco)" /></td>
-                      <td><input class="input num" inputmode="decimal" formControlName="employer" [attr.aria-label]="('premium.part.' + k | transloco) + ' ' + ('rateDialog.employer' | transloco)" /></td>
-                    </tr>
-                    @if (firstRateErrors()[k]; as e) {
-                      <tr><td></td><td colspan="3"><span class="field-error">{{ e | transloco }}</span></td></tr>
+              <table class="rate-grid">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>{{ 'rateDialog.total' | transloco }}（%）</th>
+                    <th>{{ 'rateDialog.employee' | transloco }}（%）</th>
+                    <th>{{ 'rateDialog.employer' | transloco }}（%）</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (k of firstRateKinds; track k) {
+                    @if (k !== 'childSupport' || firstRatesNeedChildSupport()) {
+                      <tr [formGroupName]="k">
+                        <th scope="row">{{ 'premium.part.' + k | transloco }}</th>
+                        <td><input class="input num" inputmode="decimal" formControlName="total" [id]="'firstRate-' + k" [attr.aria-label]="('premium.part.' + k | transloco) + ' ' + ('rateDialog.total' | transloco)" /></td>
+                        <td><input class="input num" inputmode="decimal" formControlName="employee" [attr.aria-label]="('premium.part.' + k | transloco) + ' ' + ('rateDialog.employee' | transloco)" /></td>
+                        <td><input class="input num" inputmode="decimal" formControlName="employer" [attr.aria-label]="('premium.part.' + k | transloco) + ' ' + ('rateDialog.employer' | transloco)" /></td>
+                      </tr>
+                      @if (firstRateErrors()[k]; as e) {
+                        <tr><td></td><td colspan="3"><span class="field-error">{{ e | transloco }}</span></td></tr>
+                      }
                     }
                   }
-                }
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            }
           </fieldset>
         }
       }
@@ -454,86 +416,48 @@
               <fieldset class="first-rates" [formGroup]="firstRates">
                 <legend>{{ 'office.firstRates.titleChange' | transloco }}</legend>
                 <p class="hint">{{ 'office.firstRates.leadChange' | transloco }}</p>
-                <div class="rate-file">
-                  <label class="btn btn-small">
-                    {{ 'office.firstRates.file' | transloco }}
-                    <input type="file" accept=".csv,.txt,.xlsx,.xls,.pdf" hidden (change)="readRatesFile($event)" />
-                  </label>
-                  <span class="hint">{{ 'office.firstRates.fileHint' | transloco }}</span>
-                </div>
-                @if (fileError(); as e) {
+                <!-- ファイルから（ほかの取り込みと同じ部品。11/17） -->
+                <app-rate-file-import
+                  [range]="ratesRange()"
+                  [acceptPdf]="true"
+                  [busy]="submitting()"
+                  noteKey="rateImport.willSave"
+                  (pdf)="readRatesPdf($event)"
+                />
+                @if (pdfError(); as e) {
                   <p class="field-error" role="alert">{{ e | transloco }}</p>
                 }
-                @if (fileFilled(); as n) {
+                @if (pdfFilled(); as n) {
                   <p class="hint">{{ 'rateDialog.pdf.filled' | transloco: { n: n } }}</p>
                 }
-                @if (fileMissing()) {
-                  <p class="field-error">{{ 'office.firstRates.fileNoRows' | transloco }}</p>
-                }
-                @if (fileRows().length > 0) {
-                  <p class="hint">{{ 'office.firstRates.fileRead' | transloco: { file: fileName(), ok: fileOk().length, bad: fileBad().length } }}
-                    <button type="button" class="btn btn-small" (click)="clearRatesFile()">{{ 'office.firstRates.fileClear' | transloco }}</button>
-                  </p>
-                  <div class="table-wrap file-rows">
-                    <table class="rate-grid">
-                      <thead>
-                        <tr>
-                          <th>{{ 'rateDialog.from' | transloco }}</th>
-                          @for (k of firstRateKinds; track k) {
-                            <th>{{ 'premium.part.' + k | transloco }}</th>
-                          }
-                          <th>{{ 'rateDialog.csv.col.result' | transloco }}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        @for (r of fileRows(); track r.line) {
-                          <tr>
-                            <td class="mono">{{ r.from }}</td>
-                            @for (k of firstRateKinds; track k) {
-                              <td class="mono">{{ r.input ? pct(r.input[k].employee + r.input[k].employer) : '' }}</td>
-                            }
-                            <td>
-                              @if (r.status === 'error') {
-                                @for (e of r.errors; track e) {
-                                  <span class="field-error">{{ csvErrorKey(e) | transloco }}</span>
-                                }
-                              } @else if (r.input && !fileOk().includes(r)) {
-                                <span class="field-error">{{ 'office.firstRates.beforeChange' | transloco }}</span>
-                              } @else {
-                                {{ 'office.firstRates.willSave' | transloco }}
-                              }
-                            </td>
+                <!-- 手で入れる欄（ファイルを読み込んでいる間はしまう） -->
+                @if (!ratesLoaded()) {
+                  <table class="rate-grid">
+                    <thead>
+                      <tr>
+                        <th></th>
+                        <th>{{ 'rateDialog.total' | transloco }}（%）</th>
+                        <th>{{ 'rateDialog.employee' | transloco }}（%）</th>
+                        <th>{{ 'rateDialog.employer' | transloco }}（%）</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (k of firstRateKinds; track k) {
+                        @if (k !== 'childSupport' || firstRatesNeedChildSupport()) {
+                          <tr [formGroupName]="k">
+                            <th scope="row">{{ 'premium.part.' + k | transloco }}</th>
+                            <td><input class="input num" inputmode="decimal" formControlName="total" [id]="'firstRate-' + k" [attr.aria-label]="('premium.part.' + k | transloco) + ' ' + ('rateDialog.total' | transloco)" /></td>
+                            <td><input class="input num" inputmode="decimal" formControlName="employee" [attr.aria-label]="('premium.part.' + k | transloco) + ' ' + ('rateDialog.employee' | transloco)" /></td>
+                            <td><input class="input num" inputmode="decimal" formControlName="employer" [attr.aria-label]="('premium.part.' + k | transloco) + ' ' + ('rateDialog.employer' | transloco)" /></td>
                           </tr>
-                        }
-                      </tbody>
-                    </table>
-                  </div>
-                }
-                <table class="rate-grid">
-                  <thead>
-                    <tr>
-                      <th></th>
-                      <th>{{ 'rateDialog.total' | transloco }}（%）</th>
-                      <th>{{ 'rateDialog.employee' | transloco }}（%）</th>
-                      <th>{{ 'rateDialog.employer' | transloco }}（%）</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (k of firstRateKinds; track k) {
-                      @if (k !== 'childSupport' || firstRatesNeedChildSupport()) {
-                        <tr [formGroupName]="k">
-                          <th scope="row">{{ 'premium.part.' + k | transloco }}</th>
-                          <td><input class="input num" inputmode="decimal" formControlName="total" [id]="'firstRate-' + k" [attr.aria-label]="('premium.part.' + k | transloco) + ' ' + ('rateDialog.total' | transloco)" /></td>
-                          <td><input class="input num" inputmode="decimal" formControlName="employee" [attr.aria-label]="('premium.part.' + k | transloco) + ' ' + ('rateDialog.employee' | transloco)" /></td>
-                          <td><input class="input num" inputmode="decimal" formControlName="employer" [attr.aria-label]="('premium.part.' + k | transloco) + ' ' + ('rateDialog.employer' | transloco)" /></td>
-                        </tr>
-                        @if (firstRateErrors()[k]; as e) {
-                          <tr><td></td><td colspan="3"><span class="field-error">{{ e | transloco }}</span></td></tr>
+                          @if (firstRateErrors()[k]; as e) {
+                            <tr><td></td><td colspan="3"><span class="field-error">{{ e | transloco }}</span></td></tr>
+                          }
                         }
                       }
-                    }
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                }
               </fieldset>
             } @else if (switchingToKumiai()) {
               <p class="warn">{{ 'office.hint.switchToKumiai' | transloco }}</p>

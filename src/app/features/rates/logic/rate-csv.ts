@@ -251,3 +251,42 @@ export function rateCsvTable(rates: readonly KumiaiRateInput[], unit: RateUnit =
     }),
   ];
 }
+
+// ===== 取り込みの共通の窓（app-import-issues）で直すため（11/17） =====
+
+/** エラー → 直す列（窓で「問題の列」として上に出す） */
+export function rateErrorColumns(errors: readonly RateCsvError[]): RateCsvColumn[] {
+  const out = new Set<RateCsvColumn>();
+  for (const e of errors) {
+    if (e === 'month' || e === 'outOfRange' || e === 'duplicate') out.add('from');
+    else if (e === 'unit') out.add('unit');
+    else {
+      const kind = e.split('.')[0] as Kind;
+      for (const p of PARTS) out.add(`${kind}_${p}`);
+    }
+  }
+  return RATE_CSV_COLUMNS.filter((c) => out.has(c));
+}
+
+/**
+ * 読んだ行を、窓に渡す表にする（見出し ＋ 行）
+ * 窓は「表の何行目」で行を探すので、行の番号の位置に置く（飛んだ番号は空の行）
+ */
+export function rateFixTable(rows: readonly RateCsvRow[]): string[][] {
+  const table: string[][] = [RATE_CSV_COLUMNS.map((c) => RATE_CSV_HEADERS[c])];
+  for (const r of rows) {
+    while (table.length < r.line - 1) table.push(RATE_CSV_COLUMNS.map(() => ''));
+    table[r.line - 1] = RATE_CSV_COLUMNS.map((c) => r.values[c]);
+  }
+  return table;
+}
+
+/** 窓で直した値（見出し → 値）を、列 → 値にする（知らない見出しは捨てる） */
+export function rateEditsOf(values: Readonly<Record<string, string>>): Partial<Record<RateCsvColumn, string>> {
+  const out: Partial<Record<RateCsvColumn, string>> = {};
+  for (const [h, v] of Object.entries(values)) {
+    const c = LOOKUP.get(keyOf(h));
+    if (c) out[c] = v;
+  }
+  return out;
+}

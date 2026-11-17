@@ -33,9 +33,9 @@ import {
 } from '../../logic/rate-format';
 import { RateService } from '../../rate.service';
 import { downloadCsv, safeFileName } from '../../../../shared/csv/csv';
-import { readTables } from '../../../../shared/import/parse';
 import { todayLocal } from '../../../../shared/utils/date';
-import { RateCsvRow, readRateFile, rateCsvTable, recheckRateCsv, RATE_CSV_HEADERS, RateCsvColumn } from '../../logic/rate-csv';
+import { rateCsvTable } from '../../logic/rate-csv';
+import { RateFileImport } from '../rate-file-import/rate-file-import';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 /** 窓で扱う期間と保険者（開く側で、保存済みの履歴から作る） */
@@ -64,7 +64,7 @@ const CHILD_SUPPORT_DEFAULT: RateSplit = { employee: 1150, employer: 1150 };
 
 @Component({
   selector: 'app-rate-dialog',
-  imports: [HalfWidthDigits, ReactiveFormsModule, TranslocoPipe],
+  imports: [HalfWidthDigits, ReactiveFormsModule, TranslocoPipe, RateFileImport],
   templateUrl: './rate-dialog.html',
   styleUrl: './rate-dialog.css',
 })
@@ -138,25 +138,11 @@ export class RateDialog implements OnInit {
   /** 最後に選んだ欄（候補を押すと、ここに入る） */
   readonly targetField = signal<{ kind: Kind; field: (typeof FIELDS)[number] } | null>(null);
 
-  // ===== CSV でまとめて入れる・出す（11/17） =====
-  readonly csvFile = signal<string | null>(null);
-  readonly csvRows = signal<RateCsvRow[]>([]);
-  readonly csvMissing = signal<string[]>([]);
+  // ===== CSV でまとめて入れる・出す（11/17。読み込みと直しは共通の部品 app-rate-file-import） =====
+  readonly rateImport = viewChild(RateFileImport);
   readonly csvError = signal<string | null>(null);
   readonly csvSaving = signal(false);
   readonly csvDone = signal<number | null>(null);
-  /** 保険料額表として読んだ（料率は金額から逆算） */
-  readonly csvFromTable = signal(false);
-  /** その場で直した値（行の番号 → 列 → 値）と、開いている行 */
-  readonly csvEdits = signal<Map<number, Partial<Record<RateCsvColumn, string>>>>(new Map());
-  readonly csvFixing = signal<number | null>(null);
-  readonly csvEditCount = computed(() => [...this.csvEdits().values()].reduce((n, e) => n + Object.keys(e).length, 0));
-  readonly fixParts = ['total', 'employee', 'employer'] as const;
-  readonly csvCount = computed(() => {
-    const c = { new: 0, update: 0, same: 0, error: 0 };
-    for (const r of this.csvRows()) c[r.status]++;
-    return c;
-  });
 
   readonly form = this.fb.nonNullable.group({
     from: [''],
@@ -400,80 +386,19 @@ export class RateDialog implements OnInit {
     downloadCsv(safeFileName(`料率_${name}_${todayLocal()}.csv`), rateCsvTable(this.kumiaiRows(), this.unit()));
   }
 
-  async readCsv(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    input.value = '';
-    if (!file) return;
-    this.clearCsv();
-    try {
-      const { tables } = await readTables(file);
-      const result = readRateFile(tables[0].rows, { range: this.range(), existing: this.kumiaiAll() });
-      this.csvFromTable.set(result.fromTable);
-      this.csvFile.set(file.name);
-      this.csvMissing.set(result.missing.map((c: RateCsvColumn) => RATE_CSV_HEADERS[c]));
-      this.csvRows.set(result.rows);
-    } catch (err) {
-      console.error(err);
-      this.csvError.set(err instanceof ImportFileError ? `importMap.error.${err.code}` : 'rateDialog.csv.readError');
-    }
-  }
-
-  /** その場で直す欄の値（直していなければ元の値） */
-  csvValue(r: RateCsvRow, col: RateCsvColumn): string {
-    return this.csvEdits().get(r.line)?.[col] ?? r.values[col];
-  }
-
-  setCsvValue(r: RateCsvRow, col: RateCsvColumn, value: string): void {
-    const next = new Map(this.csvEdits());
-    const row = { ...(next.get(r.line) ?? {}) };
-    if (value === r.values[col]) delete row[col];
-    else row[col] = value;
-    if (Object.keys(row).length) next.set(r.line, row);
-    else next.delete(r.line);
-    this.csvEdits.set(next);
-  }
-
-  toggleFix(line: number): void {
-    this.csvFixing.set(this.csvFixing() === line ? null : line);
-  }
-
-  /** 直した内容で確かめ直す（保存はしない） */
-  recheckCsv(): void {
-    const result = recheckRateCsv(this.csvRows(), this.csvEdits(), { range: this.range(), existing: this.kumiaiAll() });
-    this.csvRows.set(result.rows);
-    this.csvEdits.set(new Map());
-    this.csvFixing.set(null);
-  }
-
-  colOf(kind: Kind, part: 'total' | 'employee' | 'employer'): RateCsvColumn {
-    return `${kind}_${part}`;
-  }
-
-  clearCsv(): void {
-    this.csvEdits.set(new Map());
-    this.csvFixing.set(null);
-    this.csvFile.set(null);
-    this.csvFromTable.set(false);
-    this.csvRows.set([]);
-    this.csvMissing.set([]);
-    this.csvError.set(null);
-    this.csvDone.set(null);
-  }
-
   /** 新規・上書きの行だけ書く（エラーの行・変わらない行は飛ばす） */
   async importCsv(): Promise<void> {
-    if (!this.editable() || this.csvSaving()) return;
-    const items = this.csvRows()
-      .filter((r) => (r.status === 'new' || r.status === 'update') && r.input)
-      .map((r) => ({ input: r.input!, exists: r.status === 'update' }));
+    const imp = this.rateImport();
+    if (!this.editable() || this.csvSaving() || !imp || imp.blocked()) return;
+    const items = imp.toSave();
     if (!items.length) return;
     this.csvSaving.set(true);
     this.csvError.set(null);
+    this.csvDone.set(null);
     try {
       await this.rates.saveKumiaiMany(this.target().officeId, items);
       this.kumiaiAll.set(await this.rates.kumiaiList(this.target().officeId));
-      this.clearCsv();
+      imp.clear();
       this.csvDone.set(items.length);
     } catch (err) {
       console.error(err);
@@ -481,10 +406,6 @@ export class RateDialog implements OnInit {
     } finally {
       this.csvSaving.set(false);
     }
-  }
-
-  csvErrorKey(code: string): string {
-    return `rateDialog.csv.error.${code.replace('.', '_')}`;
   }
 
   /** 1回目で確認の表示、2回目で削除 */

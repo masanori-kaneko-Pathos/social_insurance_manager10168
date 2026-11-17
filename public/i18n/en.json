@@ -1056,14 +1056,7 @@
         "from": "Select the month the rates apply from."
       },
       "titleChange": "New society's rates (from the month of the change)",
-      "leadChange": "Enter the rates from the society's notice by hand or import a file. You can leave this empty and enter them later with \"View rates\" in the table below.",
-      "file": "Import from file",
-      "fileHint": "CSV or Excel (any number of years; a society premium table also works), or PDF (fills the fields below)",
-      "fileNoRows": "No rate columns were found. Use the same headings as the template in the rates window.",
-      "fileRead": "{{file}}: {{ok}} to save, {{bad}} not imported",
-      "fileClear": "Discard the file",
-      "beforeChange": "Before the month of the change, so not imported",
-      "willSave": "Registered when you save"
+      "leadChange": "Enter the rates from the society's notice by hand or import a file. You can leave this empty and enter them later with \"View rates\" in the table below."
     }
   },
   "remuneration": {
@@ -1341,14 +1334,11 @@
       "selectFirst": "Numbers found in the PDF. Click the field first, then click a number."
     },
     "csv": {
-      "choose": "Import a file (CSV or Excel)",
       "export": "Export CSV",
       "template": "Download template",
       "hint": "You can enter several years of rates at once: one row per \"from\" month, with total, employee and employer for health insurance, long-term care insurance and the child support levy (total may be blank; unit % or ‰). A society's premium table (premiums by grade) can be read as is. You can also edit an exported file in Excel and import it again.",
-      "previewTitle": "Check {{file}}",
       "missing": "Required columns are missing: {{cols}}",
       "empty": "There are no rows to import.",
-      "count": "New {{c}} · Overwrite {{u}} · Unchanged {{s}} · Errors {{e}}",
       "col": {
         "line": "Line",
         "result": "Result"
@@ -1359,7 +1349,6 @@
         "same": "Unchanged"
       },
       "import": "Import (new {{c}}, overwrite {{u}})",
-      "skipErrors": "Rows with errors are not imported. Fix them with \"Fix here\" and check again, or import without them.",
       "done": "Saved {{n}} rate rows.",
       "readError": "Could not read the file. Please check that it is a CSV or Excel file.",
       "saveError": "Could not save (nothing was saved). Please try again later.",
@@ -1381,9 +1370,7 @@
         "childSupport_mismatch": "Child support levy total does not equal employee + employer",
         "childSupport_required": "From April 2026, the child support levy rate is required"
       },
-      "unitLabel": "Unit",
-      "recheck": "Check again with the fixes ({{n}})",
-      "fromTable": "Read as a premium table. Rates are calculated by dividing the amounts by the standard remuneration (the % cells are not used). Please check the months and rates against the notice, and use \"Fix here\" if anything differs."
+      "fromTable": "Read as a premium table. Rates are calculated by dividing the amounts by the standard remuneration (the % cells are not used). Please check the months and rates against the notice, and use \"Fix\" if anything differs."
     },
     "notYet": "— (not yet in effect)"
   },
@@ -4315,6 +4302,20 @@
     "error": {
       "load": "Could not load the data for decision notices.",
       "send": "Could not send. Please try again later."
+    }
+  },
+  "rateImport": {
+    "choose": "Load from file",
+    "hint": "CSV or Excel, any number of years at once (one row per starting month). A society's premium table can be read as is.",
+    "hintPdf": "CSV or Excel can hold any number of years (a society's premium table also works). A PDF fills the fields below with the notice values.",
+    "clear": "Stop loading",
+    "willSave": "Registered when you save",
+    "blocked": "The rate file has rows with errors. Fix them, or check “Import without the error rows”.",
+    "count": {
+      "new": "{{n}} new",
+      "update": "{{n}} updated",
+      "same": "{{n}} unchanged",
+      "error": "{{n}} errors"
     }
   }
 }
