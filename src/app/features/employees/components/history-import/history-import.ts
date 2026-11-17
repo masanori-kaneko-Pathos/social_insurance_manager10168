@@ -30,6 +30,7 @@ import {
   REMUNERATION_HISTORY_SPEC,
 } from '../../logic/history-csv';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 
 interface Preview {
   fileName: string;
@@ -68,6 +69,8 @@ export class HistoryImport {
   readonly saving = signal(false);
   readonly progress = signal<{ done: number; total: number } | null>(null);
   readonly doneCount = signal<number | null>(null);
+  /** 読んだのにまだ取り込んでいなければ、画面を離れる前に確かめる（11/17） */
+  private readonly unsaved = watchUnsaved(() => (this.loaded() !== null || this.preview() !== null) && this.doneCount() === null);
 
   readonly rowErrors = computed(() => this.preview()?.read.rows.filter((r) => r.errors.length > 0) ?? []);
   readonly canImport = computed(() => {

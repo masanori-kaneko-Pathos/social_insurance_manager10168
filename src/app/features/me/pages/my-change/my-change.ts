@@ -15,6 +15,7 @@ import { familyQuestions, nameQuestions } from '../../../requests/logic/life-eve
 import { MeHeader } from '../../components/me-header/me-header';
 import { MeContext } from '../../me-context.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 
 /**
  * 項目のまとまり（選ぶ画面で見出しをつける）
@@ -42,6 +43,8 @@ export class MyChange implements OnInit {
   readonly groups = GROUPS;
   readonly chosen = signal<ReadonlySet<RequestField>>(new Set());
   readonly answers = signal<Record<string, string>>({});
+  /** 変える項目を選んだのに送っていなければ、画面を離れる前に確かめる（11/17） */
+  private readonly unsaved = watchUnsaved(() => this.chosen().size > 0);
   /** 資格確認書をなくした（書き込む項目はない。管理者が見て、保険者へ再交付を申請する） */
   readonly lostCard = signal(false);
   /** 氏名が変わった・家族が増えた／減った（承認したあとの扱いは requests/logic/life-events.ts） */
@@ -129,6 +132,7 @@ export class MyChange implements OnInit {
         qs,
         cleanAnswers(qs, this.answers()),
       );
+      this.unsaved.release();
       await this.router.navigate(['/me', 'requests', id]);
     } catch (err) {
       console.error(err);

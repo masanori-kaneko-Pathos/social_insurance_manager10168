@@ -28,6 +28,7 @@ import { RateService } from '../../../rates/rate.service';
 import { healthPartTotals, officeTotals } from '../../logic/premium-core';
 import { buildPremiumRow, PremiumRow } from '../../logic/premium-rows';
 import { calcMonthly } from '../../logic/calc-monthly';
+import { PremiumTotals } from '../../components/premium-totals/premium-totals';
 import { PremiumBreakdown } from '../../components/premium-breakdown/premium-breakdown';
 import { Pager } from '../../../../shared/components/pager/pager';
 import { ContractDoc } from '../../../../core/models/contract';
@@ -77,7 +78,7 @@ interface ListItem extends PremiumRow {
 
 @Component({
   selector: 'app-premium-list',
-  imports: [CloseOnOutside, ColumnMapper, MonthPicker, Pager, PersonListBar, PremiumBreakdown, ReviewBox, RouterLink, TranslocoPipe],
+  imports: [CloseOnOutside, ColumnMapper, MonthPicker, Pager, PersonListBar, PremiumBreakdown, ReviewBox, RouterLink, TranslocoPipe, PremiumTotals],
   templateUrl: './premium-list.html',
   styleUrl: './premium-list.css',
 })
@@ -301,6 +302,9 @@ export class PremiumList {
   readonly problems = computed(() =>
     this.rows().filter((r) => r.state === 'missing' || r.state === 'error'),
   );
+
+  /** 計算できた人の結果（合計の部品に渡す。11/17） */
+  readonly okResults = computed(() => this.rows().flatMap((r) => (r.state === 'ok' && r.result ? [r.result] : [])));
 
   /** 事業所の合計（計算できた人だけ） */
   readonly totals = computed<OfficeTotal[]>(() =>

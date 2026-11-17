@@ -41,6 +41,7 @@ import { SortHeader } from '../../../../shared/components/sort-header/sort-heade
 import { defaultListOptions, filterAndSort, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
 import { ContractDoc, EMPLOYMENT_TYPES } from '../../../../core/models/contract';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 type RowForm = FormGroup<{
   cash: FormControl<string>;
   fixed: FormControl<string>;
@@ -86,6 +87,8 @@ export class PayrollMonth {
   readonly month = signal('');
   readonly period = signal<Period | null>(null);
   readonly views = signal<ViewRow[]>([]);
+  /** 保存していない入力があれば、画面（月）を離れる前に確かめる（11/17） */
+  private readonly unsaved = watchUnsaved(() => this.views().some((v) => v.form.dirty));
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly errorKey = signal<string | null>(null);
@@ -294,7 +297,10 @@ export class PayrollMonth {
 
   fillCandidate(v: ViewRow): void {
     const c = this.candidate(v);
-    if (c !== null) v.form.controls.days.setValue(String(c));
+    if (c !== null) {
+      v.form.controls.days.setValue(String(c));
+      v.form.markAsDirty();
+    }
   }
 
   // ===== 支払基礎日数をまとめて入れる（見出しの窓。絞り込んだ人全員、ページをまたいで。11/13） =====
@@ -321,7 +327,10 @@ export class PayrollMonth {
   applyBulkDays(): void {
     if (!this.bulkDaysOk()) return;
     const d = String(Number(this.bulkDays().normalize('NFKC').trim()));
-    for (const v of this.bulkTargets()) v.form.controls.days.setValue(d);
+    for (const v of this.bulkTargets()) {
+      v.form.controls.days.setValue(d);
+      v.form.markAsDirty();
+    }
     this.bulkOpen.set(false);
   }
 

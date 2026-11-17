@@ -88,7 +88,7 @@
               {{ 'bonus.prior.amount' | transloco }}
               <input class="input amount" inputmode="numeric" [value]="priorAmount()" (input)="priorAmount.set($any($event.target).value)" />
             </label>
-            <button type="button" class="btn btn-primary btn-small" [disabled]="!priorValid() || priorSaving()" (click)="savePrior()">{{ 'common.save' | transloco }}</button>
+            <button type="button" class="btn btn-small btn-solid" [disabled]="!priorValid() || priorSaving()" (click)="savePrior()">{{ 'common.save' | transloco }}</button>
             <button type="button" class="link" (click)="priorOpen.set(false)">{{ 'common.cancel' | transloco }}</button>
           </div>
         } @else {

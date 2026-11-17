@@ -107,11 +107,6 @@ input.num {
   gap: var(--space-xs);
 }
 
-.btn-small {
-  padding: 2px 8px;
-  font-size: var(--font-xs);
-}
-
 .name {
   color: var(--color-text);
   font-weight: 600;

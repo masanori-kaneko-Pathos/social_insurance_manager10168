@@ -60,11 +60,6 @@ h3 {
   margin-left: var(--space-xs);
 }
 
-.btn-small {
-  padding: 2px 10px;
-  font-size: var(--font-xs, 12px);
-}
-
 .btn.danger {
   color: var(--color-danger-text);
 }

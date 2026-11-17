@@ -22,6 +22,7 @@ import {
   toOverseasForm,
 } from '../../logic/overseas';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 
 const NEW = 'new';
 /** ルールの上限と同じ */
@@ -70,6 +71,8 @@ export class OverseasCard {
   );
 
   readonly editing = signal<typeof NEW | number | null>(null);
+  /** 開いている窓に保存していない入力があれば、画面を離れる前に確かめる（11/17） */
+  private readonly unsaved = watchUnsaved(() => this.editing() !== null && this.form.dirty);
   readonly confirmingDelete = signal<number | null>(null);
   readonly saving = signal(false);
   readonly submitted = signal(false);

@@ -40,6 +40,7 @@ import {
   toDependentForm,
 } from '../../logic/dependent-form-model';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 
 /**
  * 扶養家族（被扶養者（異動）届・第3号被保険者関係届の材料）
@@ -80,6 +81,8 @@ export class DependentCard implements OnInit {
   readonly errorKey = signal<string | null>(null);
   /** null は閉じている、'new' は追加、それ以外は編集中の ID */
   readonly editing = signal<'new' | string | null>(null);
+  /** 開いている窓に保存していない入力があれば、画面を離れる前に確かめる（11/17） */
+  private readonly unsaved = watchUnsaved(() => this.editing() !== null && this.form.dirty);
   readonly confirmingDelete = signal<string | null>(null);
   readonly saving = signal(false);
   readonly submitted = signal(false);

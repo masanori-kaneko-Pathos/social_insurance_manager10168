@@ -1,0 +1,66 @@
+<details class="card totals" [open]="open()">
+  <summary class="totals-strip">
+    <span class="strip-title">{{ titleKey() | transloco }}</span>
+    <span class="strip-item"><small>{{ 'premiumList.strip.count' | transloco }}</small><strong>{{ results().length }}</strong></span>
+    <span class="strip-item"><small>{{ 'premiumList.col.employeeSum' | transloco }}</small><strong>{{ yen(employeeYen()) }}</strong></span>
+    <span class="strip-item"><small>{{ 'premiumList.col.employerSum' | transloco }}</small><strong>{{ yen(employerYen()) }}</strong></span>
+    <span class="strip-item main"><small>{{ 'premiumList.col.payment' | transloco }}</small><strong>{{ yen(paymentYen()) }}</strong></span>
+    <span class="fold-toggle"><span class="when-closed">{{ 'premiumList.breakdown' | transloco }} ▽</span><span class="when-open">{{ 'premiumList.breakdown' | transloco }} △</span></span>
+  </summary>
+  @if (excluded() > 0) {
+    <p class="warn">{{ 'premiumList.totalsExcluded' | transloco: { count: excluded() } }}</p>
+  }
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th class="num">{{ 'premiumList.col.employeeSum' | transloco }}</th>
+        <th class="num">{{ 'premiumList.col.employerSum' | transloco }}</th>
+        <th class="num">{{ 'premiumList.col.payment' | transloco }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (t of totals(); track t.category) {
+        <tr>
+          <th scope="row">{{ 'premiumList.category.' + t.category | transloco }}</th>
+          <td class="num">{{ yen(t.employeeYen) }}</td>
+          <td class="num">{{ yen(t.employerYen) }}</td>
+          <td class="num strong">{{ yen(t.totalYen) }}</td>
+        </tr>
+        <!-- 健康保険料の内訳（全額だけ。本人負担は合算して端数処理するので、保険ごとには決まらない） -->
+        @if (t.category === 'health') {
+          @for (p of healthParts(); track p.part) {
+            <tr class="sub-row">
+              <th scope="row">{{ 'premiumList.part.' + p.part | transloco }}</th>
+              <td></td>
+              <td></td>
+              <td class="num">{{ yen(p.totalYen) }}</td>
+            </tr>
+          }
+        }
+      }
+      <tr class="grand-total">
+        <th scope="row">{{ 'premiumList.grandTotal' | transloco }}</th>
+        <td class="num strong">{{ yen(employeeYen()) }}</td>
+        <td class="num strong">{{ yen(employerYen()) }}</td>
+        <td class="num strong">{{ yen(paymentYen()) }}</td>
+      </tr>
+      @if (refund(); as rf) {
+        <tr class="sub-row">
+          <th scope="row">{{ 'premiumList.adjustment.refund' | transloco: { month: rf.month } }}</th>
+          <td></td>
+          <td></td>
+          <td class="num">−{{ yen(rf.health + rf.pension) }}</td>
+        </tr>
+        <tr class="grand-total">
+          <th scope="row">{{ 'premiumList.adjustment.net' | transloco }}</th>
+          <td></td>
+          <td></td>
+          <td class="num strong">{{ yen(paymentYen() - rf.health - rf.pension) }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  <p class="hint">{{ hintKey() | transloco }}</p>
+  <div class="extra"><ng-content /></div>
+</details>

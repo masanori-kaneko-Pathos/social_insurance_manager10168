@@ -19,6 +19,42 @@
     <p class="muted">{{ 'bonus.readOnly' | transloco }}</p>
   }
 
+  <!-- 賞与額をファイルから読み込む（支払日より先に触ることが多いので一番上。11/17。給与ソフトの書き出しなど。入力欄に入れるだけで、保存は「保存する」。11/13）
+     支払日を決める前でも読める。ファイルに支払日の列があれば、その日を支払日の欄に入れる（11/16） -->
+  @if (!readOnly) {
+    <div class="import-line">
+      <label class="btn btn-small">
+        {{ 'bonus.import.button' | transloco }}
+        <input type="file" class="file-hidden" [accept]="importAccept" (change)="onImportFile($event)" />
+      </label>
+      <span class="muted">{{ 'bonus.import.note' | transloco }}</span>
+    </div>
+    @if (importError(); as e) {
+      <div class="alert alert-danger">{{ e | transloco }}</div>
+    }
+    @if (importFile(); as f) {
+      <app-column-mapper [tables]="f.tables" [spec]="importSpec" (confirmed)="onImportMapped($event)" (cancelled)="cancelImport()" />
+    }
+    @if (importResult(); as res) {
+      <div class="alert import-result" role="status">
+        <p>{{ 'bonus.import.result' | transloco: { file: res.fileName, count: res.amounts.size } }}</p>
+        @if (res.notFound.length > 0) {
+          <p class="warn">{{ 'bonus.import.notFound' | transloco: { list: res.notFound.join('、') } }}</p>
+        }
+        @if (res.ambiguous.length > 0) {
+          <p class="warn">{{ 'bonus.import.ambiguous' | transloco: { list: res.ambiguous.join('、') } }}</p>
+        }
+        @if (res.badAmount.length > 0) {
+          <p class="warn">{{ 'bonus.import.badAmount' | transloco: { list: res.badAmount.join('、') } }}</p>
+        }
+        @if (res.dateNote; as n) {
+          <p [class.warn]="n.warn">{{ n.key | transloco: n.params }}</p>
+        }
+        <button type="button" class="link-close" (click)="importResult.set(null)">{{ 'common.close' | transloco }}</button>
+      </div>
+    }
+  }
+
   <!-- 支払日・名称 -->
   <section class="card head-card">
     <div class="grid">
@@ -60,42 +96,6 @@
     <p class="hint">{{ 'bonus.hint.standard' | transloco }}</p>
   </section>
 
-  <!-- 賞与額をファイルから読み込む（給与ソフトの書き出しなど。入力欄に入れるだけで、保存は「保存する」。11/13）
-     支払日を決める前でも読める。ファイルに支払日の列があれば、その日を支払日の欄に入れる（11/16） -->
-  @if (!readOnly) {
-    <div class="import-line">
-      <label class="btn btn-small">
-        {{ 'bonus.import.button' | transloco }}
-        <input type="file" class="file-hidden" [accept]="importAccept" (change)="onImportFile($event)" />
-      </label>
-      <span class="muted">{{ 'bonus.import.note' | transloco }}</span>
-    </div>
-    @if (importError(); as e) {
-      <div class="alert alert-danger">{{ e | transloco }}</div>
-    }
-    @if (importFile(); as f) {
-      <app-column-mapper [tables]="f.tables" [spec]="importSpec" (confirmed)="onImportMapped($event)" (cancelled)="cancelImport()" />
-    }
-    @if (importResult(); as res) {
-      <div class="alert import-result" role="status">
-        <p>{{ 'bonus.import.result' | transloco: { file: res.fileName, count: res.amounts.size } }}</p>
-        @if (res.notFound.length > 0) {
-          <p class="warn">{{ 'bonus.import.notFound' | transloco: { list: res.notFound.join('、') } }}</p>
-        }
-        @if (res.ambiguous.length > 0) {
-          <p class="warn">{{ 'bonus.import.ambiguous' | transloco: { list: res.ambiguous.join('、') } }}</p>
-        }
-        @if (res.badAmount.length > 0) {
-          <p class="warn">{{ 'bonus.import.badAmount' | transloco: { list: res.badAmount.join('、') } }}</p>
-        }
-        @if (res.dateNote; as n) {
-          <p [class.warn]="n.warn">{{ n.key | transloco: n.params }}</p>
-        }
-        <button type="button" class="link-close" (click)="importResult.set(null)">{{ 'common.close' | transloco }}</button>
-      </div>
-    }
-  }
-
   @if (!dateOk()) {
     <section class="card empty">
       <p>{{ 'bonus.hint.needDate' | transloco }}</p>
@@ -119,6 +119,9 @@
         {{ 'premiumList.problemTitle' | transloco: { count: problemCount() } }}
       </div>
     }
+
+    <!-- この賞与の保険料の合計：保険料一覧と同じ部品（11/17） -->
+    <app-premium-totals [results]="okResults()" [excluded]="problemCount()" titleKey="bonus.totalsTitle" hintKey="bonus.hint.deduct" />
 
     <!-- 探す・絞る・並べる・ページ（入れた額は、ページを移っても保存するまで残る。合計は全員分） -->
     <app-person-list-bar
@@ -152,6 +155,7 @@
             <th colspan="3" class="group-head">{{ 'premium.col.employee' | transloco }}</th>
             <th rowspan="2" class="num">{{ 'premium.col.employer' | transloco }}</th>
             <th rowspan="2" class="num">{{ 'premium.col.total' | transloco }}</th>
+            <th rowspan="2"></th>
           </tr>
           <tr>
             <th class="num">{{ 'premiumList.col.health' | transloco }}</th>
@@ -199,14 +203,8 @@
                     {{ yen(r.result!.standardBonus) }}
                     @if (r.capped) {
                       <span class="badge badge-cap">{{ 'bonus.capped' | transloco }}</span>
-                      <span class="sub">{{
-                        'bonus.cappedNote'
-                          | transloco
-                            : {
-                                health: yen(r.result!.healthBase),
-                                pension: yen(r.result!.pensionBase),
-                              }
-                      }}</span>
+                      <span class="sub">{{ 'bonus.cappedHealth' | transloco: { n: yen(r.result!.healthBase) } }}</span>
+                      <span class="sub">{{ 'bonus.cappedPension' | transloco: { n: yen(r.result!.pensionBase) } }}</span>
                       @if (r.result!.priorHealth) {
                         <span class="sub">{{ 'bonus.priorIncluded' | transloco: { n: yen(r.result!.priorHealth!) } }}</span>
                       }
@@ -219,68 +217,47 @@
                   <td class="num strong">{{ yen(r.result!.employeeYen) }}</td>
                   <td class="num">{{ milli(r.premiumEmployerMilli) }}</td>
                   <td class="num">{{ milli(r.premiumTotalMilli) }}</td>
+                  <td class="calc">
+                    <button type="button" class="link-btn" [attr.aria-expanded]="openId() === r.employee.id" (click)="toggleOpen(r.employee.id)">
+                      {{ 'premiumList.breakdown' | transloco }} {{ openId() === r.employee.id ? '△' : '▽' }}
+                    </button>
+                  </td>
                 }
                 @case ('empty') {
                   <td class="num muted" colspan="6">—</td>
                 }
                 @case ('none') {
-                  <td class="muted" colspan="6">{{ 'bonus.state.none' | transloco }}</td>
+                  <td class="muted note" colspan="6">{{ 'bonus.state.none' | transloco }}</td>
                 }
                 @case ('counted') {
                   <td class="num">{{ yen(r.result!.standardBonus) }}</td>
-                  <td class="muted" colspan="5">{{ 'bonus.state.counted' | transloco }}</td>
+                  <td class="muted note" colspan="5">{{ 'bonus.state.counted' | transloco }}</td>
                 }
                 @case ('exempt') {
                   <td class="num">{{ yen(r.result!.standardBonus) }}</td>
-                  <td class="muted" colspan="5">{{ 'bonus.state.exempt' | transloco }}</td>
+                  <td class="muted note" colspan="5">{{ 'bonus.state.exempt' | transloco }}</td>
                 }
                 @default {
                   <td class="warn" colspan="6">{{ missingKey(r) | transloco }}</td>
                 }
               }
+              @if (r.state !== 'ok') {
+                <td></td>
+              }
             </tr>
+            @if (openId() === r.employee.id && r.state === 'ok' && r.result) {
+              <tr class="detail-row">
+                <td colspan="10">
+                  <app-premium-breakdown [result]="r.result" />
+                </td>
+              </tr>
+            }
           }
         </tbody>
       </table>
     </div>
     <app-pager variant="bottom" [total]="filtered().length" [(page)]="page" [size]="listOptions().size" />
 
-    <!-- この支給の合計 -->
-    <section class="card totals">
-      <h2>{{ 'bonus.totalsTitle' | transloco }}</h2>
-      @if (problemCount() > 0) {
-        <p class="warn">
-          {{ 'premiumList.totalsExcluded' | transloco: { count: problemCount() } }}
-        </p>
-      }
-      <table>
-        <thead>
-          <tr>
-            <th></th>
-            <th class="num">{{ 'premiumList.col.payment' | transloco }}</th>
-            <th class="num">{{ 'premiumList.col.employeeSum' | transloco }}</th>
-            <th class="num">{{ 'premiumList.col.employerSum' | transloco }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (t of totals(); track t.category) {
-            <tr>
-              <th scope="row">{{ 'premiumList.category.' + t.category | transloco }}</th>
-              <td class="num strong">{{ yen(t.totalYen) }}</td>
-              <td class="num">{{ yen(t.employeeYen) }}</td>
-              <td class="num">{{ yen(t.employerYen) }}</td>
-            </tr>
-          }
-          <tr class="grand-total">
-            <th scope="row">{{ 'bonus.grandTotal' | transloco }}</th>
-            <td class="num strong">{{ yen(grandTotalYen()) }}</td>
-            <td></td>
-            <td></td>
-          </tr>
-        </tbody>
-      </table>
-      <p class="hint">{{ 'bonus.hint.deduct' | transloco }}</p>
-    </section>
   }
 
   @if (saveErrorKey(); as key) {

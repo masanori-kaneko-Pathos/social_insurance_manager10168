@@ -106,11 +106,6 @@ td a {
   text-align: right;
 }
 
-.btn-small {
-  padding: 2px var(--space-sm);
-  font-size: var(--font-sm);
-}
-
 
 .select-line {
   display: flex;

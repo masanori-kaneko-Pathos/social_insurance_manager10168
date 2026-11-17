@@ -22,6 +22,7 @@ import { RemunerationService } from '../../remuneration.service';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 type Kind = 'health' | 'pension';
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -56,6 +57,8 @@ export class RemunerationCard implements OnInit {
   readonly errorKey = signal<string | null>(null);
   /** 編集中のフォーム：null は閉じている、'new' は追加、それ以外は編集中の適用開始月 */
   readonly editing = signal<'new' | string | null>(null);
+  /** 開いている窓に保存していない入力があれば、画面を離れる前に確かめる（11/17） */
+  private readonly unsaved = watchUnsaved(() => this.editing() !== null && this.form.dirty);
   readonly confirmingDelete = signal<string | null>(null);
   readonly saving = signal(false);
   /** フォームの適用開始月（等級表の選択に使う） */

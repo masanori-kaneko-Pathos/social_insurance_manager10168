@@ -822,3 +822,10 @@ a:where(:link, :visited):hover {
   z-index: 1;
   background: var(--color-bg);
 }
+
+/* ===== 小さいボタン（表の行の中・窓の中の補助の操作）。部品ごとに書いていたのを1か所にそろえた（11/17） ===== */
+.btn.btn-small {
+  height: 30px;
+  padding: 0 var(--space-sm);
+  font-size: var(--font-sm);
+}

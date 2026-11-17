@@ -4,8 +4,10 @@ import { employeeGuard, staffGuard } from './core/auth/role.guard';
 import { guestGuard } from './core/auth/guest.guard';
 import { officeGuard } from './features/office/office.guard';
 import { startGuard } from './features/office/start.guard';
+import { withUnsavedGuard } from './shared/services/unsaved-changes';
 
-export const routes: Routes = [
+// 画面を持つルートすべてに「保存していない入力があれば確かめる」を付ける（11/17）
+export const routes: Routes = withUnsavedGuard([
   // ===== ログイン前 =====
   {
     path: 'login',
@@ -254,4 +256,4 @@ export const routes: Routes = [
   },
 
   { path: '**', redirectTo: '' },
-];
+]);

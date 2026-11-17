@@ -34,6 +34,7 @@ import { PartialSaveError, PayrollService } from '../../payroll.service';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 /** 書き出せる期間の上限（月数） */
 const MAX_MONTHS = 24;
 /** 確認画面に出すエラーの行数 */
@@ -105,6 +106,8 @@ export class PayrollImport {
   readonly saving = signal(false);
   readonly progress = signal<{ done: number; total: number } | null>(null);
   readonly doneCount = signal<number | null>(null);
+  /** 読んだのにまだ取り込んでいなければ、画面を離れる前に確かめる（11/17） */
+  private readonly unsaved = watchUnsaved(() => (this.loaded() !== null || this.preview() !== null) && this.doneCount() === null);
   /** 取り込んだいちばん新しい支払月（次の一歩のリンク用。11/16） */
   readonly doneMonth = signal<string | null>(null);
   readonly partial = signal<{ done: number; total: number } | null>(null);

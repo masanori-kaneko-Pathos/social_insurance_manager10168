@@ -15,6 +15,7 @@ import { RequestService } from '../../../requests/request.service';
 import { MeHeader } from '../../components/me-header/me-header';
 import { MeContext } from '../../me-context.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 
 /** マイページ：依頼に答える（まだ・差し戻し）／出したものを見る */
 @Component({
@@ -35,6 +36,8 @@ export class MyRequest implements OnInit {
   readonly submitted = signal(false);
   readonly errorKey = signal<string | null>(null);
   readonly done = signal(false);
+  /** 答えを入れたのに送っていなければ、画面を離れる前に確かめる（11/17） */
+  private readonly unsaved = watchUnsaved(() => !this.done() && Object.values(this.answers()).some((v) => v.trim() !== ''));
 
   readonly answerable = computed(() => {
     const r = this.request();

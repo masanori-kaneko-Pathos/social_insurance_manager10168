@@ -233,3 +233,37 @@ td .field-error {
   justify-content: flex-end;
   margin: 0 0 var(--space-sm);
 }
+
+/* ===== 11/17：見切れの対策・行の下の内訳（保険料一覧と同じ） ===== */
+/* 長い名前は折り返す（名前と賞与額の間が空きすぎて見切れていた） */
+td:nth-child(2) {
+  white-space: normal;
+  min-width: 8em;
+  max-width: 16em;
+}
+
+/* 上限・休業の注記は折り返す */
+td.note,
+td .sub {
+  white-space: normal;
+}
+
+td.calc {
+  width: 1%;
+}
+
+.link-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--color-primary);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.detail-row td {
+  padding: var(--space-sm) var(--space-lg) var(--space-md);
+  background: var(--color-bg);
+  white-space: normal;
+}

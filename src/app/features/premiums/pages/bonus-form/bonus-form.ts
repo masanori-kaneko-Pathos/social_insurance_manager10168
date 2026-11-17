@@ -30,6 +30,8 @@ import {
 import { officeTotals } from '../../logic/premium-core';
 import { formatMilli } from '../../logic/rounding';
 
+import { PremiumBreakdown } from '../../components/premium-breakdown/premium-breakdown';
+import { PremiumTotals } from '../../components/premium-totals/premium-totals';
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { EnterNext } from '../../../../shared/directives/enter-next';
 import { PersonListBar } from '../../../../shared/components/person-list-bar/person-list-bar';
@@ -41,6 +43,7 @@ import { ContractService } from '../../../employees/contract.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { contractAt } from '../../../employees/logic/contract-form-model';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 const DATE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 /** 新規の支給を計算の中で区別するための仮の ID */
 const NEW_ID = '__new__';
@@ -60,7 +63,7 @@ interface DateNote {
 
 @Component({
   selector: 'app-bonus-form',
-  imports: [ColumnMapper, EnterNext, HalfWidthDigits, Pager, PersonListBar, RouterLink, SortHeader, TranslocoPipe],
+  imports: [ColumnMapper, EnterNext, HalfWidthDigits, Pager, PersonListBar, PremiumBreakdown, PremiumTotals, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './bonus-form.html',
   styleUrl: './bonus-form.css',
 })
@@ -95,6 +98,13 @@ export class BonusForm {
   readonly title = signal('');
   /** 従業員ID → 入力中の文字（「500,000」など） */
   readonly amountTexts = signal<Record<string, string>>({});
+  /** 読み込んだときの入力（変わったかを見るため） */
+  private readonly snapshot = signal('');
+  private snapshotOf(): string {
+    return JSON.stringify([this.paidDate(), this.title(), this.amounts()]);
+  }
+  /** 保存していない入力があれば、画面を離れる前に確かめる（11/17） */
+  private readonly unsaved = watchUnsaved(() => !this.loading() && !this.readOnly && this.snapshotOf() !== this.snapshot());
 
   readonly submitted = signal(false);
   readonly saving = signal(false);
@@ -200,6 +210,15 @@ export class BonusForm {
     () => this.rows().filter((r) => r.state === 'missing' || r.state === 'error').length,
   );
 
+  /** 計算できた人の結果（合計の部品に渡す。保険料一覧と同じ。11/17） */
+  readonly okResults = computed(() => this.rows().flatMap((r) => (r.state === 'ok' && r.result ? [r.result] : [])));
+
+  /** 行の下に開く内訳（保険料一覧と同じ。1人ずつ） */
+  readonly openId = signal<string | null>(null);
+  toggleOpen(id: string): void {
+    this.openId.update((cur) => (cur === id ? null : id));
+  }
+
   /** この支給の合計 */
   readonly totals = computed<OfficeTotal[]>(() =>
     officeTotals(this.rows().flatMap((r) => (r.state === 'ok' && r.result ? [r.result] : []))),
@@ -243,6 +262,7 @@ export class BonusForm {
       console.error(err);
       this.loadErrorKey.set(errorKeyOf(err, 'bonus.error.load'));
     } finally {
+      this.snapshot.set(this.snapshotOf());
       this.loading.set(false);
     }
   }
@@ -351,6 +371,7 @@ export class BonusForm {
     try {
       if (this.bonusId) await this.bonusApi.update(office.id, this.bonusId, input);
       else await this.bonusApi.create(office.id, input);
+      this.unsaved.release();
       await this.router.navigate(['/o', office.id, 'bonuses']);
       // 一覧に戻ったあとに知らせる（保存の知らせはトーストにそろえる。11/16）
       this.toast.show('bonus.savedToast', 5000);
@@ -374,6 +395,7 @@ export class BonusForm {
     this.saveErrorKey.set(null);
     try {
       await this.bonusApi.delete(office.id, this.bonusId);
+      this.unsaved.release();
       await this.router.navigate(['/o', office.id, 'bonuses']);
       this.toast.show('common.deleted');
     } catch (err) {

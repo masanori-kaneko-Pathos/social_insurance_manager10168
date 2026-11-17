@@ -111,7 +111,7 @@ progress {
 
 .table-wrap {
   overflow-x: auto;
-  max-height: 420px;
+  max-height: 60vh; /* 取り込みの画面でそろえる（11/17） */
   overflow-y: auto;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -257,4 +257,11 @@ td.mono {
 .fix-input.changed {
   border-color: var(--color-primary);
   background: var(--color-highlight-soft);
+}
+
+/* 見出しは上に貼り付く（従業員の取り込みとそろえる。11/17） */
+.table-wrap.scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }

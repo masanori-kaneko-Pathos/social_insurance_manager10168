@@ -1,0 +1,118 @@
+/* 合計：ふだんは1行の帯（保険料一覧から移した。11/17） */
+details.totals {
+  margin-bottom: var(--space-md);
+  padding: 0;
+}
+
+details.totals > :not(summary) {
+  margin-left: var(--space-lg);
+  margin-right: var(--space-lg);
+}
+
+details.totals[open] {
+  padding-bottom: var(--space-md);
+}
+
+.totals-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-xs) var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  cursor: pointer;
+  list-style: none;
+}
+
+.totals-strip::-webkit-details-marker {
+  display: none;
+}
+
+.strip-title {
+  font-weight: 600;
+}
+
+.strip-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.strip-item small {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.strip-item.main strong {
+  font-size: var(--font-lg);
+}
+
+.fold-toggle {
+  margin-left: auto;
+  font-size: var(--font-sm);
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+details:not([open]) > summary .when-open,
+details[open] > summary .when-closed {
+  display: none;
+}
+
+table {
+  max-width: 640px;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+}
+
+thead th {
+  font-size: var(--font-xs);
+  font-weight: 500;
+  color: var(--color-text-sub);
+}
+
+tbody th {
+  font-weight: 400;
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.strong {
+  font-weight: 600;
+}
+
+.grand-total th,
+.grand-total td {
+  border-top: 2px solid var(--color-border-strong);
+  font-weight: 600;
+}
+
+.sub-row th,
+.sub-row td {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.sub-row th {
+  padding-left: var(--space-lg);
+}
+
+.warn {
+  color: var(--color-warning-text);
+  font-size: var(--font-sm);
+}
+
+.hint {
+  margin: var(--space-sm) 0 0;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}

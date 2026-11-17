@@ -179,11 +179,6 @@ button.link {
   cursor: pointer;
 }
 
-.btn-small {
-  padding: 2px 8px;
-  font-size: var(--font-xs);
-}
-
 .done {
   font-size: var(--font-xs);
   color: var(--color-success-text, #2e6b3f);

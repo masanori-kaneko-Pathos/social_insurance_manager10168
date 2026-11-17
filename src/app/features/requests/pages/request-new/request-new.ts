@@ -18,6 +18,7 @@ import { OfficeContext } from '../../../office/office-context.service';
 import { customQuestion, fieldQuestion, REQUEST_FIELDS, RequestField, templateQuestions } from '../../logic/request-model';
 import { RequestService } from '../../request.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 
 /** ルールの上限と同じ */
 const MAX_QUESTIONS = 50;
@@ -61,6 +62,8 @@ export class RequestNew {
   // ===== あて先 =====
   readonly employees = signal<Employee[]>([]);
   readonly selected = signal<ReadonlySet<string>>(new Set());
+  /** 宛先を選んだのに送っていなければ、画面を離れる前に確かめる（11/17） */
+  private readonly unsaved = watchUnsaved(() => this.selected().size > 0);
   /** 探す・絞る・並べる・ページ（ほかの人の並ぶ表と同じ帯と見出し。11/16） */
   readonly listOptions = signal<PersonListOptions>(defaultListOptions());
   readonly page = signal(1);
@@ -224,6 +227,7 @@ export class RequestNew {
         questions: this.questions(),
         dueDate: this.dueDate() || null,
       });
+      this.unsaved.release();
       await this.router.navigate(['/o', officeId, 'requests'], { queryParams: { status: 'open' } });
     } catch (err) {
       console.error(err);

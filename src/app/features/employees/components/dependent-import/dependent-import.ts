@@ -24,6 +24,7 @@ import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { applyRowValues } from '../../../../shared/import/row-fix';
 import { ImportFix, ImportIssue, ImportIssues } from '../../../../shared/components/import-issues/import-issues';
 import { TranslocoService } from '@jsverse/transloco';
+import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 
 interface Preview {
   fileName: string;
@@ -63,6 +64,8 @@ export class DependentImport {
   readonly saving = signal(false);
   readonly progress = signal<{ done: number; total: number } | null>(null);
   readonly doneCount = signal<number | null>(null);
+  /** 読んだのにまだ取り込んでいなければ、画面を離れる前に確かめる（11/17） */
+  private readonly unsaved = watchUnsaved(() => (this.loaded() !== null || this.preview() !== null) && this.doneCount() === null);
 
   readonly errorRows = computed(() => this.preview()?.rows.filter((r) => r.errors.length > 0) ?? []);
   readonly addRows = computed(() => this.preview()?.rows.filter((r) => r.input) ?? []);

@@ -125,11 +125,6 @@ td.wrap {
   white-space: normal;
 }
 
-.btn-small {
-  padding: 2px var(--space-sm);
-  font-size: var(--font-sm);
-}
-
 /* 1人ずつの表の合計（11/16） */
 .people tfoot .total th,
 .people tfoot .total td {

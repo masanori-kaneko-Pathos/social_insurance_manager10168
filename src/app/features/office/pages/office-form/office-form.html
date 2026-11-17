@@ -372,7 +372,11 @@
             @for (p of history(); track p.from; let i = $index) {
               <tr>
                 <td class="mono">
-                  {{ isStart(p.from) ? ('office.history.start' | transloco) : p.from + '〜' }}
+                  @if (periodLabel(i); as pr) {
+                    {{ pr.from }}〜{{ pr.to }}
+                  } @else {
+                    {{ 'office.history.all' | transloco }}
+                  }
                 </td>
                 <td>{{ prefectureName(p.prefecture) }}</td>
                 <td>

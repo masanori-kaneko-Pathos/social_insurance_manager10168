@@ -19,7 +19,7 @@
       <p class="lead">{{ 'common.loading' | transloco }}</p>
     } @else if (state() === 'other') {
       <p class="lead">{{ 'invite.accept.otherAccount' | transloco }}</p>
-      <button type="button" class="btn btn-primary btn-block" (click)="logout()">{{ 'common.logout' | transloco }}</button>
+      <button type="button" class="btn btn-block" (click)="logout()">{{ 'common.logout' | transloco }}</button>
     } @else if (state() === 'unverified') {
       <!-- 会社がアドレスを決めた招待：そのアドレスの持ち主かを、確認のメールで確かめる -->
       <p class="lead">{{ 'join.sent' | transloco: { email: auth.user()?.email } }}</p>

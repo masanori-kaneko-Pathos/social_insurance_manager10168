@@ -21,6 +21,7 @@ import {
   AbroadRowError,
   planAbroadImport,
 } from '../../logic/abroad-csv';
+import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 
 interface Preview {
   fileName: string;
@@ -54,6 +55,8 @@ export class AbroadImport {
   readonly saving = signal(false);
   readonly progress = signal<{ done: number; total: number } | null>(null);
   readonly doneCount = signal<number | null>(null);
+  /** 読んだのにまだ取り込んでいなければ、画面を離れる前に確かめる（11/17） */
+  private readonly unsaved = watchUnsaved(() => this.preview() !== null && this.doneCount() === null);
   readonly skipErrors = signal(false);
   private employees: Employee[] = [];
   private fileName = '';

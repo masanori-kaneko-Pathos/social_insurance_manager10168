@@ -24,7 +24,8 @@
     "error": {
       "permission": "この操作をする権限がありません。権限が変わった場合は、画面を読み込み直してください。続くときは、事業所の管理者に確かめてください。",
       "offline": "サーバーにつながりませんでした。インターネットの接続を確かめて、もう一度お試しください。"
-    }
+    },
+    "unsavedConfirm": "保存していない入力があります。このまま移ると、入力した内容は消えます。移りますか？"
   },
   "auth": {
     "password": {
@@ -855,10 +856,11 @@
       "changeFrom": "何月分から変えるかを選んでください"
     },
     "history": {
-      "from": "適用開始",
+      "from": "期間",
       "start": "登録時から",
       "rates": "料率",
-      "showRates": "料率を見る"
+      "showRates": "料率を見る",
+      "all": "すべての期間"
     },
     "insurerRates": "この組合の料率を見る・設定する",
     "day": {
@@ -1128,13 +1130,15 @@
       "contributionNote": "※拠出金は会社だけの負担のため、合計から除いています",
       "formulaTitle": "計算式（標準報酬月額 × 料率、端数処理）",
       "adjustment": "※保険料調整制度で、本人分を {{n}}円 軽くしています（その分は会社が一時的に払い、3か月後の保険料から差し引かれます）",
-      "lineAdjustment": "保険料調整で本人分から {{n}}円を軽減"
+      "lineAdjustment": "保険料調整で本人分から {{n}}円を軽減",
+      "formulaTitleBonus": "計算式（標準賞与額 × 料率、端数処理）"
     },
     "agreement": {
       "half": "労使協定：四捨五入",
       "floor": "労使協定：切り捨て",
       "ceil": "労使協定：切り上げ"
-    }
+    },
+    "formulaBonus": "{{base}}円（標準賞与額）× {{rate}} ＝ {{total}}円"
   },
   "premiumList": {
     "title": "保険料一覧",
@@ -1369,7 +1373,7 @@
     "hasProblems": "計算できない人あり",
     "capped": "上限",
     "cappedNote": "健保等 {{health}}円・厚年等 {{pension}}円で計算",
-    "totalsTitle": "この支給の合計",
+    "totalsTitle": "この賞与の保険料（納付額）",
     "grandTotal": "納付額の合計",
     "deleteThis": "この賞与を削除",
     "confirmDelete": "本当に削除",
@@ -1424,7 +1428,9 @@
     },
     "priorIncluded": "（前の事業所の分 {{n}}円を含めた年度の累計で）",
     "total": "合計",
-    "amountTotal": "賞与額の合計 {{n}}円"
+    "amountTotal": "賞与額の合計 {{n}}円",
+    "cappedHealth": "健保等は {{n}}円で計算（年度の上限）",
+    "cappedPension": "厚年等は {{n}}円で計算（月の上限）"
   },
   "leave": {
     "title": "休業",

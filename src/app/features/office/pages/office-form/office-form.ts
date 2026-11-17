@@ -47,7 +47,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { CriteriaDoc } from '../../../../core/models/master';
-import { todayLocal, toYearMonth } from '../../../../shared/utils/date';
+import { shiftMonth, todayLocal, toYearMonth } from '../../../../shared/utils/date';
 import { parseNat } from '../../../../shared/utils/number';
 import { FilingTaskInput } from '../../../../core/models/filing-task';
 import { hasOfficeChanges, OfficeChanges, officeChanges } from '../../logic/office-changes';
@@ -78,6 +78,7 @@ import {
 } from '../../logic/office-form-model';
 import { adjustmentOfficeStatus } from '../../../premiums/logic/adjustment-office';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 /** 法人番号を入れたら法人名も必須 */
 function corporateNameRequired(g: AbstractControl): ValidationErrors | null {
   const num = (g.get('corporateNumber')?.value ?? '').trim();
@@ -149,6 +150,8 @@ export class OfficeForm {
   /** 編集で、admin でなければ読み取り専用 */
   readonly readOnly = this.isEdit && !this.context.isAdmin();
 
+  /** 保存していない入力があれば、画面を離れる前に確かめる（11/17） */
+  private readonly unsaved = watchUnsaved(() => this.form.dirty);
   readonly form = this.fb.nonNullable.group(
     {
       name: ['', [Validators.required, NOT_BLANK, Validators.maxLength(100)]],
@@ -415,6 +418,7 @@ export class OfficeForm {
       await this.profiles.load(uid);
       await this.context.refresh(uid);
       this.toast.show('office.delete.done');
+      this.unsaved.release();
       await this.router.navigateByUrl('/');
     } catch (err) {
       console.error(err);
@@ -692,6 +696,17 @@ export class OfficeForm {
     return from === FROM_THE_START;
   }
 
+  /**
+   * 履歴の行の期間（11/17）：「〜2024-03」「2024-04〜」「2024-04〜2025-02」。1行だけなら「すべての期間」
+   * 「登録時から」だと、アプリに登録した日からに見えてしまうため、終わりの月で書く
+   */
+  periodLabel(i: number): { from: string; to: string } | null {
+    const h = this.history();
+    const from = this.isStart(h[i].from) ? '' : h[i].from;
+    const to = h[i + 1] ? shiftMonth(h[i + 1].from, -1) : '';
+    return from || to ? { from, to } : null;
+  }
+
   prefectureName(code: string): string {
     return this.prefectures.find((p) => p.code === code)?.[this.lang()] ?? code;
   }
@@ -803,6 +818,7 @@ export class OfficeForm {
         }
         await this.context.refresh(uid); // 切り替えの一覧の名前なども最新に
         this.form.markAsUntouched();
+        this.form.markAsPristine();
         this.saved.set(true);
         this.toast.show('common.saved');
       } else {
@@ -816,6 +832,7 @@ export class OfficeForm {
         await this.saveDepartments(officeId);
         await this.profiles.load(uid); // currentOfficeId を最新にする
         await this.context.refresh(uid); // 切り替えの一覧にすぐ反映
+        this.unsaved.release();
         await this.router.navigateByUrl(`/o/${officeId}`);
       }
     } catch (err) {

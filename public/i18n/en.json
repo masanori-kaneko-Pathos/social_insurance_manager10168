@@ -24,7 +24,8 @@
     "error": {
       "permission": "You do not have permission for this. If your role has changed, reload the page. If it continues, ask an administrator of the office.",
       "offline": "Could not reach the server. Check your internet connection and try again."
-    }
+    },
+    "unsavedConfirm": "You have unsaved changes. If you leave now, they will be lost. Leave this page?"
   },
   "auth": {
     "password": {
@@ -855,10 +856,11 @@
       "changeFrom": "Select the month the change applies from"
     },
     "history": {
-      "from": "From",
+      "from": "Period",
       "start": "Since registration",
       "rates": "Rates",
-      "showRates": "View rates"
+      "showRates": "View rates",
+      "all": "All periods"
     },
     "insurerRates": "View or set this society's rates",
     "day": {
@@ -1128,13 +1130,15 @@
       "contributionNote": "* The contribution is employer-only and not in the total",
       "formulaTitle": "Calculation (standard remuneration × rate, rounding)",
       "adjustment": "* The premium adjustment scheme lowers the employee share by {{n}} yen (the employer pays it for now; it is deducted from premiums three months later)",
-      "lineAdjustment": "adjustment lowers the employee share by {{n}} yen"
+      "lineAdjustment": "adjustment lowers the employee share by {{n}} yen",
+      "formulaTitleBonus": "Calculation (standard bonus amount × rate, rounding)"
     },
     "agreement": {
       "half": "Agreement: round half up",
       "floor": "Agreement: round down",
       "ceil": "Agreement: round up"
-    }
+    },
+    "formulaBonus": "JPY {{base}} (standard bonus) × {{rate}} = JPY {{total}}"
   },
   "premiumList": {
     "title": "Premiums",
@@ -1369,7 +1373,7 @@
     "hasProblems": "Some can't be calculated",
     "capped": "Capped",
     "cappedNote": "Calculated on health JPY {{health}} / pension JPY {{pension}}",
-    "totalsTitle": "Totals for this bonus",
+    "totalsTitle": "Premiums for this bonus (payment)",
     "grandTotal": "Total payment",
     "deleteThis": "Delete this bonus",
     "confirmDelete": "Confirm delete",
@@ -1424,7 +1428,9 @@
     },
     "priorIncluded": "(yearly total including {{n}} yen from the previous employer)",
     "total": "Total",
-    "amountTotal": "Total bonus {{n}} yen"
+    "amountTotal": "Total bonus {{n}} yen",
+    "cappedHealth": "Health etc. calculated on JPY {{n}} (yearly cap)",
+    "cappedPension": "Pension etc. calculated on JPY {{n}} (monthly cap)"
   },
   "leave": {
     "title": "Leave",

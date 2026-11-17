@@ -77,11 +77,6 @@ td.num {
   cursor: pointer;
 }
 
-.btn-small {
-  padding: 2px var(--space-sm);
-  font-size: var(--font-sm);
-}
-
 /* ===== 1か月分の入力 ===== */
 .entry {
   margin: var(--space-sm) 0 var(--space-md);

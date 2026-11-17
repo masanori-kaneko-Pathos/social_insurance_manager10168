@@ -39,6 +39,7 @@ import { ContractService } from '../../contract.service';
 import { contractAt } from '../../logic/contract-form-model';
 import { PersonDiff, samePersonDiffs } from '../../logic/employee-csv';
 import type { Employee } from '../../../../core/models/employee';
+import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 
 /** 何を取り込むか：従業員（1行1人）／扶養家族（1行1人。11/13）／契約の履歴／標準報酬の履歴（登録済みの人に足す） */
 export type ImportMode = 'employees' | 'dependents' | 'contract' | 'remuneration' | 'certificate' | 'overseas';
@@ -101,6 +102,8 @@ export class EmployeeImport {
   readonly saving = signal(false);
   readonly progress = signal<{ done: number; total: number } | null>(null);
   readonly doneCount = signal<number | null>(null);
+  /** 読んだのにまだ取り込んでいなければ、画面を離れる前に確かめる（11/17） */
+  private readonly unsaved = watchUnsaved(() => (this.loaded() !== null || this.preview() !== null) && this.doneCount() === null);
   /** 従業員は登録できたが、マイナンバーを保管できなかった人数 */
   readonly myNumberFailed = signal(0);
   /** 確認画面：マイナンバーが入っている人数 */

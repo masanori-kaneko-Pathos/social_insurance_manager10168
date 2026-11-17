@@ -104,73 +104,8 @@
 
   @if (rows().length > 0) {
     <!-- 事業所の合計（表の上。ふだんは1行の帯だけ。内訳は開いて見る。11/13） -->
-    <details class="card totals">
-      <summary class="totals-strip">
-        <span class="strip-title">{{ 'premiumList.totalsTitle' | transloco }}</span>
-        <span class="strip-item"><small>{{ 'premiumList.strip.count' | transloco }}</small><strong>{{ rows().length - problems().length }}</strong></span>
-        <span class="strip-item"><small>{{ 'premiumList.col.employeeSum' | transloco }}</small><strong>{{ yen(employeeTotalYen()) }}</strong></span>
-        <span class="strip-item"><small>{{ 'premiumList.col.employerSum' | transloco }}</small><strong>{{ yen(employerTotalYen()) }}</strong></span>
-        <span class="strip-item main"><small>{{ 'premiumList.col.payment' | transloco }}</small><strong>{{ yen(grandTotalYen()) }}</strong></span>
-        <span class="fold-toggle"><span class="when-closed">{{ 'premiumList.breakdown' | transloco }} ▽</span><span class="when-open">{{ 'premiumList.breakdown' | transloco }} △</span></span>
-      </summary>
-      @if (problems().length > 0) {
-        <p class="warn">
-          {{ 'premiumList.totalsExcluded' | transloco: { count: problems().length } }}
-        </p>
-      }
-      <table>
-        <thead>
-          <tr>
-            <th></th>
-            <th class="num">{{ 'premiumList.col.employeeSum' | transloco }}</th>
-            <th class="num">{{ 'premiumList.col.employerSum' | transloco }}</th>
-            <th class="num">{{ 'premiumList.col.payment' | transloco }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (t of totals(); track t.category) {
-            <tr>
-              <th scope="row">{{ 'premiumList.category.' + t.category | transloco }}</th>
-              <td class="num">{{ yen(t.employeeYen) }}</td>
-              <td class="num">{{ yen(t.employerYen) }}</td>
-              <td class="num strong">{{ yen(t.totalYen) }}</td>
-            </tr>
-            <!-- 健康保険料の内訳（全額だけ。本人負担は合算して端数処理するので、保険ごとには決まらない） -->
-            @if (t.category === 'health') {
-              @for (p of healthParts(); track p.part) {
-                <tr class="sub-row">
-                  <th scope="row">{{ 'premiumList.part.' + p.part | transloco }}</th>
-                  <td></td>
-                  <td></td>
-                  <td class="num">{{ yen(p.totalYen) }}</td>
-                </tr>
-              }
-            }
-          }
-          <tr class="grand-total">
-            <th scope="row">{{ 'premiumList.grandTotal' | transloco }}</th>
-            <td class="num strong">{{ yen(employeeTotalYen()) }}</td>
-            <td class="num strong">{{ yen(employerTotalYen()) }}</td>
-            <td class="num strong">{{ yen(grandTotalYen()) }}</td>
-          </tr>
-          <!-- 保険料調整制度：3か月前の軽減額が、この月の納付額から差し引かれる（11/16） -->
-          @if (adjustmentRefund(); as rf) {
-            <tr class="sub-row">
-              <th scope="row">{{ 'premiumList.adjustment.refund' | transloco: { month: rf.month } }}</th>
-              <td></td>
-              <td></td>
-              <td class="num">−{{ yen(rf.health + rf.pension) }}</td>
-            </tr>
-            <tr class="grand-total">
-              <th scope="row">{{ 'premiumList.adjustment.net' | transloco }}</th>
-              <td></td>
-              <td></td>
-              <td class="num strong">{{ yen(grandTotalYen() - rf.health - rf.pension) }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-      <p class="hint">{{ 'premiumList.totalsHint' | transloco }}</p>
+    <!-- 事業所の合計：保険料一覧と賞与で同じ部品（11/17） -->
+    <app-premium-totals [results]="okResults()" [excluded]="problems().length" [refund]="adjustmentRefund()">
       @if (deptTotals().length > 0) {
         <!-- 部署ごとの小計（目安） -->
         <h3 class="dept-head">{{ 'premiumList.dept.title' | transloco }}</h3>
@@ -237,7 +172,7 @@
           }}</a>
         </p>
       }
-    </details>
+    </app-premium-totals>
   }
 
   <!-- この月の確認（突き合わせ・検算）。下までスクロールしないと気づかない、をなくすため上に置く。ふだんは閉じる（11/13） -->
@@ -313,7 +248,7 @@
       }
       @if (context.isAdmin()) {
         <div class="notice-actions">
-          <button type="button" class="btn btn-primary" [disabled]="noticeSaving()" (click)="saveNotice()">
+          <button type="button" class="btn btn-solid" [disabled]="noticeSaving()" (click)="saveNotice()">
             {{ (noticeSaving() ? 'common.saving' : 'premiumNotice.save') | transloco }}
           </button>
           @if (noticeSaved()) {

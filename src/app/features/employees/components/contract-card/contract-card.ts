@@ -22,6 +22,7 @@ import { ContractFields } from '../contract-fields/contract-fields';
 import { ImportFileError } from '../../../../shared/import/parse';
 import { ContractCandidate, ContractPdfRead, readContractText } from '../../logic/contract-pdf';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 
 /** 契約書の PDF の上限（読み取りの部品と同じ 5MB） */
 const MAX_PDF_BYTES = 5 * 1024 * 1024;
@@ -56,6 +57,8 @@ export class ContractCard implements OnInit {
   readonly errorKey = signal<string | null>(null);
   /** null は閉じている、'new' は追加、それ以外は編集中の始まる日 */
   readonly editing = signal<'new' | string | null>(null);
+  /** 開いている窓に保存していない入力があれば、画面を離れる前に確かめる（11/17） */
+  private readonly unsaved = watchUnsaved(() => this.editing() !== null && this.form.dirty);
   readonly confirmingDelete = signal<string | null>(null);
   /** 同じ始まる日の契約がある → 上書きしてよいかの確認中 */
   readonly confirmingOverwrite = signal(false);

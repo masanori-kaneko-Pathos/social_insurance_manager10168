@@ -444,40 +444,6 @@
     }
   </section>
 
-  <!-- ===== 右の箱：確認待ちの依頼・年1回・随時・設定 ===== -->
-  <aside class="side">
-    @if (isAdmin()) {
-      <section class="card box">
-        <h2>{{ 'home.box.requests' | transloco }}</h2>
-        @if (submittedRequests() > 0) {
-          <p class="big">{{ 'dashboard.todo.count' | transloco: { count: submittedRequests() } }}</p>
-          <a [routerLink]="['/o', office()?.id, 'requests']" [queryParams]="{ status: 'submitted' }">{{ 'dashboard.todo.toRequests' | transloco }} →</a>
-        } @else {
-          <p class="muted">{{ 'home.box.noRequests' | transloco }}</p>
-        }
-        <a [routerLink]="['/o', office()?.id, 'requests', 'new']">{{ 'request.new' | transloco }} →</a>
-      </section>
-    }
-
-    <section class="card box">
-      <h2>{{ 'home.box.yearly' | transloco }}</h2>
-      <a [routerLink]="['/o', office()?.id, 'revisions']">{{ 'nav.revisions' | transloco }} →</a>
-      <a [routerLink]="['/o', office()?.id, 'regular', regularSeason() ?? thisMonth.slice(0, 4)]">
-        {{ 'nav.regular' | transloco }} →
-        @if (regularSeason()) {
-          <span class="season">{{ 'home.box.season' | transloco }}</span>
-        }
-      </a>
-      <a [routerLink]="['/o', office()?.id, 'ages']">{{ 'dashboard.ages.title' | transloco }} →</a>
-    </section>
-
-    <section class="card box">
-      <h2>{{ 'nav.group.setup' | transloco }}</h2>
-      <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'nav.settings' | transloco }} →</a>
-      <a [routerLink]="['/o', office()?.id, 'members']">{{ 'nav.members' | transloco }} →</a>
-      <a [routerLink]="['/o', office()?.id, 'help']">{{ 'nav.help' | transloco }} →</a>
-    </section>
-  </aside>
 </div>
 
 @if (open(); as o) {

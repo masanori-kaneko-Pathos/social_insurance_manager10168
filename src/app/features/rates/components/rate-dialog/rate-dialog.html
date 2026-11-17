@@ -20,8 +20,6 @@
           <span class="period mono">
             @if (target().startKnown) {
               {{ range().from }}
-            } @else {
-              {{ 'office.history.start' | transloco }}
             }
             〜
             @if (lastMonth(); as m) {
@@ -239,7 +237,7 @@
                           @for (e of r.errors; track e) {
                             <span class="field-error">{{ csvErrorKey(e) | transloco }}</span>
                           }
-                          <button type="button" class="btn btn-small" [attr.aria-expanded]="csvFixing() === r.line" (click)="toggleFix(r.line)">
+                          <button type="button" class="btn btn-small btn-primary" [attr.aria-expanded]="csvFixing() === r.line" (click)="toggleFix(r.line)">
                             {{ 'importFix.fix' | transloco }}
                           </button>
                         } @else {

@@ -67,6 +67,7 @@ import { OFFICER_CHECKS, OFFICER_TYPES } from '../../../../core/models/employee'
 import { orgOf } from '../../logic/employee-form-model';
 import { judgeOfficer, OfficerJudgement } from '../../logic/officer';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 const NOT_BLANK = Validators.pattern(/\S/);
 
 /** 全角を半角にしてから形式を見る（空欄は通す） */
@@ -357,6 +358,8 @@ export class EmployeeForm {
   }
 
   readonly form = this.build(emptyEmployeeForm());
+  /** 保存していない入力があれば、画面を離れる前に確かめる（11/17） */
+  private readonly unsaved = watchUnsaved(() => this.form.dirty || this.contractForm.dirty);
 
   // ===== 雇用契約の段（新規だけ。入力欄は契約のカードと同じ ContractFields） =====
   /** 最初の契約（始まる日は入社日に合わせる） */
@@ -736,12 +739,14 @@ export class EmployeeForm {
           } catch (err) {
             console.error(err);
             this.toast.show('employee.form.contractFailed');
+            this.unsaved.release();
             await this.router.navigate(['/o', officeId, 'employees', id]);
             return;
           }
         }
       }
       this.toast.show(this.isEdit ? 'common.saved' : 'employee.form.created');
+      this.unsaved.release();
       await this.router.navigate(['/o', officeId, 'employees', id]);
     } catch (err) {
       console.error(err);
