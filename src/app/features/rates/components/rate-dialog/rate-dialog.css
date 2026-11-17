@@ -342,3 +342,8 @@
 .csv-preview .field-error {
   display: block;
 }
+
+/* 支援金の施行前の月（11/17） */
+.not-yet {
+  color: var(--color-text-sub);
+}

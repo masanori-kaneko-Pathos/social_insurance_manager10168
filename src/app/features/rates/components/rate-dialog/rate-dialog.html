@@ -91,7 +91,9 @@
                 <td class="mono">{{ r.month }}</td>
                 @for (kind of kinds; track kind) {
                   <td class="num">
-                    @if (r[kind]; as p) {
+                    @if (notYet(kind, r.month)) {
+                      <span class="not-yet">{{ 'rateDialog.notYet' | transloco }}</span>
+                    } @else if (r[kind]; as p) {
                       {{ show(totalOf(p)) }}
                     } @else {
                       —
@@ -130,14 +132,18 @@
                 <td class="mono">{{ k.from }}</td>
                 @for (kind of kinds; track kind) {
                   <td class="num">
-                    <div>{{ show(totalOf(k[kind])) }}</div>
-                    <div class="split">
-                      {{
-                        'rateDialog.splitNote'
-                          | transloco
-                            : { employee: show(k[kind].employee), employer: show(k[kind].employer) }
-                      }}
-                    </div>
+                    @if (notYet(kind, k.from)) {
+                      <span class="not-yet">{{ 'rateDialog.notYet' | transloco }}</span>
+                    } @else {
+                      <div>{{ show(totalOf(k[kind])) }}</div>
+                      <div class="split">
+                        {{
+                          'rateDialog.splitNote'
+                            | transloco
+                              : { employee: show(k[kind].employee), employer: show(k[kind].employer) }
+                        }}
+                      </div>
+                    }
                   </td>
                 }
                 @if (editable()) {

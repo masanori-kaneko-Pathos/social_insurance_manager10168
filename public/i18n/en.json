@@ -1053,9 +1053,10 @@
       "lead": "Enter the rates from the notice sent by the health insurance society. You can leave this empty and enter them later with \"View rates\" in the insurer and location history (per mille, CSV and PDF are available there).",
       "fromHint": "If you also calculate premiums for past payroll, choose a month before the earliest one.",
       "error": {
-        "from": "Select the month the rates apply from.",
-        "beforeChange": "This cannot be before the month of the change."
-      }
+        "from": "Select the month the rates apply from."
+      },
+      "titleChange": "New society's rates (from the month of the change)",
+      "leadChange": "Enter the rates from the notice sent by the society. You can leave this empty and enter them later with \"View rates\" in the table below. To enter several years at once (CSV, PDF) or in per mille, use that after saving."
     }
   },
   "remuneration": {
@@ -1376,7 +1377,8 @@
       "unitLabel": "Unit",
       "recheck": "Check again with the fixes ({{n}})",
       "fromTable": "Read as a premium table. Rates are calculated by dividing the amounts by the standard remuneration (the % cells are not used). Please check the months and rates against the notice, and use \"Fix here\" if anything differs."
-    }
+    },
+    "notYet": "— (not yet in effect)"
   },
   "bonus": {
     "listTitle": "Bonuses",

@@ -317,13 +317,14 @@
             class="input"
             formControlName="kumiaiName"
             [class.is-invalid]="errorOf('kumiaiName')"
+            (keydown.enter)="onKumiaiEnter($event)"
           />
           @if (errorOf('kumiaiName'); as e) {
             <span class="field-error">{{ e | transloco }}</span>
           }
         </div>
-        <!-- 組合の最初の料率（組合の名前と同じときに入れる。空ならあとで料率の窓から。11/17） -->
-        @if (showFirstRates()) {
+        <!-- 組合の最初の料率（新規登録のとき。編集で切り替えるときは「保険者・所在地の履歴」の中に出す。11/17） -->
+        @if (showFirstRates() && !isEdit) {
           <fieldset class="first-rates" [formGroup]="firstRates">
             <legend>{{ 'office.firstRates.title' | transloco }}</legend>
             <p class="hint">{{ 'office.firstRates.lead' | transloco }}</p>
@@ -349,7 +350,7 @@
                   @if (k !== 'childSupport' || firstRatesNeedChildSupport()) {
                     <tr [formGroupName]="k">
                       <th scope="row">{{ 'premium.part.' + k | transloco }}</th>
-                      <td><input class="input num" inputmode="decimal" formControlName="total" [attr.aria-label]="('premium.part.' + k | transloco) + ' ' + ('rateDialog.total' | transloco)" /></td>
+                      <td><input class="input num" inputmode="decimal" formControlName="total" [id]="'firstRate-' + k" [attr.aria-label]="('premium.part.' + k | transloco) + ' ' + ('rateDialog.total' | transloco)" /></td>
                       <td><input class="input num" inputmode="decimal" formControlName="employee" [attr.aria-label]="('premium.part.' + k | transloco) + ' ' + ('rateDialog.employee' | transloco)" /></td>
                       <td><input class="input num" inputmode="decimal" formControlName="employer" [attr.aria-label]="('premium.part.' + k | transloco) + ' ' + ('rateDialog.employer' | transloco)" /></td>
                     </tr>
@@ -393,7 +394,38 @@
                 <span class="hint">{{ 'office.hint.changeFrom' | transloco }}</span>
               }
             </div>
-            @if (switchingToKumiai()) {
+            @if (showFirstRates()) {
+              <!-- 組合の料率（切り替える月から。空ならあとで下の表の「料率を見る」から。11/17） -->
+              <fieldset class="first-rates" [formGroup]="firstRates">
+                <legend>{{ 'office.firstRates.titleChange' | transloco }}</legend>
+                <p class="hint">{{ 'office.firstRates.leadChange' | transloco }}</p>
+                <table class="rate-grid">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>{{ 'rateDialog.total' | transloco }}（%）</th>
+                      <th>{{ 'rateDialog.employee' | transloco }}（%）</th>
+                      <th>{{ 'rateDialog.employer' | transloco }}（%）</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (k of firstRateKinds; track k) {
+                      @if (k !== 'childSupport' || firstRatesNeedChildSupport()) {
+                        <tr [formGroupName]="k">
+                          <th scope="row">{{ 'premium.part.' + k | transloco }}</th>
+                          <td><input class="input num" inputmode="decimal" formControlName="total" [id]="'firstRate-' + k" [attr.aria-label]="('premium.part.' + k | transloco) + ' ' + ('rateDialog.total' | transloco)" /></td>
+                          <td><input class="input num" inputmode="decimal" formControlName="employee" [attr.aria-label]="('premium.part.' + k | transloco) + ' ' + ('rateDialog.employee' | transloco)" /></td>
+                          <td><input class="input num" inputmode="decimal" formControlName="employer" [attr.aria-label]="('premium.part.' + k | transloco) + ' ' + ('rateDialog.employer' | transloco)" /></td>
+                        </tr>
+                        @if (firstRateErrors()[k]; as e) {
+                          <tr><td></td><td colspan="3"><span class="field-error">{{ e | transloco }}</span></td></tr>
+                        }
+                      }
+                    }
+                  </tbody>
+                </table>
+              </fieldset>
+            } @else if (switchingToKumiai()) {
               <p class="warn">{{ 'office.hint.switchToKumiai' | transloco }}</p>
             }
           </div>

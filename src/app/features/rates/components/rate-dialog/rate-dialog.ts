@@ -59,6 +59,7 @@ const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 const NEW = 'new';
 
 /** 支援金の初期値：0.23%（本人・会社で半分ずつ）。2026年4月分から */
+const CHILD_SUPPORT_START = '2026-04';
 const CHILD_SUPPORT_DEFAULT: RateSplit = { employee: 1150, employer: 1150 };
 
 @Component({
@@ -218,6 +219,11 @@ export class RateDialog implements OnInit {
   }
 
   // ===== 表示 =====
+
+  /** 子ども・子育て支援金は2026年4月分から。それより前の月は 0% でなく「—（施行前）」と出す（11/17） */
+  notYet(kind: Kind, month: string): boolean {
+    return kind === 'childSupport' && month < CHILD_SUPPORT_START;
+  }
 
   show(rate: RateMicro): string {
     return formatRate(rate, this.unit());

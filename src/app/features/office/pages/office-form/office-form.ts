@@ -306,16 +306,16 @@ export class OfficeForm {
    */
   private readFirstRates(): KumiaiRateInput | null | false {
     if (!this.showFirstRates()) return null;
-    const v = this.firstRates.getRawValue();
+    const raw = this.firstRates.getRawValue();
+    // 編集で切り替えるときは、何月分からは「変更を適用する月」と同じ（欄を2つにしない）
+    const v = this.isEdit ? { ...raw, from: this.form.controls.changeFrom.value } : raw;
     const blank = (g: { total: string; employee: string; employer: string }) => !g.total.trim() && !g.employee.trim() && !g.employer.trim();
-    if (!v.from.trim() && blank(v.health) && blank(v.care)) {
+    if ((this.isEdit || !v.from.trim()) && blank(v.health) && blank(v.care)) {
       this.firstRateErrors.set({});
       return null;
     }
     const errors: Partial<Record<'from' | 'health' | 'care' | 'childSupport', string>> = {};
-    const changeFrom = this.form.controls.changeFrom.value;
     if (!MONTH.test(v.from)) errors.from = 'office.firstRates.error.from';
-    else if (this.isEdit && MONTH.test(changeFrom) && v.from < changeFrom) errors.from = 'office.firstRates.error.beforeChange';
     const health = parseSplit(v.health, 'percent');
     const care = parseSplit(v.care, 'percent');
     const needCs = !MONTH.test(v.from) || v.from >= '2026-04';
@@ -496,7 +496,7 @@ export class OfficeForm {
     // 組合の最初の料率：何月分からを見て支援金の欄を出し分ける。編集で切り替えるときは、切り替える月を初めに入れておく
     this.firstRates.controls.from.valueChanges.subscribe((v) => this.firstRatesFrom.set(v));
     this.form.controls.changeFrom.valueChanges.subscribe((v) => {
-      if (!this.firstRates.controls.from.dirty) this.firstRates.controls.from.setValue(v);
+      if (this.isEdit) this.firstRatesFrom.set(v);
     });
     this.criteria
       .list()
@@ -750,6 +750,22 @@ export class OfficeForm {
       console.error(err);
       this.counting.set('failed');
     }
+  }
+
+  /**
+   * 組合の名前で Enter（変換の確定は除く）：送信せず、次に入れる所へ動く（11/17）
+   * 編集で切り替えるとき → 「保険者・所在地の履歴」の変更を適用する月へ。新規登録 → 下の料率の欄へ
+   */
+  onKumiaiEnter(e: Event): void {
+    const k = e as KeyboardEvent;
+    if (k.isComposing || k.keyCode === 229) return;
+    e.preventDefault();
+    setTimeout(() => {
+      const target = document.getElementById(this.isEdit ? 'changeFrom' : 'firstRatesFrom');
+      if (!target) return;
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      target.focus({ preventScroll: true });
+    });
   }
 
   /** 履歴の月の表示（「最初から」は文字で） */
