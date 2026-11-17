@@ -5,11 +5,35 @@
 <nav class="menu" [attr.aria-label]="'home.menuTitle' | transloco">
   @for (t of menu(); track t.key) {
     @if (t.action === 'import') {
-      <!-- 取り込みは、何を取り込むかを選ぶ窓を開く -->
-      <button type="button" class="tile" (click)="openImport()">
-        <app-icon [name]="t.icon" />
-        <span>{{ 'home.menu.' + t.key | transloco: monthParts(payMonth()) }}</span>
-      </button>
+      <!-- インポート／エクスポート：押すとプルダウン。取り込みはページへ、出力は窓（11/17） -->
+      <div class="tile-wrap" (keydown.escape)="ioOpen.set(false)">
+        <button
+          type="button"
+          class="tile"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="ioOpen()"
+          (click)="ioOpen.set(!ioOpen())"
+        >
+          <app-icon [name]="t.icon" />
+          <span>{{ 'home.menu.' + t.key | transloco: monthParts(payMonth()) }}</span>
+          <span class="caret" aria-hidden="true">▾</span>
+        </button>
+        @if (ioOpen()) {
+          <div class="io-menu" role="menu">
+            <a
+              role="menuitem"
+              [routerLink]="['/o', office()?.id, 'import']"
+              [queryParams]="{ from: 'home' }"
+              (click)="ioOpen.set(false)"
+            >
+              <app-icon name="download" />{{ 'home.io.import' | transloco }}
+            </a>
+            <button type="button" role="menuitem" (click)="openExport()">
+              <app-icon name="upload" />{{ 'home.io.export' | transloco }}
+            </button>
+          </div>
+        }
+      </div>
     } @else {
       <a class="tile" [routerLink]="t.link">
         <app-icon [name]="t.icon" />
@@ -45,46 +69,25 @@
 }
 
 <!-- 取り込みの入口：何を取り込むかを選ぶ（11/13） -->
+<!-- 出力する（エクスポート）：それぞれの画面の「出力」へ案内する。取り込みはページ（import）に移した（11/17） -->
 <dialog #importDialog class="import-dialog" aria-labelledby="import-dialog-title" (click)="onImportBackdrop($event)">
   <div class="dialog-body">
     <header class="dialog-head">
-      <h2 id="import-dialog-title">{{ 'home.import.title' | transloco }}</h2>
+      <h2 id="import-dialog-title" class="io-head"><app-icon name="upload" />{{ 'home.import.exportTitle' | transloco }}</h2>
       <button type="button" class="close-btn" (click)="closeImport()" [attr.aria-label]="'common.close' | transloco">×</button>
     </header>
-    <!-- 左：取り込む（インポート）、右：出力する（エクスポート）。11/16 -->
-    <div class="io-columns">
-      <section>
-        <h3 class="io-head"><app-icon name="download" />{{ 'home.import.importTitle' | transloco }}</h3>
-        <p class="lead">{{ 'home.import.lead' | transloco }}</p>
-        <div class="choices">
-          @for (c of importChoices(); track c.key) {
-            <a class="choice" [routerLink]="c.link" [queryParams]="c.params ?? null" (click)="closeImport()">
-              <app-icon [name]="c.icon" />
-              <span class="choice-text">
-                <strong>{{ 'home.import.' + c.key + '.title' | transloco }}</strong>
-                <span class="sub">{{ 'home.import.' + c.key + '.body' | transloco }}</span>
-              </span>
-              <span class="arrow" aria-hidden="true">›</span>
-            </a>
-          }
-        </div>
-      </section>
-      <section>
-        <h3 class="io-head"><app-icon name="upload" />{{ 'home.import.exportTitle' | transloco }}</h3>
-        <p class="lead">{{ 'home.import.exportLead' | transloco }}</p>
-        <div class="choices">
-          @for (c of exportChoices(); track c.key) {
-            <a class="choice" [routerLink]="c.link" [queryParams]="c.params ?? null" (click)="closeImport()">
-              <app-icon [name]="c.icon" />
-              <span class="choice-text">
-                <strong>{{ 'home.export.' + c.key + '.title' | transloco }}</strong>
-                <span class="sub">{{ 'home.export.' + c.key + '.body' | transloco }}</span>
-              </span>
-              <span class="arrow" aria-hidden="true">›</span>
-            </a>
-          }
-        </div>
-      </section>
+    <p class="lead">{{ 'home.import.exportLead' | transloco }}</p>
+    <div class="choices">
+      @for (c of exportChoices(); track c.key) {
+        <a class="choice" [routerLink]="c.link" [queryParams]="c.params ?? null" (click)="closeImport()">
+          <app-icon [name]="c.icon" />
+          <span class="choice-text">
+            <strong>{{ 'home.export.' + c.key + '.title' | transloco }}</strong>
+            <span class="sub">{{ 'home.export.' + c.key + '.body' | transloco }}</span>
+          </span>
+          <span class="arrow" aria-hidden="true">›</span>
+        </a>
+      }
     </div>
   </div>
 </dialog>

@@ -428,7 +428,7 @@ h1 {
 /* ===== 取り込みの入口の窓 ===== */
 .import-dialog {
   /* 取り込む・出力するの2列（11/16） */
-  width: min(880px, calc(100vw - 32px));
+  width: min(560px, calc(100vw - 32px)); /* 出力だけの1列（11/17） */
   padding: 0;
   border: none;
   border-radius: var(--radius-lg);
@@ -545,4 +545,59 @@ h1 {
   .io-columns {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* ===== インポート／エクスポートのプルダウン（11/17） ===== */
+.tile-wrap {
+  position: relative;
+  display: grid;
+}
+
+.tile .caret {
+  margin-left: auto;
+  font-size: 0.8em;
+  color: var(--color-text-sub);
+}
+
+.io-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  min-width: 100%;
+  padding: var(--space-xs) 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.io-menu a,
+.io-menu button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--font-sm);
+  color: var(--color-text);
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.io-menu a:hover,
+.io-menu button:hover,
+.io-menu a:focus-visible,
+.io-menu button:focus-visible {
+  background: var(--color-highlight-soft, #fbf3e8);
+}
+
+/* 出力の窓は1列にしたので、幅を詰める */
+.import-dialog .dialog-head .io-head {
+  margin: 0;
 }

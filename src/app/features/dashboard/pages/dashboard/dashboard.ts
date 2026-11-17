@@ -1,4 +1,4 @@
-import { Component, computed, effect, ElementRef, inject, signal, untracked, viewChild } from '@angular/core';
+import { Component, computed, HostListener, effect, ElementRef, inject, signal, untracked, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { ContractDoc } from '../../../../core/models/contract';
@@ -320,19 +320,9 @@ export class Dashboard {
     }
   }
 
-  // ===== 取り込みの入口（何を取り込むかを選ぶ窓。11/13） =====
+  // ===== インポート／エクスポート（11/17）：タイルでプルダウン。取り込みはページ、出力は窓 =====
   private readonly importDialog = viewChild<ElementRef<HTMLDialogElement>>('importDialog');
-  /** 取り込む（インポート） */
-  readonly importChoices = computed<ImportChoice[]>(() => {
-    const o = ['/o', this.office()?.id ?? ''];
-    return [
-      { key: 'employees', icon: 'people', link: [...o, 'import'], params: { kind: 'employees', from: 'home' } },
-      { key: 'dependents', icon: 'people', link: [...o, 'import'], params: { kind: 'dependents', from: 'home' } },
-      { key: 'history', icon: 'revision', link: [...o, 'import'], params: { kind: 'contract', from: 'home' } },
-      { key: 'payrolls', icon: 'payroll', link: [...o, 'import'], params: { kind: 'payrolls', from: 'home' } },
-      { key: 'bonus', icon: 'bonus', link: [...o, 'bonuses', 'new'] },
-    ];
-  });
+  readonly ioOpen = signal(false);
 
   /** 出力する（エクスポート）。それぞれの画面の「出力」へ案内する（11/16） */
   readonly exportChoices = computed<ImportChoice[]>(() => {
@@ -346,8 +336,15 @@ export class Dashboard {
     ];
   });
 
-  openImport(): void {
+  openExport(): void {
+    this.ioOpen.set(false);
     this.importDialog()?.nativeElement.showModal();
+  }
+
+  /** プルダウンの外を押したら閉じる */
+  @HostListener('document:click', ['$event'])
+  onDocClick(event: MouseEvent): void {
+    if (this.ioOpen() && !(event.target as HTMLElement).closest('.tile-wrap')) this.ioOpen.set(false);
   }
 
   closeImport(): void {
