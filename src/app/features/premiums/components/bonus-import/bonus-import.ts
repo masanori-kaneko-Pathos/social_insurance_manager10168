@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ColumnMapper } from '../../../../shared/components/column-mapper/column-mapper';
@@ -21,7 +21,9 @@ import {
   bonusCsvTemplate,
   bonusFixColumns,
   BonusCsvRow,
+  BonusExisting,
   BonusPlan,
+  bonusWrites,
   planBonusImport,
 } from '../../logic/bonus-csv';
 import { FixButton, IssueRow } from '../../../../shared/components/import-issues/issue-row';
@@ -31,6 +33,8 @@ interface Preview {
   fileName: string;
   encoding: CsvEncoding | null;
   plan: BonusPlan;
+  /** 登録済みの支給（足し込む先。チェックで外した人を抜いて、まとめ直すときに使う） */
+  existing: BonusExisting[];
   /** 読んだ表（うちの見出し）。画面で直すとき・エラーの行を書き出すときに使う */
   table: string[][];
 }
@@ -64,7 +68,7 @@ export class BonusImport {
   readonly progress = signal<{ done: number; total: number } | null>(null);
   /** 取り込んだ人数と支給の数 */
   readonly done = signal<{ people: number; payments: number } | null>(null);
-  readonly skipErrors = signal(false);
+  readonly skipErrors = signal(true); // 問題の行は、行のチェックが外れて取り込まない（11/17）
   /** 窓で直すときの欄の種類（11/17） */
   readonly fixFields = BONUS_FIX_FIELDS;
   /** 読んだのにまだ取り込んでいなければ、画面を離れる前に確かめる */
@@ -72,7 +76,15 @@ export class BonusImport {
 
   readonly rows = computed(() => this.preview()?.plan.rows ?? []);
   readonly errorRows = computed(() => this.rows().filter((r) => r.status === 'error'));
-  readonly writes = computed(() => this.preview()?.plan.writes ?? []);
+  // ===== 行ごとのチェック（11/17）：外した人を抜いて、支払日ごとにまとめ直す =====
+  private readonly fixRef = viewChild(ImportIssues);
+  private kept(line: number): boolean {
+    return !(this.fixRef()?.excluded().has(line) ?? false);
+  }
+  readonly writes = computed(() => {
+    const p = this.preview();
+    return p ? bonusWrites(p.plan.rows.filter((r) => this.kept(r.line)), p.existing) : [];
+  });
   readonly peopleToWrite = computed(() => this.writes().reduce((n, w) => n + w.count, 0));
   readonly count = computed(() => {
     const c = { new: 0, add: 0, update: 0, same: 0, error: 0 };
@@ -146,7 +158,7 @@ export class BonusImport {
     this.preview.set(null);
     this.done.set(null);
     this.errorKey.set(null);
-    this.skipErrors.set(false);
+    this.skipErrors.set(true);
   }
 
   private async showPreview(table: string[][]): Promise<void> {
@@ -164,7 +176,7 @@ export class BonusImport {
         retireDate: e.retireDate ?? null,
       }));
       const plan = planBonusImport(table, targets, payments);
-      this.preview.set({ fileName: file.fileName, encoding: file.encoding, plan, table: table.map((r) => [...r]) });
+      this.preview.set({ fileName: file.fileName, encoding: file.encoding, plan, existing: payments, table: table.map((r) => [...r]) });
     } catch (err) {
       console.error(err);
       this.errorKey.set(errorKeyOf(err, 'employeeCsv.error.read'));

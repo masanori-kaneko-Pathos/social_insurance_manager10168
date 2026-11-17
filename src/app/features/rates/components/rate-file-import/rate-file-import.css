@@ -112,3 +112,13 @@
 .not-yet {
   color: var(--color-text-sub);
 }
+
+/* 行ごとのチェック（外した行は取り込まない。11/17） */
+.pick-col {
+  width: 2.2em;
+  text-align: center;
+}
+
+.pick-col input {
+  accent-color: var(--color-primary);
+}

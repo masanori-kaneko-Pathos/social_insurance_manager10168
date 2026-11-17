@@ -159,14 +159,15 @@
                 {{ 'common.cancel' | transloco }}
               </button>
               <button type="button" class="btn btn-primary" (click)="importCsv()" [disabled]="!canImport()">
-                {{ 'payrollCsv.import.button' | transloco: { c: pv.created.length, u: pv.updated.length } }}
+                {{ 'payrollCsv.import.button' | transloco: { c: createdCount(), u: updatedCount() } }}
               </button>
             </div>
-          @if (writes().length > 0 || fix.issues().length > 0) {
+          @if (allWrites().length > 0 || fix.issues().length > 0) {
             <div class="table-wrap scroll">
               <table>
                 <thead>
                   <tr>
+                    <th class="pick-col"><input type="checkbox" [checked]="fix.allKept()" [disabled]="fix.busy()" (change)="fix.setAll($any($event.target).checked, allWrites())" [attr.aria-label]="'importFix.keepAll' | transloco" /></th>
                     <th class="num">{{ 'payrollCsv.line' | transloco }}</th>
                     <th>{{ 'payroll.col.employee' | transloco }}</th>
                     <th>{{ 'payroll.col.paidMonth' | transloco }}</th>
@@ -177,9 +178,10 @@
                   </tr>
                 </thead>
                 <tbody>
-                  @for (x of fix.withIssues(writes().slice(0, showItems)); track x.line) {
+                  @for (x of fix.withIssues(allWrites().slice(0, showItems)); track x.line) {
                     @if (x.item; as it) {
                       <tr [class.has-issue]="!!x.issue">
+                        <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line }" /></td>
                         <td class="num">{{ it.line }}</td>
                         <td>{{ it.employeeLabel }}</td>
                         <td class="mono">{{ it.paidMonth }}</td>
@@ -196,14 +198,14 @@
                         </td>
                       </tr>
                     } @else if (x.issue; as is) {
-                      <tr app-issue-row [issue]="is" [fix]="fix" [span]="5"></tr>
+                      <tr app-issue-row [issue]="is" [fix]="fix" [cols]="issueCols()"></tr>
                     }
                   }
                 </tbody>
               </table>
             </div>
-            @if (writes().length > showItems) {
-              <p class="sub">{{ 'payrollCsv.import.moreItems' | transloco: { n: writes().length - showItems } }}</p>
+            @if (allWrites().length > showItems) {
+              <p class="sub">{{ 'payrollCsv.import.moreItems' | transloco: { n: allWrites().length - showItems } }}</p>
             }
           } @else {
             <p class="muted">{{ 'payrollCsv.import.nothing' | transloco }}</p>

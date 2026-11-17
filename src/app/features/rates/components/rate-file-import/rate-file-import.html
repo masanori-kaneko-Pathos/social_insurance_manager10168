@@ -64,6 +64,7 @@
       <table class="table">
         <thead>
           <tr>
+            <th class="pick-col"><input type="checkbox" [checked]="fix.allKept()" [disabled]="fix.busy()" (change)="fix.setAll($any($event.target).checked, rows())" [attr.aria-label]="'importFix.keepAll' | transloco" /></th>
             <th class="num">{{ 'rateDialog.csv.col.line' | transloco }}</th>
             <th>{{ 'rateDialog.from' | transloco }}</th>
             @for (kind of kinds; track kind) {
@@ -76,6 +77,7 @@
           @for (x of fix.withIssues(rows()); track x.line) {
             @if (x.item; as r) {
               <tr [class.has-issue]="!!x.issue" [class.row-error]="r.status === 'error'">
+                <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line }" /></td>
                 <td class="num">{{ fromTable() ? '—' : r.line }}</td>
                 <td class="mono">{{ r.from || '—' }}</td>
                 @for (kind of kinds; track kind) {

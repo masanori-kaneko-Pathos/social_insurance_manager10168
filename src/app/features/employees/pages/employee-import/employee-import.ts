@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -202,7 +202,28 @@ export class EmployeeImport {
   private readonly transloco = inject(TranslocoService);
   private readonly contractsApi = inject(ContractService);
   /** エラーのない行だけ取り込む（エラーの行は、あとで直して取り込み直す） */
-  readonly skipErrors = signal(false);
+  readonly skipErrors = signal(true); // 問題の行は、行のチェックが外れて取り込まない（11/17）
+  // ===== 行ごとのチェック（11/17）：外した行は取り込まない =====
+  private readonly fixRef = viewChild(ImportIssues);
+  private kept(line: number): boolean {
+    return !(this.fixRef()?.excluded().has(line) ?? false);
+  }
+  /** 問題の行：表の列ごとに、ファイルのどの列の値を出すか（取り込んだときと同じ並び。11/17） */
+  readonly issueCols: readonly (readonly string[])[] = (() => {
+    const h = EMPLOYEE_CSV_HEADERS;
+    return [
+      [h.employeeNumber],
+      [h.lastName, h.firstName],
+      [h.hireDate, h.retireDate],
+      [h.employmentType, h.payType, h.weeklyHours, h.monthlyDays],
+      [],
+      [h.healthEnrolled, h.pensionEnrolled],
+      [h.monthlyAmount, h.remunerationFrom],
+      [h.leave1Kind, h.leave2Kind],
+    ];
+  })();
+  /** 取り込む人（チェックの入った行） */
+  readonly importItems = computed(() => (this.preview()?.plan.items ?? []).filter((it) => this.kept(it.line)));
   /** 窓で直すときの欄の種類（プルダウン・カレンダー・数。11/17） */
   readonly fixFields = EMPLOYEE_FIX_FIELDS;
 
@@ -285,7 +306,7 @@ export class EmployeeImport {
       p.read.missingColumns.length === 0 &&
       (this.rowErrors().length === 0 || this.skipErrors()) &&
       (p.plan.errors.length === 0 || this.skipErrors()) &&
-      p.plan.items.length > 0
+      this.importItems().length > 0
     );
   });
   readonly reasonParams = reasonParams;
@@ -390,7 +411,8 @@ export class EmployeeImport {
     const office = this.context.current();
     const p = this.preview();
     if (!office || !p || !this.canImport()) return;
-    const total = p.plan.items.length;
+    const items = this.importItems();
+    const total = items.length;
     this.saving.set(true);
     this.progress.set({ done: 0, total });
     this.errorKey.set(null);
@@ -399,7 +421,7 @@ export class EmployeeImport {
       let numberFailed = 0;
       const n = await this.api.importMany(
         office.id,
-        p.plan.items,
+        items,
         (done) => this.progress.set({ done, total }),
         (it, employeeId) => {
           if (it.myNumber) withNumber.push({ employeeId, number: it.myNumber });

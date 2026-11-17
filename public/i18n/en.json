@@ -4086,7 +4086,7 @@
   },
   "importFix": {
     "fix": "Fix",
-    "banner": "{{n}} rows have problems. Use \"Fix\" on the red rows in the table, comparing with the rows around them.",
+    "banner": "{{n}} rows have problems and are unchecked, so they will not be imported. Use \"Fix\" on a red row to include it.",
     "line": "Line",
     "content": "Content",
     "problem": "Problem",
@@ -4099,7 +4099,10 @@
     "unknownEmployee": "If the employee number is mistyped, correct it. If the employee is not registered yet, register them first, or leave this row out with \"Import without the rows with errors\".",
     "blank": "(empty)",
     "fileValue": "Value in the file: {{v}}",
-    "onlyIssues": "Show only rows with problems"
+    "onlyIssues": "Show only rows with problems",
+    "keep": "Import line {{line}}",
+    "keepAll": "Import all rows",
+    "notKept": "Not imported (has problems)"
   },
   "special": {
     "title": "Special revision (medical care, childcare or nursing care)",

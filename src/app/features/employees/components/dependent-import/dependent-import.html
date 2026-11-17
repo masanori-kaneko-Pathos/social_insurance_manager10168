@@ -68,6 +68,7 @@
       <table class="table">
         <thead>
           <tr>
+            <th class="pick-col"><input type="checkbox" [checked]="fix.allKept()" [disabled]="fix.busy()" (change)="fix.setAll($any($event.target).checked, pv.rows)" [attr.aria-label]="'importFix.keepAll' | transloco" /></th>
             <th>{{ 'employeeCsv.col.line' | transloco }}</th>
             <th>{{ 'employee.field.employeeNumber' | transloco }}</th>
             <th>{{ 'dependentCsv.col.employee' | transloco }}</th>
@@ -79,6 +80,7 @@
           @for (x of fix.withIssues(pv.rows); track x.line) {
             @if (x.item; as r) {
               <tr [class.has-issue]="!!x.issue" [class.warn]="r.errors.length > 0">
+                <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line }" /></td>
                 <td class="num">{{ r.line }}</td>
                 <td class="mono">{{ r.employee?.employeeNumber ?? '—' }}</td>
                 <td>{{ r.employee ? r.employee.lastName + ' ' + r.employee.firstName : '—' }}</td>

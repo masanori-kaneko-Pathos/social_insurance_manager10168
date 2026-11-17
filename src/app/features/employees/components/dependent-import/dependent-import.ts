@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { ColumnMapper } from '../../../../shared/components/column-mapper/column-mapper';
@@ -72,7 +72,12 @@ export class DependentImport {
   private readonly unsaved = watchUnsaved(() => (this.loaded() !== null || this.preview() !== null) && this.doneCount() === null);
 
   readonly errorRows = computed(() => this.preview()?.rows.filter((r) => r.errors.length > 0) ?? []);
-  readonly addRows = computed(() => this.preview()?.rows.filter((r) => r.input) ?? []);
+  // ===== 行ごとのチェック（11/17）：外した行は取り込まない =====
+  private readonly fixRef = viewChild(ImportIssues);
+  private kept(line: number): boolean {
+    return !(this.fixRef()?.excluded().has(line) ?? false);
+  }
+  readonly addRows = computed(() => (this.preview()?.rows.filter((r) => r.input) ?? []).filter((r) => this.kept(r.line)));
   readonly skipRows = computed(() => this.preview()?.rows.filter((r) => r.skip) ?? []);
   readonly warnCount = computed(() => this.addRows().filter((r) => r.warnings.length > 0).length);
   readonly canImport = computed(
@@ -86,7 +91,7 @@ export class DependentImport {
   // ===== エラーの直し方（11/16。従業員の取り込みと同じ型）：画面で直す／エラーの行だけ書き出す／エラーの行を除いて取り込む =====
   private readonly transloco = inject(TranslocoService);
   // ===== エラーの直し方（11/17。共通の部品 app-import-issues） =====
-  readonly skipErrors = signal(false);
+  readonly skipErrors = signal(true); // 問題の行は、行のチェックが外れて取り込まない（11/17）
   /** 窓で直すときの欄の種類（11/17） */
   readonly fixFields = DEPENDENT_FIX_FIELDS;
 
@@ -155,7 +160,7 @@ export class DependentImport {
     this.preview.set(null);
     this.doneCount.set(null);
     this.errorKey.set(null);
-    this.skipErrors.set(false);
+    this.skipErrors.set(true);
   }
 
   private async showPreview(table: string[][]): Promise<void> {

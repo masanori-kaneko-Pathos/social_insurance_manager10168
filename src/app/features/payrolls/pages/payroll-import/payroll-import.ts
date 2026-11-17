@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ImportPicker } from '../../../../shared/components/import-picker/import-picker';
@@ -114,10 +114,24 @@ export class PayrollImport {
   readonly doneMonth = signal<string | null>(null);
   readonly partial = signal<{ done: number; total: number } | null>(null);
 
-  readonly writes = computed(() => {
+  /** 表に出す行（新規・上書き） */
+  readonly allWrites = computed(() => {
     const p = this.preview();
     return p ? [...p.created, ...p.updated] : [];
   });
+
+  // ===== 行ごとのチェック（11/17）：外した行は取り込まない =====
+  private readonly fixRef = viewChild(ImportIssues);
+  private kept(line: number): boolean {
+    return !(this.fixRef()?.excluded().has(line) ?? false);
+  }
+  /** 取り込む行（チェックの入った行） */
+  readonly writes = computed(() => this.allWrites().filter((it) => this.kept(it.line)));
+  readonly createdCount = computed(() => {
+    const created = new Set(this.preview()?.created ?? []);
+    return this.writes().filter((it) => created.has(it)).length;
+  });
+  readonly updatedCount = computed(() => this.writes().length - this.createdCount());
   readonly canImport = computed(() => {
     const p = this.preview();
     return (
@@ -254,11 +268,11 @@ export class PayrollImport {
     this.inKindMissing.set('zero');
     this.lastTable = null;
     this.table.set(null);
-    this.skipErrors.set(false);
+    this.skipErrors.set(true);
   }
 
   // ===== エラーの直し方（11/17。共通の部品 app-import-issues）：窓で1行ずつ直して、すぐ確かめ直す =====
-  readonly skipErrors = signal(false);
+  readonly skipErrors = signal(true); // 問題の行は、行のチェックが外れて取り込まない（11/17）
   /** いま確認画面に出している表（部品に渡す） */
   readonly table = signal<string[][] | null>(null);
 
@@ -269,6 +283,15 @@ export class PayrollImport {
 
   readonly summaryHeaders = computed(() => ['employeeNumber', 'name', 'paidMonth'].map((c) => this.headerOf(c)));
   readonly keyHeader = computed(() => this.headerOf('employeeNumber'));
+  /** 問題の行：表の列ごとに、ファイルのどの列の値を出すか（取り込んだときと同じ並び。11/17） */
+  readonly issueCols = computed<readonly (readonly string[])[]>(() => [
+    [this.headerOf('employeeNumber'), this.headerOf('name')],
+    [this.headerOf('paidMonth')],
+    [this.headerOf('cash')],
+    [this.headerOf('fixed')],
+    [this.headerOf('days')],
+    [],
+  ]);
   /** 窓で直すときの欄の種類（11/17） */
   readonly fixFields = PAYROLL_FIX_FIELDS;
 

@@ -7,12 +7,6 @@
       <input type="checkbox" [checked]="onlyIssues()" (change)="onlyIssues.set($any($event.target).checked)" />
       {{ 'importFix.onlyIssues' | transloco }}
     </label>
-    @if (canSkip()) {
-      <label class="opt">
-        <input type="checkbox" [checked]="skip()" [disabled]="busy()" (change)="skip.set($any($event.target).checked)" />
-        {{ 'employeeCsv.skipErrors' | transloco }}
-      </label>
-    }
     <button type="button" class="btn btn-small" (click)="exportRows()">
       {{ 'employeeCsv.exportErrors' | transloco }}
     </button>
@@ -33,6 +27,9 @@
         <h2 id="fix-dialog-title">{{ 'importFix.dialogTitle' | transloco: { line: it.line } }}</h2>
         <button type="button" class="close-btn" (click)="close()" [attr.aria-label]="'common.close' | transloco">×</button>
       </header>
+
+      <!-- この行が誰の・何の行か（森 真由美の行なのに、セイが「やまだ」…と気づけるように。11/17） -->
+      <p class="row-sum">{{ summary(it) }}</p>
 
       <ul class="messages">
         @for (m of it.messages; track $index) {

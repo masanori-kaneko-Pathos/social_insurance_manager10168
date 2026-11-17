@@ -71,7 +71,7 @@
     <div class="actions top">
       <button type="button" class="btn" (click)="clear()" [disabled]="saving()">{{ 'common.cancel' | transloco }}</button>
       <button type="button" class="btn btn-primary" (click)="importCsv()" [disabled]="!canImport()">
-        {{ 'historyCsv.import' | transloco: { n: pv.plan.items.length } }}
+        {{ 'historyCsv.import' | transloco: { n: importItems().length } }}
       </button>
     </div>
 
@@ -93,6 +93,7 @@
         <table class="table">
           <thead>
             <tr>
+              <th class="pick-col"><input type="checkbox" [checked]="fix.allKept()" [disabled]="fix.busy()" (change)="fix.setAll($any($event.target).checked, pv.plan.items)" [attr.aria-label]="'importFix.keepAll' | transloco" /></th>
               <th>{{ 'employeeCsv.col.line' | transloco }}</th>
               <th>{{ 'employeeCsv.col.number' | transloco }}</th>
               <th>{{ 'employeeCsv.col.name' | transloco }}</th>
@@ -109,6 +110,7 @@
             @for (x of fix.withIssues(pv.plan.items); track x.line) {
               @if (x.item; as it) {
                 <tr [class.has-issue]="!!x.issue" [class.warn]="it.warnings.length > 0">
+                  <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line }" /></td>
                   <td class="num">{{ it.line }}</td>
                   <td class="mono">{{ it.employeeNumber }}</td>
                   <td>{{ it.name }}</td>
@@ -138,7 +140,7 @@
                   }
                 </tr>
               } @else if (x.issue; as is) {
-                <tr app-issue-row [issue]="is" [fix]="fix" [span]="kind() === 'contract' ? 3 : 4"></tr>
+                <tr app-issue-row [issue]="is" [fix]="fix" [cols]="issueCols()"></tr>
               }
             }
           </tbody>

@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ImportPicker } from '../../../../shared/components/import-picker/import-picker';
@@ -61,7 +61,7 @@ export class AbroadImport {
   readonly doneCount = signal<number | null>(null);
   /** 読んだのにまだ取り込んでいなければ、画面を離れる前に確かめる（11/17） */
   private readonly unsaved = watchUnsaved(() => this.preview() !== null && this.doneCount() === null);
-  readonly skipErrors = signal(false);
+  readonly skipErrors = signal(true); // 問題の行は、行のチェックが外れて取り込まない（11/17）
   /** 窓で直すときの欄の種類（11/17） */
   readonly fixFields = computed(() => (this.kind() === 'certificate' ? CERTIFICATE_FIX_FIELDS : OVERSEAS_FIX_FIELDS));
   private employees: Employee[] = [];
@@ -69,7 +69,12 @@ export class AbroadImport {
   private encoding: CsvEncoding | null = null;
 
   readonly errorRows = computed(() => this.preview()?.rows.filter((r) => r.errors.length > 0) ?? []);
-  readonly addRows = computed(() => this.preview()?.rows.filter((r) => r.certificate || r.overseas) ?? []);
+  // ===== 行ごとのチェック（11/17）：外した行は取り込まない =====
+  private readonly fixRef = viewChild(ImportIssues);
+  private kept(line: number): boolean {
+    return !(this.fixRef()?.excluded().has(line) ?? false);
+  }
+  readonly addRows = computed(() => (this.preview()?.rows.filter((r) => r.certificate || r.overseas) ?? []).filter((r) => this.kept(r.line)));
   readonly skipRows = computed(() => this.preview()?.rows.filter((r) => r.skip) ?? []);
   readonly canImport = computed(
     () =>
@@ -164,7 +169,7 @@ export class AbroadImport {
     this.preview.set(null);
     this.doneCount.set(null);
     this.errorKey.set(null);
-    this.skipErrors.set(false);
+    this.skipErrors.set(true);
   }
 
   /** 1人ずつ書く（同じ人の海外勤務が2件あれば、まとめて1回で書く） */

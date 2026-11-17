@@ -238,7 +238,17 @@ export function planBonusImport(
     });
   });
 
-  // 支払日ごとにまとめる（エラーの行は入れない。変わらない人だけの支払日は書かない）
+  return { rows, writes: bonusWrites(rows, existing) };
+}
+
+/**
+ * 読んだ行から、支払日ごとの書き込みを作る（エラーの行は入れない。変わらない人だけの支払日は書かない）
+ * 行のチェックで外した人を抜いて、まとめ直すときにも使う（11/17）
+ */
+export function bonusWrites(rows: readonly BonusCsvRow[], existing: readonly BonusExisting[]): BonusWrite[] {
+  const existingByDate = new Map(existing.map((e) => [e.paidDate, e]));
+  const firstTitle = new Map<string, string>();
+  for (const r of rows) if (r.status !== 'error' && r.title && !firstTitle.has(r.paidDate)) firstTitle.set(r.paidDate, r.title);
   const groups = new Map<string, BonusCsvRow[]>();
   for (const r of rows) {
     if (r.status === 'error') continue;
@@ -266,7 +276,7 @@ export function planBonusImport(
       count,
     });
   }
-  return { rows, writes };
+  return writes;
 }
 
 /** エラー → 直す列（共通の窓で上に出す） */

@@ -73,6 +73,36 @@ export class ImportIssues {
   // ===== 表の中で直す（11/17）：親の表に問題の行を混ぜて出し、その行の「直す」で窓を開く =====
   /** 問題の行だけを表に出す */
   readonly onlyIssues = signal(false);
+
+  // ===== 行ごとのチェック（11/17。課題管理アプリと同じ）：外した行は取り込まない。問題の行はいつも外れている =====
+  readonly excluded = signal<ReadonlySet<number>>(new Set());
+
+  /** 取り込む行か（外していない、かつ問題がない） */
+  kept(line: number): boolean {
+    return !this.excluded().has(line) && !this.issueOf(line);
+  }
+
+  toggle(line: number): void {
+    const next = new Set(this.excluded());
+    if (next.has(line)) next.delete(line);
+    else next.add(line);
+    this.excluded.set(next);
+  }
+
+  /** 見出しのチェック：全部入れる／全部外す */
+  setAll(on: boolean, rows: readonly { line: number }[]): void {
+    this.excluded.set(on ? new Set() : new Set(rows.map((r) => r.line)));
+  }
+
+  allKept(): boolean {
+    return this.excluded().size === 0;
+  }
+
+  /** 問題の列と、その値（赤い行に「セイ：やまだ」と出す） */
+  problemValues(it: ImportIssue): { header: string; value: string }[] {
+    const rec = rowRecord(this.table(), it.line);
+    return it.headers.map((h) => ({ header: h, value: this.valueOf(rec, h) }));
+  }
   private readonly byLine = computed(() => new Map(this.issues().map((i) => [i.line, i])));
 
   issueOf(line: number): ImportIssue | null {

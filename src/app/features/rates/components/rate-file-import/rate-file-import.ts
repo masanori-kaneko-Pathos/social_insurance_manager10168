@@ -1,4 +1,4 @@
-import { Component, computed, effect, ElementRef, inject, input, output, signal, untracked } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, output, signal, untracked, viewChild } from '@angular/core';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import type { KumiaiRateInput, MonthRange, RateMicro, RateSplit } from '../../../../core/models/rates';
 import { ImportFix, ImportIssue, ImportIssues } from '../../../../shared/components/import-issues/import-issues';
@@ -59,7 +59,7 @@ export class RateFileImport {
   readonly fromTable = signal(false);
   readonly errorKey = signal<string | null>(null);
   /** エラーの行を除いて取り込むか */
-  readonly skip = signal(false);
+  readonly skip = signal(true); // 問題の行は、行のチェックが外れて取り込まない（11/17）
   /** 保存を押したのに、エラーの行が残っている */
   readonly blockedShown = signal(false);
 
@@ -81,9 +81,15 @@ export class RateFileImport {
   });
 
   /** 保存する料率（新規・上書き） */
+  // ===== 行ごとのチェック（11/17）：外した行は取り込まない =====
+  private readonly fixRef = viewChild(ImportIssues);
+  private kept(line: number): boolean {
+    return !(this.fixRef()?.excluded().has(line) ?? false);
+  }
+
   readonly toSave = computed(() =>
     this.rows()
-      .filter((r) => (r.status === 'new' || r.status === 'update') && r.input)
+      .filter((r) => (r.status === 'new' || r.status === 'update') && r.input && this.kept(r.line))
       .map((r) => ({ input: r.input!, exists: r.status === 'update' })),
   );
 
@@ -155,7 +161,7 @@ export class RateFileImport {
     this.missing.set([]);
     this.fromTable.set(false);
     this.errorKey.set(null);
-    this.skip.set(false);
+    this.skip.set(true);
     this.blockedShown.set(false);
   }
 

@@ -218,3 +218,9 @@
 .pick-list li:hover {
   background: var(--color-highlight);
 }
+
+/* 窓の見出しの下：この行の中身（11/17） */
+.row-sum {
+  margin: 0 0 var(--space-xs);
+  font-weight: 600;
+}

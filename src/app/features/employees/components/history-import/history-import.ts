@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ImportPicker } from '../../../../shared/components/import-picker/import-picker';
@@ -14,6 +14,7 @@ import { EmployeeService } from '../../employee.service';
 import { HistoryImportService } from '../../history-import.service';
 import {
   CONTRACT_HISTORY_FIELDS,
+  CONTRACT_HISTORY_HEADERS,
   CONTRACT_HISTORY_SPEC,
   employeeIdsIn,
   HistoryColumn,
@@ -28,6 +29,7 @@ import {
   planHistoryImport,
   readHistoryCsv,
   REMUNERATION_HISTORY_FIELDS,
+  REMUNERATION_HISTORY_HEADERS,
   REMUNERATION_HISTORY_SPEC,
 } from '../../logic/history-csv';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
@@ -85,7 +87,7 @@ export class HistoryImport {
       !this.saving() &&
       p.read.missingColumns.length === 0 &&
       ((this.rowErrors().length === 0 && p.plan.errors.length === 0) || this.skipErrors()) &&
-      p.plan.items.length > 0
+      this.importItems().length > 0
     );
   });
 
@@ -139,7 +141,7 @@ export class HistoryImport {
 
   private reset(): void {
 
-    this.skipErrors.set(false);
+    this.skipErrors.set(true);
     this.loaded.set(null);
     this.mapping.set(false);
     this.preview.set(null);
@@ -169,12 +171,13 @@ export class HistoryImport {
     const office = this.context.current();
     const p = this.preview();
     if (!office || !p || !this.canImport()) return;
-    const total = p.plan.items.length;
+    const items = this.importItems();
+    const total = items.length;
     this.saving.set(true);
     this.progress.set({ done: 0, total });
     this.errorKey.set(null);
     try {
-      const n = await this.api.importMany(office.id, p.plan.items, (done) => this.progress.set({ done, total }));
+      const n = await this.api.importMany(office.id, items, (done) => this.progress.set({ done, total }));
       this.reset();
       this.doneCount.set(n);
     } catch (err) {
@@ -196,7 +199,22 @@ export class HistoryImport {
   }
   // ===== エラーの直し方（11/17。共通の部品 app-import-issues。前は直せず、除いて取り込むこともできなかった） =====
   private readonly transloco = inject(TranslocoService);
-  readonly skipErrors = signal(false);
+  readonly skipErrors = signal(true); // 問題の行は、行のチェックが外れて取り込まない（11/17）
+  // ===== 行ごとのチェック（11/17）：外した行は取り込まない =====
+  private readonly fixRef = viewChild(ImportIssues);
+  private kept(line: number): boolean {
+    return !(this.fixRef()?.excluded().has(line) ?? false);
+  }
+  /** 問題の行：表の列ごとに、ファイルのどの列の値を出すか（11/17） */
+  readonly issueCols = computed<readonly (readonly string[])[]>(() => {
+    if (this.kind() === 'contract') {
+      const h = CONTRACT_HISTORY_HEADERS;
+      return [[h.employeeNumber], [], [h.from], [h.employmentType, h.payType, h.weeklyHours, h.monthlyDays]];
+    }
+    const h = REMUNERATION_HISTORY_HEADERS;
+    return [[h.employeeNumber], [], [h.from], [h.reason], [h.monthlyAmount, h.healthGrade, h.pensionGrade]];
+  });
+  readonly importItems = computed(() => (this.preview()?.plan.items ?? []).filter((it) => this.kept(it.line)));
   /** 窓で直すときの欄の種類（11/17） */
   readonly fixFields = computed(() => (this.kind() === 'contract' ? CONTRACT_HISTORY_FIX_FIELDS : REMUNERATION_HISTORY_FIX_FIELDS));
 
