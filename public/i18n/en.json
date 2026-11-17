@@ -3054,6 +3054,13 @@
     },
     "wholeChange": {
       "bankAccount": "Change the salary account (enter everything from the bank name)"
+    },
+    "decision": {
+      "title": "Your standard monthly remuneration (from {{m}}/{{y}})",
+      "lead": "Your standard monthly remuneration has been set from {{m}}/{{y}}",
+      "health": "Health insurance: grade {{hg}}, ¥{{hs}}",
+      "pension": "Employees' pension: grade {{pg}}, ¥{{ps}}",
+      "premium": "You can check the breakdown of your monthly premiums on this page."
     }
   },
   "todoAction": {
@@ -4210,6 +4217,29 @@
       "overlap": "Overlaps a saved overseas assignment",
       "duplicate": "The same person appears more than once (overlapping) in the file",
       "save": "Saving stopped partway. Please check the employees who were imported."
+    }
+  },
+  "decisionNotice": {
+    "title": "Send decision notices to employees (My Page)",
+    "lead": "When the notice of standard remuneration decision or revision arrives from the pension office (or the health insurance society), check it and tell each employee (employers must promptly inform insured persons once notified). People whose standard remuneration starts in the chosen month are listed.",
+    "month": "From month",
+    "empty": "No one has a standard remuneration starting in {{month}}.",
+    "all": "Select all",
+    "col": {
+      "employee": "Employee",
+      "reason": "Reason",
+      "state": "Status"
+    },
+    "state": {
+      "sent": "Sent",
+      "noAccount": "No My Page yet (visible once created)"
+    },
+    "send": "Send to {{n}} selected",
+    "sent": "Sent to {{n}} employees' My Page.",
+    "hint": "My Page shows the month, grades and amounts in the employee's language. No email is sent. If anything differs from the official notice, fix the standard remuneration first.",
+    "error": {
+      "load": "Could not load the data for decision notices.",
+      "send": "Could not send. Please try again later."
     }
   }
 }

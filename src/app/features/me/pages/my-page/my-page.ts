@@ -13,6 +13,8 @@ import { MeHeader } from '../../components/me-header/me-header';
 import { MeContext } from '../../me-context.service';
 import { MeInboxService } from '../../me-inbox.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { DecisionNotice, parseDecision } from '../../../premiums/logic/decision-notice';
+import { formatYen } from '../../../../shared/utils/number';
 
 /** 保険料を並べる月数（今月を含めて） */
 const PREMIUM_MONTHS = 6;
@@ -87,6 +89,24 @@ export class MyPage implements OnInit {
     if (n.link && this.requests().some((r) => r.id === n.link)) {
       await this.router.navigate(['/me', 'requests', n.link]);
     }
+  }
+
+  /** 決定通知（B12）なら、中身（本人の言語で文を組み立てる） */
+  decisionOf(n: InboxNotification): DecisionNotice | null {
+    return n.kind === 'notice' ? parseDecision(n.link) : null;
+  }
+
+  /** 決定通知の文の値 */
+  decisionParams(d: DecisionNotice): Record<string, string | number> {
+    const [y, m] = d.from.split('-').map(Number);
+    return {
+      y,
+      m,
+      hg: d.health?.grade ?? '',
+      hs: d.health ? formatYen(d.health.standard) : '',
+      pg: d.pension?.grade ?? '',
+      ps: d.pension ? formatYen(d.pension.standard) : '',
+    };
   }
 
   date(n: { createdAt: { toDate(): Date } | null }): string {

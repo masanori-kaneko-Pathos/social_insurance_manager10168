@@ -246,6 +246,11 @@
     </div>
   }
 
+  <!-- 決定通知を本人に届ける（B12。年を変えたら作り直す） -->
+  @for (y of [year()]; track y) {
+    <app-decision-notice-card [initialMonth]="y + '-09'" />
+  }
+
   <ul class="hint">
     <li>{{ 'regular.hint.rule' | transloco }}</li>
     <li>{{ 'regular.hint.days' | transloco }}</li>

@@ -1,0 +1,70 @@
+<section class="card">
+  <button type="button" class="toggle" [attr.aria-expanded]="open()" (click)="toggle()">
+    {{ 'decisionNotice.title' | transloco }} {{ open() ? '▲' : '▼' }}
+  </button>
+  @if (open()) {
+    <p class="hint">{{ 'decisionNotice.lead' | transloco }}</p>
+    <div class="field month">
+      <label for="dn-month">{{ 'decisionNotice.month' | transloco }}</label>
+      <input id="dn-month" class="input" type="month" [value]="month()" (change)="setMonth($any($event.target).value)" />
+    </div>
+
+    @if (errorKey(); as e) {
+      <div class="alert alert-danger" role="alert">{{ e | transloco }}</div>
+    }
+    @if (sentCount(); as n) {
+      <div class="alert alert-success" role="status">{{ 'decisionNotice.sent' | transloco: { n: n } }}</div>
+    }
+
+    @if (loading()) {
+      <p class="muted">{{ 'common.loading' | transloco }}</p>
+    } @else if (rows().length === 0) {
+      <p class="muted">{{ 'decisionNotice.empty' | transloco: { month: month() } }}</p>
+    } @else {
+      <div class="table-wrap">
+        <table class="list">
+          <thead>
+            <tr>
+              <th>
+                <input type="checkbox" [checked]="selected().size === rows().length" (change)="checkAll($any($event.target).checked)"
+                       [attr.aria-label]="'decisionNotice.all' | transloco" />
+              </th>
+              <th>{{ 'decisionNotice.col.employee' | transloco }}</th>
+              <th>{{ 'decisionNotice.col.reason' | transloco }}</th>
+              <th class="num">{{ 'remuneration.field.health' | transloco }}</th>
+              <th class="num">{{ 'remuneration.field.pension' | transloco }}</th>
+              <th>{{ 'decisionNotice.col.state' | transloco }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of rows(); track r.employee.id) {
+              <tr>
+                <td><input type="checkbox" [checked]="selected().has(r.employee.id)" (change)="check(r.employee.id, $any($event.target).checked)" [attr.aria-label]="name(r.employee)" /></td>
+                <td>{{ r.employee.employeeNumber ? r.employee.employeeNumber + '　' : '' }}{{ name(r.employee) }}</td>
+                <td>{{ 'remuneration.reason.' + r.decision.reason | transloco }}</td>
+                <td class="num">
+                  @if (r.decision.health; as h) { {{ 'remuneration.gradeShort' | transloco: { grade: h.grade } }} {{ yen(h.standard) }} } @else { — }
+                </td>
+                <td class="num">
+                  @if (r.decision.pension; as p) { {{ 'remuneration.gradeShort' | transloco: { grade: p.grade } }} {{ yen(p.standard) }} } @else { — }
+                </td>
+                <td>
+                  @if (r.sent) { <span class="badge">{{ 'decisionNotice.state.sent' | transloco }}</span> }
+                  @if (!r.hasAccount) { <span class="sub">{{ 'decisionNotice.state.noAccount' | transloco }}</span> }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (context.isAdmin()) {
+        <div class="actions">
+          <button type="button" class="btn btn-primary" [disabled]="toSend().length === 0 || sending()" (click)="send()">
+            {{ 'decisionNotice.send' | transloco: { n: toSend().length } }}
+          </button>
+        </div>
+      }
+      <p class="hint">{{ 'decisionNotice.hint' | transloco }}</p>
+    }
+  }
+</section>

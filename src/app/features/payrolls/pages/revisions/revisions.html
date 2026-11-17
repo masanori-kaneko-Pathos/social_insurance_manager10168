@@ -236,6 +236,9 @@
   <!-- 固定的賃金の変動を、人が足す・外す（B11。11/17） -->
   <app-wage-change-card [employees]="wageEmployees()" [rows]="wageRows()" [fromMonth]="fromMonth" (saved)="reload()" />
 
+  <!-- 決定通知を本人に届ける（B12） -->
+  <app-decision-notice-card [initialMonth]="thisMonth" />
+
   @if (g.waiting.length > 0) {
     <section class="card">
       <h2>{{ 'revision.group.waiting' | transloco: { n: g.waiting.length } }}</h2>

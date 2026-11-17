@@ -38,6 +38,7 @@ import { ContractDoc } from '../../../../core/models/contract';
 import { contractAt } from '../../../employees/logic/contract-form-model';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { monthsBetween } from '../../../../shared/utils/date';
+import { DecisionNoticeCard } from '../../../premiums/components/decision-notice-card/decision-notice-card';
 interface View {
   employee: Employee;
   result: RegularResult;
@@ -63,7 +64,7 @@ interface Checks {
 
 @Component({
   selector: 'app-regular',
-  imports: [HalfWidthDigits, Pager, PersonListBar, RouterLink, SortHeader, TranslocoPipe],
+  imports: [DecisionNoticeCard, HalfWidthDigits, Pager, PersonListBar, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './regular.html',
   styleUrl: './regular.css',
 })

@@ -31,6 +31,7 @@ import { withCapRevisions } from '../../../rates/logic/cap-revision';
 import { GradeTableDoc } from '../../../../core/models/rates';
 import { SpecialPerson, SpecialRevisionCard } from '../../components/special-revision-card/special-revision-card';
 import { WageChangeCard, WageChangeRow } from '../../components/wage-change-card/wage-change-card';
+import { DecisionNoticeCard } from '../../../premiums/components/decision-notice-card/decision-notice-card';
 
 interface View {
   key: string; // 行の目印（従業員ID・種類・起算月）
@@ -47,7 +48,7 @@ interface View {
  */
 @Component({
   selector: 'app-revisions',
-  imports: [NgTemplateOutlet, RouterLink, TranslocoPipe, SpecialRevisionCard, WageChangeCard],
+  imports: [DecisionNoticeCard, NgTemplateOutlet, RouterLink, TranslocoPipe, SpecialRevisionCard, WageChangeCard],
   templateUrl: './revisions.html',
   styleUrl: './revisions.css',
 })
@@ -63,6 +64,7 @@ export class RevisionsPage {
 
   readonly today = todayLocal();
   readonly fromMonth = revisionFromMonth(toYearMonth(this.today));
+  readonly thisMonth = toYearMonth(this.today);
 
   readonly views = signal<View[]>([]);
   /** 特例改定のカードに渡す材料（同じ読み込みを使い回す。11/16） */

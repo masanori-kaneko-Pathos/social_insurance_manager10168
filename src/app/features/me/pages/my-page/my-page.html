@@ -25,10 +25,23 @@
             <li [class.is-unread]="!n.readAt">
               <button type="button" class="inbox-item" (click)="open(n)">
                 <span class="kind">{{ 'me.kind.' + n.kind | transloco }}</span>
-                <span class="title">{{ n.title }}</span>
+                @if (decisionOf(n); as d) {
+                  <span class="title">{{ 'me.decision.title' | transloco: decisionParams(d) }}</span>
+                } @else {
+                  <span class="title">{{ n.title }}</span>
+                }
                 <span class="date">{{ date(n) }}</span>
               </button>
-              @if (n.body) { <p class="body">{{ n.body }}</p> }
+              @if (decisionOf(n); as d) {
+                <div class="body">
+                  <p>{{ 'me.decision.lead' | transloco: decisionParams(d) }}（{{ 'remuneration.reason.' + d.reason | transloco }}）</p>
+                  @if (d.health) { <p>{{ 'me.decision.health' | transloco: decisionParams(d) }}</p> }
+                  @if (d.pension) { <p>{{ 'me.decision.pension' | transloco: decisionParams(d) }}</p> }
+                  <p>{{ 'me.decision.premium' | transloco }}</p>
+                </div>
+              } @else if (n.body) {
+                <p class="body">{{ n.body }}</p>
+              }
             </li>
           }
         </ul>
