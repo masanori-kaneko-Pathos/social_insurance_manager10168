@@ -5,7 +5,7 @@ import { BonusPayment } from '../../../../core/models/bonus';
 import { Employee } from '../../../../core/models/employee';
 import { EmployeeService } from '../../../employees/employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
-import { everKumiai, premiumOf, ratesForOffice } from '../../../office/office-settings';
+import { everKumiai, premiumOf, insurerKeyOf, ratesForOffice } from '../../../office/office-settings';
 import { RateTables } from '../../../rates/logic/pick-rates';
 import { RateService } from '../../../rates/rate.service';
 import { BonusService } from '../../bonus.service';
@@ -53,7 +53,7 @@ export class BonusList {
     const tables = this.tables();
     const office = this.context.current();
     if (!tables || !office) return [];
-    const ctx = { ratesFor: ratesForOffice(office, tables), options: premiumOf(office) };
+    const ctx = { ratesFor: ratesForOffice(office, tables), insurerOf: insurerKeyOf(office), options: premiumOf(office) };
     const payments = this.payments();
     return payments.map((payment) => {
       const c = collectBonusResults(
@@ -86,7 +86,7 @@ export class BonusList {
     const payments = this.payments();
     const payment = payments.find((p) => p.id === id);
     if (!payment || !tables || !office) return [];
-    const ctx = { ratesFor: ratesForOffice(office, tables), options: premiumOf(office) };
+    const ctx = { ratesFor: ratesForOffice(office, tables), insurerOf: insurerKeyOf(office), options: premiumOf(office) };
     const list = this.employees().filter((e) => (payment.amounts[e.id] ?? 0) > 0);
     return filterAndSort(list, this.peopleOptions(), (e) => e, () => null, () => false)
       .map((employee) => ({

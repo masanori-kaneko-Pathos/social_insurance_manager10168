@@ -20,7 +20,7 @@ import {
   insurerFor,
   payrollOf,
   premiumOf,
-  ratesForOffice,
+  insurerKeyOf, ratesForOffice,
 } from '../../../office/office-settings';
 import { noRates, pickRates, RateTables } from '../../../rates/logic/pick-rates';
 import { withCapRevisions } from '../../../rates/logic/cap-revision';
@@ -365,7 +365,7 @@ export class PremiumList {
     const c = collectBonusResults(
       this.employees(),
       payments,
-      { ratesFor: ratesForOffice(office, tables), options: this.options() },
+      { ratesFor: ratesForOffice(office, tables), insurerOf: insurerKeyOf(office), options: this.options() },
       (d) => d.startsWith(month),
     );
     const bonus = officeTotals(c.results);

@@ -35,7 +35,7 @@ import { RateService } from '../../rate.service';
 import { downloadCsv, safeFileName } from '../../../../shared/csv/csv';
 import { readTables } from '../../../../shared/import/parse';
 import { todayLocal } from '../../../../shared/utils/date';
-import { RateCsvRow, readRateCsv, rateCsvTable, RATE_CSV_HEADERS, RateCsvColumn } from '../../logic/rate-csv';
+import { RateCsvRow, readRateFile, rateCsvTable, recheckRateCsv, RATE_CSV_HEADERS, RateCsvColumn } from '../../logic/rate-csv';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 /** 窓で扱う期間と保険者（開く側で、保存済みの履歴から作る） */
@@ -144,6 +144,13 @@ export class RateDialog implements OnInit {
   readonly csvError = signal<string | null>(null);
   readonly csvSaving = signal(false);
   readonly csvDone = signal<number | null>(null);
+  /** 保険料額表として読んだ（料率は金額から逆算） */
+  readonly csvFromTable = signal(false);
+  /** その場で直した値（行の番号 → 列 → 値）と、開いている行 */
+  readonly csvEdits = signal<Map<number, Partial<Record<RateCsvColumn, string>>>>(new Map());
+  readonly csvFixing = signal<number | null>(null);
+  readonly csvEditCount = computed(() => [...this.csvEdits().values()].reduce((n, e) => n + Object.keys(e).length, 0));
+  readonly fixParts = ['total', 'employee', 'employer'] as const;
   readonly csvCount = computed(() => {
     const c = { new: 0, update: 0, same: 0, error: 0 };
     for (const r of this.csvRows()) c[r.status]++;
@@ -395,7 +402,8 @@ export class RateDialog implements OnInit {
     this.clearCsv();
     try {
       const { tables } = await readTables(file);
-      const result = readRateCsv(tables[0].rows, { range: this.range(), existing: this.kumiaiAll() });
+      const result = readRateFile(tables[0].rows, { range: this.range(), existing: this.kumiaiAll() });
+      this.csvFromTable.set(result.fromTable);
       this.csvFile.set(file.name);
       this.csvMissing.set(result.missing.map((c: RateCsvColumn) => RATE_CSV_HEADERS[c]));
       this.csvRows.set(result.rows);
@@ -405,8 +413,42 @@ export class RateDialog implements OnInit {
     }
   }
 
+  /** その場で直す欄の値（直していなければ元の値） */
+  csvValue(r: RateCsvRow, col: RateCsvColumn): string {
+    return this.csvEdits().get(r.line)?.[col] ?? r.values[col];
+  }
+
+  setCsvValue(r: RateCsvRow, col: RateCsvColumn, value: string): void {
+    const next = new Map(this.csvEdits());
+    const row = { ...(next.get(r.line) ?? {}) };
+    if (value === r.values[col]) delete row[col];
+    else row[col] = value;
+    if (Object.keys(row).length) next.set(r.line, row);
+    else next.delete(r.line);
+    this.csvEdits.set(next);
+  }
+
+  toggleFix(line: number): void {
+    this.csvFixing.set(this.csvFixing() === line ? null : line);
+  }
+
+  /** 直した内容で確かめ直す（保存はしない） */
+  recheckCsv(): void {
+    const result = recheckRateCsv(this.csvRows(), this.csvEdits(), { range: this.range(), existing: this.kumiaiAll() });
+    this.csvRows.set(result.rows);
+    this.csvEdits.set(new Map());
+    this.csvFixing.set(null);
+  }
+
+  colOf(kind: Kind, part: 'total' | 'employee' | 'employer'): RateCsvColumn {
+    return `${kind}_${part}`;
+  }
+
   clearCsv(): void {
+    this.csvEdits.set(new Map());
+    this.csvFixing.set(null);
     this.csvFile.set(null);
+    this.csvFromTable.set(false);
     this.csvRows.set([]);
     this.csvMissing.set([]);
     this.csvError.set(null);

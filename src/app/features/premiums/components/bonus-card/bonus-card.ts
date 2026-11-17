@@ -4,7 +4,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { BonusPayment } from '../../../../core/models/bonus';
 import { Employee } from '../../../../core/models/employee';
 import { OfficeContext } from '../../../office/office-context.service';
-import { everKumiai, premiumOf, ratesForOffice } from '../../../office/office-settings';
+import { everKumiai, premiumOf, insurerKeyOf, ratesForOffice } from '../../../office/office-settings';
 import { RateTables } from '../../../rates/logic/pick-rates';
 import { RateService } from '../../../rates/rate.service';
 import { BonusService } from '../../bonus.service';
@@ -48,7 +48,7 @@ export class BonusCard implements OnInit {
     const office = this.context.current();
     if (!tables || !office) return [];
     const e = this.employee();
-    const ctx = { ratesFor: ratesForOffice(office, tables), options: premiumOf(office) };
+    const ctx = { ratesFor: ratesForOffice(office, tables), insurerOf: insurerKeyOf(office), options: premiumOf(office) };
     const payments = this.payments();
     return payments
       .filter((p) => (p.amounts[e.id] ?? 0) > 0)

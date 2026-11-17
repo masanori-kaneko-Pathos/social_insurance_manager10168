@@ -27,6 +27,7 @@ export type BonusEmployee = CoverageInput & LeaveHolder & PriorBonusHolder & { i
 
 export interface BonusContext {
   ratesFor: (month: YearMonth) => RatesForMonth;
+  insurerOf?: (month: YearMonth) => string;
   options: PremiumOptions;
 }
 
@@ -77,7 +78,7 @@ function calcFor(
   if (bonuses.length === 0) return { results: [], error: false };
   try {
     return {
-      results: calcBonuses({ employee, bonuses, ratesFor: ctx.ratesFor, options: ctx.options }),
+      results: calcBonuses({ employee, bonuses, ratesFor: ctx.ratesFor, insurerOf: ctx.insurerOf, options: ctx.options }),
       error: false,
     };
   } catch (err) {

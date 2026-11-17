@@ -107,6 +107,19 @@ describe('calcBonuses：上限', () => {
     expect(rs.map((r) => r.healthBase)).toEqual([5400000, 5730000]);
   });
 
+  it('保険者が変わったら、健保の年度の累計は新しい保険者で数え直す（11/17）', () => {
+    const e = person('1980-05-15', '2010-04-01');
+    const bonuses = [
+      { paidDate: '2026-07-10', amount: 4000000 },
+      { paidDate: '2026-12-10', amount: 4000000 },
+    ];
+    const insurerOf = (m: string) => (m >= '2026-10' ? 'kumiai:2026-10' : 'kyokai');
+    const switched = calcBonuses({ employee: e, bonuses, ratesFor: ratesFor('13'), insurerOf });
+    expect(switched.map((r) => r.healthBase)).toEqual([4000000, 4000000]);
+    // 保険者が同じなら、2回目は 573万 − 400万 ＝ 173万円まで
+    expect(calc(e, bonuses).map((r) => r.healthBase)).toEqual([4000000, 1730000]);
+  });
+
   it('厚年は1回150万円まで', () => {
     const [r] = calc(AGE30, [{ paidDate: '2026-12-10', amount: 2000000 }]);
     expect(r.pensionBase).toBe(1500000);

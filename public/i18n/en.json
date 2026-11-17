@@ -819,7 +819,8 @@
       "healthRounding": "There is no official guidance, so both are available. The method once published by the ministry is 'together'.",
       "nameEn": "Enter the English name if there is one.",
       "groupName": "Offices with the same label are listed together in the office menu. Example: Kanto sites, Head office and plant",
-      "agreementRounding": "Usually \"No agreement\". If the company and employees have a special agreement, the employee share is rounded that way (the same for the Japan Health Insurance Association, health insurance societies and pension). The company's payment stays the total rounded down to the yen."
+      "agreementRounding": "Usually \"No agreement\". If the company and employees have a special agreement, the employee share is rounded that way (the same for the Japan Health Insurance Association, health insurance societies and pension). The company's payment stays the total rounded down to the yen.",
+      "kumiaiRatesNext": "After you register, a window opens to enter the society's rates (you can also import them as CSV)."
     },
     "postal": {
       "search": "Find address",
@@ -1288,10 +1289,10 @@
       "selectFirst": "Numbers found in the PDF. Click the field first, then click a number."
     },
     "csv": {
-      "choose": "Import CSV",
+      "choose": "Import a file (CSV or Excel)",
       "export": "Export CSV",
       "template": "Download template",
-      "hint": "You can enter several years of rates at once. One row per \"from\" month, with total, employee and employer for health insurance, long-term care insurance and the child support levy (total may be blank). The unit column is % or ‰. You can edit an exported file in Excel and import it as is.",
+      "hint": "You can enter several years of rates at once: one row per \"from\" month, with total, employee and employer for health insurance, long-term care insurance and the child support levy (total may be blank; unit % or ‰). A society's premium table (premiums by grade) can be read as is. You can also edit an exported file in Excel and import it again.",
       "previewTitle": "Check {{file}}",
       "missing": "Required columns are missing: {{cols}}",
       "empty": "There are no rows to import.",
@@ -1306,7 +1307,7 @@
         "same": "Unchanged"
       },
       "import": "Import (new {{c}}, overwrite {{u}})",
-      "skipErrors": "Rows with errors are not imported. Fix them and reload the file, or import without them.",
+      "skipErrors": "Rows with errors are not imported. Fix them with \"Fix here\" and check again, or import without them.",
       "done": "Saved {{n}} rate rows.",
       "readError": "Could not read the file. Please check that it is a CSV or Excel file.",
       "saveError": "Could not save (nothing was saved). Please try again later.",
@@ -1327,7 +1328,10 @@
         "childSupport_tooHigh": "The child support levy rate exceeds 30%",
         "childSupport_mismatch": "Child support levy total does not equal employee + employer",
         "childSupport_required": "From April 2026, the child support levy rate is required"
-      }
+      },
+      "unitLabel": "Unit",
+      "recheck": "Check again with the fixes ({{n}})",
+      "fromTable": "Read as a premium table. Rates are calculated by dividing the amounts by the standard remuneration (the % cells are not used). Please check the months and rates against the notice, and use \"Fix here\" if anything differs."
     }
   },
   "bonus": {

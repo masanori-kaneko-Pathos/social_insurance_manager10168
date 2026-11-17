@@ -63,6 +63,18 @@ export function insurerFor(office: OfficeLike, month: YearMonth): OfficeForRates
   };
 }
 
+/**
+ * 月 → その月の保険者を見分ける鍵（賞与の年度の累計を、保険者ごとに数えるため。11/17）
+ * 協会けんぽは都道府県が変わっても同じ保険者。組合健保は同じ組合が続く期間（始まりの月）ごとに別
+ */
+export function insurerKeyOf(office: OfficeLike): (month: YearMonth) => string {
+  return (month) => {
+    const p = insurerFor(office, month);
+    if (!p) return 'none';
+    return p.healthInsurer.type === 'kyokai' ? 'kyokai' : `kumiai:${p.kumiaiSince ?? ''}`;
+  };
+}
+
 /** 月 → その月の料率（その月の保険者・都道府県で選ぶ。履歴より前の月は全部「未登録」） */
 export function ratesForOffice(
   office: OfficeLike,

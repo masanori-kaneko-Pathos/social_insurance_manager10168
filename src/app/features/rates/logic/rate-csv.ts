@@ -8,28 +8,16 @@ import { isBlankRow } from '../../../shared/csv/csv';
 import { toHalfWidth } from '../../../shared/utils/text';
 import { inRange } from './rate-changes';
 import { formatRateInput, MAX_RATE, parseRate, RateUnit } from './rate-format';
+import { RATE_CSV_COLUMNS, RATE_CSV_HEADERS, RateCsvColumn } from './rate-csv-columns';
+import { readRateTable } from './rate-table';
+export { RATE_CSV_COLUMNS, RATE_CSV_HEADERS };
+export type { RateCsvColumn };
 
 type Kind = 'health' | 'care' | 'childSupport';
 type Part = 'total' | 'employee' | 'employer';
 const KINDS: readonly Kind[] = ['health', 'care', 'childSupport'];
 const PARTS: readonly Part[] = ['total', 'employee', 'employer'];
 
-export type RateCsvColumn = 'from' | 'unit' | `${Kind}_${Part}`;
-
-export const RATE_CSV_HEADERS: Record<RateCsvColumn, string> = {
-  from: '何月分から',
-  unit: '単位',
-  health_total: '健康保険_全体',
-  health_employee: '健康保険_本人',
-  health_employer: '健康保険_会社',
-  care_total: '介護保険_全体',
-  care_employee: '介護保険_本人',
-  care_employer: '介護保険_会社',
-  childSupport_total: '支援金_全体',
-  childSupport_employee: '支援金_本人',
-  childSupport_employer: '支援金_会社',
-};
-export const RATE_CSV_COLUMNS = Object.keys(RATE_CSV_HEADERS) as RateCsvColumn[];
 const REQUIRED: readonly RateCsvColumn[] = ['from', 'health_employee', 'health_employer'];
 
 /** 見出しの言い換え（記号・空白は無視して比べる） */
@@ -72,6 +60,8 @@ export type RateCsvStatus = 'new' | 'update' | 'same' | 'error';
 
 export interface RateCsvRow {
   line: number; // ファイルの行（見出しが1行目）
+  /** 元の値（うちの列にそろえたもの。その場で直すときに使う） */
+  values: Record<RateCsvColumn, string>;
   from: string; // 読めた月（読めなければ元の文字）
   input: KumiaiRateInput | null;
   errors: RateCsvError[];
@@ -119,6 +109,8 @@ export function sameRate(a: KumiaiRateInput, b: KumiaiRateInput): boolean {
 export function readRateCsv(
   table: readonly (readonly string[])[],
   ctx: { range: MonthRange; existing: readonly KumiaiRateInput[] },
+  /** 行の番号を決めて読む（その場で直して確かめ直すとき、元のファイルの行の番号のままにする） */
+  lines?: readonly number[],
 ): RateCsvResult {
   const [header = [], ...body] = table;
   const index: Partial<Record<RateCsvColumn, number>> = {};
@@ -135,8 +127,9 @@ export function readRateCsv(
 
   body.forEach((cells, i) => {
     if (isBlankRow(cells)) return;
-    const line = i + 2;
+    const line = lines?.[i] ?? i + 2;
     const get = (c: RateCsvColumn) => (index[c] === undefined ? '' : (cells[index[c]!] ?? '').trim());
+    const values = Object.fromEntries(RATE_CSV_COLUMNS.map((c) => [c, get(c)])) as Record<RateCsvColumn, string>;
     const errors: RateCsvError[] = [];
 
     const from = readRateMonth(get('from'));
@@ -178,13 +171,14 @@ export function readRateCsv(
     }
 
     if (errors.length || !from || !splits.health || !splits.care || !splits.childSupport) {
-      rows.push({ line, from: from ?? get('from'), input: null, errors, status: 'error' });
+      rows.push({ line, values, from: from ?? get('from'), input: null, errors, status: 'error' });
       return;
     }
     const input: KumiaiRateInput = { from, health: splits.health, care: splits.care, childSupport: splits.childSupport };
     const before = existing.get(from);
     rows.push({
       line,
+      values,
       from,
       input,
       errors,
@@ -193,6 +187,45 @@ export function readRateCsv(
   });
   rows.sort((a, b) => a.from.localeCompare(b.from) || a.line - b.line);
   return { rows, missing };
+}
+
+/**
+ * ファイルを読む：料率の一覧（うちの形）で読めなければ、保険料額表として読む（11/17）
+ * 額表から読んだ行も、料率の一覧と同じ確かめ方・その場で直す仕組みに乗せる
+ */
+export function readRateFile(
+  table: readonly (readonly string[])[],
+  ctx: { range: MonthRange; existing: readonly KumiaiRateInput[] },
+): RateCsvResult & { fromTable: boolean } {
+  const list = readRateCsv(table, ctx);
+  if (list.missing.length === 0) return { ...list, fromTable: false };
+  const t = readRateTable(table);
+  if (!t.table) return { ...list, fromTable: false };
+  return { ...readRateCsv(t.table, ctx), fromTable: true };
+}
+
+/**
+ * その場で直した値で、確かめ直す（11/17）
+ * edits：行の番号 → 直した値。行の番号は元のファイルのまま
+ */
+export function recheckRateCsv(
+  rows: readonly RateCsvRow[],
+  edits: ReadonlyMap<number, Partial<Record<RateCsvColumn, string>>>,
+  ctx: { range: MonthRange; existing: readonly KumiaiRateInput[] },
+): RateCsvResult {
+  const ordered = [...rows].sort((a, b) => a.line - b.line);
+  const table = [
+    RATE_CSV_COLUMNS.map((c) => RATE_CSV_HEADERS[c]),
+    ...ordered.map((r) => {
+      const v = { ...r.values, ...(edits.get(r.line) ?? {}) };
+      return RATE_CSV_COLUMNS.map((c) => v[c]);
+    }),
+  ];
+  return readRateCsv(
+    table,
+    ctx,
+    ordered.map((r) => r.line),
+  );
 }
 
 /** 出力（保存済みの料率。なければ例の1行。取り込みと同じ形） */

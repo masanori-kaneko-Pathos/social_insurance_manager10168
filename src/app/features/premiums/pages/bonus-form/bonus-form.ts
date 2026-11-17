@@ -10,7 +10,7 @@ import {
   DEFAULT_PREMIUM,
   everKumiai,
   premiumOf,
-  ratesForOffice,
+  insurerKeyOf, ratesForOffice,
 } from '../../../office/office-settings';
 import { parseYen } from '../../../rates/logic/grade';
 import { formatYen } from '../../../../shared/utils/number';
@@ -141,7 +141,7 @@ export class BonusForm {
     const tables = this.tables();
     const office = this.context.current();
     if (!tables || !office) return null;
-    return { ratesFor: ratesForOffice(office, tables), options: this.options() };
+    return { ratesFor: ratesForOffice(office, tables), insurerOf: insurerKeyOf(office), options: this.options() };
   });
 
   /** 保存済みの支給に、入力中の内容を差し替えたもの（計算はいつもこれで行う） */

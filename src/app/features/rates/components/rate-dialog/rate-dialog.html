@@ -199,6 +199,9 @@
         @if (csvFile(); as file) {
           <section class="csv-preview">
             <h3>{{ 'rateDialog.csv.previewTitle' | transloco: { file: file } }}</h3>
+            @if (csvFromTable()) {
+              <p class="warn-box">{{ 'rateDialog.csv.fromTable' | transloco }}</p>
+            }
             @if (csvMissing().length) {
               <p class="warn-box">{{ 'rateDialog.csv.missing' | transloco: { cols: csvMissing().join('・') } }}</p>
             } @else if (csvRows().length === 0) {
@@ -221,7 +224,7 @@
                 <tbody>
                   @for (r of csvRows(); track r.line) {
                     <tr [class.row-error]="r.status === 'error'">
-                      <td>{{ r.line }}</td>
+                      <td>{{ csvFromTable() ? '—' : r.line }}</td>
                       <td>{{ r.from }}</td>
                       @for (kind of kinds; track kind) {
                         <td class="num">
@@ -236,16 +239,71 @@
                           @for (e of r.errors; track e) {
                             <span class="field-error">{{ csvErrorKey(e) | transloco }}</span>
                           }
+                          <button type="button" class="btn btn-small" [attr.aria-expanded]="csvFixing() === r.line" (click)="toggleFix(r.line)">
+                            {{ 'importFix.fix' | transloco }}
+                          </button>
                         } @else {
                           {{ 'rateDialog.csv.status.' + r.status | transloco }}
                         }
                       </td>
                     </tr>
+                    @if (csvFixing() === r.line) {
+                      <tr class="fix-row">
+                        <td [attr.colspan]="kinds.length + 3">
+                          <div class="fix-grid">
+                            <label class="field">
+                              <span class="label">{{ 'rateDialog.from' | transloco }}</span>
+                              <input class="input" [value]="csvValue(r, 'from')" (input)="setCsvValue(r, 'from', $any($event.target).value)" />
+                            </label>
+                            <label class="field">
+                              <span class="label">{{ 'rateDialog.csv.unitLabel' | transloco }}</span>
+                              <select class="input" [value]="csvValue(r, 'unit') || '%'" (change)="setCsvValue(r, 'unit', $any($event.target).value)">
+                                <option value="%">%</option>
+                                <option value="‰">‰</option>
+                              </select>
+                            </label>
+                          </div>
+                          <table class="split-input">
+                            <thead>
+                              <tr>
+                                <th></th>
+                                @for (f of fixParts; track f) {
+                                  <th>{{ 'rateDialog.' + f | transloco }}</th>
+                                }
+                              </tr>
+                            </thead>
+                            <tbody>
+                              @for (kind of kinds; track kind) {
+                                <tr>
+                                  <th scope="row">{{ 'premium.part.' + kind | transloco }}</th>
+                                  @for (f of fixParts; track f) {
+                                    <td>
+                                      <input
+                                        class="input"
+                                        inputmode="decimal"
+                                        [value]="csvValue(r, colOf(kind, f))"
+                                        (input)="setCsvValue(r, colOf(kind, f), $any($event.target).value)"
+                                        [attr.aria-label]="('premium.part.' + kind | transloco) + ' ' + ('rateDialog.' + f | transloco)"
+                                      />
+                                    </td>
+                                  }
+                                </tr>
+                              }
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    }
                   }
                 </tbody>
               </table>
               <div class="actions">
                 <button type="button" class="btn" (click)="clearCsv()">{{ 'common.cancel' | transloco }}</button>
+                @if (csvEditCount() > 0) {
+                  <button type="button" class="btn" (click)="recheckCsv()">
+                    {{ 'rateDialog.csv.recheck' | transloco: { n: csvEditCount() } }}
+                  </button>
+                }
                 <button
                   type="button"
                   class="btn btn-primary"

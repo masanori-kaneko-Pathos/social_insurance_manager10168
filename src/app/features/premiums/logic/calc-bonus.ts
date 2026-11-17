@@ -8,6 +8,7 @@
  *   ・資格喪失日以降に払った賞与：かからない（累計にも入らない）
  *   70歳（厚年）・75歳（健保）で資格を失う月も同じ扱い
  * - 上限：健保・介護・支援金は年度（4月〜翌3月）の累計573万円（平成27年度までは540万円）、厚年・拠出金は同じ月の合計150万円
+ * - 保険者が変わったら（協会けんぽ ⇔ 組合など）、健保の年度の累計は新しい保険者で数え直す（11/17）
  * - 転職した人：同じ年度・同じ保険者の前の事業所の標準賞与額（本人の累計申出で保険者から知らされた額）も、健保の累計に入れる（11/16）
  */
 import {
@@ -56,6 +57,8 @@ export interface BonusInput {
   bonuses: EmployeeBonus[];
   /** 月 → その月の料率（pickRates を包んだ関数） */
   ratesFor: (month: string) => RatesForMonth;
+  /** 月 → 保険者の鍵（insurerKeyOf）。なければ保険者は変わらない扱い */
+  insurerOf?: (month: string) => string;
   options?: PremiumOptions;
 }
 
@@ -91,7 +94,8 @@ export function calcBonuses(input: BonusInput): BonusPremiumResult[] {
   const healthLost = healthLostDate(employee);
   const pensionLost = pensionLostDate(employee);
 
-  const healthCumByYear = new Map<number, number>(); // 年度 → 健保の標準賞与額の累計
+  const healthCumByYear = new Map<string, number>(); // 年度|保険者 → 健保の標準賞与額の累計
+  const priorKeyOf = new Map<number, string>(); // 年度 → 前の事業所の分を足した保険者の鍵（その年度の最初の保険者にだけ足す）
   const pensionSumByMonth = new Map<string, number>(); // 月 → 厚年の標準賞与額の合計
 
   // 支払日の順に計算する（上限は先に払った賞与から順に埋まる）
@@ -122,11 +126,15 @@ export function calcBonuses(input: BonusInput): BonusPremiumResult[] {
     // 健保：年度の累計573万円（喪失月の賞与も累計には入る）
     let healthBase = 0;
     const year = fiscalYearOf(month);
-    const priorHealth = priorHealthOf(employee, year);
+    const key = `${year}|${input.insurerOf?.(month) ?? ''}`;
     if (healthStatus !== 'none') {
-      const before = healthCumByYear.get(year) ?? priorHealth;
+      let before = healthCumByYear.get(key);
+      if (before === undefined) {
+        before = priorKeyOf.has(year) ? 0 : priorHealthOf(employee, year);
+        if (!priorKeyOf.has(year)) priorKeyOf.set(year, key);
+      }
       healthBase = Math.min(standardBonus, Math.max(0, healthBonusCapOf(year) - before));
-      healthCumByYear.set(year, before + standardBonus);
+      healthCumByYear.set(key, before + standardBonus);
     }
 
     // 厚年：同じ月の合計150万円
@@ -171,7 +179,8 @@ export function calcBonuses(input: BonusInput): BonusPremiumResult[] {
       healthStatus,
       pensionStatus,
       exempt,
-      priorHealth,
+      // 前の事業所の分（この賞与の保険者の累計に足したときだけ）
+      priorHealth: (priorKeyOf.get(year) ?? key) === key ? priorHealthOf(employee, year) : 0,
     };
   });
 }
