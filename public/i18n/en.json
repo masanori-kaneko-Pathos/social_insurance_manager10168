@@ -2405,7 +2405,9 @@
       "employees": "Employees",
       "contract": "Contract history",
       "remuneration": "Standard remuneration history",
-      "dependents": "Dependents"
+      "dependents": "Dependents",
+      "certificate": "Agreement certificates",
+      "overseas": "Overseas assignments"
     },
     "pageLead": "Add records to registered employees: employment contracts from the second one onward, and standard monthly remuneration decisions (annual determination, occasional revision, etc.). Employees are matched by employee number. Records for a date (month) that already exists are skipped, never overwritten. Coverage (acquisition and loss dates) is not changed, so check the \"Review coverage\" items in the To-do list after importing.",
     "lead": {
@@ -4167,6 +4169,47 @@
       "direction": "Please choose the direction.",
       "note": "The note can be up to 200 characters.",
       "save": "Could not save. Please try again later."
+    }
+  },
+  "abroadCsv": {
+    "pageLead": "Add social security agreement certificates (people sent to Japan from abroad) or overseas assignments (people sent abroad from Japan) to registered employees. People are matched by employee number. Rows identical to saved data are skipped.",
+    "lead": {
+      "certificate": "Adds the other country's certificate to employees with foreign information. One certificate per person, so a different saved certificate is replaced. If the coverage is blank, it is taken from the list of agreements.",
+      "overseas": "Adds overseas assignments (any number per person). Rows overlapping another assignment are errors. If the paying company is blank, it is \"Japanese company only\"."
+    },
+    "columns": {
+      "certificate": "Required: employee number, certificate country (two letters such as DE or US), certificate start. Optional: name (for checking), coverage (pension only / pension and health), certificate end. Dates as 2026-04-01 or 2026/4/1.",
+      "overseas": "Required: employee number, country of work (two letters), start date. Optional: name, return date, paying company (Japan only / both / abroad only), Japanese certificate period (start and end, both if any), note."
+    },
+    "summary": "Add {{add}} · Skip {{skip}} · Errors {{error}}",
+    "col": {
+      "employee": "Employee",
+      "what": {
+        "certificate": "Certificate",
+        "overseas": "Assignment"
+      },
+      "result": "Result"
+    },
+    "add": "Add",
+    "skip": "Same as saved data; skipped",
+    "replace": "Replaces the saved certificate",
+    "import": "Import {{n}}",
+    "done": "Imported {{n}}. Please check the to-dos for agreements and overseas assignments.",
+    "toTodo": "To the to-do list",
+    "error": {
+      "required": "Missing",
+      "unknownEmployee": "No employee with this number",
+      "notForeign": "This employee has no foreign information (set it in the employee form first)",
+      "country": "Use a two-letter code for a country other than Japan",
+      "date": "Cannot read the date (use 2026-04-01)",
+      "order": "The end is before the start",
+      "covers": "Coverage must be \"pension only\" or \"pension and health\"",
+      "coversUnknown": "This country is not in the agreement list; please enter the coverage",
+      "payer": "Paying company must be Japan only, both or abroad only",
+      "pair": "Enter both the start and end of the certificate period",
+      "overlap": "Overlaps a saved overseas assignment",
+      "duplicate": "The same person appears more than once (overlapping) in the file",
+      "save": "Saving stopped partway. Please check the employees who were imported."
     }
   }
 }

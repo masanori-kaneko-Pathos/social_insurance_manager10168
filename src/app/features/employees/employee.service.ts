@@ -6,6 +6,7 @@ import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { db } from '../../core/firebase';
 import {
   CareExemption,
+  CertificateDoc,
   Overseas,
   Employee,
   EmployeeDoc,
@@ -229,6 +230,13 @@ export class EmployeeService {
     const ref = doc(this.col(officeId), employeeId);
     const priorBonusTotals = Object.keys(totals).length > 0 ? totals : null;
     await this.history.write(officeId, employeeId, 'employee', ref, 'update', { priorBonusTotals });
+  }
+
+  /** 相手国の適用証明書（外国籍の情報の中。取り込みで使う。B9。11/17） */
+  async updateCertificate(officeId: string, e: Pick<Employee, 'id' | 'foreign'>, certificate: CertificateDoc): Promise<void> {
+    if (!e.foreign) throw new Error('外国籍の情報がない従業員です');
+    const ref = doc(this.col(officeId), e.id);
+    await this.history.write(officeId, e.id, 'employee', ref, 'update', { foreign: { ...e.foreign, certificate } });
   }
 
   /** 海外勤務（従業員の文書の配列。To-do で全員分を読むので、別の入れ物にしない） */

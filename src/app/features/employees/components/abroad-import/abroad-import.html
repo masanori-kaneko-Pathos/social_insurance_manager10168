@@ -1,0 +1,117 @@
+<section class="card">
+  <h2>{{ 'employeeCsv.step1' | transloco }}</h2>
+  <p class="sub">{{ 'abroadCsv.lead.' + kind() | transloco }}</p>
+  <button type="button" class="btn" (click)="downloadTemplate()">{{ 'employeeCsv.template' | transloco }}</button>
+  <details class="columns">
+    <summary>{{ 'employeeCsv.columnsTitle' | transloco }}</summary>
+    <p class="sub">{{ 'abroadCsv.columns.' + kind() | transloco }}</p>
+  </details>
+</section>
+
+<section class="card">
+  <h2>{{ 'employeeCsv.step2' | transloco }}</h2>
+  <label class="btn file">
+    {{ 'employeeCsv.choose' | transloco }}
+    <input type="file" accept=".csv,.tsv,.txt,.xlsx,.xls,text/csv" (change)="onFile($event)" [disabled]="saving()" />
+  </label>
+
+  @if (errorKey(); as key) {
+    <div class="alert alert-danger">{{ key | transloco }}</div>
+  }
+  @if (doneCount() !== null) {
+    <div class="alert alert-success">
+      {{ 'abroadCsv.done' | transloco: { n: doneCount() } }}
+      <a [routerLink]="['/o', context.current()?.id]">{{ 'abroadCsv.toTodo' | transloco }} ›</a>
+    </div>
+  }
+  @if (progress(); as p) {
+    <p class="muted">{{ 'historyCsv.progress' | transloco: { done: p.done, total: p.total } }}</p>
+    <progress [value]="p.done" [max]="p.total"></progress>
+  }
+
+  @if (preview(); as pv) {
+    <p class="file-name">
+      {{ pv.fileName }}
+      @if (pv.encoding) {
+        <span class="sub">（{{ 'payrollCsv.encoding.' + pv.encoding | transloco }}）</span>
+      }
+    </p>
+
+    @if (pv.missing.length > 0) {
+      <div class="alert alert-danger">{{ 'payrollCsv.import.missingColumns' | transloco }} {{ pv.missing.join('・') }}</div>
+    } @else {
+      <p>{{ 'abroadCsv.summary' | transloco: { add: addRows().length, skip: skipRows().length, error: errorRows().length } }}</p>
+
+      @if (errorRows().length > 0) {
+        <div class="fix-bar">
+          <button type="button" class="btn btn-small btn-primary" [disabled]="edits().size === 0 || saving()" (click)="applyEdits()">
+            {{ 'employeeCsv.applyEdits' | transloco: { n: edits().size } }}
+          </button>
+          <label class="opt">
+            <input type="checkbox" [checked]="skipErrors()" (change)="skipErrors.set($any($event.target).checked)" />
+            {{ 'employeeCsv.skipErrors' | transloco }}
+          </label>
+        </div>
+      }
+
+      <div class="table-wrap scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>{{ 'employeeCsv.col.line' | transloco }}</th>
+              <th>{{ 'employee.field.employeeNumber' | transloco }}</th>
+              <th>{{ 'abroadCsv.col.employee' | transloco }}</th>
+              <th>{{ 'abroadCsv.col.what.' + kind() | transloco }}</th>
+              <th>{{ 'abroadCsv.col.result' | transloco }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of pv.rows; track r.line) {
+              <tr [class.warn]="r.errors.length > 0">
+                <td class="num">{{ r.line }}</td>
+                <td class="mono">{{ r.employee?.employeeNumber ?? '—' }}</td>
+                <td>{{ name(r) }}</td>
+                <td class="mono">{{ what(r) }}</td>
+                <td>
+                  @if (r.errors.length > 0) {
+                    @for (e of r.errors; track $index) {
+                      <span class="badge">{{ label(e.column) }}{{ e.column ? '：' : '' }}{{ errorText(e) | transloco }}</span>
+                    }
+                    <div class="fix-fields">
+                      @for (c of fixColumns(r); track c) {
+                        <label class="fix-field">
+                          <span>{{ label(c) }}</span>
+                          <input
+                            class="input fix-input"
+                            [class.changed]="edits().has(cellKey(r.line, c))"
+                            [value]="editValue(r.line, c)"
+                            (input)="setEdit(r.line, c, $any($event.target).value)"
+                            (keydown.enter)="applyEdits()"
+                          />
+                        </label>
+                      }
+                    </div>
+                  } @else if (r.skip) {
+                    <span class="sub">{{ 'abroadCsv.skip' | transloco }}</span>
+                  } @else {
+                    {{ 'abroadCsv.add' | transloco }}
+                    @for (w of r.warnings; track w) {
+                      <br /><span class="badge">{{ (w === 'replace' ? 'abroadCsv.replace' : kind() === 'certificate' ? 'employee.agreement.warning.' + w : 'overseas.warning.' + w) | transloco }}</span>
+                    }
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn btn-primary" [disabled]="!canImport()" (click)="importCsv()">
+          {{ 'abroadCsv.import' | transloco: { n: addRows().length } }}
+        </button>
+        <button type="button" class="btn" [disabled]="saving()" (click)="clear()">{{ 'common.cancel' | transloco }}</button>
+      </div>
+    }
+  }
+</section>

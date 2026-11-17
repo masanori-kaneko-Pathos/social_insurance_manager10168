@@ -30,12 +30,13 @@ import {
 } from '../../logic/employee-csv';
 import { reasonParams } from '../../logic/classify';
 import { DependentImport } from '../../components/dependent-import/dependent-import';
+import { AbroadImport } from '../../components/abroad-import/abroad-import';
 import { HistoryImport } from '../../components/history-import/history-import';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /** 何を取り込むか：従業員（1行1人）／扶養家族（1行1人。11/13）／契約の履歴／標準報酬の履歴（登録済みの人に足す） */
-export type ImportMode = 'employees' | 'dependents' | 'contract' | 'remuneration';
-export const IMPORT_MODES: readonly ImportMode[] = ['employees', 'dependents', 'contract', 'remuneration'];
+export type ImportMode = 'employees' | 'dependents' | 'contract' | 'remuneration' | 'certificate' | 'overseas';
+export const IMPORT_MODES: readonly ImportMode[] = ['employees', 'dependents', 'contract', 'remuneration', 'certificate', 'overseas'];
 
 interface Preview {
   fileName: string;
@@ -58,7 +59,7 @@ const INLINE_FIX_LIMIT = 30;
  */
 @Component({
   selector: 'app-employee-import',
-  imports: [ColumnMapper, DependentImport, HistoryImport, PasswordGate, RouterLink, TranslocoPipe],
+  imports: [AbroadImport, ColumnMapper, DependentImport, HistoryImport, PasswordGate, RouterLink, TranslocoPipe],
   templateUrl: './employee-import.html',
   styleUrl: './employee-import.css',
 })
