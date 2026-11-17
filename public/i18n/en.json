@@ -298,7 +298,8 @@
     "filings": "Filing lists",
     "collapse": "Collapse menu",
     "expand": "Expand menu",
-    "calendar": "Year calendar"
+    "calendar": "Year calendar",
+    "import": "Import files"
   },
   "employee": {
     "list": {
@@ -1761,11 +1762,9 @@
     "skipNote": "Months marked * are left out of the average. Under N days: fewer payment-basis days than the threshold (17 in general, 11 for short-time workers at specified offices; part-timers use 15 when no month reaches 17), because pay is lower than usual. Joined mid-month: not a full month's pay. On leave: no pay during leave."
   },
   "payrollCsv": {
-    "title": "Payroll records CSV",
     "lead": "Export a CSV, fix it in Excel, and import it back as is (the same format both ways).",
     "adminOnly": "Only administrators can import or export CSV files.",
     "export": {
-      "title": "1. Export",
       "lead": "Exports one row per employee per month for employees employed during the selected period. Entered months have numbers and missing months are blank, so the file also works as a template.",
       "from": "From month paid",
       "to": "To month paid",
@@ -1773,12 +1772,10 @@
       "last3": "Last 3 months",
       "last12": "Last 12 months",
       "button": "Export CSV",
-      "hint": "Encoded as UTF-8 with BOM (opens directly in Excel). Up to 24 months."
+      "hint": "Encoded as UTF-8 with BOM (opens directly in Excel). Up to 24 months.",
+      "drawer": "Template / export (choose a period)"
     },
     "import": {
-      "title": "2. Import",
-      "lead": "After you choose a file, a review screen appears. Nothing is saved until you press Import.",
-      "choose": "Choose file",
       "done": "Imported {{n}} records.",
       "toList": "Go to payroll records",
       "partial": "Saving failed partway. {{done}} of {{total}} records were saved. Import the same file again to add only the rest (saved records show as unchanged).",
@@ -2353,15 +2350,12 @@
     "inKindMergedTitle": "In this month, in-kind remuneration is included in the pay amount with no separate figure. Check the payslip in your payroll software to see whether a change in in-kind remuneration (such as moving into company housing) should trigger a revision."
   },
   "employeeCsv": {
-    "title": "Import employees (CSV)",
     "lead": "One row per employee with basic data and the first employment contract. Social insurance enrollment and standard remuneration are calculated from the contract and shown for review (columns can override them).",
     "adminOnly": "Only administrators can import.",
-    "step1": "1. Download the template",
     "templateHint": "It has a header row and 2 example rows. Edit it in Excel (UTF-8 or Shift_JIS).",
     "template": "Download template",
     "columnsTitle": "How to fill in the columns",
     "columnsHint": "Required: employee number, last name kana, birth date, hire date, employment type, pay type, weekly hours, monthly days, scheduled wage (and last name for Japanese nationals). Dates as 2026-04-01; hours as 40:00. Values can be the Japanese words or codes (regular, part, hourly, etc.). Leave enrollment blank to decide by category. Basic pension number (10 digits), insured person number and My Number (12 digits, stored encrypted) can also be entered.",
-    "step2": "2. Choose a file and review",
     "choose": "Choose file",
     "missingColumns": "Required columns are missing:",
     "hasErrors": "{{n}} row(s) have errors. Fix them and choose the file again (nothing is imported while errors remain).",
@@ -2458,7 +2452,9 @@
       "remuneration": "Standard remuneration history",
       "dependents": "Dependents",
       "certificate": "Agreement certificates",
-      "overseas": "Overseas assignments"
+      "overseas": "Overseas assignments",
+      "payrolls": "Payroll",
+      "myNumber": "My Number"
     },
     "pageLead": "Add records to registered employees: employment contracts from the second one onward, and standard monthly remuneration decisions (annual determination, occasional revision, etc.). Employees are matched by employee number. Records for a date (month) that already exists are skipped, never overwritten. Coverage (acquisition and loss dates) is not changed, so check the \"Review coverage\" items in the To-do list after importing.",
     "lead": {
@@ -4279,7 +4275,8 @@
       "overlap": "Overlaps a saved overseas assignment",
       "duplicate": "The same person appears more than once (overlapping) in the file",
       "save": "Saving stopped partway. Please check the employees who were imported."
-    }
+    },
+    "fileHint": "CSV or Excel (xlsx, xls)."
   },
   "decisionNotice": {
     "title": "Send decision notices to employees (My Page)",
@@ -4316,6 +4313,19 @@
       "update": "{{n}} updated",
       "same": "{{n}} unchanged",
       "error": "{{n}} errors"
+    }
+  },
+  "importPage": {
+    "title": "Import files",
+    "lead": {
+      "employees": "One row per employee with basic data and the first employment contract. Social insurance enrollment and standard remuneration are calculated from the contract and shown for review (columns can override them).",
+      "dependents": "Add dependents to registered employees in bulk. One row per dependent, matched by employee number. People already registered with the same name and birth date are skipped; nothing is overwritten.",
+      "contract": "Add records to registered employees: employment contracts from the second one onward, and standard monthly remuneration decisions (annual determination, occasional revision, etc.). Employees are matched by employee number. Records for a date (month) that already exists are skipped, never overwritten. Coverage (acquisition and loss dates) is not changed, so check the \"Review coverage\" items in the To-do list after importing.",
+      "remuneration": "Add records to registered employees: employment contracts from the second one onward, and standard monthly remuneration decisions (annual determination, occasional revision, etc.). Employees are matched by employee number. Records for a date (month) that already exists are skipped, never overwritten. Coverage (acquisition and loss dates) is not changed, so check the \"Review coverage\" items in the To-do list after importing.",
+      "payrolls": "One row per person per month: amount paid, fixed wages, payment base days and so on. Export a period from \"Template / export\", edit it in Excel and import it as is (same format both ways).",
+      "myNumber": "Add My Numbers to registered employees in one go (employee number and My Number columns). Exporting asks for your password again. Both are logged.",
+      "certificate": "Add social security agreement certificates (people sent to Japan from abroad) or overseas assignments (people sent abroad from Japan) to registered employees. People are matched by employee number. Rows identical to saved data are skipped.",
+      "overseas": "Add social security agreement certificates (people sent to Japan from abroad) or overseas assignments (people sent abroad from Japan) to registered employees. People are matched by employee number. Rows identical to saved data are skipped."
     }
   }
 }

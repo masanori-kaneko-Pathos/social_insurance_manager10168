@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ColumnMapper } from '../../../../shared/components/column-mapper/column-mapper';
 import { CsvEncoding, downloadCsv } from '../../../../shared/csv/csv';
@@ -32,7 +33,9 @@ import { reasonParams } from '../../logic/classify';
 import { DependentImport } from '../../components/dependent-import/dependent-import';
 import { AbroadImport } from '../../components/abroad-import/abroad-import';
 import { HistoryImport } from '../../components/history-import/history-import';
+import { PayrollImport } from '../../../payrolls/pages/payroll-import/payroll-import';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { ImportPicker } from '../../../../shared/components/import-picker/import-picker';
 import { ImportFix, ImportIssue, ImportIssues } from '../../../../shared/components/import-issues/import-issues';
 import { applyRowValues } from '../../../../shared/import/row-fix';
 import { ContractService } from '../../contract.service';
@@ -41,9 +44,36 @@ import { PersonDiff, samePersonDiffs } from '../../logic/employee-csv';
 import type { Employee } from '../../../../core/models/employee';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 
-/** 何を取り込むか：従業員（1行1人）／扶養家族（1行1人。11/13）／契約の履歴／標準報酬の履歴（登録済みの人に足す） */
-export type ImportMode = 'employees' | 'dependents' | 'contract' | 'remuneration' | 'certificate' | 'overseas';
-export const IMPORT_MODES: readonly ImportMode[] = ['employees', 'dependents', 'contract', 'remuneration', 'certificate', 'overseas'];
+/**
+ * 何を取り込むか（ファイルの取り込みのページの区分。11/17 に給与の実績・マイナンバーも入れた）
+ * 従業員（1行1人）／扶養家族／契約の履歴／標準報酬の履歴／給与の実績／マイナンバー／協定の適用証明書／海外勤務
+ */
+export type ImportMode =
+  | 'employees'
+  | 'dependents'
+  | 'contract'
+  | 'remuneration'
+  | 'payrolls'
+  | 'myNumber'
+  | 'certificate'
+  | 'overseas';
+export const IMPORT_MODES: readonly ImportMode[] = [
+  'employees',
+  'dependents',
+  'contract',
+  'remuneration',
+  'payrolls',
+  'myNumber',
+  'certificate',
+  'overseas',
+];
+
+/** どこから来たか（戻るの行き先と名前） */
+const FROM: Record<string, { path: string[]; label: string }> = {
+  employees: { path: ['employees'], label: 'nav.employees' },
+  payrolls: { path: ['payrolls'], label: 'payroll.listTitle' },
+  home: { path: [], label: 'nav.home' },
+};
 
 interface Preview {
   fileName: string;
@@ -64,7 +94,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-employee-import',
-  imports: [AbroadImport, ColumnMapper, DependentImport, HistoryImport, ImportIssues, PasswordGate, RouterLink, TranslocoPipe],
+  imports: [ImportPicker, PayrollImport, AbroadImport, ColumnMapper, DependentImport, HistoryImport, ImportIssues, PasswordGate, RouterLink, TranslocoPipe],
   templateUrl: './employee-import.html',
   styleUrl: './employee-import.css',
 })
@@ -77,17 +107,49 @@ export class EmployeeImport {
   private readonly myNumbers = inject(MyNumberService);
 
   readonly modes = IMPORT_MODES;
-  /** ?mode=dependents などで開ける（ホームの「ファイルから取り込む」から。11/13） */
+  /**
+   * ファイルの取り込みのページ（11/17）：?kind=payrolls などで区分を選んだ状態で開く（古い ?mode= も読む）
+   * 古い URL（employees/import・payrolls/import）は、ルートの data で区分と戻り先を決める
+   */
   private readonly route = inject(ActivatedRoute);
-  readonly mode = signal<ImportMode>(
-    (IMPORT_MODES as readonly string[]).includes(this.route.snapshot.queryParamMap.get('mode') ?? '')
-      ? (this.route.snapshot.queryParamMap.get('mode') as ImportMode)
-      : 'employees',
-  );
-  /** 従業員を取り込んだあと「次は扶養家族」：同じ画面のまま、取り込む種類を切り替える（11/16） */
-  goDependents(): void {
+  private readonly router = inject(Router);
+  readonly mode = signal<ImportMode>(this.firstMode());
+  /** 戻る（来た画面があるときだけ） */
+  readonly back = (() => {
+    const q = this.route.snapshot.queryParamMap;
+    const from = q.get('from') ?? (this.route.snapshot.data['from'] as string | undefined) ?? '';
+    return FROM[from] ?? null;
+  })();
+  /** 区分ごとの説明 */
+  readonly leadKey = computed(() => `importPage.lead.${this.mode()}`);
+
+  private firstMode(): ImportMode {
+    const q = this.route.snapshot.queryParamMap;
+    const want = q.get('kind') ?? q.get('mode') ?? (this.route.snapshot.data['kind'] as string | undefined) ?? '';
+    return (IMPORT_MODES as readonly string[]).includes(want) ? (want as ImportMode) : 'employees';
+  }
+
+  /** 区分を切り替える（URL にも残す。読み直しても同じ区分で開く） */
+  setMode(m: ImportMode): void {
     this.doneCount.set(null);
-    this.mode.set('dependents');
+    this.mode.set(m);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { kind: m, mode: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  /** 従業員を取り込んだあと「次は扶養家族」：同じ画面のまま、区分を切り替える（11/16） */
+  goDependents(): void {
+    this.setMode('dependents');
+    window.scrollTo({ top: 0 });
+  }
+
+  /** 次は給与の実績（同じ画面のまま） */
+  goPayrolls(): void {
+    this.setMode('payrolls');
     window.scrollTo({ top: 0 });
   }
 
@@ -102,6 +164,15 @@ export class EmployeeImport {
   readonly saving = signal(false);
   readonly progress = signal<{ done: number; total: number } | null>(null);
   readonly doneCount = signal<number | null>(null);
+  /** 同じページのまま ?kind= が変わったとき（扶養家族の「次は給与の実績」など）も区分を合わせる */
+  private readonly kindFollow = this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((q) => {
+    const want = q.get('kind');
+    if (want && want !== this.mode() && (IMPORT_MODES as readonly string[]).includes(want)) {
+      this.doneCount.set(null);
+      this.mode.set(want as ImportMode);
+    }
+  });
+
   /** 読んだのにまだ取り込んでいなければ、画面を離れる前に確かめる（11/17） */
   private readonly unsaved = watchUnsaved(() => (this.loaded() !== null || this.preview() !== null) && this.doneCount() === null);
   /** 従業員は登録できたが、マイナンバーを保管できなかった人数 */

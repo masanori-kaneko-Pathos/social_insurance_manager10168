@@ -1,55 +1,49 @@
-<a class="back" [routerLink]="['/o', context.current()?.id, 'payrolls']">
-  ← {{ 'payroll.listTitle' | transloco }}
-</a>
-
-<div class="page-head">
-  <h1>{{ 'payrollCsv.title' | transloco }}</h1>
-  <p class="lead">{{ 'payrollCsv.lead' | transloco }}</p>
-</div>
-
+<!-- 給与の実績（ファイルの取り込みのページの1区分。11/17） -->
 @if (!context.isAdmin()) {
   <div class="alert alert-warning">{{ 'payrollCsv.adminOnly' | transloco }}</div>
 } @else if (loading()) {
   <p class="muted">{{ 'common.loading' | transloco }}</p>
 } @else {
-  <!-- ===== 1. 書き出し ===== -->
   <section class="card">
-    <h2>{{ 'payrollCsv.export.title' | transloco }}</h2>
-    <p class="sub">{{ 'payrollCsv.export.lead' | transloco }}</p>
-    <div class="range">
-      <label>
-        {{ 'payrollCsv.export.from' | transloco }}
-        <input type="month" class="input" [(ngModel)]="from" />
-      </label>
-      <span>〜</span>
-      <label>
-        {{ 'payrollCsv.export.to' | transloco }}
-        <input type="month" class="input" [(ngModel)]="to" />
-      </label>
-      <span class="quick">
-        <button type="button" class="link" (click)="setRange(1)">{{ 'payrollCsv.export.last1' | transloco }}</button>
-        <button type="button" class="link" (click)="setRange(3)">{{ 'payrollCsv.export.last3' | transloco }}</button>
-        <button type="button" class="link" (click)="setRange(12)">{{ 'payrollCsv.export.last12' | transloco }}</button>
-      </span>
-      <button type="button" class="btn btn-primary" (click)="exportCsv()">
-        {{ 'payrollCsv.export.button' | transloco }}
-      </button>
-    </div>
-    @if (exportErrorKey(); as key) {
-      <div class="alert alert-danger">{{ key | transloco }}</div>
-    }
-    <p class="sub">{{ 'payrollCsv.export.hint' | transloco }}</p>
-  </section>
-
-  <!-- ===== 2. 取り込み ===== -->
-  <section class="card">
-    <h2>{{ 'payrollCsv.import.title' | transloco }}</h2>
-    <p class="sub">{{ 'payrollCsv.import.lead' | transloco }}</p>
-    <label class="btn file">
-      {{ 'payrollCsv.import.choose' | transloco }}
-      <input type="file" [accept]="accept" (change)="onFile($event)" [disabled]="saving()" />
-    </label>
-    <p class="sub">{{ 'importMap.fileHint' | transloco }}</p>
+    <!-- ファイルを選ぶ・ひな形（＝期間を選んで出力）・列の書き方を1行に（どの区分も同じ。11/17） -->
+    <app-import-picker
+      [accept]="accept"
+      [busy]="saving()"
+      templateKey="payrollCsv.export.drawer"
+      [templateDrawer]="true"
+      (picked)="onFile($event)"
+    >
+      <div template>
+        <p>{{ 'payrollCsv.export.lead' | transloco }}</p>
+        <div class="range">
+          <label>
+            {{ 'payrollCsv.export.from' | transloco }}
+            <input type="month" class="input" [(ngModel)]="from" />
+          </label>
+          <span>〜</span>
+          <label>
+            {{ 'payrollCsv.export.to' | transloco }}
+            <input type="month" class="input" [(ngModel)]="to" />
+          </label>
+          <span class="quick">
+            <button type="button" class="link" (click)="setRange(1)">{{ 'payrollCsv.export.last1' | transloco }}</button>
+            <button type="button" class="link" (click)="setRange(3)">{{ 'payrollCsv.export.last3' | transloco }}</button>
+            <button type="button" class="link" (click)="setRange(12)">{{ 'payrollCsv.export.last12' | transloco }}</button>
+          </span>
+          <button type="button" class="btn" (click)="exportCsv()">
+            {{ 'payrollCsv.export.button' | transloco }}
+          </button>
+        </div>
+        @if (exportErrorKey(); as key) {
+          <div class="alert alert-danger">{{ key | transloco }}</div>
+        }
+        <p class="sub">{{ 'payrollCsv.export.hint' | transloco }}</p>
+      </div>
+      <div columns>
+        <p>{{ 'payrollCsv.lead' | transloco }}</p>
+        <p>{{ 'payrollCsv.import.columnsHint' | transloco: { cols: headersJa } }}</p>
+      </div>
+    </app-import-picker>
 
     @if (errorKey(); as key) {
       <div class="alert alert-danger">{{ key | transloco }}</div>
@@ -155,6 +149,15 @@
               [busy]="saving()"
               (fixed)="onFix($event)"
             />
+
+            <div class="actions top">
+              <button type="button" class="btn" (click)="clear()" [disabled]="saving()">
+                {{ 'common.cancel' | transloco }}
+              </button>
+              <button type="button" class="btn btn-primary" (click)="importCsv()" [disabled]="!canImport()">
+                {{ 'payrollCsv.import.button' | transloco: { c: pv.created.length, u: pv.updated.length } }}
+              </button>
+            </div>
           }
           @if (writes().length > 0) {
             <div class="table-wrap scroll">
@@ -196,14 +199,6 @@
             <p class="muted">{{ 'payrollCsv.import.nothing' | transloco }}</p>
           }
 
-          <div class="actions">
-            <button type="button" class="btn" (click)="clear()" [disabled]="saving()">
-              {{ 'common.cancel' | transloco }}
-            </button>
-            <button type="button" class="btn btn-primary" (click)="importCsv()" [disabled]="!canImport()">
-              {{ 'payrollCsv.import.button' | transloco: { c: pv.created.length, u: pv.updated.length } }}
-            </button>
-          </div>
         }
       </div>
     }

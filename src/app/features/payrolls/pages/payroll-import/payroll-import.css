@@ -188,6 +188,11 @@ td.mono {
   margin-top: var(--space-md);
 }
 
+/* 取り込むボタンは表の上（どの区分も同じ。11/17） */
+.actions.top {
+  margin: var(--space-sm) 0;
+}
+
 .hint {
   margin: var(--space-md) 0 0;
   padding-left: 1.2em;

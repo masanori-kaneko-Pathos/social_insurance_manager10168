@@ -5,7 +5,7 @@
         <button type="button" class="btn" [disabled]="exporting() || loading() || exportCount() === 0" [title]="'employee.list.exportNote' | transloco" (click)="exportCsv()">
           {{ (exporting() ? 'employee.list.exporting' : 'employee.list.export') | transloco: { n: exportCount() } }}
         </button>
-        <a class="btn" routerLink="import">{{ 'employee.list.import' | transloco }}</a>
+        <a class="btn" routerLink="../import" [queryParams]="{ kind: 'employees', from: 'employees' }">{{ 'employee.list.import' | transloco }}</a>
         <a class="btn btn-primary" routerLink="new">{{ 'employee.list.add' | transloco }}</a>
       </span>
     }
@@ -155,7 +155,7 @@
       @if (context.isAdmin()) {
         <span class="head-actions">
           <a class="btn btn-primary" routerLink="new">{{ 'employee.list.add' | transloco }}</a>
-          <a class="btn" routerLink="import">{{ 'employee.list.import' | transloco }}</a>
+          <a class="btn" routerLink="../import" [queryParams]="{ kind: 'employees', from: 'employees' }">{{ 'employee.list.import' | transloco }}</a>
         </span>
       }
     </section>

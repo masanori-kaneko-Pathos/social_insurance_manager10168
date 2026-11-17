@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { ImportPicker } from '../../../../shared/components/import-picker/import-picker';
 import { ImportFix, ImportIssue, ImportIssues } from '../../../../shared/components/import-issues/import-issues';
 import { applyRowValues } from '../../../../shared/import/row-fix';
 import { ColumnMapper } from '../../../../shared/components/column-mapper/column-mapper';
@@ -48,7 +49,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-history-import',
-  imports: [ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
+  imports: [ImportPicker, ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
   templateUrl: './history-import.html',
   styleUrl: '../../pages/employee-import/employee-import.css',
 })
@@ -133,7 +134,8 @@ export class HistoryImport {
     this.reset();
   }
 
-  private reset(): void {
+  private reset(): void {
+
     this.skipErrors.set(false);
     this.loaded.set(null);
     this.mapping.set(false);

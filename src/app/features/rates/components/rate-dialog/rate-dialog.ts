@@ -89,7 +89,7 @@ export class RateDialog implements OnInit {
   readonly loading = signal(true);
   readonly loadError = signal(false);
   private readonly master = signal<MasterRateDoc[]>([]);
-  private readonly kumiaiAll = signal<KumiaiRateInput[]>([]);
+  readonly kumiaiAll = signal<KumiaiRateInput[]>([]);
 
   readonly isKumiai = computed(() => this.target().insurer.type === 'kumiai');
   readonly editable = computed(() => this.canEdit() && this.isKumiai());

@@ -35,7 +35,7 @@
             <strong>{{ 'home.steps.' + s.key + '.title' | transloco: monthParts(payMonth()) }}</strong>
             <span class="sub">{{ 'home.steps.' + s.key + '.body' | transloco }}</span>
           </div>
-          <a class="btn btn-small" [class.btn-primary]="!s.done" [routerLink]="s.link">
+          <a class="btn btn-small" [class.btn-primary]="!s.done" [routerLink]="s.link" [queryParams]="s.params ?? null">
             {{ (s.done ? 'home.steps.again' : 'home.steps.go') | transloco }}
           </a>
         </li>
@@ -74,7 +74,7 @@
         <p class="lead">{{ 'home.import.exportLead' | transloco }}</p>
         <div class="choices">
           @for (c of exportChoices(); track c.key) {
-            <a class="choice" [routerLink]="c.link" (click)="closeImport()">
+            <a class="choice" [routerLink]="c.link" [queryParams]="c.params ?? null" (click)="closeImport()">
               <app-icon [name]="c.icon" />
               <span class="choice-text">
                 <strong>{{ 'home.export.' + c.key + '.title' | transloco }}</strong>

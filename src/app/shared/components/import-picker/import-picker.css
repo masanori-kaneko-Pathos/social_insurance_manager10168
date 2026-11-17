@@ -1,0 +1,64 @@
+/* 取り込みのファイルを選ぶ行（11/17） */
+:host {
+  display: block;
+}
+
+.picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+}
+
+.file {
+  position: relative;
+  overflow: hidden;
+}
+
+.file input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.file.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+button.link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-sm);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.caret {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 0.8em;
+  transition: transform 0.15s;
+}
+
+.caret.open {
+  transform: rotate(90deg);
+}
+
+.hint {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.drawer {
+  margin-top: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-left: 3px solid var(--color-border);
+  font-size: var(--font-sm);
+}

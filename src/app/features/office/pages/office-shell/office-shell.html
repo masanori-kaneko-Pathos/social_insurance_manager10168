@@ -134,6 +134,14 @@
     </a>
 
     <span class="nav-sep" aria-hidden="true"></span>
+    <!-- ファイルの取り込み（区分を選んで取り込む。11/17） -->
+    <a
+      [routerLink]="['/o', officeId(), 'import']"
+      routerLinkActive="active"
+      [attr.title]="navCollapsed() ? ('nav.import' | transloco) : null"
+    >
+      <app-icon name="download" /><span class="label">{{ 'nav.import' | transloco }}</span>
+    </a>
     <a
       [routerLink]="['/o', officeId(), 'settings']"
       routerLinkActive="active"

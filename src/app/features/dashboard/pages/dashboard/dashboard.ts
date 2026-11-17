@@ -80,6 +80,7 @@ interface StartStep {
   key: 'employees' | 'payroll' | 'premiums';
   icon: IconName;
   link: (string | number)[];
+  params?: Record<string, string>;
   done: boolean;
 }
 
@@ -290,8 +291,8 @@ export class Dashboard {
   readonly startSteps = computed<StartStep[]>(() => {
     const o = ['/o', this.office()?.id ?? ''];
     return [
-      { key: 'employees', icon: 'people', link: [...o, 'employees', 'import'], done: this.employees().length > 0 },
-      { key: 'payroll', icon: 'payroll', link: [...o, 'payrolls', 'import'], done: (this.payrollCount() ?? 0) > 0 },
+      { key: 'employees', icon: 'people', link: [...o, 'import'], params: { kind: 'employees', from: 'home' }, done: this.employees().length > 0 },
+      { key: 'payroll', icon: 'payroll', link: [...o, 'import'], params: { kind: 'payrolls', from: 'home' }, done: (this.payrollCount() ?? 0) > 0 },
       { key: 'premiums', icon: 'premium', link: [...o, 'premiums'], done: false },
     ];
   });
@@ -325,10 +326,10 @@ export class Dashboard {
   readonly importChoices = computed<ImportChoice[]>(() => {
     const o = ['/o', this.office()?.id ?? ''];
     return [
-      { key: 'employees', icon: 'people', link: [...o, 'employees', 'import'] },
-      { key: 'dependents', icon: 'people', link: [...o, 'employees', 'import'], params: { mode: 'dependents' } },
-      { key: 'history', icon: 'revision', link: [...o, 'employees', 'import'], params: { mode: 'contract' } },
-      { key: 'payrolls', icon: 'payroll', link: [...o, 'payrolls', 'import'] },
+      { key: 'employees', icon: 'people', link: [...o, 'import'], params: { kind: 'employees', from: 'home' } },
+      { key: 'dependents', icon: 'people', link: [...o, 'import'], params: { kind: 'dependents', from: 'home' } },
+      { key: 'history', icon: 'revision', link: [...o, 'import'], params: { kind: 'contract', from: 'home' } },
+      { key: 'payrolls', icon: 'payroll', link: [...o, 'import'], params: { kind: 'payrolls', from: 'home' } },
       { key: 'bonus', icon: 'bonus', link: [...o, 'bonuses', 'new'] },
     ];
   });
@@ -339,9 +340,9 @@ export class Dashboard {
     return [
       { key: 'employees', icon: 'people', link: [...o, 'employees'] },
       { key: 'premiums', icon: 'premium', link: [...o, 'premiums'] },
-      { key: 'payrolls', icon: 'payroll', link: [...o, 'payrolls', 'import'] },
+      { key: 'payrolls', icon: 'payroll', link: [...o, 'import'], params: { kind: 'payrolls', from: 'home' } },
       { key: 'filings', icon: 'filing', link: [...o, 'filings'] },
-      { key: 'myNumbers', icon: 'admin', link: [...o, 'employees', 'import'] },
+      { key: 'myNumbers', icon: 'admin', link: [...o, 'import'], params: { kind: 'myNumber', from: 'home' } },
     ];
   });
 

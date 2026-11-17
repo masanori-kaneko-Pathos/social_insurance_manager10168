@@ -121,7 +121,8 @@ progress {
 /* 何を取り込むか（従業員／契約の履歴／標準報酬の履歴） */
 .segmented.mode {
   display: inline-flex;
-  margin-bottom: var(--space-md);
+  flex-wrap: wrap; /* 区分が8つ。狭い画面では折り返す（11/17） */
+  margin: var(--space-md) 0 var(--space-xs);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
   overflow: hidden;
@@ -162,7 +163,7 @@ progress {
 }
 
 .actions.top {
-  margin: 0 0 var(--space-sm);
+  margin: var(--space-sm) 0;
 }
 
 /* ===== エラーを画面で直す（11/13） ===== */

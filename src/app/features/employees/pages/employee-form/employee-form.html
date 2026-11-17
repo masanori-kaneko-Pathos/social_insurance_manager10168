@@ -3,7 +3,7 @@
   <h1>{{ (isEdit ? 'employee.form.titleEdit' : 'employee.form.titleNew') | transloco }}</h1>
   <!-- 何人もまとめて入れるなら、ファイルから（11/12） -->
   @if (!isEdit) {
-    <a class="btn" routerLink="../import">{{ 'employee.form.toImport' | transloco }}</a>
+    <a class="btn" [routerLink]="['/o', context.current()?.id, 'import']" [queryParams]="{ kind: 'employees', from: 'employees' }">{{ 'employee.form.toImport' | transloco }}</a>
   }
 </div>
 

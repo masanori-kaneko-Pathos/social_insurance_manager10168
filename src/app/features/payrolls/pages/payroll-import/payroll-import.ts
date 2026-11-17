@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { ImportPicker } from '../../../../shared/components/import-picker/import-picker';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
 import { Payroll } from '../../../../core/models/payroll';
@@ -66,7 +67,7 @@ interface Preview {
 
 @Component({
   selector: 'app-payroll-import',
-  imports: [ColumnMapper, HalfWidthDigits, ImportIssues, RouterLink, TranslocoPipe, FormsModule],
+  imports: [ImportPicker, ColumnMapper, HalfWidthDigits, ImportIssues, RouterLink, TranslocoPipe, FormsModule],
   templateUrl: './payroll-import.html',
   styleUrl: './payroll-import.css',
 })

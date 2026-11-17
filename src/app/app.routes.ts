@@ -116,7 +116,17 @@ export const routes: Routes = withUnsavedGuard([
               ),
           },
           {
+            // ファイルの取り込み（区分を選ぶ → ファイル → 取り込む。?kind=…&from=…。11/17）
+            path: 'import',
+            loadComponent: () =>
+              import('./features/employees/pages/employee-import/employee-import').then(
+                (m) => m.EmployeeImport,
+              ),
+          },
+          {
+            // 古い URL：同じページを、区分と戻り先を決めて開く
             path: 'employees/import',
+            data: { kind: 'employees', from: 'employees' },
             loadComponent: () =>
               import('./features/employees/pages/employee-import/employee-import').then(
                 (m) => m.EmployeeImport,
@@ -178,10 +188,12 @@ export const routes: Routes = withUnsavedGuard([
               ),
           },
           {
+            // 古い URL：ファイルの取り込みのページを、給与の実績を選んで開く（11/17）
             path: 'payrolls/import',
+            data: { kind: 'payrolls', from: 'payrolls' },
             loadComponent: () =>
-              import('./features/payrolls/pages/payroll-import/payroll-import').then(
-                (m) => m.PayrollImport,
+              import('./features/employees/pages/employee-import/employee-import').then(
+                (m) => m.EmployeeImport,
               ),
           },
           {

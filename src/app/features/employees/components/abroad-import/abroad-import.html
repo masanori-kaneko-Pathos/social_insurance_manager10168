@@ -1,19 +1,11 @@
 <section class="card">
-  <h2>{{ 'employeeCsv.step1' | transloco }}</h2>
-  <p class="sub">{{ 'abroadCsv.lead.' + kind() | transloco }}</p>
-  <button type="button" class="btn" (click)="downloadTemplate()">{{ 'employeeCsv.template' | transloco }}</button>
-  <details class="columns">
-    <summary>{{ 'employeeCsv.columnsTitle' | transloco }}</summary>
-    <p class="sub">{{ 'abroadCsv.columns.' + kind() | transloco }}</p>
-  </details>
-</section>
-
-<section class="card">
-  <h2>{{ 'employeeCsv.step2' | transloco }}</h2>
-  <label class="btn file">
-    {{ 'employeeCsv.choose' | transloco }}
-    <input type="file" accept=".csv,.tsv,.txt,.xlsx,.xls,text/csv" (change)="onFile($event)" [disabled]="saving()" />
-  </label>
+  <!-- ファイルを選ぶ・ひな形・列の書き方を1行に（どの区分も同じ。11/17） -->
+  <app-import-picker accept=".csv,.tsv,.txt,.xlsx,.xls,text/csv" hintKey="abroadCsv.fileHint" [busy]="saving()" (picked)="onFile($event)" (template)="downloadTemplate()">
+    <div columns>
+      <p>{{ 'abroadCsv.lead.' + kind() | transloco }}</p>
+      <p>{{ 'abroadCsv.columns.' + kind() | transloco }}</p>
+    </div>
+  </app-import-picker>
 
   @if (errorKey(); as key) {
     <div class="alert alert-danger">{{ key | transloco }}</div>
@@ -55,6 +47,13 @@
         (fixed)="onFix($event)"
       />
 
+      <div class="actions top">
+        <button type="button" class="btn" [disabled]="saving()" (click)="clear()">{{ 'common.cancel' | transloco }}</button>
+        <button type="button" class="btn btn-primary" [disabled]="!canImport()" (click)="importCsv()">
+          {{ 'abroadCsv.import' | transloco: { n: addRows().length } }}
+        </button>
+      </div>
+
       <div class="table-wrap scroll">
         <table class="table">
           <thead>
@@ -93,12 +92,6 @@
         </table>
       </div>
 
-      <div class="actions">
-        <button type="button" class="btn" [disabled]="saving()" (click)="clear()">{{ 'common.cancel' | transloco }}</button>
-        <button type="button" class="btn btn-primary" [disabled]="!canImport()" (click)="importCsv()">
-          {{ 'abroadCsv.import' | transloco: { n: addRows().length } }}
-        </button>
-      </div>
     }
   }
 </section>

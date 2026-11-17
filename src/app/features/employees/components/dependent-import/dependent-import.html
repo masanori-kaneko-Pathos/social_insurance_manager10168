@@ -1,20 +1,11 @@
 <section class="card">
-  <h2>{{ 'employeeCsv.step1' | transloco }}</h2>
-  <p class="sub">{{ 'dependentCsv.lead' | transloco }}</p>
-  <button type="button" class="btn" (click)="downloadTemplate()">{{ 'employeeCsv.template' | transloco }}</button>
-  <details class="columns">
-    <summary>{{ 'employeeCsv.columnsTitle' | transloco }}</summary>
-    <p class="sub">{{ 'dependentCsv.columnsHint' | transloco }}</p>
-  </details>
-</section>
-
-<section class="card">
-  <h2>{{ 'employeeCsv.step2' | transloco }}</h2>
-  <label class="btn file">
-    {{ 'employeeCsv.choose' | transloco }}
-    <input type="file" [accept]="accept" (change)="onFile($event)" [disabled]="saving()" />
-  </label>
-  <p class="sub">{{ 'importMap.fileHint' | transloco }}</p>
+  <!-- ファイルを選ぶ・ひな形・列の書き方を1行に（どの区分も同じ。11/17） -->
+  <app-import-picker [accept]="accept" [busy]="saving()" (picked)="onFile($event)" (template)="downloadTemplate()">
+    <div columns>
+      <p>{{ 'dependentCsv.lead' | transloco }}</p>
+      <p>{{ 'dependentCsv.columnsHint' | transloco }}</p>
+    </div>
+  </app-import-picker>
 
   @if (errorKey(); as key) {
     <div class="alert alert-danger">{{ key | transloco }}</div>
@@ -25,7 +16,7 @@
       <a [routerLink]="['/o', context.current()?.id, 'employees']">{{ 'employeeCsv.toList' | transloco }}</a>
       <span class="next-steps">
         {{ 'common.next' | transloco }}
-        <a [routerLink]="['/o', context.current()?.id, 'payrolls', 'import']">{{ 'employeeCsv.nextPayrolls' | transloco }} ›</a>
+        <a [routerLink]="['/o', context.current()?.id, 'import']" [queryParams]="{ kind: 'payrolls' }" queryParamsHandling="merge">{{ 'employeeCsv.nextPayrolls' | transloco }} ›</a>
       </span>
     </div>
   }
@@ -109,13 +100,6 @@
           }
         </tbody>
       </table>
-    </div>
-
-    <div class="actions">
-      <button type="button" class="btn" [disabled]="saving()" (click)="clear()">{{ 'common.cancel' | transloco }}</button>
-      <button type="button" class="btn btn-primary" [disabled]="!canImport()" (click)="importCsv()">
-        {{ 'dependentCsv.import' | transloco: { n: addRows().length } }}
-      </button>
     </div>
   }
 </section>

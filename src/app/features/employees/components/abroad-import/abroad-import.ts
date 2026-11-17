@@ -1,6 +1,7 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { ImportPicker } from '../../../../shared/components/import-picker/import-picker';
 import { ImportFix, ImportIssue, ImportIssues } from '../../../../shared/components/import-issues/import-issues';
 import { Employee } from '../../../../core/models/employee';
 import { CsvEncoding, downloadCsv } from '../../../../shared/csv/csv';
@@ -38,7 +39,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-abroad-import',
-  imports: [ImportIssues, RouterLink, TranslocoPipe],
+  imports: [ImportPicker, ImportIssues, RouterLink, TranslocoPipe],
   templateUrl: './abroad-import.html',
   styleUrl: '../../pages/employee-import/employee-import.css',
 })

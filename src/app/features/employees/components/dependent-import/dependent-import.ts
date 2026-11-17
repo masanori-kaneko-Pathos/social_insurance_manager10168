@@ -22,6 +22,7 @@ import {
 } from '../../logic/dependent-csv';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { applyRowValues } from '../../../../shared/import/row-fix';
+import { ImportPicker } from '../../../../shared/components/import-picker/import-picker';
 import { ImportFix, ImportIssue, ImportIssues } from '../../../../shared/components/import-issues/import-issues';
 import { TranslocoService } from '@jsverse/transloco';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
@@ -44,7 +45,7 @@ const PARALLEL = 8;
  */
 @Component({
   selector: 'app-dependent-import',
-  imports: [ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
+  imports: [ImportPicker, ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
   templateUrl: './dependent-import.html',
   styleUrl: '../../pages/employee-import/employee-import.css',
 })

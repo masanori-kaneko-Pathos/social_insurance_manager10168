@@ -1,21 +1,22 @@
-<a class="back" [routerLink]="['/o', context.current()?.id, 'employees']"
-  >← {{ 'employee.list.title' | transloco }}</a
->
+<!-- ファイルの取り込み（11/17）：区分を選ぶ → ファイルを選ぶ → 取り込む。保存したあともこのページに残る -->
+@if (back; as b) {
+  <a class="back" [routerLink]="['/o', context.current()?.id].concat(b.path)">← {{ b.label | transloco }}</a>
+}
 
-<h1>{{ 'employeeCsv.title' | transloco }}</h1>
-<p class="lead">{{ (mode() === 'employees' ? 'employeeCsv.lead' : mode() === 'dependents' ? 'dependentCsv.pageLead' : mode() === 'certificate' || mode() === 'overseas' ? 'abroadCsv.pageLead' : 'historyCsv.pageLead') | transloco }}</p>
+<h1>{{ 'importPage.title' | transloco }}</h1>
 
 @if (!context.isAdmin()) {
   <div class="alert alert-warning">{{ 'employeeCsv.adminOnly' | transloco }}</div>
 } @else {
-  <!-- 何を取り込むか（履歴は、登録済みの人に足す） -->
+  <!-- 何を取り込むか -->
   <div class="segmented mode" role="group" [attr.aria-label]="'historyCsv.modeLabel' | transloco">
     @for (m of modes; track m) {
-      <button type="button" [class.active]="mode() === m" [disabled]="saving()" (click)="mode.set(m)">
+      <button type="button" [class.active]="mode() === m" [attr.aria-pressed]="mode() === m" [disabled]="saving()" (click)="setMode(m)">
         {{ 'historyCsv.mode.' + m | transloco }}
       </button>
     }
   </div>
+  <p class="lead">{{ leadKey() | transloco }}</p>
 
   @if (mode() === 'employees' && noStandard()) {
     <div class="alert alert-warning">
@@ -28,28 +29,19 @@
     <app-dependent-import />
   } @else if (mode() === 'certificate' || mode() === 'overseas') {
     <app-abroad-import [kind]="mode() === 'certificate' ? 'certificate' : 'overseas'" />
-  } @else if (mode() !== 'employees') {
+  } @else if (mode() === 'contract' || mode() === 'remuneration') {
     <app-history-import [kind]="mode() === 'contract' ? 'contract' : 'remuneration'" />
-  } @else {
+  } @else if (mode() === 'payrolls') {
+    <app-payroll-import />
+  } @else if (mode() === 'employees') {
   <section class="card">
-    <h2>{{ 'employeeCsv.step1' | transloco }}</h2>
-    <p class="sub">{{ 'employeeCsv.templateHint' | transloco }}</p>
-    <button type="button" class="btn" (click)="downloadTemplate()">
-      {{ 'employeeCsv.template' | transloco }}
-    </button>
-    <details class="columns">
-      <summary>{{ 'employeeCsv.columnsTitle' | transloco }}</summary>
-      <p class="sub">{{ 'employeeCsv.columnsHint' | transloco }}</p>
-    </details>
-  </section>
-
-  <section class="card">
-    <h2>{{ 'employeeCsv.step2' | transloco }}</h2>
-    <label class="btn file">
-      {{ 'employeeCsv.choose' | transloco }}
-      <input type="file" [accept]="accept" (change)="onFile($event)" [disabled]="saving()" />
-    </label>
-    <p class="sub">{{ 'importMap.fileHint' | transloco }}</p>
+    <!-- ファイルを選ぶ・ひな形・列の書き方を1行に（どの区分も同じ。11/17） -->
+    <app-import-picker [accept]="accept" [busy]="saving()" (picked)="onFile($event)" (template)="downloadTemplate()">
+      <div columns>
+        <p>{{ 'employeeCsv.templateHint' | transloco }}</p>
+        <p>{{ 'employeeCsv.columnsHint' | transloco }}</p>
+      </div>
+    </app-import-picker>
 
     @if (errorKey(); as key) {
       <div class="alert alert-danger">{{ key | transloco }}</div>
@@ -64,7 +56,7 @@
         <span class="next-steps">
           {{ 'common.next' | transloco }}
           <button type="button" class="link" (click)="goDependents()">{{ 'employeeCsv.nextDependents' | transloco }} ›</button>
-          <a [routerLink]="['/o', context.current()?.id, 'payrolls', 'import']">{{ 'employeeCsv.nextPayrolls' | transloco }} ›</a>
+          <button type="button" class="link" (click)="goPayrolls()">{{ 'employeeCsv.nextPayrolls' | transloco }} ›</button>
         </span>
       </div>
     }
@@ -259,41 +251,50 @@
           </table>
         </div>
       }
-
-      <div class="actions">
-        <button type="button" class="btn" (click)="clear()" [disabled]="saving()">
-          {{ 'common.cancel' | transloco }}
-        </button>
-        <button
-          type="button"
-          class="btn btn-primary"
-          (click)="importCsv()"
-          [disabled]="!canImport()"
-        >
-          {{ 'employeeCsv.import' | transloco: { n: pv.plan.items.length } }}
-        </button>
-      </div>
     }
   </section>
-
-  <!-- マイナンバーの書き出し（登録済みの人。パスワードで確かめ直してから。書き出したことは記録に残る） -->
+  } @else if (mode() === 'myNumber') {
+  <!-- マイナンバー（登録済みの従業員へ。書き出しはパスワードで確かめ直してから。どちらも記録に残る） -->
   <section class="card">
-    <h2>{{ 'myNumber.export.title' | transloco }}</h2>
+    <app-import-picker
+      [accept]="accept"
+      [busy]="numberSaving()"
+      templateKey="myNumber.export.subtitle"
+      [templateDrawer]="true"
+      (picked)="onNumberFile($event)"
+    >
+      <div template>
+        <p>{{ 'myNumber.export.lead' | transloco }}</p>
+        @if (exportOpen()) {
+          <app-password-gate action="myNumber.export.button" (confirmed)="exportMyNumbers()" (cancelled)="exportOpen.set(false)" />
+        } @else {
+          <button type="button" class="btn" [disabled]="exporting()" (click)="exportOpen.set(true)">
+            {{ 'myNumber.export.button' | transloco }}
+          </button>
+        }
+        @if (exportError(); as e) {
+          <div class="alert alert-danger">{{ e | transloco }}</div>
+        }
+        @if (exportDone() !== null) {
+          <p class="sub" role="status">{{ 'myNumber.export.done' | transloco: { n: exportDone() } }}</p>
+        }
+      </div>
+      <div columns>
+        <p>{{ 'myNumber.import.lead' | transloco }}</p>
+      </div>
+    </app-import-picker>
 
-    <!-- 取り込み：登録済みの従業員へ（社員番号とマイナンバーの列） -->
-    <h3>{{ 'myNumber.import.title' | transloco }}</h3>
-    <p class="sub">{{ 'myNumber.import.lead' | transloco }}</p>
-    <label class="btn file">
-      {{ 'employeeCsv.choose' | transloco }}
-      <input type="file" [accept]="accept" (change)="onNumberFile($event)" [disabled]="numberSaving()" />
-    </label>
     @if (numberError(); as e) {
       <div class="alert alert-danger">{{ e | transloco }}</div>
     }
     @if (numberDone() !== null) {
-      <div class="alert alert-success">{{ 'myNumber.import.done' | transloco: { n: numberDone() } }}</div>
+      <div class="alert alert-success">
+        {{ 'myNumber.import.done' | transloco: { n: numberDone() } }}
+        <a [routerLink]="['/o', context.current()?.id, 'employees']">{{ 'employeeCsv.toList' | transloco }}</a>
+      </div>
     }
     @if (numberRead(); as r) {
+      <p class="file-name">{{ r.fileName }}</p>
       @if (r.missing.length > 0) {
         <div class="alert alert-danger">{{ 'myNumber.import.missing' | transloco }}</div>
       } @else {
@@ -305,28 +306,13 @@
             }
           </ul>
         }
-        <button type="button" class="btn btn-solid" [disabled]="numberSaving() || r.items.length === 0" (click)="saveNumbers()">
-          {{ 'myNumber.import.button' | transloco: { n: r.items.length } }}
-        </button>
-        <button type="button" class="btn" (click)="numberRead.set(null)">{{ 'common.cancel' | transloco }}</button>
+        <div class="actions top">
+          <button type="button" class="btn" [disabled]="numberSaving()" (click)="numberRead.set(null)">{{ 'common.cancel' | transloco }}</button>
+          <button type="button" class="btn btn-primary" [disabled]="numberSaving() || r.items.length === 0" (click)="saveNumbers()">
+            {{ 'myNumber.import.button' | transloco: { n: r.items.length } }}
+          </button>
+        </div>
       }
-    }
-
-    <!-- 書き出し -->
-    <h3>{{ 'myNumber.export.subtitle' | transloco }}</h3>
-    <p class="sub">{{ 'myNumber.export.lead' | transloco }}</p>
-    @if (exportOpen()) {
-      <app-password-gate action="myNumber.export.button" (confirmed)="exportMyNumbers()" (cancelled)="exportOpen.set(false)" />
-    } @else {
-      <button type="button" class="btn" [disabled]="exporting()" (click)="exportOpen.set(true)">
-        {{ 'myNumber.export.button' | transloco }}
-      </button>
-    }
-    @if (exportError(); as e) {
-      <div class="alert alert-danger">{{ e | transloco }}</div>
-    }
-    @if (exportDone() !== null) {
-      <p class="sub" role="status">{{ 'myNumber.export.done' | transloco: { n: exportDone() } }}</p>
     }
   </section>
   }

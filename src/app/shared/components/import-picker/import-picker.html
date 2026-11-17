@@ -1,0 +1,30 @@
+<div class="picker">
+  <label class="btn file" [class.disabled]="busy()">
+    {{ 'employeeCsv.choose' | transloco }}
+    <input type="file" [accept]="accept()" [disabled]="busy()" (change)="picked.emit($event)" />
+  </label>
+  @if (templateKey(); as key) {
+    <button
+      type="button"
+      class="link"
+      [attr.aria-expanded]="templateDrawer() ? open() === 'template' : null"
+      (click)="onTemplate()"
+    >
+      {{ key | transloco }}@if (templateDrawer()) {<span class="caret" [class.open]="open() === 'template'">▸</span>}
+    </button>
+  }
+  @if (columns()) {
+    <button type="button" class="link" [attr.aria-expanded]="open() === 'columns'" (click)="toggle('columns')">
+      {{ 'employeeCsv.columnsTitle' | transloco }}<span class="caret" [class.open]="open() === 'columns'">▸</span>
+    </button>
+  }
+</div>
+<p class="hint">{{ hintKey() | transloco }}</p>
+
+<!-- 開いたときの中身（親から差し込む。閉じている間は隠すだけ） -->
+<div class="drawer" [hidden]="open() !== 'template'">
+  <ng-content select="[template]" />
+</div>
+<div class="drawer" [hidden]="open() !== 'columns'">
+  <ng-content select="[columns]" />
+</div>
