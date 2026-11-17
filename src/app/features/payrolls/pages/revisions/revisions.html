@@ -183,6 +183,14 @@
     @if (v.group === 'other') {
       <p class="why">{{ 'revision.status.' + v.item.result.status | transloco }}</p>
     }
+    @if (canDismiss(v)) {
+      <div class="actions dismiss">
+        <button type="button" class="btn btn-small" (click)="dismiss(v)">{{ 'wageChange.dismiss' | transloco }}</button>
+        <span class="hint">{{ 'wageChange.dismissHint' | transloco }}</span>
+      </div>
+    } @else if (isManual(v) && v.group !== 'reflected') {
+      <p class="hint">{{ 'wageChange.manualHint' | transloco }}</p>
+    }
     @if (v.group === 'waiting') {
       <p class="why">{{ 'revision.waiting' | transloco: { n: missingOf(v) } }}</p>
     }
@@ -224,6 +232,9 @@
 
   <!-- 特例改定（令和9年1月から。本人の申出が要るので、候補には出さず担当者が登録する。11/16） -->
   <app-special-revision-card [people]="specialPeople()" [gradeTables]="gradeTables()" (saved)="reload()" />
+
+  <!-- 固定的賃金の変動を、人が足す・外す（B11。11/17） -->
+  <app-wage-change-card [employees]="wageEmployees()" [rows]="wageRows()" [fromMonth]="fromMonth" (saved)="reload()" />
 
   @if (g.waiting.length > 0) {
     <section class="card">

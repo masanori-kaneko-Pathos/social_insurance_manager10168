@@ -1,0 +1,110 @@
+<section class="card">
+  <h2>{{ 'wageChange.title' | transloco }}</h2>
+  <p class="hint">{{ 'wageChange.lead' | transloco }}</p>
+
+  @if (errorKey(); as e) {
+    <div class="alert alert-danger" role="alert">{{ e | transloco }}</div>
+  }
+
+  @if (sorted().length === 0) {
+    <p class="muted">{{ 'wageChange.empty' | transloco }}</p>
+  } @else {
+    <table class="list">
+      <thead>
+        <tr>
+          <th>{{ 'wageChange.col.month' | transloco }}</th>
+          <th>{{ 'wageChange.col.employee' | transloco }}</th>
+          <th>{{ 'wageChange.col.what' | transloco }}</th>
+          <th>{{ 'wageChange.col.note' | transloco }}</th>
+          @if (context.isAdmin()) { <th></th> }
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of sorted(); track r.employee.id + r.change.month) {
+          <tr>
+            <td class="mono">{{ r.change.month }}</td>
+            <td>{{ name(r.employee) }}</td>
+            <td>
+              <span class="badge" [class.badge-muted]="r.change.source === 'dismissed'">{{ 'wageChange.source.' + r.change.source | transloco }}</span>
+              @if (r.change.source === 'manual') {
+                {{ 'wageChange.kind.' + r.change.kind | transloco }}・{{ 'revision.direction.' + r.change.direction | transloco }}
+              }
+            </td>
+            <td>{{ r.change.note ?? '' }}</td>
+            @if (context.isAdmin()) {
+              <td class="row-actions">
+                <button type="button" class="btn btn-small" [disabled]="busy()" (click)="remove(r)">
+                  {{ (confirmDelete() === r.employee.id + '_' + r.change.month ? 'wageChange.confirmUndo' : 'wageChange.undo') | transloco }}
+                </button>
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (context.isAdmin()) {
+    @if (!open()) {
+      <div class="actions">
+        <button type="button" class="btn" (click)="open.set(true)">＋ {{ 'wageChange.add' | transloco }}</button>
+      </div>
+    } @else {
+      <div class="form">
+        <div class="grid">
+          <div class="field">
+            <label for="wc-employee">{{ 'wageChange.field.employee' | transloco }}</label>
+            <select id="wc-employee" class="input" [value]="form().employeeId" (change)="set('employeeId', $any($event.target).value)" [class.is-invalid]="errorOf('employeeId')">
+              <option value="">{{ 'common.select' | transloco }}</option>
+              @for (e of choices(); track e.id) {
+                <option [value]="e.id">{{ e.employeeNumber ? e.employeeNumber + '　' : '' }}{{ name(e) }}</option>
+              }
+            </select>
+            @if (errorOf('employeeId'); as k) { <span class="field-error">{{ k | transloco }}</span> }
+          </div>
+          <div class="field">
+            <label for="wc-month">{{ 'wageChange.field.month' | transloco }}</label>
+            <input id="wc-month" class="input" type="month" [value]="form().month" [min]="fromMonth()" [max]="thisMonth"
+                   (change)="set('month', $any($event.target).value)" [class.is-invalid]="errorOf('month')" />
+            <span class="hint">{{ 'wageChange.hint.month' | transloco }}</span>
+            @if (errorOf('month'); as k) { <span class="field-error">{{ k | transloco: { from: fromMonth() } }}</span> }
+          </div>
+          <div class="field">
+            <label for="wc-kind">{{ 'wageChange.field.kind' | transloco }}</label>
+            <select id="wc-kind" class="input" [value]="form().kind" (change)="set('kind', $any($event.target).value)" [class.is-invalid]="errorOf('kind')">
+              <option value="">{{ 'common.select' | transloco }}</option>
+              @for (k of kinds; track k) {
+                <option [value]="k">{{ 'wageChange.kind.' + k | transloco }}</option>
+              }
+            </select>
+            @if (errorOf('kind'); as k) { <span class="field-error">{{ k | transloco }}</span> }
+          </div>
+          <fieldset class="field">
+            <legend>{{ 'wageChange.field.direction' | transloco }}</legend>
+            <div class="radios">
+              @for (d of directions; track d) {
+                <label class="radio">
+                  <input type="radio" name="wc-direction" [value]="d" [checked]="form().direction === d" (change)="set('direction', d)" />
+                  {{ 'revision.direction.' + d | transloco }}
+                </label>
+              }
+            </div>
+            @if (errorOf('direction'); as k) { <span class="field-error">{{ k | transloco }}</span> }
+          </fieldset>
+          <div class="field wide">
+            <label for="wc-note">{{ 'wageChange.field.note' | transloco }}</label>
+            <input id="wc-note" class="input" maxlength="200" [value]="form().note" (input)="set('note', $any($event.target).value)" />
+            @if (errorOf('note'); as k) { <span class="field-error">{{ k | transloco }}</span> }
+          </div>
+        </div>
+        @if (overwrites()) {
+          <p class="hint warn">{{ 'wageChange.overwrite' | transloco }}</p>
+        }
+        <div class="actions">
+          <button type="button" class="btn" (click)="open.set(false); tried.set(false)">{{ 'common.cancel' | transloco }}</button>
+          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="add()">{{ 'wageChange.save' | transloco }}</button>
+        </div>
+      </div>
+    }
+  }
+</section>

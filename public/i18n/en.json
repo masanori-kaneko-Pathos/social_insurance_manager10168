@@ -4114,5 +4114,59 @@
     },
     "consent": "Obtained the employee's written consent (statement and consent form)",
     "retro": "(excluding retroactive pay of {{n}} yen)"
+  },
+  "wageChange": {
+    "title": "Changes in fixed wages (added or removed by hand)",
+    "lead": "Start months for irregular revisions are found automatically from months where the fixed-wage amount changed. Changes that the amount alone cannot reveal, such as a new hourly or daily rate, a change in benefits in kind or in contract hours, are added here. Candidates are recalculated from the three months starting with the added month.",
+    "empty": "No changes have been added or removed by hand.",
+    "add": "Add a change in fixed wages",
+    "save": "Add",
+    "undo": "Undo",
+    "confirmUndo": "Really undo",
+    "overwrite": "There is already a record for this person and month. Adding will replace it.",
+    "dismiss": "Not a change in fixed wages (remove)",
+    "dismissHint": "Remove it when the amount changed only because of a correction or rounding. You can restore it from the list below.",
+    "manualHint": "This start month was added by hand. To undo it, use the list of changes in fixed wages below.",
+    "dismissed": "Removed. Candidates have been recalculated.",
+    "col": {
+      "month": "Start month",
+      "employee": "Employee",
+      "what": "Change",
+      "note": "Note"
+    },
+    "source": {
+      "manual": "Added",
+      "dismissed": "Removed"
+    },
+    "field": {
+      "employee": "Employee",
+      "month": "Start month (the first pay month that fully reflects the change)",
+      "kind": "What changed",
+      "direction": "Direction",
+      "note": "Note (optional)"
+    },
+    "hint": {
+      "month": "If the change took effect mid-month, count from the next pay month (the month of the change is partly prorated)."
+    },
+    "kind": {
+      "raise": "Raise",
+      "cut": "Pay cut",
+      "allowanceNew": "New allowance",
+      "allowanceEnd": "Allowance ended",
+      "unitPrice": "Unit rate change (hourly, daily, overtime rate, etc.)",
+      "contractHours": "Change in contract hours",
+      "inKind": "Change in benefits in kind",
+      "other": "Other"
+    },
+    "error": {
+      "employee": "Please choose an employee.",
+      "month": "Please choose the start month.",
+      "tooOld": "Months before {{from}} are not shown as candidates (about the two-year limitation).",
+      "future": "That pay month has not come yet.",
+      "kind": "Please choose what changed.",
+      "direction": "Please choose the direction.",
+      "note": "The note can be up to 200 characters.",
+      "save": "Could not save. Please try again later."
+    }
   }
 }

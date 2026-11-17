@@ -30,6 +30,7 @@ import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { withCapRevisions } from '../../../rates/logic/cap-revision';
 import { GradeTableDoc } from '../../../../core/models/rates';
 import { SpecialPerson, SpecialRevisionCard } from '../../components/special-revision-card/special-revision-card';
+import { WageChangeCard, WageChangeRow } from '../../components/wage-change-card/wage-change-card';
 
 interface View {
   key: string; // 行の目印（従業員ID・種類・起算月）
@@ -46,7 +47,7 @@ interface View {
  */
 @Component({
   selector: 'app-revisions',
-  imports: [NgTemplateOutlet, RouterLink, TranslocoPipe, SpecialRevisionCard],
+  imports: [NgTemplateOutlet, RouterLink, TranslocoPipe, SpecialRevisionCard, WageChangeCard],
   templateUrl: './revisions.html',
   styleUrl: './revisions.css',
 })
@@ -67,6 +68,9 @@ export class RevisionsPage {
   /** 特例改定のカードに渡す材料（同じ読み込みを使い回す。11/16） */
   readonly specialPeople = signal<SpecialPerson[]>([]);
   readonly gradeTables = signal<GradeTableDoc[]>([]);
+  /** 人が足した・外した固定的賃金の変動（B11）と、選べる人 */
+  readonly wageRows = signal<WageChangeRow[]>([]);
+  readonly wageEmployees = signal<Employee[]>([]);
   readonly loading = signal(true);
   readonly saving = signal<string | null>(null);
   readonly errorKey = signal<string | null>(null);
@@ -113,12 +117,13 @@ export class RevisionsPage {
       const employees = all.filter((e) => !e.retireDate || e.retireDate >= `${this.fromMonth}-01`);
       const perPerson = await Promise.all(
         employees.map(async (e) => {
-          const [payrolls, remunerations, contracts] = await Promise.all([
+          const [payrolls, remunerations, contracts, wageChanges] = await Promise.all([
             this.payrollApi.listOfEmployee(office.id, e.id),
             this.remunerationApi.list(office.id, e.id),
             this.contractApi.list(office.id, e.id),
+            this.api.wageChanges(office.id, e.id),
           ]);
-          return { e, payrolls, remunerations, contracts };
+          return { e, payrolls, remunerations, contracts, wageChanges };
         }),
       );
       const ctx = {
@@ -130,9 +135,11 @@ export class RevisionsPage {
       };
       const views: View[] = [];
       const special: SpecialPerson[] = [];
-      for (const { e, payrolls, remunerations, contracts } of perPerson) {
+      const wageRows: WageChangeRow[] = [];
+      for (const { e, payrolls, remunerations, contracts, wageChanges } of perPerson) {
         const byMonth = new Map(payrolls.map((p: Payroll): [string, Payroll] => [p.paidMonth, p]));
-        const items = revisionItems({ employee: e, contracts, payrolls: byMonth, remunerations }, ctx);
+        const items = revisionItems({ employee: e, contracts, payrolls: byMonth, remunerations, wageChanges }, ctx);
+        for (const change of wageChanges) wageRows.push({ employee: e, change });
         // 反映するとき、改定しない保険の今の等級に、届出なしの一斉改定の分も入れる（11/16）
         const withCap = withCapRevisions(remunerations, tables);
         special.push({
@@ -160,12 +167,56 @@ export class RevisionsPage {
       );
       this.views.set(views);
       this.specialPeople.set(special);
+      this.wageRows.set(wageRows);
+      this.wageEmployees.set(employees);
       this.gradeTables.set(tables);
     } catch (err) {
       console.error(err);
       this.errorKey.set(errorKeyOf(err, 'revision.error.load'));
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  // ===== 固定的賃金の変動ではないので外す（B11。11/17） =====
+
+  /** 自動で見つけた起算月（額が変わった・遡及）を外せるか */
+  canDismiss(v: View): boolean {
+    return (
+      this.context.isAdmin() &&
+      v.item.type === 'irregular' &&
+      v.group !== 'reflected' &&
+      v.item.result.start.source !== 'manual' &&
+      !this.saving()
+    );
+  }
+
+  /** 人が足した起算月か（取り消しは下の一覧から） */
+  isManual(v: View): boolean {
+    return v.item.type === 'irregular' && v.item.result.start.source === 'manual';
+  }
+
+  async dismiss(v: View): Promise<void> {
+    const office = this.context.current();
+    if (!office || v.item.type !== 'irregular' || !this.canDismiss(v)) return;
+    this.saving.set(v.key);
+    this.errorKey.set(null);
+    try {
+      const start = v.item.result.start;
+      await this.api.saveWageChange(office.id, v.employee.id, {
+        month: start.month,
+        source: 'dismissed',
+        kind: 'other',
+        direction: start.direction,
+        note: null,
+      });
+      await this.load(true);
+      this.savedKey.set('wageChange.dismissed');
+    } catch (err) {
+      console.error(err);
+      this.errorKey.set(errorKeyOf(err, 'wageChange.error.save'));
+    } finally {
+      this.saving.set(null);
     }
   }
 
