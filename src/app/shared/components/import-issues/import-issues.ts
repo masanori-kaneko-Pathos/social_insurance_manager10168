@@ -107,19 +107,66 @@ export class ImportIssues {
     return w.values.includes(v);
   }
 
-  /** 選択肢の一覧の高さ（枠の中に見せる行の数。窓の中で位置が飛ばないよう、浮かぶ一覧にしない） */
-  listSize(h: string): number {
-    return Math.min(this.choicesOf(h).length, 4);
+  // ===== 選択の枠（押すと下に一覧が開く。11/17） =====
+  /** 開いている一覧の列と、矢印キーで選んでいる位置 */
+  readonly listOpen = signal<string | null>(null);
+  readonly listActive = signal(0);
+
+  selectedLabel(h: string): string {
+    const v = this.selectedOf(h);
+    return this.choicesOf(h).find((c) => c.value === v)?.label ?? v;
   }
 
-  /** 窓：同じ鍵のほかの行（前後の月など） */
-  readonly neighbors = computed(() => {
-    const it = this.open();
-    const key = this.keyHeader();
-    if (!it || !key) return [];
-    return sameKeyLines(this.table(), it.line, key).map((line) => ({ line, rec: rowRecord(this.table(), line) }));
-  });
-  readonly neighborHeaders = computed(() => (this.table()[0] ?? []).map((h) => h.replace(/^﻿/, '').trim()).filter(Boolean));
+  toggleList(h: string): void {
+    if (this.listOpen() === h) {
+      this.listOpen.set(null);
+      return;
+    }
+    const i = this.choicesOf(h).findIndex((c) => c.value === this.selectedOf(h));
+    this.listOpen.set(h);
+    this.listActive.set(Math.max(0, i));
+    this.scrollActive();
+  }
+
+  pick(h: string, value: string): void {
+    this.setValue(h, value);
+    this.listOpen.set(null);
+  }
+
+  /** 枠と一覧のキー：↓↑で動く・Enter で決める・Esc で閉じる（窓は閉じない） */
+  onPickKey(e: KeyboardEvent, h: string): void {
+    const open = this.listOpen() === h;
+    const n = this.choicesOf(h).length;
+    if (!open) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        this.toggleList(h);
+      }
+      return;
+    }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      this.listActive.update((i) => Math.min(n - 1, Math.max(0, i + (e.key === 'ArrowDown' ? 1 : -1))));
+      this.scrollActive();
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      const c = this.choicesOf(h)[this.listActive()];
+      if (c) this.pick(h, c.value);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      this.listOpen.set(null);
+    } else if (e.key === 'Tab') {
+      this.listOpen.set(null);
+    }
+  }
+
+  private scrollActive(): void {
+    afterNextRender(
+      () => this.dialog()?.nativeElement.querySelector('.pick-list li.active')?.scrollIntoView({ block: 'nearest' }),
+      { injector: this.injector },
+    );
+  }
 
   edit(it: ImportIssue): void {
     this.open.set(it);
@@ -239,6 +286,7 @@ export class ImportIssues {
 
   onClosed(): void {
     this.open.set(null);
+    this.listOpen.set(null);
   }
 
   // 背景で押し始めて背景で離したときだけ閉じる（中で選んで外で離したときは閉じない）
@@ -247,6 +295,8 @@ export class ImportIssues {
     this.pressedOnBackdrop = e.target === this.dialog()?.nativeElement;
   }
   onClick(e: MouseEvent): void {
+    // 選択の一覧の外を押したら、一覧を閉じる
+    if (this.listOpen() && !(e.target as HTMLElement).closest('.pick')) this.listOpen.set(null);
     if (this.pressedOnBackdrop && e.target === this.dialog()?.nativeElement) this.close();
   }
 

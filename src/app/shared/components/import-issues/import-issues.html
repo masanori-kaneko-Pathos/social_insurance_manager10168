@@ -127,26 +127,49 @@
 
 <!-- 1つの欄（画面で1件ずつ入れるときと同じ道具：プルダウン・カレンダー・数。11/17） -->
 <ng-template #cell let-h let-problem="problem">
-  <label class="cell">
-    <span>{{ h }}</span>
+  <div class="cell">
+    <span class="cell-label">{{ h }}</span>
     @switch (typeOf(h)?.type) {
       @case ('select') {
-        <select
-          class="input list"
-          [attr.size]="listSize(h)"
-          [class.problem]="problem"
-          [class.changed]="changed(h)"
-          (change)="setValue(h, $any($event.target).value)"
-        >
-          @for (c of choicesOf(h); track c.value) {
-            <option [value]="c.value" [selected]="c.value === selectedOf(h)">{{ c.label }}</option>
+        <!-- 選択の枠：押すと、枠のすぐ下に一覧（4行ぶん。中でスクロール）が開く。ブラウザの浮かぶ一覧は使わない -->
+        <div class="pick" (keydown)="onPickKey($event, h)">
+          <button
+            type="button"
+            class="input pick-box"
+            [class.problem]="problem"
+            [class.changed]="changed(h)"
+            aria-haspopup="listbox"
+            [attr.aria-expanded]="listOpen() === h"
+            [attr.aria-label]="h"
+            (click)="toggleList(h)"
+          >
+            <span class="pick-value">{{ selectedLabel(h) }}</span>
+            <span class="pick-caret" aria-hidden="true">▾</span>
+          </button>
+          @if (listOpen() === h) {
+            <ul class="pick-list" role="listbox" [attr.aria-label]="h">
+              @for (c of choicesOf(h); track c.value; let i = $index) {
+                <li
+                  role="option"
+                  [attr.aria-selected]="c.value === selectedOf(h)"
+                  [class.selected]="c.value === selectedOf(h)"
+                  [class.active]="i === listActive()"
+                  [class.file]="c.file"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="pick(h, c.value)"
+                >
+                  {{ c.label }}
+                </li>
+              }
+            </ul>
           }
-        </select>
+        </div>
       }
       @case ('date') {
         <input
           type="date"
           class="input"
+          [attr.aria-label]="h"
           [class.problem]="problem"
           [class.changed]="changed(h)"
           [value]="pickerValue(h)"
@@ -157,6 +180,7 @@
         <input
           type="month"
           class="input"
+          [attr.aria-label]="h"
           [class.problem]="problem"
           [class.changed]="changed(h)"
           [value]="pickerValue(h)"
@@ -167,6 +191,7 @@
         <input
           class="input num"
           inputmode="numeric"
+          [attr.aria-label]="h"
           [class.problem]="problem"
           [class.changed]="changed(h)"
           [value]="valueOf(values(), h)"
@@ -176,6 +201,7 @@
       @default {
         <input
           class="input"
+          [attr.aria-label]="h"
           [class.problem]="problem"
           [class.changed]="changed(h)"
           [value]="valueOf(values(), h)"
@@ -186,5 +212,5 @@
     @if (unreadOf(h); as v) {
       <small class="file-value">{{ 'importFix.fileValue' | transloco: { v: v } }}</small>
     }
-  </label>
+  </div>
 </ng-template>
