@@ -4067,7 +4067,9 @@
       "sex": "Cannot read the sex. Use \"Fix\" to pick from the list.",
       "yesNo": "Cannot read yes/no. Use \"Fix\" to pick it.",
       "date": "Cannot read the date. Enter it as 2026-04-01.",
-      "save": "Saving stopped partway. Check the list for the people already imported."
+      "save": "Saving stopped partway. Check the list for the people already imported.",
+      "relationshipNotEligible": "This relationship cannot be a dependent (only relatives within the third degree; a cousin is fourth). Unless it is a typo, import without this row.",
+      "relationshipNote": "When the relationship is \"Other\", enter the detail (uncle, aunt, nephew, niece, etc.)."
     },
     "fieldError": {
       "required": "Missing",

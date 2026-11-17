@@ -219,6 +219,8 @@ export class DependentImport {
   errorText(code: string): { key: string; field: string | null } {
     if (code.startsWith('field.')) {
       const [, field, err] = code.split('.');
+      // 続柄が「その他」なのに補足がない：何を入れればいいかまで言う（11/17）
+      if (field === 'relationshipNote' && err === 'required') return { key: 'dependentCsv.error.relationshipNote', field: null };
       return { key: `dependentCsv.fieldError.${err}`, field };
     }
     return { key: `dependentCsv.error.${code}`, field: null };

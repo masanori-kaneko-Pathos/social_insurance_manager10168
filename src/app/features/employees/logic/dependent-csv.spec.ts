@@ -48,3 +48,25 @@ describe('dependentFixColumns（エラー → 直す欄。11/16）', () => {
     expect(dependentFixColumns(['field.unknownField.x', 'nothing'])).toEqual([]);
   });
 });
+
+describe('続柄の「その他」と、扶養に入れない続柄（11/17）', () => {
+  const H = DEPENDENT_COLUMNS.map((c) => DEPENDENT_CSV_HEADERS[c]);
+  const emp = [{ id: 'a', employeeNumber: 'E1', lastName: '山田', firstName: '太郎', hireDate: '2000-01-01' }];
+  const line = (x: Partial<Record<(typeof DEPENDENT_COLUMNS)[number], string>>) =>
+    DEPENDENT_COLUMNS.map((c) => ({ employeeNumber: 'E1', lastName: '山田', firstName: '花', lastNameKana: 'ヤマダ', firstNameKana: 'ハナ',
+      birthDate: '1960-01-01', from: '2020-01-01', livingTogether: 'はい', ...x } as Record<string, string>)[c] ?? '');
+  const read = (x: Partial<Record<(typeof DEPENDENT_COLUMNS)[number], string>>) => planDependentImport([H, line(x)], emp, new Map(), '2026-11-17')[0];
+
+  it('その他 ＋ 補足の列なら読める。補足がなければ、続柄と補足の2つを直す欄に出す', () => {
+    expect(read({ relationship: 'その他', relationshipNote: '叔母' }).input?.relationshipNote).toBe('叔母');
+    const r = read({ relationship: 'その他' });
+    expect(r.errors).toContain('field.relationshipNote.required');
+    expect(dependentFixColumns(r.errors)).toEqual(['relationship', 'relationshipNote']);
+  });
+
+  it('いとこ は「読めない」ではなく「扶養に入れない」', () => {
+    const r = read({ relationship: 'いとこ' });
+    expect(r.errors).toContain('relationshipNotEligible');
+    expect(r.errors).not.toContain('relationship');
+  });
+});
