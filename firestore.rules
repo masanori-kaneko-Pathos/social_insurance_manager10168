@@ -317,7 +317,7 @@ service cloud.firestore {
           && e.enrolled is bool
           && optDate(e.acquiredDate) && optDate(e.lostDate)
           && (!e.enrolled || e.acquiredDate != null)
-          && (e.lossReason == null || e.lossReason in ['retire', 'death', 'age75', 'disability', 'agreement']);
+          && (e.lossReason == null || e.lossReason in ['retire', 'death', 'age75', 'disability', 'agreement', 'optOut']);
       }
 
       function validCertificate(c) {

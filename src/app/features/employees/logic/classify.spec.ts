@@ -95,11 +95,22 @@ describe('classify：働き方', () => {
 
 describe('classify：特定減額特例対象者（R2）', () => {
   const reduced = part({ scheduledWage: 80000, minimumWageReduction: true });
-  it('申出がなければ対象外、申出の日から加入、喪失の申出の日から対象外', () => {
+  it('申出がなければ対象外、加入は受付日から、喪失は受付日の翌日から対象外（R49）', () => {
     const p = person([reduced], { optInDate: '2026-11-10', optOutDate: '2027-01-01' });
     expect(at(p, '2026-11-09')).toBe('excluded:reducedWage');
     expect(at(p, '2026-11-10')).toBe('reducedWage:optedIn');
-    expect(at(p, '2027-01-01')).toBe('excluded:reducedWage');
+    expect(at(p, '2027-01-01')).toBe('reducedWage:optedIn');
+    expect(at(p, '2027-01-02')).toBe('excluded:reducedWage');
+  });
+  it('月末に喪失を受け付けたら、喪失日は翌月1日（その月まで加入）', () => {
+    const p = person([reduced], { optInDate: '2026-11-10', optOutDate: '2027-01-31' });
+    expect(at(p, '2027-01-31')).toBe('reducedWage:optedIn');
+    expect(at(p, '2027-02-01')).toBe('excluded:reducedWage');
+  });
+  it('喪失のあとにもう一度加入を受け付けたら、その日から加入', () => {
+    const p = person([reduced], { optInDate: '2027-03-01', optOutDate: '2027-01-31' });
+    expect(at(p, '2027-02-15')).toBe('excluded:reducedWage');
+    expect(at(p, '2027-03-01')).toBe('reducedWage:optedIn');
   });
   it('所定内賃金が8.8万円以上・許可がない人は、ふつうの短時間労働者', () => {
     expect(at(person([{ ...reduced, scheduledWage: 88000 }]), '2026-11-01')).toBe('shortTime:shortTimeRequirements');

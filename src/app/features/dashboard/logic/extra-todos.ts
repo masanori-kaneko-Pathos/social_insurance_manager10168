@@ -22,6 +22,9 @@
 // - ratesMissing：2〜4月になっても、その年の3月分からの健康保険の料率が登録されていない（11/16）
 //   協会けんぽは料率マスタ（アプリ側で入れる）、組合健保は事業所が入れる料率。料率が変わらない組合は「確認した」で消す
 // - adjustmentDeadline：保険料調整制度を使える事業所なのに申出がまだで、申出の期限（月の末日）が90日以内（11/16）
+// - insurerChange：健康保険の保険者が変わる（協会けんぽ ⇄ 組合、組合 ⇄ 別の組合）。切り替えの2か月前から3か月後まで（11/17）
+//   手続きは保険者ごとに違うので、期限は決めず「案内」として出す。厚生年金保険の資格は続く（届は要らない）
+//   根拠：健康保険組合の編入の案内（Q&A）の実例。書類と期限は新しい保険者の案内に従う
 
 import { addDays, DateStr, daysInMonth, monthsBetween, shiftMonth, toYearMonth, YearMonth } from '../../../shared/utils/date';
 import { contractAt } from '../../employees/logic/contract-form-model';
@@ -29,6 +32,8 @@ import type { MyNumberEntry } from '../../../core/models/my-number';
 import { disposalDue, DisposalPerson, hasNumber } from '../../my-number/logic/my-number';
 import { certificateEndingSoon, OverseasPerson, payAbroadEnrolled } from '../../employees/logic/overseas';
 import { countHeadcount, criteriaAt, HeadcountTarget, isSpecificApplied, WorkSchedule } from '../../employees/logic/coverage';
+import { FROM_THE_START, insurerHistoryOf, insurerKeyOf } from '../../office/office-settings';
+import type { HealthInsurer, InsurerPeriod } from '../../../core/models/office';
 
 export type ExtraKind =
   | 'residence'
@@ -43,7 +48,8 @@ export type ExtraKind =
   | 'overseasCertificate'
   | 'overseasPayAbroad'
   | 'ratesMissing'
-  | 'adjustmentDeadline';
+  | 'adjustmentDeadline'
+  | 'insurerChange';
 
 export interface ExtraTodo {
   kind: ExtraKind;
@@ -157,6 +163,45 @@ export function ratesMissingTodo(insurer: 'kyokai' | 'kumiai', rateFroms: readon
   const target = `${today.slice(0, 4)}-03`;
   if (rateFroms.some((f) => f >= target)) return null;
   return { kind: 'ratesMissing', employeeId: null, date: `${target}-01`, params: { insurer, year: today.slice(0, 4) } };
+}
+
+/** 保険者の切り替え：何か月前から・何か月後まで出すか */
+export const INSURER_CHANGE_BEFORE_MONTHS = 2;
+export const INSURER_CHANGE_AFTER_MONTHS = 3;
+
+export type InsurerChangeDirection = 'toKumiai' | 'toKyokai' | 'kumiaiToKumiai';
+
+/**
+ * 健康保険の保険者が変わる月（事業所の「保険者・所在地の履歴」から計算する）
+ * 都道府県だけが変わった行（協会けんぽのまま）は出さない。日付は切り替える月の1日
+ */
+export function insurerChangeTodos(
+  office: { prefecture: string; healthInsurer: HealthInsurer; insurerHistory?: InsurerPeriod[] },
+  today: DateStr,
+): ExtraTodo[] {
+  const history = insurerHistoryOf(office);
+  const keyOf = insurerKeyOf(office);
+  const out: ExtraTodo[] = [];
+  for (let i = 1; i < history.length; i++) {
+    const cur = history[i];
+    if (cur.from === FROM_THE_START) continue;
+    const before = shiftMonth(cur.from, -1);
+    if (keyOf(before) === keyOf(cur.from)) continue;
+    const showFrom = `${shiftMonth(cur.from, -INSURER_CHANGE_BEFORE_MONTHS)}-01`;
+    const showUntil = `${shiftMonth(cur.from, INSURER_CHANGE_AFTER_MONTHS + 1)}-01`;
+    if (today < showFrom || today >= showUntil) continue;
+    const prev = history[i - 1].healthInsurer;
+    const next = cur.healthInsurer;
+    const direction: InsurerChangeDirection =
+      next.type === 'kumiai' ? (prev.type === 'kumiai' ? 'kumiaiToKumiai' : 'toKumiai') : 'toKyokai';
+    out.push({
+      kind: 'insurerChange',
+      employeeId: null,
+      date: `${cur.from}-01`,
+      params: { direction, month: cur.from, from: prev.kumiaiName ?? '', to: next.kumiaiName ?? '' },
+    });
+  }
+  return out;
 }
 
 export const ADJUSTMENT_DEADLINE_DAYS = 90;

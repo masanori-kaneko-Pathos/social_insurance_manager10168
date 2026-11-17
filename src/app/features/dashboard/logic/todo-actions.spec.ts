@@ -129,6 +129,23 @@ describe('actionErrors', () => {
   });
 });
 
+describe('actionFor：特定減額特例の任意喪失（R49）', () => {
+  const p = person({ health: on('2026-04-01'), pension: on('2026-04-01'), optOutDate: '2026-10-31' });
+  it('加入の見直し：喪失日は受付日の翌日、原因は任意喪失', () => {
+    const r = actionFor(item('lose', null), p, CONTRACTS, TODAY)!;
+    expect([r.mode, r.date, r.reason]).toEqual(['loss', '2026-11-01', 'optOut']);
+  });
+  it('これから外れる：変わる日が受付日の翌日なら任意喪失', () => {
+    const q = person({ ...p, optOutDate: '2026-11-19' });
+    const r = actionFor(item('upcoming', '2026-11-20', C('excluded')), q, CONTRACTS, TODAY)!;
+    expect([r.date, r.reason]).toEqual(['2026-11-20', 'optOut']);
+  });
+  it('退職日があれば、退職による喪失が先', () => {
+    const r = actionFor(item('lose', null), person({ ...p, retireDate: '2026-10-15' }), CONTRACTS, TODAY)!;
+    expect([r.date, r.reason]).toEqual(['2026-10-16', 'retire']);
+  });
+});
+
 describe('buildSave', () => {
   it('取得届：加入にして、取得月の標準報酬（資格取得時決定）と届出の記録', () => {
     const r = actionFor(item('acquire', '2026-10-01'), person(), CONTRACTS, TODAY)!;

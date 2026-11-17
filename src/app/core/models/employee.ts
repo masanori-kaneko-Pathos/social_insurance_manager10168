@@ -16,9 +16,9 @@ export const SEXES: readonly Sex[] = ['male', 'female'];
 export type RetireReason = 'resign' | 'death' | 'transfer' | 'other';
 export const RETIRE_REASONS: readonly RetireReason[] = ['resign', 'death', 'transfer', 'other'];
 
-/** 資格喪失の原因（資格喪失届：退職等・死亡・75歳到達・障害認定・社会保障協定） */
-export type LossReason = 'retire' | 'death' | 'age75' | 'disability' | 'agreement';
-export const LOSS_REASONS: readonly LossReason[] = ['retire', 'death', 'age75', 'disability', 'agreement'];
+/** 資格喪失の原因（資格喪失届：退職等・死亡・75歳到達・障害認定・社会保障協定・特定減額特例対象者の任意喪失） */
+export type LossReason = 'retire' | 'death' | 'age75' | 'disability' | 'agreement' | 'optOut';
+export const LOSS_REASONS: readonly LossReason[] = ['retire', 'death', 'age75', 'disability', 'agreement', 'optOut'];
 
 /** 取得区分（資格取得届：健保・厚年／共済出向／船保任継） */
 export type AcquisitionType = 'standard' | 'mutualAidLoan' | 'seamenContinued';

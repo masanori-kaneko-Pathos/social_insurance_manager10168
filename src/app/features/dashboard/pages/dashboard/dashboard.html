@@ -307,6 +307,10 @@
                           @case ('adjustmentDeadline') {
                             {{ 'dashboard.todo.text.adjustmentDeadline' | transloco: it.extra!.params }}
                           }
+                          @case ('insurerChange') {
+                            {{ 'dashboard.todo.text.insurerChange.' + it.extra!.params['direction'] | transloco: it.extra!.params }}
+                            {{ 'dashboard.todo.text.insurerChangeCommon' | transloco }}
+                          }
                           @default {
                             {{
                               'dashboard.todo.text.' + it.kind
@@ -382,6 +386,9 @@
                             <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>
                           }
                           @case ('adjustmentDeadline') {
+                            <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>
+                          }
+                          @case ('insurerChange') {
                             <a [routerLink]="['/o', office()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>
                           }
                           @case ('ratesMissing') {

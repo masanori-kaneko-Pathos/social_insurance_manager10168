@@ -43,6 +43,7 @@ import { daysLeft, filterRows, kindsIn, RowView, TABLE_LIMIT, toRows } from '../
 import { personTodos } from '../../logic/todos';
 import {
   adjustmentDeadlineTodo,
+  insurerChangeTodos,
   cardReturnTodo,
   contractEndTodo,
   retireGuideTodo,
@@ -234,6 +235,7 @@ export class Dashboard {
       ...(specific ? [extraItem(specific)] : []),
       ...(ratesMissing ? [extraItem(ratesMissing)] : []),
       ...(adjustment ? [extraItem(adjustment)] : []),
+      ...insurerChangeTodos(o, this.today).map(extraItem),
       ...ageItems(this.employees(), this.thisMonth, shiftMonth(this.thisMonth, 1), this.today),
       ...this.officeIssues().map(officeItem),
       ...this.tasks().map(taskItem),
@@ -490,6 +492,7 @@ export class Dashboard {
       health: e.health,
       pension: e.pension,
       certificate: e.foreign?.certificate ?? null,
+      optOutDate: e.optOutDate ?? null,
     };
   }
 

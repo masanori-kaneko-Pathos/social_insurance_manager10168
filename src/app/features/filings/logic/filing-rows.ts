@@ -161,6 +161,7 @@ const LOSS_REASON: Record<string, string> = {
   age75: '7．75歳到達（健康保険のみ喪失）',
   disability: '9．障害認定（健康保険のみ喪失）',
   agreement: '11．社会保障協定',
+  optOut: '12．特定減額特例対象者の任意喪失',
 };
 
 /** 期間に入る喪失（健保と厚年で日が同じなら1つ。違えばそれぞれ） */

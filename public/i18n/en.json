@@ -155,7 +155,8 @@
         "overseasPayAbroad": "Coverage check for overseas assignment",
         "officerCheck": "Check officer coverage",
         "ratesMissing": "Next year's rates",
-        "adjustmentDeadline": "Premium adjustment deadline"
+        "adjustmentDeadline": "Premium adjustment deadline",
+        "insurerChange": "Change of health insurer"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. An Application to Enroll in EPI / EHI (資格取得届) is needed.",
@@ -206,7 +207,13 @@
           "kyokai": "The Kyokai Kenpo rates from March {{year}} are not registered in the app yet. Until they are, premiums from March are calculated with the previous year's rates (the rates are decided around February each year and apply from March premiums, paid in April). Please check them against the notice from Kyokai Kenpo. Once checked, you can hide this with \"Checked\".",
           "kumiai": "The health insurance society's rates from March {{year}} are not registered yet. When the rate notice arrives from the society, register it from \"Insurer and location history\" in the office settings (the month of revision differs by society). If the rates do not change, you can hide this with \"Checked\"."
         },
-        "adjustmentDeadline": "The deadline to apply for the premium adjustment scheme ({{date}}) is approaching. To use it, submit the application to the pension office by the deadline and tick \"Use the premium adjustment scheme\" in the office settings. If you decide not to use it, you can hide this with \"Checked\"."
+        "adjustmentDeadline": "The deadline to apply for the premium adjustment scheme ({{date}}) is approaching. To use it, submit the application to the pension office by the deadline and tick \"Use the premium adjustment scheme\" in the office settings. If you decide not to use it, you can hide this with \"Checked\".",
+        "insurerChange": {
+          "toKumiai": "From {{month}}, the health insurer changes from Kyokai Kenpo to \"{{to}}\". What the company usually does: (1) apply to join the health insurance society and submit the employees' and dependents' information; (2) collect the eligibility certificates issued by Kyokai Kenpo and return them; (3) check that the new eligibility certificates or eligibility notices have been issued; (4) ask whether the society decides the standard monthly remuneration again on joining.",
+          "toKyokai": "From {{month}}, the health insurer changes from \"{{from}}\" to Kyokai Kenpo. What the company usually does: (1) complete the loss of coverage with the health insurance society and collect and return its eligibility certificates; (2) file the health insurance enrollment and dependent change reports with the pension office (check the deadline with the pension office); (3) check that the new eligibility certificates or eligibility notices have been issued.",
+          "kumiaiToKumiai": "From {{month}}, the health insurer changes from \"{{from}}\" to \"{{to}}\". What the company usually does: (1) complete the loss of coverage with the previous society and collect and return its eligibility certificates; (2) apply to join the new society and submit the employees' and dependents' information; (3) check that the new eligibility certificates or eligibility notices have been issued; (4) ask whether the standard monthly remuneration is decided again on joining."
+        },
+        "insurerChangeCommon": "Documents and deadlines differ by insurer, so follow the new insurer's instructions. Employees' pension coverage continues (no filing needed). Premiums keep using the current grades. Dismiss with \"Checked\" when done."
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -381,7 +388,7 @@
       "retireReason": "Reason for leaving",
       "lossReason": "Reason coverage ended",
       "acquisitionType": "Enrollment type",
-      "optInDate": "Date of request to enroll",
+      "optInDate": "Date the pension service accepted the request to enroll",
       "multipleOffices": "Works at two or more offices",
       "rehired": "Enrolled on re-employment after retirement (same-day loss and re-acquisition)",
       "needsConfirmationCard": "Needs an eligibility certificate",
@@ -423,7 +430,7 @@
       "sortByKana": "Sort by katakana reading in the list (あ–わ)",
       "residentRegistered": "Has resident registration in Japan",
       "needsRomanNameFiling": "File the Report of Insured Worker's Name in English Alphabet (ローマ字氏名届)",
-      "optOutDate": "Date of request to withdraw",
+      "optOutDate": "Date the pension service accepted the request to withdraw",
       "phoneNote": "Note",
       "phoneN": "Phone {{n}}",
       "otherPhones": "Other phones",
@@ -447,7 +454,7 @@
     "hint": {
       "autoDates": "The start date is set to the hire date, and the end date to the day after retirement. You can change them if needed.",
       "care": "Long-term care insurance applies automatically to health insurance members aged 40 to 64.",
-      "optIn": "For short-time workers with a minimum wage reduction permit (specified reduction special cases), the date they asked to be enrolled.",
+      "optIn": "For short-time workers with a minimum wage reduction permit (specified reduction special cases): the date the Japan Pension Service accepted their request to enroll. Coverage starts on this date.",
       "numbers": "The insured person reference number is notified by the pension office after the enrollment filing. The basic pension number is used when the filing does not include the My Number.",
       "email": "The email address is also used to invite the employee to My Page.",
       "collection": "Choose this, for example, to have only employees on unpaid leave pay in cash.",
@@ -467,7 +474,7 @@
       "postalCode": "7 digits (no hyphen needed)",
       "phone": "Digits only (no hyphens needed)",
       "digitsOnly": "Digits only",
-      "optOut": "For specified reduction special cases, the date they asked to withdraw from coverage.",
+      "optOut": "For specified reduction special cases: the date the Japan Pension Service accepted their request to withdraw. Coverage ends the next day (health and pension are requested together; the employer's consent is not needed).",
       "multipleOffices": "An employee working at two or more offices chooses the managing pension office with a notification, and the premiums are split by each office's pay. The premiums in the app are an estimate using only this office's pay. Check the amounts in the notice from the pension office (the split is not calculated by the app).",
       "emergency": "Who the company contacts in case of an accident or sudden illness (up to 2). Enter separately from the employee's own phone.",
       "retireReason": {
@@ -556,7 +563,8 @@
       "death": "Death",
       "age75": "Reached age 75",
       "disability": "Disability certification",
-      "agreement": "Social security agreement"
+      "agreement": "Social security agreement",
+      "optOut": "Voluntary withdrawal (specified reduction special case)"
     },
     "acquisitionType": {
       "standard": "Health and pension",

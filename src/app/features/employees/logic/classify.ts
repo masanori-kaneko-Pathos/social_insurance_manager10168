@@ -19,7 +19,7 @@
  */
 import { Contract } from '../../../core/models/contract';
 import { CriteriaDoc } from '../../../core/models/master';
-import { DateStr, monthsPeriodEnd, toYearMonth } from '../../../shared/utils/date';
+import { addDays, DateStr, monthsPeriodEnd, toYearMonth } from '../../../shared/utils/date';
 import { formatHours, formatYen } from '../../../shared/utils/number';
 import { contractAt, isShortPeriod } from './contract-form-model';
 import type { OfficerInfo } from '../../../core/models/employee';
@@ -48,8 +48,8 @@ export type ClassifyContract = Pick<
 
 export interface ClassifyPerson {
   birthDate: DateStr;
-  optInDate: DateStr | null; // 特定減額特例：加入の申出日
-  optOutDate?: DateStr | null; // 特定減額特例：喪失の申出日
+  optInDate: DateStr | null; // 特定減額特例：加入の申出を年金機構が受理した日（その日から加入）
+  optOutDate?: DateStr | null; // 特定減額特例：喪失の申出を年金機構が受理した日（翌日から外れる）
   contracts: ClassifyContract[];
   /** 役員なら（役員でなければ null・省略）。従業員の org.officer をそのまま渡す */
   officer?: OfficerInfo | null;
@@ -125,11 +125,17 @@ export function isInsured(c: Pick<Classification, 'category'>): boolean {
 
 // ===== 1. 働き方での判定（期間は見ない） =====
 
-/** 特定減額特例の申出：その日までの、いちばん新しい申出が「加入」か */
+/**
+ * 特定減額特例の申出：その日に加入しているか（R49。日本年金機構）
+ * - 任意加入：取得日 ＝ 受理した日（受付年月日）
+ * - 任意喪失：喪失日 ＝ 受理した日の翌日
+ * 両方あれば、受付の新しいほうが今の状態
+ */
 function optedInAt(p: ClassifyPerson, date: DateStr): boolean {
   const joined = p.optInDate && p.optInDate <= date ? p.optInDate : null;
-  const left = p.optOutDate && p.optOutDate <= date ? p.optOutDate : null;
-  return !!joined && (!left || joined > left);
+  if (!joined) return false;
+  const left = p.optOutDate && addDays(p.optOutDate, 1) <= date ? p.optOutDate : null;
+  return !left || joined > left;
 }
 
 function byWork(

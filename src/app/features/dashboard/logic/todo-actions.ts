@@ -28,6 +28,8 @@ export interface ActionPerson {
   health: EnrollmentDoc;
   pension: EnrollmentDoc;
   certificate: CertificateLike | null;
+  /** 特定減額特例：喪失の申出の受付日（喪失日はその翌日。R49） */
+  optOutDate?: DateStr | null;
 }
 
 /** 見込みの報酬月額を出すための契約の項目 */
@@ -73,6 +75,11 @@ function acquirable(p: ActionPerson, date: DateStr): Plans {
 }
 
 /** その日の前日まで入っている保険（その日に喪失させられる保険） */
+/** 任意喪失の喪失日（受付日の翌日）。申出がなければ null */
+function optOutLoss(p: ActionPerson): DateStr | null {
+  return p.optOutDate ? addDays(p.optOutDate, 1) : null;
+}
+
 function losable(p: ActionPerson, date: DateStr): Plans {
   const prev = addDays(date, -1);
   return { health: enrolledOn(p.health, prev), pension: enrolledOn(p.pension, prev) };
@@ -114,10 +121,13 @@ export function actionFor(
     case 'upcoming': {
       const date = t?.date ?? today;
       const toInsured = !!t?.next && t.next.category !== 'excluded' && t.next.category !== 'unknown';
-      return toInsured ? acquire(date) : loss(date, 'retire');
+      return toInsured ? acquire(date) : loss(date, optOutLoss(p) === date ? 'optOut' : 'retire');
     }
-    case 'lose':
-      return loss(p.retireDate ? addDays(p.retireDate, 1) : today, 'retire');
+    case 'lose': {
+      if (p.retireDate) return loss(addDays(p.retireDate, 1), 'retire');
+      const out = optOutLoss(p);
+      return out && out <= today ? loss(out, 'optOut') : loss(today, 'retire');
+    }
     case 'agreement': {
       // 協定で免除される保険だけ。喪失日は証明書の始まる日
       // 証明書が取得日より前から効いていれば、取得日（＝資格を取らなかった扱い。取得の取消）

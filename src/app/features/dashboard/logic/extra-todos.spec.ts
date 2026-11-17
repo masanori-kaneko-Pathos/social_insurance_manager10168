@@ -1,4 +1,4 @@
-import { adjustmentDeadlineTodo, ratesMissingTodo } from './extra-todos';
+import { adjustmentDeadlineTodo, insurerChangeTodos, ratesMissingTodo } from './extra-todos';
 import { cardReturnTodo, contractEndTodo, isShortTerm, myNumberTodos, noticeRequired, retireGuideTodo, voluntaryEligible } from './extra-todos';
 import {
   ExtraPerson,
@@ -225,5 +225,37 @@ describe('adjustmentDeadlineTodo：保険料調整制度の申出の期限（11/
   it('もう使っている・対象でない事業所は出さない', () => {
     expect(adjustmentDeadlineTodo('2028-09', true, '2028-09-01')).toBeNull();
     expect(adjustmentDeadlineTodo(null, false, '2028-09-01')).toBeNull();
+  });
+});
+
+describe('insurerChangeTodos：保険者の切り替え（11/17）', () => {
+  const kyokai = { type: 'kyokai' as const, kumiaiName: null };
+  const kumiai = (n: string) => ({ type: 'kumiai' as const, kumiaiName: n });
+  const office = (rows: [string, string, ReturnType<typeof kumiai> | typeof kyokai][]) => ({
+    prefecture: rows[rows.length - 1][1],
+    healthInsurer: rows[rows.length - 1][2],
+    insurerHistory: rows.map(([from, prefecture, healthInsurer]) => ({ from, prefecture, healthInsurer })),
+  });
+  const toKumiai = office([['0000-01', '13', kyokai], ['2027-04', '13', kumiai('A健保')]]);
+  it('協会けんぽ → 組合：2か月前から出る（日付は切り替える月の1日）', () => {
+    expect(insurerChangeTodos(toKumiai, '2027-01-31')).toEqual([]);
+    expect(insurerChangeTodos(toKumiai, '2027-02-01')).toEqual([
+      { kind: 'insurerChange', employeeId: null, date: '2027-04-01', params: { direction: 'toKumiai', month: '2027-04', from: '', to: 'A健保' } },
+    ]);
+  });
+  it('切り替えた月の3か月後の月末まで出る', () => {
+    expect(insurerChangeTodos(toKumiai, '2027-07-31').length).toBe(1);
+    expect(insurerChangeTodos(toKumiai, '2027-08-01')).toEqual([]);
+  });
+  it('組合 → 協会けんぽ、組合 → 別の組合', () => {
+    const o = office([['0000-01', '13', kumiai('A健保')], ['2027-04', '13', kumiai('B健保')], ['2027-10', '13', kyokai]]);
+    expect(insurerChangeTodos(o, '2027-04-10').map((t) => t.params['direction'])).toEqual(['kumiaiToKumiai']);
+    expect(insurerChangeTodos(o, '2027-09-01').map((t) => [t.params['direction'], t.params['from']])).toEqual([['toKyokai', 'B健保']]);
+  });
+  it('協会けんぽのまま都道府県だけ変わったときは出さない', () => {
+    expect(insurerChangeTodos(office([['0000-01', '13', kyokai], ['2027-04', '27', kyokai]]), '2027-04-01')).toEqual([]);
+  });
+  it('同じ組合のまま都道府県だけ変わったときも出さない', () => {
+    expect(insurerChangeTodos(office([['0000-01', '13', kumiai('A健保')], ['2027-04', '27', kumiai('A健保')]]), '2027-04-01')).toEqual([]);
   });
 });

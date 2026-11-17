@@ -92,6 +92,8 @@ export function urgencyOf(
   today: DateStr,
   factDate: DateStr | null = null,
 ): Urgency {
+  // 保険者の切り替え：期限は保険者ごとに違うので持たない。切り替える月になったら「今すぐ」
+  if (kind === 'insurerChange' && factDate) return today >= factDate ? 'now' : 'soon';
   if (deadline) {
     if (deadline < today) return 'overdue';
     if (daysInclusive(today, deadline) - 1 <= NOW_DAYS) return 'now';

@@ -69,6 +69,7 @@ export const BOARD_ORDER: readonly BoardKind[] = [
   'specificOffice',
   'adjustmentDeadline',
   'ratesMissing',
+  'insurerChange',
   'myNumberDispose',
   'addressKumiai',
   'noContract',
@@ -103,6 +104,7 @@ export const SECTION_OF: Record<BoardKind, Section> = {
   specificOffice: 'soon',
   adjustmentDeadline: 'soon',
   ratesMissing: 'soon',
+  insurerChange: 'soon',
   myNumberDispose: 'soon',
   noContract: 'missing',
   officerCheck: 'missing',
@@ -121,6 +123,7 @@ export const DISMISSABLE: ReadonlySet<BoardKind> = new Set<BoardKind>([
   'specificOffice', // 事業所の設定を確かめたら消す
   'adjustmentDeadline', // 制度を使わないと決めたら消す（申し出て設定に入れれば、そもそも出なくなる）
   'ratesMissing', // 料率が変わらない組合など。料率を登録すれば、そもそも出なくなる
+  'insurerChange', // 手続きを済ませた（案内を読んだ）ら消す
   'retireGuide', // 本人に案内したら消す
   'cardReturn', // 回収した（または回収不能届を書いた）ら消す
   'contractEnd', // 同じ条件のまま自動で更新する場合など。次の契約か退職日を入れれば、そもそも出なくなる
