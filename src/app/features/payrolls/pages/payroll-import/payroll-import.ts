@@ -35,6 +35,8 @@ import { PartialSaveError, PayrollService } from '../../payroll.service';
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
+import { FixButton, IssueRow } from '../../../../shared/components/import-issues/issue-row';
+import { ImportSteps } from '../../../../shared/components/import-steps/import-steps';
 /** 書き出せる期間の上限（月数） */
 const MAX_MONTHS = 24;
 /** 確認画面に出すエラーの行数 */
@@ -66,7 +68,7 @@ interface Preview {
 
 @Component({
   selector: 'app-payroll-import',
-  imports: [ImportPicker, ColumnMapper, HalfWidthDigits, ImportIssues, RouterLink, TranslocoPipe, FormsModule],
+  imports: [FixButton, IssueRow, ImportSteps, ImportPicker, ColumnMapper, HalfWidthDigits, ImportIssues, RouterLink, TranslocoPipe, FormsModule],
   templateUrl: './payroll-import.html',
   styleUrl: './payroll-import.css',
 })

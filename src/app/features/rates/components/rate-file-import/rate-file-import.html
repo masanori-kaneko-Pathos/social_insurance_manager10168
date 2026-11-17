@@ -46,6 +46,7 @@
 
     <!-- エラーの行：共通の部品で1行ずつ直す -->
     <app-import-issues
+      #fix
       [table]="fixTable()"
       [issues]="issues()"
       [summaryHeaders]="[fromHeader]"
@@ -72,36 +73,43 @@
           </tr>
         </thead>
         <tbody>
-          @for (r of rows(); track r.line) {
-            <tr [class.row-error]="r.status === 'error'">
-              <td class="num">{{ fromTable() ? '—' : r.line }}</td>
-              <td class="mono">{{ r.from || '—' }}</td>
-              @for (kind of kinds; track kind) {
-                <td class="num">
-                  @if (notYet(kind, r.from)) {
-                    <span class="not-yet">{{ 'rateDialog.notYet' | transloco }}</span>
-                  } @else if (r.input; as k) {
-                    {{ show(totalOf(k[kind])) }}
-                    <span class="sub">{{ 'rateDialog.splitNote' | transloco: { employee: show(k[kind].employee), employer: show(k[kind].employer) } }}</span>
-                  } @else {
-                    @let v = raw(r, kind);
-                    {{ v.total || '—' }}
-                    @if (v.employee || v.employer) {
-                      <span class="sub">{{ 'rateDialog.splitNote' | transloco: { employee: v.employee || '—', employer: v.employer || '—' } }}</span>
+          @for (x of fix.withIssues(rows()); track x.line) {
+            @if (x.item; as r) {
+              <tr [class.has-issue]="!!x.issue" [class.row-error]="r.status === 'error'">
+                <td class="num">{{ fromTable() ? '—' : r.line }}</td>
+                <td class="mono">{{ r.from || '—' }}</td>
+                @for (kind of kinds; track kind) {
+                  <td class="num">
+                    @if (notYet(kind, r.from)) {
+                      <span class="not-yet">{{ 'rateDialog.notYet' | transloco }}</span>
+                    } @else if (r.input; as k) {
+                      {{ show(totalOf(k[kind])) }}
+                      <span class="sub">{{ 'rateDialog.splitNote' | transloco: { employee: show(k[kind].employee), employer: show(k[kind].employer) } }}</span>
+                    } @else {
+                      @let v = raw(r, kind);
+                      {{ v.total || '—' }}
+                      @if (v.employee || v.employer) {
+                        <span class="sub">{{ 'rateDialog.splitNote' | transloco: { employee: v.employee || '—', employer: v.employer || '—' } }}</span>
+                      }
                     }
+                  </td>
+                }
+                <td class="result">
+                  @if (r.status === 'error') {
+                    @for (e of r.errors; track e) {
+                      <span class="field-error">{{ errorKeyOf(e) | transloco }}</span>
+                    }
+                  } @else {
+                    {{ 'rateDialog.csv.status.' + r.status | transloco }}
+                  }
+                  @if (x.issue; as is) {
+                    <app-fix-button [issue]="is" [fix]="fix" />
                   }
                 </td>
-              }
-              <td class="result">
-                @if (r.status === 'error') {
-                  @for (e of r.errors; track e) {
-                    <span class="field-error">{{ errorKeyOf(e) | transloco }}</span>
-                  }
-                } @else {
-                  {{ 'rateDialog.csv.status.' + r.status | transloco }}
-                }
-              </td>
-            </tr>
+              </tr>
+            } @else if (x.issue; as is) {
+              <tr app-issue-row [issue]="is" [fix]="fix" [span]="4"></tr>
+            }
           }
         </tbody>
       </table>

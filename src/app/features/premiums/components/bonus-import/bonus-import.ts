@@ -24,6 +24,8 @@ import {
   BonusPlan,
   planBonusImport,
 } from '../../logic/bonus-csv';
+import { FixButton, IssueRow } from '../../../../shared/components/import-issues/issue-row';
+import { ImportSteps } from '../../../../shared/components/import-steps/import-steps';
 
 interface Preview {
   fileName: string;
@@ -40,7 +42,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-bonus-import',
-  imports: [ImportPicker, ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
+  imports: [FixButton, IssueRow, ImportSteps, ImportPicker, ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
   templateUrl: './bonus-import.html',
   styleUrl: '../../../employees/pages/employee-import/employee-import.css',
 })

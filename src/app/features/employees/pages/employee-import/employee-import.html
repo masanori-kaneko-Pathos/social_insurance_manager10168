@@ -37,6 +37,8 @@
     <app-bonus-import />
   } @else if (mode() === 'employees') {
   <section class="card">
+    <!-- 段階の印（課題管理アプリと同じ。11/17） -->
+    <app-import-steps [step]="doneCount() !== null ? 'done' : preview() ? 'check' : mapping() ? 'map' : 'pick'" />
     <!-- ファイルを選ぶ・ひな形・列の書き方を1行に（どの区分も同じ。11/17） -->
     <app-import-picker [accept]="accept" [busy]="saving()" (picked)="onFile($event)" (template)="downloadTemplate()">
       <div columns>
@@ -106,6 +108,7 @@
 
       <!-- エラーの行と社員番号の重なり：共通の部品で1行ずつ直す（11/17） -->
       <app-import-issues
+      #fix
         [table]="pv.table"
         [issues]="issues()"
         [summaryHeaders]="[headers.employeeNumber, headers.lastName, headers.firstName, headers.romanLastName]"
@@ -160,7 +163,7 @@
         </details>
       }
 
-      @if (pv.plan.items.length > 0) {
+      @if (pv.plan.items.length > 0 || fix.issues().length > 0) {
         <h3>
           {{
             'employeeCsv.planTitle'
@@ -194,61 +197,68 @@
               </tr>
             </thead>
             <tbody>
-              @for (it of pv.plan.items; track it.line) {
-                <tr [class.warn]="it.warnings.length > 0">
-                  <td class="num">{{ it.line }}</td>
-                  <td class="mono">{{ it.employee.employeeNumber }}</td>
-                  <td>{{ name(it) }}</td>
-                  <td class="mono">
-                    {{ it.employee.hireDate }}
-                    @if (it.employee.retireDate) {
-                      <br />〜{{ it.employee.retireDate }}
-                    }
-                  </td>
-                  <td>
-                    {{ 'contract.employmentType.' + it.contract.employmentType | transloco }}・{{
-                      'contract.payType.' + it.contract.payType | transloco
-                    }}
-                    <br /><span class="mono">{{ hours(it) }}／{{ it.contract.monthlyDays }}日</span>
-                    @if (it.contract.periodEnd) {
-                      <br /><span class="sub">〜{{ it.contract.periodEnd }}</span>
-                    }
-                  </td>
-                  <td>
-                    <strong>{{
-                      'contract.category.' + it.classification.category | transloco
-                    }}</strong>
-                    @let p = reasonParams(it.classification);
-                    <br /><span class="sub">
-                      @if (it.classification.below) {
-                        {{ 'contract.below.' + it.classification.below | transloco: p }}
+              @for (x of fix.withIssues(pv.plan.items); track x.line) {
+                @if (x.item; as it) {
+                  <tr [class.has-issue]="!!x.issue" [class.warn]="it.warnings.length > 0">
+                    <td class="num">{{ it.line }}</td>
+                    <td class="mono">{{ it.employee.employeeNumber }}</td>
+                    <td>{{ name(it) }}</td>
+                    <td class="mono">
+                      {{ it.employee.hireDate }}
+                      @if (it.employee.retireDate) {
+                        <br />〜{{ it.employee.retireDate }}
                       }
-                      {{ 'contract.reason.' + it.classification.reason | transloco: p }}
-                    </span>
-                  </td>
-                  <td>
-                    {{ 'employeeCsv.ins.health' | transloco }}
-                    {{ it.employee.health.enrolled ? '○' : '—' }} ／{{
-                      'employeeCsv.ins.pension' | transloco
-                    }}
-                    {{ it.employee.pension.enrolled ? '○' : '—' }}
-                    @for (w of it.warnings; track w) {
-                      <br /><span class="badge">{{ 'employeeCsv.warning.' + w | transloco: { number: it.sameAs ?? '' } }}</span>
-                    }
-                  </td>
-                  <td class="mono">
-                    @if (it.remuneration; as r) {
-                      {{ r.from }}〜<br />
-                      {{ 'employeeCsv.ins.health' | transloco }} {{ r.health.grade }}級
-                      {{ yen(r.health.standard) }}<br />
-                      {{ 'employeeCsv.ins.pension' | transloco }} {{ r.pension.grade }}級
-                      {{ yen(r.pension.standard) }}
-                    } @else {
-                      —
-                    }
-                  </td>
-                  <td class="num">{{ it.leaves.length || '—' }}</td>
-                </tr>
+                    </td>
+                    <td>
+                      {{ 'contract.employmentType.' + it.contract.employmentType | transloco }}・{{
+                        'contract.payType.' + it.contract.payType | transloco
+                      }}
+                      <br /><span class="mono">{{ hours(it) }}／{{ it.contract.monthlyDays }}日</span>
+                      @if (it.contract.periodEnd) {
+                        <br /><span class="sub">〜{{ it.contract.periodEnd }}</span>
+                      }
+                    </td>
+                    <td>
+                      <strong>{{
+                        'contract.category.' + it.classification.category | transloco
+                      }}</strong>
+                      @let p = reasonParams(it.classification);
+                      <br /><span class="sub">
+                        @if (it.classification.below) {
+                          {{ 'contract.below.' + it.classification.below | transloco: p }}
+                        }
+                        {{ 'contract.reason.' + it.classification.reason | transloco: p }}
+                      </span>
+                    </td>
+                    <td>
+                      {{ 'employeeCsv.ins.health' | transloco }}
+                      {{ it.employee.health.enrolled ? '○' : '—' }} ／{{
+                        'employeeCsv.ins.pension' | transloco
+                      }}
+                      {{ it.employee.pension.enrolled ? '○' : '—' }}
+                      @for (w of it.warnings; track w) {
+                        <br /><span class="badge">{{ 'employeeCsv.warning.' + w | transloco: { number: it.sameAs ?? '' } }}</span>
+                      }
+                    </td>
+                    <td class="mono">
+                      @if (it.remuneration; as r) {
+                        {{ r.from }}〜<br />
+                        {{ 'employeeCsv.ins.health' | transloco }} {{ r.health.grade }}級
+                        {{ yen(r.health.standard) }}<br />
+                        {{ 'employeeCsv.ins.pension' | transloco }} {{ r.pension.grade }}級
+                        {{ yen(r.pension.standard) }}
+                      } @else {
+                        —
+                      }
+                    </td>
+                    <td class="num">{{ it.leaves.length || '—' }}  @if (x.issue; as is) {
+                    <td class="num">{{ it.leaves.length || '—' }}    <app-fix-button [issue]="is" [fix]="fix" />
+                    <td class="num">{{ it.leaves.length || '—' }}  }
+                    <td class="num">{{ it.leaves.length || '—' }}</td>
+                  </tr>
+                } @else if (x.issue; as is) {
+                  <tr app-issue-row [issue]="is" [fix]="fix" [span]="7"></tr>
+                }
               }
             </tbody>
           </table>
@@ -259,6 +269,8 @@
   } @else if (mode() === 'myNumber') {
   <!-- マイナンバー（登録済みの従業員へ。書き出しはパスワードで確かめ直してから。どちらも記録に残る） -->
   <section class="card">
+    <!-- 段階の印（課題管理アプリと同じ。11/17） -->
+    <app-import-steps [hasMap]="false" [step]="numberDone() !== null ? 'done' : numberRead() ? 'check' : 'pick'" />
     <app-import-picker
       [accept]="accept"
       [busy]="numberSaving()"

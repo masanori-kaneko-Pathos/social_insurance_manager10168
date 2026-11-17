@@ -5,6 +5,8 @@
   <p class="muted">{{ 'common.loading' | transloco }}</p>
 } @else {
   <section class="card">
+    <!-- 段階の印（課題管理アプリと同じ。11/17） -->
+    <app-import-steps [step]="doneCount() !== null ? 'done' : preview() ? 'check' : mapping() ? 'map' : 'pick'" />
     <!-- ファイルを選ぶ・ひな形（＝期間を選んで出力）・列の書き方を1行に（どの区分も同じ。11/17） -->
     <app-import-picker
       [accept]="accept"
@@ -140,6 +142,7 @@
           <!-- エラーの行：共通の部品で1行ずつ直す（11/17） -->
           @if (table(); as t) {
             <app-import-issues
+      #fix
               [table]="t"
               [issues]="issues()"
               [summaryHeaders]="summaryHeaders()"
@@ -159,8 +162,7 @@
                 {{ 'payrollCsv.import.button' | transloco: { c: pv.created.length, u: pv.updated.length } }}
               </button>
             </div>
-          }
-          @if (writes().length > 0) {
+          @if (writes().length > 0 || fix.issues().length > 0) {
             <div class="table-wrap scroll">
               <table>
                 <thead>
@@ -175,20 +177,27 @@
                   </tr>
                 </thead>
                 <tbody>
-                  @for (it of writes().slice(0, showItems); track it.line) {
-                    <tr>
-                      <td class="num">{{ it.line }}</td>
-                      <td>{{ it.employeeLabel }}</td>
-                      <td class="mono">{{ it.paidMonth }}</td>
-                      <td class="num">{{ yen(it.input.cash) }}</td>
-                      <td class="num">{{ yen(it.input.fixed) }}</td>
-                      <td class="num">{{ it.input.days }}</td>
-                      <td>
-                        @if (pv.updated.includes(it)) {
-                          <span class="badge badge-warn">{{ 'payrollCsv.overwrite' | transloco }}</span>
-                        }
-                      </td>
-                    </tr>
+                  @for (x of fix.withIssues(writes().slice(0, showItems)); track x.line) {
+                    @if (x.item; as it) {
+                      <tr [class.has-issue]="!!x.issue">
+                        <td class="num">{{ it.line }}</td>
+                        <td>{{ it.employeeLabel }}</td>
+                        <td class="mono">{{ it.paidMonth }}</td>
+                        <td class="num">{{ yen(it.input.cash) }}</td>
+                        <td class="num">{{ yen(it.input.fixed) }}</td>
+                        <td class="num">{{ it.input.days }}</td>
+                        <td>
+                          @if (pv.updated.includes(it)) {
+                            <span class="badge badge-warn">{{ 'payrollCsv.overwrite' | transloco }}</span>
+                          }
+                          @if (x.issue; as is) {
+                            <app-fix-button [issue]="is" [fix]="fix" />
+                          }
+                        </td>
+                      </tr>
+                    } @else if (x.issue; as is) {
+                      <tr app-issue-row [issue]="is" [fix]="fix" [span]="5"></tr>
+                    }
                   }
                 </tbody>
               </table>
@@ -198,6 +207,7 @@
             }
           } @else {
             <p class="muted">{{ 'payrollCsv.import.nothing' | transloco }}</p>
+          }
           }
 
         }

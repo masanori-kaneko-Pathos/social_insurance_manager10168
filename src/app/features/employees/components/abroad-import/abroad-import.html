@@ -1,4 +1,6 @@
 <section class="card">
+  <!-- 段階の印（課題管理アプリと同じ。11/17） -->
+  <app-import-steps [hasMap]="false" [step]="doneCount() !== null ? 'done' : preview() ? 'check' : 'pick'" />
   <!-- ファイルを選ぶ・ひな形・列の書き方を1行に（どの区分も同じ。11/17） -->
   <app-import-picker accept=".csv,.tsv,.txt,.xlsx,.xls,text/csv" hintKey="abroadCsv.fileHint" [busy]="saving()" (picked)="onFile($event)" (template)="downloadTemplate()">
     <div columns>
@@ -36,6 +38,7 @@
 
       <!-- エラーの行：共通の部品で1行ずつ直す（11/17） -->
       <app-import-issues
+      #fix
         [table]="pv.table"
         [issues]="issues()"
         [summaryHeaders]="[header('employeeNumber'), header('name')]"
@@ -67,27 +70,34 @@
             </tr>
           </thead>
           <tbody>
-            @for (r of pv.rows; track r.line) {
-              <tr [class.warn]="r.errors.length > 0">
-                <td class="num">{{ r.line }}</td>
-                <td class="mono">{{ r.employee?.employeeNumber ?? '—' }}</td>
-                <td>{{ name(r) }}</td>
-                <td class="mono">{{ what(r) }}</td>
-                <td>
-                  @if (r.errors.length > 0) {
-                    @for (e of r.errors; track $index) {
-                      <span class="badge">{{ label(e.column) }}{{ e.column ? '：' : '' }}{{ errorText(e) | transloco }}</span>
+            @for (x of fix.withIssues(pv.rows); track x.line) {
+              @if (x.item; as r) {
+                <tr [class.has-issue]="!!x.issue" [class.warn]="r.errors.length > 0">
+                  <td class="num">{{ r.line }}</td>
+                  <td class="mono">{{ r.employee?.employeeNumber ?? '—' }}</td>
+                  <td>{{ name(r) }}</td>
+                  <td class="mono">{{ what(r) }}</td>
+                  <td>
+                    @if (r.errors.length > 0) {
+                      @for (e of r.errors; track $index) {
+                        <span class="badge">{{ label(e.column) }}{{ e.column ? '：' : '' }}{{ errorText(e) | transloco }}</span>
+                      }
+                    } @else if (r.skip) {
+                      <span class="sub">{{ 'abroadCsv.skip' | transloco }}</span>
+                    } @else {
+                      {{ 'abroadCsv.add' | transloco }}
+                      @for (w of r.warnings; track w) {
+                        <br /><span class="badge">{{ (w === 'replace' ? 'abroadCsv.replace' : kind() === 'certificate' ? 'employee.agreement.warning.' + w : 'overseas.warning.' + w) | transloco }}</span>
+                      }
                     }
-                  } @else if (r.skip) {
-                    <span class="sub">{{ 'abroadCsv.skip' | transloco }}</span>
-                  } @else {
-                    {{ 'abroadCsv.add' | transloco }}
-                    @for (w of r.warnings; track w) {
-                      <br /><span class="badge">{{ (w === 'replace' ? 'abroadCsv.replace' : kind() === 'certificate' ? 'employee.agreement.warning.' + w : 'overseas.warning.' + w) | transloco }}</span>
+                    @if (x.issue; as is) {
+                      <app-fix-button [issue]="is" [fix]="fix" />
                     }
-                  }
-                </td>
-              </tr>
+                  </td>
+                </tr>
+              } @else if (x.issue; as is) {
+                <tr app-issue-row [issue]="is" [fix]="fix" [span]="3"></tr>
+              }
             }
           </tbody>
         </table>

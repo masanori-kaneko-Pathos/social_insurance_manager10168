@@ -1,4 +1,6 @@
 <section class="card">
+  <!-- 段階の印（課題管理アプリと同じ。11/17） -->
+  <app-import-steps [step]="doneCount() !== null ? 'done' : preview() ? 'check' : mapping() ? 'map' : 'pick'" />
   <!-- ファイルを選ぶ・ひな形・列の書き方を1行に（どの区分も同じ。11/17） -->
   <app-import-picker [accept]="accept" [busy]="saving()" (picked)="onFile($event)" (template)="downloadTemplate()">
     <div columns>
@@ -54,6 +56,7 @@
 
     <!-- エラーの行：共通の部品で1行ずつ直す（11/17） -->
     <app-import-issues
+      #fix
       [table]="pv.table"
       [issues]="issues()"
       [summaryHeaders]="[columnLabel('employeeNumber'), columnLabel('from')]"
@@ -83,7 +86,7 @@
       </details>
     }
 
-    @if (pv.plan.items.length > 0) {
+    @if (pv.plan.items.length > 0 || fix.issues().length > 0) {
       <h3>{{ 'historyCsv.planTitle.' + kind() | transloco: { n: pv.plan.items.length } }}</h3>
       <p class="sub">{{ 'historyCsv.planNote' | transloco }}</p>
       <div class="table-wrap scroll">
@@ -103,33 +106,40 @@
             </tr>
           </thead>
           <tbody>
-            @for (it of pv.plan.items; track it.line) {
-              <tr [class.warn]="it.warnings.length > 0">
-                <td class="num">{{ it.line }}</td>
-                <td class="mono">{{ it.employeeNumber }}</td>
-                <td>{{ it.name }}</td>
-                <td class="mono">{{ it.id }}</td>
-                @if (it.contract; as c) {
-                  <td>
-                    {{ 'contract.employmentType.' + c.employmentType | transloco }}・{{ 'contract.payType.' + c.payType | transloco }}
-                    <br /><span class="mono">{{ hours(it) }}／{{ c.monthlyDays }}日・{{ yen(c.scheduledWage) }}円</span>
-                    @if (c.periodEnd) {
-                      <br /><span class="sub">〜{{ c.periodEnd }}</span>
-                    }
-                  </td>
-                }
-                @if (it.remuneration; as r) {
-                  <td>{{ 'remuneration.reason.' + r.reason | transloco }}</td>
-                  <td class="mono">
-                    {{ yen(r.monthlyAmount) }}円<br />
-                    {{ 'employeeCsv.ins.health' | transloco }} {{ r.health.grade }}級 {{ yen(r.health.standard) }}<br />
-                    {{ 'employeeCsv.ins.pension' | transloco }} {{ r.pension.grade }}級 {{ yen(r.pension.standard) }}
-                    @for (w of it.warnings; track w) {
-                      <br /><span class="badge">{{ 'historyCsv.warning.' + w | transloco: it.computed ?? {} }}</span>
-                    }
-                  </td>
-                }
-              </tr>
+            @for (x of fix.withIssues(pv.plan.items); track x.line) {
+              @if (x.item; as it) {
+                <tr [class.has-issue]="!!x.issue" [class.warn]="it.warnings.length > 0">
+                  <td class="num">{{ it.line }}</td>
+                  <td class="mono">{{ it.employeeNumber }}</td>
+                  <td>{{ it.name }}</td>
+                  <td class="mono">{{ it.id }}</td>
+                  @if (it.contract; as c) {
+                    <td>
+                      {{ 'contract.employmentType.' + c.employmentType | transloco }}・{{ 'contract.payType.' + c.payType | transloco }}
+                      <br /><span class="mono">{{ hours(it) }}／{{ c.monthlyDays }}日・{{ yen(c.scheduledWage) }}円</span>
+                      @if (c.periodEnd) {
+                        <br /><span class="sub">〜{{ c.periodEnd }}</span>
+                      }
+                    </td>
+                  }
+                  @if (it.remuneration; as r) {
+                    <td>{{ 'remuneration.reason.' + r.reason | transloco }}</td>
+                    <td class="mono">
+                      {{ yen(r.monthlyAmount) }}円<br />
+                      {{ 'employeeCsv.ins.health' | transloco }} {{ r.health.grade }}級 {{ yen(r.health.standard) }}<br />
+                      {{ 'employeeCsv.ins.pension' | transloco }} {{ r.pension.grade }}級 {{ yen(r.pension.standard) }}
+                      @for (w of it.warnings; track w) {
+                        <br /><span class="badge">{{ 'historyCsv.warning.' + w | transloco: it.computed ?? {} }}</span>
+                      }
+                      @if (x.issue; as is) {
+                        <app-fix-button [issue]="is" [fix]="fix" />
+                      }
+                    </td>
+                  }
+                </tr>
+              } @else if (x.issue; as is) {
+                <tr app-issue-row [issue]="is" [fix]="fix" [span]="kind() === 'contract' ? 3 : 4"></tr>
+              }
             }
           </tbody>
         </table>

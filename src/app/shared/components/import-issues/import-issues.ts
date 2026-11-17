@@ -18,6 +18,13 @@ export interface ImportIssue {
   suggestions?: { label: string; values: Record<string, string> }[];
 }
 
+/** 表の1行：読めた行（item）か、問題の行（issue）か、その両方 */
+export interface IssueRow<T> {
+  line: number;
+  item: T | null;
+  issue: ImportIssue | null;
+}
+
 /** 直した1行（見出し → 値）。親は表に入れて、読み直す */
 export interface ImportFix {
   line: number;
@@ -62,6 +69,27 @@ export class ImportIssues {
   private readonly injector = inject(Injector);
   private readonly transloco = inject(TranslocoService);
   private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('dialog');
+
+  // ===== 表の中で直す（11/17）：親の表に問題の行を混ぜて出し、その行の「直す」で窓を開く =====
+  /** 問題の行だけを表に出す */
+  readonly onlyIssues = signal(false);
+  private readonly byLine = computed(() => new Map(this.issues().map((i) => [i.line, i])));
+
+  issueOf(line: number): ImportIssue | null {
+    return this.byLine().get(line) ?? null;
+  }
+
+  /**
+   * 親の表の行（読めた行）に、問題の行を行の番号の順に混ぜる
+   * 読めた行に問題があれば issue も付ける。「問題の行だけ表示」のときは問題の行だけ
+   */
+  withIssues<T extends { line: number }>(items: readonly T[]): IssueRow<T>[] {
+    const rows = new Map<number, IssueRow<T>>();
+    for (const item of items) rows.set(item.line, { line: item.line, item, issue: this.issueOf(item.line) });
+    for (const issue of this.issues()) if (!rows.has(issue.line)) rows.set(issue.line, { line: issue.line, item: null, issue });
+    const out = [...rows.values()].sort((a, b) => a.line - b.line);
+    return this.onlyIssues() ? out.filter((r) => r.issue) : out;
+  }
 
   /** 開いている行と、窓の中の値 */
   readonly open = signal<ImportIssue | null>(null);

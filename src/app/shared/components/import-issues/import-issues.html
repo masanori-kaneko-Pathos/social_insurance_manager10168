@@ -1,47 +1,21 @@
+<!-- 問題の行の帯（一覧は出さない。表の中の赤い行の「直す」で直す。課題管理アプリと同じ考え方。11/17） -->
 @if (issues().length > 0) {
   <div class="alert alert-danger">{{ 'importFix.banner' | transloco: { n: issues().length } }}</div>
 
   <div class="fix-bar">
-    <button type="button" class="btn btn-small" (click)="exportRows()">
-      {{ 'employeeCsv.exportErrors' | transloco }}
-    </button>
+    <label class="opt">
+      <input type="checkbox" [checked]="onlyIssues()" (change)="onlyIssues.set($any($event.target).checked)" />
+      {{ 'importFix.onlyIssues' | transloco }}
+    </label>
     @if (canSkip()) {
       <label class="opt">
         <input type="checkbox" [checked]="skip()" [disabled]="busy()" (change)="skip.set($any($event.target).checked)" />
         {{ 'employeeCsv.skipErrors' | transloco }}
       </label>
     }
-  </div>
-
-  <div class="issues-wrap">
-    <table class="issues">
-      <thead>
-        <tr>
-          <th class="num">{{ 'importFix.line' | transloco }}</th>
-          <th>{{ 'importFix.content' | transloco }}</th>
-          <th>{{ 'importFix.problem' | transloco }}</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (it of issues(); track it.line) {
-          <tr>
-            <td class="num">{{ it.line }}</td>
-            <td class="content">{{ summary(it) }}</td>
-            <td class="problems">
-              @for (m of it.messages; track $index) {
-                <span>{{ m }}</span>
-              }
-            </td>
-            <td class="act">
-              <button type="button" class="btn btn-small btn-primary" [disabled]="busy()" (click)="edit(it)">
-                {{ 'importFix.fix' | transloco }}
-              </button>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
+    <button type="button" class="btn btn-small" (click)="exportRows()">
+      {{ 'employeeCsv.exportErrors' | transloco }}
+    </button>
   </div>
 }
 

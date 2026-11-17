@@ -4086,7 +4086,7 @@
   },
   "importFix": {
     "fix": "Fix",
-    "banner": "{{n}} row(s) have problems. Fix them one by one with \"Fix\"; each fix is checked again right away.",
+    "banner": "{{n}} rows have problems. Use \"Fix\" on the red rows in the table, comparing with the rows around them.",
     "line": "Line",
     "content": "Content",
     "problem": "Problem",
@@ -4098,7 +4098,8 @@
     "byName": "From the name: is this {{name}} ({{n}})?",
     "unknownEmployee": "If the employee number is mistyped, correct it. If the employee is not registered yet, register them first, or leave this row out with \"Import without the rows with errors\".",
     "blank": "(empty)",
-    "fileValue": "Value in the file: {{v}}"
+    "fileValue": "Value in the file: {{v}}",
+    "onlyIssues": "Show only rows with problems"
   },
   "special": {
     "title": "Special revision (medical care, childcare or nursing care)",
@@ -4351,5 +4352,11 @@
       "afterRetire": "Paid after the retirement date (no premiums)",
       "titleDiffers": "Different title for the same paid date (the first row's title is used)"
     }
+  },
+  "importSteps": {
+    "pick": "Choose a file",
+    "map": "Match columns",
+    "check": "Check",
+    "done": "Imported"
   }
 }
