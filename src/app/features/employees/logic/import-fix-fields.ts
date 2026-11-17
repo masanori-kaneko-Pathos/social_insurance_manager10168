@@ -1,7 +1,7 @@
 // 取り込みのエラーを窓で直すときの欄の種類（従業員・扶養家族・履歴・協定・海外勤務。11/17）
 // 選ぶ列は、画面で1人ずつ入れるときと同じ選択肢（同じ翻訳の鍵）。表に戻す言葉は、取り込みが読む言葉
 
-import { byHeader, choices, DATE, FixField, MONTH, NUMBER, YES_NO } from '../../../shared/import/fix-fields';
+import { byHeader, choices, DATE, FixField, MONTH, NUMBER, shownWhen, TEXT, YES_NO } from '../../../shared/import/fix-fields';
 import { CERTIFICATE_CSV_HEADERS, OVERSEAS_CSV_HEADERS } from './abroad-csv';
 import { DEPENDENT_CSV_HEADERS } from './dependent-csv';
 import { EMPLOYEE_CSV_HEADERS } from './employee-csv';
@@ -123,6 +123,8 @@ export const DEPENDENT_FIX_FIELDS = byHeader(DEPENDENT_CSV_HEADERS, {
     ['孫', 'grandchild'],
     ['その他', 'other'],
   ]),
+  // 続柄が「その他」を選んだときだけ出す（叔父・姪など）
+  relationshipNote: shownWhen(TEXT, DEPENDENT_CSV_HEADERS.relationship, ['その他']),
   birthDate: DATE,
   from: DATE,
   sex: SEX,

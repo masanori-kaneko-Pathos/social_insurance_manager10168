@@ -146,8 +146,6 @@ const REL: Record<string, Relationship> = {
 };
 /** 「その他」に入れて、言葉を続柄の補足に残すもの（3親等内の親族） */
 const REL_OTHER = ['伯父', '叔父', '伯母', '叔母', 'おじ', 'おば', '甥', '姪', 'おい', 'めい', 'ひ孫', '曾孫'];
-/** 扶養に入れない続柄（3親等より遠い親族など。11/17）。「読めない」ではなく、入れられないと知らせる */
-const REL_NOT_ELIGIBLE = ['いとこ', '従兄弟', '従姉妹', '従兄', '従弟', '従姉', '従妹', 'はとこ', '再従兄弟', '再従姉妹', '友人', '知人', '同僚'];
 
 const OCC: Record<string, Occupation> = {
   無職: 'none', なし: 'none', 専業主婦: 'none', 専業主夫: 'none',
@@ -186,7 +184,6 @@ export interface DependentTarget {
 export type DependentRowError =
   | 'employeeNotFound'
   | 'relationship'
-  | 'relationshipNotEligible' // いとこ など（扶養に入れない。11/17）
   | 'occupation'
   | 'startReason'
   | 'endReason'
@@ -244,15 +241,11 @@ export function planDependentImport(
     let relationship: Relationship | null = REL[relWord] ?? null;
     // 「その他」の補足：補足の列か、続柄の列に書いた言葉（叔父・姪など）
     let relationshipNote = get('relationshipNote');
-    if (!relationship && REL_NOT_ELIGIBLE.some((w) => relWord.includes(w))) {
-      errors.push('relationshipNotEligible');
-    } else {
-      if (!relationship && REL_OTHER.some((w) => relWord.includes(w))) {
-        relationship = 'other';
-        relationshipNote = relationshipNote || relWord;
-      }
-      if (!relationship) errors.push('relationship');
+    if (!relationship && REL_OTHER.some((w) => relWord.includes(w))) {
+      relationship = 'other';
+      relationshipNote = relationshipNote || relWord;
     }
+    if (!relationship) errors.push('relationship');
 
     const v = emptyDependentForm('');
     v.relationship = relationship ?? 'spouse';
@@ -347,7 +340,6 @@ export function planDependentImport(
 const DEPENDENT_FIX: Readonly<Record<string, readonly DependentColumn[]>> = {
   employeeNotFound: ['employeeNumber'],
   relationship: ['relationship'],
-  relationshipNotEligible: ['relationship'],
   date: ['birthDate', 'from', 'to'],
   sex: ['sex'],
   yesNo: ['livingTogether', 'disabled'],

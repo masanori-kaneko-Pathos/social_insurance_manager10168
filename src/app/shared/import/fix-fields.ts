@@ -10,15 +10,30 @@ export interface FixChoice {
   label?: string;
 }
 
-export type FixField =
+/** この欄を出す条件：ほかの列（header）が values のどれかのときだけ（例：続柄が「その他」なら続柄の補足） */
+export interface FixWhen {
+  header: string;
+  values: readonly string[];
+}
+
+export type FixField = (
   | { type: 'select'; choices: readonly FixChoice[] }
   | { type: 'date' }
   | { type: 'month' }
-  | { type: 'number' };
+  | { type: 'number' }
+  | { type: 'text' }
+) & { when?: FixWhen };
 
 export const DATE: FixField = { type: 'date' };
 export const MONTH: FixField = { type: 'month' };
 export const NUMBER: FixField = { type: 'number' };
+
+/** 条件つきの欄（条件に合うと、その列のすぐ下に出る。合わなくなると消えて、値は空に戻る） */
+export function shownWhen(field: FixField, header: string, values: readonly string[]): FixField {
+  return { ...field, when: { header, values } };
+}
+
+export const TEXT: FixField = { type: 'text' };
 
 export function select(choices: readonly FixChoice[]): FixField {
   return { type: 'select', choices };

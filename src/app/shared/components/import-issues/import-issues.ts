@@ -75,15 +75,42 @@ export class ImportIssues {
       .join('　');
   };
 
-  /** 窓：問題の列（上）とほかの列（下） */
+  /**
+   * 窓：問題の列（上）とほかの列（下）
+   * 条件つきの欄（続柄が「その他」なら続柄の補足 など）は、条件の列が問題の列なら、そのすぐ下に出す。条件に合わなければ出さない
+   */
   readonly fields = computed(() => {
     const it = this.open();
     if (!it) return { problem: [] as string[], other: [] as string[] };
-    const header = (this.table()[0] ?? []).map((h) => h.replace(/^﻿/, '').trim()).filter(Boolean);
-    const isProblem = (h: string) => it.headers.some((p) => headerKey(p) === headerKey(h));
-    const problem = [...header.filter(isProblem), ...it.headers.filter((p) => !header.some((h) => headerKey(h) === headerKey(p)))];
-    return { problem, other: header.filter((h) => !isProblem(h)) };
+    this.values(); // 選び直したら出し直す
+    const header = (this.table()[0] ?? []).map((h) => h.replace(/^\uFEFF/, '').trim()).filter(Boolean);
+    const same = (a: string, b: string) => headerKey(a) === headerKey(b);
+    const isProblem = (h: string) => it.headers.some((p) => same(p, h));
+    const problem = [...header.filter(isProblem), ...it.headers.filter((p) => !header.some((h) => same(h, p)))];
+    for (const [h, t] of Object.entries(this.fieldTypes())) {
+      if (!t.when || problem.some((p) => same(p, h))) continue;
+      const at = problem.findIndex((p) => same(p, t.when!.header));
+      if (at >= 0) problem.splice(at + 1, 0, h);
+    }
+    const inProblem = (h: string) => problem.some((p) => same(p, h));
+    return {
+      problem: problem.filter((h) => this.shown(h)),
+      other: header.filter((h) => !inProblem(h) && this.shown(h)),
+    };
   });
+
+  /** 条件つきの欄を出すか（条件の列の今の値で決める） */
+  shown(h: string): boolean {
+    const w = this.typeOf(h)?.when;
+    if (!w) return true;
+    const v = this.matchChoice(w.header) ?? this.valueOf(this.values(), w.header).trim();
+    return w.values.includes(v);
+  }
+
+  /** 選択肢の一覧の高さ（枠の中に見せる行の数。窓の中で位置が飛ばないよう、浮かぶ一覧にしない） */
+  listSize(h: string): number {
+    return Math.min(this.choicesOf(h).length, 4);
+  }
 
   /** 窓：同じ鍵のほかの行（前後の月など） */
   readonly neighbors = computed(() => {
@@ -116,6 +143,13 @@ export class ImportIssues {
     const upper = this.upperHeaders().some((u) => headerKey(u) === headerKey(h));
     const num = this.typeOf(h)?.type === 'number';
     this.values.update((m) => ({ ...m, [h]: upper ? toHalfWidth(v).toUpperCase() : num ? toHalfWidth(v) : v }));
+    // この列で出る・消える欄：消えたら、入れかけの値を空に戻す
+    for (const [dep, t] of Object.entries(this.fieldTypes())) {
+      if (t.when && headerKey(t.when.header) === headerKey(h) && !this.shown(dep) && this.valueOf(this.values(), dep) !== '') {
+        const key = Object.keys(this.values()).find((x) => headerKey(x) === headerKey(dep)) ?? dep;
+        this.values.update((m) => ({ ...m, [key]: '' }));
+      }
+    }
   }
 
   // ===== 欄の種類（画面で1件ずつ入れるときと同じ道具で直す。11/17） =====

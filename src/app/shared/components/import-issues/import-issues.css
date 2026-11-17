@@ -203,3 +203,19 @@
 .input.num {
   text-align: right;
 }
+
+/* 選択肢は枠の中の一覧（4行ぶん。中でスクロール）。浮かぶ一覧だと窓の中で位置が飛ぶため（11/17） */
+.input.list {
+  height: auto;
+  padding: 2px 0;
+  overflow-y: auto;
+}
+
+.input.list option {
+  padding: 4px var(--space-sm);
+}
+
+.input.list option:checked {
+  background: var(--color-highlight);
+  color: var(--color-text);
+}

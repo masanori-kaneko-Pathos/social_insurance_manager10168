@@ -132,7 +132,8 @@
     @switch (typeOf(h)?.type) {
       @case ('select') {
         <select
-          class="input"
+          class="input list"
+          [attr.size]="listSize(h)"
           [class.problem]="problem"
           [class.changed]="changed(h)"
           (change)="setValue(h, $any($event.target).value)"

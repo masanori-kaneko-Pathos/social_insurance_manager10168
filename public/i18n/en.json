@@ -4060,7 +4060,7 @@
     },
     "error": {
       "employeeNotFound": "No employee with this number",
-      "relationship": "Cannot read the relationship. Use \"Fix\" to pick from the list.",
+      "relationship": "Pick the right item from the list. Only relatives within the third degree can be dependents. Unless it is a typo, import without this row.",
       "occupation": "Cannot read the occupation. Use \"Fix\" to pick from the list.",
       "startReason": "Cannot read the reason for becoming a dependent. Use \"Fix\" to pick from the list.",
       "endReason": "Cannot read the reason for leaving. Use \"Fix\" to pick from the list.",
@@ -4068,7 +4068,6 @@
       "yesNo": "Cannot read yes/no. Use \"Fix\" to pick it.",
       "date": "Cannot read the date. Enter it as 2026-04-01.",
       "save": "Saving stopped partway. Check the list for the people already imported.",
-      "relationshipNotEligible": "This relationship cannot be a dependent (only relatives within the third degree; a cousin is fourth). Unless it is a typo, import without this row.",
       "relationshipNote": "When the relationship is \"Other\", enter the detail (uncle, aunt, nephew, niece, etc.)."
     },
     "fieldError": {
@@ -4094,7 +4093,7 @@
     "dialogTitle": "Fix line {{line}}",
     "otherColumns": "Other columns ({{n}})",
     "neighbors": "Other rows with the same employee number ({{n}})",
-    "apply": "Fix and check again",
+    "apply": "Fix",
     "useNumber": "Use the free number {{n}}",
     "byName": "From the name: is this {{name}} ({{n}})?",
     "unknownEmployee": "If the employee number is mistyped, correct it. If the employee is not registered yet, register them first, or leave this row out with \"Import without the rows with errors\".",

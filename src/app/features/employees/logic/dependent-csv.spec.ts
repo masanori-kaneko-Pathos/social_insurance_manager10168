@@ -49,7 +49,7 @@ describe('dependentFixColumns（エラー → 直す欄。11/16）', () => {
   });
 });
 
-describe('続柄の「その他」と、扶養に入れない続柄（11/17）', () => {
+describe('続柄の「その他」（11/17）', () => {
   const H = DEPENDENT_COLUMNS.map((c) => DEPENDENT_CSV_HEADERS[c]);
   const emp = [{ id: 'a', employeeNumber: 'E1', lastName: '山田', firstName: '太郎', hireDate: '2000-01-01' }];
   const line = (x: Partial<Record<(typeof DEPENDENT_COLUMNS)[number], string>>) =>
@@ -64,9 +64,7 @@ describe('続柄の「その他」と、扶養に入れない続柄（11/17）',
     expect(dependentFixColumns(r.errors)).toEqual(['relationship', 'relationshipNote']);
   });
 
-  it('いとこ は「読めない」ではなく「扶養に入れない」', () => {
-    const r = read({ relationship: 'いとこ' });
-    expect(r.errors).toContain('relationshipNotEligible');
-    expect(r.errors).not.toContain('relationship');
+  it('いとこ（扶養に入れない続柄）は、ほかの読めない言葉と同じく relationship のエラー', () => {
+    expect(read({ relationship: 'いとこ' }).errors).toContain('relationship');
   });
 });
