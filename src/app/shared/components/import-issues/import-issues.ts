@@ -168,6 +168,15 @@ export class ImportIssues {
     );
   }
 
+  /** 窓：同じ鍵のほかの行（前後の月など） */
+  readonly neighbors = computed(() => {
+    const it = this.open();
+    const key = this.keyHeader();
+    if (!it || !key) return [];
+    return sameKeyLines(this.table(), it.line, key).map((line) => ({ line, rec: rowRecord(this.table(), line) }));
+  });
+  readonly neighborHeaders = computed(() => (this.table()[0] ?? []).map((h) => h.replace(/^﻿/, '').trim()).filter(Boolean));
+
   edit(it: ImportIssue): void {
     this.open.set(it);
     this.values.set(rowRecord(this.table(), it.line));
