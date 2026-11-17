@@ -808,3 +808,17 @@ a:where(:link, :visited):hover {
 :lang(ja) :is(h1, h2, h3, .btn, .tile, .lead, .hint, label, legend) {
   word-break: auto-phrase;
 }
+
+/* 取り込みの確認の表：枠の中でスクロールし、見出しは上に貼り付く（11/17。全部の取り込みで共通） */
+.table-wrap.scroll {
+  max-height: 60vh;
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.table-wrap.scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-bg);
+}

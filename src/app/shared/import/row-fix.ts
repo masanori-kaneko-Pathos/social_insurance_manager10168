@@ -82,3 +82,67 @@ export function cellOf(
   const j = (table[0] ?? []).findIndex((h) => keys.has(headerKey(h)));
   return j < 0 ? '' : (table[line - 1]?.[j] ?? '');
 }
+
+// ===== 1行ずつ直す窓（app-import-issues。11/17） =====
+
+/** その列の見出し（表にある書き方）。どれもなければ最初の名前（足すときの見出し） */
+export function resolveHeader(header: readonly string[], labels: readonly string[]): string {
+  const keys = new Set(labels.map(headerKey));
+  return header.find((h) => keys.has(headerKey(h))) ?? labels[0] ?? '';
+}
+
+/**
+ * 1行の値を直す（元の表は変えず、新しい表を返す）。values は 見出し → 値
+ * 表にない見出しは右に足す（ほかの行は空）
+ */
+export function applyRowValues(
+  table: readonly (readonly string[])[],
+  line: number,
+  values: Readonly<Record<string, string>>,
+): string[][] {
+  const out = table.map((row) => [...row]);
+  if (out.length === 0 || line < 2 || !out[line - 1]) return out;
+  const header = out[0];
+  const row = out[line - 1];
+  for (const [label, value] of Object.entries(values)) {
+    let j = header.findIndex((h) => headerKey(h) === headerKey(label));
+    if (j < 0) {
+      header.push(label);
+      j = header.length - 1;
+    }
+    while (row.length <= j) row.push('');
+    row[j] = value;
+  }
+  return out;
+}
+
+/** 1行を 見出し → 値 に（見出しが空の列は飛ばす） */
+export function rowRecord(table: readonly (readonly string[])[], line: number): Record<string, string> {
+  const header = table[0] ?? [];
+  const row = table[line - 1] ?? [];
+  const out: Record<string, string> = {};
+  header.forEach((h, j) => {
+    const label = h.replace(/^\uFEFF/, '').trim();
+    if (label) out[label] = row[j] ?? '';
+  });
+  return out;
+}
+
+/** 同じ鍵（社員番号など）の、ほかの行の番号（前後の月を見せるため。多すぎるときは近い行から max 件） */
+export function sameKeyLines(
+  table: readonly (readonly string[])[],
+  line: number,
+  keyHeader: string,
+  max = 6,
+): number[] {
+  const header = table[0] ?? [];
+  const j = header.findIndex((h) => headerKey(h) === headerKey(keyHeader));
+  if (j < 0) return [];
+  const key = (table[line - 1]?.[j] ?? '').trim();
+  if (!key) return [];
+  const lines: number[] = [];
+  for (let i = 1; i < table.length; i++) {
+    if (i + 1 !== line && (table[i][j] ?? '').trim() === key) lines.push(i + 1);
+  }
+  return lines.sort((a, b) => Math.abs(a - line) - Math.abs(b - line)).slice(0, max).sort((a, b) => a - b);
+}

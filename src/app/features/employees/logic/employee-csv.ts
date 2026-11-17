@@ -497,6 +497,11 @@ export interface ImportContext {
   gradeTables: GradeTableDoc[];
   /** 登録済みの社員番号 */
   existingNumbers: ReadonlySet<string>;
+  /**
+   * 登録済みの人（社員番号 → 氏名・生年月日）。社員番号・氏名・生年月日がすべて同じ行は「登録済み（同じ人）」として飛ばす（11/17）
+   * ない（古い呼び方）ときは、番号が同じならいつも重なりのエラー
+   */
+  existingPeople?: ReadonlyMap<string, SamePersonKey>;
   /** 事業所の部署（部署の列を、名前で結ぶ） */
   departments?: readonly { id: string; name: string }[];
 }
@@ -522,13 +527,29 @@ export interface ImportItem {
 
 export interface ImportPlan {
   items: ImportItem[];
-  /** 社員番号の重複（ファイルの中・登録済み）。取り込まない */
+  /** 社員番号の重複（ファイルの中・登録済みの別の人）。取り込まない */
   errors: { line: number; code: 'duplicateInFile' | 'alreadyExists'; employeeNumber: string }[];
+  /** 登録済みの同じ人（社員番号・氏名・生年月日が同じ）。取り込まない（上書きもしない。11/17） */
+  skipped: { line: number; employeeNumber: string; employee: EmployeeFormInput; contract: ContractInput }[];
+}
+
+/** 同じ人かを見分ける項目 */
+export interface SamePersonKey {
+  lastName: string;
+  firstName: string;
+  birthDate: string;
+}
+
+/** 氏名は空白と全角半角を無視して比べる */
+export function isSamePerson(a: SamePersonKey, b: SamePersonKey): boolean {
+  const k = (s: string) => (s ?? '').normalize('NFKC').replace(/\s+/g, '');
+  return k(a.lastName) === k(b.lastName) && k(a.firstName) === k(b.firstName) && a.birthDate === b.birthDate;
 }
 
 export function planImport(rows: EmployeeCsvRow[], ctx: ImportContext): ImportPlan {
   const items: ImportItem[] = [];
   const errors: ImportPlan['errors'] = [];
+  const skipped: ImportPlan['skipped'] = [];
   const seen = new Set<string>();
 
   for (const r of rows) {
@@ -536,7 +557,13 @@ export function planImport(rows: EmployeeCsvRow[], ctx: ImportContext): ImportPl
     const p = r.parsed;
     const num = p.employee.employeeNumber ?? '';
     if (ctx.existingNumbers.has(num)) {
-      errors.push({ line: r.line, code: 'alreadyExists', employeeNumber: num });
+      const known = ctx.existingPeople?.get(num);
+      const e = p.employee;
+      if (known && isSamePerson(known, { lastName: e.lastName, firstName: e.firstName, birthDate: e.birthDate })) {
+        skipped.push({ line: r.line, employeeNumber: num, employee: e, contract: p.contract });
+      } else {
+        errors.push({ line: r.line, code: 'alreadyExists', employeeNumber: num });
+      }
       continue;
     }
     if (seen.has(num)) {
@@ -613,7 +640,50 @@ export function planImport(rows: EmployeeCsvRow[], ctx: ImportContext): ImportPl
       myNumber: p.myNumber,
     });
   }
-  return { items, errors };
+  return { items, errors, skipped };
+}
+
+// ===== 登録済みの同じ人：ファイルと違う所（上書きはしないので、知らせるだけ。11/17） =====
+
+export interface PersonDiff {
+  column: EmployeeColumn;
+  saved: string;
+  file: string;
+}
+
+/** 比べる項目（契約は今日の契約と比べる） */
+export function samePersonDiffs(
+  file: { employee: EmployeeFormInput; contract: ContractInput },
+  saved: {
+    employee: Pick<EmployeeFormInput, 'lastNameKana' | 'firstNameKana' | 'sex' | 'hireDate' | 'retireDate' | 'basicPensionNumber'>;
+    contract: ContractInput | null;
+  },
+): PersonDiff[] {
+  const out: PersonDiff[] = [];
+  const add = (column: EmployeeColumn, a: unknown, b: unknown) => {
+    const s = (v: unknown) => (v === null || v === undefined ? '' : String(v));
+    if (s(a) !== s(b)) out.push({ column, saved: s(a), file: s(b) });
+  };
+  const f = file.employee;
+  const e = saved.employee;
+  add('lastNameKana', e.lastNameKana, f.lastNameKana);
+  add('firstNameKana', e.firstNameKana, f.firstNameKana);
+  add('sex', e.sex, f.sex);
+  add('hireDate', e.hireDate, f.hireDate);
+  add('retireDate', e.retireDate, f.retireDate);
+  add('basicPensionNumber', e.basicPensionNumber, f.basicPensionNumber);
+  const c = saved.contract;
+  const k = file.contract;
+  if (c) {
+    add('employmentType', c.employmentType, k.employmentType);
+    add('payType', c.payType, k.payType);
+    if (c.weeklyMinutes !== k.weeklyMinutes) out.push({ column: 'weeklyHours', saved: formatHours(c.weeklyMinutes), file: formatHours(k.weeklyMinutes) });
+    add('monthlyDays', c.monthlyDays, k.monthlyDays);
+    add('scheduledWage', c.scheduledWage, k.scheduledWage);
+    add('hourlyWage', c.hourlyWage, k.hourlyWage);
+    add('periodEnd', c.periodEnd, k.periodEnd);
+  }
+  return out;
 }
 
 // ===== ひな形 =====

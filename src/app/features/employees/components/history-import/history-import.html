@@ -61,43 +61,17 @@
       </div>
     }
 
-    @if (rowErrors().length > 0) {
-      <div class="alert alert-danger">{{ 'historyCsv.hasErrors' | transloco: { n: rowErrors().length } }}</div>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>{{ 'employeeCsv.col.line' | transloco }}</th>
-            <th>{{ 'employeeCsv.col.column' | transloco }}</th>
-            <th>{{ 'employeeCsv.col.problem' | transloco }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (r of rowErrors(); track r.line) {
-            @for (e of r.errors; track $index) {
-              <tr>
-                <td class="num">{{ r.line }}</td>
-                <td>{{ columnLabel(e.column) }}</td>
-                <td>
-                  {{
-                    (e.code.startsWith('contract.') ? 'contract.error.' + e.code.slice(9) : 'employeeCsv.rowError.' + e.code)
-                      | transloco
-                  }}
-                  @if (cellOf(r, e); as v) {
-                    <span class="sub">（{{ v }}）</span>
-                  }
-                </td>
-              </tr>
-            }
-          }
-        </tbody>
-      </table>
-    }
-
-    @for (e of pv.plan.errors; track e.line) {
-      <div class="alert alert-danger">
-        {{ 'historyCsv.planError.' + e.code | transloco: { line: e.line, number: e.employeeNumber, id: e.id } }}
-      </div>
-    }
+    <!-- エラーの行：共通の部品で1行ずつ直す（11/17） -->
+    <app-import-issues
+      [table]="pv.table"
+      [issues]="issues()"
+      [summaryHeaders]="[columnLabel('employeeNumber'), columnLabel('from')]"
+      [keyHeader]="columnLabel('employeeNumber')"
+      fileStem="history"
+      [(skip)]="skipErrors"
+      [busy]="saving()"
+      (fixed)="onFix($event)"
+    />
 
     @if (pv.plan.skipped.length > 0) {
       <details class="columns">

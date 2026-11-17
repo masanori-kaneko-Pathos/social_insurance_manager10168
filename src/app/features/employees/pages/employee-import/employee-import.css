@@ -236,3 +236,13 @@ progress {
 .fix-field .fix-input {
   width: 9em;
 }
+
+/* 登録済みの同じ人（11/17） */
+.same-people {
+  margin: var(--space-sm) 0 var(--space-md);
+}
+
+.same-people summary {
+  cursor: pointer;
+  font-weight: 600;
+}

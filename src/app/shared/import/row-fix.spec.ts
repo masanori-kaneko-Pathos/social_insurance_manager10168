@@ -1,4 +1,5 @@
 import { applyCellEdits, cellKey, cellOf, columnsForCodes, errorRowsTable } from './row-fix';
+import { applyRowValues, resolveHeader, rowRecord, sameKeyLines } from './row-fix';
 
 const T = [
   ['社員番号', '支払った月', '支払額'],
@@ -40,5 +41,25 @@ describe('row-fix（取り込みのエラーの直し方。11/16）', () => {
     expect(columnsForCodes(['fixedOverCash', 'cashRequired', 'badMonth', 'unknown'], map)).toEqual(['cash', 'fixed', 'month']);
     expect(cellOf(T, 3, ['支払った月'])).toBe('2026/13');
     expect(cellOf(T, 3, ['ない列'])).toBe('');
+  });
+});
+
+describe('1行ずつ直す窓の道具（11/17）', () => {
+  const t = [['社員番号', '氏名', '月'], ['E001', '山田', '2026-01'], ['E002', '佐藤', '2026-01'], ['E001', '山田', '2026-02']];
+  it('applyRowValues：1行だけ直す。表にない見出しは右に足す', () => {
+    const out = applyRowValues(t, 3, { 氏名: '佐藤花子', メモ: 'x' });
+    expect(out[0]).toEqual(['社員番号', '氏名', '月', 'メモ']);
+    expect(out[2]).toEqual(['E002', '佐藤花子', '2026-01', 'x']);
+    expect(out[1]).toEqual(['E001', '山田', '2026-01']);
+    expect(t[2]).toEqual(['E002', '佐藤', '2026-01']);
+  });
+  it('rowRecord・resolveHeader', () => {
+    expect(rowRecord(t, 2)).toEqual({ 社員番号: 'E001', 氏名: '山田', 月: '2026-01' });
+    expect(resolveHeader(['Employee number', 'Name'], ['社員番号', 'Employee number'])).toBe('Employee number');
+    expect(resolveHeader(['x'], ['社員番号'])).toBe('社員番号');
+  });
+  it('sameKeyLines：同じ社員番号のほかの行', () => {
+    expect(sameKeyLines(t, 2, '社員番号')).toEqual([4]);
+    expect(sameKeyLines(t, 3, '社員番号')).toEqual([]);
   });
 });

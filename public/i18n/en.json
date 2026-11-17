@@ -2405,6 +2405,14 @@
         "duplicateInFile": "{{number}} appears more than once in the file",
         "alreadyExists": "{{number}} is already registered"
       }
+    },
+    "same": {
+      "title": "Already registered, same person (same employee number, name and birth date): {{n}} row(s). Not imported",
+      "changed": "{{n}} with differences from the file",
+      "lead": "Importing never overwrites. To keep when a change took effect, enter contract changes with the contract history import or \"Change contract terms\" on the employee page, and other changes by editing the employee.",
+      "column": "Item",
+      "saved": "Registered value",
+      "file": "Value in the file"
     }
   },
   "historyCsv": {
@@ -4062,7 +4070,18 @@
     }
   },
   "importFix": {
-    "fix": "Fix here"
+    "fix": "Fix",
+    "banner": "{{n}} row(s) have problems. Fix them one by one with \"Fix\"; each fix is checked again right away.",
+    "line": "Line",
+    "content": "Content",
+    "problem": "Problem",
+    "dialogTitle": "Fix line {{line}}",
+    "otherColumns": "Other columns ({{n}})",
+    "neighbors": "Other rows with the same employee number ({{n}})",
+    "apply": "Fix and check again",
+    "useNumber": "Use the free number {{n}}",
+    "byName": "From the name: is this {{name}} ({{n}})?",
+    "unknownEmployee": "If the employee number is mistyped, correct it. If the employee is not registered yet, register them first, or leave this row out with \"Import without the rows with errors\"."
   },
   "special": {
     "title": "Special revision (medical care, childcare or nursing care)",

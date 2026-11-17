@@ -1,3 +1,4 @@
+import { isSamePerson, samePersonDiffs } from './employee-csv';
 import type { GradeTableDoc } from '../../../core/models/rates';
 import { HEALTH_ROWS, PENSION_ROWS } from '../../payrolls/logic/grades.fixture';
 import {
@@ -168,5 +169,25 @@ describe('nextEmployeeNumber（重なったときの空き番号の例。11/16�
   it('数字で終わる番号がなければ null', () => {
     expect(nextEmployeeNumber(['ABC', ''])).toBeNull();
     expect(nextEmployeeNumber([])).toBeNull();
+  });
+});
+
+describe('登録済みの同じ人（11/17）', () => {
+  it('isSamePerson：氏名の空白と全角半角は無視、生年月日は同じであること', () => {
+    const a = { lastName: '山田', firstName: '花子', birthDate: '1990-01-01' };
+    expect(isSamePerson(a, { lastName: '山田 ', firstName: '花子', birthDate: '1990-01-01' })).toBeTrue();
+    expect(isSamePerson(a, { ...a, birthDate: '1990-01-02' })).toBeFalse();
+    expect(isSamePerson(a, { ...a, firstName: '太郎' })).toBeFalse();
+  });
+  it('samePersonDiffs：違う項目だけ（契約は今の契約と比べる）', () => {
+    const file = {
+      employee: { lastNameKana: 'ヤマダ', firstNameKana: 'ハナコ', sex: 'female', hireDate: '2020-04-01', retireDate: null, basicPensionNumber: null },
+      contract: { employmentType: 'regular', payType: 'monthly', weeklyMinutes: 2400, monthlyDays: 21, scheduledWage: 300000, hourlyWage: null, periodEnd: null },
+    } as any;
+    const saved = { employee: { ...file.employee, hireDate: '2020-04-02' }, contract: { ...file.contract, scheduledWage: 280000 } } as any;
+    expect(samePersonDiffs(file, saved)).toEqual([
+      { column: 'hireDate', saved: '2020-04-02', file: '2020-04-01' },
+      { column: 'scheduledWage', saved: '280000', file: '300000' },
+    ]);
   });
 });

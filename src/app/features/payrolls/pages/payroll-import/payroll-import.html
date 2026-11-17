@@ -143,66 +143,21 @@
             </div>
           }
 
-          @if (pv.read.errors.length > 0) {
-            <div class="alert alert-danger">{{ 'payrollCsv.import.hasErrors' | transloco }}</div>
-            <!-- エラーの直し方（従業員の取り込みと同じ。11/16） -->
-            <div class="fix-bar">
-              <button type="button" class="btn btn-small btn-primary" [disabled]="edits().size === 0 || saving()" (click)="applyEdits()">
-                {{ 'employeeCsv.applyEdits' | transloco: { n: edits().size } }}
-              </button>
-              <button type="button" class="btn btn-small" (click)="exportErrorRows()">{{ 'employeeCsv.exportErrors' | transloco }}</button>
-              <label class="opt">
-                <input type="checkbox" [checked]="skipErrors()" (change)="skipErrors.set($any($event.target).checked)" />
-                {{ 'employeeCsv.skipErrors' | transloco }}
-              </label>
-            </div>
-            @if (pv.read.errors.length > showErrors) {
-              <p class="sub">{{ 'employeeCsv.manyErrors' | transloco }}</p>
-            }
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th class="num">{{ 'payrollCsv.line' | transloco }}</th>
-                    <th>{{ 'payrollCsv.problem' | transloco }}</th>
-                    <th>{{ 'importFix.fix' | transloco }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (e of pv.read.errors.slice(0, showErrors); track e.line) {
-                    <tr>
-                      <td class="num">{{ e.line }}</td>
-                      <td class="problems">
-                        @for (k of errorKeys(e.codes); track k) {
-                          <span>{{ k | transloco }}</span>
-                        }
-                      </td>
-                      <td>
-                        <div class="fix-fields">
-                          @for (c of fixColumns(e.codes); track c) {
-                            <label class="fix-field">
-                              <span>{{ columnName(c) }}</span>
-                              <input
-                                class="input fix-input"
-                                [class.changed]="edits().has(cellKey(e.line, c))"
-                                [value]="editValue(e.line, c)"
-                                (input)="setEdit(e.line, c, $any($event.target).value)"
-                                (keydown.enter)="applyEdits()"
-                              />
-                            </label>
-                          }
-                        </div>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-            @if (pv.read.errors.length > showErrors) {
-              <p class="sub">{{ 'payrollCsv.import.moreErrors' | transloco: { n: pv.read.errors.length - showErrors } }}</p>
-            }
-          } @else if (writes().length > 0) {
-            <div class="table-wrap">
+          <!-- エラーの行：共通の部品で1行ずつ直す（11/17） -->
+          @if (table(); as t) {
+            <app-import-issues
+              [table]="t"
+              [issues]="issues()"
+              [summaryHeaders]="summaryHeaders()"
+              [keyHeader]="keyHeader()"
+              fileStem="payrolls"
+              [(skip)]="skipErrors"
+              [busy]="saving()"
+              (fixed)="onFix($event)"
+            />
+          }
+          @if (writes().length > 0) {
+            <div class="table-wrap scroll">
               <table>
                 <thead>
                   <tr>

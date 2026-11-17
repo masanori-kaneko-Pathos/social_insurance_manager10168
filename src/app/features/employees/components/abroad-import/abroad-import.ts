@@ -1,9 +1,10 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { ImportFix, ImportIssue, ImportIssues } from '../../../../shared/components/import-issues/import-issues';
 import { Employee } from '../../../../core/models/employee';
 import { CsvEncoding, downloadCsv } from '../../../../shared/csv/csv';
-import { applyCellEdits, cellKey, cellOf } from '../../../../shared/import/row-fix';
+import { applyRowValues, resolveHeader } from '../../../../shared/import/row-fix';
 import { ImportFileError, readTables } from '../../../../shared/import/parse';
 import { todayLocal } from '../../../../shared/utils/date';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
@@ -36,7 +37,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-abroad-import',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [ImportIssues, RouterLink, TranslocoPipe],
   templateUrl: './abroad-import.html',
   styleUrl: '../../pages/employee-import/employee-import.css',
 })
@@ -53,9 +54,7 @@ export class AbroadImport {
   readonly saving = signal(false);
   readonly progress = signal<{ done: number; total: number } | null>(null);
   readonly doneCount = signal<number | null>(null);
-  readonly edits = signal<Map<string, string>>(new Map());
   readonly skipErrors = signal(false);
-  readonly cellKey = cellKey;
   private employees: Employee[] = [];
   private fileName = '';
   private encoding: CsvEncoding | null = null;
@@ -124,25 +123,28 @@ export class AbroadImport {
     }
   }
 
-  fixColumns(r: AbroadImportRow): string[] {
-    return abroadFixColumns(r.errors);
+  // ===== エラーの直し方（11/17。共通の部品 app-import-issues） =====
+  private readonly transloco = inject(TranslocoService);
+
+  /** 表にある見出しの書き方 */
+  header(column: string): string {
+    return resolveHeader(this.preview()?.table[0] ?? [], abroadLabels(this.kind(), column));
   }
 
-  editValue(line: number, column: string): string {
-    const t = this.preview()?.table ?? [];
-    return this.edits().get(cellKey(line, column)) ?? cellOf(t, line, abroadLabels(this.kind(), column));
-  }
-
-  setEdit(line: number, column: string, value: string): void {
-    this.edits.update((m) => new Map(m).set(cellKey(line, column), value));
-  }
-
-  async applyEdits(): Promise<void> {
+  readonly issues = computed<ImportIssue[]>(() => {
     const p = this.preview();
-    if (!p || this.edits().size === 0) return;
-    const table = applyCellEdits(p.table, this.edits(), (c) => abroadLabels(this.kind(), c));
-    this.edits.set(new Map());
-    await this.showPreview(table);
+    if (!p) return [];
+    return this.errorRows().map((r) => {
+      const messages = r.errors.map((e) => `${this.label(e.column)}${e.column ? '：' : ''}${this.transloco.translate(this.errorText(e))}`);
+      if (r.errors.some((e) => e.code === 'unknownEmployee')) messages.push(this.transloco.translate('importFix.unknownEmployee'));
+      return { line: r.line, messages, headers: abroadFixColumns(r.errors).map((c) => this.header(c)) };
+    });
+  });
+
+  async onFix(fix: ImportFix): Promise<void> {
+    const p = this.preview();
+    if (!p) return;
+    await this.showPreview(applyRowValues(p.table, fix.line, fix.values));
   }
 
   clear(): void {
@@ -153,7 +155,6 @@ export class AbroadImport {
     this.preview.set(null);
     this.doneCount.set(null);
     this.errorKey.set(null);
-    this.edits.set(new Map());
     this.skipErrors.set(false);
   }
 

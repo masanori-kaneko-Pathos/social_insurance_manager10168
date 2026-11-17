@@ -21,7 +21,8 @@ import {
   planDependentImport,
 } from '../../logic/dependent-csv';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
-import { applyCellEdits, cellKey, cellOf, errorRowsTable } from '../../../../shared/import/row-fix';
+import { applyRowValues } from '../../../../shared/import/row-fix';
+import { ImportFix, ImportIssue, ImportIssues } from '../../../../shared/components/import-issues/import-issues';
 import { TranslocoService } from '@jsverse/transloco';
 
 interface Preview {
@@ -42,7 +43,7 @@ const PARALLEL = 8;
  */
 @Component({
   selector: 'app-dependent-import',
-  imports: [ColumnMapper, RouterLink, TranslocoPipe],
+  imports: [ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
   templateUrl: './dependent-import.html',
   styleUrl: '../../pages/employee-import/employee-import.css',
 })
@@ -77,48 +78,27 @@ export class DependentImport {
 
   // ===== エラーの直し方（11/16。従業員の取り込みと同じ型）：画面で直す／エラーの行だけ書き出す／エラーの行を除いて取り込む =====
   private readonly transloco = inject(TranslocoService);
-  readonly edits = signal<Map<string, string>>(new Map());
+  // ===== エラーの直し方（11/17。共通の部品 app-import-issues） =====
   readonly skipErrors = signal(false);
-  readonly cellKey = cellKey;
 
-  fixColumns(r: DependentImportRow): DependentColumn[] {
-    return dependentFixColumns(r.errors);
-  }
-
-  editValue(line: number, column: DependentColumn): string {
-    const t = this.preview()?.table ?? [];
-    return this.edits().get(cellKey(line, column)) ?? cellOf(t, line, [this.headers[column]]);
-  }
-
-  setEdit(line: number, column: string, value: string): void {
-    this.edits.update((m) => new Map(m).set(cellKey(line, column), value));
-  }
-
-  /** 直した値を表に入れて、確認をやり直す */
-  async applyEdits(): Promise<void> {
+  readonly issues = computed<ImportIssue[]>(() => {
     const p = this.preview();
-    if (!p || this.edits().size === 0) return;
-    const table = applyCellEdits(p.table, this.edits(), (c) => [this.headers[c as DependentColumn] ?? c]);
-    this.edits.set(new Map());
-    await this.showPreview(table);
-  }
+    if (!p) return [];
+    return this.errorRows().map((r) => {
+      const messages = r.errors.map((e) => {
+        const t = this.errorText(e);
+        return `${this.fieldLabel(t.field)}${t.field ? '：' : ''}${this.transloco.translate(t.key)}`;
+      });
+      const suggestions: NonNullable<ImportIssue['suggestions']> = [];
+      if (r.errors.includes('employeeNotFound')) messages.push(this.transloco.translate('importFix.unknownEmployee'));
+      return { line: r.line, messages, headers: dependentFixColumns(r.errors).map((c) => this.headers[c]), suggestions };
+    });
+  });
 
-  /** エラーの行だけを書き出す（右端に「エラー」の列） */
-  exportErrorRows(): void {
+  async onFix(fix: ImportFix): Promise<void> {
     const p = this.preview();
     if (!p) return;
-    const messages = new Map(
-      this.errorRows().map((r) => [
-        r.line,
-        r.errors
-          .map((e) => {
-            const t = this.errorText(e);
-            return `${this.fieldLabel(t.field)}${t.field ? '：' : ''}${this.transloco.translate(t.key)}`;
-          })
-          .join(' ／ '),
-      ]),
-    );
-    downloadCsv(`dependents-errors-${todayLocal()}.csv`, errorRowsTable(p.table, messages, this.transloco.translate('employeeCsv.errorColumn')));
+    await this.showPreview(applyRowValues(p.table, fix.line, fix.values));
   }
 
   downloadTemplate(): void {
@@ -166,7 +146,6 @@ export class DependentImport {
     this.preview.set(null);
     this.doneCount.set(null);
     this.errorKey.set(null);
-    this.edits.set(new Map());
     this.skipErrors.set(false);
   }
 

@@ -110,111 +110,59 @@
         </div>
       }
 
-      @if (rowErrors().length > 0) {
-        <div class="alert alert-danger">
-          {{ 'employeeCsv.hasErrors' | transloco: { n: rowErrors().length } }}
-        </div>
-        <!-- 直し方：少なければこの表の中で直して確かめ直す。多ければエラーの行だけ書き出して Excel で（11/13） -->
-        <div class="fix-bar">
-          <button type="button" class="btn btn-small btn-primary" [disabled]="edits().size === 0 || saving()" (click)="applyEdits()">
-            {{ 'employeeCsv.applyEdits' | transloco: { n: edits().size } }}
-          </button>
-          <button type="button" class="btn btn-small" (click)="exportErrorRows()">{{ 'employeeCsv.exportErrors' | transloco }}</button>
-          <label class="opt">
-            <input type="checkbox" [checked]="skipErrors()" (change)="skipErrors.set($any($event.target).checked)" />
-            {{ 'employeeCsv.skipErrors' | transloco }}
-          </label>
-        </div>
-        @if (manyErrors()) {
-          <p class="sub">{{ 'employeeCsv.manyErrors' | transloco }}</p>
-        }
-        <div class="table-wrap scroll">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>{{ 'employeeCsv.col.line' | transloco }}</th>
-              <th>{{ 'employeeCsv.col.column' | transloco }}</th>
-              <th>{{ 'employeeCsv.col.problem' | transloco }}</th>
-              <th>{{ 'employeeCsv.col.fix' | transloco }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (r of rowErrors(); track r.line) {
-              @for (e of r.errors; track $index) {
-                <tr>
-                  <td class="num">{{ r.line }}</td>
-                  <td>{{ columnLabel(e.column) }}</td>
-                  <td>
-                    {{
-                      (e.code.startsWith('contract.')
-                        ? 'contract.error.' + e.code.slice(9)
-                        : 'employeeCsv.rowError.' + e.code
-                      ) | transloco
-                    }}
-                  </td>
-                  <td>
-                    @if (e.column) {
-                      <input
-                        class="input fix-input"
-                        [class.changed]="edits().has(editKey(r.line, e.column))"
-                        [value]="editValue(r, e)"
-                        (input)="setEdit(r.line, e.column, $any($event.target).value)"
-                        (keydown.enter)="applyEdits()"
-                        [attr.aria-label]="r.line + ' ' + columnLabel(e.column)"
-                      />
-                    }
-                  </td>
-                </tr>
-              }
-            }
-          </tbody>
-        </table>
-        </div>
-      }
+      <!-- エラーの行と社員番号の重なり：共通の部品で1行ずつ直す（11/17） -->
+      <app-import-issues
+        [table]="pv.table"
+        [issues]="issues()"
+        [summaryHeaders]="[headers.employeeNumber, headers.lastName, headers.firstName, headers.romanLastName]"
+        [upperHeaders]="[headers.romanLastName, headers.romanFirstName, headers.romanMiddleName, headers.nationality]"
+        fileStem="employees"
+        [(skip)]="skipErrors"
+        [busy]="saving()"
+        (fixed)="onFix($event)"
+      />
 
-      <!-- 社員番号が重なった行：その場で別の番号に直せる（11/16） -->
-      @if (pv.plan.errors.length > 0) {
-        <div class="card dup-card">
-          <h3>{{ 'employeeCsv.dup.title' | transloco: { n: pv.plan.errors.length } }}</h3>
-          <p class="sub">
-            {{ 'employeeCsv.dup.lead' | transloco }}
-            @if (numberSuggestion(); as next) {
-              {{ 'employeeCsv.dup.suggest' | transloco: { next: next } }}
+      <!-- 登録済みの同じ人（社員番号・氏名・生年月日が同じ）：取り込まない。違う所があれば知らせる（11/17） -->
+      @if (samePeople().length > 0) {
+        <details class="same-people">
+          <summary>
+            {{ 'employeeCsv.same.title' | transloco: { n: samePeople().length } }}
+            @if (changedPeople().length > 0) {
+              <span class="badge badge-warn">{{ 'employeeCsv.same.changed' | transloco: { n: changedPeople().length } }}</span>
             }
-          </p>
-          <table class="dup-table">
-            <thead>
-              <tr>
-                <th class="num">{{ 'employeeCsv.dup.line' | transloco }}</th>
-                <th>{{ 'employeeCsv.dup.reason' | transloco }}</th>
-                <th>{{ 'employee.field.employeeNumber' | transloco }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (e of pv.plan.errors; track e.line) {
-                <tr>
-                  <td class="num">{{ e.line }}</td>
-                  <td>{{ 'employeeCsv.dup.code.' + e.code | transloco: { number: e.employeeNumber } }}</td>
-                  <td>
-                    <input
-                      class="input fix-input"
-                      [class.changed]="edits().has(editKey(e.line, 'employeeNumber'))"
-                      [value]="numberEdit(e.line, e.employeeNumber)"
-                      (input)="setEdit(e.line, 'employeeNumber', $any($event.target).value)"
-                      (keydown.enter)="applyEdits()"
-                      [attr.aria-label]="e.line + ' ' + ('employee.field.employeeNumber' | transloco)"
-                    />
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-          <div class="actions">
-            <button type="button" class="btn btn-small btn-primary" [disabled]="edits().size === 0 || saving()" (click)="applyEdits()">
-              {{ 'employeeCsv.applyEdits' | transloco: { n: edits().size } }}
-            </button>
-          </div>
-        </div>
+          </summary>
+          <p class="sub">{{ 'employeeCsv.same.lead' | transloco }}</p>
+          @if (changedPeople().length > 0) {
+            <div class="table-wrap scroll">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>{{ 'employeeCsv.col.line' | transloco }}</th>
+                    <th>{{ 'employeeCsv.col.number' | transloco }}</th>
+                    <th>{{ 'employeeCsv.col.name' | transloco }}</th>
+                    <th>{{ 'employeeCsv.same.column' | transloco }}</th>
+                    <th>{{ 'employeeCsv.same.saved' | transloco }}</th>
+                    <th>{{ 'employeeCsv.same.file' | transloco }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (x of changedPeople(); track x.line) {
+                    @for (d of x.diffs; track d.column; let first = $first) {
+                      <tr>
+                        <td class="num">{{ first ? x.line : '' }}</td>
+                        <td class="mono">{{ first ? x.employeeNumber : '' }}</td>
+                        <td>{{ first ? x.name : '' }}</td>
+                        <td>{{ columnLabel(d.column) }}</td>
+                        <td>{{ d.saved || '—' }}</td>
+                        <td>{{ d.file || '—' }}</td>
+                      </tr>
+                    }
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </details>
       }
 
       @if (pv.plan.items.length > 0) {

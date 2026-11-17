@@ -51,26 +51,23 @@
       {{ 'dependentCsv.summary' | transloco: { add: addRows().length, skip: skipRows().length, error: errorRows().length, warn: warnCount() } }}
     </p>
 
-    @if (errorRows().length > 0) {
-      <div class="alert alert-danger">{{ 'dependentCsv.hasErrors' | transloco: { n: errorRows().length } }}</div>
-      <!-- エラーの直し方（従業員の取り込みと同じ。11/16） -->
-      <div class="fix-bar">
-        <button type="button" class="btn btn-small btn-primary" [disabled]="edits().size === 0 || saving()" (click)="applyEdits()">
-          {{ 'employeeCsv.applyEdits' | transloco: { n: edits().size } }}
-        </button>
-        <button type="button" class="btn btn-small" (click)="exportErrorRows()">{{ 'employeeCsv.exportErrors' | transloco }}</button>
-        <label class="opt">
-          <input type="checkbox" [checked]="skipErrors()" (change)="skipErrors.set($any($event.target).checked)" />
-          {{ 'employeeCsv.skipErrors' | transloco }}
-        </label>
-      </div>
-    }
+    <!-- エラーの行：共通の部品で1行ずつ直す（11/17） -->
+    <app-import-issues
+      [table]="pv.table"
+      [issues]="issues()"
+      [summaryHeaders]="[headers.employeeNumber, headers.lastName, headers.firstName, headers.relationship]"
+      [keyHeader]="headers.employeeNumber"
+      fileStem="dependents"
+      [(skip)]="skipErrors"
+      [busy]="saving()"
+      (fixed)="onFix($event)"
+    />
 
     <div class="actions top">
+      <button type="button" class="btn" [disabled]="saving()" (click)="clear()">{{ 'common.cancel' | transloco }}</button>
       <button type="button" class="btn btn-primary" [disabled]="!canImport()" (click)="importCsv()">
         {{ 'dependentCsv.import' | transloco: { n: addRows().length } }}
       </button>
-      <button type="button" class="btn" [disabled]="saving()" (click)="clear()">{{ 'common.cancel' | transloco }}</button>
     </div>
     <div class="table-wrap scroll">
       <table class="table">
@@ -99,21 +96,6 @@
                     @let t = errorText(e);
                     <span class="badge">{{ fieldLabel(t.field) }}{{ t.field ? '：' : '' }}{{ t.key | transloco }}</span>
                   }
-                  <!-- その場で直す欄（エラーに関係する列だけ） -->
-                  <div class="fix-fields">
-                    @for (c of fixColumns(r); track c) {
-                      <label class="fix-field">
-                        <span>{{ headers[c] }}</span>
-                        <input
-                          class="input fix-input"
-                          [class.changed]="edits().has(cellKey(r.line, c))"
-                          [value]="editValue(r.line, c)"
-                          (input)="setEdit(r.line, c, $any($event.target).value)"
-                          (keydown.enter)="applyEdits()"
-                        />
-                      </label>
-                    }
-                  </div>
                 } @else if (r.skip) {
                   <span class="sub">{{ 'dependentCsv.skip.' + r.skip | transloco }}</span>
                 } @else {
@@ -130,10 +112,10 @@
     </div>
 
     <div class="actions">
+      <button type="button" class="btn" [disabled]="saving()" (click)="clear()">{{ 'common.cancel' | transloco }}</button>
       <button type="button" class="btn btn-primary" [disabled]="!canImport()" (click)="importCsv()">
         {{ 'dependentCsv.import' | transloco: { n: addRows().length } }}
       </button>
-      <button type="button" class="btn" [disabled]="saving()" (click)="clear()">{{ 'common.cancel' | transloco }}</button>
     </div>
   }
 </section>

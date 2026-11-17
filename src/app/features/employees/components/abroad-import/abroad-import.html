@@ -42,17 +42,18 @@
     } @else {
       <p>{{ 'abroadCsv.summary' | transloco: { add: addRows().length, skip: skipRows().length, error: errorRows().length } }}</p>
 
-      @if (errorRows().length > 0) {
-        <div class="fix-bar">
-          <button type="button" class="btn btn-small btn-primary" [disabled]="edits().size === 0 || saving()" (click)="applyEdits()">
-            {{ 'employeeCsv.applyEdits' | transloco: { n: edits().size } }}
-          </button>
-          <label class="opt">
-            <input type="checkbox" [checked]="skipErrors()" (change)="skipErrors.set($any($event.target).checked)" />
-            {{ 'employeeCsv.skipErrors' | transloco }}
-          </label>
-        </div>
-      }
+      <!-- エラーの行：共通の部品で1行ずつ直す（11/17） -->
+      <app-import-issues
+        [table]="pv.table"
+        [issues]="issues()"
+        [summaryHeaders]="[header('employeeNumber'), header('name')]"
+        [keyHeader]="header('employeeNumber')"
+        [upperHeaders]="[header('country')]"
+        fileStem="abroad"
+        [(skip)]="skipErrors"
+        [busy]="saving()"
+        (fixed)="onFix($event)"
+      />
 
       <div class="table-wrap scroll">
         <table class="table">
@@ -77,20 +78,6 @@
                     @for (e of r.errors; track $index) {
                       <span class="badge">{{ label(e.column) }}{{ e.column ? '：' : '' }}{{ errorText(e) | transloco }}</span>
                     }
-                    <div class="fix-fields">
-                      @for (c of fixColumns(r); track c) {
-                        <label class="fix-field">
-                          <span>{{ label(c) }}</span>
-                          <input
-                            class="input fix-input"
-                            [class.changed]="edits().has(cellKey(r.line, c))"
-                            [value]="editValue(r.line, c)"
-                            (input)="setEdit(r.line, c, $any($event.target).value)"
-                            (keydown.enter)="applyEdits()"
-                          />
-                        </label>
-                      }
-                    </div>
                   } @else if (r.skip) {
                     <span class="sub">{{ 'abroadCsv.skip' | transloco }}</span>
                   } @else {
@@ -107,10 +94,10 @@
       </div>
 
       <div class="actions">
+        <button type="button" class="btn" [disabled]="saving()" (click)="clear()">{{ 'common.cancel' | transloco }}</button>
         <button type="button" class="btn btn-primary" [disabled]="!canImport()" (click)="importCsv()">
           {{ 'abroadCsv.import' | transloco: { n: addRows().length } }}
         </button>
-        <button type="button" class="btn" [disabled]="saving()" (click)="clear()">{{ 'common.cancel' | transloco }}</button>
       </div>
     }
   }

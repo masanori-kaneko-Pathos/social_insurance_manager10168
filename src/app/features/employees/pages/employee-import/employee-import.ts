@@ -33,6 +33,12 @@ import { DependentImport } from '../../components/dependent-import/dependent-imp
 import { AbroadImport } from '../../components/abroad-import/abroad-import';
 import { HistoryImport } from '../../components/history-import/history-import';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { ImportFix, ImportIssue, ImportIssues } from '../../../../shared/components/import-issues/import-issues';
+import { applyRowValues } from '../../../../shared/import/row-fix';
+import { ContractService } from '../../contract.service';
+import { contractAt } from '../../logic/contract-form-model';
+import { PersonDiff, samePersonDiffs } from '../../logic/employee-csv';
+import type { Employee } from '../../../../core/models/employee';
 
 /** 何を取り込むか：従業員（1行1人）／扶養家族（1行1人。11/13）／契約の履歴／標準報酬の履歴（登録済みの人に足す） */
 export type ImportMode = 'employees' | 'dependents' | 'contract' | 'remuneration' | 'certificate' | 'overseas';
@@ -49,8 +55,6 @@ interface Preview {
   table: string[][];
 }
 
-/** エラーがこれより多いときは、書き出して Excel で直すことを勧める */
-const INLINE_FIX_LIMIT = 30;
 
 /**
  * 従業員の取り込み（CSV）
@@ -59,7 +63,7 @@ const INLINE_FIX_LIMIT = 30;
  */
 @Component({
   selector: 'app-employee-import',
-  imports: [AbroadImport, ColumnMapper, DependentImport, HistoryImport, PasswordGate, RouterLink, TranslocoPipe],
+  imports: [AbroadImport, ColumnMapper, DependentImport, HistoryImport, ImportIssues, PasswordGate, RouterLink, TranslocoPipe],
   templateUrl: './employee-import.html',
   styleUrl: './employee-import.css',
 })
@@ -113,83 +117,77 @@ export class EmployeeImport {
   readonly numberError = signal<string | null>(null);
   readonly numberDone = signal<number | null>(null);
 
-  // ===== エラーの直し方（11/13）：少なければ画面の中で、多ければエラーの行だけ書き出して Excel で =====
+  // ===== エラーの直し方（11/17）：共通の部品（app-import-issues）。「直す」の窓で1行ずつ直して、すぐ確かめ直す =====
   private readonly transloco = inject(TranslocoService);
-  /** 画面で直した値（'行|列' → 値）。「直した内容で確かめ直す」で表に入れて読み直す */
-  readonly edits = signal<Map<string, string>>(new Map());
+  private readonly contractsApi = inject(ContractService);
   /** エラーのない行だけ取り込む（エラーの行は、あとで直して取り込み直す） */
   readonly skipErrors = signal(false);
-  readonly manyErrors = computed(() => this.rowErrors().reduce((n, r) => n + r.errors.length, 0) > INLINE_FIX_LIMIT);
 
-  editKey(line: number, column: string): string {
-    return `${line}|${column}`;
-  }
-
-  editValue(r: EmployeeCsvRow, e: CsvRowError): string {
-    return e.column ? (this.edits().get(this.editKey(r.line, e.column)) ?? this.cellOf(r, e)) : '';
-  }
-
-  setEdit(line: number, column: string, value: string): void {
-    this.edits.update((m) => new Map(m).set(this.editKey(line, column), value));
-  }
-
-  /** 直した値を表に入れて、確認をやり直す */
-  async applyEdits(): Promise<void> {
+  /** エラーの行と、社員番号が重なった行（どちらも窓で直す） */
+  readonly issues = computed<ImportIssue[]>(() => {
     const p = this.preview();
-    if (!p || this.edits().size === 0) return;
-    const table = p.table.map((row) => [...row]);
-    const header = table[0];
-    for (const [k, value] of this.edits()) {
-      const [lineText, column] = k.split('|');
-      const row = table[Number(lineText) - 1];
-      if (!row) continue;
-      const label = EMPLOYEE_CSV_HEADERS[column as keyof typeof EMPLOYEE_CSV_HEADERS];
-      let j = header.findIndex((h) => h.replace(/^\uFEFF/, '').trim() === label || h.trim() === column);
-      if (j < 0) {
-        // 表にない列（任意の列を使っていなかった）は、右に足す
-        header.push(label);
-        j = header.length - 1;
-      }
-      while (row.length <= j) row.push('');
-      row[j] = value;
+    if (!p) return [];
+    const t = (key: string, params?: Record<string, unknown>) => this.transloco.translate(key, params);
+    const out: ImportIssue[] = this.rowErrors().map((r) => ({
+      line: r.line,
+      headers: r.errors.filter((e) => e.column).map((e) => this.columnLabel(e.column)),
+      messages: r.errors.map((e) => {
+        const what = e.code.startsWith('contract.') ? t('contract.error.' + e.code.slice(9)) : t('employeeCsv.rowError.' + e.code);
+        return e.column ? `${this.columnLabel(e.column)}：${what}` : what;
+      }),
+    }));
+    const next = this.numberSuggestion();
+    for (const e of p.plan.errors) {
+      out.push({
+        line: e.line,
+        headers: [this.headers.employeeNumber],
+        messages: [t('employeeCsv.dup.code.' + e.code, { number: e.employeeNumber })],
+        suggestions: next ? [{ label: t('importFix.useNumber', { n: next }), values: { [this.headers.employeeNumber]: next } }] : [],
+      });
     }
-    this.edits.set(new Map());
-    await this.showPreview(table);
-  }
+    return out.sort((a, b) => a.line - b.line);
+  });
 
-  /** エラーの行だけを書き出す（右端に「エラー」の列。Excel で直して、そのファイルを取り込み直す） */
-  exportErrorRows(): void {
+  /** 窓で直した1行を表に入れて、確かめ直す */
+  async onFix(fix: ImportFix): Promise<void> {
     const p = this.preview();
     if (!p) return;
-    const t = (key: string) => this.transloco.translate(key);
-    const header = [...p.table[0], t('employeeCsv.errorColumn')];
-    const rows = this.rowErrors().map((r) => {
-      const msg = r.errors
-        .map((e) => {
-          const what = e.code.startsWith('contract.') ? t('contract.error.' + e.code.slice(9)) : t('employeeCsv.rowError.' + e.code);
-          return e.column ? `${this.columnLabel(e.column)}：${what}` : what;
-        })
-        .join(' ／ ');
-      return [...(p.table[r.line - 1] ?? []), msg];
-    });
-    downloadCsv(`employees-errors-${todayLocal()}.csv`, [header, ...rows]);
+    await this.showPreview(applyRowValues(p.table, fix.line, fix.values));
   }
 
-  /**
-   * 社員番号が重なった行を、画面で別の番号に直す（11/16）
-   * 直した番号は、ほかの列の直しと同じく「直した内容で確かめ直す」で表に入れて読み直す
-   */
-  numberEdit(line: number, current: string): string {
-    return this.edits().get(this.editKey(line, 'employeeNumber')) ?? current;
-  }
+  /** 登録済みの同じ人：ファイルと違う所（取り込まない。知らせるだけ） */
+  readonly samePeople = signal<{ line: number; employeeNumber: string; name: string; diffs: PersonDiff[] }[]>([]);
+  readonly changedPeople = computed(() => this.samePeople().filter((x) => x.diffs.length > 0));
 
+  private async loadSamePeople(plan: ImportPlan, existing: readonly Employee[]): Promise<void> {
+    const office = this.context.current();
+    if (!office || plan.skipped.length === 0) {
+      this.samePeople.set([]);
+      return;
+    }
+    const byNo = new Map(existing.map((e) => [e.employeeNumber ?? '', e]));
+    const today = todayLocal();
+    const rows = await Promise.all(
+      plan.skipped.map(async (s) => {
+        const saved = byNo.get(s.employeeNumber);
+        const contracts = saved ? await this.contractsApi.list(office.id, saved.id) : [];
+        const contract = contractAt(contracts, today);
+        return {
+          line: s.line,
+          employeeNumber: s.employeeNumber,
+          name: `${s.employee.lastName} ${s.employee.firstName}`.trim(),
+          diffs: saved ? samePersonDiffs(s, { employee: saved, contract }) : [],
+        };
+      }),
+    );
+    this.samePeople.set(rows);
+  }
   /** 空いている番号の例（登録済み・ファイルの中・画面で直した番号のどれとも重ならない） */
   readonly numberSuggestion = computed(() => {
     const p = this.preview();
     if (!p) return null;
     const inFile = p.read.rows.map((r) => r.values.employeeNumber ?? '');
-    const edited = [...this.edits().entries()].filter(([k]) => k.endsWith('|employeeNumber')).map(([, v]) => v);
-    return nextEmployeeNumber([...p.existingNumbers, ...inFile, ...edited]);
+    return nextEmployeeNumber([...p.existingNumbers, ...inFile]);
   });
 
   readonly rowErrors = computed(
@@ -286,10 +284,15 @@ export class EmployeeImport {
         criteria,
         gradeTables,
         existingNumbers: new Set(existingNumbers),
+        existingPeople: new Map(
+          existing
+            .filter((e) => e.employeeNumber)
+            .map((e) => [e.employeeNumber!, { lastName: e.lastName, firstName: e.firstName, birthDate: e.birthDate }]),
+        ),
         departments: office.departments ?? [],
       });
       this.preview.set({ fileName: file.fileName, encoding: file.encoding, read, plan, table, existingNumbers });
-      this.skipErrors.set(false);
+      await this.loadSamePeople(plan, existing);
     } catch (err) {
       console.error(err);
       this.errorKey.set(errorKeyOf(err, 'employeeCsv.error.read'));

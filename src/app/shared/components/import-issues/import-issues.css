@@ -1,0 +1,194 @@
+.fix-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  margin: var(--space-sm) 0;
+}
+
+.fix-bar .opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-sm);
+}
+
+/* 一覧は枠の中でスクロールし、見出しは上に貼り付く */
+.issues-wrap {
+  max-height: 50vh;
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-md);
+}
+
+.issues {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+.issues th,
+.issues td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.issues thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-bg);
+  white-space: nowrap;
+}
+
+.issues .num {
+  width: 4em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.issues .content {
+  white-space: nowrap;
+}
+
+.issues .problems span {
+  display: block;
+  color: var(--color-danger-text);
+}
+
+.issues .act {
+  width: 1%;
+  white-space: nowrap;
+}
+
+/* ===== 窓（rate-dialog・todo-dialog と同じ作り） ===== */
+.fix-dialog {
+  width: min(760px, calc(100vw - 32px));
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-popover);
+  overflow: hidden;
+}
+
+.fix-dialog::backdrop {
+  background: rgb(62 30 2 / 45%);
+}
+
+.dialog-body {
+  max-height: calc(100vh - 64px);
+  overflow: auto;
+  padding: var(--space-lg);
+}
+
+.dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.dialog-head h2 {
+  margin: 0;
+  font-size: var(--font-lg);
+}
+
+.close-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-sub);
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  background: var(--color-hover);
+}
+
+.messages {
+  margin: var(--space-sm) 0 var(--space-md);
+  padding-left: 1.2em;
+  color: var(--color-danger-text);
+  font-size: var(--font-sm);
+}
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-sm) var(--space-md);
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.problem-grid .cell span {
+  color: var(--color-danger-text);
+  font-weight: 600;
+}
+
+.problem-grid .input {
+  border-color: var(--color-danger-text);
+}
+
+.input.changed {
+  border-color: var(--color-primary);
+  background: var(--color-highlight-soft);
+}
+
+.others {
+  margin-top: var(--space-md);
+}
+
+.others summary {
+  cursor: pointer;
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+  margin-bottom: var(--space-sm);
+}
+
+.neighbor-wrap {
+  overflow-x: auto;
+}
+
+.neighbor {
+  border-collapse: collapse;
+  font-size: var(--font-xs, 0.75rem);
+  white-space: nowrap;
+}
+
+.neighbor th,
+.neighbor td {
+  padding: 2px 8px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.neighbor .num {
+  text-align: right;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}

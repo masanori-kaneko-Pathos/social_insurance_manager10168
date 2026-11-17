@@ -1,6 +1,8 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { ImportFix, ImportIssue, ImportIssues } from '../../../../shared/components/import-issues/import-issues';
+import { applyRowValues } from '../../../../shared/import/row-fix';
 import { ColumnMapper } from '../../../../shared/components/column-mapper/column-mapper';
 import { CsvEncoding, downloadCsv } from '../../../../shared/csv/csv';
 import { isOurFormat } from '../../../../shared/import/column-map';
@@ -34,6 +36,8 @@ interface Preview {
   encoding: CsvEncoding | null;
   read: HistoryCsvRead;
   plan: HistoryPlan;
+  /** 読んだ表（窓で直すとき・エラーの行を書き出すときに使う） */
+  table: string[][];
 }
 
 /**
@@ -43,7 +47,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-history-import',
-  imports: [ColumnMapper, RouterLink, TranslocoPipe],
+  imports: [ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
   templateUrl: './history-import.html',
   styleUrl: '../../pages/employee-import/employee-import.css',
 })
@@ -73,8 +77,7 @@ export class HistoryImport {
       this.context.isAdmin() &&
       !this.saving() &&
       p.read.missingColumns.length === 0 &&
-      this.rowErrors().length === 0 &&
-      p.plan.errors.length === 0 &&
+      ((this.rowErrors().length === 0 && p.plan.errors.length === 0) || this.skipErrors()) &&
       p.plan.items.length > 0
     );
   });
@@ -127,7 +130,8 @@ export class HistoryImport {
     this.reset();
   }
 
-  private reset(): void {
+  private reset(): void {
+    this.skipErrors.set(false);
     this.loaded.set(null);
     this.mapping.set(false);
     this.preview.set(null);
@@ -146,7 +150,7 @@ export class HistoryImport {
       // 登録済みの記録は、ファイルに出てくる人の分だけ読む
       const existing = await this.api.existingIds(office.id, kind, employeeIdsIn(read.rows, employees));
       const plan = planHistoryImport(read.rows, { employees, existing, gradeTables });
-      this.preview.set({ fileName: file.fileName, encoding: file.encoding, read, plan });
+      this.preview.set({ fileName: file.fileName, encoding: file.encoding, read, plan, table });
     } catch (err) {
       console.error(err);
       this.errorKey.set(errorKeyOf(err, 'employeeCsv.error.read'));
@@ -182,6 +186,49 @@ export class HistoryImport {
     const m = it.contract?.weeklyMinutes ?? 0;
     return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
   }
+  // ===== エラーの直し方（11/17。共通の部品 app-import-issues。前は直せず、除いて取り込むこともできなかった） =====
+  private readonly transloco = inject(TranslocoService);
+  readonly skipErrors = signal(false);
+
+  readonly issues = computed<ImportIssue[]>(() => {
+    const p = this.preview();
+    if (!p) return [];
+    const t = (key: string, params?: Record<string, unknown>) => this.transloco.translate(key, params);
+    const byLine = new Map<number, ImportIssue>();
+    const at = (line: number) => {
+      if (!byLine.has(line)) byLine.set(line, { line, messages: [], headers: [] });
+      return byLine.get(line)!;
+    };
+    for (const r of this.rowErrors()) {
+      for (const e of r.errors) {
+        const what = e.code.startsWith('contract.') ? t('contract.error.' + e.code.slice(9)) : t('employeeCsv.rowError.' + e.code);
+        const it = at(r.line);
+        it.messages.push(e.column ? `${this.columnLabel(e.column)}：${what}` : what);
+        if (e.column) it.headers.push(this.columnLabel(e.column));
+      }
+    }
+    const cols: Record<string, HistoryColumn[]> = {
+      unknownEmployee: ['employeeNumber'],
+      duplicateInFile: ['from'],
+      beforeHire: ['from'],
+      afterRetire: ['from'],
+      badGrade: ['healthGrade', 'pensionGrade'] as HistoryColumn[],
+    };
+    for (const e of p.plan.errors) {
+      const it = at(e.line);
+      it.messages.push(t('historyCsv.planError.' + e.code, { line: e.line, number: e.employeeNumber, id: e.id }));
+      if (e.code === 'unknownEmployee') it.messages.push(t('importFix.unknownEmployee'));
+      for (const c of cols[e.code] ?? []) it.headers.push(this.columnLabel(c));
+    }
+    return [...byLine.values()].sort((a, b) => a.line - b.line);
+  });
+
+  async onFix(fix: ImportFix): Promise<void> {
+    const p = this.preview();
+    if (!p) return;
+    await this.showPreview(applyRowValues(p.table, fix.line, fix.values));
+  }
+
   cellOf(r: HistoryCsvRow, e: HistoryRowError): string {
     return e.column ? (r.values[e.column] ?? '') : '';
   }

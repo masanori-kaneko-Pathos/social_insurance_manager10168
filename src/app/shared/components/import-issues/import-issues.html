@@ -1,0 +1,142 @@
+@if (issues().length > 0) {
+  <div class="alert alert-danger">{{ 'importFix.banner' | transloco: { n: issues().length } }}</div>
+
+  <div class="fix-bar">
+    <button type="button" class="btn btn-small" (click)="exportRows()">
+      {{ 'employeeCsv.exportErrors' | transloco }}
+    </button>
+    @if (canSkip()) {
+      <label class="opt">
+        <input type="checkbox" [checked]="skip()" [disabled]="busy()" (change)="skip.set($any($event.target).checked)" />
+        {{ 'employeeCsv.skipErrors' | transloco }}
+      </label>
+    }
+  </div>
+
+  <div class="issues-wrap">
+    <table class="issues">
+      <thead>
+        <tr>
+          <th class="num">{{ 'importFix.line' | transloco }}</th>
+          <th>{{ 'importFix.content' | transloco }}</th>
+          <th>{{ 'importFix.problem' | transloco }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (it of issues(); track it.line) {
+          <tr>
+            <td class="num">{{ it.line }}</td>
+            <td class="content">{{ summary(it) }}</td>
+            <td class="problems">
+              @for (m of it.messages; track $index) {
+                <span>{{ m }}</span>
+              }
+            </td>
+            <td class="act">
+              <button type="button" class="btn btn-small btn-primary" [disabled]="busy()" (click)="edit(it)">
+                {{ 'importFix.fix' | transloco }}
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<dialog
+  #dialog
+  class="fix-dialog"
+  aria-labelledby="fix-dialog-title"
+  (pointerdown)="onPointerDown($event)"
+  (click)="onClick($event)"
+  (close)="onClosed()"
+>
+  @if (open(); as it) {
+    <form class="dialog-body" (submit)="$event.preventDefault(); save()">
+      <header class="dialog-head">
+        <h2 id="fix-dialog-title">{{ 'importFix.dialogTitle' | transloco: { line: it.line } }}</h2>
+        <button type="button" class="close-btn" (click)="close()" [attr.aria-label]="'common.close' | transloco">×</button>
+      </header>
+
+      <ul class="messages">
+        @for (m of it.messages; track $index) {
+          <li>{{ m }}</li>
+        }
+      </ul>
+
+      @if (it.suggestions?.length) {
+        <div class="suggestions">
+          @for (s of it.suggestions; track s.label) {
+            <button type="button" class="btn btn-small" (click)="useSuggestion(s.values)">{{ s.label }}</button>
+          }
+        </div>
+      }
+
+      <div class="grid problem-grid">
+        @for (h of fields().problem; track h) {
+          <label class="cell">
+            <span>{{ h }}</span>
+            <input
+              class="input problem"
+              [class.changed]="changed(h)"
+              [value]="valueOf(values(), h)"
+              (input)="setValue(h, $any($event.target).value)"
+            />
+          </label>
+        }
+      </div>
+
+      <details class="others">
+        <summary>{{ 'importFix.otherColumns' | transloco: { n: fields().other.length } }}</summary>
+        <div class="grid">
+          @for (h of fields().other; track h) {
+            <label class="cell">
+              <span>{{ h }}</span>
+              <input
+                class="input"
+                [class.changed]="changed(h)"
+                [value]="valueOf(values(), h)"
+                (input)="setValue(h, $any($event.target).value)"
+              />
+            </label>
+          }
+        </div>
+      </details>
+
+      @if (neighbors().length > 0) {
+        <details class="others">
+          <summary>{{ 'importFix.neighbors' | transloco: { n: neighbors().length } }}</summary>
+          <div class="neighbor-wrap">
+            <table class="neighbor">
+              <thead>
+                <tr>
+                  <th class="num">{{ 'importFix.line' | transloco }}</th>
+                  @for (h of neighborHeaders(); track h) {
+                    <th>{{ h }}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (n of neighbors(); track n.line) {
+                  <tr>
+                    <td class="num">{{ n.line }}</td>
+                    @for (h of neighborHeaders(); track h) {
+                      <td>{{ valueOf(n.rec, h) }}</td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </details>
+      }
+
+      <div class="dialog-actions">
+        <button type="button" class="btn" (click)="close()">{{ 'common.cancel' | transloco }}</button>
+        <button type="submit" class="btn btn-solid">{{ 'importFix.apply' | transloco }}</button>
+      </div>
+    </form>
+  }
+</dialog>
