@@ -26,6 +26,7 @@ import { ImportPicker } from '../../../../shared/components/import-picker/import
 import { ImportFix, ImportIssue, ImportIssues } from '../../../../shared/components/import-issues/import-issues';
 import { TranslocoService } from '@jsverse/transloco';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
+import { DEPENDENT_FIX_FIELDS } from '../../logic/import-fix-fields';
 
 interface Preview {
   fileName: string;
@@ -84,6 +85,8 @@ export class DependentImport {
   private readonly transloco = inject(TranslocoService);
   // ===== エラーの直し方（11/17。共通の部品 app-import-issues） =====
   readonly skipErrors = signal(false);
+  /** 窓で直すときの欄の種類（11/17） */
+  readonly fixFields = DEPENDENT_FIX_FIELDS;
 
   readonly issues = computed<ImportIssue[]>(() => {
     const p = this.preview();

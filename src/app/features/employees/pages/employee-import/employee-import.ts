@@ -44,6 +44,7 @@ import { contractAt } from '../../logic/contract-form-model';
 import { PersonDiff, samePersonDiffs } from '../../logic/employee-csv';
 import type { Employee } from '../../../../core/models/employee';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
+import { EMPLOYEE_FIX_FIELDS } from '../../logic/import-fix-fields';
 
 /**
  * 何を取り込むか（ファイルの取り込みのページの区分。11/17 に給与の実績・マイナンバーも入れた）
@@ -200,6 +201,8 @@ export class EmployeeImport {
   private readonly contractsApi = inject(ContractService);
   /** エラーのない行だけ取り込む（エラーの行は、あとで直して取り込み直す） */
   readonly skipErrors = signal(false);
+  /** 窓で直すときの欄の種類（プルダウン・カレンダー・数。11/17） */
+  readonly fixFields = EMPLOYEE_FIX_FIELDS;
 
   /** エラーの行と、社員番号が重なった行（どちらも窓で直す） */
   readonly issues = computed<ImportIssue[]>(() => {

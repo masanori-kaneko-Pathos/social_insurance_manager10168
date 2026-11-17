@@ -139,6 +139,8 @@ const REL: Record<string, Relationship> = {
   弟: 'youngerSibling', 妹: 'youngerSibling', 兄: 'olderSibling', 姉: 'olderSibling',
   祖父: 'grandparent', 祖母: 'grandparent', 祖父母: 'grandparent', 曽祖父: 'greatGrandparent', 曽祖母: 'greatGrandparent',
   孫: 'grandchild', その他: 'other', other: 'other',
+  // 画面の名前のまとめ方でも読む（取り込みの窓のプルダウンから入る言葉。11/17）
+  義父母: 'parentInLaw', 弟妹: 'youngerSibling', 兄姉: 'olderSibling', 曽祖父母: 'greatGrandparent',
 };
 /** 「その他」に入れて、言葉を続柄の補足に残すもの（3親等内の親族） */
 const REL_OTHER = ['伯父', '叔父', '伯母', '叔母', 'おじ', 'おば', '甥', '姪', 'おい', 'めい', 'ひ孫', '曾孫'];

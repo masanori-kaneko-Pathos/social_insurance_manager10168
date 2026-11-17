@@ -15,6 +15,7 @@ import { OfficeContext } from '../../../office/office-context.service';
 import { BonusService } from '../../bonus.service';
 import {
   BONUS_CSV_FIELDS,
+  BONUS_FIX_FIELDS,
   BONUS_CSV_HEADERS,
   BONUS_TABLE_SPEC,
   bonusCsvTemplate,
@@ -62,6 +63,8 @@ export class BonusImport {
   /** 取り込んだ人数と支給の数 */
   readonly done = signal<{ people: number; payments: number } | null>(null);
   readonly skipErrors = signal(false);
+  /** 窓で直すときの欄の種類（11/17） */
+  readonly fixFields = BONUS_FIX_FIELDS;
   /** 読んだのにまだ取り込んでいなければ、画面を離れる前に確かめる */
   private readonly unsaved = watchUnsaved(() => (this.loaded() !== null || this.preview() !== null) && this.done() === null);
 

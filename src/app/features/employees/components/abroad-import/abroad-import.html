@@ -41,6 +41,7 @@
         [summaryHeaders]="[header('employeeNumber'), header('name')]"
         [keyHeader]="header('employeeNumber')"
         [upperHeaders]="[header('country')]"
+        [fieldTypes]="fixFields()"
         fileStem="abroad"
         [(skip)]="skipErrors"
         [busy]="saving()"

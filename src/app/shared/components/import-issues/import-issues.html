@@ -76,15 +76,7 @@
 
       <div class="grid problem-grid">
         @for (h of fields().problem; track h) {
-          <label class="cell">
-            <span>{{ h }}</span>
-            <input
-              class="input problem"
-              [class.changed]="changed(h)"
-              [value]="valueOf(values(), h)"
-              (input)="setValue(h, $any($event.target).value)"
-            />
-          </label>
+          <ng-container *ngTemplateOutlet="cell; context: { $implicit: h, problem: true }" />
         }
       </div>
 
@@ -92,15 +84,7 @@
         <summary>{{ 'importFix.otherColumns' | transloco: { n: fields().other.length } }}</summary>
         <div class="grid">
           @for (h of fields().other; track h) {
-            <label class="cell">
-              <span>{{ h }}</span>
-              <input
-                class="input"
-                [class.changed]="changed(h)"
-                [value]="valueOf(values(), h)"
-                (input)="setValue(h, $any($event.target).value)"
-              />
-            </label>
+            <ng-container *ngTemplateOutlet="cell; context: { $implicit: h, problem: false }" />
           }
         </div>
       </details>
@@ -140,3 +124,66 @@
     </form>
   }
 </dialog>
+
+<!-- 1つの欄（画面で1件ずつ入れるときと同じ道具：プルダウン・カレンダー・数。11/17） -->
+<ng-template #cell let-h let-problem="problem">
+  <label class="cell">
+    <span>{{ h }}</span>
+    @switch (typeOf(h)?.type) {
+      @case ('select') {
+        <select
+          class="input"
+          [class.problem]="problem"
+          [class.changed]="changed(h)"
+          (change)="setValue(h, $any($event.target).value)"
+        >
+          @for (c of choicesOf(h); track c.value) {
+            <option [value]="c.value" [selected]="c.value === selectedOf(h)">{{ c.label }}</option>
+          }
+        </select>
+      }
+      @case ('date') {
+        <input
+          type="date"
+          class="input"
+          [class.problem]="problem"
+          [class.changed]="changed(h)"
+          [value]="pickerValue(h)"
+          (change)="setValue(h, $any($event.target).value)"
+        />
+      }
+      @case ('month') {
+        <input
+          type="month"
+          class="input"
+          [class.problem]="problem"
+          [class.changed]="changed(h)"
+          [value]="pickerValue(h)"
+          (change)="setValue(h, $any($event.target).value)"
+        />
+      }
+      @case ('number') {
+        <input
+          class="input num"
+          inputmode="numeric"
+          [class.problem]="problem"
+          [class.changed]="changed(h)"
+          [value]="valueOf(values(), h)"
+          (input)="setValue(h, $any($event.target).value)"
+        />
+      }
+      @default {
+        <input
+          class="input"
+          [class.problem]="problem"
+          [class.changed]="changed(h)"
+          [value]="valueOf(values(), h)"
+          (input)="setValue(h, $any($event.target).value)"
+        />
+      }
+    }
+    @if (unreadOf(h); as v) {
+      <small class="file-value">{{ 'importFix.fileValue' | transloco: { v: v } }}</small>
+    }
+  </label>
+</ng-template>

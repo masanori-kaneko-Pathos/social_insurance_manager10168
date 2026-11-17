@@ -23,6 +23,7 @@ import {
   planAbroadImport,
 } from '../../logic/abroad-csv';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
+import { CERTIFICATE_FIX_FIELDS, OVERSEAS_FIX_FIELDS } from '../../logic/import-fix-fields';
 
 interface Preview {
   fileName: string;
@@ -59,6 +60,8 @@ export class AbroadImport {
   /** 読んだのにまだ取り込んでいなければ、画面を離れる前に確かめる（11/17） */
   private readonly unsaved = watchUnsaved(() => this.preview() !== null && this.doneCount() === null);
   readonly skipErrors = signal(false);
+  /** 窓で直すときの欄の種類（11/17） */
+  readonly fixFields = computed(() => (this.kind() === 'certificate' ? CERTIFICATE_FIX_FIELDS : OVERSEAS_FIX_FIELDS));
   private employees: Employee[] = [];
   private fileName = '';
   private encoding: CsvEncoding | null = null;

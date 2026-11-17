@@ -6,6 +6,7 @@
 
 import type { BonusPaymentInput } from '../../../core/models/bonus';
 import { ImportField, normalizeDate, normalizeNumber, OurTableSpec } from '../../../shared/import/column-map';
+import { byHeader, DATE, NUMBER } from '../../../shared/import/fix-fields';
 
 export const BONUS_CSV_COLUMNS = ['employeeNumber', 'name', 'paidDate', 'title', 'amount', 'inKind'] as const;
 export type BonusCsvColumn = (typeof BONUS_CSV_COLUMNS)[number];
@@ -285,3 +286,6 @@ export function bonusFixColumns(errors: readonly BonusCsvError[]): BonusCsvColum
   }
   return BONUS_CSV_COLUMNS.filter((c) => out.has(c));
 }
+
+/** 窓で直すときの欄の種類（支払日はカレンダー、額は数。11/17） */
+export const BONUS_FIX_FIELDS = byHeader(BONUS_CSV_HEADERS, { paidDate: DATE, amount: NUMBER, inKind: NUMBER });

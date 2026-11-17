@@ -58,6 +58,7 @@
       [issues]="issues()"
       [summaryHeaders]="[columnLabel('employeeNumber'), columnLabel('from')]"
       [keyHeader]="columnLabel('employeeNumber')"
+      [fieldTypes]="fixFields()"
       fileStem="history"
       [(skip)]="skipErrors"
       [busy]="saving()"

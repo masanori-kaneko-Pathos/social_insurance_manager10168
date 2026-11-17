@@ -24,8 +24,7 @@ import {
   payrollLabels,
   PAYROLL_TABLE_SPEC,
   payrollFileName,
-  readPayrollCsv,
-} from '../../logic/payroll-csv';
+  readPayrollCsv, PAYROLL_FIX_FIELDS } from '../../logic/payroll-csv';
 import { monthsBetween, shiftMonth, todayLocal } from '../../../../shared/utils/date';
 import { latestPaidMonth } from '../../logic/payroll-rows';
 import { payrollOf, premiumMonthOfPay } from '../../../office/office-settings';
@@ -268,6 +267,8 @@ export class PayrollImport {
 
   readonly summaryHeaders = computed(() => ['employeeNumber', 'name', 'paidMonth'].map((c) => this.headerOf(c)));
   readonly keyHeader = computed(() => this.headerOf('employeeNumber'));
+  /** 窓で直すときの欄の種類（11/17） */
+  readonly fixFields = PAYROLL_FIX_FIELDS;
 
   readonly issues = computed<ImportIssue[]>(() => {
     const p = this.preview();

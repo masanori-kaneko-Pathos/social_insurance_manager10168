@@ -10,6 +10,7 @@ import { inRange } from './rate-changes';
 import { formatRateInput, MAX_RATE, parseRate, RateUnit } from './rate-format';
 import { RATE_CSV_COLUMNS, RATE_CSV_HEADERS, RateCsvColumn } from './rate-csv-columns';
 import { readRateTable } from './rate-table';
+import { byHeader, FixField, MONTH, NUMBER, select } from '../../../shared/import/fix-fields';
 export { RATE_CSV_COLUMNS, RATE_CSV_HEADERS };
 export type { RateCsvColumn };
 
@@ -290,3 +291,13 @@ export function rateEditsOf(values: Readonly<Record<string, string>>): Partial<R
   }
   return out;
 }
+
+/** 窓で直すときの欄の種類（何月分からはカレンダー、単位はプルダウン、料率は数。11/17） */
+export const RATE_FIX_FIELDS: Record<string, FixField> = byHeader(RATE_CSV_HEADERS, {
+  from: MONTH,
+  unit: select([
+    { value: '%', label: '%' },
+    { value: '‰', label: '‰' },
+  ]),
+  ...Object.fromEntries(RATE_CSV_COLUMNS.filter((c) => c.includes('_')).map((c) => [c, NUMBER])),
+});

@@ -48,6 +48,7 @@
       [issues]="issues()"
       [summaryHeaders]="[headers.employeeNumber, headers.name, headers.paidDate]"
       [keyHeader]="headers.employeeNumber"
+      [fieldTypes]="fixFields"
       fileStem="bonuses"
       [(skip)]="skipErrors"
       [busy]="saving()"

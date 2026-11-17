@@ -32,6 +32,7 @@ import {
 } from '../../logic/history-csv';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
+import { CONTRACT_HISTORY_FIX_FIELDS, REMUNERATION_HISTORY_FIX_FIELDS } from '../../logic/import-fix-fields';
 
 interface Preview {
   fileName: string;
@@ -194,6 +195,8 @@ export class HistoryImport {
   // ===== エラーの直し方（11/17。共通の部品 app-import-issues。前は直せず、除いて取り込むこともできなかった） =====
   private readonly transloco = inject(TranslocoService);
   readonly skipErrors = signal(false);
+  /** 窓で直すときの欄の種類（11/17） */
+  readonly fixFields = computed(() => (this.kind() === 'contract' ? CONTRACT_HISTORY_FIX_FIELDS : REMUNERATION_HISTORY_FIX_FIELDS));
 
   readonly issues = computed<ImportIssue[]>(() => {
     const p = this.preview();

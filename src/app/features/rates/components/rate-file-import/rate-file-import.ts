@@ -6,6 +6,7 @@ import { ImportFileError, MAX_FILE_BYTES, readTables } from '../../../../shared/
 import {
   CHILD_SUPPORT_START,
   RATE_CSV_HEADERS,
+  RATE_FIX_FIELDS,
   RateCsvColumn,
   RateCsvRow,
   RateCsvStatus,
@@ -91,6 +92,8 @@ export class RateFileImport {
   // ----- 共通の窓（app-import-issues）に渡すもの -----
   readonly fixTable = computed(() => rateFixTable(this.rows()));
   readonly fromHeader = RATE_CSV_HEADERS.from;
+  /** 窓で直すときの欄の種類（11/17） */
+  readonly fixFields = RATE_FIX_FIELDS;
   readonly issues = computed<ImportIssue[]>(() =>
     this.rows()
       .filter((r) => r.status === 'error')

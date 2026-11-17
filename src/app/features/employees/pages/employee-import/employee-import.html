@@ -110,6 +110,7 @@
         [issues]="issues()"
         [summaryHeaders]="[headers.employeeNumber, headers.lastName, headers.firstName, headers.romanLastName]"
         [upperHeaders]="[headers.romanLastName, headers.romanFirstName, headers.romanMiddleName, headers.nationality]"
+        [fieldTypes]="fixFields"
         fileStem="employees"
         [(skip)]="skipErrors"
         [busy]="saving()"

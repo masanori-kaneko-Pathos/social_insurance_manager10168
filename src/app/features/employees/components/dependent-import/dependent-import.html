@@ -48,6 +48,7 @@
       [issues]="issues()"
       [summaryHeaders]="[headers.employeeNumber, headers.lastName, headers.firstName, headers.relationship]"
       [keyHeader]="headers.employeeNumber"
+      [fieldTypes]="fixFields"
       fileStem="dependents"
       [(skip)]="skipErrors"
       [busy]="saving()"

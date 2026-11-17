@@ -192,3 +192,14 @@
   gap: var(--space-sm);
   margin-top: var(--space-lg);
 }
+
+/* カレンダー・プルダウンに入らなかったファイルの値（11/17） */
+.file-value {
+  color: var(--color-text-sub);
+  font-size: var(--font-xs);
+  overflow-wrap: anywhere;
+}
+
+.input.num {
+  text-align: right;
+}

@@ -9,6 +9,7 @@ import { formatHours } from '../../../shared/utils/number';
 import { employedDuring, PayrollEmployee, PaySchedule, periodOf } from './payroll-rows';
 import { daysInclusive } from '../../../shared/utils/date';
 import { ImportField, OurTableSpec, ValueKind } from '../../../shared/import/column-map';
+import { byHeader, FixField, MONTH, NUMBER, select, YES_NO } from '../../../shared/import/fix-fields';
 
 // ===== 列 =====
 
@@ -538,3 +539,20 @@ export function payrollLabels(column: string): string[] {
   const c = column as PayrollColumn;
   return PAYROLL_HEADERS.ja[c] ? [PAYROLL_HEADERS.ja[c], PAYROLL_HEADERS.en[c]] : [column];
 }
+
+// ===== 取り込みのエラーを窓で直すときの欄の種類（11/17。日本語・英語の見出しの両方） =====
+export const PAYROLL_FIX_FIELDS: Record<string, FixField> = (() => {
+  const fields: Partial<Record<PayrollColumn, FixField>> = {
+    paidMonth: MONTH,
+    cash: NUMBER,
+    fixed: NUMBER,
+    days: NUMBER,
+    inKind: NUMBER,
+    retro: NUMBER,
+    absentDays: NUMBER,
+    hours: NUMBER,
+    prorated: YES_NO,
+    state: select((Object.keys(STATE_LABELS.ja) as PayrollState[]).map((k) => ({ value: STATE_LABELS.ja[k], label: STATE_LABELS.ja[k] }))),
+  };
+  return { ...byHeader(PAYROLL_HEADERS.ja, fields), ...byHeader(PAYROLL_HEADERS.en, fields) };
+})();

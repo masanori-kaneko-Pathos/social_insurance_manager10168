@@ -1,10 +1,13 @@
 import { afterNextRender, Component, computed, ElementRef, Injector, input, model, output, signal, viewChild, inject } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { downloadCsv } from '../../csv/csv';
 import { headerKey } from '../../import/column-map';
 import { errorRowsTable, rowRecord, sameKeyLines } from '../../import/row-fix';
 import { todayLocal } from '../../utils/date';
 import { toHalfWidth } from '../../utils/text';
+import { normalizeDate, normalizeMonth } from '../../import/column-map';
+import { FixChoice, FixField, isIsoDate, isIsoMonth } from '../../import/fix-fields';
 
 /** 1行の問題（文は翻訳済みで渡す。headers は問題のある列の見出し＝表にある書き方） */
 export interface ImportIssue {
@@ -30,7 +33,7 @@ export interface ImportFix {
  */
 @Component({
   selector: 'app-import-issues',
-  imports: [TranslocoPipe],
+  imports: [NgTemplateOutlet, TranslocoPipe],
   templateUrl: './import-issues.html',
   styleUrl: './import-issues.css',
 })
@@ -51,6 +54,8 @@ export class ImportIssues {
   /** 除いて取り込めるか（重なりなど、除けないものがあるときは false） */
   readonly canSkip = input(true);
   readonly busy = input(false);
+  /** 見出し → 欄の種類（プルダウン・カレンダー・数。11/17）。ない列は文字の欄 */
+  readonly fieldTypes = input<Readonly<Record<string, FixField>>>({});
 
   readonly fixed = output<ImportFix>();
 
@@ -96,7 +101,7 @@ export class ImportIssues {
       () => {
         const d = this.dialog()?.nativeElement;
         if (d && !d.open) d.showModal();
-        d?.querySelector<HTMLInputElement>('input.problem')?.focus();
+        d?.querySelector<HTMLElement>('.problem')?.focus();
       },
       { injector: this.injector },
     );
@@ -109,7 +114,70 @@ export class ImportIssues {
 
   setValue(h: string, v: string): void {
     const upper = this.upperHeaders().some((u) => headerKey(u) === headerKey(h));
-    this.values.update((m) => ({ ...m, [h]: upper ? toHalfWidth(v).toUpperCase() : v }));
+    const num = this.typeOf(h)?.type === 'number';
+    this.values.update((m) => ({ ...m, [h]: upper ? toHalfWidth(v).toUpperCase() : num ? toHalfWidth(v) : v }));
+  }
+
+  // ===== 欄の種類（画面で1件ずつ入れるときと同じ道具で直す。11/17） =====
+
+  typeOf(h: string): FixField | null {
+    const types = this.fieldTypes();
+    const k = Object.keys(types).find((x) => headerKey(x) === headerKey(h));
+    return k ? types[k] : null;
+  }
+
+  /** プルダウンの中身：空 ＋（一覧にないファイルの値）＋ 一覧 */
+  choicesOf(h: string): { value: string; label: string; file: boolean }[] {
+    const t = this.typeOf(h);
+    if (t?.type !== 'select') return [];
+    const current = this.valueOf(this.values(), h).trim();
+    const label = (c: FixChoice) => (c.labelKey ? this.transloco.translate(c.labelKey) : (c.label ?? c.value));
+    const list = t.choices.map((c) => ({ value: c.value, label: label(c), file: false }));
+    const out = [{ value: '', label: this.transloco.translate('importFix.blank'), file: false }];
+    if (current && !this.matchChoice(h)) {
+      out.push({ value: current, label: this.transloco.translate('importFix.fileValue', { v: current }), file: true });
+    }
+    return [...out, ...list];
+  }
+
+  /** 今の値に当たる選択肢の値（言葉か表示の名前が同じなら当たり） */
+  matchChoice(h: string): string | null {
+    const t = this.typeOf(h);
+    if (t?.type !== 'select') return null;
+    const key = (s: string) => toHalfWidth(s).normalize('NFKC').trim();
+    const current = key(this.valueOf(this.values(), h));
+    if (!current) return '';
+    const hit = t.choices.find(
+      (c) => key(c.value) === current || (c.labelKey && key(this.transloco.translate(c.labelKey)) === current) || (c.label && key(c.label) === current),
+    );
+    return hit ? hit.value : null;
+  }
+
+  selectedOf(h: string): string {
+    return this.matchChoice(h) ?? this.valueOf(this.values(), h).trim();
+  }
+
+  /** カレンダーに入れる値（読めない値なら空。元の値は下に出す） */
+  pickerValue(h: string): string {
+    const t = this.typeOf(h);
+    const v = this.valueOf(this.values(), h);
+    if (t?.type === 'date') {
+      const d = normalizeDate(v);
+      return isIsoDate(d) ? d : '';
+    }
+    if (t?.type === 'month') {
+      const m = normalizeMonth(v);
+      return isIsoMonth(m) ? m : '';
+    }
+    return v;
+  }
+
+  /** カレンダーに入らなかったファイルの値（なければ null） */
+  unreadOf(h: string): string | null {
+    const t = this.typeOf(h);
+    if (t?.type !== 'date' && t?.type !== 'month') return null;
+    const v = this.valueOf(this.values(), h).trim();
+    return v && !this.pickerValue(h) ? v : null;
   }
 
   useSuggestion(values: Record<string, string>): void {
