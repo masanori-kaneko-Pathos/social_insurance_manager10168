@@ -21,6 +21,7 @@ import {
   RETIRE_REASONS,
   SEXES,
 } from '../../../../core/models/employee';
+import type { Employee } from '../../../../core/models/employee';
 import { addDays, todayLocal } from '../../../../shared/utils/date';
 import { toHalfWidth } from '../../../../shared/utils/text';
 import { OfficeContext } from '../../../office/office-context.service';
@@ -552,7 +553,32 @@ export class EmployeeForm {
   private lastAutoAcquired = '';
   private lastAutoLost = '';
 
+  // ===== 二重登録の注意（新規だけ。同じ氏名・生年月日の人がもう登録されていれば知らせる。止めない。11/17） =====
+  private readonly others = signal<Employee[]>([]);
+
+  /** 同じ氏名・生年月日の登録済みの人（いなければ null） */
+  sameAsOther(): Employee | null {
+    if (this.isEdit) return null;
+    const v = this.form.getRawValue();
+    const k = (s: string | null | undefined) => (s ?? '').normalize('NFKC').replace(/\s+/g, '');
+    if (!v.birthDate || !k(v.lastName)) return null;
+    return (
+      this.others().find(
+        (o) => o.birthDate === v.birthDate && k(o.lastName) === k(v.lastName) && k(o.firstName) === k(v.firstName),
+      ) ?? null
+    );
+  }
+
   constructor() {
+    if (!this.isEdit) {
+      const officeId = this.context.current()?.id;
+      if (officeId) {
+        this.employees
+          .list(officeId)
+          .then((list) => this.others.set(list))
+          .catch((err) => console.error(err));
+      }
+    }
     const c = this.form.controls;
     c.hasForeign.valueChanges.subscribe((v) => this.foreignOn.set(v));
     c.hireDate.valueChanges.subscribe((hire) => {

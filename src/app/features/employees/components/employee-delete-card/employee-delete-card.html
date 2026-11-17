@@ -1,0 +1,25 @@
+<section class="card danger-zone">
+  <h2>{{ 'employee.delete.title' | transloco }}</h2>
+  <p class="hint">{{ 'employee.delete.lead' | transloco }}</p>
+  @if (!open()) {
+    <button type="button" class="btn danger" (click)="open.set(true)">{{ 'employee.delete.open' | transloco }}</button>
+  } @else {
+    <ul class="hint list">
+      <li>{{ 'employee.delete.removes' | transloco }}</li>
+      <li>{{ 'employee.delete.blocked' | transloco }}</li>
+    </ul>
+    <div class="field">
+      <label for="deleteTyped">{{ 'employee.delete.type' | transloco: { word: expected() } }}</label>
+      <input id="deleteTyped" class="input" autocomplete="off" [value]="typed()" (input)="typed.set($any($event.target).value)" />
+    </div>
+    <div class="actions">
+      <button type="button" class="btn" [disabled]="deleting()" (click)="cancel()">{{ 'common.cancel' | transloco }}</button>
+      <button type="button" class="btn danger" [disabled]="!typedOk() || deleting()" (click)="remove()">
+        {{ (deleting() ? 'employee.delete.deleting' : 'employee.delete.confirm') | transloco }}
+      </button>
+    </div>
+    @if (errorKey(); as e) {
+      <p class="field-error" role="alert">{{ e | transloco }}</p>
+    }
+  }
+</section>

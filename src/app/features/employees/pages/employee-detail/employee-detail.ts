@@ -39,6 +39,7 @@ import { CareExemptionCard } from '../../components/care-exemption-card/care-exe
 import { OverseasCard } from '../../components/overseas-card/overseas-card';
 import { ContractCard } from '../../components/contract-card/contract-card';
 import { DependentCard } from '../../components/dependent-card/dependent-card';
+import { EmployeeDeleteCard } from '../../components/employee-delete-card/employee-delete-card';
 import { HistoryCard } from '../../components/history-card/history-card';
 import { LeaveCard } from '../../components/leave-card/leave-card';
 import { RemunerationCard } from '../../components/remuneration-card/remuneration-card';
@@ -75,6 +76,7 @@ type AddKind = 'leave' | 'care' | 'overseas';
     RemunerationCard,
     ContractCard,
     DependentCard,
+    EmployeeDeleteCard,
     PremiumCard,
     BonusCard,
     LeaveCard,

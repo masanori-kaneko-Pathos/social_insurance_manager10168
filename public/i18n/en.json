@@ -356,7 +356,8 @@
       "addPhone": "Add phone number",
       "removePhone": "Remove",
       "addEmergency": "Add an emergency contact",
-      "toImport": "Import from a file"
+      "toImport": "Import from a file",
+      "sameAs": "Someone with the same name and date of birth is already registered ({{number}} {{name}}). Check that this is not a duplicate. If it is a different person, you can register."
     },
     "section": {
       "basic": "Basic information",
@@ -762,6 +763,28 @@
         "noPay": "An officer without remuneration cannot be insured."
       },
       "officerNote": "Corporate officers are insured if they receive remuneration from the corporation for their work. For part-time officers, the 6 items above have no priority and the situation is judged as a whole (the pension office decides). Sole proprietors made officers who pay \"membership fees\" exceeding their remuneration are, in principle, not covered (MHLW notice, March 18, 2026)."
+    },
+    "delete": {
+      "title": "Cancel this registration",
+      "lead": "Removes a person registered by mistake (for example, registered twice). Do not use this for people who left; enter the retirement date instead. This cannot be undone.",
+      "open": "Cancel this registration",
+      "removes": "This also removes the person's contracts, standard remuneration, payroll records, dependents, leaves, change history and their amounts in bonus payments.",
+      "blocked": "People in submitted filing records (with a submission date), with My Number records or with a My Page account cannot be removed. They are taken out of unsubmitted filing records.",
+      "type": "To confirm, type \"{{word}}\"",
+      "confirm": "Cancel and remove",
+      "deleting": "Removing…",
+      "done": "The registration was cancelled.",
+      "error": {
+        "notAdmin": "Only administrators can do this.",
+        "notFound": "This employee was not found (it may already be removed).",
+        "numberMismatch": "The text you typed does not match.",
+        "hasFilings": "This person is in a submitted filing record, so the registration cannot be cancelled. Filings already submitted must be cancelled at the pension office.",
+        "hasMyNumber": "There is a My Number record (including a pending request). Dispose of the number or cancel the request under Personal info first.",
+        "hasAccount": "A My Page account is linked, so the registration cannot be cancelled.",
+        "badArgument": "Could not cancel. Reload the page.",
+        "signIn": "Please sign in again.",
+        "unknown": "Could not cancel. Please try again later."
+      }
     }
   },
   "office": {
@@ -2361,7 +2384,8 @@
       "unknownCategory": "Cannot judge (registered as not insured)",
       "override": "Enrollment overridden",
       "oldTable": "Before grade tables (oldest table used)",
-      "unknownDepartment": "Department not found in office settings (registered without a department)"
+      "unknownDepartment": "Department not found in office settings (registered without a department)",
+      "sameNameBirth": "Same name and date of birth as {{number}}. Check for a duplicate"
     },
     "planError": {
       "duplicateInFile": "Line {{line}}: employee number {{number}} appears more than once.",

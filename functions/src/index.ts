@@ -268,3 +268,6 @@ export const siDeleteOffice = onCall({ region: REGION, timeoutSeconds: 540 }, as
 
 // マイナンバー（暗号化して保管。読み書きは mynumber.ts の関数だけ）
 export { siMyNumberAdmin, siMyNumberExport, siMyNumberImport, siMyNumberSubmit, siMyNumberView } from './mynumber.js';
+
+// 従業員の登録の取り消し（間違えて登録した人。11/17）
+export { siDeleteEmployee } from './employee-delete.js';

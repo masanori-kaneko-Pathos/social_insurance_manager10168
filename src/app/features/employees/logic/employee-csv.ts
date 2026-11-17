@@ -511,7 +511,8 @@ export type ImportWarning =
   | 'unknownCategory' // 判定できない（所定が空など）→ 加入しないで登録する
   | 'override' // 加入を列で上書きした
   | 'oldTable' // 標準報酬の開始月に等級表がなく、いちばん古い表で出した
-  | 'unknownDepartment'; // 部署の名前が事業所の部署にない（部署なしで登録する）
+  | 'unknownDepartment' // 部署の名前が事業所の部署にない（部署なしで登録する）
+  | 'sameNameBirth'; // 社員番号は違うが、氏名・生年月日が同じ人が登録済みかファイルの前の行にいる（二重登録かも。止めない。11/17）
 
 export interface ImportItem {
   line: number;
@@ -523,6 +524,8 @@ export interface ImportItem {
   warnings: ImportWarning[];
   /** マイナンバー（任意。従業員の文書には書かず、登録のあと関数へ渡す） */
   myNumber: string | null;
+  /** sameNameBirth のとき：同じ氏名・生年月日の人の社員番号 */
+  sameAs?: string;
 }
 
 export interface ImportPlan {
@@ -551,6 +554,10 @@ export function planImport(rows: EmployeeCsvRow[], ctx: ImportContext): ImportPl
   const errors: ImportPlan['errors'] = [];
   const skipped: ImportPlan['skipped'] = [];
   const seen = new Set<string>();
+  /** 氏名・生年月日 → 社員番号（登録済みと、ファイルの前の行。二重登録の注意に使う） */
+  const personKey = (k: SamePersonKey) => `${(k.lastName ?? '').normalize('NFKC').replace(/\s+/g, '')}|${(k.firstName ?? '').normalize('NFKC').replace(/\s+/g, '')}|${k.birthDate}`;
+  const byPerson = new Map<string, string>();
+  for (const [no, k] of ctx.existingPeople ?? []) byPerson.set(personKey(k), no);
 
   for (const r of rows) {
     if (!r.parsed) continue;
@@ -580,6 +587,10 @@ export function planImport(rows: EmployeeCsvRow[], ctx: ImportContext): ImportPl
       e.hireDate,
     );
     const warnings: ImportWarning[] = [];
+    const pk = personKey({ lastName: e.lastName, firstName: e.firstName, birthDate: e.birthDate });
+    const sameAs = byPerson.get(pk);
+    if (sameAs && sameAs !== num) warnings.push('sameNameBirth');
+    else byPerson.set(pk, num);
     const auto = isInsured(classification);
     if (classification.category === 'unknown') warnings.push('unknownCategory');
     else if (!auto) warnings.push('notInsured');
@@ -638,6 +649,7 @@ export function planImport(rows: EmployeeCsvRow[], ctx: ImportContext): ImportPl
       classification,
       warnings,
       myNumber: p.myNumber,
+      ...(sameAs && sameAs !== num ? { sameAs } : {}),
     });
   }
   return { items, errors, skipped };

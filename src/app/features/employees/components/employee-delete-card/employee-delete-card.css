@@ -1,0 +1,27 @@
+/* 登録の取り消し（事業所の削除と同じ見た目。11/17） */
+.danger-zone {
+  border: 1px solid var(--color-danger-text);
+  margin-top: var(--space-lg);
+}
+
+.danger-zone h2 {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-md);
+}
+
+.btn.danger {
+  color: var(--color-danger-text);
+  border-color: var(--color-danger-text);
+}
+
+.list {
+  margin: var(--space-sm) 0;
+  padding-left: 1.2em;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+  margin-top: var(--space-sm);
+}

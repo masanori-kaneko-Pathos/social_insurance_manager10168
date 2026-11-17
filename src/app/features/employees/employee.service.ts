@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HistoryService } from './history.service';
 import { addDoc, collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
-import { cached, cacheKey, peek } from '../../core/data-cache';
+import { cached, cacheKey, forgetAll, peek } from '../../core/data-cache';
+import { httpsCallable } from 'firebase/functions';
 import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
-import { db } from '../../core/firebase';
+import { db, functions } from '../../core/firebase';
 import {
   CareExemption,
   CertificateDoc,
@@ -180,6 +181,16 @@ export class EmployeeService {
    * 登録：画面が扱わない項目は初期値で埋める
    * 従業員の文書 → 鍵付きの文書 の順に、別々に書く（1回の判定でルールが数える式を少なくするため）
    */
+  /**
+   * 登録の取り消し（間違えて登録した人。関数 siDeleteEmployee。11/17）
+   * confirm：画面で打ち込んだ社員番号（番号がない人は姓）。届出・マイナンバー・マイページがある人は関数が断る
+   * 賞与・給与の索引などからも外れるので、覚えておいた一覧は全部忘れる
+   */
+  async deleteEmployee(officeId: string, employeeId: string, confirm: string): Promise<void> {
+    await httpsCallable(functions, 'siDeleteEmployee', { timeout: 120_000 })({ officeId, employeeId, confirm });
+    forgetAll();
+  }
+
   async create(officeId: string, input: EmployeeFormInput): Promise<string> {
     const { main, priv } = splitPrivate(input);
     const full: EmployeeInput = { ...employeeExtras(), ...main };

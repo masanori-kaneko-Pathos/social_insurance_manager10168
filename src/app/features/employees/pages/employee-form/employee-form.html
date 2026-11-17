@@ -34,6 +34,11 @@
       @if (step() === 'confirm') {
         <p class="hint confirm-lead">{{ 'employee.step.confirmLead' | transloco }}</p>
       }
+      @if (sameAsOther(); as o) {
+        <div class="alert alert-warning" role="alert">
+          {{ 'employee.form.sameAs' | transloco: { number: o.employeeNumber ?? '—', name: o.lastName + ' ' + o.firstName } }}
+        </div>
+      }
     }
 
     <p class="required-note">{{ 'common.requiredNote' | transloco }}</p>

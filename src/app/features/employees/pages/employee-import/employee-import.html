@@ -238,7 +238,7 @@
                     }}
                     {{ it.employee.pension.enrolled ? '○' : '—' }}
                     @for (w of it.warnings; track w) {
-                      <br /><span class="badge">{{ 'employeeCsv.warning.' + w | transloco }}</span>
+                      <br /><span class="badge">{{ 'employeeCsv.warning.' + w | transloco: { number: it.sameAs ?? '' } }}</span>
                     }
                   </td>
                   <td class="mono">
