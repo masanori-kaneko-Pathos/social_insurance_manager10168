@@ -43,7 +43,11 @@ import {
 } from '../../office-settings';
 import { RateDialog, RateDialogTarget } from '../../../rates/components/rate-dialog/rate-dialog';
 import { RateService } from '../../../rates/rate.service';
-import { parseSplit } from '../../../rates/logic/rate-format';
+import { formatRate, formatRateInput, parseSplit } from '../../../rates/logic/rate-format';
+import { RateCsvRow, readRateFile } from '../../../rates/logic/rate-csv';
+import { findRates, guessFill } from '../../../rates/logic/rate-pdf';
+import { ImportFileError, MAX_FILE_BYTES, readTables } from '../../../../shared/import/parse';
+import { EnterNext } from '../../../../shared/directives/enter-next';
 import type { KumiaiRateInput } from '../../../../core/models/rates';
 import { ToastService } from '../../../../shared/services/toast.service';
 
@@ -123,7 +127,7 @@ const emptyToNull = (v: string) => (v.trim() ? v.trim() : null);
 
 @Component({
   selector: 'app-office-form',
-  imports: [DepartmentCard, HalfWidthDigits, PasswordGate, ReactiveFormsModule, RouterLink, TranslocoPipe, RateDialog],
+  imports: [DepartmentCard, EnterNext, HalfWidthDigits, PasswordGate, ReactiveFormsModule, RouterLink, TranslocoPipe, RateDialog],
   templateUrl: './office-form.html',
   styleUrl: './office-form.css',
 })
@@ -293,6 +297,87 @@ export class OfficeForm {
   readonly showFirstRates = computed(
     () => this.insurerType() === 'kumiai' && (!this.isEdit || this.insurerChanged()),
   );
+
+  // ----- ファイルから（CSV・Excel・組合の保険料額表・PDF）。保存のときに、手で入れた分と一緒に書く（11/17） -----
+  readonly fileName = signal<string | null>(null);
+  readonly fileRows = signal<RateCsvRow[]>([]);
+  readonly fileMissing = signal(false);
+  readonly fileError = signal<string | null>(null);
+  readonly fileFilled = signal<number | null>(null); // PDF：欄に入れた数
+  /** 取り込める行（エラーのない行）。切り替えの月より前の行は除く */
+  readonly fileOk = computed(() => this.fileRows().filter((r) => r.input && r.status !== 'error' && this.inFirstRange(r.input.from)));
+  readonly fileBad = computed(() => this.fileRows().filter((r) => !r.input || r.status === 'error' || !this.inFirstRange(r.input.from)));
+
+  private firstRangeFrom(): string {
+    return this.isEdit ? this.form.controls.changeFrom.value : FROM_THE_START;
+  }
+
+  private inFirstRange(month: string): boolean {
+    const f = this.firstRangeFrom();
+    return !MONTH.test(f) || month >= f;
+  }
+
+  pct(rate: number): string {
+    return formatRate(rate, 'percent');
+  }
+
+  csvErrorKey(code: string): string {
+    return `rateDialog.csv.error.${code.replace('.', '_')}`;
+  }
+
+  /** 料率のファイルを読む。CSV・Excel は何年分でも。PDF は通知の値を下の欄に入れる */
+  async readRatesFile(event: Event): Promise<void> {
+    const el = event.target as HTMLInputElement;
+    const file = el.files?.[0];
+    el.value = '';
+    if (!file) return;
+    this.clearRatesFile();
+    try {
+      if (file.size > MAX_FILE_BYTES) throw new ImportFileError('tooBig');
+      if (/\.pdf$/i.test(file.name)) {
+        const { readPdfLines } = await import('../../../../shared/import/pdf');
+        const cands = findRates(await readPdfLines(await file.arrayBuffer()));
+        let filled = 0;
+        for (const [key, rate] of Object.entries(guessFill(cands))) {
+          const [kind, field] = key.split('.') as ['health' | 'care' | 'childSupport', 'total' | 'employee' | 'employer'];
+          const c = this.firstRates.controls[kind]?.controls[field];
+          if (c && c.value.trim() === '' && rate !== undefined) {
+            c.setValue(formatRateInput(rate, 'percent'));
+            c.markAsDirty();
+            filled++;
+          }
+        }
+        this.fileName.set(file.name);
+        this.fileFilled.set(filled);
+        if (!filled) this.fileError.set('rateDialog.pdf.none');
+        return;
+      }
+      const { tables } = await readTables(file);
+      const result = readRateFile(tables[0].rows, { range: { from: FROM_THE_START, to: null }, existing: [] });
+      this.fileName.set(file.name);
+      this.fileMissing.set(result.missing.length > 0 && result.rows.length === 0);
+      this.fileRows.set(result.rows);
+      this.firstRates.markAsDirty();
+    } catch (err) {
+      console.error(err);
+      this.fileError.set(err instanceof ImportFileError ? `importMap.error.${err.code}` : 'rateDialog.csv.readError');
+    }
+  }
+
+  clearRatesFile(): void {
+    this.fileName.set(null);
+    this.fileRows.set([]);
+    this.fileMissing.set(false);
+    this.fileError.set(null);
+    this.fileFilled.set(null);
+  }
+
+  /** 保存のときに書く料率：ファイルの行 ＋ 手で入れた分（同じ月はファイルが先） */
+  private ratesToWrite(manual: KumiaiRateInput | null): KumiaiRateInput[] {
+    const list = this.fileOk().map((r) => r.input!);
+    if (manual && !list.some((x) => x.from === manual.from)) list.push(manual);
+    return list.sort((a, b) => a.from.localeCompare(b.from));
+  }
 
   /** 支援金は2026年4月分から（それより前から入れるときは0にするので、欄を出さない） */
   readonly firstRatesNeedChildSupport = computed(() => {
@@ -889,8 +974,9 @@ export class OfficeForm {
         const firstRate = this.readFirstRates();
         await this.offices.update(office.id, input, this.tasksOf(this.pendingChanges()));
         await this.saveDepartments(office.id);
-        if (firstRate) await this.rates.createKumiai(office.id, firstRate);
+        for (const r of this.ratesToWrite(firstRate)) await this.rates.createKumiai(office.id, r);
         this.firstRates.reset();
+        this.clearRatesFile();
         this.changeFactDate.set(todayLocal());
         const fresh = await this.offices.get(office.id);
         if (fresh) {
@@ -913,7 +999,7 @@ export class OfficeForm {
         // 部署は作ったあとに足す（作るときの項目の決まりを変えないため）
         await this.saveDepartments(officeId);
         // 組合の最初の料率（入れていれば）。事業所ができてからでないと書けない
-        if (firstRate) await this.rates.createKumiai(officeId, firstRate);
+        for (const r of this.ratesToWrite(firstRate)) await this.rates.createKumiai(officeId, r);
         await this.profiles.load(uid); // currentOfficeId を最新にする
         await this.context.refresh(uid); // 切り替えの一覧にすぐ反映
         this.unsaved.release();

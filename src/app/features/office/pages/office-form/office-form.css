@@ -470,3 +470,16 @@ h3 {
   width: 110px;
   text-align: right;
 }
+
+.rate-file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: var(--space-sm) 0;
+}
+
+.file-rows {
+  max-height: 40vh;
+  overflow: auto;
+}

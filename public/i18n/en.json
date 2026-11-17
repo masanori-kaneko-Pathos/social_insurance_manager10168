@@ -1050,13 +1050,20 @@
     },
     "firstRates": {
       "title": "Society's rates (first period)",
-      "lead": "Enter the rates from the notice sent by the health insurance society. You can leave this empty and enter them later with \"View rates\" in the insurer and location history (per mille, CSV and PDF are available there).",
+      "lead": "Enter the rates from the society's notice by hand or import a file. You can leave this empty and enter them later with \"View rates\" in the insurer and location history.",
       "fromHint": "If you also calculate premiums for past payroll, choose a month before the earliest one.",
       "error": {
         "from": "Select the month the rates apply from."
       },
       "titleChange": "New society's rates (from the month of the change)",
-      "leadChange": "Enter the rates from the notice sent by the society. You can leave this empty and enter them later with \"View rates\" in the table below. To enter several years at once (CSV, PDF) or in per mille, use that after saving."
+      "leadChange": "Enter the rates from the society's notice by hand or import a file. You can leave this empty and enter them later with \"View rates\" in the table below.",
+      "file": "Import from file",
+      "fileHint": "CSV or Excel (any number of years; a society premium table also works), or PDF (fills the fields below)",
+      "fileNoRows": "No rate columns were found. Use the same headings as the template in the rates window.",
+      "fileRead": "{{file}}: {{ok}} to save, {{bad}} not imported",
+      "fileClear": "Discard the file",
+      "beforeChange": "Before the month of the change, so not imported",
+      "willSave": "Registered when you save"
     }
   },
   "remuneration": {

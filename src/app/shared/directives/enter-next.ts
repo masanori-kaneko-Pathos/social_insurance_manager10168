@@ -26,6 +26,7 @@ function atEdge(el: HTMLElement, dir: 'left' | 'right'): boolean {
  * - 左右の矢印は、カーソルが文字の端にあるときだけ（文字の中の移動を邪魔しない）
  * - 選択肢（select）の上下は、選択肢を変える動きのまま
  * - 日本語の変換中の Enter は、変換の確定なので移らない
+ * - 移った先が画面の下のほうなら、画面を少し動かして真ん中に出す（11/17）
  */
 @Directive({
   selector: '[appEnterNext]',
@@ -38,6 +39,8 @@ export class EnterNext {
   onKeydown(e: KeyboardEvent): void {
     const target = e.target as HTMLElement;
     if (!target.matches(FIELDS) || e.isComposing || e.keyCode === 229 || e.altKey || e.ctrlKey || e.metaKey) return;
+    // 欄が自分で Enter を扱った（部署の読みへ移る・組合の名前から履歴へ動く など）ときは、何もしない（11/17）
+    if (e.defaultPrevented) return;
 
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -67,7 +70,10 @@ export class EnterNext {
 
   private focus(el: HTMLElement | undefined): boolean {
     if (!el) return false;
-    el.focus();
+    el.focus({ preventScroll: true });
+    // 画面の下のほう（下の「保存する」の帯の近く）か上に隠れていたら、少しずつ画面を動かす（11/17）
+    const r = el.getBoundingClientRect();
+    if (r.bottom > window.innerHeight * 0.7 || r.top < 80) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
     if (el instanceof HTMLInputElement && el.type !== 'checkbox') el.select();
     return true;
   }

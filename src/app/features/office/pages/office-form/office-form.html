@@ -46,7 +46,7 @@
     <div class="alert alert-success" role="status">{{ 'office.form.saved' | transloco }}</div>
   }
 
-  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate appEnterNext>
     <p class="required-note">{{ 'common.requiredNote' | transloco }}</p>
     <!-- 基本情報 -->
     <section id="sec-basic" class="card">
@@ -328,6 +328,61 @@
           <fieldset class="first-rates" [formGroup]="firstRates">
             <legend>{{ 'office.firstRates.title' | transloco }}</legend>
             <p class="hint">{{ 'office.firstRates.lead' | transloco }}</p>
+            <div class="rate-file">
+              <label class="btn btn-small">
+                {{ 'office.firstRates.file' | transloco }}
+                <input type="file" accept=".csv,.txt,.xlsx,.xls,.pdf" hidden (change)="readRatesFile($event)" />
+              </label>
+              <span class="hint">{{ 'office.firstRates.fileHint' | transloco }}</span>
+            </div>
+            @if (fileError(); as e) {
+              <p class="field-error" role="alert">{{ e | transloco }}</p>
+            }
+            @if (fileFilled(); as n) {
+              <p class="hint">{{ 'rateDialog.pdf.filled' | transloco: { n: n } }}</p>
+            }
+            @if (fileMissing()) {
+              <p class="field-error">{{ 'office.firstRates.fileNoRows' | transloco }}</p>
+            }
+            @if (fileRows().length > 0) {
+              <p class="hint">{{ 'office.firstRates.fileRead' | transloco: { file: fileName(), ok: fileOk().length, bad: fileBad().length } }}
+                <button type="button" class="btn btn-small" (click)="clearRatesFile()">{{ 'office.firstRates.fileClear' | transloco }}</button>
+              </p>
+              <div class="table-wrap file-rows">
+                <table class="rate-grid">
+                  <thead>
+                    <tr>
+                      <th>{{ 'rateDialog.from' | transloco }}</th>
+                      @for (k of firstRateKinds; track k) {
+                        <th>{{ 'premium.part.' + k | transloco }}</th>
+                      }
+                      <th>{{ 'rateDialog.csv.col.result' | transloco }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (r of fileRows(); track r.line) {
+                      <tr>
+                        <td class="mono">{{ r.from }}</td>
+                        @for (k of firstRateKinds; track k) {
+                          <td class="mono">{{ r.input ? pct(r.input[k].employee + r.input[k].employer) : '' }}</td>
+                        }
+                        <td>
+                          @if (r.status === 'error') {
+                            @for (e of r.errors; track e) {
+                              <span class="field-error">{{ csvErrorKey(e) | transloco }}</span>
+                            }
+                          } @else if (r.input && !fileOk().includes(r)) {
+                            <span class="field-error">{{ 'office.firstRates.beforeChange' | transloco }}</span>
+                          } @else {
+                            {{ 'office.firstRates.willSave' | transloco }}
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
             <div class="field from">
               <label for="firstRatesFrom">{{ 'rateDialog.from' | transloco }}</label>
               <input id="firstRatesFrom" class="input" type="month" formControlName="from" [class.is-invalid]="firstRateErrors().from" />
@@ -399,6 +454,61 @@
               <fieldset class="first-rates" [formGroup]="firstRates">
                 <legend>{{ 'office.firstRates.titleChange' | transloco }}</legend>
                 <p class="hint">{{ 'office.firstRates.leadChange' | transloco }}</p>
+                <div class="rate-file">
+                  <label class="btn btn-small">
+                    {{ 'office.firstRates.file' | transloco }}
+                    <input type="file" accept=".csv,.txt,.xlsx,.xls,.pdf" hidden (change)="readRatesFile($event)" />
+                  </label>
+                  <span class="hint">{{ 'office.firstRates.fileHint' | transloco }}</span>
+                </div>
+                @if (fileError(); as e) {
+                  <p class="field-error" role="alert">{{ e | transloco }}</p>
+                }
+                @if (fileFilled(); as n) {
+                  <p class="hint">{{ 'rateDialog.pdf.filled' | transloco: { n: n } }}</p>
+                }
+                @if (fileMissing()) {
+                  <p class="field-error">{{ 'office.firstRates.fileNoRows' | transloco }}</p>
+                }
+                @if (fileRows().length > 0) {
+                  <p class="hint">{{ 'office.firstRates.fileRead' | transloco: { file: fileName(), ok: fileOk().length, bad: fileBad().length } }}
+                    <button type="button" class="btn btn-small" (click)="clearRatesFile()">{{ 'office.firstRates.fileClear' | transloco }}</button>
+                  </p>
+                  <div class="table-wrap file-rows">
+                    <table class="rate-grid">
+                      <thead>
+                        <tr>
+                          <th>{{ 'rateDialog.from' | transloco }}</th>
+                          @for (k of firstRateKinds; track k) {
+                            <th>{{ 'premium.part.' + k | transloco }}</th>
+                          }
+                          <th>{{ 'rateDialog.csv.col.result' | transloco }}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (r of fileRows(); track r.line) {
+                          <tr>
+                            <td class="mono">{{ r.from }}</td>
+                            @for (k of firstRateKinds; track k) {
+                              <td class="mono">{{ r.input ? pct(r.input[k].employee + r.input[k].employer) : '' }}</td>
+                            }
+                            <td>
+                              @if (r.status === 'error') {
+                                @for (e of r.errors; track e) {
+                                  <span class="field-error">{{ csvErrorKey(e) | transloco }}</span>
+                                }
+                              } @else if (r.input && !fileOk().includes(r)) {
+                                <span class="field-error">{{ 'office.firstRates.beforeChange' | transloco }}</span>
+                              } @else {
+                                {{ 'office.firstRates.willSave' | transloco }}
+                              }
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
                 <table class="rate-grid">
                   <thead>
                     <tr>
