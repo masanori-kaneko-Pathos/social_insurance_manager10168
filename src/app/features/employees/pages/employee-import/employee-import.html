@@ -33,6 +33,8 @@
     <app-history-import [kind]="mode() === 'contract' ? 'contract' : 'remuneration'" />
   } @else if (mode() === 'payrolls') {
     <app-payroll-import />
+  } @else if (mode() === 'bonuses') {
+    <app-bonus-import />
   } @else if (mode() === 'employees') {
   <section class="card">
     <!-- ファイルを選ぶ・ひな形・列の書き方を1行に（どの区分も同じ。11/17） -->

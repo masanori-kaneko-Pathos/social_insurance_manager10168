@@ -34,6 +34,7 @@ import { DependentImport } from '../../components/dependent-import/dependent-imp
 import { AbroadImport } from '../../components/abroad-import/abroad-import';
 import { HistoryImport } from '../../components/history-import/history-import';
 import { PayrollImport } from '../../../payrolls/pages/payroll-import/payroll-import';
+import { BonusImport } from '../../../premiums/components/bonus-import/bonus-import';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { ImportPicker } from '../../../../shared/components/import-picker/import-picker';
 import { ImportFix, ImportIssue, ImportIssues } from '../../../../shared/components/import-issues/import-issues';
@@ -54,6 +55,7 @@ export type ImportMode =
   | 'contract'
   | 'remuneration'
   | 'payrolls'
+  | 'bonuses'
   | 'myNumber'
   | 'certificate'
   | 'overseas';
@@ -63,6 +65,7 @@ export const IMPORT_MODES: readonly ImportMode[] = [
   'contract',
   'remuneration',
   'payrolls',
+  'bonuses',
   'myNumber',
   'certificate',
   'overseas',
@@ -72,6 +75,7 @@ export const IMPORT_MODES: readonly ImportMode[] = [
 const FROM: Record<string, { path: string[]; label: string }> = {
   employees: { path: ['employees'], label: 'nav.employees' },
   payrolls: { path: ['payrolls'], label: 'payroll.listTitle' },
+  bonuses: { path: ['bonuses'], label: 'nav.bonuses' },
   home: { path: [], label: 'nav.home' },
 };
 
@@ -94,7 +98,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-employee-import',
-  imports: [ImportPicker, PayrollImport, AbroadImport, ColumnMapper, DependentImport, HistoryImport, ImportIssues, PasswordGate, RouterLink, TranslocoPipe],
+  imports: [ImportPicker, PayrollImport, BonusImport, AbroadImport, ColumnMapper, DependentImport, HistoryImport, ImportIssues, PasswordGate, RouterLink, TranslocoPipe],
   templateUrl: './employee-import.html',
   styleUrl: './employee-import.css',
 })

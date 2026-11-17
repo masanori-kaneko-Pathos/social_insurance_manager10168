@@ -1,0 +1,109 @@
+<section class="card">
+  <!-- ファイルを選ぶ・ひな形・列の書き方を1行に（どの区分も同じ。11/17） -->
+  <app-import-picker [accept]="accept" [busy]="saving()" (picked)="onFile($event)" (template)="downloadTemplate()">
+    <div columns>
+      <p>{{ 'bonusCsv.lead' | transloco }}</p>
+      <p>{{ 'bonusCsv.columnsHint' | transloco }}</p>
+    </div>
+  </app-import-picker>
+
+  @if (errorKey(); as key) {
+    <div class="alert alert-danger">{{ key | transloco }}</div>
+  }
+  @if (done(); as d) {
+    <div class="alert alert-success">
+      {{ 'bonusCsv.done' | transloco: { people: d.people, payments: d.payments } }}
+      <a [routerLink]="['/o', context.current()?.id, 'bonuses']">{{ 'bonusCsv.toList' | transloco }}</a>
+    </div>
+  }
+  @if (progress(); as p) {
+    <p class="muted">{{ 'bonusCsv.progress' | transloco: { done: p.done, total: p.total } }}</p>
+    <progress [value]="p.done" [max]="p.total"></progress>
+  }
+
+  <!-- 見出しがうちと違うファイル：列を合わせる（確認画面から戻ったときに選んだ値が残るよう、隠すだけにする） -->
+  @if (loaded(); as f) {
+    <app-column-mapper [hidden]="!mapping()" [tables]="f.tables" [spec]="spec" (confirmed)="onMapped($event)" (cancelled)="clear()" />
+  }
+
+  @if (preview(); as pv) {
+    <p class="file-name">
+      {{ pv.fileName }}
+      @if (pv.encoding) {
+        <span class="sub">（{{ 'payrollCsv.encoding.' + pv.encoding | transloco }}）</span>
+      }
+      <button type="button" class="btn redo" (click)="remap()" [disabled]="saving()">{{ 'importMap.redo' | transloco }}</button>
+    </p>
+
+    <p>
+      {{
+        'bonusCsv.summary'
+          | transloco: { payments: writes().length, n: count().new, a: count().add, u: count().update, s: count().same, e: count().error }
+      }}
+    </p>
+
+    <!-- エラーの行：共通の部品で1行ずつ直す -->
+    <app-import-issues
+      [table]="pv.table"
+      [issues]="issues()"
+      [summaryHeaders]="[headers.employeeNumber, headers.name, headers.paidDate]"
+      [keyHeader]="headers.employeeNumber"
+      fileStem="bonuses"
+      [(skip)]="skipErrors"
+      [busy]="saving()"
+      (fixed)="onFix($event)"
+    />
+
+    <div class="actions top">
+      <button type="button" class="btn" [disabled]="saving()" (click)="clear()">{{ 'common.cancel' | transloco }}</button>
+      <button type="button" class="btn btn-primary" [disabled]="!canImport()" (click)="importCsv()">
+        {{ 'bonusCsv.import' | transloco: { people: peopleToWrite(), payments: writes().length } }}
+      </button>
+    </div>
+
+    <div class="table-wrap scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th class="num">{{ 'employeeCsv.col.line' | transloco }}</th>
+            <th>{{ 'employee.field.employeeNumber' | transloco }}</th>
+            <th>{{ 'bonusCsv.col.employee' | transloco }}</th>
+            <th>{{ 'bonusCsv.col.paidDate' | transloco }}</th>
+            <th>{{ 'bonusCsv.col.title' | transloco }}</th>
+            <th class="num">{{ 'bonusCsv.col.amount' | transloco }}</th>
+            <th>{{ 'bonusCsv.col.result' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of pv.plan.rows; track r.line) {
+            <tr [class.warn]="r.errors.length > 0">
+              <td class="num">{{ r.line }}</td>
+              <td class="mono">{{ r.employee?.employeeNumber ?? '—' }}</td>
+              <td>{{ name(r) }}</td>
+              <td class="mono">{{ r.paidDate || '—' }}</td>
+              <td>{{ r.title || '—' }}</td>
+              <td class="num">
+                {{ yen(r.amount) }}
+                @if (r.inKind !== null && r.inKind > 0) {
+                  <br /><span class="sub">{{ 'bonusCsv.inKind' | transloco: { n: yen(r.inKind) } }}</span>
+                }
+              </td>
+              <td>
+                @if (r.errors.length > 0) {
+                  @for (e of r.errors; track e) {
+                    <span class="badge">{{ 'bonusCsv.error.' + e | transloco }}</span>
+                  }
+                } @else {
+                  {{ 'bonusCsv.status.' + r.status | transloco }}
+                  @for (w of r.warnings; track w) {
+                    <br /><span class="badge">{{ 'bonusCsv.warning.' + w | transloco }}</span>
+                  }
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

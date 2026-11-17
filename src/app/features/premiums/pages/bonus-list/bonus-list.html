@@ -1,9 +1,15 @@
 <div class="page-head">
   <h1>{{ 'bonus.listTitle' | transloco }}</h1>
   @if (context.isAdmin()) {
-    <a class="btn btn-primary" [routerLink]="['/o', context.current()?.id, 'bonuses', 'new']">
-      {{ 'bonus.add' | transloco }}
-    </a>
+    <div class="head-actions">
+      <!-- 何回分もまとめて：ファイルの取り込みのページ（11/17） -->
+      <a class="btn" [routerLink]="['/o', context.current()?.id, 'import']" [queryParams]="{ kind: 'bonuses', from: 'bonuses' }">
+        {{ 'bonus.csv' | transloco }}
+      </a>
+      <a class="btn btn-primary" [routerLink]="['/o', context.current()?.id, 'bonuses', 'new']">
+        {{ 'bonus.add' | transloco }}
+      </a>
+    </div>
   }
 </div>
 

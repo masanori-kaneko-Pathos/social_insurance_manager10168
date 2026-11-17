@@ -1459,7 +1459,8 @@
     "total": "Total",
     "amountTotal": "Total bonus {{n}} yen",
     "cappedHealth": "Health etc. calculated on JPY {{n}} (yearly cap)",
-    "cappedPension": "Pension etc. calculated on JPY {{n}} (monthly cap)"
+    "cappedPension": "Pension etc. calculated on JPY {{n}} (monthly cap)",
+    "csv": "Import CSV"
   },
   "leave": {
     "title": "Leave",
@@ -2454,7 +2455,8 @@
       "certificate": "Agreement certificates",
       "overseas": "Overseas assignments",
       "payrolls": "Payroll",
-      "myNumber": "My Number"
+      "myNumber": "My Number",
+      "bonuses": "Bonuses"
     },
     "pageLead": "Add records to registered employees: employment contracts from the second one onward, and standard monthly remuneration decisions (annual determination, occasional revision, etc.). Employees are matched by employee number. Records for a date (month) that already exists are skipped, never overwritten. Coverage (acquisition and loss dates) is not changed, so check the \"Review coverage\" items in the To-do list after importing.",
     "lead": {
@@ -4304,9 +4306,47 @@
       "contract": "Add records to registered employees: employment contracts from the second one onward, and standard monthly remuneration decisions (annual determination, occasional revision, etc.). Employees are matched by employee number. Records for a date (month) that already exists are skipped, never overwritten. Coverage (acquisition and loss dates) is not changed, so check the \"Review coverage\" items in the To-do list after importing.",
       "remuneration": "Add records to registered employees: employment contracts from the second one onward, and standard monthly remuneration decisions (annual determination, occasional revision, etc.). Employees are matched by employee number. Records for a date (month) that already exists are skipped, never overwritten. Coverage (acquisition and loss dates) is not changed, so check the \"Review coverage\" items in the To-do list after importing.",
       "payrolls": "One row per person per month: amount paid, fixed wages, payment base days and so on. Export a period from \"Template / export\", edit it in Excel and import it as is (same format both ways).",
+      "bonuses": "One row per person per payment: paid date and bonus amount. Rows with the same paid date become one payment. Existing payments are merged: people not in the file keep their amounts.",
       "myNumber": "Add My Numbers to registered employees in one go (employee number and My Number columns). Exporting asks for your password again. Both are logged.",
       "certificate": "Add social security agreement certificates (people sent to Japan from abroad) or overseas assignments (people sent abroad from Japan) to registered employees. People are matched by employee number. Rows identical to saved data are skipped.",
       "overseas": "Add social security agreement certificates (people sent to Japan from abroad) or overseas assignments (people sent abroad from Japan) to registered employees. People are matched by employee number. Rows identical to saved data are skipped."
+    }
+  },
+  "bonusCsv": {
+    "lead": "Keep the template headers to read the file without mapping columns. Files with other headers (payroll software exports) can be read after mapping.",
+    "columnsHint": "Required: employee number (or name), paid date and bonus amount. Title and in-kind may be empty; an empty in-kind keeps the saved in-kind amount.",
+    "summary": "{{payments}} payments: new {{n}} · added {{a}} · updated {{u}} · unchanged {{s}} · errors {{e}}",
+    "import": "Import ({{payments}} payments, {{people}} people)",
+    "done": "Imported amounts for {{people}} people into {{payments}} payments.",
+    "toList": "Go to bonuses",
+    "progress": "Saving… {{done}} / {{total}} payments",
+    "inKind": "incl. in kind {{n}}",
+    "col": {
+      "employee": "Employee",
+      "paidDate": "Paid date",
+      "title": "Title",
+      "amount": "Amount",
+      "result": "Result"
+    },
+    "status": {
+      "new": "New payment",
+      "add": "Added to payment",
+      "update": "Updated",
+      "same": "Unchanged"
+    },
+    "error": {
+      "employeeNotFound": "No employee with this number (name)",
+      "nameAmbiguous": "Several people share this name. Enter the employee number",
+      "paidDate": "Cannot read the paid date (use 2026-07-10)",
+      "amount": "Cannot read the amount (whole yen, 0 or more)",
+      "inKind": "Cannot read the in-kind amount (whole yen, 0 or more)",
+      "duplicate": "Same person and paid date appear in an earlier row",
+      "save": "Could not save. Some payments may have been saved; check the bonus list and import again (merging means the same file will not double up)."
+    },
+    "warning": {
+      "beforeHire": "Paid before the hire date (no premiums)",
+      "afterRetire": "Paid after the retirement date (no premiums)",
+      "titleDiffers": "Different title for the same paid date (the first row's title is used)"
     }
   }
 }
