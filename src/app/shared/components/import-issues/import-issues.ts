@@ -389,9 +389,11 @@ export class ImportIssues {
     if (this.pressedOnBackdrop && e.target === this.dialog()?.nativeElement) this.close();
   }
 
+  /** 取り込まない行（エラーの行とチェックを外した行）を書き出す。エラーの列は、外しただけの行なら空欄（11/18） */
   exportRows(): void {
     const errorHeader = this.transloco.translate('employeeCsv.errorColumn');
-    const messages = new Map(this.issues().map((it) => [it.line, it.messages.join(' ／ ')]));
-    downloadCsv(`${this.fileStem()}-errors-${todayLocal()}.csv`, errorRowsTable(this.table(), messages, errorHeader));
+    const messages = new Map<number, string>([...this.excluded()].map((line) => [line, '']));
+    for (const it of this.issues()) messages.set(it.line, it.messages.join(' ／ '));
+    downloadCsv(`${this.fileStem()}-not-imported-${todayLocal()}.csv`, errorRowsTable(this.table(), messages, errorHeader));
   }
 }

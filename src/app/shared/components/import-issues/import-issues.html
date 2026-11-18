@@ -1,12 +1,16 @@
-<!-- 問題の行の帯（一覧は出さない。表の中の赤い行の「直す」で直す。課題管理アプリと同じ考え方。11/17） -->
+<!-- エラーの行の帯（一覧は出さない。表の中の赤い行の「詳細」で直す。課題管理アプリと同じ考え方。11/17） -->
 @if (issues().length > 0) {
   <div class="alert alert-danger">{{ 'importFix.banner' | transloco: { n: issues().length } }}</div>
-
+}
+<!-- 取り込まない行（エラーの行・チェックを外した行）があれば、書き出して Excel で直せる（11/18） -->
+@if (issues().length > 0 || excluded().size > 0) {
   <div class="fix-bar">
-    <label class="opt">
-      <input type="checkbox" [checked]="onlyIssues()" (change)="onlyIssues.set($any($event.target).checked)" />
-      {{ 'importFix.onlyIssues' | transloco }}
-    </label>
+    @if (issues().length > 0) {
+      <label class="opt">
+        <input type="checkbox" [checked]="onlyIssues()" (change)="onlyIssues.set($any($event.target).checked)" />
+        {{ 'importFix.onlyIssues' | transloco }}
+      </label>
+    }
     <button type="button" class="btn btn-small" (click)="exportRows()">
       {{ 'employeeCsv.exportErrors' | transloco }}
     </button>

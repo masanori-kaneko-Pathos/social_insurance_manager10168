@@ -20,7 +20,7 @@ export class ThemeService {
   constructor() {
     this.media?.addEventListener('change', (e) => {
       this.systemDark.set(e.matches);
-      this.apply();
+      this.switchTo();
     });
     this.apply();
   }
@@ -32,7 +32,27 @@ export class ThemeService {
     } catch {
       // 保存できない環境（プライベートブラウズなど）では、この画面の間だけ
     }
-    this.apply();
+    this.switchTo();
+  }
+
+  /**
+   * 切り替えのときだけ、画面全体を 0.15 秒で重ねて入れ替える（11/18）
+   * ページの切り替えと同じ View Transitions を使う（要素ごとに色を動かすと、大きな表で重くなるため）
+   * 対応していないブラウザ・色が変わらないとき・動きを減らす設定の人は、すぐ切り替える
+   */
+  private switchTo(): void {
+    const next = this.dark() ? 'dark' : 'light';
+    const root = document.documentElement;
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => { finished: Promise<void> } };
+    const reduce = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (root.dataset['theme'] === next || !doc.startViewTransition || reduce) {
+      this.apply();
+      return;
+    }
+    root.classList.add('theme-switching');
+    doc
+      .startViewTransition(() => this.apply())
+      .finished.finally(() => root.classList.remove('theme-switching'));
   }
 
   private read(): ThemePref {
