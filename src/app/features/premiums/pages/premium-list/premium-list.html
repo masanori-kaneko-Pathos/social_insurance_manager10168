@@ -357,7 +357,27 @@
     </app-person-list-bar>
     <p class="legend">{{ (options().healthRounding === 'combined' ? 'premiumList.healthLegend' : 'premiumList.healthLegendSeparate') | transloco }}</p>
     <div class="card table-wrap">
-      <table>
+      <table class="fixed-cols">
+        <!-- 欄の幅を固定する（並び替え・ページ送りで表示する人が変わっても、幅が揺れないように。11/18） -->
+        <colgroup>
+          <col class="c-number" />
+          <col class="c-name" />
+          <col class="c-standard" />
+          @if (showParts()) {
+            @for (p of healthPartKeys; track p) {
+              <col class="c-yen" />
+            }
+          }
+          <col class="c-yen" />
+          <col class="c-yen-wide" />
+          <col class="c-yen" />
+          <col class="c-employer" />
+          <col class="c-yen-wide" />
+          @if (showContribution()) {
+            <col class="c-yen-wide" />
+          }
+          <col class="c-calc" />
+        </colgroup>
         <thead>
           <tr>
             <th rowspan="2" [attr.aria-sort]="ariaSort('number')">

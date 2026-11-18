@@ -178,6 +178,25 @@ tbody tr:not(.problem):hover td {
   font-size: var(--font-xs);
 }
 
+/* ===== 11/18：欄の幅を固定（中身で幅を決めると、表示する人が変わるたびに揺れる・見切れる） ===== */
+table.fixed-cols {
+  table-layout: fixed;
+  min-width: 80em;
+}
+
+col.c-number { width: 6.5em; }
+col.c-name { width: 13em; }
+col.c-standard { width: 11em; }
+col.c-yen { width: 8em; }
+col.c-yen-wide { width: 8.5em; }
+col.c-employer { width: 9.5em; }
+col.c-calc { width: 5.5em; }
+
+/* 名前の欄（名前の横の「介護開始」などの札も）は、決めた幅の中で折り返す */
+table.fixed-cols td:nth-child(2) {
+  white-space: normal;
+}
+
 /* 本人負担の内訳の見出しは長いので折り返す */
 th.part-head {
   max-width: 9em;

@@ -48,7 +48,16 @@
     <p class="muted">{{ 'request.empty' | transloco }}</p>
   } @else {
     <div class="table-wrap">
-      <table>
+      <table class="fixed-cols">
+        <!-- 欄の幅を固定（表示する行が変わっても揺れないように。幅の種類は styles.css の col.w-*。11/18） -->
+        <colgroup>
+          <col class="w-status" />
+          <col />
+          <col class="w-person" />
+          <col class="w-type" />
+          <col class="w-date" />
+          <col class="w-date" />
+        </colgroup>
         <thead>
           <tr>
             <th>{{ 'request.col.status' | transloco }}</th>

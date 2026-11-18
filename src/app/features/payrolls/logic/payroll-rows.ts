@@ -191,6 +191,19 @@ export function validatePayroll(x: PayrollInput, periodDays: number): PayrollErr
 }
 
 /** 隠れた列（cash・fixed・days 以外）に初期値でない値が入っているか（行の印に使う） */
+/** 「入力する項目を増やす」で出る列のうち、値の入っている列（札に名前を出す。11/18） */
+export type ExtraField = 'hours' | 'retro' | 'inKind' | 'absentDays' | 'prorated' | 'state';
+export function extraFields(x: PayrollInput): ExtraField[] {
+  const out: ExtraField[] = [];
+  if (x.workMinutes != null) out.push('hours');
+  if (x.retro !== 0) out.push('retro');
+  if (x.inKind !== 0) out.push('inKind');
+  if (x.absentDays != null) out.push('absentDays');
+  if (x.prorated) out.push('prorated');
+  if (x.state !== 'normal') out.push('state');
+  return out;
+}
+
 export function hasExtra(x: PayrollInput): boolean {
   return (
     x.inKind !== 0 ||

@@ -1,6 +1,7 @@
 import { emptyPayrollInput, Payroll } from '../../../core/models/payroll';
 import {
   employedDuring,
+  extraFields,
   hasExtra,
   insuredDuring,
   latestPaidMonth,
@@ -167,6 +168,14 @@ describe('validatePayroll', () => {
   it('実労働時間の上限（31日 × 24時間）', () => {
     expect(validatePayroll({ ...ok, workMinutes: 44640 }, 31)).toEqual([]);
     expect(validatePayroll({ ...ok, workMinutes: 44641 }, 31)).toEqual(['minutesOutOfRange']);
+  });
+});
+
+describe('extraFields：隠れた列のうち値の入っている列（札に名前を出す）', () => {
+  it('入っている列だけ、表の並びの順に', () => {
+    expect(extraFields(emptyPayrollInput())).toEqual([]);
+    expect(extraFields({ ...emptyPayrollInput(), workMinutes: 7200, retro: 15000 })).toEqual(['hours', 'retro']);
+    expect(extraFields({ ...emptyPayrollInput(), prorated: true, state: 'furlough' })).toEqual(['prorated', 'state']);
   });
 });
 

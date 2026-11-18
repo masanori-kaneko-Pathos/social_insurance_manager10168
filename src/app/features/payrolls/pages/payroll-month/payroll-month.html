@@ -79,7 +79,28 @@
 
   <div class="card table-wrap">
     <!-- Enter・矢印キーで次のセルへ（表計算ソフトと同じ動き） -->
-    <table appEnterNext="grid">
+    <table appEnterNext="grid" class="fixed-cols">
+      <!-- 欄の幅を固定（表示する行が変わっても揺れないように。幅の種類は styles.css の col.w-*。11/18） -->
+      <colgroup>
+        <col class="w-number" />
+        <col class="w-name" />
+        <col class="w-dept" />
+        <col class="w-type" />
+        <col class="w-input" />
+        @if (showAll()) {
+          <col class="w-input" />
+          <col class="w-yen" />
+        }
+        <col class="w-input" />
+        <col class="w-days" />
+        @if (showAll()) {
+          <col class="w-input" />
+          <col class="w-short" />
+          <col class="w-days" />
+          <col class="w-short" />
+          <col class="w-type" />
+        }
+      </colgroup>
       <thead>
         <tr>
           <!-- 社員番号 → 氏名（ほかの表と同じ順。どちらも見出しを押すと並び替え。11/13） -->
@@ -151,8 +172,11 @@
                 @if (v.row.partial) {
                   <span class="badge badge-warn">{{ 'payroll.tag.partial' | transloco }}</span>
                 }
+                <!-- 隠れている列に値がある：どの列かを書き、押すとその列を出す（11/18） -->
                 @if (extraHidden(v)) {
-                  <span class="badge badge-info">{{ 'payroll.tag.extra' | transloco }}</span>
+                  <a class="badge badge-info badge-link" [routerLink]="[]" [queryParams]="{ all: 1 }" queryParamsHandling="merge" [title]="'payroll.tag.extraTitle' | transloco">
+                    {{ 'payroll.tag.extraOf' | transloco: { items: extraText(v) } }}
+                  </a>
                 }
               </div>
             </td>

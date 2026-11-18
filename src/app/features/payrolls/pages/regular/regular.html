@@ -46,7 +46,20 @@
       entryKey="regular.entryState."
     />
     <div class="card table-wrap">
-      <table>
+      <table class="fixed-cols">
+        <!-- 欄の幅を固定（表示する行が変わっても揺れないように。幅の種類は styles.css の col.w-*。11/18） -->
+        <colgroup>
+          <col class="w-number" />
+          <col class="w-name" />
+          <col class="w-yen" />
+          <col class="w-yen" />
+          <col class="w-yen" />
+          <col class="w-money" />
+          <col class="w-grade" />
+          <col class="w-grade" />
+          <col class="w-status" />
+          <col class="w-act" />
+        </colgroup>
         <thead>
           <tr>
             <th class="fit"><app-sort-header key="number" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.employeeNumber' | transloco }}</app-sort-header></th>

@@ -135,7 +135,15 @@
     <span class="hint">{{ 'request.selectedCount' | transloco: { count: selected().size } }}</span>
   </div>
   <div class="table-wrap">
-    <table class="people-table">
+    <table class="people-table fixed-cols">
+      <!-- 欄の幅を固定（表示する行が変わっても揺れないように。幅の種類は styles.css の col.w-*。11/18） -->
+      <colgroup>
+        <col class="w-check" />
+        <col class="w-number" />
+        <col class="w-name" />
+        <col class="w-dept" />
+        <col />
+      </colgroup>
       <thead>
         <tr>
           <th class="check"><span class="sr-only">{{ 'request.selectAll' | transloco }}</span></th>

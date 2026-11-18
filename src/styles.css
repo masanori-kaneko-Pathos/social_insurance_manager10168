@@ -836,3 +836,57 @@ a:where(:link, :visited):hover {
   animation-duration: 150ms;
   animation-timing-function: ease-out;
 }
+
+/* ===== 欄の幅を固定する表（11/18） =====
+   ブラウザの標準は「いま表示している行の中身」で欄の幅を決めるので、並び替え・ページ送り・絞り込みで
+   表示する人が変わるたびに揺れる。table に fixed-cols、<colgroup> の各 <col> に下の幅の種類を付ける。
+   幅の種類のない <col /> は、残りの幅を分け合う */
+table.fixed-cols {
+  table-layout: fixed;
+  min-width: 56em;
+}
+col.w-check {
+  width: 2.8em;
+}
+col.w-number {
+  width: 6.5em;
+}
+col.w-name {
+  width: 12em;
+}
+col.w-person {
+  width: 16em;
+} /* 社員番号＋氏名を1つの欄に並べる表 */
+col.w-dept {
+  width: 9.5em;
+}
+col.w-type {
+  width: 8em;
+}
+col.w-date {
+  width: 8.5em;
+}
+col.w-short {
+  width: 6em;
+}
+col.w-days {
+  width: 9.5em;
+} /* 「支払基礎日数 ▾」の見出しが1行に入る幅 */
+col.w-yen {
+  width: 8.5em;
+}
+col.w-money {
+  width: 10em;
+}
+col.w-input {
+  width: 12em;
+} /* 金額の入力欄（99,999,999 まで）が入る幅 */
+col.w-grade {
+  width: 9em;
+}
+col.w-status {
+  width: 9em;
+}
+col.w-act {
+  width: 9em;
+}

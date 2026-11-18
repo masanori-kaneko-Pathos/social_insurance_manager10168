@@ -1619,7 +1619,9 @@
       "notSaved": "未入力",
       "notInsured": "未加入",
       "partial": "期間の途中で入社・退職",
-      "extra": "ほかの列に値あり"
+      "extra": "ほかの列に値あり",
+      "extraOf": "{{items}}の入力あり",
+      "extraTitle": "押すと、この列を表示します（「入力する項目を増やす」と同じ）"
     },
     "state": {
       "normal": "通常",

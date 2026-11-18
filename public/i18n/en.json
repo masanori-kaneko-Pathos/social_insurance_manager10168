@@ -1619,7 +1619,9 @@
       "notSaved": "Not entered",
       "notInsured": "Not insured",
       "partial": "Joined or left mid-period",
-      "extra": "Other columns have values"
+      "extra": "Other columns have values",
+      "extraOf": "Has {{items}}",
+      "extraTitle": "Click to show these columns (same as \"More fields\")"
     },
     "state": {
       "normal": "Normal",

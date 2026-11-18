@@ -62,7 +62,16 @@
   }
 
   <div class="card table-wrap">
-    <table>
+    <table class="fixed-cols">
+      <!-- 欄の幅を固定（表示する行が変わっても揺れないように。幅の種類は styles.css の col.w-*。11/18） -->
+      <colgroup>
+        <col class="w-check" />
+        <col class="w-number" />
+        <col class="w-name" />
+        <col class="w-dept" />
+        <col class="w-type" />
+        <col />
+      </colgroup>
       <thead>
         <tr>
           <th class="check">

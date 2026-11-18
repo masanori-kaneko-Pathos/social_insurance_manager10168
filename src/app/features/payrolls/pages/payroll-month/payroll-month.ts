@@ -2,7 +2,7 @@ import { Component, computed, DestroyRef, ElementRef, inject, signal, viewChild 
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { map } from 'rxjs';
 import { Employee } from '../../../../core/models/employee';
 import { PAYROLL_STATES, PayrollState } from '../../../../core/models/payroll';
@@ -20,6 +20,7 @@ import {
   totalOf,
 } from '../../logic/payroll-input';
 import {
+  extraFields,
   hasExtra,
   latestPaidMonth,
   Period,
@@ -77,6 +78,7 @@ const MONTH_RE = /^[0-9]{4}-(0[1-9]|1[0-2])$/;
 })
 export class PayrollMonth {
   private readonly fb = inject(FormBuilder).nonNullable;
+  private readonly transloco = inject(TranslocoService);
   private readonly employeesApi = inject(EmployeeService);
   private readonly payrollApi = inject(PayrollService);
   private readonly route = inject(ActivatedRoute);
@@ -351,6 +353,14 @@ export class PayrollMonth {
   }
 
   /** 隠れた列に保存済みの値がある（すべての列を出していないときの印） */
+  /** 値の入っている隠れた列の名前（「実労働時間・遡及支払額」） */
+  extraText(v: ViewRow): string {
+    if (!v.row.saved) return '';
+    return extraFields(v.row.saved)
+      .map((f) => this.transloco.translate('payroll.col.' + f))
+      .join('・');
+  }
+
   extraHidden(v: ViewRow): boolean {
     return !this.showAll() && !!v.row.saved && hasExtra(v.row.saved);
   }

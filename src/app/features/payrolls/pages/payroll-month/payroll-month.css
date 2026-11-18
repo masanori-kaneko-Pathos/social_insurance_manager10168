@@ -141,6 +141,16 @@ input.num {
   color: var(--color-text);
 }
 
+/* 押すと隠れた列を出す札（11/18） */
+a.badge-link {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+a.badge-link:hover {
+  text-decoration: underline;
+}
+
 .badge-sub {
   border: 1px solid var(--color-border);
   color: var(--color-text-sub);
