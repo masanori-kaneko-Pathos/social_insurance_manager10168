@@ -196,10 +196,21 @@
     height: auto;
     flex-direction: row;
     width: auto;
+    /* 画面の幅に合わせる（広い画面の「上に寄せる」が残ると中身の幅まで広がり、横に動かせない。11/18） */
+    align-self: stretch;
+    min-width: 0;
     padding: var(--space-sm);
     overflow-x: auto;
     border-right: 0;
     border-bottom: 1px solid var(--color-border);
+    /* 横に動かせることが分かるように：細いスクロールバーを出し、右端を少しぼかす（11/18） */
+    scrollbar-width: thin;
+    mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+  }
+
+  /* 項目は縮めず、はみ出した分を横に動かして見る */
+  .side-nav a {
+    flex: none;
   }
 
   /* 横に並べるときは、まとまりの見出しを出さない */
