@@ -123,8 +123,9 @@ tr.problem td {
   background: var(--color-warning-bg);
 }
 
+/* 賞与額の箱：1億円未満が収まる幅（11/18 に 130px から詰めた） */
 .input.amount {
-  width: 130px;
+  width: 110px;
   height: 34px;
 }
 
@@ -246,6 +247,10 @@ td:nth-child(2) {
 td.note,
 td .sub {
   white-space: normal;
+}
+
+td.note .note-sub {
+  display: block;
 }
 
 td.calc {

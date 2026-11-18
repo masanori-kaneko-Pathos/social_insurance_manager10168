@@ -668,13 +668,13 @@ export class EmployeeForm {
       { id: 'sec-basic', key: 'employee.section.basic', sub: true },
       ...(this.isForeign() ? [{ id: 'sec-foreign', key: 'employee.section.foreign', sub: true }] : []),
       { id: 'sec-employment', key: 'employee.section.employment', sub: true },
+      { id: 'sec-org', key: 'employee.section.org', sub: true },
       { id: 'sec-insurance', key: 'employee.section.insurance', sub: true },
       { id: 'sec-numbers', key: 'employee.section.numbers', sub: true },
       { id: 'sec-contact', key: 'employee.section.contact', sub: true },
       { id: 'sec-commute', key: 'employee.section.commute', sub: true },
       { id: 'sec-bank', key: 'employee.section.bank', sub: true },
       { id: 'sec-collection', key: 'employee.section.collection', sub: true },
-      { id: 'sec-org', key: 'employee.section.org', sub: true },
     ];
     if (this.loadedEmployee()) items.push({ id: 'sec-delete', key: 'employee.delete.title' });
     return items;

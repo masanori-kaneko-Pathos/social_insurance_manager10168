@@ -41,11 +41,11 @@
                 }
                 @case ('counted') {
                   <td class="num">{{ yen(r.result!.standardBonus) }}</td>
-                  <td class="muted">{{ 'bonus.state.counted' | transloco }}</td>
+                  <td class="muted">{{ 'bonus.state.counted' | transloco }}<br />{{ 'bonus.state.countedNote' | transloco }}</td>
                 }
                 @case ('exempt') {
                   <td class="num">{{ yen(r.result!.standardBonus) }}</td>
-                  <td class="muted">{{ 'bonus.state.exempt' | transloco }}</td>
+                  <td class="muted">{{ 'bonus.state.exempt' | transloco }}<br />{{ 'bonus.state.exemptNote' | transloco }}</td>
                 }
                 @case ('none') {
                   <td class="muted" colspan="2">{{ 'bonus.state.none' | transloco }}</td>

@@ -1410,8 +1410,10 @@
     "cardEmpty": "No bonuses paid.",
     "state": {
       "none": "Not insured on the payment date",
-      "counted": "No premium in the month coverage ends (still counts toward the annual health total)",
-      "exempt": "Exempt due to leave (still counts toward the annual health total)"
+      "counted": "No premium in the month coverage ends",
+      "countedNote": "(still counts toward the annual health total)",
+      "exempt": "Exempt due to leave",
+      "exemptNote": "(still counts toward the annual health total)"
     },
     "hint": {
       "paidDate": "Premiums depend on the payment date (none before coverage starts or on/after it ends).",
