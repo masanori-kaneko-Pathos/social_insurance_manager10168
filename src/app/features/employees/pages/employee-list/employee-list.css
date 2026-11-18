@@ -89,11 +89,12 @@
     white-space: nowrap;
   }
   
+  /* 見出しはほかの一覧と同じ書き方（白地・普通の太さ。11/18） */
   th {
-    font-size: var(--font-xs);
-    font-weight: 600;
+    font-size: var(--font-sm);
+    font-weight: 400;
     color: var(--color-text-sub);
-    background: var(--color-bg);
+    background: var(--color-surface);
   }
   
   /* 欄の幅を固定（並び替えで幅が動かないように。氏名は残りの幅。11/18） */
@@ -427,6 +428,14 @@ th .arrow.default {
 }
 .as-of-note {
   margin-bottom: var(--space-sm);
+}
+
+/* 見出しの横に基準日（11/18） */
+.title-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-md);
 }
 
 /* ページ送り（表の上と下） */

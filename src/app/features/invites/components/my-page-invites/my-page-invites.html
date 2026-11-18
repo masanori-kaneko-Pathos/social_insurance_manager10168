@@ -62,7 +62,7 @@
   }
 
   <div class="card table-wrap">
-    <table class="fixed-cols">
+    <table class="fixed-cols sticky-head">
       <!-- 欄の幅を固定（表示する行が変わっても揺れないように。幅の種類は styles.css の col.cw-*。11/18） -->
       <colgroup>
         <col class="cw-check" />
@@ -70,6 +70,7 @@
         <col class="cw-name" />
         <col class="cw-dept" />
         <col class="cw-type" />
+        <col class="cw-date" />
         <col />
       </colgroup>
       <thead>
@@ -87,6 +88,8 @@
           <th><app-sort-header key="kana" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.name' | transloco }}</app-sort-header></th>
           <th><app-sort-header key="dept" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.department' | transloco }}</app-sort-header></th>
           <th><app-sort-header key="employment" [(options)]="listOptions" [(page)]="page">{{ 'employee.list.employment' | transloco }}</app-sort-header></th>
+          <!-- 入社日（入社前の人に先に招待を送る、の見分けに。11/18） -->
+          <th><app-sort-header key="hire" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.hireDate' | transloco }}</app-sort-header></th>
           <th>{{ 'myPages.col.status' | transloco }}</th>
         </tr>
       </thead>
@@ -121,6 +124,7 @@
                 <span class="muted">—</span>
               }
             </td>
+            <td class="mono">{{ r.employee.hireDate || '—' }}</td>
             <!-- マイページ：状態の札と、その下に状態に合った1行（宛先・期限・リンクのコピー） -->
             <td class="mp">
               <span class="st st-{{ r.status }}">{{ 'myPages.status.' + r.status | transloco }}</span>
@@ -152,7 +156,7 @@
             </td>
           </tr>
         } @empty {
-          <tr><td colspan="6" class="muted">{{ (rows().length === 0 ? 'myPages.empty' : 'myPages.noMatch') | transloco }}</td></tr>
+          <tr><td colspan="7" class="muted">{{ (rows().length === 0 ? 'myPages.empty' : 'myPages.noMatch') | transloco }}</td></tr>
         }
       </tbody>
     </table>

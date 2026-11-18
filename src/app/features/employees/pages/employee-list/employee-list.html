@@ -1,5 +1,12 @@
 <div class="page-head">
-    <h1>{{ 'employee.list.title' | transloco }}</h1>
+    <!-- 見出しの横に基準日（その日の時点の一覧：在籍・区分・加入・年齢。11/18 に絞り込みの帯から移した） -->
+    <div class="title-group">
+      <h1>{{ 'employee.list.title' | transloco }}</h1>
+      <label class="as-of">
+        <span>{{ 'employee.list.asOf' | transloco }}</span>
+        <input class="input" type="date" [value]="asOf()" (change)="setAsOf($any($event.target).value)" />
+      </label>
+    </div>
     @if (context.isAdmin()) {
       <span class="head-actions">
         <button type="button" class="btn" [disabled]="exporting() || loading() || exportCount() === 0" [title]="'employee.list.exportNote' | transloco" (click)="exportCsv()">
@@ -17,15 +24,10 @@
   @if (isPast()) {
     <div class="alert as-of-note" role="status">
       {{ 'employee.list.asOfNote' | transloco: { date: asOf() } }}
-      <button type="button" class="link-btn" (click)="setAsOf('')">{{ 'employee.list.asOfReset' | transloco }}</button>
+      <button type="button" class="btn btn-small" (click)="setAsOf('')">{{ 'employee.list.asOfReset' | transloco }}</button>
     </div>
   }
   <div class="toolbar">
-    <!-- 基準日：その日の時点の一覧（在籍・区分・加入・年齢） -->
-    <label class="as-of">
-      <span>{{ 'employee.list.asOf' | transloco }}</span>
-      <input class="input" type="date" [value]="asOf()" (change)="setAsOf($any($event.target).value)" />
-    </label>
     <!-- フィルター（複数の条件を組み合わせる。選んだらすぐ反映） -->
     <div class="filter-wrap" #filterWrap>
       <button
@@ -164,7 +166,7 @@
   } @else {
     <app-pager class="pager-top" variant="top" [total]="filtered().length" [page]="page()" [size]="pageSize()" (resized)="setPer($event)" />
     <div class="card table-wrap">
-      <table class="fixed-cols">
+      <table class="fixed-cols sticky-head">
         <!-- 欄の幅を固定する（並び替えでページの人が入れ替わっても、幅が動かないように。氏名は残りの幅。11/18） -->
         <colgroup>
           <col class="c-number" />

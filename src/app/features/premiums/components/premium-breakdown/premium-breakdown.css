@@ -6,7 +6,7 @@
 /* ===== 給与明細の形（11/16） ===== */
 .slip {
   width: auto;
-  min-width: 26em;
+  min-width: 22em;
   border-collapse: collapse;
   font-variant-numeric: tabular-nums;
 }
@@ -127,7 +127,7 @@
 
 .line {
   display: grid;
-  grid-template-columns: 10em 1fr;
+  grid-template-columns: 7em 1fr; /* 項目名は2行に折り返してよい（「子ども・子育て支援金」。11/18 に 10em から詰めた） */
   gap: 0 var(--space-md);
   padding: 2px 0;
 }
@@ -153,7 +153,7 @@
 
 .group-sum {
   margin-top: var(--space-xs);
-  padding-left: calc(10em + var(--space-md));
+  padding-left: calc(7em + var(--space-md));
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -171,4 +171,10 @@
   .group-sum {
     padding-left: 0;
   }
+}
+/* 給与明細の形の項目名も2行に折り返してよい（表の幅に収めるため。11/18） */
+.slip th[scope='row'],
+.slip tbody th {
+  max-width: 7.5em;
+  white-space: normal;
 }

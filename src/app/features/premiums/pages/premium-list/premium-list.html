@@ -357,7 +357,7 @@
     </app-person-list-bar>
     <p class="legend">{{ (options().healthRounding === 'combined' ? 'premiumList.healthLegend' : 'premiumList.healthLegendSeparate') | transloco }}</p>
     <div class="card table-wrap">
-      <table class="fixed-cols">
+      <table class="fixed-cols sticky-head">
         <!-- 欄の幅を固定する（並び替え・ページ送りで表示する人が変わっても、幅が揺れないように。11/18） -->
         <colgroup>
           <col class="c-number" />

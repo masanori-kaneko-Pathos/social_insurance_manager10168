@@ -176,21 +176,8 @@ col.c-state {
   width: 10em;
 }
 
-/* 表を枠の中でスクロールさせ、見出しは上に、社員番号と氏名は左に貼り付ける
-   （下に送っても「どの箱がどの項目か」、右に送っても「だれの行か」が分かるように） */
-.table-wrap {
-  max-height: calc(100vh - 220px); /* 下に貼り付くページの帯の分をあける */
-  overflow: auto;
-}
-
-thead th {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: var(--color-surface);
-  box-shadow: inset 0 -1px 0 var(--color-border);
-}
-
+/* 見出しは画面の上に貼り付く（styles.css の table.sticky-head。ページ全体をスクロールする）。
+   項目を増やして表が本文より広くなったら、社員番号と氏名は左に貼り付く（右に送っても「だれの行か」分かる） */
 tbody td:nth-child(1),
 tbody td:nth-child(2),
 thead th:nth-child(1),

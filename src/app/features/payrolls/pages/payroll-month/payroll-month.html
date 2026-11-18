@@ -85,7 +85,7 @@
 
   <div class="card table-wrap">
     <!-- Enter・矢印キーで次のセルへ（表計算ソフトと同じ動き） -->
-    <table appEnterNext="grid" class="fixed-cols" [class.all]="showAll()">
+    <table appEnterNext="grid" class="fixed-cols sticky-head" [class.all]="showAll()">
       <!-- 欄の幅を固定（表示する行が変わっても揺れないように。幅の種類は styles.css の col.cw-*。11/18） -->
       <colgroup>
         <col class="cw-number" />
