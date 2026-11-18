@@ -1680,7 +1680,8 @@
       "premiums": "See the premiums deducted from the {{paid}} pay (for month {{month}})",
       "revisions": "Check revision candidates"
     },
-    "listRange": "{{fromM}}/{{fromY}} – {{toM}}/{{toY}}"
+    "listRange": "{{fromM}}/{{fromY}} – {{toM}}/{{toY}}",
+    "showAllNote": "Showing all fields. Use the button to go back to the basic view."
   },
   "regular": {
     "title": "Annual SMR determination {{year}} (定時決定, teiji kettei)",

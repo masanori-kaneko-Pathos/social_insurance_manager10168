@@ -142,13 +142,98 @@ input.num {
 }
 
 /* 押すと隠れた列を出す札（11/18） */
-a.badge-link {
-  text-decoration: none;
+button.badge-link {
+  border: 0;
+  font: inherit;
+  font-size: var(--font-xs);
   cursor: pointer;
 }
 
-a.badge-link:hover {
+button.badge-link:hover {
   text-decoration: underline;
+}
+
+/* 項目を増やした表示のときの一言（戻し方の案内） */
+.all-note {
+  color: var(--color-text-sub);
+}
+
+/* ===== 11/18：表の幅・見出しと左の2列の固定 ===== */
+/* 氏名の欄が残りの幅を受け持つので、表の最小の幅で氏名の幅を守る */
+table.fixed-cols {
+  min-width: 70em;
+}
+
+table.fixed-cols.all {
+  min-width: 140em;
+}
+
+col.c-inkind {
+  width: 17em; /* 入力欄と「計算」ボタン */
+}
+
+col.c-state {
+  width: 10em;
+}
+
+/* 表を枠の中でスクロールさせ、見出しは上に、社員番号と氏名は左に貼り付ける
+   （下に送っても「どの箱がどの項目か」、右に送っても「だれの行か」が分かるように） */
+.table-wrap {
+  max-height: calc(100vh - 220px); /* 下に貼り付くページの帯の分をあける */
+  overflow: auto;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--color-surface);
+  box-shadow: inset 0 -1px 0 var(--color-border);
+}
+
+tbody td:nth-child(1),
+tbody td:nth-child(2),
+thead th:nth-child(1),
+thead th:nth-child(2) {
+  position: sticky;
+  background: var(--color-surface);
+}
+
+tbody td:nth-child(1),
+thead th:nth-child(1) {
+  left: 0;
+}
+
+tbody td:nth-child(2),
+thead th:nth-child(2) {
+  left: 6.5em; /* 社員番号の欄の幅（col.cw-number） */
+  box-shadow: inset -1px 0 0 var(--color-border);
+}
+
+tbody td:nth-child(1),
+tbody td:nth-child(2) {
+  z-index: 1;
+}
+
+thead th:nth-child(1),
+thead th:nth-child(2) {
+  z-index: 3;
+}
+
+/* 札から開いたとき、その欄を少しの間光らせる */
+td.flash {
+  animation: flash 2.4s ease-out;
+}
+
+@keyframes flash {
+  0%,
+  40% {
+    background: var(--color-highlight);
+    box-shadow: inset 0 0 0 2px var(--color-primary);
+  }
+  100% {
+    box-shadow: inset 0 0 0 2px transparent;
+  }
 }
 
 .badge-sub {

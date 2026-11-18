@@ -353,6 +353,23 @@ export class PayrollMonth {
   }
 
   /** 隠れた列に保存済みの値がある（すべての列を出していないときの印） */
+  /**
+   * 札を押したとき：項目を増やした表示にして、その人の、値の入っている最初の欄まで横に送り、少しの間光らせる（11/18）
+   * 戻すときは、表の上の「入力する項目を減らす」
+   */
+  openExtra(v: ViewRow): void {
+    const field = v.row.saved ? extraFields(v.row.saved)[0] : undefined;
+    void this.router.navigate([], { relativeTo: this.route, queryParams: { all: 1 }, queryParamsHandling: 'merge' }).then(() => {
+      setTimeout(() => {
+        const cell = document.querySelector<HTMLElement>(`tr[data-row="${v.employee.id}"] td[data-field="${field ?? ''}"]`);
+        if (!cell) return;
+        cell.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+        cell.classList.add('flash');
+        setTimeout(() => cell.classList.remove('flash'), 2400);
+      });
+    });
+  }
+
   /** 値の入っている隠れた列の名前（「実労働時間・遡及支払額」） */
   extraText(v: ViewRow): string {
     if (!v.row.saved) return '';

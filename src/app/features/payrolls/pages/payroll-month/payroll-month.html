@@ -49,9 +49,15 @@
   }
 
   <div class="toolbar">
-    <a [routerLink]="[]" [queryParams]="{ all: showAll() ? null : 1 }" queryParamsHandling="merge">
-      {{ (showAll() ? 'payroll.showBasic' : 'payroll.showAll') | transloco }}
-    </a>
+    <!-- 項目を増やした表示のときは、戻し方が分かるようにボタンで出す（11/18） -->
+    @if (showAll()) {
+      <span class="all-note">{{ 'payroll.showAllNote' | transloco }}</span>
+      <a class="btn btn-small" [routerLink]="[]" [queryParams]="{ all: null }" queryParamsHandling="merge">
+        {{ 'payroll.showBasic' | transloco }}
+      </a>
+    } @else {
+      <a [routerLink]="[]" [queryParams]="{ all: 1 }" queryParamsHandling="merge">{{ 'payroll.showAll' | transloco }}</a>
+    }
   </div>
 
   <!-- 現物給与の計算（1人分。「この額を入れる」で現物の欄に入る） -->
@@ -79,26 +85,27 @@
 
   <div class="card table-wrap">
     <!-- Enter・矢印キーで次のセルへ（表計算ソフトと同じ動き） -->
-    <table appEnterNext="grid" class="fixed-cols">
-      <!-- 欄の幅を固定（表示する行が変わっても揺れないように。幅の種類は styles.css の col.w-*。11/18） -->
+    <table appEnterNext="grid" class="fixed-cols" [class.all]="showAll()">
+      <!-- 欄の幅を固定（表示する行が変わっても揺れないように。幅の種類は styles.css の col.cw-*。11/18） -->
       <colgroup>
-        <col class="w-number" />
-        <col class="w-name" />
-        <col class="w-dept" />
-        <col class="w-type" />
-        <col class="w-input" />
+        <col class="cw-number" />
+        <!-- 氏名の欄は、残りの幅を受け持つ（欄の間がむやみに空かないように） -->
+        <col />
+        <col class="cw-dept" />
+        <col class="cw-type" />
+        <col class="cw-input" />
         @if (showAll()) {
-          <col class="w-input" />
-          <col class="w-yen" />
+          <col class="c-inkind" />
+          <col class="cw-yen" />
         }
-        <col class="w-input" />
-        <col class="w-days" />
+        <col class="cw-input" />
+        <col class="cw-days" />
         @if (showAll()) {
-          <col class="w-input" />
-          <col class="w-short" />
-          <col class="w-days" />
-          <col class="w-short" />
-          <col class="w-type" />
+          <col class="cw-input" />
+          <col class="cw-short" />
+          <col class="cw-days" />
+          <col class="cw-short" />
+          <col class="c-state" />
         }
       </colgroup>
       <thead>
@@ -158,7 +165,7 @@
       </thead>
       <tbody>
         @for (v of shown().rows; track v.employee.id) {
-          <tr [formGroup]="v.form" [class.has-error]="rowErrors().has(v.employee.id)" [class.edited]="v.form.dirty">
+          <tr [formGroup]="v.form" [attr.data-row]="v.employee.id" [class.has-error]="rowErrors().has(v.employee.id)" [class.edited]="v.form.dirty">
             <td class="emp-no">{{ v.employee.employeeNumber ?? '—' }}</td>
             <td>
               <app-person-name [person]="v.employee" [link]="['/o', context.current()?.id, 'employees', v.employee.id]" />
@@ -174,9 +181,9 @@
                 }
                 <!-- 隠れている列に値がある：どの列かを書き、押すとその列を出す（11/18） -->
                 @if (extraHidden(v)) {
-                  <a class="badge badge-info badge-link" [routerLink]="[]" [queryParams]="{ all: 1 }" queryParamsHandling="merge" [title]="'payroll.tag.extraTitle' | transloco">
+                  <button type="button" class="badge badge-info badge-link" [title]="'payroll.tag.extraTitle' | transloco" (click)="openExtra(v)">
                     {{ 'payroll.tag.extraOf' | transloco: { items: extraText(v) } }}
-                  </a>
+                  </button>
                 }
               </div>
             </td>
@@ -193,7 +200,7 @@
               <input class="input num w-money" formControlName="cash" inputmode="numeric" />
             </td>
             @if (showAll()) {
-              <td class="num">
+              <td class="num" data-field="inKind">
                 <div class="days">
                   @if (v.form.controls.inKindMerged.value) {
                     <!-- 給与ソフトが支払額に含めていて、分けた額がない -->
@@ -225,17 +232,17 @@
               <input class="input num w-days" formControlName="days" inputmode="numeric" />
             </td>
             @if (showAll()) {
-              <td class="num">
+              <td class="num" data-field="retro">
                 <input class="input num w-money" formControlName="retro" inputmode="numeric" />
               </td>
-              <td class="num">
+              <td class="num" data-field="absentDays">
                 <input class="input num w-days" formControlName="absentDays" inputmode="numeric" />
               </td>
-              <td class="num">
+              <td class="num" data-field="hours">
                 <input class="input num w-hours" formControlName="hours" />
               </td>
-              <td><input type="checkbox" formControlName="prorated" /></td>
-              <td>
+              <td data-field="prorated"><input type="checkbox" formControlName="prorated" /></td>
+              <td data-field="state">
                 <select class="input" formControlName="state">
                   @for (s of states; track s) {
                     <option [value]="s">{{ 'payroll.state.' + s | transloco }}</option>

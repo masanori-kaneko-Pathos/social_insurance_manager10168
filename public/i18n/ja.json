@@ -1680,7 +1680,8 @@
       "premiums": "{{paid}}月払いの給与から控除する保険料（{{month}}月分）を見る",
       "revisions": "改定の候補を確かめる"
     },
-    "listRange": "{{fromY}}年{{fromM}}月〜{{toY}}年{{toM}}月"
+    "listRange": "{{fromY}}年{{fromM}}月〜{{toY}}年{{toM}}月",
+    "showAllNote": "入力する項目を増やした表示です。終わったら右のボタンで元に戻せます。"
   },
   "regular": {
     "title": "{{year}}年の定時決定",

@@ -118,6 +118,11 @@ th.name-col {
   width: 10em;
 }
 
+/* 右端の欄が残りの幅を受け持つので、表の最小の幅で反映ボタンの幅を守る（11/18） */
+table.fixed-cols {
+  min-width: 90em;
+}
+
 /* 氏名：幅を抑え、外国人の長い名前は語の切れ目（空白）で折り返す（11/18） */
 .name-box {
   display: inline-block;
