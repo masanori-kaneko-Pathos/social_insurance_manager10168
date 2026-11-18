@@ -34,7 +34,9 @@ h1 {
   font-weight: 600;
   text-align: center;
   text-decoration: none;
-  transition: background var(--dur-fast), border-color var(--dur-fast);
+  transition:
+    background var(--dur-fast),
+    border-color var(--dur-fast);
 }
 
 .tile:hover {
@@ -600,4 +602,10 @@ h1 {
 /* 出力の窓は1列にしたので、幅を詰める */
 .import-dialog .dialog-head .io-head {
   margin: 0;
+}
+
+/* To-do が空のときの「1年先まで見る →」（年齢到達で絞っているとき。） */
+.empty-link {
+  margin-left: var(--space-sm);
+  white-space: nowrap;
 }
