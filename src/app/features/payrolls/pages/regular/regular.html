@@ -49,15 +49,16 @@
       <table class="fixed-cols sticky-head">
         <!-- 欄の幅を固定（表示する行が変わっても揺れないように。幅の種類は styles.css の col.cw-*。11/18） -->
         <colgroup>
-          <col class="cw-number" />
-          <col class="cw-name" />
-          <col class="cw-yen" />
-          <col class="cw-yen" />
-          <col class="cw-yen" />
-          <col class="cw-money" />
-          <col class="cw-grade" />
-          <col class="cw-grade" />
-          <col class="cw-status" />
+          <!-- この画面は欄が多いので、専用の詰めた幅（regular.css の col.r-*。11/18） -->
+          <col class="r-number" />
+          <col class="r-name" />
+          <col class="r-month" />
+          <col class="r-month" />
+          <col class="r-month" />
+          <col class="r-avg" />
+          <col class="r-grade" />
+          <col class="r-grade" />
+          <col class="r-result" />
           <!-- 右端の反映の欄が、残りの幅を受け持つ -->
           <col />
         </colgroup>
@@ -69,8 +70,9 @@
             <th class="num month">{{ 'regular.col.month' | transloco: { m: 5 } }}</th>
             <th class="num month">{{ 'regular.col.month' | transloco: { m: 6 } }}</th>
             <th class="num fit">{{ 'regular.col.average' | transloco }}</th>
-            <th class="num fit">{{ 'regular.col.current' | transloco }}</th>
-            <th class="num fit">{{ 'regular.col.next' | transloco }}</th>
+            <!-- 「今」「9月分から」の下に小さく「健保 / 厚年」（欄の中の「21級 / 18級」の並びの説明。11/18） -->
+            <th class="num fit">{{ 'regular.col.current' | transloco }}<span class="th-sub">{{ 'regular.col.gradeNote' | transloco }}</span></th>
+            <th class="num fit">{{ 'regular.col.next' | transloco }}<span class="th-sub">{{ 'regular.col.gradeNote' | transloco }}</span></th>
             <th class="fit">{{ 'regular.col.result' | transloco }}</th>
             <!-- 余った幅はこの右端の欄が受け持つ（欄の間がむやみに空かないように。11/18） -->
             <th></th>

@@ -118,9 +118,18 @@ th.name-col {
   width: 10em;
 }
 
-/* 右端の欄が残りの幅を受け持つので、表の最小の幅で反映ボタンの幅を守る（11/18） */
+/* 欄の幅（合計 62em ＋ 反映の欄 10em ＝ 72em ≒ 1010px：サイドバーを開き、縦のスクロールバーが出ていても
+   本文（約1015px）に収まる。11/18） */
+col.r-number { width: 6em; }
+col.r-name { width: 8.6em; }
+col.r-month { width: 6.6em; }
+col.r-avg { width: 7.6em; }
+col.r-grade { width: 6.6em; }
+col.r-result { width: 6.8em; }
+
+/* 右端の反映の欄が残りの幅を受け持つので、表の最小の幅で反映ボタン（「据え置きで確定」）の幅を守る */
 table.fixed-cols {
-  min-width: 90em;
+  min-width: 72em;
 }
 
 /* 氏名：幅を抑え、外国人の長い名前は語の切れ目（空白）で折り返す（11/18） */
@@ -266,4 +275,21 @@ th.fit {
 td.result-chips > a.badge {
   font-size: 11px;
   padding: 0 4px;
+}
+
+/* 月の欄の小さな文字（日数・遡及の額・修正平均の説明）は、決めた幅に入らなければ折り返す（11/18） */
+td.num .sub {
+  white-space: normal;
+}
+
+/* 決定通知のカード（部品）と、上の表の間をあける（ページの CSS は部品の中まで届かないので、外枠に付ける。11/18） */
+app-decision-notice-card {
+  display: block;
+  margin-top: var(--space-lg);
+}
+
+/* 見出しの下の小さな注記（「健保 / 厚年」。11/18） */
+.th-sub {
+  display: block;
+  font-size: var(--font-xs);
 }

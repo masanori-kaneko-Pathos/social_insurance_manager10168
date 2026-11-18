@@ -1620,8 +1620,8 @@
       "notInsured": "未加入",
       "partial": "期間の途中で入社・退職",
       "extra": "ほかの列に値あり",
-      "extraOf": "{{items}}の入力あり",
-      "extraTitle": "押すと、この列を表示します（「入力する項目を増やす」と同じ）"
+      "extraTitle": "押すと、この列を表示します",
+      "extraClose": "押すと、元の表示に戻します"
     },
     "state": {
       "normal": "通常",
@@ -1680,8 +1680,7 @@
       "premiums": "{{paid}}月払いの給与から控除する保険料（{{month}}月分）を見る",
       "revisions": "改定の候補を確かめる"
     },
-    "listRange": "{{fromY}}年{{fromM}}月〜{{toY}}年{{toM}}月",
-    "showAllNote": "入力する項目を増やした表示です。終わったら右のボタンで元に戻せます。"
+    "listRange": "{{fromY}}年{{fromM}}月〜{{toY}}年{{toM}}月"
   },
   "regular": {
     "title": "{{year}}年の定時決定",
@@ -1701,8 +1700,9 @@
       "employee": "従業員",
       "month": "{{m}}月払い",
       "average": "平均",
-      "current": "今（健保/厚年）",
+      "current": "今",
       "next": "9月分から",
+      "gradeNote": "健保 / 厚年",
       "result": "結果"
     },
     "days": "{{d}}日",
@@ -2773,7 +2773,7 @@
     }
   },
   "inKind": {
-    "open": "計算",
+    "open": "価額表で計算",
     "openTitle": "食事・住宅の現物給与を、都道府県の価額で計算する",
     "title": "現物給与の計算：{{name}}（{{month}} 支払）",
     "table": "{{name}}の価額（{{from}} からの表）を使います。勤務地（事業所の所在地）の都道府県です。",

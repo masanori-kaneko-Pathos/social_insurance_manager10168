@@ -20,8 +20,8 @@ import {
   totalOf,
 } from '../../logic/payroll-input';
 import {
+  ExtraField,
   extraFields,
-  hasExtra,
   latestPaidMonth,
   Period,
   PayrollRow,
@@ -353,12 +353,24 @@ export class PayrollMonth {
   }
 
   /** 隠れた列に保存済みの値がある（すべての列を出していないときの印） */
+  /** 隠れた列のうち、値の入っている列（札に出す。開いているときも出しっぱなし。11/18） */
+  extraOf(v: ViewRow): ExtraField[] {
+    return v.row.saved ? extraFields(v.row.saved) : [];
+  }
+
+  /** 札を押したとき：閉じていれば開いてその欄へ送る。開いていれば元の表示に戻す（11/18） */
+  toggleExtra(v: ViewRow, field: ExtraField): void {
+    if (this.showAll()) {
+      void this.router.navigate([], { relativeTo: this.route, queryParams: { all: null }, queryParamsHandling: 'merge' });
+      return;
+    }
+    this.openExtra(v, field);
+  }
+
   /**
-   * 札を押したとき：項目を増やした表示にして、その人の、値の入っている最初の欄まで横に送り、少しの間光らせる（11/18）
-   * 戻すときは、表の上の「入力する項目を減らす」
+   * 項目を増やした表示にして、その人のその欄まで横に送り、少しの間光らせる（11/18）
    */
-  openExtra(v: ViewRow): void {
-    const field = v.row.saved ? extraFields(v.row.saved)[0] : undefined;
+  openExtra(v: ViewRow, field: ExtraField): void {
     void this.router.navigate([], { relativeTo: this.route, queryParams: { all: 1 }, queryParamsHandling: 'merge' }).then(() => {
       setTimeout(() => {
         const cell = document.querySelector<HTMLElement>(`tr[data-row="${v.employee.id}"] td[data-field="${field ?? ''}"]`);
@@ -370,17 +382,6 @@ export class PayrollMonth {
     });
   }
 
-  /** 値の入っている隠れた列の名前（「実労働時間・遡及支払額」） */
-  extraText(v: ViewRow): string {
-    if (!v.row.saved) return '';
-    return extraFields(v.row.saved)
-      .map((f) => this.transloco.translate('payroll.col.' + f))
-      .join('・');
-  }
-
-  extraHidden(v: ViewRow): boolean {
-    return !this.showAll() && !!v.row.saved && hasExtra(v.row.saved);
-  }
 
   async save(): Promise<void> {
     const office = this.context.current();

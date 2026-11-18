@@ -1620,8 +1620,8 @@
       "notInsured": "Not insured",
       "partial": "Joined or left mid-period",
       "extra": "Other columns have values",
-      "extraOf": "Has {{items}}",
-      "extraTitle": "Click to show these columns (same as \"More fields\")"
+      "extraTitle": "Click to show this column",
+      "extraClose": "Click to go back to the basic view"
     },
     "state": {
       "normal": "Normal",
@@ -1680,8 +1680,7 @@
       "premiums": "See the premiums deducted from the {{paid}} pay (for month {{month}})",
       "revisions": "Check revision candidates"
     },
-    "listRange": "{{fromM}}/{{fromY}} – {{toM}}/{{toY}}",
-    "showAllNote": "Showing all fields. Use the button to go back to the basic view."
+    "listRange": "{{fromM}}/{{fromY}} – {{toM}}/{{toY}}"
   },
   "regular": {
     "title": "Annual SMR determination {{year}} (定時決定, teiji kettei)",
@@ -1701,8 +1700,9 @@
       "employee": "Employee",
       "month": "Paid in month {{m}}",
       "average": "Average",
-      "current": "Now (health/pension)",
+      "current": "Now",
       "next": "From September",
+      "gradeNote": "health / pension",
       "result": "Result"
     },
     "days": "{{d}} days",
@@ -2773,7 +2773,7 @@
     }
   },
   "inKind": {
-    "open": "Calc",
+    "open": "Calculate by rates",
     "openTitle": "Calculate in-kind meals and housing with the prefecture values",
     "title": "In-kind calculation: {{name}} (paid {{month}})",
     "table": "Uses the values for {{name}} (table from {{from}}), the prefecture of the workplace (office address).",

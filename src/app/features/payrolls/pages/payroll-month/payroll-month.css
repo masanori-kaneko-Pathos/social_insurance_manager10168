@@ -89,7 +89,7 @@ input.num {
 }
 
 .w-money {
-  width: 7.5em; /* 99,999,999 まで入る幅（11/13 に 9em から詰めた） */
+  width: 6em; /* 7桁（9,999,999 円）まで入る幅（11/18 に 7.5em から詰めた） */
 }
 
 .w-days {
@@ -164,12 +164,24 @@ table.fixed-cols {
   min-width: 70em;
 }
 
+/* 項目を増やした表示（部署・雇用形態は隠す）：本文より広いので、カードの中で横にスクロールする。
+   社員番号と氏名は左に残り、横のスクロールは支払額から始まる（上下はページ全体で動く。11/18）。
+   この表示の間だけ、見出しの上への貼り付きは効かない（貼り付きは一番近いスクロールの枠に対して働くため） */
+.table-wrap:has(> table.all) {
+  overflow-x: auto;
+}
+
 table.fixed-cols.all {
-  min-width: 140em;
+  width: max-content;
+  min-width: 100%;
+}
+
+col.c-money {
+  width: 7.5em; /* 金額の入力欄（.w-money）と欄の余白 */
 }
 
 col.c-inkind {
-  width: 17em; /* 入力欄と「計算」ボタン */
+  width: 14em; /* 入力欄と「価額表で計算」ボタン */
 }
 
 col.c-state {
@@ -191,10 +203,17 @@ thead th:nth-child(1) {
   left: 0;
 }
 
-tbody td:nth-child(2),
-thead th:nth-child(2) {
+tbody td:nth-child(2) {
   left: 6.5em; /* 社員番号の欄の幅（col.cw-number） */
   box-shadow: inset -1px 0 0 var(--color-border);
+}
+
+/* 見出しの氏名：右の縦線と、ほかの見出しと同じ下の線の両方（片方だけだと下の線が消える。11/18） */
+thead th:nth-child(2) {
+  left: 6.5em;
+  box-shadow:
+    inset -1px 0 0 var(--color-border),
+    inset 0 -1px 0 var(--color-border);
 }
 
 tbody td:nth-child(1),
@@ -207,19 +226,29 @@ thead th:nth-child(2) {
   z-index: 3;
 }
 
-/* 札から開いたとき、その欄を少しの間光らせる */
+/* 札から開いたとき、その欄を少しの間光らせる（角丸の枠。表の欄そのものは角丸にできないので、内側に重ねて描く。11/18） */
 td.flash {
-  animation: flash 2.4s ease-out;
+  position: relative;
+}
+
+td.flash::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-highlight) 45%, transparent);
+  pointer-events: none;
+  animation: flash 2.4s ease-out forwards;
 }
 
 @keyframes flash {
   0%,
   40% {
-    background: var(--color-highlight);
-    box-shadow: inset 0 0 0 2px var(--color-primary);
+    opacity: 1;
   }
   100% {
-    box-shadow: inset 0 0 0 2px transparent;
+    opacity: 0;
   }
 }
 

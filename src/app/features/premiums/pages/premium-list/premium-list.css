@@ -114,7 +114,9 @@ thead th {
 
 .group-head {
   text-align: center;
-  border-bottom: 1px solid var(--color-border-strong);
+  /* 「本人負担」の下の線は欄の中に描く（表の線だと、貼り付いた見出しの下ですき間になり後ろが透ける。11/18） */
+  border-bottom: 0;
+  box-shadow: inset 0 -1px 0 var(--color-border-strong);
 }
 
 th.num,
@@ -193,9 +195,25 @@ col.c-yen-wide { width: 7.4em; }
 col.c-employer { width: 7.4em; }
 col.c-calc { width: 4.8em; }
 
+/* 見出しは決めた幅の中で折り返してよい。ただし語の途中では切らない（「会社負担／（目安）」で折る。11/18） */
+thead th {
+  word-break: keep-all;
+}
+
 /* 見出しは決めた幅の中で折り返してよい */
 thead th {
   white-space: normal;
+}
+
+/* 内訳・拠出金の列を出して本文より広くなったときだけ、カードごと表の幅まで広がる（切れずに、ページが横に動く）。
+   全部の欄の幅が決まっているので計算できる（給与の実績の「項目を増やす」と同じ。11/18） */
+.table-wrap:has(> table.wide) {
+  width: max-content;
+  min-width: 100%;
+}
+
+table.fixed-cols.wide {
+  width: max-content;
 }
 
 /* 名前の欄（名前の横の「介護開始」などの札も）は、決めた幅の中で折り返す */

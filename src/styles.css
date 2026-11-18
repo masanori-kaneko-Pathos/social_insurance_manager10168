@@ -890,3 +890,24 @@ col.cw-status {
 col.cw-act {
   width: 9em;
 }
+
+/* ===== 見出しを画面の上に貼り付ける表 =====
+   ページ全体を普通にスクロールし、表の見出しの行だけが画面の上端に残る（表計算ソフトの「枠の固定」）。
+   表の外枠（.table-wrap）が横スクロールの枠だと貼り付かないので、overflow: clip にする
+   （clip はスクロールの枠を作らないので貼り付きが効き、しかもカードの角丸で見出しの角が切られる。
+    画面の上に貼り付いたあとは、カードの途中なので角は四角になる） */
+.table-wrap:has(> table.sticky-head) {
+  overflow: clip;
+}
+table.sticky-head > thead {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+table.sticky-head > thead th {
+  background: var(--color-surface);
+  /* 表の線は表そのものに描かれ、貼り付いた見出しと一緒に動かない（すき間から後ろが透ける）。
+     見出しの線は欄の中に描く（box-shadow）。11/18 */
+  border-bottom: 0;
+  box-shadow: inset 0 -1px 0 var(--color-border);
+}

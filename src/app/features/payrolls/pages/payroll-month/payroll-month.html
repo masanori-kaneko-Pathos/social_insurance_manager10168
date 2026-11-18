@@ -49,15 +49,9 @@
   }
 
   <div class="toolbar">
-    <!-- 項目を増やした表示のときは、戻し方が分かるようにボタンで出す（11/18） -->
-    @if (showAll()) {
-      <span class="all-note">{{ 'payroll.showAllNote' | transloco }}</span>
-      <a class="btn btn-small" [routerLink]="[]" [queryParams]="{ all: null }" queryParamsHandling="merge">
-        {{ 'payroll.showBasic' | transloco }}
-      </a>
-    } @else {
-      <a [routerLink]="[]" [queryParams]="{ all: 1 }" queryParamsHandling="merge">{{ 'payroll.showAll' | transloco }}</a>
-    }
+    <a [routerLink]="[]" [queryParams]="{ all: showAll() ? null : 1 }" queryParamsHandling="merge">
+      {{ (showAll() ? 'payroll.showBasic' : 'payroll.showAll') | transloco }}
+    </a>
   </div>
 
   <!-- 現物給与の計算（1人分。「この額を入れる」で現物の欄に入る） -->
@@ -89,19 +83,22 @@
       <!-- 欄の幅を固定（表示する行が変わっても揺れないように。幅の種類は styles.css の col.cw-*。11/18） -->
       <colgroup>
         <col class="cw-number" />
-        <!-- 氏名の欄は、残りの幅を受け持つ（欄の間がむやみに空かないように） -->
-        <col />
-        <col class="cw-dept" />
-        <col class="cw-type" />
-        <col class="cw-input" />
+        <!-- 氏名の欄は、残りの幅を受け持つ（欄の間がむやみに空かないように）。項目を増やした表示では幅を決める -->
+        <col [class.cw-name]="showAll()" />
+        <!-- 項目を増やした表示では、部署・雇用形態を隠す（細かく入れる場面なので。絞り込みで足りる。11/18） -->
+        @if (!showAll()) {
+          <col class="cw-dept" />
+          <col class="cw-type" />
+        }
+        <col class="c-money" />
         @if (showAll()) {
           <col class="c-inkind" />
           <col class="cw-yen" />
         }
-        <col class="cw-input" />
+        <col class="c-money" />
         <col class="cw-days" />
         @if (showAll()) {
-          <col class="cw-input" />
+          <col class="c-money" />
           <col class="cw-short" />
           <col class="cw-days" />
           <col class="cw-short" />
@@ -114,8 +111,10 @@
           <th><app-sort-header key="number" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.employeeNumber' | transloco }}</app-sort-header></th>
           <th><app-sort-header key="kana" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.name' | transloco }}</app-sort-header></th>
           <!-- 部署・雇用形態（担当が分かれていても、自分の受け持ちが目で見て分かるように。11/13） -->
-          <th><app-sort-header key="dept" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.department' | transloco }}</app-sort-header></th>
-          <th><app-sort-header key="employment" [(options)]="listOptions" [(page)]="page">{{ 'employee.list.employment' | transloco }}</app-sort-header></th>
+          @if (!showAll()) {
+            <th><app-sort-header key="dept" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.department' | transloco }}</app-sort-header></th>
+            <th><app-sort-header key="employment" [(options)]="listOptions" [(page)]="page">{{ 'employee.list.employment' | transloco }}</app-sort-header></th>
+          }
           <th class="num">{{ 'payroll.col.cash' | transloco }}</th>
           @if (showAll()) {
             <th class="num">{{ 'payroll.col.inKind' | transloco }}</th>
@@ -179,23 +178,30 @@
                 @if (v.row.partial) {
                   <span class="badge badge-warn">{{ 'payroll.tag.partial' | transloco }}</span>
                 }
-                <!-- 隠れている列に値がある：どの列かを書き、押すとその列を出す（11/18） -->
-                @if (extraHidden(v)) {
-                  <button type="button" class="badge badge-info badge-link" [title]="'payroll.tag.extraTitle' | transloco" (click)="openExtra(v)">
-                    {{ 'payroll.tag.extraOf' | transloco: { items: extraText(v) } }}
+                <!-- 隠れている列に値がある：列ごとに札を出す。押すとその列を出して送る。開いているときに押すと元の表示に戻す（11/18） -->
+                @for (f of extraOf(v); track f) {
+                  <button
+                    type="button"
+                    class="badge badge-warn badge-link"
+                    [title]="(showAll() ? 'payroll.tag.extraClose' : 'payroll.tag.extraTitle') | transloco"
+                    (click)="toggleExtra(v, f)"
+                  >
+                    {{ 'payroll.col.' + f | transloco }}
                   </button>
                 }
               </div>
             </td>
             <!-- 長い部署の名前は「…」で切り、全部はマウスを乗せると出る -->
-            <td class="org dept" [attr.title]="deptName(v.employee)">{{ deptName(v.employee) ?? '—' }}</td>
-            <td class="org">
-              @if (contractOf(v)?.employmentType; as t) {
-                {{ 'contract.employmentType.' + t | transloco }}
-              } @else {
-                <span class="muted">—</span>
-              }
-            </td>
+            @if (!showAll()) {
+              <td class="org dept" [attr.title]="deptName(v.employee)">{{ deptName(v.employee) ?? '—' }}</td>
+              <td class="org">
+                @if (contractOf(v)?.employmentType; as t) {
+                  {{ 'contract.employmentType.' + t | transloco }}
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+            }
             <td class="num">
               <input class="input num w-money" formControlName="cash" inputmode="numeric" />
             </td>
@@ -253,7 +259,7 @@
           </tr>
           @if (rowErrors().get(v.employee.id); as errs) {
             <tr class="error-row">
-              <td [attr.colspan]="showAll() ? 14 : 7">
+              <td [attr.colspan]="showAll() ? 12 : 7">
                 @for (e of errs; track e) {
                   <span>{{ 'payroll.rowError.' + e | transloco }}</span>
                 }
