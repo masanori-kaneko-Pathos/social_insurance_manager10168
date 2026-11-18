@@ -26,6 +26,7 @@ import {
   usableInviteOf,
 } from '../../logic/my-page-status';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { PersonName } from '../../../../shared/components/person-name/person-name';
 
 interface Row {
   employee: Employee;
@@ -55,7 +56,7 @@ interface Result {
     '(document:pointercancel)': 'onPointerUp()',
     '(document:pointermove)': 'onPointerMove($event)',
   },
-  imports: [Pager, PersonListBar, RouterLink, SortHeader, TranslocoPipe],
+  imports: [PersonName, Pager, PersonListBar, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './my-page-invites.html',
   styleUrl: './my-page-invites.css',
 })

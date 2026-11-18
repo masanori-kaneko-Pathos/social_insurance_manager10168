@@ -116,8 +116,8 @@
                 <tr [class.has-issue]="!!x.issue" [class.warn]="it.warnings.length > 0">
                   <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line }" /></td>
                   <td class="num">{{ it.line }}</td>
-                  <td class="mono">{{ it.employeeNumber }}</td>
-                  <td>{{ it.name }}</td>
+                  <td class="emp-no">{{ it.employeeNumber }}</td>
+                  <td>@if (employeeOf(it.employeeId); as e) { <app-person-name [person]="e" /> } @else { {{ it.name }} }</td>
                   <td class="mono">{{ it.id }}</td>
                   @if (it.contract; as c) {
                     <td>

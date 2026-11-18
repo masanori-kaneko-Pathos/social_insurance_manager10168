@@ -7,6 +7,7 @@ import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { OfficeContext } from '../../../office/office-context.service';
 import { directionOfKind, toWageChange, WageChangeForm, wageChangeErrors } from '../../logic/wage-change';
 import { RevisionService } from '../../revision.service';
+import { PersonName } from '../../../../shared/components/person-name/person-name';
 
 export interface WageChangeRow {
   employee: Employee;
@@ -20,7 +21,7 @@ export interface WageChangeRow {
  */
 @Component({
   selector: 'app-wage-change-card',
-  imports: [TranslocoPipe],
+  imports: [PersonName, TranslocoPipe],
   templateUrl: './wage-change-card.html',
   styleUrl: './wage-change-card.css',
 })

@@ -137,15 +137,10 @@
       </thead>
       <tbody>
         @for (v of shown().rows; track v.employee.id) {
-          <tr [formGroup]="v.form" [class.has-error]="rowErrors().has(v.employee.id)">
-            <td class="mono">{{ v.employee.employeeNumber ?? '—' }}</td>
+          <tr [formGroup]="v.form" [class.has-error]="rowErrors().has(v.employee.id)" [class.edited]="v.form.dirty">
+            <td class="emp-no">{{ v.employee.employeeNumber ?? '—' }}</td>
             <td>
-              <a
-                class="name"
-                [routerLink]="['/o', context.current()?.id, 'employees', v.employee.id]"
-              >
-                {{ name(v.employee) }}
-              </a>
+              <app-person-name [person]="v.employee" [link]="['/o', context.current()?.id, 'employees', v.employee.id]" />
               <div class="tags">
                 @if (!v.row.saved) {
                   <span class="badge badge-sub">{{ 'payroll.tag.notSaved' | transloco }}</span>
@@ -238,7 +233,14 @@
       </tbody>
     </table>
   </div>
-  <app-pager variant="bottom" [total]="filtered().length" [(page)]="page" [size]="listOptions().size" />
+  <!-- 「保存する」は、直したときだけ下の帯の右に出す（直した行は黄色。賞与と同じ。11/18） -->
+  <app-pager variant="bottom" [total]="filtered().length" [(page)]="page" [size]="listOptions().size" [showBand]="anyDirty()">
+    @if (context.isAdmin() && anyDirty()) {
+      <button bandEnd type="button" class="btn btn-solid" (click)="save()" [disabled]="saving()">
+        {{ (saving() ? 'payroll.saving' : 'payroll.save') | transloco }}
+      </button>
+    }
+  </app-pager>
 
   @if (errorKey(); as key) {
     <div class="alert alert-danger">{{ key | transloco }}</div>
@@ -256,13 +258,6 @@
     </div>
   }
 
-  @if (context.isAdmin()) {
-    <div class="actions">
-      <button type="button" class="btn btn-solid" (click)="save()" [disabled]="saving()">
-        {{ (saving() ? 'payroll.saving' : 'payroll.save') | transloco }}
-      </button>
-    </div>
-  }
 
   <ul class="hint">
     <li>{{ 'payroll.hint.cash' | transloco }}</li>

@@ -109,6 +109,12 @@
       </span>
       {{ 'bonus.peopleCount' | transloco: { count: peopleCount() } }}
       <span>{{ 'bonus.amountTotal' | transloco: { n: yen(amountTotal()) } }}</span>
+      <!-- 書き出し：給与ソフトに渡す社会保険の本人負担まで（差引支給額は給与ソフトで。11/18） -->
+      @if (!isNew) {
+        <button type="button" class="btn btn-small" [disabled]="dirty()" [attr.title]="dirty() ? ('bonus.export.savedFirst' | transloco) : null" (click)="exportCsv()">
+          {{ 'bonus.export.button' | transloco }}
+        </button>
+      }
       @if (hiddenCount() > 0) {
         <span class="muted">{{ 'bonus.hint.hidden' | transloco: { count: hiddenCount() } }}</span>
       }
@@ -133,15 +139,6 @@
       entryKey="personList.bonusState."
     />
 
-    <!-- 保存するボタンは表の上にも（人数が多くても、下まで行かずに押せる。取り込みの画面と同じ。11/16） -->
-    @if (!readOnly) {
-      <div class="actions top">
-        <span class="hint">{{ 'bonus.hint.unsaved' | transloco }}</span>
-        <button type="button" class="btn btn-solid" [disabled]="saving()" (click)="save()">
-          {{ (saving() ? 'common.saving' : 'common.save') | transloco }}
-        </button>
-      </div>
-    }
 
     <!-- 1行1人 -->
     <div class="card table-wrap">
@@ -165,16 +162,9 @@
         </thead>
         <tbody>
           @for (r of shown().rows; track r.employee.id) {
-            <tr [class.problem]="r.state === 'missing' || r.state === 'error'">
-              <td class="mono">{{ r.employee.employeeNumber ?? '—' }}</td>
-              <td>
-                <a
-                  class="name"
-                  [routerLink]="['/o', context.current()?.id, 'employees', r.employee.id]"
-                >
-                  {{ r.employee.lastName }} {{ r.employee.firstName }}
-                </a>
-              </td>
+            <tr [class.problem]="r.state === 'missing' || r.state === 'error'" [class.edited]="rowDirty(r.employee.id)">
+              <td class="emp-no">{{ r.employee.employeeNumber ?? '—' }}</td>
+              <td><app-person-name [person]="r.employee" [link]="['/o', context.current()?.id, 'employees', r.employee.id]" /></td>
               <td class="num">
                 <input
                   class="input num amount"
@@ -263,7 +253,15 @@
         </tbody>
       </table>
     </div>
-    <app-pager variant="bottom" [total]="filtered().length" [(page)]="page" [size]="listOptions().size" />
+    <!-- 「保存する」は、直したときだけ下の帯の右に出す（直した行は黄色。11/18） -->
+    <app-pager variant="bottom" [total]="filtered().length" [(page)]="page" [size]="listOptions().size" [showBand]="dirty()">
+      @if (dirty()) {
+        <span bandEnd class="save-note">{{ 'bonus.hint.unsaved' | transloco }}</span>
+        <button bandEnd type="button" class="btn btn-solid" [disabled]="saving()" (click)="save()">
+          {{ (saving() ? 'common.saving' : 'common.save') | transloco }}
+        </button>
+      }
+    </app-pager>
 
   }
 
@@ -288,13 +286,9 @@
         </button>
       }
       <span class="spacer"></span>
-      <span class="hint">{{ 'bonus.hint.unsaved' | transloco }}</span>
       <a class="btn" [routerLink]="['/o', context.current()?.id, 'bonuses']">
         {{ 'common.cancel' | transloco }}
       </a>
-      <button type="button" class="btn btn-solid" [disabled]="saving()" (click)="save()">
-        {{ (saving() ? 'common.saving' : 'common.save') | transloco }}
-      </button>
     </div>
   }
 }

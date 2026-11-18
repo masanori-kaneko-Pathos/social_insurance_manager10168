@@ -25,6 +25,15 @@ h2 {
   margin-bottom: var(--space-md);
 }
 
+/* 部品の中のカード（特例改定・固定的賃金の変動・決定通知）にも同じ間を空ける。
+   ページの .card の決まりは部品の中まで届かないので、部品の外枠に付ける（11/18） */
+app-special-revision-card,
+app-wage-change-card,
+app-decision-notice-card {
+  display: block;
+  margin-bottom: var(--space-md);
+}
+
 .item {
   padding: var(--space-sm) 0 var(--space-md);
   border-bottom: 1px solid var(--color-border);

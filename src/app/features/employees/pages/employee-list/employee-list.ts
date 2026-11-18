@@ -37,6 +37,7 @@ import { downloadCsv } from '../../../../shared/csv/csv';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { RemunerationService } from '../../remuneration.service';
 import { employeeExportTable } from '../../logic/employee-export';
+import { PersonName } from '../../../../shared/components/person-name/person-name';
 type StatusFilter = 'active' | 'retired' | 'all';
 const STATUSES: readonly StatusFilter[] = ['active', 'retired', 'all'];
 
@@ -55,7 +56,7 @@ const pick = <T extends string>(list: readonly T[], v: string | null, fallback: 
 
 @Component({
   selector: 'app-employee-list',
-  imports: [HalfWidthDigits, Pager, RouterLink, TranslocoPipe],
+  imports: [PersonName, HalfWidthDigits, Pager, RouterLink, TranslocoPipe],
   templateUrl: './employee-list.html',
   styleUrl: './employee-list.css',
   host: {

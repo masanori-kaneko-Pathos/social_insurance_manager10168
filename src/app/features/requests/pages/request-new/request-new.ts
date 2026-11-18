@@ -19,6 +19,7 @@ import { customQuestion, fieldQuestion, REQUEST_FIELDS, RequestField, templateQu
 import { RequestService } from '../../request.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
+import { PersonName } from '../../../../shared/components/person-name/person-name';
 
 /** ルールの上限と同じ */
 const MAX_QUESTIONS = 50;
@@ -29,7 +30,7 @@ const MAX_QUESTIONS = 50;
  */
 @Component({
   selector: 'app-request-new',
-  imports: [PersonListBar, RouterLink, SortHeader, TranslocoPipe],
+  imports: [PersonName, PersonListBar, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './request-new.html',
   styleUrl: '../requests.css',
 })

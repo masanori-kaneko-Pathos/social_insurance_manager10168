@@ -11,6 +11,7 @@ import { IMPORT_ACCEPT, ImportFileError, readTables, SheetTable } from '../../..
 import { OfficeContext } from '../../../office/office-context.service';
 import { RateService } from '../../../rates/rate.service';
 import { EmployeeService } from '../../employee.service';
+import { Employee } from '../../../../core/models/employee';
 import { HistoryImportService } from '../../history-import.service';
 import {
   CONTRACT_HISTORY_FIELDS,
@@ -37,6 +38,7 @@ import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { CONTRACT_HISTORY_FIX_FIELDS, REMUNERATION_HISTORY_FIX_FIELDS } from '../../logic/import-fix-fields';
 import { IssueRow } from '../../../../shared/components/import-issues/issue-row';
 import { ImportSteps } from '../../../../shared/components/import-steps/import-steps';
+import { PersonName } from '../../../../shared/components/person-name/person-name';
 
 interface Preview {
   fileName: string;
@@ -54,7 +56,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-history-import',
-  imports: [IssueRow, ImportSteps, ImportPicker, ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
+  imports: [PersonName, IssueRow, ImportSteps, ImportPicker, ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
   templateUrl: './history-import.html',
   styleUrl: '../../pages/employee-import/employee-import.css',
 })
@@ -149,6 +151,12 @@ export class HistoryImport {
     this.errorKey.set(null);
   }
 
+  /** 表の氏名にフリガナを付けるため、読んだ従業員を覚えておく（11/18） */
+  private readonly employeeMap = signal<ReadonlyMap<string, Employee>>(new Map());
+  employeeOf(id: string): Employee | null {
+    return this.employeeMap().get(id) ?? null;
+  }
+
   private async showPreview(table: string[][]): Promise<void> {
     const office = this.context.current();
     const file = this.loaded();
@@ -157,6 +165,7 @@ export class HistoryImport {
     try {
       const read = readHistoryCsv(kind, table);
       const [employees, gradeTables] = await Promise.all([this.employeesApi.list(office.id), this.rates.grades()]);
+      this.employeeMap.set(new Map(employees.map((e) => [e.id, e])));
       // 登録済みの記録は、ファイルに出てくる人の分だけ読む
       const existing = await this.api.existingIds(office.id, kind, employeeIdsIn(read.rows, employees));
       const plan = planHistoryImport(read.rows, { employees, existing, gradeTables });

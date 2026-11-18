@@ -32,6 +32,7 @@ import { GradeTableDoc } from '../../../../core/models/rates';
 import { SpecialPerson, SpecialRevisionCard } from '../../components/special-revision-card/special-revision-card';
 import { WageChangeCard, WageChangeRow } from '../../components/wage-change-card/wage-change-card';
 import { DecisionNoticeCard } from '../../../premiums/components/decision-notice-card/decision-notice-card';
+import { PersonName } from '../../../../shared/components/person-name/person-name';
 
 interface View {
   key: string; // 行の目印（従業員ID・種類・起算月）
@@ -48,7 +49,7 @@ interface View {
  */
 @Component({
   selector: 'app-revisions',
-  imports: [DecisionNoticeCard, NgTemplateOutlet, RouterLink, TranslocoPipe, SpecialRevisionCard, WageChangeCard],
+  imports: [PersonName, DecisionNoticeCard, NgTemplateOutlet, RouterLink, TranslocoPipe, SpecialRevisionCard, WageChangeCard],
   templateUrl: './revisions.html',
   styleUrl: './revisions.css',
 })

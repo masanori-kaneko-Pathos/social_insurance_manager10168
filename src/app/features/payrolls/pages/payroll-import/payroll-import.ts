@@ -37,6 +37,7 @@ import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { IssueRow } from '../../../../shared/components/import-issues/issue-row';
 import { ImportSteps } from '../../../../shared/components/import-steps/import-steps';
+import { PersonName } from '../../../../shared/components/person-name/person-name';
 /** 書き出せる期間の上限（月数） */
 const MAX_MONTHS = 24;
 /** 確認画面に出すエラーの行数 */
@@ -68,7 +69,7 @@ interface Preview {
 
 @Component({
   selector: 'app-payroll-import',
-  imports: [IssueRow, ImportSteps, ImportPicker, ColumnMapper, HalfWidthDigits, ImportIssues, RouterLink, TranslocoPipe, FormsModule],
+  imports: [PersonName, IssueRow, ImportSteps, ImportPicker, ColumnMapper, HalfWidthDigits, ImportIssues, RouterLink, TranslocoPipe, FormsModule],
   templateUrl: './payroll-import.html',
   styleUrl: './payroll-import.css',
 })
@@ -82,6 +83,12 @@ export class PayrollImport {
   readonly showItems = SHOW_ITEMS;
 
   private employees: Employee[] = [];
+  /** 表の氏名にフリガナを付けるため（読んだ従業員を ID で引く。11/18） */
+  private employeeMap: { from: Employee[]; map: Map<string, Employee> } | null = null;
+  employeeOf(id: string): Employee | null {
+    if (this.employeeMap?.from !== this.employees) this.employeeMap = { from: this.employees, map: new Map(this.employees.map((e) => [e.id, e])) };
+    return this.employeeMap.map.get(id) ?? null;
+  }
   private saved = new Map<string, Payroll>(); // 'employeeId|paidMonth' → 保存済み（読んだ月の分だけ）
   /** 保存済みの実績をもう読んだ月（全部は読まず、出力する月・ファイルにある月だけ読む。11/16） */
   private loadedMonths = new Set<string>();

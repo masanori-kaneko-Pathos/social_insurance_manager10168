@@ -249,6 +249,17 @@ td .sub {
   white-space: normal;
 }
 
+/* 直した行（保存していない。11/18） */
+tr.edited td {
+  background: var(--color-warning-bg);
+}
+
+/* 帯の「保存する」の横の一言 */
+.save-note {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
 td.note .note-sub {
   display: block;
 }

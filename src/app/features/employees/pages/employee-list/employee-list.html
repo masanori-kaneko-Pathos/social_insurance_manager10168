@@ -223,17 +223,9 @@
           }
           @for (e of sec.items; track e.id) {
             <tr [class.retired]="isRetired(e)">
-              <td class="mono">{{ e.employeeNumber ?? '—' }}</td>
-              <td>
-                <!-- 氏名とフリガナを横に並べる（行を1段にする。長い名前は折り返す。11/13） -->
-                <span class="person">
-                  <a class="person-name" [routerLink]="[e.id]">{{ e.lastName }} {{ e.firstName }}</a>
-                  <span class="person-kana">
-                    {{ e.lastNameKana }} {{ e.firstNameKana }}
-                    @if (e.foreign?.alias; as a) { （{{ a.last }} {{ a.first }}） }
-                  </span>
-                </span>
-              </td>
+              <td class="emp-no">{{ e.employeeNumber ?? '—' }}</td>
+              <!-- 氏名とフリガナを横に並べる（共通の部品。11/18） -->
+              <td><app-person-name [person]="e" [link]="[e.id]" layout="inline" /></td>
               <td class="wrap">
                 {{ deptName(e) ?? '—' }}
                 @if (e.org?.position; as pos) { <span class="person-kana">{{ pos }}</span> }

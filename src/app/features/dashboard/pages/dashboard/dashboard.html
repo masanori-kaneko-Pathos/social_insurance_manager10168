@@ -150,11 +150,12 @@
                   <td class="kind-cell">{{ 'dashboard.todo.kind.' + it.kind | transloco }}</td>
                   <td>
                     @if (e) {
-                      <a class="who" [routerLink]="['/o', office()?.id, 'employees', e.id]" (click)="$event.stopPropagation()">
+                      <span class="who" (click)="$event.stopPropagation()">
                         @if (e.employeeNumber) {
                           <span class="emp-no">{{ e.employeeNumber }}</span>
-                        }{{ employeeName(e) }}
-                      </a>
+                        }
+                        <app-person-name [person]="e" [link]="['/o', office()?.id, 'employees', e.id]" layout="inline" />
+                      </span>
                     } @else {
                       —
                     }

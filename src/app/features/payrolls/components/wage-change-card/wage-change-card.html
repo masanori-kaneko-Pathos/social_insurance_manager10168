@@ -23,7 +23,10 @@
         @for (r of sorted(); track r.employee.id + r.change.month) {
           <tr>
             <td class="mono">{{ r.change.month }}</td>
-            <td>{{ name(r.employee) }}</td>
+            <td>
+              @if (r.employee.employeeNumber) { <span class="emp-no">{{ r.employee.employeeNumber }}</span> }
+              <app-person-name [person]="r.employee" layout="inline" />
+            </td>
             <td>
               <span class="badge" [class.badge-muted]="r.change.source === 'dismissed'">{{ 'wageChange.source.' + r.change.source | transloco }}</span>
               @if (r.change.source === 'manual') {

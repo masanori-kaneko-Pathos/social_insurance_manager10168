@@ -153,7 +153,10 @@
         @for (x of registered(); track x.employee.id + x.r.from) {
           <tr>
             <td class="mono">{{ x.r.from }}〜</td>
-            <td><a [routerLink]="['/o', context.current()?.id, 'employees', x.employee.id]">{{ name(x.employee) }}</a></td>
+            <td>
+              @if (x.employee.employeeNumber) { <span class="emp-no">{{ x.employee.employeeNumber }}</span> }
+              <app-person-name [person]="x.employee" [link]="['/o', context.current()?.id, 'employees', x.employee.id]" layout="inline" />
+            </td>
             <td class="num mono">{{ yen(x.r.monthlyAmount) }}</td>
             <td class="num mono">{{ x.r.health.grade }}級 {{ yen(x.r.health.standard) }}</td>
             <td class="num mono">{{ x.r.pension.grade }}級 {{ yen(x.r.pension.standard) }}</td>

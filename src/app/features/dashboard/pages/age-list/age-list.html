@@ -79,13 +79,8 @@
             @for (r of g.rows; track r.employee.id + '-' + r.event.age) {
               <tr>
                 <td>
-                  <a
-                    class="name"
-                    [routerLink]="['/o', office()?.id, 'employees', r.employee.id]"
-                  >
-                    @if (r.employee.employeeNumber) { <span class="emp-no">{{ r.employee.employeeNumber }}</span> }
-                    {{ r.employee.lastName }} {{ r.employee.firstName }}
-                  </a>
+                  @if (r.employee.employeeNumber) { <span class="emp-no">{{ r.employee.employeeNumber }}</span> }
+                  <app-person-name [person]="r.employee" [link]="['/o', office()?.id, 'employees', r.employee.id]" layout="inline" />
                 </td>
                 <td class="mono">{{ r.employee.birthDate }}</td>
                 <td>

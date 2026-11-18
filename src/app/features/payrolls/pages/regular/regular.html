@@ -67,12 +67,7 @@
             @let r = v.result;
             <tr>
               <td class="emp-no">{{ v.employee.employeeNumber ?? '' }}</td>
-              <td>
-                <!-- 長い名前は語の切れ目で折り返す（11/18） -->
-                <a class="name name-box" [routerLink]="['/o', context.current()?.id, 'employees', v.employee.id]">
-                  {{ name(v.employee) }}
-                </a>
-              </td>
+              <td><app-person-name [person]="v.employee" [link]="['/o', context.current()?.id, 'employees', v.employee.id]" /></td>
               @for (m of r.months; track m.month) {
                 <td class="num" [class.skipped]="!m.used">
                   @if (m.payroll) {
@@ -239,7 +234,8 @@
         <tbody>
           @for (v of excluded(); track v.employee.id) {
             <tr>
-              <td>{{ name(v.employee) }}</td>
+              <td class="emp-no">{{ v.employee.employeeNumber ?? '' }}</td>
+              <td><app-person-name [person]="v.employee" [link]="['/o', context.current()?.id, 'employees', v.employee.id]" layout="inline" /></td>
               <td class="sub">{{ 'regular.excluded.' + v.result.excluded | transloco }}</td>
             </tr>
           }

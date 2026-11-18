@@ -14,6 +14,7 @@ import { officeTotals } from '../../logic/premium-core';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { SortHeader } from '../../../../shared/components/sort-header/sort-header';
 import { defaultListOptions, filterAndSort, PersonListOptions } from '../../../../shared/logic/person-list';
+import { PersonName } from '../../../../shared/components/person-name/person-name';
 
 /** 開いた支給の、1人ずつの行 */
 interface PersonRow {
@@ -32,7 +33,7 @@ interface ListRow {
 
 @Component({
   selector: 'app-bonus-list',
-  imports: [RouterLink, SortHeader, TranslocoPipe],
+  imports: [PersonName, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './bonus-list.html',
   styleUrl: './bonus-list.css',
 })

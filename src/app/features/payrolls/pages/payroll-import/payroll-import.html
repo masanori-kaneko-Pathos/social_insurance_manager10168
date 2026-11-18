@@ -187,7 +187,14 @@
                       <tr [class.has-issue]="!!x.issue">
                         <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line }" /></td>
                         <td class="num">{{ it.line }}</td>
-                        <td>{{ it.employeeLabel }}</td>
+                        <td>
+                          @if (employeeOf(it.employeeId); as e) {
+                            @if (e.employeeNumber) { <span class="emp-no">{{ e.employeeNumber }}</span> }
+                            <app-person-name [person]="e" />
+                          } @else {
+                            {{ it.employeeLabel }}
+                          }
+                        </td>
                         <td class="mono">{{ it.paidMonth }}</td>
                         <td class="num">{{ yen(it.input.cash) }}</td>
                         <td class="num">{{ yen(it.input.fixed) }}</td>

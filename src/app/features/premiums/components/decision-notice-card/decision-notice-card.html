@@ -40,7 +40,10 @@
             @for (r of rows(); track r.employee.id) {
               <tr>
                 <td><input type="checkbox" [checked]="selected().has(r.employee.id)" (change)="check(r.employee.id, $any($event.target).checked)" [attr.aria-label]="name(r.employee)" /></td>
-                <td>{{ r.employee.employeeNumber ? r.employee.employeeNumber + '　' : '' }}{{ name(r.employee) }}</td>
+                <td>
+                  @if (r.employee.employeeNumber) { <span class="emp-no">{{ r.employee.employeeNumber }}</span> }
+                  <app-person-name [person]="r.employee" layout="inline" />
+                </td>
                 <td>{{ 'remuneration.reason.' + r.decision.reason | transloco }}</td>
                 <td class="num">
                   @if (r.decision.health; as h) { {{ 'remuneration.gradeShort' | transloco: { grade: h.grade } }} {{ yen(h.standard) }} } @else { — }

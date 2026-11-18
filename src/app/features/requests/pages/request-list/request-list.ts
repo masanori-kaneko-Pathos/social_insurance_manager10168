@@ -11,13 +11,14 @@ import { MyPageInvites } from '../../../invites/components/my-page-invites/my-pa
 import { sortRequests } from '../../logic/request-model';
 import { RequestService } from '../../request.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { PersonName } from '../../../../shared/components/person-name/person-name';
 
 type Filter = RequestStatus | 'all';
 
 /** 依頼と申請の一覧（確認待ちが上）。状態の絞り込みは URL（?status=）に持つ */
 @Component({
   selector: 'app-request-list',
-  imports: [MyPageInvites, RouterLink, TranslocoPipe],
+  imports: [PersonName, MyPageInvites, RouterLink, TranslocoPipe],
   templateUrl: './request-list.html',
   styleUrl: '../requests.css',
 })
@@ -82,6 +83,10 @@ export class RequestList {
   nameOf(employeeId: string): string {
     const e = this.employees().get(employeeId);
     return e ? `${e.lastName} ${e.firstName}`.trim() : '—';
+  }
+
+  employeeOf(employeeId: string): Employee | null {
+    return this.employees().get(employeeId) ?? null;
   }
 
   numberOf(employeeId: string): string | null {

@@ -10,6 +10,7 @@ import { RemunerationService } from '../../../employees/remuneration.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import { DecisionNoticeService } from '../../decision-notice.service';
 import { DecisionNotice } from '../../logic/decision-notice';
+import { PersonName } from '../../../../shared/components/person-name/person-name';
 
 interface Row {
   employee: Employee;
@@ -27,7 +28,7 @@ const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
  */
 @Component({
   selector: 'app-decision-notice-card',
-  imports: [TranslocoPipe],
+  imports: [PersonName, TranslocoPipe],
   templateUrl: './decision-notice-card.html',
   styleUrl: './decision-notice-card.css',
 })

@@ -38,8 +38,12 @@ import { PAGE_SIZES, PageSize } from '../../logic/person-list';
     } @else {
       <!-- 帯の上に差し込む中身（選んだ人への操作の帯など。下に貼り付くのも一緒。11/13） -->
       <ng-content />
-      @if (pages() > 1) {
+      @if (pages() > 1 || showBand()) {
       <div class="band bottom">
+        <!-- 真ん中にページ送り、右端に差し込む操作（直したときの「保存する」など。11/18） -->
+        <span></span>
+        <div class="mid">
+        @if (pages() > 1) {
         <nav class="pages" [attr.aria-label]="'pager.label' | transloco">
           <button type="button" class="pg wide" [disabled]="page() <= 1" (click)="go(page() - 1)">‹ {{ 'pager.prev' | transloco }}</button>
           @for (p of numbers(); track $index) {
@@ -53,6 +57,9 @@ import { PAGE_SIZES, PageSize } from '../../logic/person-list';
         </nav>
         <span class="where">{{ 'pager.where' | transloco: { total: total(), from: from(), to: to(), pages: pages(), page: page() } }}</span>
         <button type="button" class="to-top" (click)="toTop()">↑ {{ 'pager.toTop' | transloco }}</button>
+        }
+        </div>
+        <div class="end"><ng-content select="[bandEnd]" /></div>
       </div>
       }
     }
@@ -72,16 +79,19 @@ import { PAGE_SIZES, PageSize } from '../../logic/person-list';
     .size { display: inline-flex; align-items: center; gap: var(--space-xs); margin-left: auto; color: var(--color-text-sub); }
     .size .input { width: auto; }
     /* 下の帯：画面の下に貼り付く */
-    .bottom { justify-content: center; padding: var(--space-sm) var(--space-md); background: color-mix(in srgb, var(--color-bg) 92%, transparent); backdrop-filter: blur(4px); border-top: 1px solid var(--color-border); }
+    /* 帯の高さは前のまま（番号のボタンだけ小さくした。11/18）。3つに分けて、ページ送りは真ん中・差し込みは右端 */
+    .bottom { display: grid; grid-template-columns: 1fr auto 1fr; min-height: calc(44px + 2 * var(--space-sm)); box-sizing: border-box; padding: var(--space-sm) var(--space-md); background: color-mix(in srgb, var(--color-bg) 92%, transparent); backdrop-filter: blur(4px); border-top: 1px solid var(--color-border); }
+    .mid { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-sm) var(--space-md); }
+    .end { display: flex; justify-content: flex-end; align-items: center; gap: var(--space-sm); }
     .pages { display: inline-flex; align-items: center; gap: var(--space-xs); }
-    .pg { box-sizing: border-box; width: 44px; height: 44px; padding: 0; font: inherit; font-size: var(--font-sm); color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); cursor: pointer; font-variant-numeric: tabular-nums; }
-    .pg.wide { width: 6.5em; font-weight: 600; }
+    .pg { box-sizing: border-box; width: 32px; height: 32px; padding: 0; font: inherit; font-size: var(--font-xs); color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); cursor: pointer; font-variant-numeric: tabular-nums; }
+    .pg.wide { width: 5.5em; font-weight: 600; }
     .pg:hover:not(:disabled):not(.gap) { background: var(--color-hover); }
     .pg.on { color: var(--color-on-primary); background: var(--color-primary); border-color: var(--color-primary); font-weight: 700; }
     .pg:disabled { opacity: 0.35; cursor: default; }
     .pg.gap { display: inline-flex; align-items: center; justify-content: center; border-color: transparent; background: none; color: var(--color-text-sub); cursor: default; }
-    .where { color: var(--color-text-sub); font-variant-numeric: tabular-nums; }
-    .to-top { padding: 0; font: inherit; font-size: var(--font-sm); color: var(--color-primary); background: none; border: 0; text-decoration: underline; cursor: pointer; }
+    .where { font-size: var(--font-xs); color: var(--color-text-sub); font-variant-numeric: tabular-nums; }
+    .to-top { padding: 0; font: inherit; font-size: var(--font-xs); color: var(--color-primary); background: none; border: 0; text-decoration: underline; cursor: pointer; }
   `,
 })
 export class Pager {
@@ -93,6 +103,8 @@ export class Pager {
   readonly size = model.required<PageSize>();
   /** 表示人数を変えたとき（新しい人数と、先頭の1人が入るページ）。URL に持つ画面は、これで1回だけ書き換える */
   readonly resized = output<{ size: PageSize; page: number }>();
+  /** 1ページしかなくても下の帯を出す（直したときの「保存する」を帯に出すため。11/18） */
+  readonly showBand = input(false);
 
   readonly sizes = PAGE_SIZES;
   readonly pages = computed(() => Math.max(1, Math.ceil(this.total() / this.size())));

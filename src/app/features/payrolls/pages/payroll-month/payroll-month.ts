@@ -42,6 +42,7 @@ import { defaultListOptions, filterAndSort, pageOf, PersonListOptions } from '..
 import { ContractDoc, EMPLOYMENT_TYPES } from '../../../../core/models/contract';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
+import { PersonName } from '../../../../shared/components/person-name/person-name';
 type RowForm = FormGroup<{
   cash: FormControl<string>;
   fixed: FormControl<string>;
@@ -66,7 +67,7 @@ const MONTH_RE = /^[0-9]{4}-(0[1-9]|1[0-2])$/;
 
 @Component({
   selector: 'app-payroll-month',
-  imports: [EnterNext, HalfWidthDigits, InKindCalculator, MonthPicker, Pager, PersonListBar, ReactiveFormsModule, RouterLink, SortHeader, TranslocoPipe],
+  imports: [PersonName, EnterNext, HalfWidthDigits, InKindCalculator, MonthPicker, Pager, PersonListBar, ReactiveFormsModule, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './payroll-month.html',
   styleUrl: './payroll-month.css',
   host: {
@@ -88,7 +89,11 @@ export class PayrollMonth {
   readonly period = signal<Period | null>(null);
   readonly views = signal<ViewRow[]>([]);
   /** 保存していない入力があれば、画面（月）を離れる前に確かめる（11/17） */
-  private readonly unsaved = watchUnsaved(() => this.views().some((v) => v.form.dirty));
+  private readonly unsaved = watchUnsaved(() => this.anyDirty());
+  /** 直した行があるか（「保存する」は、直したときだけ下の帯に出す。11/18） */
+  anyDirty(): boolean {
+    return this.views().some((v) => v.form.dirty);
+  }
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly errorKey = signal<string | null>(null);

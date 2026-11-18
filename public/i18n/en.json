@@ -1462,7 +1462,24 @@
     "amountTotal": "Total bonus {{n}} yen",
     "cappedHealth": "Health etc. calculated on JPY {{n}} (yearly cap)",
     "cappedPension": "Pension etc. calculated on JPY {{n}} (monthly cap)",
-    "csv": "Import CSV"
+    "csv": "Import CSV",
+    "export": {
+      "button": "Export (CSV)",
+      "savedFirst": "Save before exporting",
+      "file": "bonus_insurance",
+      "col": {
+        "number": "Employee No.",
+        "name": "Name",
+        "paidDate": "Paid date",
+        "amount": "Bonus",
+        "standard": "Standard bonus",
+        "health": "Health etc. (employee)",
+        "pension": "Pension (employee)",
+        "employee": "Employee total",
+        "employer": "Employer (estimate)",
+        "note": "Note"
+      }
+    }
   },
   "leave": {
     "title": "Leave",

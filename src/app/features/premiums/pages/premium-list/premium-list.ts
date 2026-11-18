@@ -69,6 +69,7 @@ import {
   StandardView,
 } from '../../logic/premium-list-view';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { PersonName } from '../../../../shared/components/person-name/person-name';
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -78,7 +79,7 @@ interface ListItem extends PremiumRow {
 
 @Component({
   selector: 'app-premium-list',
-  imports: [CloseOnOutside, ColumnMapper, MonthPicker, Pager, PersonListBar, PremiumBreakdown, ReviewBox, RouterLink, TranslocoPipe, PremiumTotals],
+  imports: [PersonName, CloseOnOutside, ColumnMapper, MonthPicker, Pager, PersonListBar, PremiumBreakdown, ReviewBox, RouterLink, TranslocoPipe, PremiumTotals],
   templateUrl: './premium-list.html',
   styleUrl: './premium-list.css',
 })

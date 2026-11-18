@@ -1,6 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { downloadCsv, safeFileName } from '../../../../shared/csv/csv';
+import { bonusExportTable } from '../../logic/bonus-export';
 import { BonusPayment, BonusPaymentInput } from '../../../../core/models/bonus';
 import { Employee } from '../../../../core/models/employee';
 import { OfficeTotal } from '../../../../core/models/premium';
@@ -44,6 +46,7 @@ import { ToastService } from '../../../../shared/services/toast.service';
 import { contractAt } from '../../../employees/logic/contract-form-model';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
+import { PersonName } from '../../../../shared/components/person-name/person-name';
 const DATE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 /** 新規の支給を計算の中で区別するための仮の ID */
 const NEW_ID = '__new__';
@@ -63,7 +66,7 @@ interface DateNote {
 
 @Component({
   selector: 'app-bonus-form',
-  imports: [ColumnMapper, EnterNext, HalfWidthDigits, Pager, PersonListBar, PremiumBreakdown, PremiumTotals, RouterLink, SortHeader, TranslocoPipe],
+  imports: [PersonName, ColumnMapper, EnterNext, HalfWidthDigits, Pager, PersonListBar, PremiumBreakdown, PremiumTotals, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './bonus-form.html',
   styleUrl: './bonus-form.css',
 })
@@ -102,6 +105,14 @@ export class BonusForm {
   private readonly snapshot = signal('');
   private snapshotOf(): string {
     return JSON.stringify([this.paidDate(), this.title(), this.amounts()]);
+  }
+  /** 保存してある額（読み込んだとき。行ごとに「直したか」を見るため。11/18） */
+  private readonly savedAmounts = signal<Record<string, number>>({});
+  /** 保存していない入力があるか（「保存する」は、直したときだけ下の帯に出す。11/18） */
+  readonly dirty = computed(() => !this.loading() && !this.readOnly && this.snapshotOf() !== this.snapshot());
+  /** この人の額を直したか（直した行を黄色くする） */
+  rowDirty(id: string): boolean {
+    return this.badAmounts().has(id) || (this.amounts()[id] ?? 0) !== (this.savedAmounts()[id] ?? 0);
   }
   /** 保存していない入力があれば、画面を離れる前に確かめる（11/17） */
   private readonly unsaved = watchUnsaved(() => !this.loading() && !this.readOnly && this.snapshotOf() !== this.snapshot());
@@ -263,6 +274,7 @@ export class BonusForm {
       this.loadErrorKey.set(errorKeyOf(err, 'bonus.error.load'));
     } finally {
       this.snapshot.set(this.snapshotOf());
+      this.savedAmounts.set(this.amounts());
       this.loading.set(false);
     }
   }
@@ -407,6 +419,30 @@ export class BonusForm {
   }
 
   // ===== 表示の小道具 =====
+
+  // ===== 書き出し（給与ソフトに渡す、社会保険の本人負担まで。11/18） =====
+  private readonly transloco = inject(TranslocoService);
+  /** 保存した内容だけを書き出す（直している途中の額が混ざらないように） */
+  exportCsv(): void {
+    const office = this.context.current();
+    if (!office || this.dirty() || !this.dateOk()) return;
+    const t = (k: string) => this.transloco.translate(k);
+    const cols = ['number', 'name', 'paidDate', 'amount', 'standard', 'health', 'pension', 'employee', 'employer', 'note'];
+    const people = [...this.rows()]
+      .sort((a, b) => (a.employee.employeeNumber ?? '').localeCompare(b.employee.employeeNumber ?? '', 'ja', { numeric: true }))
+      .map((r) => ({
+        employeeNumber: r.employee.employeeNumber ?? null,
+        name: `${r.employee.lastName} ${r.employee.firstName}`.trim(),
+        amountYen: this.amounts()[r.employee.id] ?? 0,
+        row: r,
+        note:
+          r.state === 'exempt' || r.state === 'counted' || r.state === 'none'
+            ? t('bonus.state.' + r.state)
+            : r.state === 'ok' ? '' : t(this.missingKey(r)),
+      }));
+    const table = bonusExportTable(cols.map((c) => t('bonus.export.col.' + c)), this.paidDate(), people);
+    downloadCsv(safeFileName(`${t('bonus.export.file')}_${office.name}_${this.paidDate()}.csv`), table);
+  }
 
   missingKey(r: FormRow): string {
     if (r.state === 'error') return 'premium.error.calc';

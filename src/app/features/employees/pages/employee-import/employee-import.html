@@ -148,7 +148,7 @@
                     @for (d of x.diffs; track d.column; let first = $first) {
                       <tr>
                         <td class="num">{{ first ? x.line : '' }}</td>
-                        <td class="mono">{{ first ? x.employeeNumber : '' }}</td>
+                        <td class="emp-no">{{ first ? x.employeeNumber : '' }}</td>
                         <td>{{ first ? x.name : '' }}</td>
                         <td>{{ columnLabel(d.column) }}</td>
                         <td>{{ d.saved || '—' }}</td>
@@ -208,12 +208,9 @@
                   <tr [class.has-issue]="!!x.issue" [class.warn]="it.warnings.length > 0">
                     <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line }" /></td>
                     <td class="num">{{ it.line }}</td>
-                    <td class="mono">{{ it.employee.employeeNumber }}</td>
-                    <!-- 氏名とカナ・部署・年齢（従業員の一覧と同じくらい。11/17）。長い名前は語の切れ目で折り返す（11/18） -->
-                    <td>
-                      <span class="name-box">{{ name(it) }}</span>
-                      <span class="name-box sub">{{ kana(it) }}</span>
-                    </td>
+                    <td class="emp-no">{{ it.employee.employeeNumber }}</td>
+                    <!-- 氏名とカナ（共通の部品。11/18）・部署・年齢 -->
+                    <td><app-person-name [person]="it.employee" /></td>
                     <td>{{ deptName(it) }}</td>
                     <td class="num">{{ age(it) }}</td>
                     <td class="mono">

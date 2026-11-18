@@ -407,14 +407,9 @@
         <tbody>
           @for (r of sortedRows(); track r.employee.id) {
             <tr [class.problem]="r.state !== 'ok' && r.state !== 'exempt'" [class.open]="openId() === r.employee.id">
-              <td class="mono">{{ r.employee.employeeNumber ?? '—' }}</td>
+              <td class="emp-no">{{ r.employee.employeeNumber ?? '—' }}</td>
               <td>
-                <a
-                  class="name"
-                  [routerLink]="['/o', context.current()?.id, 'employees', r.employee.id]"
-                >
-                  {{ r.employee.lastName }} {{ r.employee.firstName }}
-                </a>
+                <app-person-name [person]="r.employee" [link]="['/o', context.current()?.id, 'employees', r.employee.id]" />
                 @for (c of r.changes; track c) {
                   <span class="badge badge-change" [attr.title]="c === 'careStart' || c === 'careEnd' || c === 'cap' ? ('premiumList.changeNote.' + c | transloco) : null">{{
                     'premiumList.change.' + c | transloco

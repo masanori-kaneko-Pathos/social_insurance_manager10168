@@ -64,6 +64,7 @@ import { countryName } from '../../../employees/logic/foreign-options';
 import { MyNumberService } from '../../../my-number/my-number.service';
 import { TodoBadgeService } from '../../todo-badge.service';
 import { TodoService } from '../../todo.service';
+import { PersonName } from '../../../../shared/components/person-name/person-name';
 
 /** よく使うメニューの1つ */
 interface MenuTile {
@@ -107,7 +108,7 @@ interface OpenAction {
  */
 @Component({
   selector: 'app-dashboard',
-  imports: [Icon, RouterLink, TranslocoPipe, TodoDialog],
+  imports: [PersonName, Icon, RouterLink, TranslocoPipe, TodoDialog],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })

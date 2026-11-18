@@ -16,6 +16,7 @@ import {
   sortMonthOf,
 } from '../../../employees/logic/age-events';
 import { OfficeContext } from '../../../office/office-context.service';
+import { PersonName } from '../../../../shared/components/person-name/person-name';
 
 /** 「以内」の範囲：今月から何か月先まで（0 は今月だけ） */
 const WITHIN = [0, 1, 6, 12] as const;
@@ -38,7 +39,7 @@ interface AgeGroup {
  */
 @Component({
   selector: 'app-age-list',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [PersonName, RouterLink, TranslocoPipe],
   templateUrl: './age-list.html',
   styleUrl: './age-list.css',
 })

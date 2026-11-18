@@ -29,6 +29,7 @@ import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { DEPENDENT_FIX_FIELDS } from '../../logic/import-fix-fields';
 import { IssueRow } from '../../../../shared/components/import-issues/issue-row';
 import { ImportSteps } from '../../../../shared/components/import-steps/import-steps';
+import { PersonName } from '../../../../shared/components/person-name/person-name';
 
 interface Preview {
   fileName: string;
@@ -48,7 +49,7 @@ const PARALLEL = 8;
  */
 @Component({
   selector: 'app-dependent-import',
-  imports: [IssueRow, ImportSteps, ImportPicker, ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
+  imports: [PersonName, IssueRow, ImportSteps, ImportPicker, ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
   templateUrl: './dependent-import.html',
   styleUrl: '../../pages/employee-import/employee-import.css',
 })

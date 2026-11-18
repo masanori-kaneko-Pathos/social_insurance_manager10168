@@ -28,6 +28,7 @@ import {
 } from '../../logic/bonus-csv';
 import { IssueRow } from '../../../../shared/components/import-issues/issue-row';
 import { ImportSteps } from '../../../../shared/components/import-steps/import-steps';
+import { PersonName } from '../../../../shared/components/person-name/person-name';
 
 interface Preview {
   fileName: string;
@@ -46,7 +47,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-bonus-import',
-  imports: [IssueRow, ImportSteps, ImportPicker, ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
+  imports: [PersonName, IssueRow, ImportSteps, ImportPicker, ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
   templateUrl: './bonus-import.html',
   styleUrl: '../../../employees/pages/employee-import/employee-import.css',
 })

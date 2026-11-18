@@ -146,6 +146,11 @@ input.num {
   color: var(--color-text-sub);
 }
 
+/* 直した行（保存していない。11/18） */
+tr.edited td {
+  background: var(--color-warning-bg);
+}
+
 tr.has-error td {
   border-bottom: none;
 }

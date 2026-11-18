@@ -97,9 +97,9 @@
                 />
               }
             </td>
-            <td class="mono">{{ r.employee.employeeNumber ?? '—' }}</td>
+            <td class="emp-no">{{ r.employee.employeeNumber ?? '—' }}</td>
             <td>
-              <a class="person-name" [routerLink]="['/o', context.current()?.id, 'employees', r.employee.id]">{{ nameOf(r.employee) }}</a>
+              <app-person-name [person]="r.employee" [link]="['/o', context.current()?.id, 'employees', r.employee.id]" layout="inline" />
               @if (isBeforeHire(r.employee)) {
                 <span class="badge-before" [title]="'myPages.beforeHireTitle' | transloco">{{ 'myPages.beforeHire' | transloco: { date: r.employee.hireDate } }}</span>
               }

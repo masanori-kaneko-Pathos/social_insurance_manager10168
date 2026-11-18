@@ -149,8 +149,8 @@
         @for (e of shown().rows; track e.id) {
           <tr [class.on]="selected().has(e.id)" (click)="toggle(e.id)">
             <td class="check"><input type="checkbox" [checked]="selected().has(e.id)" (click)="$event.stopPropagation()" (change)="toggle(e.id)" [attr.aria-label]="nameOf(e)" /></td>
-            <td class="mono">{{ e.employeeNumber ?? '' }}</td>
-            <td>{{ nameOf(e) }}</td>
+            <td class="emp-no">{{ e.employeeNumber ?? '' }}</td>
+            <td><app-person-name [person]="e" layout="inline" /></td>
             <td>{{ deptName(e) ?? '—' }}</td>
             <td>
               @if (e.userUid) { <span class="sub">{{ 'request.accountFilter.linked' | transloco }}</span> }

@@ -1462,7 +1462,24 @@
     "amountTotal": "賞与額の合計 {{n}}円",
     "cappedHealth": "健保等は {{n}}円で計算（年度の上限）",
     "cappedPension": "厚年等は {{n}}円で計算（月の上限）",
-    "csv": "CSVで取り込む"
+    "csv": "CSVで取り込む",
+    "export": {
+      "button": "書き出す（CSV）",
+      "savedFirst": "保存してから書き出してください",
+      "file": "賞与の社会保険料",
+      "col": {
+        "number": "社員番号",
+        "name": "氏名",
+        "paidDate": "支払日",
+        "amount": "賞与額",
+        "standard": "標準賞与額",
+        "health": "健康保険等（本人）",
+        "pension": "厚生年金保険（本人）",
+        "employee": "本人負担の合計",
+        "employer": "会社負担（目安）",
+        "note": "備考"
+      }
+    }
   },
   "leave": {
     "title": "休業",

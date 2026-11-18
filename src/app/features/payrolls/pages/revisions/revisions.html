@@ -17,7 +17,8 @@
   <div class="item">
     <div class="item-head">
       <span class="badge type-{{ v.item.type }}">{{ typeKey(v) | transloco }}</span>
-      <a class="who" [routerLink]="['/o', context.current()?.id, 'employees', v.employee.id]">{{ name(v.employee) }}</a>
+      @if (v.employee.employeeNumber) { <span class="emp-no">{{ v.employee.employeeNumber }}</span> }
+      <app-person-name class="who" [person]="v.employee" [link]="['/o', context.current()?.id, 'employees', v.employee.id]" layout="inline" />
       <span class="months mono">
         {{ 'revision.span' | transloco: { start: startOf(v), revised: v.item.result.revisedFrom } }}
       </span>

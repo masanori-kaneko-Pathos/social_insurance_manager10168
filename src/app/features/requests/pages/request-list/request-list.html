@@ -68,9 +68,12 @@
                 <span class="sub">{{ 'request.type.' + r.type | transloco }}</span>
               </td>
               <td>
-                <a [routerLink]="['/o', context.current()?.id, 'employees', r.employeeId]">
-                  @if (numberOf(r.employeeId); as no) { <span class="emp-no">{{ no }}</span> }{{ nameOf(r.employeeId) }}
-                </a>
+                @if (employeeOf(r.employeeId); as e) {
+                  @if (e.employeeNumber) { <span class="emp-no">{{ e.employeeNumber }}</span> }
+                  <app-person-name [person]="e" [link]="['/o', context.current()?.id, 'employees', e.id]" layout="inline" />
+                } @else {
+                  —
+                }
               </td>
               <td>{{ 'request.direction.' + r.direction | transloco }}</td>
               <td>{{ r.dueDate ?? '' }}</td>
