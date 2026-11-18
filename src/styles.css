@@ -829,3 +829,10 @@ a:where(:link, :visited):hover {
   padding: 0 var(--space-sm);
   font-size: var(--font-sm);
 }
+
+/* ライト／ダークの切り替え：画面全体を 0.15 秒で重ねて入れ替える（11/18。ThemeService が切り替えの間だけ付ける） */
+:root.theme-switching::view-transition-old(root),
+:root.theme-switching::view-transition-new(root) {
+  animation-duration: 150ms;
+  animation-timing-function: ease-out;
+}

@@ -1691,7 +1691,8 @@
       "partialAcquisition": "* joined mid-month",
       "suspended": "* on leave"
     },
-    "corrected": "Corrected average (excluding retro pay)",
+    "corrected": "Corrected average",
+    "correctedNote": "(excluding retro pay)",
     "grade": "G{{h}} / G{{p}}",
     "change": {
       "up": "Up",

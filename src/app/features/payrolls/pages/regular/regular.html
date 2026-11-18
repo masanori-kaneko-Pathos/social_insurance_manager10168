@@ -49,15 +49,16 @@
       <table>
         <thead>
           <tr>
-            <th><app-sort-header key="number" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.employeeNumber' | transloco }}</app-sort-header></th>
-            <th><app-sort-header key="kana" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.name' | transloco }}</app-sort-header></th>
+            <th class="fit"><app-sort-header key="number" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.employeeNumber' | transloco }}</app-sort-header></th>
+            <th class="name-col"><app-sort-header key="kana" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.name' | transloco }}</app-sort-header></th>
             <th class="num month">{{ 'regular.col.month' | transloco: { m: 4 } }}</th>
             <th class="num month">{{ 'regular.col.month' | transloco: { m: 5 } }}</th>
             <th class="num month">{{ 'regular.col.month' | transloco: { m: 6 } }}</th>
             <th class="num fit">{{ 'regular.col.average' | transloco }}</th>
             <th class="num fit">{{ 'regular.col.current' | transloco }}</th>
             <th class="num fit">{{ 'regular.col.next' | transloco }}</th>
-            <th>{{ 'regular.col.result' | transloco }}</th>
+            <th class="fit">{{ 'regular.col.result' | transloco }}</th>
+            <!-- 余った幅はこの右端の欄が受け持つ（欄の間がむやみに空かないように。11/18） -->
             <th></th>
           </tr>
         </thead>
@@ -67,7 +68,8 @@
             <tr>
               <td class="emp-no">{{ v.employee.employeeNumber ?? '' }}</td>
               <td>
-                <a class="name" [routerLink]="['/o', context.current()?.id, 'employees', v.employee.id]">
+                <!-- 長い名前は語の切れ目で折り返す（11/18） -->
+                <a class="name name-box" [routerLink]="['/o', context.current()?.id, 'employees', v.employee.id]">
                   {{ name(v.employee) }}
                 </a>
               </td>
@@ -75,12 +77,11 @@
                 <td class="num" [class.skipped]="!m.used">
                   @if (m.payroll) {
                     <div>{{ yen(m.amount) }}</div>
-                    <div class="sub">
-                      {{ 'regular.days' | transloco: { d: m.payroll.days } }}
-                      @if (m.payroll.retro > 0) {
-                        ・{{ 'regular.retro' | transloco: { n: yen(m.payroll.retro) } }}
-                      }
-                    </div>
+                    <div class="sub">{{ 'regular.days' | transloco: { d: m.payroll.days } }}</div>
+                    <!-- 遡及の額は一段下に（横に並べると月の欄が広がる。11/18） -->
+                    @if (m.payroll.retro > 0) {
+                      <div class="sub">{{ 'regular.retro' | transloco: { n: yen(m.payroll.retro) } }}</div>
+                    }
                   } @else {
                     <a [routerLink]="['/o', context.current()?.id, 'payrolls', m.month]">
                       {{ 'regular.noRecord' | transloco }}
@@ -96,6 +97,7 @@
                   <div>{{ yen(r.average) }}</div>
                   @if (r.hasRetro) {
                     <div class="sub">{{ 'regular.corrected' | transloco }}</div>
+                    <div class="sub">{{ 'regular.correctedNote' | transloco }}</div>
                   }
                 } @else {
                   —

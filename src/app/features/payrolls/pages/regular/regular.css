@@ -114,6 +114,19 @@ td.num {
   font-weight: 600;
 }
 
+th.name-col {
+  width: 10em;
+}
+
+/* 氏名：幅を抑え、外国人の長い名前は語の切れ目（空白）で折り返す（11/18） */
+.name-box {
+  display: inline-block;
+  max-width: 10em;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+
 .badge {
   display: inline-block;
   margin-right: var(--space-xs);
@@ -234,7 +247,7 @@ button.link {
 }
 
 /* ===== 11/16：月の列を詰める・札を小さく ===== */
-/* 数字の列は中身の幅に縮める（余った幅は氏名と結果の列へ） */
+/* 数字の列は中身の幅に縮める（余った幅は右端の空の欄へ。11/18） */
 th.month,
 th.fit {
   width: 1%;

@@ -1691,7 +1691,8 @@
       "partialAcquisition": "※途中入社",
       "suspended": "※休職"
     },
-    "corrected": "修正平均（遡及分を除く）",
+    "corrected": "修正平均",
+    "correctedNote": "（遡及分を除く）",
     "grade": "{{h}}級 / {{p}}級",
     "change": {
       "up": "上がる",

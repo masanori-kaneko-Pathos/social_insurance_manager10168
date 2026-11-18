@@ -212,6 +212,15 @@ h2 {
   margin-top: 0;
 }
 
+/* 「固定的賃金の変動ではない（外す）」は表の下に全幅で（「反映する」と同じ class なので、右の列に入らないように。11/18） */
+.item > .actions.dismiss {
+  grid-column: 1 / -1;
+  grid-row: auto;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: var(--space-sm);
+}
+
 /* 狭い画面では今までどおり縦に */
 @media (max-width: 900px) {
   .item {
