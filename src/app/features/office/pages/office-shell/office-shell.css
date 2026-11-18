@@ -167,9 +167,28 @@
   max-width: calc(1080px + 140px);
 }
 
+/* ヘッダー：左（アプリ名・事業所）は縮んでよい、右（ベル・設定）は縮まない（狭い画面で重ならないように。11/18） */
+.header-left {
+  flex: 1 1 auto;
+}
+
+.header-right {
+  flex: none;
+}
+
 @media (max-width: 720px) {
   .shell-body {
     flex-direction: column;
+  }
+
+  /* 狭い画面ではアプリ名の文字を隠して、事業所の名前に幅を回す */
+  .app-home {
+    display: none;
+  }
+
+  .app-header {
+    padding: 0 var(--space-md);
+    gap: var(--space-sm);
   }
 
   .side-nav {

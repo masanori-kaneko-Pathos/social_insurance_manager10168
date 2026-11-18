@@ -1,13 +1,14 @@
 :host {
     position: relative;
     min-width: 0;
+    flex: 0 1 auto; /* ヘッダーが狭いときは縮む（名前は「…」で切る。11/18） */
   }
   
   .trigger {
     display: flex;
     align-items: center;
     gap: var(--space-xs);
-    max-width: 280px;
+    max-width: min(280px, 100%);
     height: 36px;
     padding: 0 var(--space-sm);
     font: inherit;
