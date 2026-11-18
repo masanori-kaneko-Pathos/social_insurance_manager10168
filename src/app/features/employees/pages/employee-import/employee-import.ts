@@ -24,6 +24,7 @@ import {
   employeeCsvTemplate,
   EmployeeCsvRead,
   ImportItem,
+  ImportWarning,
   ImportPlan,
   nextEmployeeNumber,
   planImport,
@@ -218,7 +219,6 @@ export class EmployeeImport {
       [h.birthDate],
       [h.hireDate, h.retireDate],
       [h.employmentType, h.payType, h.weeklyHours, h.monthlyDays],
-      [],
       [h.healthEnrolled, h.pensionEnrolled],
       [h.monthlyAmount, h.remunerationFrom],
       [h.leave1Kind, h.leave2Kind],
@@ -512,6 +512,17 @@ export class EmployeeImport {
   // ===== 表示 =====
   name(it: ImportItem): string {
     return `${it.employee.lastName} ${it.employee.firstName}`.trim();
+  }
+  /** 加入の欄：入る保険だけ（健保・厚年／健保／厚年） */
+  enrolledLabel(it: ImportItem): string {
+    const t = (k: string) => this.transloco.translate(`employeeCsv.ins.${k}`);
+    return [it.employee.health.enrolled ? t('health') : '', it.employee.pension.enrolled ? t('pension') : '']
+      .filter(Boolean)
+      .join('・');
+  }
+  /** 表に出す注意（「加入しない」は欄に書くので出さない。部署なしは部署の欄の「—」で分かるので出さない。11/18） */
+  shownWarnings(it: ImportItem): ImportWarning[] {
+    return it.warnings.filter((w) => w !== 'notInsured' && w !== 'unknownDepartment');
   }
   kana(it: ImportItem): string {
     return `${it.employee.lastNameKana ?? ''} ${it.employee.firstNameKana ?? ''}`.trim() || '—';
