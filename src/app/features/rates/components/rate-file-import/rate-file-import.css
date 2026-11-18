@@ -140,7 +140,8 @@
   padding-right: var(--space-md);
 }
 
-/* 右端の「確認」 */
+/* 右端の「詳細」（表の「左寄せ」より強く効かせて、赤い行の「詳細」と位置をそろえる。11/18） */
+.table td.act-col,
 .act-col {
   text-align: right;
   white-space: nowrap;
