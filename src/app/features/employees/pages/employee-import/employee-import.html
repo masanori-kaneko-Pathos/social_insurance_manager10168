@@ -190,15 +190,16 @@
               <tr>
                 <th class="pick-col"><input type="checkbox" [checked]="fix.allKept()" [disabled]="fix.busy()" (change)="fix.setAll($any($event.target).checked, pv.plan.items)" [attr.aria-label]="'importFix.keepAll' | transloco" /></th>
                 <th>{{ 'employeeCsv.col.line' | transloco }}</th>
-                <th>{{ 'employeeCsv.col.number' | transloco }}</th>
-                <th>{{ 'employeeCsv.col.name' | transloco }}</th>
-                <th>{{ 'employee.list.sort.dept' | transloco }}</th>
-                <th class="num">{{ 'employee.list.sort.age' | transloco }}</th>
-                <th>{{ 'employeeCsv.col.hire' | transloco }}</th>
-                <th>{{ 'employeeCsv.col.contract' | transloco }}</th>
-                <th>{{ 'employeeCsv.col.enrolled' | transloco }}</th>
-                <th>{{ 'employeeCsv.col.standard' | transloco }}</th>
-                <th>{{ 'employeeCsv.col.leaves' | transloco }}</th>
+                <th class="shrink">{{ 'employeeCsv.col.number' | transloco }}</th>
+                <!-- 欄は中身の幅まで縮め、余った幅は休業の欄へ。加入は「加入しない」が1行に入る幅（11/18） -->
+                <th class="shrink">{{ 'employeeCsv.col.name' | transloco }}</th>
+                <th class="shrink">{{ 'employee.list.sort.dept' | transloco }}</th>
+                <th class="num shrink">{{ 'employee.list.sort.age' | transloco }}</th>
+                <th class="shrink">{{ 'employeeCsv.col.hire' | transloco }}</th>
+                <th class="shrink">{{ 'employeeCsv.col.contract' | transloco }}</th>
+                <th class="enroll-col">{{ 'employeeCsv.col.enrolled' | transloco }}</th>
+                <th class="shrink">{{ 'employeeCsv.col.standard' | transloco }}</th>
+                <th class="num leaves-col">{{ 'employeeCsv.col.leaves' | transloco }}</th>
                 <th class="act-col"></th>
               </tr>
             </thead>

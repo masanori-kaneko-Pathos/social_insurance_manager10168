@@ -315,6 +315,24 @@ progress {
   white-space: normal;
 }
 
+/* 折り返した札が楕円にならないよう、角丸を小さく */
+.enroll-box .badge {
+  border-radius: var(--radius-sm);
+}
+
+/* 従業員の取り込み：中身の幅まで縮める欄と、休業の欄の最低の幅（11/18） */
+th.shrink {
+  width: 1%;
+}
+
+th.enroll-col {
+  width: 8em;
+}
+
+th.leaves-col {
+  min-width: 4em;
+}
+
 /* 右端の「詳細」 */
 .act-col {
   text-align: right;
