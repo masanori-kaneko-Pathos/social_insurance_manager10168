@@ -59,6 +59,9 @@
     />
 
     <div class="actions top">
+      @if (fix.notImported(pv.plan.rows); as n) {
+        <span class="skip-note">{{ 'importFix.notImported' | transloco: { n: n } }}</span>
+      }
       <button type="button" class="btn" [disabled]="saving()" (click)="clear()">{{ 'common.cancel' | transloco }}</button>
       <button type="button" class="btn btn-primary" [disabled]="!canImport()" (click)="importCsv()">
         {{ 'bonusCsv.import' | transloco: { people: peopleToWrite(), payments: writes().length } }}

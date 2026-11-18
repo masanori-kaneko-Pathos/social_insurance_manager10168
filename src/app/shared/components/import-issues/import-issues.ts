@@ -91,7 +91,8 @@ export class ImportIssues {
 
   /** 見出しのチェック：全部入れる／全部外す */
   setAll(on: boolean, rows: readonly { line: number }[]): void {
-    this.excluded.set(on ? new Set() : new Set(rows.map((r) => r.line)));
+    // 全部外すときは、問題の行にも外した印を付ける（直しても勝手に入らないように）
+    this.excluded.set(on ? new Set() : new Set([...rows.map((r) => r.line), ...this.issues().map((i) => i.line)]));
   }
 
   allKept(): boolean {
@@ -113,13 +114,29 @@ export class ImportIssues {
    * 親の表の行（読めた行）に、問題の行を行の番号の順に混ぜる
    * 読めた行に問題があれば issue も付ける。「問題の行だけ表示」のときは問題の行だけ
    */
-  withIssues<T extends { line: number }>(items: readonly T[]): IssueRow<T>[] {
+  withIssues<T extends { line: number }>(items: readonly T[], limit = Infinity): IssueRow<T>[] {
+    // 同じ材料なら前の結果を使う（表を描くたびに作り直さない。給与は数千行あるため。11/17）
+    const key = [items, this.issues(), this.onlyIssues(), limit] as const;
+    const memo = this.memo;
+    if (memo && memo.key.every((k, i) => k === key[i])) return memo.out as IssueRow<T>[];
     const rows = new Map<number, IssueRow<T>>();
-    for (const item of items) rows.set(item.line, { line: item.line, item, issue: this.issueOf(item.line) });
+    for (const item of items.slice(0, limit)) rows.set(item.line, { line: item.line, item, issue: this.issueOf(item.line) });
     for (const issue of this.issues()) if (!rows.has(issue.line)) rows.set(issue.line, { line: issue.line, item: null, issue });
-    const out = [...rows.values()].sort((a, b) => a.line - b.line);
-    return this.onlyIssues() ? out.filter((r) => r.issue) : out;
+    const all = [...rows.values()].sort((a, b) => a.line - b.line);
+    const out = this.onlyIssues() ? all.filter((r) => r.issue) : all;
+    this.memo = { key, out };
+    return out;
   }
+  private memo: { key: readonly unknown[]; out: unknown[] } | null = null;
+
+  /** 取り込まない行の数（外した行 ＋ 問題の行）。取り込むボタンの横に出す */
+  notImported(items: readonly { line: number }[]): number {
+    const lines = new Set([...items.map((i) => i.line), ...this.issues().map((i) => i.line)]);
+    let n = 0;
+    for (const l of lines) if (!this.kept(l)) n++;
+    return n;
+  }
+
 
   /** 開いている行と、窓の中の値 */
   readonly open = signal<ImportIssue | null>(null);

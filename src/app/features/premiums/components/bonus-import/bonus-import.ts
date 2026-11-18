@@ -88,7 +88,8 @@ export class BonusImport {
   readonly peopleToWrite = computed(() => this.writes().reduce((n, w) => n + w.count, 0));
   readonly count = computed(() => {
     const c = { new: 0, add: 0, update: 0, same: 0, error: 0 };
-    for (const r of this.rows()) c[r.status]++;
+    // チェックで外した行は数えない（取り込むボタンの数と合わせる。エラーはいつも数える）
+    for (const r of this.rows()) if (r.status === 'error' || this.kept(r.line)) c[r.status]++;
     return c;
   });
   readonly canImport = computed(

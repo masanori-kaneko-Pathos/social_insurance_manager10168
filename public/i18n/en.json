@@ -4103,7 +4103,8 @@
     "keep": "Import line {{line}}",
     "keepAll": "Import all rows",
     "notKept": "Not imported (has problems)",
-    "check": "Check"
+    "check": "Check",
+    "notImported": "{{n}} rows will not be imported (problems or unchecked)"
   },
   "special": {
     "title": "Special revision (medical care, childcare or nursing care)",

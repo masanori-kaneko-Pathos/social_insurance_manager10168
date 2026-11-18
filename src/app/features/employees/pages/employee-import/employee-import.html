@@ -167,7 +167,7 @@
         <h3>
           {{
             'employeeCsv.planTitle'
-              | transloco: { n: pv.plan.items.length, insured: insuredCount() }
+              | transloco: { n: importItems().length, insured: insuredCount() }
           }}
         </h3>
         @if (myNumberCount() > 0) {
@@ -175,6 +175,9 @@
         }
         <!-- 取り込むボタンは表の上にも（人数が多くても、下まで行かずに押せる。11/13） -->
         <div class="actions top">
+          @if (fix.notImported(pv.plan.items); as n) {
+            <span class="skip-note">{{ 'importFix.notImported' | transloco: { n: n } }}</span>
+          }
           <button type="button" class="btn" (click)="clear()" [disabled]="saving()">{{ 'common.cancel' | transloco }}</button>
           <button type="button" class="btn btn-primary" (click)="importCsv()" [disabled]="!canImport()">
             {{ 'employeeCsv.import' | transloco: { n: importItems().length } }}
@@ -189,6 +192,8 @@
                 <th>{{ 'employeeCsv.col.line' | transloco }}</th>
                 <th>{{ 'employeeCsv.col.number' | transloco }}</th>
                 <th>{{ 'employeeCsv.col.name' | transloco }}</th>
+                <th>{{ 'employee.list.sort.dept' | transloco }}</th>
+                <th class="num">{{ 'employee.list.sort.age' | transloco }}</th>
                 <th>{{ 'employeeCsv.col.hire' | transloco }}</th>
                 <th>{{ 'employeeCsv.col.contract' | transloco }}</th>
                 <th>{{ 'employeeCsv.col.category' | transloco }}</th>
@@ -205,7 +210,13 @@
                     <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line }" /></td>
                     <td class="num">{{ it.line }}</td>
                     <td class="mono">{{ it.employee.employeeNumber }}</td>
-                    <td>{{ name(it) }}</td>
+                    <!-- 氏名とカナ・部署・年齢（従業員の一覧と同じくらい。11/17） -->
+                    <td>
+                      {{ name(it) }}
+                      <br /><span class="sub">{{ kana(it) }}</span>
+                    </td>
+                    <td>{{ deptName(it) }}</td>
+                    <td class="num">{{ age(it) }}</td>
                     <td class="mono">
                       {{ it.employee.hireDate }}
                       @if (it.employee.retireDate) {
@@ -221,12 +232,15 @@
                         <br /><span class="sub">〜{{ it.contract.periodEnd }}</span>
                       }
                     </td>
-                    <td>
-                      <!-- 区分は名前だけ（理由は、名前に重ねると出る。表を横に詰めるため。11/17） -->
+                    <td class="category">
                       @let p = reasonParams(it.classification);
-                      <strong [attr.title]="(it.classification.below ? ('contract.below.' + it.classification.below | transloco: p) + ' ' : '') + ('contract.reason.' + it.classification.reason | transloco: p)">{{
-                        'contract.category.' + it.classification.category | transloco
-                      }}</strong>
+                      <strong>{{ 'contract.category.' + it.classification.category | transloco }}</strong>
+                      <span class="reason">
+                        @if (it.classification.below) {
+                          {{ 'contract.below.' + it.classification.below | transloco: p }}
+                        }
+                        {{ 'contract.reason.' + it.classification.reason | transloco: p }}
+                      </span>
                     </td>
                     <td>
                       {{ 'employeeCsv.ins.health' | transloco }}

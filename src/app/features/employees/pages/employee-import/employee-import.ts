@@ -14,7 +14,7 @@ import { EmployeeImportService } from '../../employee-import.service';
 import { PasswordGate } from '../../../my-number/components/password-gate/password-gate';
 import { myNumberReason, MyNumberService } from '../../../my-number/my-number.service';
 import { MyNumberImportRead, myNumberCsv, readMyNumberTable } from '../../../my-number/logic/my-number-csv';
-import { todayLocal } from '../../../../shared/utils/date';
+import { ageAt, todayLocal } from '../../../../shared/utils/date';
 import {
   CsvRowError,
   EMPLOYEE_CSV_HEADERS,
@@ -213,7 +213,9 @@ export class EmployeeImport {
     const h = EMPLOYEE_CSV_HEADERS;
     return [
       [h.employeeNumber],
-      [h.lastName, h.firstName],
+      [h.lastName, h.firstName, h.lastNameKana, h.firstNameKana],
+      [h.department],
+      [h.birthDate],
       [h.hireDate, h.retireDate],
       [h.employmentType, h.payType, h.weeklyHours, h.monthlyDays],
       [],
@@ -314,9 +316,7 @@ export class EmployeeImport {
   readonly noStandard = computed(() => !this.context.current()?.standardHours);
   readonly insuredCount = computed(
     () =>
-      this.preview()?.plan.items.filter(
-        (i) => i.employee.health.enrolled || i.employee.pension.enrolled,
-      ).length ?? 0,
+      this.importItems().filter((i) => i.employee.health.enrolled || i.employee.pension.enrolled).length,
   );
 
   downloadTemplate(): void {
@@ -512,6 +512,17 @@ export class EmployeeImport {
   // ===== 表示 =====
   name(it: ImportItem): string {
     return `${it.employee.lastName} ${it.employee.firstName}`.trim();
+  }
+  kana(it: ImportItem): string {
+    return `${it.employee.lastNameKana ?? ''} ${it.employee.firstNameKana ?? ''}`.trim() || '—';
+  }
+  /** 部署の名前（事業所の設定の部署に結べた人だけ） */
+  deptName(it: ImportItem): string {
+    const id = it.employee.org?.departmentId;
+    return (id && this.context.current()?.departments?.find((d) => d.id === id)?.name) || '—';
+  }
+  age(it: ImportItem): string {
+    return it.employee.birthDate ? String(ageAt(it.employee.birthDate, todayLocal())) : '—';
   }
   hours(it: ImportItem): string {
     const m = it.contract.weeklyMinutes;

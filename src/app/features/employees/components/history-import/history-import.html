@@ -69,6 +69,9 @@
     />
 
     <div class="actions top">
+      @if (fix.notImported(pv.plan.items); as n) {
+        <span class="skip-note">{{ 'importFix.notImported' | transloco: { n: n } }}</span>
+      }
       <button type="button" class="btn" (click)="clear()" [disabled]="saving()">{{ 'common.cancel' | transloco }}</button>
       <button type="button" class="btn btn-primary" (click)="importCsv()" [disabled]="!canImport()">
         {{ 'historyCsv.import' | transloco: { n: importItems().length } }}
@@ -87,7 +90,7 @@
     }
 
     @if (pv.plan.items.length > 0 || fix.issues().length > 0) {
-      <h3>{{ 'historyCsv.planTitle.' + kind() | transloco: { n: pv.plan.items.length } }}</h3>
+      <h3>{{ 'historyCsv.planTitle.' + kind() | transloco: { n: importItems().length } }}</h3>
       <p class="sub">{{ 'historyCsv.planNote' | transloco }}</p>
       <div class="table-wrap scroll">
         <table class="table">

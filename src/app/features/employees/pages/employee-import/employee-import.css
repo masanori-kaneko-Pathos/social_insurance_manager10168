@@ -280,3 +280,24 @@ progress {
   text-align: right;
   white-space: nowrap;
 }
+
+/* 取り込むボタンの横：取り込まない行の数（11/17） */
+.skip-note {
+  align-self: center;
+  margin-right: auto;
+  font-size: var(--font-sm);
+  color: var(--color-danger-text);
+}
+
+/* 区分：名前と理由（理由は折り返す。横に詰めるため、この欄だけ幅を決める。11/17） */
+.table-wrap table td.category {
+  white-space: normal;
+  min-width: 14em;
+  max-width: 22em;
+}
+
+.category .reason {
+  display: block;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}

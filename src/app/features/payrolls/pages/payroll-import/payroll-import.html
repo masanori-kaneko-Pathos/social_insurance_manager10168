@@ -107,8 +107,8 @@
           <p class="sub">{{ 'payrollCsv.import.columnsHint' | transloco: { cols: headersJa } }}</p>
         } @else {
           <div class="counts">
-            <span>{{ 'payrollCsv.count.created' | transloco: { n: pv.created.length } }}</span>
-            <span>{{ 'payrollCsv.count.updated' | transloco: { n: pv.updated.length } }}</span>
+            <span>{{ 'payrollCsv.count.created' | transloco: { n: createdCount() } }}</span>
+            <span>{{ 'payrollCsv.count.updated' | transloco: { n: updatedCount() } }}</span>
             <span class="sub">{{ 'payrollCsv.count.unchanged' | transloco: { n: pv.unchanged.length } }}</span>
             @if (pv.read.unfilledLines > 0) {
               <span class="sub">{{ 'payrollCsv.count.unfilled' | transloco: { n: pv.read.unfilledLines } }}</span>
@@ -155,6 +155,9 @@
             />
 
             <div class="actions top">
+              @if (fix.notImported(allWrites()); as n) {
+                <span class="skip-note">{{ 'importFix.notImported' | transloco: { n: n } }}</span>
+              }
               <button type="button" class="btn" (click)="clear()" [disabled]="saving()">
                 {{ 'common.cancel' | transloco }}
               </button>
@@ -179,7 +182,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  @for (x of fix.withIssues(allWrites().slice(0, showItems)); track x.line) {
+                  @for (x of fix.withIssues(allWrites(), showItems); track x.line) {
                     @if (x.item; as it) {
                       <tr [class.has-issue]="!!x.issue">
                         <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line }" /></td>

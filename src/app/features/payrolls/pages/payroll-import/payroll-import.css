@@ -303,3 +303,11 @@ td.mono {
   text-align: right;
   white-space: nowrap;
 }
+
+/* 取り込むボタンの横：取り込まない行の数（11/17） */
+.skip-note {
+  align-self: center;
+  margin-right: auto;
+  font-size: var(--font-sm);
+  color: var(--color-danger-text);
+}
