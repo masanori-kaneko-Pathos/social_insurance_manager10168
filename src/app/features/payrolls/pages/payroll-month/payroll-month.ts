@@ -169,6 +169,15 @@ export class PayrollMonth {
     v.form.controls.inKind.setValue(String(yen));
     v.form.markAsDirty();
     this.inKindFor.set(null);
+    this.inKindPicking.set(false);
+  }
+
+  /** 表の上の「価額表で計算」：入れる人を選ぶ欄を出しているか（11/18） */
+  readonly inKindPicking = signal(false);
+  pickInKind(employeeId: string): void {
+    const v = this.views().find((x) => x.employee.id === employeeId);
+    if (v) this.openInKind(v);
+    else this.inKindFor.set(null);
   }
 
   // ===== 探す・絞る・並べる・ページ（1000人を縦に並べない。11/12） =====
@@ -238,6 +247,7 @@ export class PayrollMonth {
     }
     this.month.set(month);
     this.inKindFor.set(null);
+    this.inKindPicking.set(false);
     try {
       this.employees ??= await this.employeesApi.list(office.id);
       const employees = this.employees;

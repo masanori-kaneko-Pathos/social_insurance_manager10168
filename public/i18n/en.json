@@ -2821,7 +2821,9 @@
     "movedIn": "Move-in date",
     "movedInHint": "Prorated: monthly value × days from move-in ÷ days in the month.",
     "changePrefecture": "Change",
-    "dispatchedHint": "For dispatched workers, the value is calculated for the prefecture of the dispatching office (this office), not the actual workplace (Japan Pension Service Q&A on in-kind remuneration)."
+    "dispatchedHint": "For dispatched workers, the value is calculated for the prefecture of the dispatching office (this office), not the actual workplace (Japan Pension Service Q&A on in-kind remuneration).",
+    "pickPerson": "Person",
+    "pickNone": "Choose a person"
   },
   "invite": {
     "accept": {

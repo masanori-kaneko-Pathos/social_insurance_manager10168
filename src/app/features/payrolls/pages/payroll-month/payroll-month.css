@@ -181,7 +181,21 @@ col.c-money {
 }
 
 col.c-inkind {
-  width: 14em; /* 入力欄と「価額表で計算」ボタン */
+  width: 7.5em; /* 入力欄だけ（計算のボタンは表の上。11/18） */
+}
+
+/* 現物給与の計算で、入れる人を選ぶ欄（表の上。11/18） */
+.in-kind-pick {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-sm);
+}
+
+.in-kind-pick .input {
+  width: auto;
+  min-width: 16em;
 }
 
 col.c-state {

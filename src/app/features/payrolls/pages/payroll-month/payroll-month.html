@@ -52,8 +52,26 @@
     <a [routerLink]="[]" [queryParams]="{ all: showAll() ? null : 1 }" queryParamsHandling="merge">
       {{ (showAll() ? 'payroll.showBasic' : 'payroll.showAll') | transloco }}
     </a>
+    <!-- 現物給与の計算は表の上に1つだけ（行ごとのボタンは置かない。窓の中で入れる人を選ぶ。11/18） -->
+    @if (showAll() && context.isAdmin()) {
+      <button type="button" class="btn btn-small" [title]="'inKind.openTitle' | transloco" (click)="inKindPicking.set(!inKindPicking())">
+        {{ 'inKind.open' | transloco }}
+      </button>
+    }
   </div>
 
+  <!-- 現物給与の計算：入れる人を選ぶ（表の上のボタンから。11/18） -->
+  @if (inKindPicking()) {
+    <label class="in-kind-pick">
+      <span>{{ 'inKind.pickPerson' | transloco }}</span>
+      <select class="input" [value]="inKindFor()?.employee?.id ?? ''" (change)="pickInKind($any($event.target).value)">
+        <option value="">{{ 'inKind.pickNone' | transloco }}</option>
+        @for (x of filtered(); track x.employee.id) {
+          <option [value]="x.employee.id">{{ x.employee.employeeNumber ? x.employee.employeeNumber + '　' : '' }}{{ x.employee.lastName }} {{ x.employee.firstName }}</option>
+        }
+      </select>
+    </label>
+  }
   <!-- 現物給与の計算（1人分。「この額を入れる」で現物の欄に入る） -->
   @if (inKindFor(); as v) {
     <app-in-kind-calculator
@@ -63,7 +81,7 @@
       [employeeName]="v.employee.lastName + ' ' + v.employee.firstName"
       [dispatched]="inKindDispatched()"
       (apply)="applyInKind(v, $event)"
-      (closed)="inKindFor.set(null)"
+      (closed)="inKindFor.set(null); inKindPicking.set(false)"
     />
   }
 
@@ -216,16 +234,6 @@
                     }
                   } @else {
                     <input class="input num w-money" formControlName="inKind" inputmode="numeric" />
-                  }
-                  @if (context.isAdmin()) {
-                    <button
-                      type="button"
-                      class="btn btn-small"
-                      (click)="openInKind(v)"
-                      [title]="'inKind.openTitle' | transloco"
-                    >
-                      {{ 'inKind.open' | transloco }}
-                    </button>
                   }
                 </div>
               </td>
