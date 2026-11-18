@@ -187,27 +187,13 @@ table.fixed-cols {
   min-width: 65em;
 }
 
-col.c-number {
-  width: 6em;
-}
-col.c-name {
-  width: 10em;
-}
-col.c-standard {
-  width: 9.4em;
-}
-col.c-yen {
-  width: 6.3em;
-}
-col.c-yen-wide {
-  width: 7.4em;
-}
-col.c-employer {
-  width: 7.4em;
-}
-col.c-calc {
-  width: 4.8em;
-}
+col.c-number { width: 6em; }
+col.c-name { width: 10em; }
+col.c-standard { width: 9.4em; }
+col.c-yen { width: 6.3em; }
+col.c-yen-wide { width: 7.4em; }
+col.c-employer { width: 7.4em; }
+col.c-calc { width: 4.8em; }
 
 /* 見出しは決めた幅の中で折り返してよい。ただし語の途中では切らない（「会社負担／（目安）」で折る。11/18） */
 thead th {
@@ -284,6 +270,7 @@ td.calc .link-btn {
   border-radius: var(--radius-sm);
 }
 
+/* 今月の変わり目（介護開始・新規など）：随時改定と同じ薄いオレンジ（「変わったので見てほしい」の色。11/18 に濃いオレンジから） */
 .badge-change {
   background: var(--color-highlight);
   color: var(--color-text);
@@ -550,6 +537,7 @@ details.totals {
 .strip-item.main strong {
   font-size: var(--font-lg);
 }
+
 
 details.totals > :not(summary) {
   margin-left: var(--space-lg);

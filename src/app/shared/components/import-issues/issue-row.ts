@@ -24,7 +24,7 @@ function normLine(l: IssueLine): { hs: readonly string[]; sep: string; pre: stri
 /**
  * 表の中の問題の行（11/17）：<tr app-issue-row [issue]="…" [fix]="fix" [cols]="表の列ごとの見出し">
  * 取り込んだときと同じ列に、ファイルに書いてあった値を並べる（問題の値は赤く太く）。説明は「詳細」の窓で読む
- * 表にない列の問題（セイ・マイナンバーなど）は、最後の欄に「セイ：やまだ」と出す
+ * 表にない列の問題（ローマ字・マイナンバーなど）は札を出さない。赤い行で値の赤字がないことが「詳細」を開く合図になる（11/18）
  * cols を渡さない表では、行の中身と説明を1つの欄にまとめて出す（span は真ん中の欄の列の数）
  */
 @Component({
@@ -34,7 +34,7 @@ function normLine(l: IssueLine): { hs: readonly string[]; sep: string; pre: stri
     <td class="pick-col"><input type="checkbox" disabled [attr.aria-label]="'importFix.notKept' | transloco" /></td>
     <td class="num">{{ issue().line }}</td>
     @if (cells().length > 0) {
-      @for (c of cells(); track $index; let last = $last) {
+      @for (c of cells(); track $index) {
         <td class="val">
           @for (ln of c; track $index) {
             <span class="cell-line"
@@ -42,11 +42,6 @@ function normLine(l: IssueLine): { hs: readonly string[]; sep: string; pre: stri
             >
           } @empty {
             —
-          }
-          @if (last) {
-            @for (v of extra(); track v.header) {
-              <span class="issue-value">{{ v.header }}：<b>{{ v.value || ('importFix.blank' | transloco) }}</b></span>
-            }
           }
         </td>
       }
@@ -106,10 +101,15 @@ function normLine(l: IssueLine): { hs: readonly string[]; sep: string; pre: stri
       display: block;
       font-weight: 600;
     }
+    /* 1つの欄にまとめる表（扶養家族など）：文は欄の中で折り返し、札は1枚ずつ改行（11/18） */
+    td.issue-cell {
+      white-space: normal;
+    }
     .issue-values {
       display: flex;
-      flex-wrap: wrap;
-      gap: 2px var(--space-sm);
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
       margin: 2px 0;
     }
     .issue-value {
@@ -150,11 +150,4 @@ export class IssueRow {
     ),
   );
 
-  /** 表の列にない問題（最後の欄に「セイ：やまだ」と出す） */
-  readonly extra = computed(() => {
-    const shown = this.cols().flatMap((lines) => lines.flatMap((l) => normLine(l).hs));
-    return this.issue()
-      .headers.filter((h) => !shown.some((s) => headerKey(s) === headerKey(h)))
-      .map((h) => ({ header: h, value: this.fix().valueOf(this.rec(), h) }));
-  });
 }

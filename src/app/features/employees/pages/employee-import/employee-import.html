@@ -231,14 +231,16 @@
                     <!-- 加入：入る保険だけ書く（入らなければ「加入しない」）。区分の名前と理由は出さず、重ねると出す。11/18 -->
                     @let p = reasonParams(it.classification);
                     <td [attr.title]="(it.classification.below ? ('contract.below.' + it.classification.below | transloco: p) + ' ' : '') + ('contract.reason.' + it.classification.reason | transloco: p)">
-                      @if (it.employee.health.enrolled || it.employee.pension.enrolled) {
-                        {{ enrolledLabel(it) }}
-                      } @else {
-                        <span class="sub">{{ 'employeeCsv.warning.notInsured' | transloco }}</span>
-                      }
-                      @for (w of shownWarnings(it); track w) {
-                        <br /><span class="badge">{{ 'employeeCsv.warning.' + w | transloco: { number: it.sameAs ?? '' } }}</span>
-                      }
+                      <div class="enroll-box">
+                        @if (it.employee.health.enrolled || it.employee.pension.enrolled) {
+                          {{ enrolledLabel(it) }}
+                        } @else {
+                          <span class="sub">{{ 'employeeCsv.warning.notInsured' | transloco }}</span>
+                        }
+                        @for (w of shownWarnings(it); track w) {
+                          <br /><span class="badge">{{ 'employeeCsv.warning.' + w | transloco: { number: it.sameAs ?? '' } }}</span>
+                        }
+                      </div>
                     </td>
                     <td class="mono">
                       @if (it.remuneration; as r) {

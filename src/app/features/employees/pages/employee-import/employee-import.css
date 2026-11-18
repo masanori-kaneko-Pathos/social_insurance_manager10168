@@ -284,6 +284,25 @@ progress {
   overflow-wrap: normal;
 }
 
+/* 扶養家族の取り込みの結果：札は1枚ずつ改行し、長い文は欄の中で折り返す（11/18） */
+.table-wrap table td.result-col {
+  white-space: normal;
+}
+
+.result-col .badge {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 2px 0;
+  white-space: normal;
+}
+
+/* 従業員の取り込みの「加入」：札（同じ人がいる、など）は折り返し、欄を広げすぎない（11/18） */
+.enroll-box {
+  max-width: 9em;
+  white-space: normal;
+}
+
 /* 右端の「詳細」 */
 .act-col {
   text-align: right;

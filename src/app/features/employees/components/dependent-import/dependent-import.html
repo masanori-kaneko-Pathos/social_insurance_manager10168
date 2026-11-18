@@ -68,7 +68,17 @@
       </button>
     </div>
     <div class="table-wrap scroll">
-      <table class="table">
+      <!-- 欄の幅を固定し、横にスクロールしなくても右端の「詳細」が押せるようにする（結果の札は折り返す。11/18） -->
+      <table class="table fixed-cols">
+        <colgroup>
+          <col class="cw-check" />
+          <col class="cw-short" />
+          <col class="cw-number" />
+          <col class="cw-name" />
+          <col class="cw-name" />
+          <col />
+          <col class="cw-short" />
+        </colgroup>
         <thead>
           <tr>
             <th class="pick-col"><input type="checkbox" [checked]="fix.allKept()" [disabled]="fix.busy()" (change)="fix.setAll($any($event.target).checked, pv.rows)" [attr.aria-label]="'importFix.keepAll' | transloco" /></th>
@@ -92,7 +102,7 @@
                   {{ r.name || '—' }}
                   @if (r.relationship) { <span class="sub">（{{ 'dependent.relationship.' + r.relationship | transloco }}）</span> }
                 </td>
-                <td>
+                <td class="result-col">
                   @if (r.errors.length > 0) {
                     @for (e of r.errors; track $index) {
                       @let t = errorText(e);
