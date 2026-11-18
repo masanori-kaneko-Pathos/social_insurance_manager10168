@@ -46,7 +46,7 @@ import { PersonDiff, samePersonDiffs } from '../../logic/employee-csv';
 import type { Employee } from '../../../../core/models/employee';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { EMPLOYEE_FIX_FIELDS } from '../../logic/import-fix-fields';
-import { IssueRow } from '../../../../shared/components/import-issues/issue-row';
+import { IssueCol, IssueRow } from '../../../../shared/components/import-issues/issue-row';
 import { ImportSteps } from '../../../../shared/components/import-steps/import-steps';
 
 /**
@@ -209,19 +209,19 @@ export class EmployeeImport {
   private kept(line: number): boolean {
     return !(this.fixRef()?.excluded().has(line) ?? false);
   }
-  /** 問題の行：表の列ごとに、ファイルのどの列の値を出すか（取り込んだときと同じ並び。11/17） */
-  readonly issueCols: readonly (readonly string[])[] = (() => {
+  /** 問題の行：表の列ごとに、ファイルのどの列の値を出すか（取り込んだときと同じ並び・同じ書き方。11/18） */
+  readonly issueCols: readonly IssueCol[] = (() => {
     const h = EMPLOYEE_CSV_HEADERS;
     return [
       [h.employeeNumber],
-      [h.lastName, h.firstName, h.lastNameKana, h.firstNameKana],
+      [[h.lastName, h.firstName], [h.lastNameKana, h.firstNameKana]],
       [h.department],
       [h.birthDate],
-      [h.hireDate, h.retireDate],
-      [h.employmentType, h.payType, h.weeklyHours, h.monthlyDays],
-      [h.healthEnrolled, h.pensionEnrolled],
-      [h.monthlyAmount, h.remunerationFrom],
-      [h.leave1Kind, h.leave2Kind],
+      [h.hireDate, { hs: [h.retireDate], pre: '〜' }],
+      [{ hs: [h.employmentType, h.payType], sep: '・' }, { hs: [h.weeklyHours, h.monthlyDays], sep: '／' }],
+      [{ hs: [h.healthEnrolled, h.pensionEnrolled], sep: '・' }],
+      [h.remunerationFrom, h.monthlyAmount],
+      [[h.leave1Kind, h.leave2Kind]],
     ];
   })();
   /** 取り込む人（チェックの入った行） */

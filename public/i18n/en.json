@@ -1816,7 +1816,7 @@
       "updated": "{{n}} overwrite",
       "unchanged": "{{n}} unchanged",
       "unfilled": "{{n}} blank rows skipped",
-      "errors": "{{n}} rows with problems"
+      "errors": "{{n}} rows with errors"
     },
     "line": "Row",
     "problem": "Problem",
@@ -1836,7 +1836,7 @@
     "hint": {
       "columns": "Columns are read by header name (any order; unknown columns are ignored). Required: employee number, month paid, paid in money, fixed wages, payment basis days. Rows without an employee number are matched by name.",
       "excel": "CSV files saved by Excel (Shift_JIS) can be read as is, including months Excel turned into dates like 2026/10/1 and employee numbers that lost leading zeros.",
-      "allOrNothing": "If some rows have problems, fix them here or choose \"Import without error rows\". Saving is done in batches of 500."
+      "allOrNothing": "Fix rows with errors here, or import with them left unchecked (only those rows are skipped). Saving is done in batches of 500."
     },
     "error": {
       "load": "Could not load employees or payroll records.",
@@ -4086,25 +4086,25 @@
   },
   "importFix": {
     "fix": "Fix",
-    "banner": "{{n}} rows have problems and are unchecked, so they will not be imported. Use \"Check\" on a red row to fix and include it.",
+    "banner": "{{n}} rows have errors and are unchecked, so they will not be imported. Use \"Details\" on a red row to fix and include it.",
     "line": "Line",
     "content": "Content",
-    "problem": "Problem",
+    "problem": "Error",
     "dialogTitle": "Line {{line}}",
     "otherColumns": "Other columns ({{n}})",
     "neighbors": "Other rows with the same employee number ({{n}})",
     "apply": "Fix",
     "useNumber": "Use the free number {{n}}",
     "byName": "From the name: is this {{name}} ({{n}})?",
-    "unknownEmployee": "If the employee number is mistyped, correct it. If the employee is not registered yet, register them first, or leave this row out with \"Import without the rows with errors\".",
+    "unknownEmployee": "If the employee number is mistyped, correct it. If the employee is not registered yet, register them first. If you import as is, only this row is left out.",
     "blank": "(empty)",
     "fileValue": "Value in the file: {{v}}",
-    "onlyIssues": "Show only rows with problems",
+    "onlyIssues": "Show only rows with errors",
     "keep": "Import line {{line}}",
     "keepAll": "Import all rows",
-    "notKept": "Not imported (has problems)",
-    "check": "Check",
-    "notImported": "{{n}} rows will not be imported (problems or unchecked)"
+    "notKept": "Has errors, so it will not be imported",
+    "check": "Details",
+    "notImported": "{{n}} rows will not be imported (errors or unchecked)"
   },
   "special": {
     "title": "Special revision (medical care, childcare or nursing care)",

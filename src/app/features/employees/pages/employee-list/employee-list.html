@@ -164,7 +164,20 @@
   } @else {
     <app-pager class="pager-top" variant="top" [total]="filtered().length" [page]="page()" [size]="pageSize()" (resized)="setPer($event)" />
     <div class="card table-wrap">
-      <table>
+      <table class="fixed-cols">
+        <!-- 欄の幅を固定する（並び替えでページの人が入れ替わっても、幅が動かないように。氏名は残りの幅。11/18） -->
+        <colgroup>
+          <col class="c-number" />
+          <col />
+          <col class="c-dept" />
+          <col class="c-employment" />
+          <col class="c-age" />
+          <col class="c-hire" />
+          <col class="c-ins" />
+          @if (context.isAdmin()) {
+            <col class="c-edit" />
+          }
+        </colgroup>
         <thead>
           <tr>
             <!-- 見出しを押すと並び替え（もう一度押すと逆順） -->
@@ -221,7 +234,7 @@
                   </span>
                 </span>
               </td>
-              <td>
+              <td class="wrap">
                 {{ deptName(e) ?? '—' }}
                 @if (e.org?.position; as pos) { <span class="person-kana">{{ pos }}</span> }
               </td>
@@ -237,7 +250,7 @@
               </td>
               <td class="num">{{ age(e) }}</td>
               <td class="mono">{{ e.hireDate }}</td>
-              <td>
+              <td class="wrap">
                 @if (e.health.enrolled) { <span class="badge">{{ 'employee.badge.health' | transloco }}</span> }
                 @if (e.pension.enrolled) { <span class="badge">{{ 'employee.badge.pension' | transloco }}</span> }
                 @if (isRetired(e)) { <span class="badge badge-muted">{{ 'employee.status.retired' | transloco }}</span> }

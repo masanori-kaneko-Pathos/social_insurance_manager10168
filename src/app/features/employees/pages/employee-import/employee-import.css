@@ -275,7 +275,16 @@ progress {
   padding-right: var(--space-md);
 }
 
-/* 右端の「確認」 */
+/* 氏名：幅を抑え、外国人の長い名前は語の切れ目（空白）で折り返す。名前の途中では切らない（11/18） */
+.name-box {
+  display: block;
+  max-width: 11em;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+
+/* 右端の「詳細」 */
 .act-col {
   text-align: right;
   white-space: nowrap;

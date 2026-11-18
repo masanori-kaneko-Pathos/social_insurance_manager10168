@@ -209,10 +209,10 @@
                     <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line }" /></td>
                     <td class="num">{{ it.line }}</td>
                     <td class="mono">{{ it.employee.employeeNumber }}</td>
-                    <!-- 氏名とカナ・部署・年齢（従業員の一覧と同じくらい。11/17） -->
+                    <!-- 氏名とカナ・部署・年齢（従業員の一覧と同じくらい。11/17）。長い名前は語の切れ目で折り返す（11/18） -->
                     <td>
-                      {{ name(it) }}
-                      <br /><span class="sub">{{ kana(it) }}</span>
+                      <span class="name-box">{{ name(it) }}</span>
+                      <span class="name-box sub">{{ kana(it) }}</span>
                     </td>
                     <td>{{ deptName(it) }}</td>
                     <td class="num">{{ age(it) }}</td>

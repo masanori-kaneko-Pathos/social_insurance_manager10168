@@ -5,8 +5,25 @@ import { rowRecord } from '../../import/row-fix';
 import { ImportIssue, ImportIssues } from './import-issues';
 
 /**
+ * 問題の行の1つの欄の、1行分（11/18）
+ * - 'セイ'：その列の値だけで1行
+ * - ['セイ', 'メイ']：空白でつないで1行（「森 真由美」）
+ * - { hs, sep, pre }：sep でつなぎ、頭に pre を付ける（「正社員・月給」「〜2026-09-30」）
+ */
+export type IssueLine = string | readonly string[] | { readonly hs: readonly string[]; readonly sep?: string; readonly pre?: string };
+/** 問題の行の1つの欄（上から順に行を並べる） */
+export type IssueCol = readonly IssueLine[];
+
+function normLine(l: IssueLine): { hs: readonly string[]; sep: string; pre: string } {
+  if (typeof l === 'string') return { hs: [l], sep: ' ', pre: '' };
+  if (Array.isArray(l)) return { hs: l as readonly string[], sep: ' ', pre: '' };
+  const o = l as Exclude<IssueLine, string | readonly string[]>;
+  return { hs: o.hs, sep: o.sep ?? ' ', pre: o.pre ?? '' };
+}
+
+/**
  * 表の中の問題の行（11/17）：<tr app-issue-row [issue]="…" [fix]="fix" [cols]="表の列ごとの見出し">
- * 取り込んだときと同じ列に、ファイルに書いてあった値を並べる（問題の値は赤く太く）。説明は「直す」の窓で読む
+ * 取り込んだときと同じ列に、ファイルに書いてあった値を並べる（問題の値は赤く太く）。説明は「詳細」の窓で読む
  * 表にない列の問題（セイ・マイナンバーなど）は、最後の欄に「セイ：やまだ」と出す
  * cols を渡さない表では、行の中身と説明を1つの欄にまとめて出す（span は真ん中の欄の列の数）
  */
@@ -18,9 +35,11 @@ import { ImportIssue, ImportIssues } from './import-issues';
     <td class="num">{{ issue().line }}</td>
     @if (cells().length > 0) {
       @for (c of cells(); track $index; let last = $last) {
-        <td>
-          @for (v of c; track v.header) {
-            <span class="cell-value" [class.bad]="v.bad">{{ v.value || ('importFix.blank' | transloco) }}</span>
+        <td class="val">
+          @for (ln of c; track $index) {
+            <span class="cell-line"
+              >{{ ln.pre }}@for (v of ln.parts; track v.header; let first = $first) {@if (!first) {<span>{{ ln.sep }}</span>}<span [class.bad]="v.bad">{{ v.value || ('importFix.blank' | transloco) }}</span>}</span
+            >
           } @empty {
             —
           }
@@ -54,25 +73,32 @@ import { ImportIssue, ImportIssues } from './import-issues';
   `,
   host: { class: 'issue-row' },
   styles: `
+    /* 表の欄の決まり（余白・線・折り返さない）は、取り込みのページの CSS からは届かないので、ここにも書く（11/18） */
     :host td {
+      padding: var(--space-xs) var(--space-sm);
+      border-bottom: 1px solid var(--color-border);
+      text-align: left;
       background: var(--color-danger-bg, #fdeceb);
       vertical-align: top;
+    }
+    td.val {
+      white-space: nowrap;
     }
     .pick-col {
       width: 2.2em;
       text-align: center;
     }
-    .cell-value {
+    .cell-line {
       display: block;
     }
-    .cell-value.bad {
+    .cell-line .bad {
       color: var(--color-danger-text);
       font-weight: 700;
     }
     td.num {
       padding-right: var(--space-md);
     }
-    .act-col {
+    td.act-col {
       text-align: right;
       white-space: nowrap;
     }
@@ -101,7 +127,7 @@ export class IssueRow {
   readonly issue = input.required<ImportIssue>();
   readonly fix = input.required<ImportIssues>();
   /** 表の列（行の番号のあと）ごとに、ファイルのどの見出しの値を出すか */
-  readonly cols = input<readonly (readonly string[])[]>([]);
+  readonly cols = input<readonly IssueCol[]>([]);
   /** cols がないとき：真ん中の欄の列の数 */
   readonly span = input(1);
 
@@ -111,16 +137,22 @@ export class IssueRow {
   }
 
   readonly cells = computed(() =>
-    this.cols().map((hs) =>
-      hs
-        .map((h) => ({ header: h, value: this.fix().valueOf(this.rec(), h), bad: this.isBad(h) }))
-        .filter((v) => v.value !== '' || v.bad),
+    this.cols().map((lines) =>
+      lines
+        .map((l) => {
+          const ln = normLine(l);
+          const parts = ln.hs
+            .map((h) => ({ header: h, value: this.fix().valueOf(this.rec(), h), bad: this.isBad(h) }))
+            .filter((v) => v.value !== '' || v.bad);
+          return { parts, sep: ln.sep, pre: ln.pre };
+        })
+        .filter((ln) => ln.parts.length > 0),
     ),
   );
 
   /** 表の列にない問題（最後の欄に「セイ：やまだ」と出す） */
   readonly extra = computed(() => {
-    const shown = this.cols().flat();
+    const shown = this.cols().flatMap((lines) => lines.flatMap((l) => normLine(l).hs));
     return this.issue()
       .headers.filter((h) => !shown.some((s) => headerKey(s) === headerKey(h)))
       .map((h) => ({ header: h, value: this.fix().valueOf(this.rec(), h) }));

@@ -96,6 +96,44 @@
     background: var(--color-bg);
   }
   
+  /* 欄の幅を固定（並び替えで幅が動かないように。氏名は残りの幅。11/18） */
+  table.fixed-cols {
+    table-layout: fixed;
+    min-width: 68em;
+  }
+
+  col.c-number {
+    width: 7em;
+  }
+
+  col.c-dept {
+    width: 9.5em;
+  }
+
+  col.c-employment {
+    width: 7.5em;
+  }
+
+  col.c-age {
+    width: 5em;
+  }
+
+  col.c-hire {
+    width: 8em;
+  }
+
+  col.c-ins {
+    width: 15em;
+  }
+
+  col.c-edit {
+    width: 4.5em;
+  }
+
+  td.wrap {
+    white-space: normal;
+  }
+
   tbody tr:last-child td {
     border-bottom: 0;
   }
