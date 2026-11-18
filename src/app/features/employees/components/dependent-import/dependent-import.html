@@ -98,7 +98,7 @@
                 <td class="num">{{ r.line }}</td>
                 <td class="emp-no">{{ r.employee?.employeeNumber ?? '—' }}</td>
                 <td>@if (r.employee; as e) { <app-person-name [person]="e" /> } @else { — }</td>
-                <td>
+                <td class="dep-col">
                   {{ r.name || '—' }}
                   @if (r.relationship) { <span class="sub">（{{ 'dependent.relationship.' + r.relationship | transloco }}）</span> }
                 </td>

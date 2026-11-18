@@ -284,6 +284,18 @@ progress {
   overflow-wrap: normal;
 }
 
+/* 扶養家族の取り込みの扶養家族の欄：決めた幅の中で折り返す（語の途中では切らない。11/18） */
+.table-wrap table td.dep-col {
+  white-space: normal;
+  word-break: keep-all;
+}
+
+/* 続柄（「（配偶者（夫・妻））」）はひとかたまりで次の行へ */
+.dep-col .sub {
+  display: inline-block;
+  white-space: nowrap;
+}
+
 /* 扶養家族の取り込みの結果：札は1枚ずつ改行し、長い文は欄の中で折り返す（11/18） */
 .table-wrap table td.result-col {
   white-space: normal;
