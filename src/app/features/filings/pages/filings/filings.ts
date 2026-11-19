@@ -231,7 +231,8 @@ export class FilingsPage {
     const targets = this.employees!.filter((e) => decisions.has(e.id) && decisions.get(e.id)!.method !== 'keep');
     if (targets.length === 0) return [];
     const tIds = targets.map((e) => e.id);
-    const months = ['03', '04', '05', '06'].map((m) => `${year}-${m}`);
+    // 7月は一時帰休が7/1に解消したかを見るためだけに読む（6月の途中で解消したとき。11/19）
+    const months = ['03', '04', '05', '06', '07'].map((m) => `${year}-${m}`);
     // 賞与に係る報酬を足した人がいれば、備考に書く支払月のために支給を読む（11/19）
     const anyBonus = targets.some((e) => (decisions.get(e.id)!.bonusMonthly ?? 0) > 0);
     const [byMonth, rems, bonusPayments] = await Promise.all([
@@ -247,7 +248,10 @@ export class FilingsPage {
         if (p) payrolls.set(m, p);
       });
       const prev = standardAt(rems[i], `${year}-08`);
-      const raise = findStartMonths(payrolls).find((s) => s.month >= `${year}-04` && s.direction !== 'unclear');
+      // 昇給・降給の月（4〜6月）。一時帰休の始まり・終わりは昇給・降給ではないので除く（11/19）
+      const raise = findStartMonths(payrolls).find(
+        (s) => s.month >= `${year}-04` && s.month <= `${year}-06` && s.direction !== 'unclear' && s.source !== 'furlough',
+      );
       const three = ['04', '05', '06'].map((m) => payrolls.get(`${year}-${m}`) ?? null);
       this.nenkinExtra.set(e.id, {
         previous: prev ? { health: prev.health.standard, pension: prev.pension.standard, from: prev.from } : null,

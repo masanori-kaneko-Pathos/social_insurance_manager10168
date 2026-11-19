@@ -304,7 +304,7 @@ export function regularRemarks(x: {
     // 一時帰休は「5」ではなく「9．その他」に書く（ガイドブック。11/19）
     months.some((p) => p && p.state === 'suspended') && '5．病休・育休・休職等',
     x.annual && '8．年間平均',
-    furloughRemark(months),
+    furloughRemark(months, x.payrolls.get(`${y}-07`)),
     bonusRemark('9', x.bonusMonthly, x.bonusMonths),
   ].filter((s): s is string => !!s);
 }
@@ -313,10 +313,11 @@ export function regularRemarks(x: {
  * 一時帰休の備考（算定基礎届の記入・提出ガイドブック：「9．その他」に休業手当の支払月と、解消したときはその旨。11/19）
  * 解消した日はアプリにないので「解消」とだけ書く（日付は届を書くときに足す）
  */
-function furloughRemark(months: (Payroll | undefined)[]): string | false {
+function furloughRemark(months: (Payroll | undefined)[], july: Payroll | undefined): string | false {
   const hit = months.map((p, i) => (p?.state === 'furlough' ? i + 4 : 0)).filter((m) => m > 0);
   if (hit.length === 0) return false;
-  const resolved = months[2] != null && months[2].state !== 'furlough';
+  // 7/1に解消：6月の給与がふつう、または7月の給与がもう入っていてふつう（定時決定の計算と同じ。regular.ts）
+  const resolved = (months[2] != null && months[2].state !== 'furlough') || (july != null && july.state !== 'furlough');
   return `9．その他（一時帰休 休業手当 ${hit.join('.')}月${resolved ? '・一時帰休解消' : ''}）`;
 }
 

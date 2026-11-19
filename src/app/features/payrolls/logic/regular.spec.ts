@@ -407,4 +407,15 @@ describe('decideRegular：一時帰休（休業手当。ガイドブック。11/
     expect(r.usedCount).toBe(3);
     expect(r.average).toBe(210000);
   });
+  it('6月の給与は休業手当でも、7月に払った給与がふつうなら7/1に解消（事例集 5(1) 問3・4）。4〜6月とも休業手当なら従前のまま（問7）', () => {
+    const r = decideRegular(
+      input({ payrolls: new Map([furlough('2027-04', 200000), pay('2027-05', 330000, 30), furlough('2027-06', 220000), pay('2027-07', 340000)]) }),
+    );
+    expect(r.usedCount).toBe(1);
+    expect(r.average).toBe(330000);
+    const all = decideRegular(
+      input({ payrolls: new Map([furlough('2027-04', 200000), furlough('2027-05', 210000), furlough('2027-06', 220000), pay('2027-07', 340000)]) }),
+    );
+    expect(all.status).toBe('keep');
+  });
 });

@@ -182,12 +182,16 @@ function useMonths(
 
 /**
  * 一時帰休が7月1日までに解消していれば、休業手当を受けた月（状態が一時帰休の月）を平均から除く（11/19）
- * 解消したかは「6月の実績が一時帰休でない」で見る。6月も一時帰休なら、休業手当を含めたまま平均する
+ * 解消したかは 7月1日の時点で見る（事例集 5(1) 問3・4）：6月の実績が一時帰休でない、
+ * または 7月に払った給与（july）がもう入っていて一時帰休でない（6月の途中で解消したなど）なら解消
+ * 解消していなければ、休業手当を含めたまま平均する
  */
-export function withoutResolvedFurlough(months: MonthUse[]): MonthUse[] {
+export function withoutResolvedFurlough(months: MonthUse[], july: Payroll | null = null): MonthUse[] {
   const june = months[months.length - 1];
   const any = months.some((m) => m.payroll?.state === 'furlough');
-  if (!any || !june?.payroll || june.payroll.state === 'furlough') return months;
+  const juneOk = !!june?.payroll && june.payroll.state !== 'furlough';
+  const julyOk = !!july && july.state !== 'furlough';
+  if (!any || !(juneOk || julyOk)) return months;
   return months.map((m) =>
     m.payroll?.state === 'furlough' && m.used ? { ...m, used: false, skip: 'furloughResolved' as const } : m,
   );
@@ -292,7 +296,10 @@ export function decideRegular(x: RegularInput): RegularResult {
     : null;
 
   // --- 4・5・6月 ---
-  const months = withoutResolvedFurlough(useMonths(['04', '05', '06'].map((m) => `${y}-${m}`), x, acquired));
+  const months = withoutResolvedFurlough(
+    useMonths(['04', '05', '06'].map((m) => `${y}-${m}`), x, acquired),
+    x.payrolls.get(`${y}-07`) ?? null,
+  );
   const usedCount = months.filter((m) => m.used).length;
   const withMonths = { ...base, excluded: null, months, usedCount, current };
 
