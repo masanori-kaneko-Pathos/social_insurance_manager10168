@@ -3,7 +3,7 @@ import { MasterRateDoc } from '../../../core/models/rates';
 import { CoverageInput } from '../../employees/logic/coverage';
 import { pickRates } from '../../rates/logic/pick-rates';
 import { RemunerationLike } from './calc-monthly';
-import { buildPremiumRow, isLastMonthBeforeLeaving } from './premium-rows';
+import { buildPremiumRow, isLastMonthBeforeLeaving, isSameMonthPension } from './premium-rows';
 
 const MASTER: MasterRateDoc[] = [
   { kind: 'kyokaiHealth', from: '2025-03', byPrefecture: { '13': 99100 }, source: 'test' },
@@ -168,5 +168,20 @@ describe('isLastMonthBeforeLeaving：退職前の最後の月（2か月分の控
     const remE = [rem('2024-04', [22, 300000], [19, 300000])];
     expect(row('2026-08', e, remE).lastMonth).toBeTrue();
     expect(row('2026-07', e, remE).lastMonth).toBeFalse();
+  });
+});
+
+describe('isSameMonthPension：厚生年金の同月得喪（11/19）', () => {
+  const e = (acquiredDate: string, lostDate: string | null) => ({
+    birthDate: '1990-05-15',
+    health: { enrolled: true, acquiredDate, lostDate, lossReason: 'retire' },
+    pension: { enrolled: true, acquiredDate, lostDate, lossReason: 'retire' },
+  });
+  it('9/1 入社・9/20 退職（喪失日 9/21）：9月は同月得喪', () => {
+    expect(isSameMonthPension(e('2026-09-01', '2026-09-21'), '2026-09')).toBeTrue();
+  });
+  it('9/30 退職（喪失日 10/1）は同月得喪ではない。喪失日がないときも', () => {
+    expect(isSameMonthPension(e('2026-09-01', '2026-10-01'), '2026-09')).toBeFalse();
+    expect(isSameMonthPension(e('2026-09-01', null), '2026-09')).toBeFalse();
   });
 });

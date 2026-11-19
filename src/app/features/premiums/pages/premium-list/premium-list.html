@@ -448,6 +448,10 @@
                 @if (r.lastMonth && payroll().deduction === 'next') {
                   <span class="badge badge-change" [title]="'premiumList.lastMonthNote' | transloco">{{ 'premiumList.lastMonth' | transloco }}</span>
                 }
+                <!-- 厚生年金の同月得喪：同じ月にほかで厚生年金・国民年金に入ると、厚生年金保険料はあとで返ってくる（11/19） -->
+                @if (r.sameMonthPension) {
+                  <span class="badge badge-change" [title]="'premiumList.sameMonthNote' | transloco">{{ 'premiumList.sameMonth' | transloco }}</span>
+                }
                 @if (r.employee.multipleOffices) {
                   <span class="badge badge-warn" [title]="'premiumList.multipleOfficesNote' | transloco">{{ 'premiumList.multipleOffices' | transloco }}</span>
                 }

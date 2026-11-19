@@ -10,8 +10,8 @@ import {
 } from '../../../core/models/premium';
 import { RatesForMonth } from '../../../core/models/rates';
 import { StandardRemuneration } from '../../../core/models/remuneration';
-import { CoverageInput, coverageForMonth } from '../../employees/logic/coverage';
-import { shiftMonth, YearMonth } from '../../../shared/utils/date';
+import { CoverageInput, coverageForMonth, pensionLostDate } from '../../employees/logic/coverage';
+import { shiftMonth, toYearMonth, YearMonth } from '../../../shared/utils/date';
 import { LeaveHolder } from '../../employees/logic/leave';
 import { latest } from '../../rates/logic/pick-rates';
 import { calcMonthly, RemunerationLike } from './calc-monthly';
@@ -36,6 +36,12 @@ export interface PremiumRow extends PremiumSplit {
   changes: ChangeReason[];
   /** 退職・死亡で資格を失う前の最後の月（最後の給与から前月分とこの月分を控除できる。健保法167条1項。11/19） */
   lastMonth: boolean;
+  /**
+   * 厚生年金を同じ月に取得して喪失した（同月得喪。11/19）
+   * その月の厚生年金保険料はかかるが、同じ月にほかで厚生年金・国民年金（第1号・第3号）に入ると、
+   * 年金事務所から連絡があり、厚生年金保険料は納めなくてよくなる（健康保険・介護は対象外。2015年10月から）
+   */
+  sameMonthPension: boolean;
 }
 
 export interface RowInput {
@@ -151,6 +157,7 @@ export function buildPremiumRow(input: RowInput): PremiumRow {
       .reduce((s, g) => s + g.employeeYen, 0),
     changes: capChanges(input, changesBetween(prev, cur)),
     lastMonth: cur.state === 'ok' && isLastMonthBeforeLeaving(input.employee, input.month),
+    sameMonthPension: isSameMonthPension(input.employee, input.month),
   };
 }
 
@@ -176,6 +183,13 @@ export function isLastMonthBeforeLeaving(
   if (cur.health) reasons.push(employee.health.lossReason);
   if (cur.pension) reasons.push(employee.pension.lossReason);
   return reasons.every(leaving);
+}
+
+/** 厚生年金を、その月に取得して同じ月に喪失したか（同月得喪） */
+export function isSameMonthPension(employee: CoverageInput, month: YearMonth): boolean {
+  const acquired = employee.pension.acquiredDate;
+  const lost = pensionLostDate(employee);
+  return !!acquired && !!lost && toYearMonth(acquired) === month && toYearMonth(lost) === month && lost > acquired;
 }
 
 /** その月から一斉改定の行が効いていれば、「等級変更」を「上限の改定」に言いかえる */
