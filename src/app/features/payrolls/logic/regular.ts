@@ -39,7 +39,7 @@ export interface MonthUse {
   payroll: Payroll | null;
   used: boolean;
   skip: MonthSkip | null;
-  /** 通貨＋現物 */
+  /** 通貨＋現物（＋賞与に係る報酬。年4回以上の賞与の 年額÷12 を各月に足す。11/19） */
   amount: number;
   /** この月の支払基礎日数の基準（17・11、パートの読み替えで15）。11/16 */
   minDays: number;
@@ -88,6 +88,8 @@ export interface RegularResult {
   next: Standards | null;
   change: 'up' | 'down' | 'same' | null;
   annual: AnnualCandidate | null;
+  /** 各月の報酬に足した賞与に係る報酬（年4回以上の賞与の 年額÷12。なければ 0。11/19） */
+  bonusMonthly: number;
 }
 
 // ===== 小さな道具 =====
@@ -136,9 +138,11 @@ function useMonth(
   acquiredDate: string | null,
   schedule: PaySchedule,
   minDays: number = REGULAR_MIN_DAYS,
+  bonusMonthly = 0,
 ): MonthUse {
   if (!payroll) return { month, payroll: null, used: false, skip: 'noRecord', amount: 0, minDays };
-  const amount = payTotal(payroll);
+  // 賞与に係る報酬は各月の報酬に足す（局部長通知 2(1)。算定基礎届も各月の額に足して書く）
+  const amount = payTotal(payroll) + bonusMonthly;
   const p = periodOf(month, schedule);
   let skip: MonthSkip | null = null;
   if (acquiredDate != null && acquiredDate > p.start && acquiredDate <= p.end) {
@@ -161,14 +165,15 @@ function useMonths(
   acquired: string | null,
 ): MonthUse[] {
   const minDaysAt = x.minDaysAt ?? (() => REGULAR_MIN_DAYS);
-  const months = list.map((m) => useMonth(m, x.payrolls.get(m), acquired, x.schedule, minDaysAt(m)));
+  const bonus = x.bonusMonthly ?? 0;
+  const months = list.map((m) => useMonth(m, x.payrolls.get(m), acquired, x.schedule, minDaysAt(m), bonus));
   const partAt = x.partAt;
   if (!partAt || months.some((m) => m.used) || !months.every((m) => m.skip === 'noRecord' || partAt(m.month))) {
     return months;
   }
   return months.map((m) =>
     m.skip === 'shortDays'
-      ? useMonth(m.month, x.payrolls.get(m.month), acquired, x.schedule, MIN_DAYS_PART_FALLBACK)
+      ? useMonth(m.month, x.payrolls.get(m.month), acquired, x.schedule, MIN_DAYS_PART_FALLBACK, bonus)
       : m,
   );
 }
@@ -224,6 +229,8 @@ export interface RegularInput {
   minDaysAt?: (paidMonth: string) => number;
   /** その支払月、短時間就労者（4分の3以上のパート・アルバイト）か。省くとパートの読み替えをしない */
   partAt?: (paidMonth: string) => boolean;
+  /** 賞与に係る報酬（年4回以上の賞与の 7/1前1年の額 ÷ 12）。各月の報酬に足す。省くと 0（11/19。bonus-nature.ts） */
+  bonusMonthly?: number;
 }
 
 export function decideRegular(x: RegularInput): RegularResult {
@@ -243,6 +250,7 @@ export function decideRegular(x: RegularInput): RegularResult {
     next: null,
     change: null,
     annual: null,
+    bonusMonthly: x.bonusMonthly ?? 0,
   };
 
   // --- 対象者か ---

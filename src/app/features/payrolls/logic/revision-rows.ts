@@ -28,6 +28,7 @@ import { judgeLeaveEnd, LeaveEndResult } from './leave-end';
 import { PaySchedule, periodOf } from './payroll-rows';
 import { GradeRows, Remuneration } from './regular';
 import { minDaysOf } from './revision-base';
+import { irregularBonusYearOf } from '../../premiums/logic/bonus-nature';
 
 export type RevisionEmployee = Pick<
   Employee,
@@ -40,6 +41,8 @@ export interface RevisionPerson {
   payrolls: ReadonlyMap<string, Payroll>;
   remunerations: readonly Remuneration[];
   wageChanges?: readonly WageChange[];
+  /** 定時決定の年 → 賞与に係る報酬（年4回以上の賞与の 年額÷12）。省くと 0（11/19。bonus-nature.ts） */
+  bonusMonthlyFor?: (year: number) => number;
 }
 
 export interface RevisionContext {
@@ -126,6 +129,7 @@ export function revisionItems(p: RevisionPerson, ctx: RevisionContext): Revision
   // 随時改定
   for (const start of findStartMonths(p.payrolls, p.wageChanges ?? [])) {
     if (start.month < ctx.fromMonth) continue;
+    const revisedFrom = shiftMonth(start.month, 3);
     const r = judgeIrregular({
       start,
       payrolls: p.payrolls,
@@ -133,6 +137,8 @@ export function revisionItems(p: RevisionPerson, ctx: RevisionContext): Revision
       gradesAt,
       minDaysAt,
       pensionAt,
+      // 7〜9月の改定はその年、ほかは直前の定時決定の額（irregularBonusYearOf）
+      bonusMonthly: p.bonusMonthlyFor?.(irregularBonusYearOf(revisedFrom)) ?? 0,
     });
     items.push({ type: 'irregular', employeeId: e.id, result: r, reflected: reflected(r.revisedFrom) });
   }

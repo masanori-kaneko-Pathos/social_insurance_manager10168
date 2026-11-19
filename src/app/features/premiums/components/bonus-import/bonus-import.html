@@ -92,7 +92,13 @@
                 <td class="emp-no">{{ r.employee?.employeeNumber ?? '—' }}</td>
                 <td>@if (r.employee; as e) { <app-person-name [person]="e" /> } @else { {{ name(r) }} }</td>
                 <td class="mono">{{ r.paidDate || '—' }}</td>
-                <td>{{ r.title || '—' }}</td>
+                <td>
+                  {{ r.title || '—' }}
+                  <!-- 性質（年4回以上かを数えるまとまり。列は増やさず名称の下に。11/19） -->
+                  @if (r.nature) {
+                    <br /><span class="sub">{{ 'bonusCsv.nature' | transloco: { name: r.nature } }}</span>
+                  }
+                </td>
                 <td class="num">
                   {{ yen(r.amount) }}
                   @if (r.inKind !== null && r.inKind > 0) {

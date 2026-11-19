@@ -28,6 +28,7 @@ import { RegularService } from '../../../payrolls/regular.service';
 import { RevisionService } from '../../../payrolls/revision.service';
 import { BonusService } from '../../../premiums/bonus.service';
 import { eligibleOn } from '../../../premiums/logic/bonus-rows';
+import { bonusRemunerationOf, irregularBonusYearOf, isRemunerationBonus } from '../../../premiums/logic/bonus-nature';
 import {
   acquiredDateOf,
   acquireRow,
@@ -245,7 +246,8 @@ export class FilingsPage {
       this.nenkinExtra.set(e.id, {
         previous: prev ? { health: prev.health.standard, pension: prev.pension.standard, from: prev.from } : null,
         regular: {
-          months: three.map((p) => (p ? { days: p.days, cash: p.cash, inKind: p.inKind } : null)),
+          // 賞与に係る報酬（年4回以上の賞与）は各月の通貨の額に足す（11/19）
+          months: three.map((p) => (p ? { days: p.days, cash: p.cash + (d.bonusMonthly ?? 0), inKind: p.inKind } : null)),
           retro: three.reduce((s, p) => s + (p?.retro ?? 0), 0),
         },
         bonus: null,
@@ -260,7 +262,8 @@ export class FilingsPage {
         total: d.total,
         average: d.average,
         corrected: d.corrected,
-        remarks: regularRemarks({ employee: e, year, annual: d.method === 'annual', payrolls }),
+        remarks: regularRemarks({ employee: e, year, annual: d.method === 'annual', payrolls, bonusMonthly: d.bonusMonthly }),
+        bonusMonthly: d.bonusMonthly ?? 0,
       });
     });
   }
@@ -274,6 +277,10 @@ export class FilingsPage {
     ]);
     const decisions = all.filter((d) => d.revisedFrom >= this.from() && d.revisedFrom <= this.to());
     const byId = new Map(this.employees!.map((e) => [e.id, e]));
+    // 年4回以上の賞与（賞与に係る報酬）：随時改定で足した額を、支給の記録から出し直す（11/19）
+    const bonusPayments = decisions.length > 0 ? await this.bonusApi.list(officeId) : [];
+    const bonusMonthlyOf = (employeeId: string, revisedFrom: string) =>
+      bonusRemunerationOf(employeeId, irregularBonusYearOf(revisedFrom), bonusPayments).monthly;
     // 特例改定：初月の1か月分だけ（月額変更届（特例改定用）。支払基礎日数は記録した日数。下がったときは勤務しなかった日も含む）
     const specialRows = Promise.all(
       specials
@@ -333,7 +340,9 @@ export class FilingsPage {
               revisedFrom: d.revisedFrom,
               annual: d.method === 'annual',
               reasonNote: d.reasonNote,
+              bonusMonthly: bonusMonthlyOf(e.id, d.revisedFrom),
             }),
+            bonusMonthly: bonusMonthlyOf(e.id, d.revisedFrom),
           });
         }),
     );
@@ -350,7 +359,11 @@ export class FilingsPage {
       .filter((p) => p.paidDate >= from && p.paidDate <= to)
       .flatMap((p) =>
         Object.entries(p.amounts)
-          .filter(([id, amount]) => amount > 0 && byId.has(id) && eligibleOn(byId.get(id)!, p.paidDate))
+          // 年4回以上の「賞与に係る報酬」は賞与支払届を出さない（定時決定で報酬月額に足す。11/19）
+          .filter(
+            ([id, amount]) =>
+              amount > 0 && byId.has(id) && eligibleOn(byId.get(id)!, p.paidDate) && !isRemunerationBonus(id, p, payments),
+          )
           .map(([id, amount]) => {
             const inKind = p.inKindAmounts?.[id] ?? 0;
             // 届書作成プログラム向け：1人1行なので、同じ期間に2回以上あれば新しいほうを使う

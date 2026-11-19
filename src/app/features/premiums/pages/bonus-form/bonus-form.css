@@ -20,7 +20,8 @@ h2 {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  /* 支払日・名称・性質・数え方の4つが横に並ぶ幅（240px だと3つ＋1つに分かれた。11/19） */
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 0 var(--space-lg);
 }
 

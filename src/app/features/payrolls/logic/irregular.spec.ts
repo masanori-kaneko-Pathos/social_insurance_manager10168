@@ -226,3 +226,13 @@ describe('judgeIrregular：年間平均（保険者算定。平成30年 Q&A）',
     expect(r.annual).toBeNull();
   });
 });
+
+describe('judgeIrregular：賞与に係る報酬を各月に足す（年4回以上の賞与。11/19）', () => {
+  it('3か月の平均に 年額÷12 を足して比べる', () => {
+    const payrolls = [pay('2026-04', 258600, 235000, 31), pay('2026-05', 257300, 235000, 30), pay('2026-06', 255400, 235000, 31)];
+    const base = judgeIrregular(input(up('2026-04'), payrolls, [rem('2025-09', 220)]));
+    const withBonus = judgeIrregular({ ...input(up('2026-04'), payrolls, [rem('2025-09', 220)]), bonusMonthly: 30000 });
+    expect(withBonus.average!.average).toBe(base.average!.average + 30000);
+    expect(withBonus.months.map((m) => m.amount)).toEqual([288600, 287300, 285400]);
+  });
+});

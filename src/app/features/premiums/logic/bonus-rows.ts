@@ -15,13 +15,10 @@ import { DateStr, YearMonth } from '../../../shared/utils/date';
 import { EmployeeBonus, bonusStatus, calcBonuses, PriorBonusHolder } from './calc-bonus';
 import { PremiumSplit, splitContribution } from './premium-core';
 import { LeaveHolder } from '../../employees/logic/leave';
+import { countOf, isRemunerationBonus, NaturePaymentLike, natureOf, periodYearOf } from './bonus-nature';
 
-/** 計算に使う支給の形（BonusPayment をそのまま渡せる） */
-export interface BonusPaymentLike {
-  id: string;
-  paidDate: DateStr;
-  amounts: Record<string, number>;
-}
+/** 計算に使う支給の形（BonusPayment をそのまま渡せる。性質・数え方は年4回以上の判定に使う。11/19） */
+export type BonusPaymentLike = NaturePaymentLike;
 
 export type BonusEmployee = CoverageInput & LeaveHolder & PriorBonusHolder & { id: string };
 
@@ -33,14 +30,30 @@ export interface BonusContext {
 
 const HEALTH_PARTS: PremiumPart[] = ['health', 'care', 'childSupport'];
 
-/** その従業員の賞与（全支給から。0円・空は払っていない扱い） */
+/**
+ * その従業員の賞与（全支給から。0円・空は払っていない扱い）
+ * 「賞与に係る報酬」に当たる支給（年4回以上）は賞与ではないので外す（保険料も年度の累計も対象外。11/19）
+ */
 export function bonusesOf(employeeId: string, payments: BonusPaymentLike[]): EmployeeBonus[] {
   const list: EmployeeBonus[] = [];
   for (const p of payments) {
     const amount = p.amounts[employeeId];
-    if (amount && amount > 0) list.push({ paidDate: p.paidDate, amount });
+    if (amount && amount > 0 && !isRemunerationBonus(employeeId, p, payments))
+      list.push({ paidDate: p.paidDate, amount });
   }
   return list;
+}
+
+/** その人のその支給が「賞与に係る報酬」なら、性質と回数（7/1前1年）。賞与なら null（11/19） */
+export function remunerationOf(
+  employeeId: string,
+  payment: BonusPaymentLike,
+  payments: BonusPaymentLike[],
+): { nature: string; count: number; year: number } | null {
+  if (!isRemunerationBonus(employeeId, payment, payments)) return null;
+  const year = periodYearOf(payment.paidDate);
+  const nature = natureOf(payment);
+  return { nature, count: countOf(employeeId, nature, year, payments), year };
 }
 
 /** 保存済みの支給のうち、入力中の支給（同じ id）だけを入力中の内容に差し替える */
@@ -91,8 +104,9 @@ function calcFor(
  * 行の状態
  * ok：保険料がかかる／empty：この支給で賞与なし／none：支払日に資格がない
  * counted：喪失月（保険料はかからないが健保の累計には入る）／missing：料率がない／error：計算できない
+ * remuneration：年4回以上の「賞与に係る報酬」（賞与の保険料・賞与支払届の対象外。定時決定で報酬月額に足す。11/19）
  */
-export type BonusRowState = 'ok' | 'empty' | 'none' | 'counted' | 'exempt' | 'missing' | 'error';
+export type BonusRowState = 'ok' | 'empty' | 'none' | 'counted' | 'exempt' | 'remuneration' | 'missing' | 'error';
 
 export interface BonusRow extends PremiumSplit {
   state: BonusRowState;
@@ -100,6 +114,8 @@ export interface BonusRow extends PremiumSplit {
   healthEmployeeYen: number; // 本人負担のうち 健保・介護・支援金
   pensionEmployeeYen: number; // 本人負担のうち 厚年
   capped: boolean; // 上限で削られたか
+  /** 賞与に係る報酬のとき：性質と、7/1前1年に受けた回数（11/19） */
+  remuneration: { nature: string; count: number; year: number } | null;
 }
 
 const EMPTY_SPLIT: PremiumSplit = {
@@ -130,12 +146,15 @@ export function buildBonusRow(
   paidDate: DateStr,
   ctx: BonusContext,
 ): BonusRow {
+  const payment = payments.find((p) => p.paidDate === paidDate);
+  const remuneration = payment ? remunerationOf(employee.id, payment, payments) : null;
   const { results, error } = calcFor(employee, payments, ctx);
-  const result = results.find((r) => r.paidDate === paidDate) ?? null;
+  const result = remuneration ? null : (results.find((r) => r.paidDate === paidDate) ?? null);
   const groups = result?.groups ?? [];
   return {
     ...(result ? splitContribution(result) : EMPTY_SPLIT),
-    state: error ? 'error' : stateOf(result),
+    state: remuneration ? 'remuneration' : error ? 'error' : stateOf(result),
+    remuneration,
     result,
     healthEmployeeYen: groups
       .filter((g) => g.parts.some((p) => HEALTH_PARTS.includes(p)))

@@ -191,3 +191,29 @@ describe('産休・育休中の賞与', () => {
     expect(r.result?.exemptPending).toBeTrue();
   });
 });
+
+describe('年4回以上の賞与（賞与に係る報酬。11/19）', () => {
+  const q = { nature: '四半期インセンティブ' };
+  const e = emp('q', '1990-01-10', '2020-04-01');
+  const payments = [
+    { ...pay('a', '2025-09-25', { q: 100_000 }), ...q },
+    { ...pay('b', '2025-12-25', { q: 100_000 }), ...q },
+    { ...pay('c', '2026-03-25', { q: 100_000 }), ...q },
+    { ...pay('d', '2026-06-25', { q: 100_000 }), ...q },
+    { ...pay('e', '2026-09-25', { q: 3_000_000 }), ...q },
+  ];
+
+  it('最初の年の4回は賞与（保険料がかかる）、次の年の9月の支給は報酬（保険料なし・累計にも入らない）', () => {
+    expect(buildBonusRow(e, payments, '2026-06-25', ctx).state).toBe('ok');
+    const sep = buildBonusRow(e, payments, '2026-09-25', ctx);
+    expect(sep.state).toBe('remuneration');
+    expect(sep.result).toBeNull();
+    expect(sep.remuneration).toEqual({ nature: '四半期インセンティブ', count: 4, year: 2026 });
+  });
+
+  it('事業所の合計（collectBonusResults）にも入らない', () => {
+    const c = collectBonusResults([e], payments, ctx, (d) => d === '2026-09-25');
+    expect(c.results).toEqual([]);
+    expect(c.problemCount).toBe(0);
+  });
+});

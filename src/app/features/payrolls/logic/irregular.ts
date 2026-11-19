@@ -96,6 +96,8 @@ export interface IrregularInput {
   minDaysAt: (paidMonth: string) => number;
   /** 改定する月に厚年の資格があるか（70歳以上などは健保だけ） */
   pensionAt: (month: string) => boolean;
+  /** 賞与に係る報酬（年4回以上の賞与の 年額÷12）。各月の報酬に足す。省くと 0（局部長通知 2(1)・2(3)。11/19） */
+  bonusMonthly?: number;
 }
 
 export interface IrregularResult {
@@ -235,7 +237,8 @@ export function judgeIrregular(x: IrregularInput): IrregularResult {
     return {
       month,
       payroll,
-      amount: payroll ? payTotal(payroll) : 0,
+      // 賞与に係る報酬は各月の報酬に足す（賞与の額が変わっただけでは随時改定の起算にならない。11/19）
+      amount: payroll ? payTotal(payroll) + (x.bonusMonthly ?? 0) : 0,
       minDays,
       used: !!payroll && payroll.days >= minDays,
     };

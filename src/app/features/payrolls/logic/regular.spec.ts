@@ -372,3 +372,21 @@ describe('decideRegular：支払基礎日数の基準（年金機構「定時決
     expect(decideRegular(input({ payrolls: months(16, 15, 16) })).status).toBe('keep');
   });
 });
+
+describe('decideRegular：賞与に係る報酬（年4回以上の賞与。11/19）', () => {
+  it('各月の報酬に 年額÷12 を足して平均する（300,000 ＋ 70,000 → 370,000 → 健保26級）', () => {
+    const payrolls = new Map([pay('2027-04', 300000), pay('2027-05', 300000, 30), pay('2027-06', 300000)]);
+    const r = decideRegular(input({ payrolls, bonusMonthly: 70000 }));
+    expect(r.bonusMonthly).toBe(70000);
+    expect(r.months.map((m) => m.amount)).toEqual([370000, 370000, 370000]);
+    expect(r.average).toBe(370000);
+    expect(r.next?.health).toEqual({ grade: 26, standard: 380000 });
+  });
+
+  it('足さなければ今までどおり（bonusMonthly は 0）', () => {
+    const payrolls = new Map([pay('2027-04', 300000), pay('2027-05', 300000, 30), pay('2027-06', 300000)]);
+    const r = decideRegular(input({ payrolls }));
+    expect(r.bonusMonthly).toBe(0);
+    expect(r.average).toBe(300000);
+  });
+});

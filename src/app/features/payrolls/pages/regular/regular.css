@@ -293,3 +293,23 @@ app-decision-notice-card {
   display: block;
   font-size: var(--font-xs);
 }
+
+/* 賞与に係る報酬の欄（年4回以上の賞与。年間平均の欄と同じ形。11/19） */
+.bonus-natures {
+  margin: 0 0 var(--space-sm);
+  padding-left: 1.2em;
+}
+
+.bonus-edit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.bonus-edit .input {
+  width: 10em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

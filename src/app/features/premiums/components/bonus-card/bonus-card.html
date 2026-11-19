@@ -47,6 +47,11 @@
                   <td class="num">{{ yen(r.result!.standardBonus) }}</td>
                   <td class="muted">{{ 'bonus.state.exempt' | transloco }}<br />{{ 'bonus.state.exemptNote' | transloco }}</td>
                 }
+                @case ('remuneration') {
+                  <!-- 年4回以上の賞与（賞与に係る報酬）。11/19 -->
+                  <td class="num muted">—</td>
+                  <td class="muted">{{ 'bonus.state.remuneration' | transloco }}</td>
+                }
                 @case ('none') {
                   <td class="muted" colspan="2">{{ 'bonus.state.none' | transloco }}</td>
                 }

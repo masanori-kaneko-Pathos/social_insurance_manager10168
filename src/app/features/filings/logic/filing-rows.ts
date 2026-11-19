@@ -212,22 +212,30 @@ export interface RevisionRowInput {
   corrected: number | null;
   /** 届に書く備考 */
   remarks: string[];
+  /** 賞与に係る報酬（年4回以上の賞与の 年額÷12）。各月の通貨の額に足して書く（11/19） */
+  bonusMonthly?: number;
 }
 
 function monthCells(x: RevisionRowInput): FilingRow {
   const row: FilingRow = {};
+  const bonus = x.bonusMonthly ?? 0; // 賞与に係る報酬は各月の通貨の額に足す（11/19）
   [0, 1, 2].forEach((i) => {
     const month = shiftMonth(x.firstMonth, i);
     const p = x.payrolls.get(month);
     const n = i + 1;
     row[`m${n}Month`] = `${Number(month.slice(5))}月`;
     row[`m${n}Days`] = p ? `${p.days}日` : '';
-    row[`m${n}Cash`] = p ? yen(p.cash) : '';
+    row[`m${n}Cash`] = p ? yen(p.cash + bonus) : '';
     row[`m${n}InKind`] = p ? yen(p.inKind) : '';
     // 現物が内訳なし（null）の月は、現物の欄を空にする（合計は支払額のままで正しい）
-    row[`m${n}Total`] = p ? yen(payTotal(p)) : '';
+    row[`m${n}Total`] = p ? yen(payTotal(p) + bonus) : '';
   });
   return row;
+}
+
+/** 賞与に係る報酬を足したときの備考（「9．その他」・月額変更届は「6．その他」。11/19） */
+export function bonusRemark(no: '6' | '9', bonusMonthly: number | null | undefined): string | false {
+  return !!bonusMonthly && bonusMonthly > 0 && `${no}．その他（賞与に係る報酬 ${yen(bonusMonthly)}円を各月に加算）`;
 }
 
 /** ⑧遡及支払額：3か月のうち遡及支払のあった月と額（複数あれば足す。月は最初の月） */
@@ -266,6 +274,7 @@ export function regularRemarks(x: {
   year: number;
   annual: boolean;
   payrolls: ReadonlyMap<string, Payroll>;
+  bonusMonthly?: number | null;
 }): string[] {
   const e = x.employee;
   const y = x.year;
@@ -277,6 +286,7 @@ export function regularRemarks(x: {
     !!acquired && acquired > `${y}-04-01` && acquired <= `${y}-06-30` && '4．途中入社',
     months.some((p) => p && p.state !== 'normal') && '5．病休・育休・休職等',
     x.annual && '8．年間平均',
+    bonusRemark('9', x.bonusMonthly),
   ].filter((s): s is string => !!s);
 }
 
@@ -286,6 +296,7 @@ export function irregularRemarks(x: {
   revisedFrom: YearMonth;
   annual: boolean;
   reasonNote: string | null;
+  bonusMonthly?: number | null;
 }): string[] {
   const e = x.employee;
   return [
@@ -293,6 +304,7 @@ export function irregularRemarks(x: {
     e.multipleOffices && '2．二以上勤務',
     !!x.reasonNote && `4．昇給・降給の理由（${x.reasonNote}）`,
     x.annual && '6．その他（年間平均）',
+    bonusRemark('6', x.bonusMonthly),
   ].filter((s): s is string => !!s);
 }
 

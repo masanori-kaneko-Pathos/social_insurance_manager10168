@@ -96,3 +96,23 @@ describe('planBonusImport：賞与の取り込み（11/17）', () => {
     expect(p.writes[0].input.inKindAmounts).toEqual({ b: 10000 });
   });
 });
+
+describe('planBonusImport：性質の列（年4回以上の賞与。11/19）', () => {
+  it('性質は支払日ごとに最初の行。空なら登録済みの性質のまま、新しい支給なら入れない（賞与）', () => {
+    const p = planBonusImport(
+      [
+        H,
+        row({ employeeNumber: 'E001', paidDate: '2026-09-25', amount: '100000', nature: '四半期インセンティブ' }),
+        row({ employeeNumber: 'E004', paidDate: '2026-09-25', amount: '100000', nature: 'インフレ手当' }),
+        row({ employeeNumber: 'E001', paidDate: '2026-12-10', amount: '300000' }),
+      ],
+      people,
+      [{ id: 'x', paidDate: '2026-12-10', title: '冬季賞与', amounts: {}, nature: '決算賞与' }],
+    );
+    expect(p.rows[1].warnings).toContain('natureDiffers');
+    expect(p.writes[0].input.nature).toBe('四半期インセンティブ');
+    expect(p.writes[1].input.nature).toBe('決算賞与');
+    const plain = planBonusImport([H, row({ employeeNumber: 'E001', paidDate: '2026-07-10', amount: '1' })], people, []);
+    expect(plain.writes[0].input.nature).toBeUndefined();
+  });
+});

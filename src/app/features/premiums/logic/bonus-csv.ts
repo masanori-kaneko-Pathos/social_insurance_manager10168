@@ -8,7 +8,7 @@ import type { BonusPaymentInput } from '../../../core/models/bonus';
 import { ImportField, normalizeDate, normalizeNumber, OurTableSpec } from '../../../shared/import/column-map';
 import { byHeader, DATE, NUMBER } from '../../../shared/import/fix-fields';
 
-export const BONUS_CSV_COLUMNS = ['employeeNumber', 'name', 'paidDate', 'title', 'amount', 'inKind'] as const;
+export const BONUS_CSV_COLUMNS = ['employeeNumber', 'name', 'paidDate', 'title', 'amount', 'inKind', 'nature'] as const;
 export type BonusCsvColumn = (typeof BONUS_CSV_COLUMNS)[number];
 
 export const BONUS_CSV_HEADERS: Record<BonusCsvColumn, string> = {
@@ -18,6 +18,7 @@ export const BONUS_CSV_HEADERS: Record<BonusCsvColumn, string> = {
   title: '名称',
   amount: '賞与額',
   inKind: '現物',
+  nature: '性質', // 年4回以上かを数えるまとまり。空は「賞与」（11/19。bonus-nature.ts）
 };
 
 /** 見出しの言い換え（賞与の登録の画面の「ファイルから読み込む」と同じ言い方も読む） */
@@ -47,6 +48,7 @@ export const BONUS_CSV_FIELDS: readonly ImportField<BonusCsvColumn>[] = [
     required: true,
   },
   { key: 'inKind', header: BONUS_CSV_HEADERS.inKind, words: ['現物給与', '現物の額', 'In kind'], kind: 'number' },
+  { key: 'nature', header: BONUS_CSV_HEADERS.nature, words: ['賞与の性質', '賞与の種類', 'Nature'] },
 ];
 
 export const BONUS_TABLE_SPEC: OurTableSpec<BonusCsvColumn, BonusCsvColumn> = {
@@ -81,6 +83,7 @@ export interface BonusExisting {
   title: string | null;
   amounts: Readonly<Record<string, number>>;
   inKindAmounts?: Readonly<Record<string, number>>;
+  nature?: string | null;
 }
 
 export type BonusCsvError =
@@ -94,7 +97,8 @@ export type BonusCsvError =
 export type BonusCsvWarning =
   | 'beforeHire' // 支払日が入社日より前（保険料はかからない）
   | 'afterRetire' // 支払日が退職日より後（保険料はかからない）
-  | 'titleDiffers'; // 同じ支払日で名称が違う（最初の名称を使う）
+  | 'titleDiffers' // 同じ支払日で名称が違う（最初の名称を使う）
+  | 'natureDiffers'; // 同じ支払日で性質が違う（最初の性質を使う。11/19）
 
 /** new：新しい支給／add：登録済みの支給に追加／update：額を上書き／same：変わらない */
 export type BonusRowStatus = 'new' | 'add' | 'update' | 'same' | 'error';
@@ -106,6 +110,8 @@ export interface BonusCsvRow {
   label: string;
   paidDate: string; // 読めなければ元の文字
   title: string;
+  /** 性質（空は登録済みの性質のまま、新しい支給なら「賞与」。11/19） */
+  nature: string;
   amount: number | null;
   inKind: number | null; // 空なら null（登録済みの現物はそのまま）
   errors: BonusCsvError[];
@@ -171,6 +177,7 @@ export function planBonusImport(
   const rows: BonusCsvRow[] = [];
   const seen = new Set<string>();
   const firstTitle = new Map<string, string>();
+  const firstNature = new Map<string, string>();
 
   body.forEach((cells, i) => {
     const get = (c: BonusCsvColumn) => (col(c) >= 0 ? (cells[col(c)] ?? '') : '').trim();
@@ -211,6 +218,12 @@ export function planBonusImport(
       if (first === undefined) firstTitle.set(paidDate, title);
       else if (first !== title) warnings.push('titleDiffers');
     }
+    const nature = get('nature');
+    if (paidDate && nature) {
+      const first = firstNature.get(paidDate);
+      if (first === undefined) firstNature.set(paidDate, nature);
+      else if (first !== nature) warnings.push('natureDiffers');
+    }
 
     let status: BonusRowStatus = 'error';
     if (errors.length === 0 && employee && paidDate && amount !== null && !Number.isNaN(amount)) {
@@ -230,6 +243,7 @@ export function planBonusImport(
       label: no || name,
       paidDate: paidDate ?? get('paidDate'),
       title,
+      nature,
       amount: amount === null || Number.isNaN(amount) ? null : amount,
       inKind: inKind === null || Number.isNaN(inKind) ? null : inKind,
       errors,
@@ -249,6 +263,8 @@ export function bonusWrites(rows: readonly BonusCsvRow[], existing: readonly Bon
   const existingByDate = new Map(existing.map((e) => [e.paidDate, e]));
   const firstTitle = new Map<string, string>();
   for (const r of rows) if (r.status !== 'error' && r.title && !firstTitle.has(r.paidDate)) firstTitle.set(r.paidDate, r.title);
+  const firstNature = new Map<string, string>();
+  for (const r of rows) if (r.status !== 'error' && r.nature && !firstNature.has(r.paidDate)) firstNature.set(r.paidDate, r.nature);
   const groups = new Map<string, BonusCsvRow[]>();
   for (const r of rows) {
     if (r.status === 'error') continue;
@@ -269,10 +285,12 @@ export function bonusWrites(rows: readonly BonusCsvRow[], existing: readonly Bon
       }
     }
     const fileTitle = firstTitle.get(paidDate) ?? '';
+    const fileNature = firstNature.get(paidDate) ?? '';
+    const nature = fileNature || before?.nature || null;
     writes.push({
       paidDate,
       existingId: before?.id ?? null,
-      input: { paidDate, title: fileTitle || before?.title || null, amounts, inKindAmounts },
+      input: { paidDate, title: fileTitle || before?.title || null, amounts, inKindAmounts, ...(nature ? { nature } : {}) },
       count,
     });
   }

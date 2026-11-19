@@ -22,6 +22,7 @@ import { BONUS_IMPORT_SPEC, BonusImportResult, matchBonusRows } from '../../logi
 import { RateTables } from '../../../rates/logic/pick-rates';
 import { RateService } from '../../../rates/rate.service';
 import { BonusService } from '../../bonus.service';
+import { BONUS_COUNT_AS, BonusCountAs, DEFAULT_NATURE, natureOf } from '../../logic/bonus-nature';
 import {
   BonusContext,
   BonusRow,
@@ -99,12 +100,21 @@ export class BonusForm {
   // ===== 入力（「保存する」を押すまで Firestore には書かない） =====
   readonly paidDate = signal('');
   readonly title = signal('');
+  /** 性質（年4回以上かを数えるまとまり。空は「賞与」）と回数の数え方（11/19。bonus-nature.ts） */
+  readonly nature = signal('');
+  readonly countAs = signal<BonusCountAs>('normal');
+  readonly countAsList = BONUS_COUNT_AS;
+  readonly defaultNature = DEFAULT_NATURE;
+  /** ほかの支給で使った性質（入力の候補） */
+  readonly natureOptions = computed(() => [
+    ...new Set([DEFAULT_NATURE, ...this.payments().map((p) => natureOf(p))]),
+  ]);
   /** 従業員ID → 入力中の文字（「500,000」など） */
   readonly amountTexts = signal<Record<string, string>>({});
   /** 読み込んだときの入力（変わったかを見るため） */
   private readonly snapshot = signal('');
   private snapshotOf(): string {
-    return JSON.stringify([this.paidDate(), this.title(), this.amounts()]);
+    return JSON.stringify([this.paidDate(), this.title(), this.nature().trim(), this.countAs(), this.amounts()]);
   }
   /** 保存してある額（読み込んだとき。行ごとに「直したか」を見るため。11/18） */
   private readonly savedAmounts = signal<Record<string, number>>({});
@@ -171,6 +181,8 @@ export class BonusForm {
       id: this.bonusId ?? NEW_ID,
       paidDate: this.paidDate(),
       amounts: this.amounts(),
+      nature: this.nature().trim() || null,
+      countAs: this.countAs(),
     }),
   );
 
@@ -265,6 +277,8 @@ export class BonusForm {
         }
         this.paidDate.set(p.paidDate);
         this.title.set(p.title ?? '');
+        this.nature.set(p.nature ?? '');
+        this.countAs.set(p.countAs ?? 'normal');
         this.amountTexts.set(
           Object.fromEntries(Object.entries(p.amounts).map(([id, n]) => [id, formatYen(n)])),
         );
@@ -376,6 +390,8 @@ export class BonusForm {
       paidDate: this.paidDate(),
       title: title ? title : null,
       amounts: this.amounts(),
+      nature: this.nature().trim() || null,
+      countAs: this.countAs(),
     };
 
     this.saving.set(true);
@@ -436,7 +452,7 @@ export class BonusForm {
         amountYen: this.amounts()[r.employee.id] ?? 0,
         row: r,
         note:
-          r.state === 'exempt' || r.state === 'counted' || r.state === 'none'
+          r.state === 'exempt' || r.state === 'counted' || r.state === 'none' || r.state === 'remuneration'
             ? t('bonus.state.' + r.state)
             : r.state === 'ok' ? '' : t(this.missingKey(r)),
       }));

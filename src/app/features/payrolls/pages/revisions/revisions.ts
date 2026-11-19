@@ -33,6 +33,8 @@ import { SpecialPerson, SpecialRevisionCard } from '../../components/special-rev
 import { WageChangeCard, WageChangeRow } from '../../components/wage-change-card/wage-change-card';
 import { DecisionNoticeCard } from '../../../premiums/components/decision-notice-card/decision-notice-card';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
+import { BonusService } from '../../../premiums/bonus.service';
+import { bonusRemunerationOf } from '../../../premiums/logic/bonus-nature';
 
 interface View {
   key: string; // 行の目印（従業員ID・種類・起算月）
@@ -61,6 +63,7 @@ export class RevisionsPage {
   private readonly criteriaApi = inject(CriteriaService);
   private readonly rates = inject(RateService);
   private readonly api = inject(RevisionService);
+  private readonly bonusApi = inject(BonusService);
   readonly context = inject(OfficeContext);
 
   readonly today = todayLocal();
@@ -111,10 +114,11 @@ export class RevisionsPage {
     if (!quiet) this.loading.set(true);
     this.errorKey.set(null);
     try {
-      const [all, tables, criteria] = await Promise.all([
+      const [all, tables, criteria, bonusPayments] = await Promise.all([
         this.employeesApi.list(office.id),
         this.rates.grades(),
         this.criteriaApi.list(),
+        this.bonusApi.list(office.id), // 年4回以上の賞与（賞与に係る報酬）を各月の報酬に足すため（11/19）
       ]);
       // 出し始める月より前に辞めた人は読まない（読む回数を減らす）
       const employees = all.filter((e) => !e.retireDate || e.retireDate >= `${this.fromMonth}-01`);
@@ -141,7 +145,11 @@ export class RevisionsPage {
       const wageRows: WageChangeRow[] = [];
       for (const { e, payrolls, remunerations, contracts, wageChanges } of perPerson) {
         const byMonth = new Map(payrolls.map((p: Payroll): [string, Payroll] => [p.paidMonth, p]));
-        const items = revisionItems({ employee: e, contracts, payrolls: byMonth, remunerations, wageChanges }, ctx);
+        const bonusMonthlyFor = (y: number) => bonusRemunerationOf(e.id, y, bonusPayments).monthly;
+        const items = revisionItems(
+          { employee: e, contracts, payrolls: byMonth, remunerations, wageChanges, bonusMonthlyFor },
+          ctx,
+        );
         for (const change of wageChanges) wageRows.push({ employee: e, change });
         // 反映するとき、改定しない保険の今の等級に、届出なしの一斉改定の分も入れる（11/16）
         const withCap = withCapRevisions(remunerations, tables);

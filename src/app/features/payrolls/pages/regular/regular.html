@@ -110,6 +110,10 @@
                     <div class="sub">{{ 'regular.corrected' | transloco }}</div>
                     <div class="sub">{{ 'regular.correctedNote' | transloco }}</div>
                   }
+                  <!-- 年4回以上の賞与（賞与に係る報酬）を各月に足した額（11/19） -->
+                  @if (r.bonusMonthly > 0) {
+                    <div class="sub">{{ 'regular.bonus.included' | transloco: { n: yen(r.bonusMonthly) } }}</div>
+                  }
                 } @else {
                   —
                 }
@@ -149,6 +153,19 @@
                   <button type="button" class="link" (click)="toggleAnnual(v)">
                     <span class="badge badge-info">{{ 'regular.annual.badge' | transloco }}</span>
                   </button>
+                }
+                <!-- 年4回以上の賞与：報酬に当たる性質がある人／性質を問わず4回以上の人（性質の確認）。押すと下に欄を開く（11/19） -->
+                @switch (bonusBadge(v)) {
+                  @case ('remuneration') {
+                    <button type="button" class="link" [attr.aria-expanded]="openBonus() === v.employee.id" (click)="toggleBonus(v)">
+                      <span class="badge badge-info">{{ 'regular.bonus.badge' | transloco }}</span>
+                    </button>
+                  }
+                  @case ('check') {
+                    <button type="button" class="link" [attr.aria-expanded]="openBonus() === v.employee.id" (click)="toggleBonus(v)">
+                      <span class="badge badge-warn">{{ 'regular.bonus.checkBadge' | transloco: { n: v.bonusCount } }}</span>
+                    </button>
+                  }
                 }
                 <!-- 7〜9月改定の随時改定が残っている人：先に改定の候補で反映する（その人は算定基礎届から外れる） -->
                 @if (v.pending; as pd) {
@@ -215,6 +232,47 @@
                       </button>
                     }
                     <p class="sub">{{ 'regular.annual.hint' | transloco }}</p>
+                  </div>
+                </td>
+              </tr>
+            }
+
+            <!-- 賞与に係る報酬（年4回以上の賞与）の欄（年間平均の欄と同じ形。11/19） -->
+            @if (openBonus() === v.employee.id) {
+              <tr class="annual-row">
+                <td colspan="10">
+                  <div class="annual">
+                    <h3>{{ 'regular.bonus.title' | transloco }}</h3>
+                    <p class="sub">{{ 'regular.bonus.window' | transloco: { from: bonusWindow().from, to: bonusWindow().to } }}</p>
+                    @if (v.bonusAuto.natures.length > 0) {
+                      <ul class="bonus-natures">
+                        @for (n of v.bonusAuto.natures; track n.nature) {
+                          <li>{{ 'regular.bonus.nature' | transloco: { name: n.nature, count: n.count, total: yen(n.total) } }}</li>
+                        }
+                      </ul>
+                    } @else {
+                      <p class="warn">{{ 'regular.bonus.checkNote' | transloco: { n: v.bonusCount } }}</p>
+                    }
+                    @if (canReflect(v)) {
+                      <div class="bonus-edit">
+                        <label [attr.for]="'bonus-annual-' + v.employee.id">{{ 'regular.bonus.annual' | transloco }}</label>
+                        <input
+                          [id]="'bonus-annual-' + v.employee.id"
+                          class="input num"
+                          inputmode="numeric"
+                          autocomplete="off"
+                          [value]="yen(bonusAnnualOf(v))"
+                          (change)="setBonusAnnual(v, $any($event.target).value)"
+                        />
+                        <span>{{ 'regular.bonus.monthly' | transloco: { n: yen(r.bonusMonthly) } }}</span>
+                        @if (bonusEdited(v)) {
+                          <button type="button" class="btn btn-small" (click)="resetBonusAnnual(v)">{{ 'regular.bonus.reset' | transloco }}</button>
+                        }
+                      </div>
+                    } @else {
+                      <p>{{ 'regular.bonus.monthlyFixed' | transloco: { n: yen(r.bonusMonthly) } }}</p>
+                    }
+                    <p class="sub">{{ 'regular.bonus.hint' | transloco }}</p>
                   </div>
                 </td>
               </tr>

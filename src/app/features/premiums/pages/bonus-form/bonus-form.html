@@ -92,8 +92,46 @@
           [disabled]="readOnly"
         />
       </div>
+
+      <!-- 性質：年4回以上かを数えるまとまり（名称にかかわらず、同じ性質の支給ごとに数える。11/19） -->
+      <div class="field">
+        <label for="nature">{{ 'bonus.field.nature' | transloco }}</label>
+        <input
+          id="nature"
+          class="input"
+          maxlength="30"
+          list="nature-options"
+          [placeholder]="defaultNature"
+          [value]="nature()"
+          (input)="nature.set($any($event.target).value)"
+          [disabled]="readOnly"
+        />
+        <datalist id="nature-options">
+          @for (n of natureOptions(); track n) {
+            <option [value]="n"></option>
+          }
+        </datalist>
+        <span class="hint">{{ 'bonus.hint.nature' | transloco }}</span>
+      </div>
+
+      <div class="field">
+        <label for="countAs">{{ 'bonus.field.countAs' | transloco }}</label>
+        <select
+          id="countAs"
+          class="input"
+          [value]="countAs()"
+          (change)="countAs.set($any($event.target).value)"
+          [disabled]="readOnly"
+        >
+          @for (c of countAsList; track c) {
+            <option [value]="c" [selected]="c === countAs()">{{ 'bonus.countAs.' + c | transloco }}</option>
+          }
+        </select>
+        <span class="hint">{{ 'bonus.hint.countAs' | transloco }}</span>
+      </div>
     </div>
     <p class="hint">{{ 'bonus.hint.standard' | transloco }}</p>
+    <p class="hint">{{ 'bonus.hint.fourTimes' | transloco }}</p>
   </section>
 
   @if (!dateOk()) {
@@ -242,6 +280,14 @@
                   <td class="muted note" colspan="5">
                     {{ 'bonus.state.counted' | transloco }}
                     <span class="note-sub">{{ 'bonus.state.countedNote' | transloco }}</span>
+                  </td>
+                }
+                @case ('remuneration') {
+                  <!-- 年4回以上の賞与：賞与の保険料・賞与支払届の対象外（定時決定で報酬月額に足す。11/19） -->
+                  <td class="num muted">—</td>
+                  <td class="muted note" colspan="5">
+                    {{ 'bonus.state.remuneration' | transloco }}
+                    <span class="note-sub">{{ 'bonus.state.remunerationNote' | transloco: { nature: r.remuneration!.nature, count: r.remuneration!.count, year: r.remuneration!.year } }}</span>
                   </td>
                 }
                 @case ('exempt') {

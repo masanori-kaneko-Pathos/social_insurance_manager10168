@@ -23,6 +23,8 @@ export interface RegularDecisionDoc {
   corrected: number | null; // ⑯修正平均額（遡及支払があったときだけ）
   annualAverage: number | null; // 年間平均（候補だったときだけ）
   monthlyAmount: number; // 等級を決めた報酬月額
+  /** 各月の報酬に足した「賞与に係る報酬」（年4回以上の賞与の 年額÷12。なし・0 は足していない。11/19） */
+  bonusMonthly?: number | null;
   seasonal: boolean; // 年間平均：業務の性質上、例年発生する
   consent: boolean; // 年間平均：被保険者が同意した
   health: StandardRemuneration;
