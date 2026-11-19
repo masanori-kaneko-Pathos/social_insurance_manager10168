@@ -78,7 +78,19 @@ export function isBlankRow(row: readonly string[]): boolean {
   return row.every((c) => c.trim() === '');
 }
 
-function quote(v: string): string {
+/**
+ * CSV インジェクションの対策（11/19）
+ * = + - @ やタブ・改行で始まる値は、Excel などで開くと数式として動くことがある（従業員が入れた文字も書き出すため）。
+ * 先頭に ' を付けて文字として扱わせる。ただし「-1000」「-0.5」のような数はそのまま（額のマイナスを壊さない）
+ */
+export function neutralizeFormula(v: string): string {
+  if (!/^[=+\-@\t\r]/.test(v)) return v;
+  if (/^[+-]?\d[\d,]*(\.\d+)?$/.test(v)) return v;
+  return `'${v}`;
+}
+
+function quote(raw: string): string {
+  const v = neutralizeFormula(raw);
   return /[",\r\n]/.test(v) || /^\s|\s$/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
 }
 
