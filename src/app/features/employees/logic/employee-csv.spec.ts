@@ -88,6 +88,17 @@ describe('readEmployeeCsv', () => {
     expect(leaves[0].birthDate).toBe('2026-09-15');
     expect(leaves[1].childBirthDate).toBe('2026-09-15');
     expect(leaves[1].plannedEnd).toBe('2027-09-14');
+    expect(leaves[0].filed).toBeNull(); // 申出日が空なら申出がまだ
+  });
+  it('休業の申出日があれば「届を出した」と同じ形で入る。読めない日付はエラー（11/19）', () => {
+    const r = readEmployeeCsv(
+      table({ ...BASE, leave1Kind: '育休', leave1Start: '2026-11-11', leave1End: '2027-09-14', leave1Birth: '2026-09-15', leave1Filed: '2026-11-20' }),
+    );
+    const l = r.rows[0].parsed!.leaves[0];
+    expect(l.filed?.filedOn).toBe('2026-11-20');
+    expect(l.filed?.plannedEnd).toBe('2027-09-14');
+    const bad = readEmployeeCsv(table({ ...BASE, leave1Kind: '育休', leave1Start: '2026-11-11', leave1Filed: '11月20日' }));
+    expect(bad.rows[0].errors.map((e) => `${e.column}:${e.code}`)).toContain('leave1Filed:date');
   });
   it('外国籍でローマ字があれば、届書の氏名はローマ字', () => {
     const r = readEmployeeCsv(

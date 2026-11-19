@@ -123,10 +123,10 @@ describe('deductionPayMonth：何月に支払う給与から控除するか', ()
     expect(deductionPayMonth('2026-12', DEFAULT_PAYROLL)).toBe('2027-01');
   });
 
-  it('当月控除：11月分は11月に支払う給与から', () => {
-    expect(deductionPayMonth('2026-11', { ...DEFAULT_PAYROLL, deduction: 'current' })).toBe(
-      '2026-11',
-    );
+  it('前に「当月控除」で保存された事業所も、翌月控除として読む（健保法167条。11/19）', () => {
+    const old = { prefecture: '13', healthInsurer: { type: 'kyokai' as const, kumiaiName: null }, payroll: { ...DEFAULT_PAYROLL, deduction: 'current' } } as unknown as Parameters<typeof payrollOf>[0];
+    expect(payrollOf(old).deduction).toBe('next');
+    expect(deductionPayMonth('2026-11', payrollOf(old))).toBe('2026-12');
   });
 });
 
@@ -174,10 +174,9 @@ describe('kumiaiRun / spanOf / insurerFor の kumiaiSince', () => {
 });
 
 describe('premiumMonthOfPay（給与から控除するのは何月分か。11/16）', () => {
-  const pay = (deduction: 'current' | 'next') => ({ closingDay: 31, payDay: 25, payMonth: 'next' as const, deduction });
-  it('翌月控除なら前の月の分、当月控除なら同じ月の分', () => {
-    expect(premiumMonthOfPay('2026-11', pay('next'))).toBe('2026-10');
-    expect(premiumMonthOfPay('2026-01', pay('next'))).toBe('2025-12');
-    expect(premiumMonthOfPay('2026-11', pay('current'))).toBe('2026-11');
+  const pay = { closingDay: 31, payDay: 25, payMonth: 'next' as const, deduction: 'next' as const };
+  it('前の月の分（翌月控除だけ。11/19）', () => {
+    expect(premiumMonthOfPay('2026-11', pay)).toBe('2026-10');
+    expect(premiumMonthOfPay('2026-01', pay)).toBe('2025-12');
   });
 });

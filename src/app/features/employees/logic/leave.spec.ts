@@ -1,4 +1,4 @@
-import { exemptBonus, exemptMonth, exemptRangeOf, leaveExemptsMonth, LeaveLike, oneMonthEnd } from './leave';
+import { exemptBonus, exemptMonth, exemptRangeOf, filedLeaves, leaveExemptsMonth, LeaveLike, oneMonthEnd } from './leave';
 import { daysInclusive } from '../../../shared/utils/date';
 
 const maternity = (start: string, end: string | null): LeaveLike => ({
@@ -143,5 +143,22 @@ describe('同じ月の中で何回か取った育休は日数を合計する', (
   });
   it('就業予定日数は合計から除く', () => {
     expect(exemptMonth([a, { ...b, workDays: 1 }], '2026-07')).toBeFalse();
+  });
+});
+
+describe('filedLeaves：申出済みの休業だけ（免除は事業主の申出が要る。健保法159条・159条の3。11/19）', () => {
+  const filed = { ...childcare('2026-11-10', '2027-03-31'), filed: { filedOn: '2026-11-12' } };
+  const notFiled = { ...maternity('2026-06-01', '2026-08-31'), filed: null };
+  const legacy = childcare('2025-01-10', '2025-03-31'); // filed の項目がない
+
+  it('申出のない休業は外す（項目がないものも申出がまだとみなす）', () => {
+    expect(filedLeaves([filed, notFiled, legacy])).toEqual([filed]);
+    expect(filedLeaves(undefined)).toEqual([]);
+  });
+
+  it('申出がまだの休業は、条件に当たっても計算では免除にならない', () => {
+    expect(exemptMonth([notFiled], '2026-07')).toBeTrue(); // 条件には当たる
+    expect(exemptMonth(filedLeaves([notFiled]), '2026-07')).toBeFalse();
+    expect(exemptMonth(filedLeaves([filed]), '2026-12')).toBeTrue();
   });
 });

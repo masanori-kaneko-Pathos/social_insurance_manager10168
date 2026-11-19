@@ -23,7 +23,7 @@ import { PickedRate, RatesForMonth } from '../../../core/models/rates';
 import { CoverageInput, healthLostDate, isCareMonth, pensionLostDate } from '../../employees/logic/coverage';
 import { DateStr, fiscalYearOf, toYearMonth } from '../../../shared/utils/date';
 import { makeGroups, makeLine, withTotals } from './premium-core';
-import { exemptBonus, LeaveHolder } from '../../employees/logic/leave';
+import { exemptBonus, filedLeaves, LeaveHolder } from '../../employees/logic/leave';
 
 export const HEALTH_BONUS_CAP_PER_YEAR = 5_730_000; // 健保：年度の累計（平成28年度から）
 /** 平成27年度までの健保の年度の上限（平成28年4月に540万円→573万円。過去の料率を入れたので年度で分ける。11/16） */
@@ -118,8 +118,10 @@ export function calcBonuses(input: BonusInput): BonusPremiumResult[] {
         b.paidDate,
       ) === 'charged';
     // 産休・育休で免除：保険料はかからないが、健保は標準賞与額が決まり年度累計に入る（日本年金機構）
-    const exempt =
-      (rawHealth === 'charged' || rawPensionCharged) && exemptBonus(employee.leaves, b.paidDate);
+    // 免除は申出をした休業だけ。申出がまだなら保険料をかけ、exemptPending で知らせる（健保法159条・159条の3。11/19）
+    const charged = rawHealth === 'charged' || rawPensionCharged;
+    const exempt = charged && exemptBonus(filedLeaves(employee.leaves), b.paidDate);
+    const exemptPending = charged && !exempt && exemptBonus(employee.leaves, b.paidDate);
     const healthStatus = exempt && rawHealth === 'charged' ? 'counted' : rawHealth;
     const pensionStatus: 'charged' | 'none' = rawPensionCharged && !exempt ? 'charged' : 'none';
 
@@ -168,6 +170,7 @@ export function calcBonuses(input: BonusInput): BonusPremiumResult[] {
       month,
       groups: makeGroups(lines, options),
       missing,
+      ...(exemptPending ? { exemptPending: true } : {}),
     });
     return {
       ...result,

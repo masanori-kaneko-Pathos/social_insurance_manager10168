@@ -54,7 +54,7 @@ import {
   remunerationAt,
   tabOf,
 } from '../../logic/employee-overview';
-import { exemptMonth } from '../../logic/leave';
+import { exemptMonth, filedLeaves } from '../../logic/leave';
 import { RemunerationService } from '../../remuneration.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 
@@ -314,9 +314,9 @@ export class EmployeeDetail {
     void this.loadOverview();
   }
 
-  /** 産休・育休で保険料が免除される月か */
+  /** 産休・育休で保険料が免除される月か（申出書を出した休業だけ。11/19） */
   isExempt(month: YearMonth): boolean {
-    return exemptMonth(this.employee()?.leaves, month);
+    return exemptMonth(filedLeaves(this.employee()?.leaves), month);
   }
 
   // ===== タブと「＋登録」 =====

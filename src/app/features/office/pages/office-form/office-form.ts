@@ -184,7 +184,6 @@ export class OfficeForm {
       closingDay: [DEFAULT_PAYROLL.closingDay],
       payMonth: [DEFAULT_PAYROLL.payMonth as PayrollSettings['payMonth']],
       payDay: [DEFAULT_PAYROLL.payDay],
-      deduction: [DEFAULT_PAYROLL.deduction as PayrollSettings['deduction']],
       method: [DEFAULT_PREMIUM.method as CollectionMethod],
       healthRounding: [DEFAULT_PREMIUM.healthRounding as HealthRounding],
       // 労使協定（特約）の端数処理（'' ＝ 法律どおり。11/16）
@@ -622,7 +621,6 @@ export class OfficeForm {
       closingDay: payroll.closingDay,
       payMonth: payroll.payMonth,
       payDay: payroll.payDay,
-      deduction: payroll.deduction,
       method: premium.method,
       healthRounding: premium.healthRounding,
       agreementRounding: premium.agreementRounding ?? '',
@@ -715,7 +713,6 @@ export class OfficeForm {
       closingDay: payroll.closingDay,
       payMonth: payroll.payMonth,
       payDay: payroll.payDay,
-      deduction: payroll.deduction,
       method: premium.method,
       healthRounding: premium.healthRounding,
       agreementRounding: premium.agreementRounding ?? '',
@@ -937,7 +934,7 @@ export class OfficeForm {
         closingDay: Number(v.closingDay),
         payMonth: v.payMonth,
         payDay: Number(v.payDay),
-        deduction: v.deduction,
+        deduction: 'next' as const, // 翌月控除だけ（健保法167条。11/19）
       },
       premium: { method: v.method, healthRounding: v.healthRounding, agreementRounding: v.agreementRounding || null },
       ...coverage,

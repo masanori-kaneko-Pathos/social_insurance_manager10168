@@ -3,7 +3,7 @@ import { MasterRateDoc } from '../../../core/models/rates';
 import { CoverageInput } from '../../employees/logic/coverage';
 import { pickRates } from '../../rates/logic/pick-rates';
 import { RemunerationLike } from './calc-monthly';
-import { buildPremiumRow } from './premium-rows';
+import { buildPremiumRow, isLastMonthBeforeLeaving } from './premium-rows';
 
 const MASTER: MasterRateDoc[] = [
   { kind: 'kyokaiHealth', from: '2025-03', byPrefecture: { '13': 99100 }, source: 'test' },
@@ -118,11 +118,55 @@ describe('buildPremiumRow：一覧の1行', () => {
   it('産休・育休で免除の月は exempt。標準報酬月額は出し、保険料は0', () => {
     const onLeave = {
       ...A,
-      leaves: [{ kind: 'maternity', start: '2026-10-20', end: '2027-01-14' }],
+      leaves: [{ kind: 'maternity', start: '2026-10-20', end: '2027-01-14', filed: { filedOn: '2026-10-25' } }],
     };
     const r = row('2026-11', onLeave, remA);
     expect(r.state).toBe('exempt');
     expect(r.health).toEqual({ grade: 23, standard: 320000 });
     expect(r.premiumTotalMilli).toBe(0);
+  });
+});
+
+describe('isLastMonthBeforeLeaving：退職前の最後の月（2か月分の控除の案内。11/19）', () => {
+  const leaving = (lostDate: string, reason: string | null) => ({
+    birthDate: '1990-05-15',
+    health: { enrolled: true, acquiredDate: '2024-04-01', lostDate, lossReason: reason },
+    pension: { enrolled: true, acquiredDate: '2024-04-01', lostDate, lossReason: reason },
+  });
+
+  it('8/31 退職（喪失日 9/1）：8月分が最後の月。7月・9月は違う', () => {
+    const e = leaving('2026-09-01', 'retire');
+    expect(isLastMonthBeforeLeaving(e, '2026-08')).toBeTrue();
+    expect(isLastMonthBeforeLeaving(e, '2026-07')).toBeFalse();
+    expect(isLastMonthBeforeLeaving(e, '2026-09')).toBeFalse();
+  });
+
+  it('8/20 退職（喪失日 8/21）：喪失月の8月は保険料がかからないので、7月分が最後の月', () => {
+    const e = leaving('2026-08-21', 'retire');
+    expect(isLastMonthBeforeLeaving(e, '2026-07')).toBeTrue();
+    expect(isLastMonthBeforeLeaving(e, '2026-08')).toBeFalse();
+  });
+
+  it('死亡・原因が空の古いデータも対象。75歳・任意喪失は対象外（働き続けている）', () => {
+    expect(isLastMonthBeforeLeaving(leaving('2026-09-01', 'death'), '2026-08')).toBeTrue();
+    expect(isLastMonthBeforeLeaving(leaving('2026-09-01', null), '2026-08')).toBeTrue();
+    expect(isLastMonthBeforeLeaving(leaving('2026-09-01', 'age75'), '2026-08')).toBeFalse();
+    expect(isLastMonthBeforeLeaving(leaving('2026-09-01', 'optOut'), '2026-08')).toBeFalse();
+  });
+
+  it('厚年は70歳で先に喪失していても、健保の退職で最後の月になる', () => {
+    const e = {
+      birthDate: '1955-01-15',
+      health: { enrolled: true, acquiredDate: '2010-04-01', lostDate: '2026-09-01', lossReason: 'retire' },
+      pension: { enrolled: true, acquiredDate: '2010-04-01', lostDate: '2025-01-14', lossReason: null },
+    };
+    expect(isLastMonthBeforeLeaving(e, '2026-08')).toBeTrue();
+  });
+
+  it('一覧の行にも付く（保険料がかかる月だけ）', () => {
+    const e = leaving('2026-09-01', 'retire');
+    const remE = [rem('2024-04', [22, 300000], [19, 300000])];
+    expect(row('2026-08', e, remE).lastMonth).toBeTrue();
+    expect(row('2026-07', e, remE).lastMonth).toBeFalse();
   });
 });

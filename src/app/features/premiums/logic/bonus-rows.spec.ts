@@ -170,7 +170,7 @@ describe('産休・育休中の賞与', () => {
   it('免除：保険料はかからないが、健保の年度累計には入る（日本年金機構）', () => {
     const mom = {
       ...emp('mom', '1990-01-10', '2020-04-01'),
-      leaves: [{ kind: 'childcare' as const, start: '2026-06-01', end: '2026-09-30' }],
+      leaves: [{ kind: 'childcare' as const, start: '2026-06-01', end: '2026-09-30', filed: { filedOn: '2026-06-05' } }],
     };
     const payments = [
       pay('p1', '2026-07-10', { mom: 4_000_000 }),
@@ -179,5 +179,15 @@ describe('産休・育休中の賞与', () => {
     expect(buildBonusRow(mom, payments, '2026-07-10', ctx).state).toBe('exempt');
     // 7月の400万円が累計に入っているので、12月は 573万 − 400万 ＝ 173万円まで
     expect(buildBonusRow(mom, payments, '2026-12-10', ctx).result?.healthBase).toBe(1_730_000);
+  });
+
+  it('申出書がまだなら免除しない：保険料をかけて exemptPending（11/19）', () => {
+    const mom = {
+      ...emp('mom', '1990-01-10', '2020-04-01'),
+      leaves: [{ kind: 'childcare' as const, start: '2026-06-01', end: '2026-09-30', filed: null }],
+    };
+    const r = buildBonusRow(mom, [pay('p1', '2026-07-10', { mom: 400_000 })], '2026-07-10', ctx);
+    expect(r.state).toBe('ok');
+    expect(r.result?.exemptPending).toBeTrue();
   });
 });

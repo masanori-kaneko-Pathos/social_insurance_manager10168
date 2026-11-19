@@ -15,6 +15,10 @@
  * - 育休：支払月が免除の月（＝月の末日を含む）で、かつ休業が連続して1か月を超えるときだけ免除
  *   （2022年10月1日以降に始まった育休。終了日が未定のときは「超える」とみなす）
  * 免除でも標準賞与額は決まり、健保の年度累計には入る（日本年金機構）
+ *
+ * 免除は「事業主が申出をしたとき」に受けられる（健康保険法159条・159条の3、厚生年金保険法81条の2・81条の2の2）。
+ * このファイルの exemptMonth・exemptBonus は「免除の条件に当たるか」だけを見る。
+ * 保険料の計算は filedLeaves で申出済みの休業だけに絞ってから使う（申出がまだなら保険料をかけ、「申出すれば免除」と出す。11/19）
  */
 import {
   addDays,
@@ -34,11 +38,22 @@ export interface LeaveLike {
   plannedEnd?: DateStr | null; // 終了予定日
   /** 出生時育休：休業中に働いた日数（14日の数え方から除く） */
   workDays?: number | null;
+  /** 申出書（産前産後休業取得者申出書・育児休業等取得者申出書）を出した記録。ない・null は申出がまだ（11/19） */
+  filed?: { filedOn: string } | null;
 }
 
 /** 休業の記録を持つもの（Employee をそのまま渡せる） */
 export interface LeaveHolder {
   leaves?: LeaveLike[];
+}
+
+/**
+ * 申出済みの休業だけ（11/19）
+ * 保険料の免除は事業主が申出をしたときに受けられるので、計算にはこれを通した休業を渡す
+ * （健康保険法159条・159条の3、厚生年金保険法81条の2・81条の2の2）
+ */
+export function filedLeaves<T extends LeaveLike>(leaves: readonly T[] | undefined): T[] {
+  return (leaves ?? []).filter((l) => l.filed != null);
 }
 
 /** 保険料の免除がある休業か（介護休業・休職は免除なし） */

@@ -34,6 +34,8 @@ export interface PremiumRow extends PremiumSplit {
   healthEmployeeYen: number; // 本人負担のうち 健保・介護・支援金
   pensionEmployeeYen: number; // 本人負担のうち 厚年
   changes: ChangeReason[];
+  /** 退職・死亡で資格を失う前の最後の月（最後の給与から前月分とこの月分を控除できる。健保法167条1項。11/19） */
+  lastMonth: boolean;
 }
 
 export interface RowInput {
@@ -148,7 +150,32 @@ export function buildPremiumRow(input: RowInput): PremiumRow {
       .filter((g) => g.parts.includes('pension'))
       .reduce((s, g) => s + g.employeeYen, 0),
     changes: capChanges(input, changesBetween(prev, cur)),
+    lastMonth: cur.state === 'ok' && isLastMonthBeforeLeaving(input.employee, input.month),
   };
+}
+
+/** 喪失の原因（社員の文書にはあるが、加入の判定の型にはないので、ここで足して読む） */
+type WithLossReason = { health: { lossReason?: string | null }; pension: { lossReason?: string | null } };
+
+/**
+ * 使用されなくなった（退職・死亡）ために、この月が保険料のかかる最後の月か（11/19）
+ * - この月は健保か厚年がかかり、次の月はどちらもかからない
+ * - 喪失の原因が 退職・死亡（原因が空の古いデータは退職とみなす）。75歳・障害認定・任意喪失などは除く
+ * 保険料は翌月控除なので、この月分はふつう翌月の給与から控除する。翌月に給与がないときは、
+ * 最後の給与から前月分とこの月分の2か月分を控除できる（健康保険法167条1項・厚生年金保険法84条1項）
+ */
+export function isLastMonthBeforeLeaving(
+  employee: CoverageInput & Partial<WithLossReason>,
+  month: YearMonth,
+): boolean {
+  const cur = coverageForMonth(employee, month);
+  const next = coverageForMonth(employee, shiftMonth(month, 1));
+  if (!(cur.health || cur.pension) || next.health || next.pension) return false;
+  const leaving = (r: string | null | undefined) => r == null || r === 'retire' || r === 'death';
+  const reasons: (string | null | undefined)[] = [];
+  if (cur.health) reasons.push(employee.health.lossReason);
+  if (cur.pension) reasons.push(employee.pension.lossReason);
+  return reasons.every(leaving);
 }
 
 /** その月から一斉改定の行が効いていれば、「等級変更」を「上限の改定」に言いかえる */

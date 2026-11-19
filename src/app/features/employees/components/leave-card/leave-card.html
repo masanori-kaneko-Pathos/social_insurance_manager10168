@@ -218,6 +218,10 @@
               <td class="mono">
                 @if (r.range; as range) {
                   {{ range.from }} 〜 {{ range.to ?? ('leave.ongoing' | transloco) }}
+                  <!-- 免除は申出をしたときだけ（健保法159条・159条の3。11/19） -->
+                  @if (!r.leave.filed) {
+                    <div class="sub">{{ 'leave.notFiledYet' | transloco }}</div>
+                  }
                 } @else {
                   <span class="muted">{{ 'leave.noExempt' | transloco }}</span>
                 }

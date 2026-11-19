@@ -19,7 +19,7 @@ import { StandardRemuneration } from '../../../core/models/remuneration';
 import { CoverageInput, coverageForMonth } from '../../employees/logic/coverage';
 import { latest } from '../../rates/logic/pick-rates';
 import { makeGroups, makeLine, withTotals } from './premium-core';
-import { exemptMonth, LeaveHolder } from '../../employees/logic/leave';
+import { exemptMonth, filedLeaves, LeaveHolder } from '../../employees/logic/leave';
 import { AdjustmentInput } from './premium-adjustment';
 
 /** 報酬の履歴のうち、計算に使う部分（RemunerationDoc をそのまま渡せる） */
@@ -48,9 +48,12 @@ export function calcMonthly(input: MonthlyInput): PremiumResult {
   const rem = latest(input.remunerations, month);
 
   // 産休・育休で免除の月：保険料の行を作らない（本人分・会社分とも免除。合計にも入らない）
-  if ((coverage.health || coverage.pension) && exemptMonth(input.employee.leaves, month)) {
+  // 免除は申出をした休業だけ。申出がまだなら保険料をかけ、exemptPending で「申出すれば免除」と知らせる（11/19）
+  const covered = coverage.health || coverage.pension;
+  if (covered && exemptMonth(filedLeaves(input.employee.leaves), month)) {
     return withTotals({ kind: 'monthly', month, groups: [], missing: [], exempt: true });
   }
+  const exemptPending = covered && exemptMonth(input.employee.leaves, month);
 
   const lines: PremiumLine[] = [];
   const missing: { part: PremiumPart; reason: MissingReason }[] = [];
@@ -78,5 +81,11 @@ export function calcMonthly(input: MonthlyInput): PremiumResult {
     add('childContribution', rem?.pension, rates.childContribution);
   }
 
-  return withTotals({ kind: 'monthly', month, groups: makeGroups(lines, options), missing });
+  return withTotals({
+    kind: 'monthly',
+    month,
+    groups: makeGroups(lines, options),
+    missing,
+    ...(exemptPending ? { exemptPending: true } : {}),
+  });
 }

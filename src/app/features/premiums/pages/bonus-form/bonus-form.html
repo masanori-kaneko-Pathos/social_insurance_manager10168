@@ -177,7 +177,12 @@
           @for (r of shown().rows; track r.employee.id) {
             <tr [class.problem]="r.state === 'missing' || r.state === 'error'" [class.edited]="rowDirty(r.employee.id)">
               <td class="emp-no">{{ r.employee.employeeNumber ?? '—' }}</td>
-              <td><app-person-name [person]="r.employee" [link]="['/o', context.current()?.id, 'employees', r.employee.id]" /></td>
+              <td>
+                <app-person-name [person]="r.employee" [link]="['/o', context.current()?.id, 'employees', r.employee.id]" />
+                @if (r.result?.exemptPending) {
+                  <span class="badge badge-cap" [title]="'bonus.exemptPendingNote' | transloco">{{ 'bonus.exemptPending' | transloco }}</span>
+                }
+              </td>
               <td class="num">
                 <input
                   class="input num amount"

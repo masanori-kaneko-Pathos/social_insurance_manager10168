@@ -3,14 +3,12 @@ import { monthlyTasks, upcomingMonths, yearTasks } from './year-tasks';
 const keys = (o: Parameters<typeof yearTasks>[0], m: number) => yearTasks(o).find((x) => x.month === m)!.tasks.map((t) => t.key);
 
 describe('yearTasks：1年の業務の暦', () => {
-  const base = { bonusMonths: [6, 12], insurer: 'kyokai' as const, deduction: 'next' as const };
+  const base = { bonusMonths: [6, 12], insurer: 'kyokai' as const };
 
-  it('7月は算定基礎届、9月は新しい標準報酬（翌月徴収なら10月の給与から）', () => {
+  it('7月は算定基礎届、9月は新しい標準報酬（翌月控除なので10月の給与から）', () => {
     expect(keys(base, 7)).toContain('regular');
     const sep = yearTasks(base)[8].tasks.find((t) => t.key === 'regularApply')!;
     expect(sep.params).toEqual({ payMonth: 10 });
-    const cur = yearTasks({ ...base, deduction: 'current' })[8].tasks.find((t) => t.key === 'regularApply')!;
-    expect(cur.params).toEqual({ payMonth: 9 });
   });
 
   it('賞与の月に賞与支払届。並びは月の順で、重複はまとめる', () => {

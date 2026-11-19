@@ -76,10 +76,12 @@ export const EMPLOYEE_CSV_HEADERS = {
   leave1Start: '休業1_開始日',
   leave1End: '休業1_終了日',
   leave1Birth: '休業1_出産日・子の生年月日',
+  leave1Filed: '休業1_申出日', // 申出書を出した日。空なら申出がまだ（保険料は免除しない。11/19）
   leave2Kind: '休業2_種類',
   leave2Start: '休業2_開始日',
   leave2End: '休業2_終了日',
   leave2Birth: '休業2_出産日・子の生年月日',
+  leave2Filed: '休業2_申出日',
   department: '部署', // 事業所の設定の部署の名前（11/13）
   note: 'メモ',
 } as const;
@@ -313,6 +315,7 @@ function readLeave(
   const startCol = `leave${n}Start` as EmployeeColumn;
   const endCol = `leave${n}End` as EmployeeColumn;
   const birthCol = `leave${n}Birth` as EmployeeColumn;
+  const filedCol = `leave${n}Filed` as EmployeeColumn;
   const kind = pick(LEAVE, v[kindCol] ?? '');
   if (kind === null) return null;
   if (kind === undefined) {
@@ -322,10 +325,12 @@ function readLeave(
   const start = readDate(v[startCol] ?? '');
   const end = readDate(v[endCol] ?? '');
   const birth = readDate(v[birthCol] ?? '');
+  const filedOn = readDate(v[filedCol] ?? '');
   if (!start) errors.push({ column: startCol, code: 'date' });
   if (end === undefined) errors.push({ column: endCol, code: 'date' });
   if (birth === undefined) errors.push({ column: birthCol, code: 'date' });
-  if (!start || end === undefined || birth === undefined) return null;
+  if (filedOn === undefined) errors.push({ column: filedCol, code: 'date' });
+  if (!start || end === undefined || birth === undefined || filedOn === undefined) return null;
   if (end && end < start) {
     errors.push({ column: endCol, code: 'endBeforeStart' });
     return null;
@@ -339,6 +344,18 @@ function readLeave(
   if (kind === 'childcare' || kind === 'paternity') {
     l.childBirthDate = birth || null;
     l.childType = 'natural';
+  }
+  // 申出日があれば「届を出した」と同じ形で写す（免除は申出をした休業だけ。健保法159条・159条の3。11/19）
+  if (filedOn) {
+    l.filed = {
+      filedOn,
+      start: l.start,
+      plannedEnd: l.plannedEnd,
+      end: l.end,
+      expectedBirthDate: l.expectedBirthDate,
+      birthDate: l.birthDate,
+      multipleBirth: l.multipleBirth,
+    };
   }
   return l;
 }
@@ -763,7 +780,7 @@ export const EMPLOYEE_WORDS: Partial<Record<EmployeeImportKey, readonly string[]
 const KIND: Partial<Record<EmployeeImportKey, ValueKind>> = {
   lastNameKana: 'kana', firstNameKana: 'kana', fullNameKana: 'kana',
   birthDate: 'date', hireDate: 'date', retireDate: 'date', optInDate: 'date', optOutDate: 'date', periodEnd: 'date',
-  leave1Start: 'date', leave1End: 'date', leave1Birth: 'date', leave2Start: 'date', leave2End: 'date', leave2Birth: 'date',
+  leave1Start: 'date', leave1End: 'date', leave1Birth: 'date', leave1Filed: 'date', leave2Start: 'date', leave2End: 'date', leave2Birth: 'date', leave2Filed: 'date',
   remunerationFrom: 'month',
   basicPensionNumber: 'digits', insuredNumber: 'digits', myNumber: 'digits',
   monthlyAmount: 'number', hourlyWage: 'number', dailyWage: 'number', scheduledWage: 'number',

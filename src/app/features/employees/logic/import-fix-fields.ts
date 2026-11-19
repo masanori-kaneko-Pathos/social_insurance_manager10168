@@ -86,10 +86,12 @@ export const EMPLOYEE_FIX_FIELDS = byHeader(EMPLOYEE_CSV_HEADERS, {
   leave1Start: DATE,
   leave1End: DATE,
   leave1Birth: DATE,
+  leave1Filed: DATE,
   leave2Kind: LEAVE,
   leave2Start: DATE,
   leave2End: DATE,
   leave2Birth: DATE,
+  leave2Filed: DATE,
 });
 
 export const CONTRACT_HISTORY_FIX_FIELDS = byHeader(CONTRACT_HISTORY_HEADERS, { from: DATE, ...CONTRACT });

@@ -38,11 +38,11 @@ export function hoursText(minutes: number): string {
   return `${h}:${String(m).padStart(2, '0')}`;
 }
 
-/** 休業の1件 → 4つの列（種類・開始日・終了日・出産日／子の生年月日） */
-function leaveCells(l: Leave | undefined): [string, string, string, string] {
-  if (!l) return ['', '', '', ''];
+/** 休業の1件 → 5つの列（種類・開始日・終了日・出産日／子の生年月日・申出日） */
+function leaveCells(l: Leave | undefined): [string, string, string, string, string] {
+  if (!l) return ['', '', '', '', ''];
   const birth = l.kind === 'maternity' ? (l.birthDate ?? l.expectedBirthDate) : l.childBirthDate;
-  return [LEAVE[l.kind], l.start, l.end ?? l.plannedEnd ?? '', birth ?? ''];
+  return [LEAVE[l.kind], l.start, l.end ?? l.plannedEnd ?? '', birth ?? '', l.filed?.filedOn ?? ''];
 }
 
 /** 1人分の行（列は EMPLOYEE_COLUMNS の順） */
@@ -54,8 +54,8 @@ export function employeeExportRow(x: EmployeeExportItem, deptName: (id: string) 
     .filter((r) => r.reason === 'acquisition')
     .sort((a, b) => a.from.localeCompare(b.from))[0];
   const leaves = [...(e.leaves ?? [])].sort((a, b) => b.start.localeCompare(a.start)).slice(0, 2).reverse();
-  const [l1Kind, l1Start, l1End, l1Birth] = leaveCells(leaves[0]);
-  const [l2Kind, l2Start, l2End, l2Birth] = leaveCells(leaves[1]);
+  const [l1Kind, l1Start, l1End, l1Birth, l1Filed] = leaveCells(leaves[0]);
+  const [l2Kind, l2Start, l2End, l2Birth, l2Filed] = leaveCells(leaves[1]);
 
   const v: Record<EmployeeColumn, string> = {
     employeeNumber: e.employeeNumber ?? '',
@@ -101,10 +101,12 @@ export function employeeExportRow(x: EmployeeExportItem, deptName: (id: string) 
     leave1Start: l1Start,
     leave1End: l1End,
     leave1Birth: l1Birth,
+    leave1Filed: l1Filed,
     leave2Kind: l2Kind,
     leave2Start: l2Start,
     leave2End: l2End,
     leave2Birth: l2Birth,
+    leave2Filed: l2Filed,
     department: e.org?.departmentId ? (deptName(e.org.departmentId) ?? '') : '',
     note: c?.note ?? '',
   };

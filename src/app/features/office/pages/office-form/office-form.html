@@ -742,16 +742,9 @@
 
         <div class="field full">
           <span class="label">{{ 'office.field.deduction' | transloco }}</span>
-          <div class="radio-group">
-            <label class="radio">
-              <input type="radio" value="next" formControlName="deduction" />
-              {{ 'office.deduction.next' | transloco }}
-            </label>
-            <label class="radio">
-              <input type="radio" value="current" formControlName="deduction" />
-              {{ 'office.deduction.current' | transloco }}
-            </label>
-          </div>
+          <!-- 翌月控除だけ（健保法167条1項・厚年法84条1項。11/19 に選択肢をなくした） -->
+          <div>{{ 'office.deduction.next' | transloco }}</div>
+          <p class="hint">{{ 'office.deduction.lawNote' | transloco }}</p>
         </div>
       </div>
 

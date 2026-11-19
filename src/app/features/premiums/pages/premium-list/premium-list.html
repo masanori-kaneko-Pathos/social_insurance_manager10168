@@ -435,6 +435,12 @@
                     'premiumList.change.' + c | transloco
                   }}</span>
                 }
+                @if (r.result?.exemptPending) {
+                  <span class="badge badge-warn" [title]="'premiumList.exemptPendingNote' | transloco">{{ 'premiumList.exemptPending' | transloco }}</span>
+                }
+                @if (r.lastMonth) {
+                  <span class="badge badge-change" [title]="'premiumList.lastMonthNote' | transloco">{{ 'premiumList.lastMonth' | transloco }}</span>
+                }
                 @if (r.employee.multipleOffices) {
                   <span class="badge badge-warn" [title]="'premiumList.multipleOfficesNote' | transloco">{{ 'premiumList.multipleOffices' | transloco }}</span>
                 }

@@ -540,7 +540,7 @@
       "monthSuffix": "",
       "futureHint": "Faded marks are future months (planned).",
       "exemptMark": "Ex",
-      "exemptHint": "\"Ex\" marks months exempt from premiums due to maternity/childcare leave (coverage continues).",
+      "exemptHint": "\"Ex\" marks months exempt from premiums due to maternity/childcare leave (only leaves whose application has been filed; coverage continues).",
       "notResidentRegistered": "No resident registration",
       "emptyReason": {
         "notEnrolled": "Not enrolled in health insurance or pension, so no premiums.",
@@ -897,7 +897,7 @@
     },
     "deduction": {
       "next": "Next-month deduction (last month's premium from this month's pay)",
-      "current": "Same-month deduction (this month's premium from this month's pay)"
+      "lawNote": "Fixed by law (Health Insurance Act Art. 167(1), Employees' Pension Insurance Act Art. 84(1)). Only for an employee who is leaving, last month's and this month's premiums (two months) may be deducted from the final pay. Check employees marked \"Last month\" on the premium list."
     },
     "method": {
       "payroll": "Deducted from pay (50 sen (1/100 yen) or less rounded down)",
@@ -1246,6 +1246,10 @@
     "employerNote": "incl. fractions of ¥1",
     "multipleOffices": "2+ offices",
     "multipleOfficesNote": "\"2+ offices\" employees work at two or more offices. Their premiums are split by each office's pay, so the amounts here are estimates. Check the notice from the pension office.",
+    "lastMonth": "Last month",
+    "lastMonthNote": "This is the last month's premium because the employee is leaving (or has died). Premiums are deducted from the next month's pay. If there is no pay next month, deduct last month's and this month's premiums (two months) from the final pay (Health Insurance Act Art. 167(1), Employees' Pension Insurance Act Art. 84(1)).",
+    "exemptPending": "Not applied yet",
+    "exemptPendingNote": "This month qualifies for the maternity/childcare leave exemption, but the employer has not applied yet, so premiums are charged. Click \"Mark as filed\" under Leave on the employee page to apply the exemption (Health Insurance Act Arts. 159, 159-3; Employees' Pension Insurance Act Arts. 81-2, 81-2-2).",
     "advance": {
       "check": "Check advances",
       "result": "Employees whose pay in month {{payMonth}} cannot cover their share: {{count}}",
@@ -1401,6 +1405,8 @@
     "peopleCount": "{{count}}",
     "hasProblems": "Some can't be calculated",
     "capped": "Capped",
+    "exemptPending": "Not applied yet",
+    "exemptPendingNote": "This bonus qualifies for the maternity/childcare leave exemption, but the employer has not applied yet, so premiums are charged. Click \"Mark as filed\" under Leave on the employee page to apply the exemption (Health Insurance Act Arts. 159, 159-3).",
     "cappedNote": "Calculated on health JPY {{health}} / pension JPY {{pension}}",
     "totalsTitle": "Premiums for this bonus (payment)",
     "grandTotal": "Total payment",
@@ -1553,6 +1559,7 @@
     "undecided": "Undecided",
     "ongoing": "(end undecided)",
     "noExempt": "No exemption",
+    "notFiledYet": "Not exempt until the application is filed",
     "confirmDelete": "Delete",
     "hint": {
       "rule": "Exempt from the start month to the month before the month containing the day after the end (or planned end). Childcare leave ending within a month is exempt if the month's childcare leave totals 14 days or more (excluding working days). Bonuses are exempt only for childcare leave over one month.",
