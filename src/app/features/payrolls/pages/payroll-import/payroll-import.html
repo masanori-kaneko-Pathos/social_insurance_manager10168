@@ -182,7 +182,8 @@
                   </tr>
                 </thead>
                 <tbody>
-                  @for (x of fix.withIssues(allWrites(), showItems); track x.line) {
+                  @let pg = pageOf(fix.withIssues(allWrites()), page(), pageSize());
+                  @for (x of pg.rows; track x.line) {
                     @if (x.item; as it) {
                       <tr [class.has-issue]="!!x.issue">
                         <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line }" /></td>
@@ -213,9 +214,8 @@
                 </tbody>
               </table>
             </div>
-            @if (allWrites().length > showItems) {
-              <p class="sub">{{ 'payrollCsv.import.moreItems' | transloco: { n: allWrites().length - showItems } }}</p>
-            }
+            <!-- ほかの一覧と同じページ送り（100行ずつ。11/19） -->
+            <app-pager variant="bottom" [total]="fix.withIssues(allWrites()).length" [(page)]="page" [(size)]="pageSize" />
           } @else {
             <p class="muted">{{ 'payrollCsv.import.nothing' | transloco }}</p>
           }

@@ -38,12 +38,12 @@ import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { IssueRow } from '../../../../shared/components/import-issues/issue-row';
 import { ImportSteps } from '../../../../shared/components/import-steps/import-steps';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
+import { Pager } from '../../../../shared/components/pager/pager';
+import { PAGE_SIZE, PageSize, pageOf } from '../../../../shared/logic/person-list';
 /** 書き出せる期間の上限（月数） */
 const MAX_MONTHS = 24;
 /** 確認画面に出すエラーの行数 */
 const SHOW_ERRORS = 100;
-/** 確認画面に出す取り込む行の数 */
-const SHOW_ITEMS = 20;
 /** CSV だけのエラー（それ以外は月の表と同じ payroll.rowError の文言を使う） */
 const CSV_ERRORS = new Set([
   'noEmployeeNumber',
@@ -69,7 +69,7 @@ interface Preview {
 
 @Component({
   selector: 'app-payroll-import',
-  imports: [PersonName, IssueRow, ImportSteps, ImportPicker, ColumnMapper, HalfWidthDigits, ImportIssues, RouterLink, TranslocoPipe, FormsModule],
+  imports: [PersonName, Pager, IssueRow, ImportSteps, ImportPicker, ColumnMapper, HalfWidthDigits, ImportIssues, RouterLink, TranslocoPipe, FormsModule],
   templateUrl: './payroll-import.html',
   styleUrl: './payroll-import.css',
 })
@@ -80,7 +80,10 @@ export class PayrollImport {
   readonly context = inject(OfficeContext);
 
   readonly showErrors = SHOW_ERRORS;
-  readonly showItems = SHOW_ITEMS;
+  /** 確認の表は、ほかの一覧と同じページ送りで100行ずつ（前は20行だけ出して「ほか◯件」にしていた。11/19） */
+  readonly page = signal(1);
+  readonly pageSize = signal<PageSize>(PAGE_SIZE);
+  readonly pageOf = pageOf;
 
   private employees: Employee[] = [];
   /** 表の氏名にフリガナを付けるため（読んだ従業員を ID で引く。11/18） */
@@ -365,6 +368,7 @@ export class PayrollImport {
       }
       if (this.lastTable !== table) return; // 読んでいる間に別のファイルに変わった
       this.preview.set({ fileName: file.fileName, encoding: file.encoding, read, ...classifyImport(read.items, this.saved) });
+      this.page.set(1);
     } catch (err) {
       console.error(err);
       this.errorKey.set(errorKeyOf(err, 'payrollCsv.error.read'));

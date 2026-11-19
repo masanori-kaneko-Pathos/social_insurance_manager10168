@@ -1846,7 +1846,6 @@
       "zeroPadded": "For {{n}} rows whose employee number lost its leading zeros, the zeros were restored for matching (Excel can drop them).",
       "hasErrors": "Some rows have problems. Fix them below and press \"Check again with fixes\", or import without the error rows.",
       "moreErrors": "{{n}} more rows have problems.",
-      "moreItems": "{{n}} more",
       "nothing": "There is nothing to import (all rows match saved records or are blank).",
       "button": "Import ({{c}} new, {{u}} overwrite)",
       "noInKind": "This file has no in-kind column. How should in-kind remuneration be handled?",
