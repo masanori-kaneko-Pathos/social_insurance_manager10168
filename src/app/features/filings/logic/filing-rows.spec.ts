@@ -177,6 +177,26 @@ describe('月額変更届・算定基礎届', () => {
   });
 });
 
+describe('75歳以上の70歳以上被用者（11/19）', () => {
+  it('算定基礎届：従前の「健」は書かず、「厚」と備考の70歳以上被用者算定は書く', () => {
+    const r = revisionRow('regular', {
+      employee: emp({ birthDate: '1950-03-01' }),
+      month: '2026-09',
+      firstMonth: '2026-04',
+      payrolls: new Map(),
+      previous: { health: 300000, pension: 300000, from: '2025-09' },
+      raise: null,
+      total: 0,
+      average: 0,
+      corrected: null,
+      remarks: ['1．70歳以上被用者算定'],
+    });
+    expect(r['prevHealth']).toBe('');
+    expect(r['prevPension']).toBe('300');
+    expect(r['remarks']).toContain('70歳以上被用者算定');
+  });
+});
+
 describe('特例改定（11/16）', () => {
   it('備考は様式どおり（下がったとき・戻ったとき）', () => {
     const e = emp({ birthDate: '1990-01-01' });

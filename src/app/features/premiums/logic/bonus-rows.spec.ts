@@ -217,3 +217,12 @@ describe('年4回以上の賞与（賞与に係る報酬。11/19）', () => {
     expect(c.problemCount).toBe(0);
   });
 });
+
+describe('75歳以上の70歳以上被用者の賞与（11/19）', () => {
+  it('保険料はかからない（none）が over70 が立つ（賞与支払届は出す）', () => {
+    const old = emp('old', '1951-12-18', '2018-04-01'); // 2026-12-18 に75歳
+    const r = buildBonusRow(old, [pay('x', '2026-12-25', { old: 300_000 })], '2026-12-25', ctx);
+    expect(r.state).toBe('none');
+    expect(r.over70).toBeTrue();
+  });
+});

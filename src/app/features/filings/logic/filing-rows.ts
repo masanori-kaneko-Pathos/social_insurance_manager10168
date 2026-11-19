@@ -9,7 +9,7 @@
 
 import { payTotal, type Payroll } from '../../../core/models/payroll';
 import { addDays, DateStr, shiftMonth, YearMonth } from '../../../shared/utils/date';
-import { ageReachDate } from '../../employees/logic/coverage';
+import { ageReachDate, birthdayAt } from '../../employees/logic/coverage';
 import { toWareki, toWarekiMonth } from './wareki';
 
 export type FilingKind = 'acquire' | 'loss' | 'regular' | 'irregular' | 'bonus';
@@ -259,10 +259,12 @@ function retroOf(x: RevisionRowInput): string {
 export function revisionRow(kind: 'regular' | 'irregular', x: RevisionRowInput): FilingRow {
   const e = x.employee;
   const reach70 = over70(e.birthDate, `${x.month}-01`);
+  // 75歳以上で健保がない人（70歳以上被用者だけの届）は、従前の「健」を書かない（11/19）
+  const healthLost = birthdayAt(e.birthDate, 75) <= `${x.month}-01` || (!!e.health.lostDate && e.health.lostDate <= `${x.month}-01`);
   return {
     ...person(e),
     [kind === 'regular' ? 'applyMonth' : 'revisedMonth']: toWarekiMonth(x.month),
-    prevHealth: x.previous ? thousand(x.previous.health) : '',
+    prevHealth: x.previous && e.health.enrolled && !healthLost ? thousand(x.previous.health) : '',
     prevPension: x.previous ? thousand(x.previous.pension) : '',
     prevFrom: x.previous ? toWarekiMonth(x.previous.from) : '',
     raise: x.raise ? `${Number(x.raise.month.slice(5))}月 ${x.raise.direction === 'up' ? '1．昇給' : '2．降給'}` : '',

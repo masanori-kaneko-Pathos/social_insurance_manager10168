@@ -1,4 +1,4 @@
-import { pensionGradeNeeded } from './coverage';
+import { isOver70Employee, pensionGradeNeeded } from './coverage';
 import { CoverageInput, ageReachDate, coverageForMonth, defaultEnrollmentDates, emptyReason, isChargedMonth } from './coverage';
 import { monthsOfFiscalYear, fiscalYearOf } from '../../../shared/utils/date';
 
@@ -208,5 +208,28 @@ describe('pensionGradeNeeded：厚生年金の等級が要る月か（11/16）',
     expect(pensionGradeNeeded(p('1990-01-01', true, '2020-04-01', '2026-10-01'), '2026-09')).toBeTrue();
     expect(pensionGradeNeeded(p('1990-01-01', true, '2020-04-01', '2026-10-01'), '2026-10')).toBeFalse();
     expect(pensionGradeNeeded(p('1990-01-01', true, '2026-10-01', '2026-10-21'), '2026-10')).toBeTrue();
+  });
+});
+
+describe('isOver70Employee：70歳以上被用者（厚生年金保険法27条。11/19）', () => {
+  const e = (over: object = {}) => ({
+    birthDate: '1951-12-18', // 70歳到達 2021-12-17・75歳 2026-12-18
+    retireDate: null as string | null,
+    pension: { enrolled: true, acquiredDate: '2018-04-01', lostDate: null as string | null },
+    ...over,
+  });
+  it('70歳に達した日から当たる。75歳で健保がなくなっても当たる', () => {
+    expect(isOver70Employee(e(), '2021-12-16')).toBeFalse();
+    expect(isOver70Employee(e(), '2021-12-17')).toBeTrue();
+    expect(isOver70Employee(e(), '2026-12-25')).toBeTrue();
+  });
+  it('退職した・厚年に入っていない人は当たらない', () => {
+    expect(isOver70Employee(e({ retireDate: '2026-06-30' }), '2026-07-10')).toBeFalse();
+    expect(isOver70Employee(e({ pension: { enrolled: true, acquiredDate: '2018-04-01', lostDate: '2026-07-01' } }), '2026-07-10')).toBeFalse();
+    expect(isOver70Employee(e({ pension: { enrolled: false, acquiredDate: null, lostDate: null } }), '2026-07-10')).toBeFalse();
+  });
+  it('70歳以上で入社した人も当たる（取得日から）', () => {
+    expect(isOver70Employee(e({ pension: { enrolled: true, acquiredDate: '2026-04-01', lostDate: null } }), '2026-07-10')).toBeTrue();
+    expect(isOver70Employee(e({ pension: { enrolled: true, acquiredDate: '2026-04-01', lostDate: null } }), '2026-03-31')).toBeFalse();
   });
 });

@@ -10,7 +10,7 @@ import {
   PremiumPart,
 } from '../../../core/models/premium';
 import { RatesForMonth } from '../../../core/models/rates';
-import { CoverageInput, healthLostDate, pensionLostDate } from '../../employees/logic/coverage';
+import { CoverageInput, healthLostDate, isOver70Employee, pensionLostDate } from '../../employees/logic/coverage';
 import { DateStr, YearMonth } from '../../../shared/utils/date';
 import { EmployeeBonus, bonusStatus, calcBonuses, PriorBonusHolder } from './calc-bonus';
 import { PremiumSplit, splitContribution } from './premium-core';
@@ -116,6 +116,8 @@ export interface BonusRow extends PremiumSplit {
   capped: boolean; // 上限で削られたか
   /** 賞与に係る報酬のとき：性質と、7/1前1年に受けた回数（11/19） */
   remuneration: { nature: string; count: number; year: number } | null;
+  /** 保険料はかからないが、70歳以上被用者として賞与支払届を出す人（75歳以上を含む。11/19） */
+  over70: boolean;
 }
 
 const EMPTY_SPLIT: PremiumSplit = {
@@ -155,6 +157,7 @@ export function buildBonusRow(
     ...(result ? splitContribution(result) : EMPTY_SPLIT),
     state: remuneration ? 'remuneration' : error ? 'error' : stateOf(result),
     remuneration,
+    over70: isOver70Employee(employee as BonusEmployee & { retireDate?: DateStr | null }, paidDate),
     result,
     healthEmployeeYen: groups
       .filter((g) => g.parts.some((p) => HEALTH_PARTS.includes(p)))

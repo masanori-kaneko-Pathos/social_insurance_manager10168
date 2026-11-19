@@ -89,6 +89,23 @@ export function pensionLostDate(input: CoverageInput): DateStr | null {
   return earlier(input.pension.lostDate, ageReachDate(input.birthDate, 70));
 }
 
+/**
+ * 70歳以上被用者か（厚生年金保険法27条。11/19）
+ * 70歳に達した日以後も、厚年に入っていた人がそのまま使われている（年齢以外の理由で喪失していない・退職していない）
+ * 保険料はかからないが、算定基礎届・月額変更届・賞与支払届は「70歳以上被用者」として出す（75歳以上で健保がなくなっても同じ）
+ * ※ 厚年の加入歴は、この事業所の加入の記録で見る（ほかの会社だけの加入歴は分からない）
+ */
+export function isOver70Employee(
+  input: Pick<CoverageInput, 'birthDate' | 'pension'> & { retireDate?: DateStr | null },
+  date: DateStr,
+): boolean {
+  const p = input.pension;
+  if (!p.enrolled || !p.acquiredDate || p.acquiredDate > date) return false;
+  if (p.lostDate && p.lostDate <= date) return false; // 退職など、年齢以外で喪失した
+  if (input.retireDate && input.retireDate < date) return false;
+  return ageReachDate(input.birthDate, 70) <= date;
+}
+
 /** 健康保険：75歳の誕生日に後期高齢者医療へ移るため喪失 */
 export function healthLostDate(input: CoverageInput): DateStr | null {
   return earlier(input.health.lostDate, birthdayAt(input.birthDate, 75));

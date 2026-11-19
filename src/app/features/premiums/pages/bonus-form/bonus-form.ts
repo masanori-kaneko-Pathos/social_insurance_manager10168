@@ -23,6 +23,7 @@ import { RateTables } from '../../../rates/logic/pick-rates';
 import { RateService } from '../../../rates/rate.service';
 import { BonusService } from '../../bonus.service';
 import { BONUS_COUNT_AS, BonusCountAs, DEFAULT_NATURE, natureOf } from '../../logic/bonus-nature';
+import { isOver70Employee } from '../../../employees/logic/coverage';
 import {
   BonusContext,
   BonusRow,
@@ -194,7 +195,8 @@ export class BonusForm {
     const texts = this.amountTexts();
     const payments = this.draftPayments();
     return this.employees()
-      .filter((e) => eligibleOn(e, date) || (texts[e.id] ?? '').trim() !== '')
+      // 70歳以上被用者（75歳以上を含む）も出す：保険料はかからないが、賞与支払届を出すので額を入れる（11/19）
+      .filter((e) => eligibleOn(e, date) || isOver70Employee(e, date) || (texts[e.id] ?? '').trim() !== '')
       .map((employee) => ({ employee, ...buildBonusRow(employee, payments, date, ctx) }));
   });
 
@@ -452,7 +454,9 @@ export class BonusForm {
         amountYen: this.amounts()[r.employee.id] ?? 0,
         row: r,
         note:
-          r.state === 'exempt' || r.state === 'counted' || r.state === 'none' || r.state === 'remuneration'
+          r.state === 'none' && r.over70
+            ? t('bonus.state.over70')
+            : r.state === 'exempt' || r.state === 'counted' || r.state === 'none' || r.state === 'remuneration'
             ? t('bonus.state.' + r.state)
             : r.state === 'ok' ? '' : t(this.missingKey(r)),
       }));

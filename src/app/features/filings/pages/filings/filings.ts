@@ -28,6 +28,7 @@ import { RegularService } from '../../../payrolls/regular.service';
 import { RevisionService } from '../../../payrolls/revision.service';
 import { BonusService } from '../../../premiums/bonus.service';
 import { eligibleOn } from '../../../premiums/logic/bonus-rows';
+import { isOver70Employee } from '../../../employees/logic/coverage';
 import { bonusRemunerationOf, irregularBonusYearOf, isRemunerationBonus } from '../../../premiums/logic/bonus-nature';
 import {
   acquiredDateOf,
@@ -372,9 +373,13 @@ export class FilingsPage {
       .flatMap((p) =>
         Object.entries(p.amounts)
           // 年4回以上の「賞与に係る報酬」は賞与支払届を出さない（定時決定で報酬月額に足す。11/19）
+          // 70歳以上被用者（75歳以上で健保もない人を含む）は保険料がなくても届を出す（厚生年金保険法27条。11/19）
           .filter(
             ([id, amount]) =>
-              amount > 0 && byId.has(id) && eligibleOn(byId.get(id)!, p.paidDate) && !isRemunerationBonus(id, p, payments),
+              amount > 0 &&
+              byId.has(id) &&
+              (eligibleOn(byId.get(id)!, p.paidDate) || isOver70Employee(byId.get(id)!, p.paidDate)) &&
+              !isRemunerationBonus(id, p, payments),
           )
           .map(([id, amount]) => {
             const inKind = p.inKindAmounts?.[id] ?? 0;

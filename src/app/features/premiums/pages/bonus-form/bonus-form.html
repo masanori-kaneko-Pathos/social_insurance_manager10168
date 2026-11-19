@@ -280,7 +280,8 @@
                   <td class="num muted" colspan="6">—</td>
                 }
                 @case ('none') {
-                  <td class="muted note" colspan="6">{{ 'bonus.state.none' | transloco }}</td>
+                  <!-- 70歳以上被用者（75歳以上を含む）：保険料はないが賞与支払届は出す（11/19） -->
+                  <td class="muted note" colspan="6">{{ (r.over70 ? 'bonus.state.over70' : 'bonus.state.none') | transloco }}</td>
                 }
                 @case ('counted') {
                   <td class="num">{{ yen(r.result!.standardBonus) }}</td>

@@ -1418,15 +1418,16 @@
     "cardEmpty": "No bonuses paid.",
     "state": {
       "none": "Not insured on the payment date",
+      "over70": "Employee aged 70+ (no premium; a bonus payment report is still filed as an employee aged 70+)",
       "counted": "No premium in the month coverage ends",
       "countedNote": "(still counts toward the annual health total)",
       "exempt": "Exempt due to leave",
       "exemptNote": "(still counts toward the annual health total)",
       "remuneration": "Bonus as remuneration (no bonus premium)",
-      "remunerationNote": "\"{{nature}}\" was paid {{count}} times in the year before July 1, {{year}}, so it is treated as remuneration. No bonus payment report; added to the monthly remuneration at the annual determination."
+      "remunerationNote": "\"{{nature}}\" paid {{count}} times in the year before July 1, {{year}}. Added to monthly pay at the annual determination."
     },
     "hint": {
-      "paidDate": "Premiums depend on the payment date (none before coverage starts or on/after it ends).",
+      "paidDate": "No premium for payments before the acquisition date or on/after the loss date.",
       "needDate": "Enter the payment date to show eligible employees.",
       "standard": "Standard Bonus Amount (SBA) = bonus amount rounded down to the nearest 1,000 yen. Caps: health etc. JPY 5.73M per fiscal year (Apr–Mar); pension etc. JPY 1.5M per month.",
       "natureShort": "Empty means \"賞与\". Name only payments of a different nature.",
@@ -1452,7 +1453,7 @@
     "closePeople": "Close",
     "import": {
       "button": "Import from file",
-      "note": "A file (CSV or Excel) with employee numbers (or names) and bonus amounts. If it has a paid date column, the paid date is filled in too (you can read the file before choosing the date). It only fills the inputs; press Save to store them.",
+      "note": "Fills the amounts from a CSV or Excel file (and the paid date, if the file has one). Click Save to save.",
       "result": "Filled in bonus amounts for {{count}} people from {{file}}. Check them before saving.",
       "notFound": "Not found: {{list}} (includes people not covered on this pay date)",
       "ambiguous": "Several people share the name: {{list}} (use an employee number column)",
@@ -2008,7 +2009,7 @@
         "cycle": "For schedules that vary by week. The cycle total is averaged per week."
       },
       "scheduledWage": "Scheduled wage: base pay and allowances. Excludes one-off pay, bonuses, overtime/holiday/night premiums, attendance, commuting and family allowances.",
-      "expected": "Expected monthly pay: the amount on the Application to Enroll (資格取得届). Scheduled wage plus expected overtime, commuting allowance, etc. (copied from the scheduled wage if empty).",
+      "expected": "Expected monthly pay: the amount on the Application to Enroll (資格取得届). Scheduled wage plus expected overtime, commuting allowance, etc. (copied from the scheduled wage if empty). If bonuses are paid 4+ times a year, also add the annual bonus of employees in similar work ÷ 12.",
       "periodEnd": "Leave blank for no fixed term.",
       "student": "Daytime students are not covered as short-time workers (evening, correspondence, part-time school and students on leave are).",
       "special": {
