@@ -151,7 +151,7 @@ describe('月額変更届・算定基礎届', () => {
       '6．その他（年間平均）',
     ]);
   });
-  it('賞与に係る報酬（年4回以上の賞与）：各月の通貨と合計に足し、備考の「その他」に書く（11/19）', () => {
+  it('賞与に係る報酬（年4回以上の賞与）：各月の通貨と合計に足し、備考の「その他」に払った月と ÷12 の額（ガイドブック ケース⑦。11/19）', () => {
     const r = revisionRow('regular', {
       employee: emp({ birthDate: '1985-05-01' }),
       month: '2026-09',
@@ -168,12 +168,12 @@ describe('月額変更届・算定基礎届', () => {
     expect(r['m1Cash']).toBe('284,000');
     expect(r['m1Total']).toBe('284,000');
     const e = emp({ birthDate: '1990-01-01' });
-    expect(regularRemarks({ employee: e, year: 2026, annual: false, payrolls: new Map(), bonusMonthly: 70000 })).toEqual([
-      '9．その他（賞与に係る報酬 70,000円を各月に加算）',
-    ]);
-    expect(irregularRemarks({ employee: e, revisedFrom: '2026-11', annual: false, reasonNote: null, bonusMonthly: 70000 })).toEqual([
-      '6．その他（賞与に係る報酬 70,000円を各月に加算）',
-    ]);
+    expect(
+      regularRemarks({ employee: e, year: 2026, annual: false, payrolls: new Map(), bonusMonthly: 75000, bonusMonths: [9, 12, 3, 6] }),
+    ).toEqual(['9．その他（賞与 9.12.3.6月 75,000円）']);
+    expect(
+      irregularRemarks({ employee: e, revisedFrom: '2026-11', annual: false, reasonNote: null, bonusMonthly: 70000, bonusMonths: [9, 12, 3, 6] }),
+    ).toEqual(['6．その他（賞与 9.12.3.6月 70,000円）']);
   });
 });
 

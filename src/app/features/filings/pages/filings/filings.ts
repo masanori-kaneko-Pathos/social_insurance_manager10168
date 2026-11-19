@@ -229,9 +229,12 @@ export class FilingsPage {
     if (targets.length === 0) return [];
     const tIds = targets.map((e) => e.id);
     const months = ['03', '04', '05', '06'].map((m) => `${year}-${m}`);
-    const [byMonth, rems] = await Promise.all([
+    // 賞与に係る報酬を足した人がいれば、備考に書く支払月のために支給を読む（11/19）
+    const anyBonus = targets.some((e) => (decisions.get(e.id)!.bonusMonthly ?? 0) > 0);
+    const [byMonth, rems, bonusPayments] = await Promise.all([
       Promise.all(months.map((m) => this.payrollApi.month(officeId, tIds, m))),
       Promise.all(tIds.map((id) => this.remunerationsApi.list(officeId, id))),
+      anyBonus ? this.bonusApi.list(officeId) : Promise.resolve([]),
     ]);
     return targets.map((e, i) => {
       const d = decisions.get(e.id)!;
@@ -262,7 +265,14 @@ export class FilingsPage {
         total: d.total,
         average: d.average,
         corrected: d.corrected,
-        remarks: regularRemarks({ employee: e, year, annual: d.method === 'annual', payrolls, bonusMonthly: d.bonusMonthly }),
+        remarks: regularRemarks({
+          employee: e,
+          year,
+          annual: d.method === 'annual',
+          payrolls,
+          bonusMonthly: d.bonusMonthly,
+          bonusMonths: (d.bonusMonthly ?? 0) > 0 ? bonusRemunerationOf(e.id, year, bonusPayments).months : [],
+        }),
         bonusMonthly: d.bonusMonthly ?? 0,
       });
     });
@@ -279,8 +289,9 @@ export class FilingsPage {
     const byId = new Map(this.employees!.map((e) => [e.id, e]));
     // 年4回以上の賞与（賞与に係る報酬）：随時改定で足した額を、支給の記録から出し直す（11/19）
     const bonusPayments = decisions.length > 0 ? await this.bonusApi.list(officeId) : [];
-    const bonusMonthlyOf = (employeeId: string, revisedFrom: string) =>
-      bonusRemunerationOf(employeeId, irregularBonusYearOf(revisedFrom), bonusPayments).monthly;
+    const bonusOf = (employeeId: string, revisedFrom: string) =>
+      bonusRemunerationOf(employeeId, irregularBonusYearOf(revisedFrom), bonusPayments);
+    const bonusMonthlyOf = (employeeId: string, revisedFrom: string) => bonusOf(employeeId, revisedFrom).monthly;
     // 特例改定：初月の1か月分だけ（月額変更届（特例改定用）。支払基礎日数は記録した日数。下がったときは勤務しなかった日も含む）
     const specialRows = Promise.all(
       specials
@@ -341,6 +352,7 @@ export class FilingsPage {
               annual: d.method === 'annual',
               reasonNote: d.reasonNote,
               bonusMonthly: bonusMonthlyOf(e.id, d.revisedFrom),
+              bonusMonths: bonusOf(e.id, d.revisedFrom).months,
             }),
             bonusMonthly: bonusMonthlyOf(e.id, d.revisedFrom),
           });

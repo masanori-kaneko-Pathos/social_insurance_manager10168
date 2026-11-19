@@ -93,6 +93,8 @@ export interface BonusRemuneration {
   annual: number;
   /** 合計 ÷ 12（1円未満切り捨て）：報酬月額に足す額 */
   monthly: number;
+  /** 足した支給を払った月（支払日の順。算定基礎届の備考「賞与 9.12.3.6月 75,000円」に書く。11/19） */
+  months: number[];
 }
 
 /** 定時決定（Y）で報酬月額に足す「賞与に係る報酬」 */
@@ -115,7 +117,13 @@ export function bonusRemunerationOf(
     .filter((t) => t.count >= REMUNERATION_COUNT)
     .sort((a, b) => a.nature.localeCompare(b.nature, 'ja'));
   const annual = natures.reduce((s, t) => s + t.total, 0);
-  return { year, natures, annual, monthly: monthlyOf(annual) };
+  const counted = new Set(natures.map((t) => t.nature));
+  const months = payments
+    .filter((p) => paidTo(employeeId, p) && inWindow(p, w) && countAsOf(p) !== 'oneOff' && counted.has(natureOf(p)))
+    .map((p) => p.paidDate)
+    .sort()
+    .map((d) => Number(d.slice(5, 7)));
+  return { year, natures, annual, monthly: monthlyOf(annual), months: [...new Set(months)] };
 }
 
 /** 年額 ÷ 12（1円未満切り捨て） */

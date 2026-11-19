@@ -42,6 +42,7 @@ describe('賞与に係る報酬（年4回以上。局部長通知・令和5年Q&
     expect(r.annual).toBe(840_000);
     expect(r.monthly).toBe(70_000);
     expect(r.natures).toEqual([{ nature: '四半期インセンティブ', count: 4, total: 840_000 }]);
+    expect(r.months).toEqual([9, 12, 3, 6]); // 備考「賞与 9.12.3.6月」の順（支払日の順）
   });
 
   it('最初の年の4回は賞与のまま（前の年の実績がない。Q4）。9月以降の支給から報酬', () => {
@@ -106,5 +107,21 @@ describe('賞与に係る報酬（年4回以上。局部長通知・令和5年Q&
     const list = quarter.map((p) => ({ ...p, inKindAmounts: { e1: 1_200 } }));
     expect(bonusRemunerationOf('e1', 2026, list).annual).toBe(844_800);
     expect(bonusRemunerationOf('e1', 2026, list).monthly).toBe(70_400);
+  });
+});
+
+describe('算定基礎届の記入・提出ガイドブック ケース⑦（11/19）', () => {
+  it('9月12万・12月38万・3月15万・6月25万 ＝ 90万円 ÷ 12 ＝ 75,000円（4〜6月 270,000 → 345,000）', () => {
+    const list = [
+      pay('a', '2025-09-25', { e1: 120_000 }),
+      pay('b', '2025-12-25', { e1: 380_000 }),
+      pay('c', '2026-03-25', { e1: 150_000 }),
+      pay('d', '2026-06-25', { e1: 250_000 }),
+    ];
+    const r = bonusRemunerationOf('e1', 2026, list);
+    expect(r.annual).toBe(900_000);
+    expect(r.monthly).toBe(75_000);
+    expect(r.months).toEqual([9, 12, 3, 6]);
+    expect(270_000 + r.monthly).toBe(345_000);
   });
 });
