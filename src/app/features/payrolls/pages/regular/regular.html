@@ -247,7 +247,13 @@
                     @if (v.bonusAuto.natures.length > 0) {
                       <ul class="bonus-natures">
                         @for (n of v.bonusAuto.natures; track n.nature) {
-                          <li>{{ 'regular.bonus.nature' | transloco: { name: n.nature, count: n.count, total: yen(n.total) } }}</li>
+                          <li>
+                            {{ 'regular.bonus.nature' | transloco: { name: n.nature, count: n.count, total: yen(n.total) } }}
+                            @if (n.estimated) {
+                              <!-- 年4回以上の賞与の最初の年：平均 × 規程の回数（11/19） -->
+                              <span class="estimated">{{ 'regular.bonus.estimated' | transloco }}</span>
+                            }
+                          </li>
                         }
                       </ul>
                     } @else {

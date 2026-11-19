@@ -5,11 +5,15 @@ import { HistoryService } from '../employees/history.service';
 import { bonusChanges } from '../employees/logic/history';
 import { db } from '../../core/firebase';
 import { BonusPaymentDoc, BonusPayment, BonusPaymentInput } from '../../core/models/bonus';
+import { BonusItemService } from './bonus-item.service';
+import { resolveItems } from './logic/bonus-items';
+import { DEFAULT_NATURE } from './logic/bonus-nature';
 
 /** 賞与の支給（事業所の下。1回の支給＝1件。ドキュメントIDは自動） */
 @Injectable({ providedIn: 'root' })
 export class BonusService {
   private readonly history = inject(HistoryService);
+  private readonly items = inject(BonusItemService);
 
   private col(officeId: string) {
     return collection(db, 'offices', officeId, 'bonusPayments');
@@ -17,10 +21,19 @@ export class BonusService {
 
   /** 新しい順（年度の累計を出すため、いつも全件を読む。1事業所で年に数件なので軽い） */
   async list(officeId: string): Promise<BonusPayment[]> {
-    const snap = await countedGetDocs(this.col(officeId));
-    return snap.docs
+    const [snap, items] = await Promise.all([
+      countedGetDocs(this.col(officeId)),
+      // 賞与の項目（読めなくても、今までどおり名前ごと・回数で判定で計算する）
+      this.items.list(officeId).catch((err) => {
+        console.error(err);
+        return [];
+      }),
+    ]);
+    const list = snap.docs
       .map((d) => ({ id: d.id, ...(d.data() as BonusPaymentDoc) }))
       .sort((a, b) => b.paidDate.localeCompare(a.paidDate));
+    // 支給に、当たった項目のまとまりと決まりを付ける（計算のときだけ。保存はしない。11/19）
+    return resolveItems(list, items, DEFAULT_NATURE);
   }
 
   /** 作ったドキュメントの ID を返す */

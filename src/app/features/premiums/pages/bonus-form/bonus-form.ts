@@ -22,7 +22,11 @@ import { BONUS_IMPORT_SPEC, BonusImportResult, matchBonusRows } from '../../logi
 import { RateTables } from '../../../rates/logic/pick-rates';
 import { RateService } from '../../../rates/rate.service';
 import { BonusService } from '../../bonus.service';
-import { BONUS_COUNT_AS, BonusCountAs, DEFAULT_NATURE, natureOf } from '../../logic/bonus-nature';
+import { BONUS_COUNT_AS, BonusCountAs, DEFAULT_NATURE, natureOf, periodYearOf } from '../../logic/bonus-nature';
+import { resolveItems, treatmentAt } from '../../logic/bonus-items';
+import { todayLocal } from '../../../../shared/utils/date';
+import { BonusItemService } from '../../bonus-item.service';
+import type { BonusItem, BonusTreatment } from '../../../../core/models/bonus-item';
 import { isOver70Employee } from '../../../employees/logic/coverage';
 import {
   BonusContext,
@@ -78,6 +82,7 @@ export class BonusForm {
   private readonly toast = inject(ToastService);
   private readonly employeesApi = inject(EmployeeService);
   private readonly bonusApi = inject(BonusService);
+  private readonly itemsApi = inject(BonusItemService);
   private readonly rates = inject(RateService);
   readonly context = inject(OfficeContext);
 
@@ -106,10 +111,19 @@ export class BonusForm {
   readonly countAs = signal<BonusCountAs>('normal');
   readonly countAsList = BONUS_COUNT_AS;
   readonly defaultNature = DEFAULT_NATURE;
-  /** ほかの支給で使った性質（入力の候補） */
+  /** 賞与の項目（11/19） */
+  readonly items = signal<BonusItem[]>([]);
+  /** 入力の候補：賞与の項目の名前と、ほかの支給で使った名前 */
   readonly natureOptions = computed(() => [
-    ...new Set([DEFAULT_NATURE, ...this.payments().map((p) => natureOf(p))]),
+    ...new Set([DEFAULT_NATURE, ...this.items().map((i) => i.name), ...this.payments().map((p) => natureOf(p))]),
   ]);
+  /** 入力中の名前が当たる項目と、支払日の扱い（当たらなければ null。11/19） */
+  readonly natureItem = computed<{ name: string; treatment: BonusTreatment } | null>(() => {
+    const [p] = resolveItems([{ nature: this.nature().trim() || null }], this.items(), DEFAULT_NATURE);
+    if (!p.rule) return null;
+    const year = periodYearOf(this.paidDate() || todayLocal());
+    return { name: p.rule.name, treatment: treatmentAt(p.rule, year) };
+  });
   /** 従業員ID → 入力中の文字（「500,000」など） */
   readonly amountTexts = signal<Record<string, string>>({});
   /** 読み込んだときの入力（変わったかを見るため） */
@@ -178,13 +192,23 @@ export class BonusForm {
 
   /** 保存済みの支給に、入力中の内容を差し替えたもの（計算はいつもこれで行う） */
   private readonly draftPayments = computed(() =>
-    withDraft(this.payments(), {
-      id: this.bonusId ?? NEW_ID,
-      paidDate: this.paidDate(),
-      amounts: this.amounts(),
-      nature: this.nature().trim() || null,
-      countAs: this.countAs(),
-    }),
+    withDraft(
+      this.payments(),
+      // 入力中の支給にも、賞与の項目を当てる（対象外・年4回以上の賞与をその場で表に出す。11/19）
+      resolveItems(
+        [
+          {
+            id: this.bonusId ?? NEW_ID,
+            paidDate: this.paidDate(),
+            amounts: this.amounts(),
+            nature: this.nature().trim() || null,
+            countAs: this.countAs(),
+          },
+        ],
+        this.items(),
+        DEFAULT_NATURE,
+      )[0],
+    ),
   );
 
   /** 表の行：支払日に対象になりうる人と、金額を入れた人（打つたびに計算し直す） */
@@ -258,11 +282,13 @@ export class BonusForm {
     const office = this.context.current();
     if (!office) return;
     try {
-      const [employees, payments, tables] = await Promise.all([
+      const [employees, payments, tables, items] = await Promise.all([
         this.employeesApi.list(office.id),
         this.bonusApi.list(office.id),
         this.rates.tablesFor(office.id, everKumiai(office)),
+        this.itemsApi.list(office.id).catch(() => [] as BonusItem[]),
       ]);
+      this.items.set(items);
       this.employees.set(employees);
       this.payments.set(payments);
       this.tables.set(tables);
@@ -456,7 +482,7 @@ export class BonusForm {
         note:
           r.state === 'none' && r.over70
             ? t('bonus.state.over70')
-            : r.state === 'exempt' || r.state === 'counted' || r.state === 'none' || r.state === 'remuneration'
+            : r.state === 'exempt' || r.state === 'counted' || r.state === 'none' || r.state === 'remuneration' || r.state === 'notCovered'
             ? t('bonus.state.' + r.state)
             : r.state === 'ok' ? '' : t(this.missingKey(r)),
       }));

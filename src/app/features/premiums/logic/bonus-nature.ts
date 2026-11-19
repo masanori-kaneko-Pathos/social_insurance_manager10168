@@ -16,8 +16,14 @@
  *   → 規程を新しく作った年は実績がないので賞与のまま（Q4）、実績が3回以下なら翌年度も賞与（Q8）
  * - 定時決定（Y）では、Y年7月1日前の1年に受けた「報酬に当たる性質」の支給の合計 ÷ 12 を報酬月額に足す
  *   （年の途中で規程を変えた人の「受けたであろう額」は、定時決定の画面で年額を手で直す）
+ *
+ * 賞与の項目（bonus-items.ts。11/19）
+ * - 項目に当たった支給は、項目ごとに数える（group）
+ * - 扱い「年4回以上の賞与」：回数を待たずに報酬。最初の年で実績が規程の回数に足りなければ、平均 × 規程の回数を見込みにする
+ * - 扱い「対象外」：賞与でも報酬でもない（保険料・賞与支払届・定時決定のどれにも入れない）
  */
 import { DateStr } from '../../../shared/utils/date';
+import { ItemRule, treatmentAt } from './bonus-items';
 
 /** 性質の初期値 */
 export const DEFAULT_NATURE = '賞与';
@@ -34,13 +40,22 @@ export interface NaturePaymentLike {
   inKindAmounts?: Record<string, number>;
   nature?: string | null;
   countAs?: BonusCountAs | null;
+  /** 当たった賞与の項目の名前（計算の前に付ける。保存しない） */
+  group?: string;
+  /** 当たった賞与の項目の決まり（同上） */
+  rule?: ItemRule;
 }
 
 /** 4回以上で「賞与に係る報酬」 */
 export const REMUNERATION_COUNT = 4;
 
-export function natureOf(p: Pick<NaturePaymentLike, 'nature'>): string {
-  return p.nature?.trim() || DEFAULT_NATURE;
+export function natureOf(p: Pick<NaturePaymentLike, 'nature' | 'group'>): string {
+  return p.group ?? (p.nature?.trim() || DEFAULT_NATURE);
+}
+
+/** 社会保険の対象外の項目の支給か（賞与でも報酬でもない） */
+export function isNotCovered(p: Pick<NaturePaymentLike, 'paidDate' | 'rule'>): boolean {
+  return treatmentAt(p.rule, periodYearOf(p.paidDate)) === 'none';
 }
 
 function countAsOf(p: Pick<NaturePaymentLike, 'countAs'>): BonusCountAs {
@@ -76,13 +91,18 @@ export function isRemunerationBonus(
   payments: readonly NaturePaymentLike[],
 ): boolean {
   if (!paidTo(employeeId, payment) || countAsOf(payment) === 'oneOff') return false;
+  const treatment = treatmentAt(payment.rule, periodYearOf(payment.paidDate));
+  if (treatment === 'none') return false;
+  if (treatment === 'remuneration') return true;
   return countOf(employeeId, natureOf(payment), periodYearOf(payment.paidDate), payments) >= REMUNERATION_COUNT;
 }
 
 export interface NatureTotal {
   nature: string;
   count: number; // 数えた回数
-  total: number; // 額（通貨＋現物。分割の続きを含む）
+  total: number; // 額（通貨＋現物。分割の続きを含む。見込みのときは見込みの額）
+  /** 年4回以上の賞与で、実績が規程の回数に足りないので「平均 × 規程の回数」にした（11/19） */
+  estimated?: boolean;
 }
 
 export interface BonusRemuneration {
@@ -105,21 +125,38 @@ export function bonusRemunerationOf(
 ): BonusRemuneration {
   const w = windowOf(year);
   const byNature = new Map<string, NatureTotal>();
+  const forced = new Map<string, number | null>(); // 扱いが「年4回以上の賞与」のまとまり → 規程の回数
   for (const p of payments) {
     if (!paidTo(employeeId, p) || !inWindow(p, w) || countAsOf(p) === 'oneOff') continue;
+    const treatment = treatmentAt(p.rule, year);
+    if (treatment === 'none') continue;
     const n = natureOf(p);
+    if (treatment === 'remuneration') forced.set(n, p.rule?.plannedCount ?? null);
     const t = byNature.get(n) ?? { nature: n, count: 0, total: 0 };
     if (countAsOf(p) === 'normal') t.count++;
     t.total += (p.amounts[employeeId] ?? 0) + (p.inKindAmounts?.[employeeId] ?? 0);
     byNature.set(n, t);
   }
   const natures = [...byNature.values()]
-    .filter((t) => t.count >= REMUNERATION_COUNT)
+    .filter((t) => t.count >= REMUNERATION_COUNT || forced.has(t.nature))
+    .map((t) => {
+      const planned = forced.get(t.nature);
+      return planned && t.count > 0 && t.count < planned
+        ? { ...t, total: Math.floor((t.total * planned) / t.count), estimated: true }
+        : t;
+    })
     .sort((a, b) => a.nature.localeCompare(b.nature, 'ja'));
   const annual = natures.reduce((s, t) => s + t.total, 0);
   const counted = new Set(natures.map((t) => t.nature));
   const months = payments
-    .filter((p) => paidTo(employeeId, p) && inWindow(p, w) && countAsOf(p) !== 'oneOff' && counted.has(natureOf(p)))
+    .filter(
+      (p) =>
+        paidTo(employeeId, p) &&
+        inWindow(p, w) &&
+        countAsOf(p) !== 'oneOff' &&
+        treatmentAt(p.rule, year) !== 'none' &&
+        counted.has(natureOf(p)),
+    )
     .map((p) => p.paidDate)
     .sort()
     .map((d) => Number(d.slice(5, 7)));

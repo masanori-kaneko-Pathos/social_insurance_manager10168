@@ -93,7 +93,7 @@
         />
       </div>
 
-      <!-- 性質：年4回以上かを数えるまとまり（名称にかかわらず、同じ性質の支給ごとに数える。11/19） -->
+      <!-- 賞与の項目：年4回以上かを数えるまとまり（名称にかかわらず、同じ項目の支給ごとに数える。11/19） -->
       <div class="field">
         <label for="nature">{{ 'bonus.field.nature' | transloco }}</label>
         <input
@@ -111,7 +111,12 @@
             <option [value]="n"></option>
           }
         </datalist>
-        <span class="hint">{{ 'bonus.hint.natureShort' | transloco }}</span>
+        @if (natureItem(); as it) {
+          <!-- 当たった賞与の項目と、社会保険の扱い（11/19） -->
+          <span class="hint">{{ 'bonus.hint.natureItem' | transloco: { name: it.name, treatment: ('bonusItem.treatment.' + it.treatment | transloco) } }}</span>
+        } @else {
+          <span class="hint">{{ 'bonus.hint.natureShort' | transloco }}</span>
+        }
       </div>
 
       <div class="field">
@@ -289,6 +294,11 @@
                     {{ 'bonus.state.counted' | transloco }}
                     <span class="note-sub">{{ 'bonus.state.countedNote' | transloco }}</span>
                   </td>
+                }
+                @case ('notCovered') {
+                  <!-- 賞与の項目で「社会保険の対象外」（11/19） -->
+                  <td class="num muted">—</td>
+                  <td class="muted note" colspan="5">{{ 'bonus.state.notCovered' | transloco }}</td>
                 }
                 @case ('remuneration') {
                   <!-- 年4回以上の賞与：賞与の保険料・賞与支払届の対象外（定時決定で報酬月額に足す。11/19） -->

@@ -1,5 +1,6 @@
 import { Timestamp } from 'firebase/firestore';
 import type { BonusCountAs } from '../../features/premiums/logic/bonus-nature';
+import type { ItemRule } from '../../features/premiums/logic/bonus-items';
 
 /**
  * Firestore の offices/{officeId}/bonusPayments/{自動ID}（賞与の支給1回分）
@@ -24,6 +25,9 @@ export interface BonusPaymentDoc {
 
 export interface BonusPayment extends BonusPaymentDoc {
   id: string;
+  /** 当たった賞与の項目の名前と決まり（一覧を読んだときに付ける。保存しない。11/19） */
+  group?: string;
+  rule?: ItemRule;
 }
 
 /** 画面から保存する形（現物は今の画面にまだないので、なければ係が {} で埋める） */

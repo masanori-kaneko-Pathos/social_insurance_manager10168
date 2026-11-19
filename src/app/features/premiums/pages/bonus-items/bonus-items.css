@@ -1,0 +1,284 @@
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.page-head a.btn {
+  text-decoration: none;
+}
+
+.head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+h1 {
+  margin: 0;
+  font-size: var(--font-xl);
+}
+
+.muted {
+  color: var(--color-text-sub);
+}
+
+.empty p {
+  margin: 0;
+  color: var(--color-text-sub);
+}
+
+.table-wrap {
+  padding: 0;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+th,
+td {
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+thead th {
+  font-weight: 400;
+  color: var(--color-text-sub);
+}
+
+th.num,
+td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.name {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.badge {
+  display: inline-block;
+  margin-left: var(--space-xs);
+  padding: 0 6px;
+  font-size: var(--font-xs);
+  border-radius: var(--radius-sm);
+}
+
+.badge-warn {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
+}
+
+.hint {
+  margin: var(--space-sm) 0 0;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.toggle-col {
+  width: 1%;
+  text-align: right;
+}
+
+tr.is-open > td {
+  border-bottom-color: transparent;
+}
+
+.detail > td {
+  padding: 0 var(--space-md) var(--space-md);
+  background: var(--color-bg);
+}
+
+.people {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.people a {
+  color: var(--color-text);
+}
+
+.sub {
+  margin-left: var(--space-xs);
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.strong {
+  font-weight: 600;
+}
+
+.warn {
+  color: var(--color-warning-text);
+}
+
+td.wrap {
+  white-space: normal;
+}
+
+/* 1人ずつの表の合計（11/16） */
+.people tfoot .total th,
+.people tfoot .total td {
+  border-top: 2px solid var(--color-border-strong);
+  font-weight: 600;
+}
+
+.people tfoot .total th {
+  text-align: left;
+}
+
+/* ===== 賞与の項目（11/19） ===== */
+.back {
+  display: inline-block;
+  margin-bottom: var(--space-xs);
+  font-size: var(--font-sm);
+}
+
+.lead {
+  margin: 0 0 var(--space-md);
+  color: var(--color-text-sub);
+  font-size: var(--font-sm);
+}
+
+.card {
+  margin-bottom: var(--space-lg);
+}
+
+td.name {
+  font-weight: 600;
+}
+
+td.wrap {
+  white-space: normal;
+  min-width: 12em;
+}
+
+.sub {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.badge.t-count {
+  background: var(--color-highlight-soft);
+  border: 1px solid var(--color-border);
+}
+
+.badge.t-remuneration {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
+}
+
+.badge.t-none {
+  color: var(--color-text-sub);
+  border: 1px dashed var(--color-border);
+}
+
+h2 {
+  margin: 0 0 var(--space-md);
+  font-size: var(--font-md);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0 var(--space-lg);
+}
+
+.hint {
+  display: block;
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.hint.warn {
+  color: var(--color-warning-text);
+}
+
+.input.short {
+  max-width: 8em;
+}
+
+.treatments {
+  margin: var(--space-sm) 0 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-sm);
+}
+
+.treatments legend {
+  margin-bottom: var(--space-xs);
+  font-size: var(--font-sm);
+}
+
+.choice {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: flex-start;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.choice.on {
+  border-color: var(--color-primary);
+  background: var(--color-highlight-soft);
+}
+
+.choice input {
+  margin-top: 4px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.fold-notes {
+  margin: var(--space-sm) 0 0;
+  padding-left: 1.2em;
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.alert-success {
+  margin-bottom: var(--space-md);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+/* 扱いの選択・注意・規程の回数の間をあける（描画で詰まって見えた。11/19） */
+.treatments {
+  margin-bottom: var(--space-sm);
+}
+
+.hint.warn {
+  margin-top: var(--space-sm);
+}
+
+.edit > .grid ~ .grid {
+  margin-top: var(--space-md);
+}

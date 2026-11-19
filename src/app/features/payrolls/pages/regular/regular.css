@@ -314,3 +314,10 @@ app-decision-notice-card {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+
+/* 年4回以上の賞与の最初の年の見込み（11/19） */
+.bonus-natures .estimated {
+  margin-left: var(--space-xs);
+  font-size: var(--font-xs);
+  color: var(--color-warning-text);
+}

@@ -1398,7 +1398,7 @@
     "field": {
       "paidDate": "Payment date",
       "title": "Name (e.g. summer bonus)",
-      "nature": "Nature",
+      "nature": "Bonus item",
       "countAs": "How to count"
     },
     "col": {
@@ -1431,21 +1431,23 @@
       "exempt": "Exempt due to leave",
       "exemptNote": "(still counts toward the annual health total)",
       "remuneration": "Bonus as remuneration (no bonus premium)",
-      "remunerationNote": "\"{{nature}}\" paid {{count}} times in the year before July 1, {{year}}. Added to monthly pay at the annual determination."
+      "remunerationNote": "\"{{nature}}\" paid {{count}} times in the year before July 1, {{year}}. Added to monthly pay at the annual determination.",
+      "notCovered": "Item not covered by social insurance"
     },
     "hint": {
       "paidDate": "No premium for payments before the acquisition date or on/after the loss date.",
       "needDate": "Enter the payment date to show eligible employees.",
       "standard": "Standard Bonus Amount (SBA) = bonus amount rounded down to the nearest 1,000 yen. Caps: health etc. JPY 5.73M per fiscal year (Apr–Mar); pension etc. JPY 1.5M per month.",
-      "natureShort": "Empty means \"賞与\". Name only payments of a different nature.",
-      "fourTimesTitle": "About bonuses paid 4+ times a year (nature and counting)",
-      "nature": "Payments are counted per nature, regardless of their name. Keep summer, winter and year-end bonuses as \"賞与\"; name payments of a different nature (inflation allowance, quarterly incentive, etc.).",
+      "natureShort": "Blank means \"Bonus\". Use another item only for payments counted separately.",
+      "fourTimesTitle": "About bonuses paid 4+ times a year (item and counting)",
+      "nature": "Payments are counted per item, regardless of their title. Keep summer, winter and year-end bonuses as \"賞与\"; use a separate item for payments counted separately (inflation allowance, quarterly incentive, etc.). Set each item's treatment on the Bonus items page.",
       "countAs": "Count an exceptionally split payment once, and do not count a payment made only this year.",
-      "fourTimes": "If the same employee received payments of the same nature 4+ times in the year before July 1, payments from September are \"bonus as remuneration\" for that employee only: no bonus premium and no bonus payment report (the annual amount ÷ 12 is added at the annual determination). In the year the rule is created, it stays a bonus until the next annual determination.",
+      "fourTimes": "If the same employee received payments of the same item 4+ times in the year before July 1, payments from September are \"bonus as remuneration\" for that employee only: no bonus premium and no bonus payment report (the annual amount ÷ 12 is added at the annual determination). In the year the rule is created, it stays a bonus until the next annual determination.",
       "hidden": "({{count}} not insured on the payment date are hidden)",
       "deduct": "The employee share is deducted from this bonus and paid together with that month's monthly premiums.",
       "unsaved": "Unsaved changes",
-      "list": "Payment is the total of health insurance, pension and child and childcare contributions."
+      "list": "Payment is the total of health insurance, pension and child and childcare contributions.",
+      "natureItem": "Item \"{{name}}\" — social insurance: {{treatment}}"
     },
     "error": {
       "load": "Couldn't load bonus data.",
@@ -1818,15 +1820,16 @@
       "badge": "4+ bonuses",
       "checkBadge": "{{n}} bonuses",
       "title": "Bonus treated as remuneration (4+ times a year)",
-      "window": "Payments from {{from}} to {{to}} (the year before July 1) are counted by nature.",
+      "window": "Payments from {{from}} to {{to}} (the year before July 1) are counted by bonus item.",
       "nature": "{{name}}: {{count}} times, {{total}} yen",
-      "checkNote": "{{n}} bonuses in this period, but each nature was paid 3 times or fewer, so they stay bonuses. On the bonus screen, check that bonuses of the same nature share one name.",
+      "checkNote": "{{n}} bonuses in this period, but each item was paid 3 times or fewer, so they stay bonuses. On the bonus screen, check that bonuses of the same item share one name.",
       "annual": "Annual amount",
       "monthly": "÷ 12 = {{n}} yen added to each month",
       "monthlyFixed": "Decided with {{n}} yen added to each month.",
       "reset": "Use the calculated amount",
       "included": "Includes {{n}} yen bonus remuneration",
-      "hint": "If the pay rules changed during the year, enter the amount the employee would have received under the new rules."
+      "hint": "If the pay rules changed during the year, enter the amount the employee would have received under the new rules.",
+      "estimated": "(estimate: average × scheduled count)"
     }
   },
   "payrollCsv": {
@@ -4391,14 +4394,14 @@
   },
   "bonusCsv": {
     "lead": "Keep the template headers to read the file without mapping columns. Files with other headers (payroll software exports) can be read after mapping.",
-    "columnsHint": "Required: employee number (or name), paid date and bonus amount. Title and in-kind may be empty; an empty in-kind keeps the saved in-kind amount. Nature (the group counted for 4+ payments a year) defaults to \"賞与\" when empty; enter a name for payments of a different nature (inflation allowance, quarterly incentive, etc.).",
+    "columnsHint": "Required: employee number (or name), paid date and bonus amount. Title and in-kind may be empty; an empty in-kind keeps the saved in-kind amount. Bonus item defaults to \"賞与\" when empty; enter an item name or import name for payments counted separately (inflation allowance, quarterly incentive, etc.).",
     "summary": "{{payments}} payments: new {{n}} · added {{a}} · updated {{u}} · unchanged {{s}} · errors {{e}}",
     "import": "Import ({{payments}} payments, {{people}} people)",
     "done": "Imported amounts for {{people}} people into {{payments}} payments.",
     "toList": "Go to bonuses",
     "progress": "Saving… {{done}} / {{total}} payments",
     "inKind": "incl. in kind {{n}}",
-    "nature": "Nature: {{name}}",
+    "nature": "Bonus item: {{name}}",
     "col": {
       "employee": "Employee",
       "paidDate": "Paid date",
@@ -4425,7 +4428,7 @@
       "beforeHire": "Paid before the hire date (no premiums)",
       "afterRetire": "Paid after the retirement date (no premiums)",
       "titleDiffers": "Different title for the same paid date (the first row's title is used)",
-      "natureDiffers": "Different natures on the same paid date (the first row is used)"
+      "natureDiffers": "Different bonus items on the same paid date (the first row is used)"
     }
   },
   "importSteps": {
@@ -4433,5 +4436,66 @@
     "map": "Match columns",
     "check": "Check",
     "done": "Imported"
+  },
+  "bonusItem": {
+    "title": "Bonus items",
+    "back": "Bonuses",
+    "add": "Add item",
+    "lead": "Set how bonus payments are grouped for the four-times-a-year count and how social insurance treats them. Unregistered names are counted by name.",
+    "saved": "Saved \"{{name}}\".",
+    "empty": "No items yet. Payments are counted by name (blank means \"Bonus\").",
+    "col": {
+      "name": "Item",
+      "labels": "Import names",
+      "treatment": "Social insurance",
+      "plannedCount": "Scheduled count",
+      "used": "Payments"
+    },
+    "treatment": {
+      "count": "Decide by count",
+      "remuneration": "Four or more per year",
+      "none": "Not covered"
+    },
+    "treatmentHint": {
+      "count": "Remuneration if the same person received it 4+ times in the year before July 1; otherwise a bonus.",
+      "remuneration": "Paid 4+ times a year under the rules. No bonus report; annual total ÷ 12 is added to remuneration at the regular decision.",
+      "none": "Gifts such as wedding or sympathy money. Neither a bonus nor remuneration."
+    },
+    "nextChange": "From the {{year}} regular decision: {{treatment}}",
+    "usedCount": "{{count}}",
+    "edit": "Edit",
+    "editTitle": "Edit item",
+    "addTitle": "Add item",
+    "field": {
+      "name": "Item name",
+      "labels": "Import names",
+      "treatment": "Social insurance",
+      "plannedCount": "Scheduled count per year"
+    },
+    "hint": {
+      "name": "The name chosen when entering a bonus. Renaming keeps past payments in this item.",
+      "labels": "Names in your payroll software CSV, separated by commas.",
+      "fromNextYear": "This item is already used, so the change applies from the {{year}} regular decision (July 1, {{year}}). Earlier payments keep the previous treatment.",
+      "plannedCount": "In the first year, if there are fewer payments than this, the annual amount is estimated as average × this count (editable in the regular decision)."
+    },
+    "placeholder": {
+      "labels": "Summer bonus, Winter bonus"
+    },
+    "error": {
+      "load": "Could not load bonus items.",
+      "save": "Could not save. Please try again later.",
+      "nameRequired": "Enter an item name.",
+      "nameTooLong": "Use 30 characters or fewer.",
+      "duplicate": "Another item already uses this name or import name.",
+      "plannedCount": "Enter a count from 1 to 12.",
+      "tooManyLabels": "Up to 20 import names.",
+      "labelInUse": "Import names used by payments cannot be removed."
+    },
+    "howTitle": "How bonus items work",
+    "how": {
+      "count": "Payments are counted per person and per item, regardless of their titles. Put summer and winter bonuses in the same item to count them together.",
+      "labels": "Renaming moves the old name to import names. Items cannot be deleted.",
+      "change": "Counts use the year before July 1, so changes apply from the next July 1. Reports already filed do not change."
+    }
   }
 }

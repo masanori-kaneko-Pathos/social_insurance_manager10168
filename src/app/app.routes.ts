@@ -168,6 +168,12 @@ export const routes: Routes = withUnsavedGuard([
               import('./features/premiums/pages/bonus-list/bonus-list').then((m) => m.BonusList),
           },
           {
+            // 賞与の項目（年4回以上かを数えるまとまりと、社会保険の扱い。11/19）
+            path: 'bonuses/items',
+            loadComponent: () =>
+              import('./features/premiums/pages/bonus-items/bonus-items').then((m) => m.BonusItems),
+          },
+          {
             path: 'bonuses/new',
             data: { wide: true }, // 広い画面では表を横に伸ばす（11/16）
             loadComponent: () =>

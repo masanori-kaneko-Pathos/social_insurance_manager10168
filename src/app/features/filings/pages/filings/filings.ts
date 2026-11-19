@@ -29,7 +29,7 @@ import { RevisionService } from '../../../payrolls/revision.service';
 import { BonusService } from '../../../premiums/bonus.service';
 import { eligibleOn } from '../../../premiums/logic/bonus-rows';
 import { isOver70Employee } from '../../../employees/logic/coverage';
-import { bonusRemunerationOf, irregularBonusYearOf, isRemunerationBonus } from '../../../premiums/logic/bonus-nature';
+import { bonusRemunerationOf, irregularBonusYearOf, isNotCovered, isRemunerationBonus } from '../../../premiums/logic/bonus-nature';
 import {
   acquiredDateOf,
   acquireRow,
@@ -369,7 +369,8 @@ export class FilingsPage {
     const byId = new Map(this.employees!.map((e) => [e.id, e]));
     const bonusDates = new Map<string, string>();
     const paid = payments
-      .filter((p) => p.paidDate >= from && p.paidDate <= to)
+      // 賞与の項目で「社会保険の対象外」にした支給（祝い金など）は届に出さない（11/19）
+      .filter((p) => p.paidDate >= from && p.paidDate <= to && !isNotCovered(p))
       .flatMap((p) =>
         Object.entries(p.amounts)
           // 年4回以上の「賞与に係る報酬」は賞与支払届を出さない（定時決定で報酬月額に足す。11/19）

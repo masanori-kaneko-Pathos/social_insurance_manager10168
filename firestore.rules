@@ -768,6 +768,23 @@ service cloud.firestore {
         allow delete: if isAdmin(officeId);
       }
 
+      // ----- 賞与の項目（年4回以上かを数えるまとまりと、社会保険の扱い。11/19。core/models/bonus-item.ts） -----
+      // 消さない（過去の支給の扱いが変わるため）。名前を変えたら古い名前は labels に移す（アプリ）
+      match /bonusItems/{itemId} {
+        function validBonusItem(d) {
+          return exactKeys(d, ['name', 'labels', 'plannedCount', 'treatments', 'createdAt', 'updatedAt'])
+            && d.name is string && d.name.size() > 0 && d.name.size() <= 30
+            && d.labels is list && d.labels.size() <= 20
+            && (d.plannedCount == null || (d.plannedCount is int && d.plannedCount >= 1 && d.plannedCount <= 12))
+            && d.treatments is list && d.treatments.size() >= 1 && d.treatments.size() <= 30;
+        }
+
+        allow read: if isMember(officeId);
+        allow create: if isAdmin(officeId) && validBonusItem(request.resource.data) && created(request.resource.data);
+        allow update: if isAdmin(officeId) && validBonusItem(request.resource.data) && updated(request.resource.data);
+        allow delete: if false;
+      }
+
       // ----- 招待（ID ＝ 招待コード）-----
       // 従業員の招待（kind: employee）は、下の update で本人が使う。
       // メンバーの招待（kind: member）を使うのは関数 siAcceptMemberInvite（メールの確認・アドレスの一致を関数が確かめる）

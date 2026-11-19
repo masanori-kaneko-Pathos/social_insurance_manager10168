@@ -15,7 +15,7 @@ import { DateStr, YearMonth } from '../../../shared/utils/date';
 import { EmployeeBonus, bonusStatus, calcBonuses, PriorBonusHolder } from './calc-bonus';
 import { PremiumSplit, splitContribution } from './premium-core';
 import { LeaveHolder } from '../../employees/logic/leave';
-import { countOf, isRemunerationBonus, NaturePaymentLike, natureOf, periodYearOf } from './bonus-nature';
+import { countOf, isNotCovered, isRemunerationBonus, NaturePaymentLike, natureOf, periodYearOf } from './bonus-nature';
 
 /** 計算に使う支給の形（BonusPayment をそのまま渡せる。性質・数え方は年4回以上の判定に使う。11/19） */
 export type BonusPaymentLike = NaturePaymentLike;
@@ -38,7 +38,7 @@ export function bonusesOf(employeeId: string, payments: BonusPaymentLike[]): Emp
   const list: EmployeeBonus[] = [];
   for (const p of payments) {
     const amount = p.amounts[employeeId];
-    if (amount && amount > 0 && !isRemunerationBonus(employeeId, p, payments))
+    if (amount && amount > 0 && !isNotCovered(p) && !isRemunerationBonus(employeeId, p, payments))
       list.push({ paidDate: p.paidDate, amount });
   }
   return list;
@@ -105,8 +105,9 @@ function calcFor(
  * ok：保険料がかかる／empty：この支給で賞与なし／none：支払日に資格がない
  * counted：喪失月（保険料はかからないが健保の累計には入る）／missing：料率がない／error：計算できない
  * remuneration：年4回以上の「賞与に係る報酬」（賞与の保険料・賞与支払届の対象外。定時決定で報酬月額に足す。11/19）
+ * notCovered：賞与の項目で「社会保険の対象外」にした支給（祝い金など。11/19）
  */
-export type BonusRowState = 'ok' | 'empty' | 'none' | 'counted' | 'exempt' | 'remuneration' | 'missing' | 'error';
+export type BonusRowState = 'ok' | 'empty' | 'none' | 'counted' | 'exempt' | 'remuneration' | 'notCovered' | 'missing' | 'error';
 
 export interface BonusRow extends PremiumSplit {
   state: BonusRowState;
@@ -155,7 +156,14 @@ export function buildBonusRow(
   const groups = result?.groups ?? [];
   return {
     ...(result ? splitContribution(result) : EMPTY_SPLIT),
-    state: remuneration ? 'remuneration' : error ? 'error' : stateOf(result),
+    state:
+      payment && (payment.amounts[employee.id] ?? 0) > 0 && isNotCovered(payment)
+        ? 'notCovered'
+        : remuneration
+          ? 'remuneration'
+          : error
+            ? 'error'
+            : stateOf(result),
     remuneration,
     over70: isOver70Employee(employee as BonusEmployee & { retireDate?: DateStr | null }, paidDate),
     result,

@@ -1,0 +1,158 @@
+<div class="page-head">
+  <div>
+    <a class="back" [routerLink]="['/o', context.current()?.id, 'bonuses']">← {{ 'bonusItem.back' | transloco }}</a>
+    <h1>{{ 'bonusItem.title' | transloco }}</h1>
+  </div>
+  @if (context.isAdmin() && !draft()) {
+    <div class="head-actions">
+      <button type="button" class="btn btn-primary" (click)="startNew()">{{ 'bonusItem.add' | transloco }}</button>
+    </div>
+  }
+</div>
+
+<p class="lead">{{ 'bonusItem.lead' | transloco }}</p>
+
+@if (savedName(); as name) {
+  <div class="alert alert-success" role="status">{{ 'bonusItem.saved' | transloco: { name } }}</div>
+}
+
+@if (loading()) {
+  <p class="muted">{{ 'common.loading' | transloco }}</p>
+} @else if (errorKey(); as key) {
+  <div class="alert alert-danger">{{ key | transloco }}</div>
+} @else {
+  @if (rows().length === 0) {
+    <section class="card empty">
+      <p>{{ 'bonusItem.empty' | transloco }}</p>
+    </section>
+  } @else {
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'bonusItem.col.name' | transloco }}</th>
+            <th>{{ 'bonusItem.col.labels' | transloco }}</th>
+            <th>{{ 'bonusItem.col.treatment' | transloco }}</th>
+            <th class="num">{{ 'bonusItem.col.plannedCount' | transloco }}</th>
+            <th class="num">{{ 'bonusItem.col.used' | transloco }}</th>
+            @if (context.isAdmin()) {
+              <th class="toggle-col"></th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.item.id) {
+            <tr [class.is-open]="draft()?.id === r.item.id">
+              <td class="name">{{ r.item.name }}</td>
+              <td class="wrap">{{ r.item.labels.length > 0 ? r.item.labels.join('・') : '—' }}</td>
+              <td>
+                <span class="badge" [class]="'badge t-' + r.now">{{ 'bonusItem.treatment.' + r.now | transloco }}</span>
+                @if (r.next; as n) {
+                  <span class="sub">{{ 'bonusItem.nextChange' | transloco: { year: n.fromYear, treatment: ('bonusItem.treatment.' + n.treatment | transloco) } }}</span>
+                }
+              </td>
+              <td class="num">{{ r.item.plannedCount ?? '—' }}</td>
+              <td class="num">{{ 'bonusItem.usedCount' | transloco: { count: r.used } }}</td>
+              @if (context.isAdmin()) {
+                <td class="toggle-col">
+                  <button type="button" class="btn btn-small" (click)="startEdit(r.item)" [disabled]="!!draft()">
+                    {{ 'bonusItem.edit' | transloco }}
+                  </button>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (draft(); as d) {
+    <section class="card edit">
+      <h2>{{ (d.id ? 'bonusItem.editTitle' : 'bonusItem.addTitle') | transloco }}</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="item-name">{{ 'bonusItem.field.name' | transloco }}</label>
+          <input
+            id="item-name"
+            class="input"
+            maxlength="30"
+            [value]="d.name"
+            (input)="patch({ name: $any($event.target).value })"
+            [class.is-invalid]="formErrors().includes('nameRequired') || formErrors().includes('duplicate')"
+          />
+          <span class="hint">{{ 'bonusItem.hint.name' | transloco }}</span>
+        </div>
+        <div class="field">
+          <label for="item-labels">
+            {{ 'bonusItem.field.labels' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+          </label>
+          <input
+            id="item-labels"
+            class="input"
+            [value]="d.labels"
+            [placeholder]="'bonusItem.placeholder.labels' | transloco"
+            (input)="patch({ labels: $any($event.target).value })"
+            [class.is-invalid]="formErrors().includes('labelInUse')"
+          />
+          <span class="hint">{{ 'bonusItem.hint.labels' | transloco }}</span>
+        </div>
+      </div>
+
+      <fieldset class="treatments">
+        <legend>{{ 'bonusItem.field.treatment' | transloco }}</legend>
+        @for (t of treatments; track t) {
+          <label class="choice" [class.on]="d.treatment === t">
+            <input type="radio" name="treatment" [checked]="d.treatment === t" (change)="patch({ treatment: t })" />
+            <span>
+              <strong>{{ 'bonusItem.treatment.' + t | transloco }}</strong>
+              <span class="hint">{{ 'bonusItem.treatmentHint.' + t | transloco }}</span>
+            </span>
+          </label>
+        }
+      </fieldset>
+      @if (draftUsed()) {
+        <p class="hint warn">{{ 'bonusItem.hint.fromNextYear' | transloco: { year: nextYear } }}</p>
+      }
+
+      @if (d.treatment === 'remuneration') {
+        <div class="grid">
+          <div class="field">
+            <label for="item-count">
+              {{ 'bonusItem.field.plannedCount' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+            </label>
+            <input
+              id="item-count"
+              class="input short"
+              type="number"
+              min="1"
+              max="12"
+              inputmode="numeric"
+              [value]="d.plannedCount"
+              (input)="patch({ plannedCount: $any($event.target).value })"
+              [class.is-invalid]="formErrors().includes('plannedCount')"
+            />
+            <span class="hint">{{ 'bonusItem.hint.plannedCount' | transloco }}</span>
+          </div>
+        </div>
+      }
+
+      @for (e of formErrors(); track e) {
+        <p class="field-error">{{ 'bonusItem.error.' + e | transloco }}</p>
+      }
+      <div class="actions">
+        <button type="button" class="btn" (click)="cancel()" [disabled]="saving()">{{ 'common.cancel' | transloco }}</button>
+        <button type="button" class="btn btn-primary" (click)="save()" [disabled]="saving()">{{ 'common.save' | transloco }}</button>
+      </div>
+    </section>
+  }
+
+  <details class="fold">
+    <summary>{{ 'bonusItem.howTitle' | transloco }}</summary>
+    <ul class="fold-notes">
+      <li>{{ 'bonusItem.how.count' | transloco }}</li>
+      <li>{{ 'bonusItem.how.labels' | transloco }}</li>
+      <li>{{ 'bonusItem.how.change' | transloco }}</li>
+    </ul>
+  </details>
+}

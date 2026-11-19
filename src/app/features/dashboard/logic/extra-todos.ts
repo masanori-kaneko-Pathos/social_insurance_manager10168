@@ -40,6 +40,7 @@ import { FROM_THE_START, insurerHistoryOf, insurerKeyOf } from '../../office/off
 import type { HealthInsurer, InsurerPeriod } from '../../../core/models/office';
 import { bonusStatus, healthBonusCapOf, priorHealthOf, PriorBonusHolder, standardBonusOf } from '../../premiums/logic/calc-bonus';
 import { bonusesOf, BonusPaymentLike } from '../../premiums/logic/bonus-rows';
+import { isNotCovered } from '../../premiums/logic/bonus-nature';
 import { CoverageInput, healthLostDate } from '../../employees/logic/coverage';
 
 export type ExtraKind =
@@ -439,12 +440,15 @@ export function overseasPayAbroadTodo(p: OverseasPerson, today: DateStr): ExtraT
 /** 先月・先々月が支払予定月で、その月にだれにも賞与を払っていなければ To-do（期限：予定月の翌月末日） */
 export function bonusNoneTodos(
   bonusMonths: readonly number[],
-  payments: readonly Pick<BonusPaymentLike, 'paidDate' | 'amounts'>[],
+  payments: readonly Pick<BonusPaymentLike, 'paidDate' | 'amounts' | 'rule'>[],
   today: DateStr,
 ): ExtraTodo[] {
   const thisMonth = toYearMonth(today);
+  // 社会保険の対象外の項目（祝い金など）だけを払った月は、賞与を払っていない扱い
   const paid = new Set(
-    payments.filter((p) => Object.values(p.amounts).some((a) => a > 0)).map((p) => toYearMonth(p.paidDate)),
+    payments
+      .filter((p) => !isNotCovered(p) && Object.values(p.amounts).some((a) => a > 0))
+      .map((p) => toYearMonth(p.paidDate)),
   );
   const out: ExtraTodo[] = [];
   for (const back of [2, 1]) {

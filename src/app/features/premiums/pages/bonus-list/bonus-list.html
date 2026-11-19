@@ -1,7 +1,11 @@
 <div class="page-head">
   <h1>{{ 'bonus.listTitle' | transloco }}</h1>
-  @if (context.isAdmin()) {
-    <div class="head-actions">
+  <div class="head-actions">
+    <!-- 賞与の項目（だれでも見られる。編集は管理者だけ。11/19） -->
+    <a class="btn" [routerLink]="['/o', context.current()?.id, 'bonuses', 'items']">
+      {{ 'bonusItem.title' | transloco }}
+    </a>
+    @if (context.isAdmin()) {
       <!-- 何回分もまとめて：ファイルの取り込みのページ（11/17） -->
       <a class="btn" [routerLink]="['/o', context.current()?.id, 'import']" [queryParams]="{ kind: 'bonuses', from: 'bonuses' }">
         {{ 'bonus.csv' | transloco }}
@@ -9,8 +13,8 @@
       <a class="btn btn-primary" [routerLink]="['/o', context.current()?.id, 'bonuses', 'new']">
         {{ 'bonus.add' | transloco }}
       </a>
-    </div>
-  }
+    }
+  </div>
 </div>
 
 @if (loading()) {
@@ -97,6 +101,10 @@
                           @case ('counted') {
                             <td class="num">{{ yen(p.row.result!.standardBonus) }}</td>
                             <td class="muted wrap">{{ 'bonus.state.counted' | transloco }}<br />{{ 'bonus.state.countedNote' | transloco }}</td>
+                          }
+                          @case ('notCovered') {
+                            <td class="num muted">—</td>
+                            <td class="muted wrap">{{ 'bonus.state.notCovered' | transloco }}</td>
                           }
                           @case ('remuneration') {
                             <td class="num muted">—</td>
