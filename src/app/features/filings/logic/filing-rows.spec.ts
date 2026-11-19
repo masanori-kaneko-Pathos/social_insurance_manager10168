@@ -177,6 +177,19 @@ describe('月額変更届・算定基礎届', () => {
   });
 });
 
+describe('一時帰休の備考（11/19）', () => {
+  it('「5」ではなく「9．その他」に、休業手当の月と解消を書く', () => {
+    const e = emp({ birthDate: '1990-01-01' });
+    const f = (m: string) => { const [k, p] = pay(m, 100); return [k, { ...p, state: 'furlough' as const }] as [string, Payroll]; };
+    expect(regularRemarks({ employee: e, year: 2026, annual: false, payrolls: new Map([f('2026-04'), pay('2026-05', 100), pay('2026-06', 100)]) })).toEqual([
+      '9．その他（一時帰休 休業手当 4月・一時帰休解消）',
+    ]);
+    expect(regularRemarks({ employee: e, year: 2026, annual: false, payrolls: new Map([f('2026-04'), f('2026-05'), f('2026-06')]) })).toEqual([
+      '9．その他（一時帰休 休業手当 4.5.6月）',
+    ]);
+  });
+});
+
 describe('75歳以上の70歳以上被用者（11/19）', () => {
   it('算定基礎届：従前の「健」は書かず、「厚」と備考の70歳以上被用者算定は書く', () => {
     const r = revisionRow('regular', {

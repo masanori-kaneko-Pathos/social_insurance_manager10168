@@ -40,8 +40,13 @@ import { PAGE_SIZES, PageSize } from '../../logic/person-list';
       <ng-content />
       @if (pages() > 1 || showBand()) {
       <div class="band bottom">
-        <!-- 真ん中にページ送り、右端に差し込む操作（直したときの「保存する」など。11/18） -->
-        <span></span>
+        <!-- 左に「上へ戻る」、真ん中にページ送り、右端に差し込む操作（直したときの「保存する」など。11/18）
+             「上へ戻る」はページ送りのすぐ左に寄せる（真ん中を細くして、右端の保存ボタンの場所を空ける。11/19） -->
+        <div class="start">
+          @if (pages() > 1) {
+            <button type="button" class="to-top" [attr.aria-label]="'pager.toTop' | transloco" (click)="toTop()">↑<span class="to-top-label"> {{ 'pager.toTop' | transloco }}</span></button>
+          }
+        </div>
         <div class="mid">
         @if (pages() > 1) {
         <nav class="pages" [attr.aria-label]="'pager.label' | transloco">
@@ -56,7 +61,6 @@ import { PAGE_SIZES, PageSize } from '../../logic/person-list';
           <button type="button" class="pg wide" [disabled]="page() >= pages()" (click)="go(page() + 1)">{{ 'pager.next' | transloco }} ›</button>
         </nav>
         <span class="where">{{ 'pager.where' | transloco: { total: total(), from: from(), to: to(), pages: pages(), page: page() } }}</span>
-        <button type="button" class="to-top" (click)="toTop()">↑ {{ 'pager.toTop' | transloco }}</button>
         }
         </div>
         <div class="end"><ng-content select="[bandEnd]" /></div>
@@ -82,6 +86,7 @@ import { PAGE_SIZES, PageSize } from '../../logic/person-list';
     /* 帯の高さは前のまま（番号のボタンだけ小さくした。11/18）。3つに分けて、ページ送りは真ん中・差し込みは右端 */
     .bottom { display: grid; grid-template-columns: 1fr auto 1fr; min-height: calc(44px + 2 * var(--space-sm)); box-sizing: border-box; padding: var(--space-sm) var(--space-md); background: color-mix(in srgb, var(--color-bg) 92%, transparent); backdrop-filter: blur(4px); border-top: 1px solid var(--color-border); }
     .mid { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-sm) var(--space-md); }
+    .start { display: flex; justify-content: flex-end; align-items: center; }
     .end { display: flex; justify-content: flex-end; align-items: center; gap: var(--space-sm); }
     .pages { display: inline-flex; align-items: center; gap: var(--space-xs); }
     .pg { box-sizing: border-box; width: 32px; height: 32px; padding: 0; font: inherit; font-size: var(--font-xs); color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); cursor: pointer; font-variant-numeric: tabular-nums; }
@@ -91,7 +96,9 @@ import { PAGE_SIZES, PageSize } from '../../logic/person-list';
     .pg:disabled { opacity: 0.35; cursor: default; }
     .pg.gap { display: inline-flex; align-items: center; justify-content: center; border-color: transparent; background: none; color: var(--color-text-sub); cursor: default; }
     .where { font-size: var(--font-xs); color: var(--color-text-sub); font-variant-numeric: tabular-nums; }
-    .to-top { padding: 0; font: inherit; font-size: var(--font-xs); color: var(--color-primary); background: none; border: 0; text-decoration: underline; cursor: pointer; }
+    .to-top { padding: 0; font: inherit; font-size: var(--font-xs); color: var(--color-primary); background: none; border: 0; text-decoration: underline; cursor: pointer; white-space: nowrap; }
+    /* 狭い画面は「↑」だけ（左の欄が細く、文字が縦に折れるため。11/19） */
+    @media (max-width: 720px) { .to-top-label { display: none; } .to-top { font-size: var(--font-md, 16px); text-decoration: none; } }
   `,
 })
 export class Pager {

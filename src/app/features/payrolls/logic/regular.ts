@@ -7,7 +7,9 @@
 // - 「保険者算定（年間平均）の手続きについて」：要件、対象となる場合（3月までの資格取得、1等級差の例外）
 // - 支払基礎日数（日本年金機構「定時決定」5・6。R47）：一般は17日以上の月。特定適用事業所の短時間労働者は11日以上の月。
 //   短時間就労者（パート）は17日以上の月 → なければ15日以上の月 → なければ従前（11/16 に入れた）
-// ※ 一時帰休（休業手当）の特例はまだ入れていない
+// - 一時帰休（休業手当。11/19）：算定基礎届の記入・提出ガイドブック「一時帰休による休業手当が支給されているとき」
+//   7月1日の時点で解消していれば、休業手当を受けた月を除いて平均。解消していなければ、休業手当を含めて平均
+//   アプリは「6月の実績が一時帰休でない」ことで解消したとみなす
 
 import type { GradeRow } from '../../../core/models/rates';
 import type { RemunerationDoc, StandardRemuneration } from '../../../core/models/remuneration';
@@ -31,8 +33,8 @@ export interface Standards {
   pension: StandardRemuneration | null; // 厚年の資格がない（70歳以上など）ときは null
 }
 
-/** 1か月が平均に使えない理由 */
-export type MonthSkip = 'noRecord' | 'shortDays' | 'partialAcquisition' | 'suspended';
+/** 1か月が平均に使えない理由（furloughResolved：7/1までに解消した一時帰休の月。11/19） */
+export type MonthSkip = 'noRecord' | 'shortDays' | 'partialAcquisition' | 'suspended' | 'furloughResolved';
 
 export interface MonthUse {
   month: string; // 支払った月
@@ -178,6 +180,19 @@ function useMonths(
   );
 }
 
+/**
+ * 一時帰休が7月1日までに解消していれば、休業手当を受けた月（状態が一時帰休の月）を平均から除く（11/19）
+ * 解消したかは「6月の実績が一時帰休でない」で見る。6月も一時帰休なら、休業手当を含めたまま平均する
+ */
+export function withoutResolvedFurlough(months: MonthUse[]): MonthUse[] {
+  const june = months[months.length - 1];
+  const any = months.some((m) => m.payroll?.state === 'furlough');
+  if (!any || !june?.payroll || june.payroll.state === 'furlough') return months;
+  return months.map((m) =>
+    m.payroll?.state === 'furlough' && m.used ? { ...m, used: false, skip: 'furloughResolved' as const } : m,
+  );
+}
+
 /** 平均（1円未満切り捨て）。withoutRetro なら遡及支払額を引く */
 function averageOf(months: MonthUse[], withoutRetro: boolean): number {
   const used = months.filter((m) => m.used);
@@ -277,7 +292,7 @@ export function decideRegular(x: RegularInput): RegularResult {
     : null;
 
   // --- 4・5・6月 ---
-  const months = useMonths(['04', '05', '06'].map((m) => `${y}-${m}`), x, acquired);
+  const months = withoutResolvedFurlough(useMonths(['04', '05', '06'].map((m) => `${y}-${m}`), x, acquired));
   const usedCount = months.filter((m) => m.used).length;
   const withMonths = { ...base, excluded: null, months, usedCount, current };
 

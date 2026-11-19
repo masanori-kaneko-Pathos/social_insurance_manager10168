@@ -390,3 +390,21 @@ describe('decideRegular：賞与に係る報酬（年4回以上の賞与。11/19
     expect(r.average).toBe(300000);
   });
 });
+
+describe('decideRegular：一時帰休（休業手当。ガイドブック。11/19）', () => {
+  const furlough = (m: string, cash: number): [string, Payroll] => {
+    const [k, p] = pay(m, cash);
+    return [k, { ...p, state: 'furlough' }];
+  };
+  it('7/1までに解消（6月はふつう）：休業手当の月を除いて平均', () => {
+    const r = decideRegular(input({ payrolls: new Map([furlough('2027-04', 200000), pay('2027-05', 330000, 30), pay('2027-06', 342000)]) }));
+    expect(r.months[0].skip).toBe('furloughResolved');
+    expect(r.usedCount).toBe(2);
+    expect(r.average).toBe(336000);
+  });
+  it('解消していない（6月も一時帰休）：休業手当を含めて平均', () => {
+    const r = decideRegular(input({ payrolls: new Map([furlough('2027-04', 200000), furlough('2027-05', 210000), furlough('2027-06', 220000)]) }));
+    expect(r.usedCount).toBe(3);
+    expect(r.average).toBe(210000);
+  });
+});

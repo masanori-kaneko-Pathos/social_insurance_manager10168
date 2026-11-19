@@ -327,11 +327,14 @@
     </div>
     <!-- 「保存する」は、直したときだけ下の帯の右に出す（直した行は黄色。11/18） -->
     <app-pager variant="bottom" [total]="filtered().length" [(page)]="page" [size]="listOptions().size" [showBand]="dirty()">
+      <!-- @if の中は1つの箱にまとめる（要素が2つ以上だと bandEnd が効かず、帯の上に出てしまう。11/19） -->
       @if (dirty()) {
-        <span bandEnd class="save-note">{{ 'bonus.hint.unsaved' | transloco }}</span>
-        <button bandEnd type="button" class="btn btn-solid" [disabled]="saving()" (click)="save()">
-          {{ (saving() ? 'common.saving' : 'common.save') | transloco }}
-        </button>
+        <span bandEnd class="band-save">
+          <span class="save-note">{{ 'bonus.hint.unsaved' | transloco }}</span>
+          <button type="button" class="btn btn-solid" [disabled]="saving()" (click)="save()">
+            {{ (saving() ? 'common.saving' : 'common.save') | transloco }}
+          </button>
+        </span>
       }
     </app-pager>
 

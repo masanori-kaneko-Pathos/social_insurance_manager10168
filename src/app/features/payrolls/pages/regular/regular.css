@@ -278,7 +278,8 @@ td.result-chips > a.badge {
 }
 
 /* 月の欄の小さな文字（日数・遡及の額・修正平均の説明）は、決めた幅に入らなければ折り返す（11/18） */
-td.num .sub {
+td.num .sub,
+td.num .skip {
   white-space: normal;
 }
 

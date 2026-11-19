@@ -1437,7 +1437,7 @@
       "fourTimes": "If the same employee received payments of the same nature 4+ times in the year before July 1, payments from September are \"bonus as remuneration\" for that employee only: no bonus premium and no bonus payment report (the annual amount ÷ 12 is added at the annual determination). In the year the rule is created, it stays a bonus until the next annual determination.",
       "hidden": "({{count}} not insured on the payment date are hidden)",
       "deduct": "The employee share is deducted from this bonus and paid together with that month's monthly premiums.",
-      "unsaved": "Nothing is saved until you press Save.",
+      "unsaved": "Unsaved changes",
       "list": "Payment is the total of health insurance, pension and child and childcare contributions."
     },
     "error": {
@@ -1733,7 +1733,8 @@
     "skip": {
       "shortDays": "* under {{n}} days",
       "partialAcquisition": "* joined mid-month",
-      "suspended": "* on leave"
+      "suspended": "* on leave",
+      "furloughResolved": "* layoff ended"
     },
     "corrected": "Corrected average",
     "correctedNote": "(excluding retro pay)",

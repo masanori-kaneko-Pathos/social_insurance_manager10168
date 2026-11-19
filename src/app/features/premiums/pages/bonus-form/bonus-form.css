@@ -286,6 +286,24 @@ tr.edited td {
   color: var(--color-text-sub);
 }
 
+/* 帯の右端：「未保存の変更があります」と「保存する」を横に並べる。文は折り返さない（11/19） */
+.band-save {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.band-save .save-note {
+  white-space: nowrap;
+}
+
+/* 狭い画面は帯の右端が細いので、ボタンだけにする */
+@media (max-width: 720px) {
+  .band-save .save-note {
+    display: none;
+  }
+}
+
 td.note .note-sub {
   display: block;
 }
