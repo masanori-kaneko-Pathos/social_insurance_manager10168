@@ -221,3 +221,24 @@ export function addTotals(a: OfficeTotal[], b: OfficeTotal[]): OfficeTotal[] {
       : t;
   });
 }
+
+/**
+ * 支払日が pick に合う賞与の結果を、人ごとに（保険料一覧の内訳で「この賞与の保険料はだれの分か」を見せる。11/19）
+ * 計算できない人・料率がない人は入れない（事業所の合計と同じ）
+ */
+export function bonusResultsByEmployee(
+  employees: BonusEmployee[],
+  payments: BonusPaymentLike[],
+  ctx: BonusContext,
+  pick: (paidDate: DateStr) => boolean,
+): Map<string, BonusPremiumResult[]> {
+  const map = new Map<string, BonusPremiumResult[]>();
+  for (const e of employees) {
+    if (!payments.some((p) => pick(p.paidDate) && (p.amounts[e.id] ?? 0) > 0)) continue;
+    const calc = calcFor(e, payments, ctx);
+    if (calc.error) continue;
+    const list = calc.results.filter((r) => pick(r.paidDate) && r.missing.length === 0);
+    if (list.length > 0) map.set(e.id, list);
+  }
+  return map;
+}

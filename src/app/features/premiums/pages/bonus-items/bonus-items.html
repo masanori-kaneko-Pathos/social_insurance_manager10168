@@ -21,11 +21,11 @@
 } @else if (errorKey(); as key) {
   <div class="alert alert-danger">{{ key | transloco }}</div>
 } @else {
-  @if (rows().length === 0) {
+  @if (rows().length === 0 && looseNames().length === 0) {
     <section class="card empty">
       <p>{{ 'bonusItem.empty' | transloco }}</p>
     </section>
-  } @else {
+  } @else if (rows().length > 0) {
     <div class="card table-wrap">
       <table>
         <thead>
@@ -65,6 +65,50 @@
         </tbody>
       </table>
     </div>
+  }
+
+  <!-- まだ決めていない名前：支給に出てくるが、どの項目にも入っていない名前（11/19） -->
+  @if (looseNames().length > 0) {
+    <section class="card loose">
+      <h2>{{ 'bonusItem.loose.title' | transloco }}</h2>
+      <p class="hint">{{ 'bonusItem.loose.lead' | transloco }}</p>
+      <ul class="loose-list">
+        @for (l of looseNames(); track l.name) {
+          <li>
+            <span class="loose-name">{{ l.name }}</span>
+            <span class="muted">{{ 'bonusItem.usedCount' | transloco: { count: l.count } }}</span>
+            @if (context.isAdmin()) {
+              <span class="loose-actions">
+                <button type="button" class="btn btn-small" (click)="startNew(l.name)" [disabled]="!!draft() || saving()">
+                  {{ 'bonusItem.loose.make' | transloco }}
+                </button>
+                @if (items().length > 0) {
+                  <select
+                    class="input input-small"
+                    [attr.aria-label]="'bonusItem.loose.joinLabel' | transloco: { name: l.name }"
+                    (change)="setJoinTarget(l.name, $any($event.target).value)"
+                    [disabled]="!!draft() || saving()"
+                  >
+                    <option value="">{{ 'bonusItem.loose.joinPick' | transloco }}</option>
+                    @for (it of items(); track it.id) {
+                      <option [value]="it.id">{{ it.name }}</option>
+                    }
+                  </select>
+                  <button
+                    type="button"
+                    class="btn btn-small"
+                    (click)="join(l.name)"
+                    [disabled]="!joinTarget()[l.name] || !!draft() || saving()"
+                  >
+                    {{ 'bonusItem.loose.join' | transloco }}
+                  </button>
+                }
+              </span>
+            }
+          </li>
+        }
+      </ul>
+    </section>
   }
 
   @if (draft(); as d) {

@@ -361,3 +361,14 @@ th.leaves-col {
   font-size: var(--font-xs);
   color: var(--color-text-sub);
 }
+
+/* 賞与の取り込み：ファイルの名前がどの賞与の項目に当たるか（11/19） */
+.items-note {
+  margin: var(--space-sm) 0;
+  font-size: var(--font-sm);
+}
+
+.item-map.loose {
+  color: var(--color-warning-text);
+  font-weight: 600;
+}

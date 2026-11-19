@@ -13,6 +13,10 @@ import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { EmployeeService } from '../../../employees/employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import { BonusService } from '../../bonus.service';
+import { BonusItemService } from '../../bonus-item.service';
+import type { BonusItem } from '../../../../core/models/bonus-item';
+import { itemIndex } from '../../logic/bonus-items';
+import { DEFAULT_NATURE } from '../../logic/bonus-nature';
 import {
   BONUS_CSV_FIELDS,
   BONUS_FIX_FIELDS,
@@ -54,6 +58,7 @@ interface Preview {
 export class BonusImport {
   private readonly employeesApi = inject(EmployeeService);
   private readonly bonusApi = inject(BonusService);
+  private readonly itemsApi = inject(BonusItemService);
   private readonly transloco = inject(TranslocoService);
   readonly context = inject(OfficeContext);
 
@@ -76,6 +81,18 @@ export class BonusImport {
   private readonly unsaved = watchUnsaved(() => (this.loaded() !== null || this.preview() !== null) && this.done() === null);
 
   readonly rows = computed(() => this.preview()?.plan.rows ?? []);
+
+  /** 賞与の項目（確認の段で、ファイルの名前がどの項目に当たるかを見せる。11/19） */
+  private readonly items = signal<BonusItem[]>([]);
+  /** ファイルに出てくる賞与の項目の名前と、当たる項目（まだ決めていなければ null） */
+  readonly natureSummary = computed(() => {
+    const index = itemIndex(this.items());
+    const names = [...new Set(this.rows().filter((r) => r.status !== 'error').map((r) => r.nature?.trim() || DEFAULT_NATURE))];
+    return names.map((name) => ({ name, item: index.get(name)?.name ?? null }));
+  });
+  readonly hasLooseNames = computed(() => this.natureSummary().some((n) => n.item === null));
+  /** 取り込んだあとに出す：まだ決めていない名前があったか */
+  readonly looseAfterImport = signal(false);
   readonly errorRows = computed(() => this.rows().filter((r) => r.status === 'error'));
   // ===== 行ごとのチェック（11/17）：外した人を抜いて、支払日ごとにまとめ直す =====
   private readonly fixRef = viewChild(ImportIssues);
@@ -168,7 +185,12 @@ export class BonusImport {
     const file = this.loaded();
     if (!office || !file) return;
     try {
-      const [employees, payments] = await Promise.all([this.employeesApi.list(office.id), this.bonusApi.list(office.id)]);
+      const [employees, payments, items] = await Promise.all([
+        this.employeesApi.list(office.id),
+        this.bonusApi.list(office.id),
+        this.itemsApi.list(office.id).catch(() => [] as BonusItem[]),
+      ]);
+      this.items.set(items);
       const targets = employees.map((e) => ({
         id: e.id,
         employeeNumber: e.employeeNumber ?? null,
@@ -200,6 +222,7 @@ export class BonusImport {
         else await this.bonusApi.create(office.id, w.input);
         this.progress.set({ done: i + 1, total: writes.length });
       }
+      this.looseAfterImport.set(this.hasLooseNames());
       this.done.set({ people, payments: writes.length });
       this.preview.set(null);
       this.loaded.set(null);

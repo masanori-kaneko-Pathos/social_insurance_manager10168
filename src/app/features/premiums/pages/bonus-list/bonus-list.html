@@ -26,20 +26,77 @@
     <p>{{ 'bonus.empty' | transloco }}</p>
   </section>
 } @else {
+  <!-- まだ決めていない名前があるときだけ（11/19） -->
+  @if (looseNames().length > 0) {
+    <p class="loose-note">
+      {{ 'bonus.looseNote' | transloco: { count: looseNames().length, names: looseNames().join('、') } }}
+      <a [routerLink]="['/o', context.current()?.id, 'bonuses', 'items']">{{ 'bonus.toItems' | transloco }} →</a>
+    </p>
+  }
+
+  <!-- 絞り込み（ほかの一覧と同じ形のボタンとパネル）と、名称で探す（11/19） -->
+  <div class="toolbar">
+    <div class="filter-wrap" #filterWrap>
+      <button type="button" class="btn filter-btn" [class.on]="filterCount() > 0" [attr.aria-expanded]="filterOpen()" (click)="filterOpen.set(!filterOpen())">
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M2 3.5h12L9.5 9v4l-3 1.5V9z" /></svg>
+        {{ 'employee.filter.button' | transloco }}
+        @if (filterCount() > 0) { <span class="count">{{ filterCount() }}</span> }
+      </button>
+      @if (filterOpen()) {
+        @let f = options().filter;
+        <div class="filter-panel" animate.enter="panel-enter" animate.leave="panel-leave">
+          <div class="filter-head">
+            <strong>{{ 'employee.filter.title' | transloco }}</strong>
+            <button type="button" class="link" (click)="clearFilter()">{{ 'employee.filter.clear' | transloco }}</button>
+          </div>
+          <fieldset class="range">
+            <legend>{{ 'bonus.filter.period' | transloco }}</legend>
+            <input class="input" type="month" [value]="f.from" (change)="setFilter({ from: $any($event.target).value })" [attr.aria-label]="'employee.filter.from' | transloco" />
+            <span>〜</span>
+            <input class="input" type="month" [value]="f.to" (change)="setFilter({ to: $any($event.target).value })" [attr.aria-label]="'employee.filter.to' | transloco" />
+          </fieldset>
+          <fieldset>
+            <legend>{{ 'bonus.field.nature' | transloco }}</legend>
+            <label class="opt"><input type="radio" name="bonusItem" [checked]="f.item === itemAll" (change)="setFilter({ item: itemAll })" />{{ 'bonus.filter.allItems' | transloco }}</label>
+            @for (n of itemNames(); track n) {
+              <label class="opt"><input type="radio" name="bonusItem" [checked]="f.item === n" (change)="setFilter({ item: n })" />{{ n }}</label>
+            }
+            @if (looseNames().length > 0) {
+              <label class="opt"><input type="radio" name="bonusItem" [checked]="f.item === itemLoose" (change)="setFilter({ item: itemLoose })" />{{ 'bonus.filter.looseItems' | transloco }}</label>
+            }
+          </fieldset>
+        </div>
+      }
+    </div>
+    <input
+      class="input search"
+      type="search"
+      [placeholder]="'bonus.filter.search' | transloco"
+      [attr.aria-label]="'bonus.filter.search' | transloco"
+      [value]="options().filter.query"
+      (input)="setFilter({ query: $any($event.target).value })"
+    />
+  </div>
+
+  @if (shownRows().length === 0) {
+    <section class="card empty">
+      <p>{{ 'bonus.filter.none' | transloco }}</p>
+    </section>
+  } @else {
   <div class="card table-wrap">
     <table>
       <thead>
         <tr>
-          <th>{{ 'bonus.col.paidDate' | transloco }}</th>
-          <th>{{ 'bonus.col.title' | transloco }}</th>
-          <th class="num">{{ 'bonus.col.people' | transloco }}</th>
-          <th class="num">{{ 'bonus.col.amountTotal' | transloco }}</th>
+          <th><button type="button" class="sort" [class.on]="options().sort === 'paidDate'" (click)="sortBy('paidDate')">{{ 'bonus.col.paidDate' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('paidDate') }}</span></button></th>
+          <th><button type="button" class="sort" [class.on]="options().sort === 'title'" (click)="sortBy('title')">{{ 'bonus.col.title' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('title') }}</span></button></th>
+          <th class="num"><button type="button" class="sort" [class.on]="options().sort === 'people'" (click)="sortBy('people')">{{ 'bonus.col.people' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('people') }}</span></button></th>
+          <th class="num"><button type="button" class="sort" [class.on]="options().sort === 'amount'" (click)="sortBy('amount')">{{ 'bonus.col.amountTotal' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('amount') }}</span></button></th>
           <th class="num">{{ 'bonus.col.payment' | transloco }}</th>
           <th class="toggle-col"></th>
         </tr>
       </thead>
       <tbody>
-        @for (r of rows(); track r.payment.id) {
+        @for (r of shownRows(); track r.payment.id) {
           <tr [class.is-open]="openId() === r.payment.id">
             <td class="mono">
               <a
@@ -49,7 +106,13 @@
                 {{ r.payment.paidDate }}
               </a>
             </td>
-            <td>{{ r.payment.title ?? '—' }}</td>
+            <td>
+              {{ r.payment.title ?? '—' }}
+              <!-- 賞与の項目（「賞与」以外のときだけ。11/19） -->
+              @if (itemOf(r) !== defaultNature) {
+                <span class="sub">{{ itemOf(r) }}</span>
+              }
+            </td>
             <td class="num">{{ 'bonus.peopleCount' | transloco: { count: r.people } }}</td>
             <td class="num">{{ yen(r.amountYen) }}</td>
             <td class="num">
@@ -139,7 +202,19 @@
           }
         }
       </tbody>
+      <!-- 絞り込んだ支給の合計（人数は延べ。11/19） -->
+      <tfoot>
+        @let t = total();
+        <tr class="list-total">
+          <th scope="row" colspan="2">{{ 'bonus.listTotal' | transloco: { count: t.count } }}</th>
+          <td class="num">{{ 'bonus.peopleCount' | transloco: { count: t.people } }}</td>
+          <td class="num">{{ yen(t.amountYen) }}</td>
+          <td class="num strong">{{ yen(t.totalYen) }}</td>
+          <td class="toggle-col"></td>
+        </tr>
+      </tfoot>
     </table>
   </div>
+  }
   <p class="hint">{{ 'bonus.hint.list' | transloco }}</p>
 }

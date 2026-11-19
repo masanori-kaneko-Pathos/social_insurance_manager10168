@@ -1301,7 +1301,14 @@
     "adjustment": {
       "refund": "Premium adjustment refund (reduction for {{month}}, returned to the employer)",
       "net": "Payment after the refund (compare with the payment notice)"
-    }
+    },
+    "bonusBadge": "Bonus: {{n}} yen",
+    "bonusBadgeNote": "Received a bonus this month. Bonus premiums are calculated separately from the monthly premium (see the breakdown).",
+    "breakdownMonthly": "Monthly premium",
+    "breakdownBonus": "Bonus premium (paid {{date}})",
+    "bonusBasis": "Bonus {{amount}} yen → standard bonus {{standard}} yen (rounded down to 1,000 yen).",
+    "bonusCapHealth": "Health insurance uses {{base}} yen, up to the annual cap (5.73 million yen).",
+    "bonusCapPension": "Pension uses {{base}} yen, up to the monthly cap (1.5 million yen)."
   },
   "rateDialog": {
     "title": "Health insurance rates",
@@ -1447,7 +1454,9 @@
       "deduct": "The employee share is deducted from this bonus and paid together with that month's monthly premiums.",
       "unsaved": "Unsaved changes",
       "list": "Payment is the total of health insurance, pension and child and childcare contributions.",
-      "natureItem": "Item \"{{name}}\" — social insurance: {{treatment}}"
+      "natureItem": "Item \"{{name}}\" — social insurance: {{treatment}}",
+      "natureLoose": "No treatment set for this name yet (decided by count).",
+      "toItems": "Set it in bonus items"
     },
     "error": {
       "load": "Couldn't load bonus data.",
@@ -1458,7 +1467,7 @@
       "noAmount": "Enter a bonus amount for at least one employee.",
       "save": "Couldn't save. Try again later."
     },
-    "openPeople": "By person",
+    "openPeople": "Breakdown",
     "closePeople": "Close",
     "import": {
       "button": "Import from file",
@@ -1509,7 +1518,17 @@
       "normal": "Count",
       "split": "Continuation of a split payment (not counted; amount added)",
       "oneOff": "This year only (not counted; stays a bonus)"
-    }
+    },
+    "looseNote": "{{count}} name(s) have no treatment set ({{names}}). Until then, they are counted by name.",
+    "toItems": "Set in bonus items",
+    "filter": {
+      "period": "Paid month",
+      "allItems": "All",
+      "looseItems": "Names not set yet",
+      "search": "Search by title or bonus item",
+      "none": "No payments match the conditions."
+    },
+    "listTotal": "Total ({{count}} payments)"
   },
   "leave": {
     "title": "Leave",
@@ -4429,7 +4448,12 @@
       "afterRetire": "Paid after the retirement date (no premiums)",
       "titleDiffers": "Different title for the same paid date (the first row's title is used)",
       "natureDiffers": "Different bonus items on the same paid date (the first row is used)"
-    }
+    },
+    "itemsTitle": "Bonus items: ",
+    "itemLoose": "not set yet",
+    "itemsLooseHint": "Names without a treatment can still be imported (decided by count). Set the treatment in Bonus items after importing.",
+    "itemsLoose": "Some names have no treatment set yet.",
+    "toItems": "Set in bonus items"
   },
   "importSteps": {
     "pick": "Choose a file",
@@ -4496,6 +4520,14 @@
       "count": "Payments are counted per person and per item, regardless of their titles. Put summer and winter bonuses in the same item to count them together.",
       "labels": "Renaming moves the old name to import names. Items cannot be deleted.",
       "change": "Counts use the year before July 1, so changes apply from the next July 1. Reports already filed do not change."
+    },
+    "loose": {
+      "title": "Names not set yet",
+      "lead": "Names used by payments that are not in any item. Until set, they are counted by name.",
+      "make": "Make an item",
+      "joinPick": "Choose an item",
+      "join": "Add to this item",
+      "joinLabel": "Item for \"{{name}}\""
     }
   }
 }

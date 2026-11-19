@@ -743,3 +743,25 @@ details.fold[open]::details-content {
     animation: none;
   }
 }
+
+/* この月に賞与を受けた人の札と、内訳の見出し（11/19） */
+.badge-bonus {
+  background: var(--color-highlight-soft);
+  color: var(--color-tab-active);
+  border: 1px solid var(--color-highlight);
+}
+
+.breakdown-title {
+  margin: var(--space-md) 0 var(--space-xs);
+  font-size: var(--font-sm);
+}
+
+.breakdown-title:first-child {
+  margin-top: 0;
+}
+
+.bonus-basis {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}

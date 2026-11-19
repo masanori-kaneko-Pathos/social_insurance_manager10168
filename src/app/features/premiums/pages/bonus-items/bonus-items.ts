@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { BONUS_TREATMENTS, BonusItem, BonusTreatment } from '../../../../core/models/bonus-item';
 import { BonusPayment } from '../../../../core/models/bonus';
@@ -29,6 +29,13 @@ interface Draft {
   plannedCount: string;
 }
 
+/** 支給に出てくるが、どの項目にも入っていない名前（11/19） */
+export interface LooseName {
+  name: string;
+  /** その名前の支給の数 */
+  count: number;
+}
+
 interface ItemRow {
   item: BonusItem;
   /** 今の定時決定の年の扱い */
@@ -53,6 +60,7 @@ export class BonusItems {
   readonly context = inject(OfficeContext);
   private readonly api = inject(BonusItemService);
   private readonly bonusApi = inject(BonusService);
+  private readonly route = inject(ActivatedRoute);
 
   readonly treatments = BONUS_TREATMENTS;
   readonly today = todayLocal();
@@ -83,6 +91,23 @@ export class BonusItems {
     }),
   );
 
+  /**
+   * まだ決めていない名前：支給に出てくるが、どの項目にも当たらない名前（多い順）
+   * 項目を決めないままでも、名前ごとに回数で判定するので計算は正しい。ここで扱いを決めてもらう
+   */
+  readonly looseNames = computed<LooseName[]>(() => {
+    const counts = new Map<string, number>();
+    for (const p of this.payments()) {
+      if (p.group) continue;
+      const name = p.nature?.trim() || DEFAULT_NATURE;
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+    return [...counts].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'ja'));
+  });
+
+  /** 「ほかの項目に入れる」で選んでいる項目（名前 → 項目ID） */
+  readonly joinTarget = signal<Record<string, string>>({});
+
   /** 編集中の項目が、もう支給に使われているか（扱いの変更が次の定時決定の年からになる） */
   readonly draftUsed = computed(() => {
     const d = this.draft();
@@ -103,6 +128,11 @@ export class BonusItems {
       const [items, payments] = await Promise.all([this.api.list(officeId), this.bonusApi.list(officeId)]);
       this.items.set(items);
       this.payments.set(payments);
+      // 賞与の入力・一覧の「項目にする」から来たとき：その名前で新しい項目を開く（1回だけ）
+      const name = this.route.snapshot.queryParamMap.get('name');
+      if (name && !this.draft() && this.context.isAdmin() && this.looseNames().some((l) => l.name === name)) {
+        this.startNew(name);
+      }
     } catch (err) {
       console.error(err);
       this.errorKey.set('bonusItem.error.load');
@@ -113,10 +143,38 @@ export class BonusItems {
 
   // ===== 編集 =====
 
-  startNew(): void {
+  startNew(name = ''): void {
     this.savedName.set(null);
     this.formErrors.set([]);
-    this.draft.set({ id: null, name: '', labels: '', treatment: 'count', plannedCount: '' });
+    this.draft.set({ id: null, name, labels: '', treatment: 'count', plannedCount: '' });
+  }
+
+  setJoinTarget(name: string, itemId: string): void {
+    this.joinTarget.set({ ...this.joinTarget(), [name]: itemId });
+  }
+
+  /** まだ決めていない名前を、選んだ項目の取り込みの名前に足す（扱いはその項目のもの） */
+  async join(name: string): Promise<void> {
+    const officeId = this.context.current()?.id;
+    const it = this.items().find((i) => i.id === this.joinTarget()[name]);
+    if (!officeId || !it || this.saving()) return;
+    const input = { name: it.name, labels: [...it.labels, name], plannedCount: it.plannedCount, treatments: it.treatments };
+    const errors = validateItem(input, this.items().filter((i) => i.id !== it.id));
+    if (errors.length > 0) {
+      this.errorKey.set('bonusItem.error.' + errors[0]);
+      return;
+    }
+    this.saving.set(true);
+    try {
+      await this.api.update(officeId, it.id, input);
+      this.savedName.set(it.name);
+      await this.load(officeId);
+    } catch (err) {
+      console.error(err);
+      this.errorKey.set('bonusItem.error.save');
+    } finally {
+      this.saving.set(false);
+    }
   }
 
   startEdit(it: BonusItem): void {

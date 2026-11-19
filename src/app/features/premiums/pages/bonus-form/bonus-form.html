@@ -114,6 +114,12 @@
         @if (natureItem(); as it) {
           <!-- 当たった賞与の項目と、社会保険の扱い（11/19） -->
           <span class="hint">{{ 'bonus.hint.natureItem' | transloco: { name: it.name, treatment: ('bonusItem.treatment.' + it.treatment | transloco) } }}</span>
+        } @else if (nature().trim()) {
+          <!-- 項目に入っていない名前：回数で判定する。扱いを決める画面へ（11/19） -->
+          <span class="hint">
+            {{ 'bonus.hint.natureLoose' | transloco }}
+            <a [routerLink]="['/o', context.current()?.id, 'bonuses', 'items']" [queryParams]="{ name: nature().trim() }">{{ 'bonus.hint.toItems' | transloco }}</a>
+          </span>
         } @else {
           <span class="hint">{{ 'bonus.hint.natureShort' | transloco }}</span>
         }

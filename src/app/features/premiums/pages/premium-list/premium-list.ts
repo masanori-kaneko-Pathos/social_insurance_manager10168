@@ -42,8 +42,9 @@ import { PersonListBar } from '../../../../shared/components/person-list-bar/per
 import { defaultListOptions, filterAndSort, listFilterCount, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
 import { formatMilli } from '../../logic/rounding';
 import { BonusPayment } from '../../../../core/models/bonus';
+import type { BonusPremiumResult } from '../../../../core/models/premium';
 import { BonusService } from '../../bonus.service';
-import { addTotals, collectBonusResults } from '../../logic/bonus-rows';
+import { addTotals, bonusResultsByEmployee, collectBonusResults } from '../../logic/bonus-rows';
 import { downloadCsv, safeFileName } from '../../../../shared/csv/csv';
 import { downloadXlsx } from '../../../../shared/xlsx/download-xlsx';
 import { Payroll } from '../../../../core/models/payroll';
@@ -383,6 +384,26 @@ export class PremiumList {
       problemCount: c.problemCount,
     };
   });
+
+  /** この月に払った賞与の、人ごとの計算（内訳に月額と並べて出す。11/19） */
+  readonly bonusByEmployee = computed(() => {
+    const tables = this.tables();
+    const office = this.context.current();
+    const month = this.month();
+    const payments = this.bonusPayments();
+    if (!tables || !office || !payments.some((p) => p.paidDate.startsWith(month))) return new Map<string, BonusPremiumResult[]>();
+    return bonusResultsByEmployee(
+      this.employees(),
+      payments,
+      { ratesFor: ratesForOffice(office, tables), insurerOf: insurerKeyOf(office), options: this.options() },
+      (d) => d.startsWith(month),
+    );
+  });
+
+  /** その人のこの月の賞与の本人負担（札に出す） */
+  bonusEmployeeYen(id: string): number {
+    return (this.bonusByEmployee().get(id) ?? []).reduce((s, r) => s + r.employeeYen, 0);
+  }
 
   /** 月額・賞与の表の列（見出しは1人ごとの表と同じ短い名前） */
   readonly bonusCols = [

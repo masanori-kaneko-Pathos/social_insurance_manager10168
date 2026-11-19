@@ -435,6 +435,12 @@
                     'premiumList.change.' + c | transloco
                   }}</span>
                 }
+                <!-- この月に賞与を受けた人：本人負担は月額と別（内訳で賞与の計算を見せる。11/19） -->
+                @if (bonusByEmployee().has(r.employee.id)) {
+                  <span class="badge badge-bonus" [title]="'premiumList.bonusBadgeNote' | transloco">{{
+                    'premiumList.bonusBadge' | transloco: { n: yen(bonusEmployeeYen(r.employee.id)) }
+                  }}</span>
+                }
                 @if (r.result?.exemptPending) {
                   <span class="badge badge-warn" [title]="'premiumList.exemptPendingNote' | transloco">{{ 'premiumList.exemptPending' | transloco }}</span>
                 }
@@ -506,7 +512,32 @@
               <tr class="detail-row">
                 <td [attr.colspan]="colCount()">
                   <div class="detail-body" animate.enter="detail-enter" animate.leave="detail-leave">
+                  @if (bonusByEmployee().has(r.employee.id)) {
+                    <h4 class="breakdown-title">{{ 'premiumList.breakdownMonthly' | transloco }}</h4>
+                  }
                   <app-premium-breakdown [result]="r.result" />
+                  <!-- この月に払った賞与の計算（支払日ごと。月額とは別に端数処理する。11/19） -->
+                  @for (b of bonusByEmployee().get(r.employee.id) ?? []; track b.paidDate) {
+                    <h4 class="breakdown-title">
+                      {{ 'premiumList.breakdownBonus' | transloco: { date: b.paidDate } }}
+                    </h4>
+                    <p class="bonus-basis">
+                      {{ 'premiumList.bonusBasis' | transloco: { amount: yen(b.amount), standard: yen(b.standardBonus) } }}
+                      @if (b.healthBase < b.standardBonus && b.healthStatus !== 'none') {
+                        {{ 'premiumList.bonusCapHealth' | transloco: { base: yen(b.healthBase) } }}
+                      }
+                      @if (b.pensionBase < b.standardBonus && b.pensionStatus === 'charged') {
+                        {{ 'premiumList.bonusCapPension' | transloco: { base: yen(b.pensionBase) } }}
+                      }
+                    </p>
+                    @if (b.exempt) {
+                      <p class="bonus-basis">{{ 'bonus.state.exempt' | transloco }}（{{ 'bonus.state.exemptNote' | transloco }}）</p>
+                    } @else if (b.groups.length === 0) {
+                      <p class="bonus-basis">{{ 'bonus.state.counted' | transloco }}（{{ 'bonus.state.countedNote' | transloco }}）</p>
+                    } @else {
+                      <app-premium-breakdown [result]="b" />
+                    }
+                  }
                   <a
                     class="to-employee"
                     [routerLink]="['/o', context.current()?.id, 'employees', r.employee.id]"

@@ -17,6 +17,13 @@
       {{ 'bonusCsv.done' | transloco: { people: d.people, payments: d.payments } }}
       <a [routerLink]="['/o', context.current()?.id, 'bonuses']">{{ 'bonusCsv.toList' | transloco }}</a>
     </div>
+    @if (looseAfterImport()) {
+      <!-- まだ決めていない名前があれば、賞与の項目で扱いを決めてもらう（11/19） -->
+      <p class="items-note">
+        {{ 'bonusCsv.itemsLoose' | transloco }}
+        <a [routerLink]="['/o', context.current()?.id, 'bonuses', 'items']">{{ 'bonusCsv.toItems' | transloco }} →</a>
+      </p>
+    }
   }
   @if (progress(); as p) {
     <p class="muted">{{ 'bonusCsv.progress' | transloco: { done: p.done, total: p.total } }}</p>
@@ -43,6 +50,26 @@
           | transloco: { payments: writes().length, n: count().new, a: count().add, u: count().update, s: count().same, e: count().error }
       }}
     </p>
+
+    <!-- ファイルの賞与の項目の名前と、当たる項目（まだ決めていなくても取り込める。回数で判定する。11/19） -->
+    @if (natureSummary().length > 0) {
+      <p class="items-note">
+        {{ 'bonusCsv.itemsTitle' | transloco }}
+        @for (n of natureSummary(); track n.name; let last = $last) {
+          <span class="item-map" [class.loose]="!n.item">
+            {{ n.name }} →
+            @if (n.item; as it) {
+              {{ it }}
+            } @else {
+              {{ 'bonusCsv.itemLoose' | transloco }}
+            }</span
+          >{{ last ? '' : '、' }}
+        }
+        @if (hasLooseNames()) {
+          <br /><span class="sub">{{ 'bonusCsv.itemsLooseHint' | transloco }}</span>
+        }
+      </p>
+    }
 
     <!-- エラーの行：共通の部品で1行ずつ直す -->
     <app-import-issues

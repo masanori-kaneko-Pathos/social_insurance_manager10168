@@ -141,3 +141,65 @@ td.wrap {
 .people tfoot .total th {
   text-align: left;
 }
+
+/* ===== 絞り込み・並べ替え・合計（11/19。ほかの一覧の帯・見出しと同じ形） ===== */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.search {
+  flex: 1;
+  min-width: 200px;
+}
+
+.sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sort:hover {
+  color: var(--color-text);
+  text-decoration: underline;
+}
+
+.sort.on {
+  color: var(--color-text);
+}
+
+.sort .arrow {
+  display: inline-block;
+  min-width: 1em;
+  font-size: 0.8em;
+  color: var(--color-primary);
+}
+
+th.num .sort {
+  justify-content: flex-end;
+}
+
+tfoot .list-total th,
+tfoot .list-total td {
+  border-top: 2px solid var(--color-border-strong);
+  border-bottom: 0;
+  font-weight: 600;
+}
+
+.loose-note {
+  margin: 0 0 var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-sm);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border-radius: var(--radius-sm);
+}

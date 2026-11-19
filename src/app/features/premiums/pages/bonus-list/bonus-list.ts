@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { BonusPayment } from '../../../../core/models/bonus';
@@ -15,6 +15,20 @@ import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { SortHeader } from '../../../../shared/components/sort-header/sort-header';
 import { defaultListOptions, filterAndSort, PersonListOptions } from '../../../../shared/logic/person-list';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
+import {
+  bonusFilterCount,
+  BonusListFilter,
+  BonusListOptions,
+  BonusListSort,
+  bonusRowsTotal,
+  defaultBonusListOptions,
+  filterBonusRows,
+  ITEM_ALL,
+  ITEM_LOOSE,
+  itemNameOf,
+  sortBonusRows,
+} from '../../logic/bonus-list-view';
+import { DEFAULT_NATURE } from '../../logic/bonus-nature';
 
 /** 開いた支給の、1人ずつの行 */
 interface PersonRow {
@@ -33,6 +47,10 @@ interface ListRow {
 
 @Component({
   selector: 'app-bonus-list',
+  host: {
+    '(document:click)': 'onDocumentClick($event)',
+    '(document:keydown.escape)': 'filterOpen.set(false)',
+  },
   imports: [PersonName, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './bonus-list.html',
   styleUrl: './bonus-list.css',
@@ -72,6 +90,57 @@ export class BonusList {
       };
     });
   });
+
+  // ===== 絞り込み・並べ替え・合計（11/19） =====
+  readonly options = signal<BonusListOptions>(defaultBonusListOptions());
+  readonly filterOpen = signal(false);
+  private readonly filterWrap = viewChild<ElementRef<HTMLElement>>('filterWrap');
+  readonly itemAll = ITEM_ALL;
+  readonly itemLoose = ITEM_LOOSE;
+  readonly defaultNature = DEFAULT_NATURE;
+  readonly filterCount = computed(() => bonusFilterCount(this.options().filter));
+  /** 絞り込みの「賞与の項目」の選択肢：支給に出てくる項目の名前 */
+  readonly itemNames = computed(() =>
+    [...new Set(this.payments().flatMap((p) => (p.group ? [p.group] : [])))].sort((a, b) => a.localeCompare(b, 'ja')),
+  );
+  /** まだ決めていない名前（支給に出てくるが、どの項目にも入っていない。一覧の上で知らせる） */
+  readonly looseNames = computed(() => [
+    ...new Set(this.payments().filter((p) => !p.group).map((p) => p.nature?.trim() || DEFAULT_NATURE)),
+  ]);
+  readonly shownRows = computed(() => {
+    const o = this.options();
+    return sortBonusRows(filterBonusRows(this.rows(), o.filter, DEFAULT_NATURE), o.sort, o.dir);
+  });
+  readonly total = computed(() => bonusRowsTotal(this.shownRows()));
+
+  itemOf(r: ListRow): string {
+    return itemNameOf(r.payment, DEFAULT_NATURE);
+  }
+
+  setFilter(patch: Partial<BonusListFilter>): void {
+    this.options.update((o) => ({ ...o, filter: { ...o.filter, ...patch } }));
+  }
+
+  clearFilter(): void {
+    this.options.update((o) => ({ ...o, filter: defaultBonusListOptions().filter }));
+  }
+
+  /** 見出しを押す：同じ列なら向きを変える。初めての列は、支払日・数は大きい順、名称は五十音順から */
+  sortBy(key: BonusListSort): void {
+    this.options.update((o) =>
+      o.sort === key ? { ...o, dir: o.dir === 'asc' ? 'desc' : 'asc' } : { ...o, sort: key, dir: key === 'title' ? 'asc' : 'desc' },
+    );
+  }
+
+  arrow(key: BonusListSort): string {
+    const o = this.options();
+    return o.sort === key ? (o.dir === 'asc' ? '▲' : '▼') : '';
+  }
+
+  onDocumentClick(e: MouseEvent): void {
+    const wrap = this.filterWrap()?.nativeElement;
+    if (this.filterOpen() && wrap && !wrap.contains(e.target as Node)) this.filterOpen.set(false);
+  }
 
   /** 1人ずつの額を開いている支給（1つだけ開く） */
   readonly openId = signal<string | null>(null);
