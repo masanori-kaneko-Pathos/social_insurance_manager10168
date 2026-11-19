@@ -765,13 +765,22 @@ export class EmployeeForm {
     try {
       let id: string;
       if (this.isEdit && this.employeeId) {
+        // 資格取得のあとで生年月日を直したら、被保険者生年月日訂正届の宿題を残す（11/19）
+        const before = this.loadedEmployee();
+        const birthFixed =
+          !!before &&
+          !!input.birthDate &&
+          before.birthDate !== input.birthDate &&
+          (!!before.health.acquiredDate || !!before.pension.acquiredDate);
         await this.employees.update(
           officeId,
           this.employeeId,
           input,
           this.addressChanged() ? this.addressFactDate() || undefined : undefined,
+          birthFixed ? [{ kind: 'birthDate', employeeId: this.employeeId, factDate: todayLocal(), fields: ['birthDate'] }] : [],
         );
         this.loadedContact = input.contact;
+        if (before && input.birthDate) this.loadedEmployee.set({ ...before, birthDate: input.birthDate }); // 2回目の保存で宿題が重ならないように
         this.addressChanged.set(false);
         id = this.employeeId;
       } else {

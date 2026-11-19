@@ -157,7 +157,10 @@
         "officerCheck": "Check officer coverage",
         "ratesMissing": "Next year's rates",
         "adjustmentDeadline": "Premium adjustment deadline",
-        "insurerChange": "Change of health insurer"
+        "insurerChange": "Change of health insurer",
+        "bonusNone": "Bonus non-payment report",
+        "bonusCumulative": "Cumulative bonus declaration",
+        "birthDate": "Date of birth correction"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. An Application to Enroll in EPI / EHI (資格取得届) is needed.",
@@ -190,10 +193,10 @@
         "loseDeath": "This is a loss of coverage due to death. The loss date is the day after the date of death, and the notification is due within 5 days. Collect and attach the eligibility certificate if one was issued. If the person had dependents, they also lose dependent status, so guide them to switch to National Health Insurance etc.",
         "retireGuide": "Retires on {{date}}. Explain health insurance and pension after retirement to the employee.",
         "retireVoluntary": {
-          "kyokai": "Voluntary continuation: if the employee submits the application to the Kyokai Kenpo branch of their prefecture by {{deadline}} (within 20 days from the day after retirement), they can stay covered for 2 years. The premium is paid entirely by the person (standard monthly remuneration capped at 320,000 yen). National Health Insurance or becoming a family member's dependent are other options. For pension, if there is no next employer, enroll in the National Pension at the municipality. Dismiss with \"Checked\" after explaining.",
-          "kumiai": "Voluntary continuation: if the employee applies to the health insurance society by {{deadline}} (within 20 days from the day after retirement), they can stay covered for 2 years (premium paid entirely by the person; check the society's rules). National Health Insurance or becoming a family member's dependent are other options. For pension, if there is no next employer, enroll in the National Pension at the municipality. Dismiss with \"Checked\" after explaining."
+          "kyokai": "Voluntary continuation: if the employee submits the application to the Kyokai Kenpo branch of their prefecture by {{deadline}} (within 20 days from the day after retirement), they can stay covered for 2 years. The premium is paid entirely by the person (standard monthly remuneration capped at 320,000 yen). National Health Insurance or becoming a family member's dependent are other options. For pension, if there is no next employer, enroll in the National Pension at the municipality. Dismiss with \"Checked\" after explaining. For employees joining National Health Insurance, provide a document showing the date coverage ended (such as a certificate of loss of coverage) if requested.",
+          "kumiai": "Voluntary continuation: if the employee applies to the health insurance society by {{deadline}} (within 20 days from the day after retirement), they can stay covered for 2 years (premium paid entirely by the person; check the society's rules). National Health Insurance or becoming a family member's dependent are other options. For pension, if there is no next employer, enroll in the National Pension at the municipality. Dismiss with \"Checked\" after explaining. For employees joining National Health Insurance, provide a document showing the date coverage ended (such as a certificate of loss of coverage) if requested."
         },
-        "retireNoVoluntary": "Voluntary continuation is not possible because the person was not continuously covered for 2 months. Guide them to National Health Insurance or becoming a family member's dependent. For pension, if there is no next employer, enroll in the National Pension at the municipality. Dismiss with \"Checked\" after explaining.",
+        "retireNoVoluntary": "Voluntary continuation is not possible because the person was not continuously covered for 2 months. Guide them to National Health Insurance or becoming a family member's dependent. For pension, if there is no next employer, enroll in the National Pension at the municipality. Dismiss with \"Checked\" after explaining. For employees joining National Health Insurance, provide a document showing the date coverage ended (such as a certificate of loss of coverage) if requested.",
         "name": "The name changed on {{date}} (the registered name has been updated). Automatic updates via the link between My Number and the basic pension number may not apply to this person, so check whether the \"Insured person name change notification\" is needed and, if so, file it promptly.",
         "dependentChange": {
           "increase": "On {{date}}, the employee applied saying a family member may become a dependent. Check eligibility; if so, register them on the dependents card and file the Dependent Change Report within 5 days (for a spouse, the National Pension Category 3 notification uses the same form).",
@@ -214,7 +217,10 @@
           "toKyokai": "From {{month}}, the health insurer changes from \"{{from}}\" to Kyokai Kenpo. What the company usually does: (1) complete the loss of coverage with the health insurance society and collect and return its eligibility certificates; (2) file the health insurance enrollment and dependent change reports with the pension office (check the deadline with the pension office); (3) check that the new eligibility certificates or eligibility notices have been issued.",
           "kumiaiToKumiai": "From {{month}}, the health insurer changes from \"{{from}}\" to \"{{to}}\". What the company usually does: (1) complete the loss of coverage with the previous society and collect and return its eligibility certificates; (2) apply to join the new society and submit the employees' and dependents' information; (3) check that the new eligibility certificates or eligibility notices have been issued; (4) ask whether the standard monthly remuneration is decided again on joining."
         },
-        "insurerChangeCommon": "Documents and deadlines differ by insurer, so follow the new insurer's instructions. Employees' pension coverage continues (no filing needed). Premiums keep using the current grades. Dismiss with \"Checked\" when done."
+        "insurerChangeCommon": "Documents and deadlines differ by insurer, so follow the new insurer's instructions. Employees' pension coverage continues (no filing needed). Premiums keep using the current grades. Dismiss with \"Checked\" when done.",
+        "bonusNone": "Bonuses are scheduled for {{month}}/{{year}}, but none are recorded. If none were paid, submit a \"Bonus non-payment report\" to the pension office by {{date}} (end of the following month; also to the health insurance society if applicable). If they were paid, record them and this item disappears. Once submitted, you can hide it with \"Checked\".",
+        "bonusCumulative": "Including the previous employer, the cumulative standard bonus amount for health insurance in fiscal {{year}} is {{total}} yen, above the cap ({{cap}} yen). For the cap to apply, the employee must submit a \"Cumulative standard bonus declaration\" to the insurer (follow the insurer's instructions). The app already applies the cap. Once you have informed the employee, you can hide this with \"Checked\".",
+        "birthDate": "The date of birth was corrected on {{date}}. If the acquisition notification was already filed, promptly submit a \"Date of birth correction notification\". Age thresholds (long-term care at 40/65, 70, 75) may change, so check premiums and filings too."
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -276,7 +282,8 @@
       "toDependents": "Go to the dependents card",
       "toOverseas": "View overseas assignment",
       "toLoss": "Enter the loss-of-coverage date",
-      "toOfficer": "Answer the officer items"
+      "toOfficer": "Answer the officer items",
+      "toBonuses": "Go to bonuses"
     }
   },
   "nav": {
@@ -848,7 +855,7 @@
       "history": "Changing the insurer or prefecture records the month it applies from. Earlier months keep the previous rates.",
       "changeFrom": "Premiums from this month use the new insurer and prefecture.",
       "switchToKumiai": "Until kumiai rates are registered, health premiums from the switch month show as 'No rate registered'.",
-      "method": "Per-employee settings (e.g. cash for employees on leave) are coming later.",
+      "method": "This applies to the whole office. Employees whose pay cannot cover their share can be checked with \"Check advances\" in the premium list.",
       "healthRounding": "There is no official guidance, so both are available. The method once published by the ministry is 'together'.",
       "nameEn": "Enter the English name if there is one.",
       "groupName": "Offices with the same label are listed together in the office menu. Example: Kanto sites, Head office and plant",
@@ -948,7 +955,7 @@
         "insuredCount": "If blank, the app counts employees of this office. If the corporation has other offices, enter the total.",
         "pensionFund": "Very few offices are members. Used for the Application to Enroll (資格取得届).",
         "bonus": "Used to check Bonus Payment Reports (賞与支払届) and non-payment reports.",
-        "inKind": "Used to check that benefits in kind are entered in payroll records. Valuation is not supported yet."
+        "inKind": "Used for the office change notification (types of benefits in kind). Amounts can be calculated from the official valuation table with \"Calculate by rates\" in payroll records."
       },
       "count": "Count",
       "counting": "Counting…",
@@ -3736,7 +3743,7 @@
       "addressChars": "The kanji address was omitted because it contains unsupported characters ({{chars}})",
       "addressLong": "The kanji address was omitted because it exceeds 37 characters"
     },
-    "nenkinMultiBonus": "For people with two or more bonuses in the period ({{names}}), only the latest bonus was exported (one row per person)."
+    "nenkinMultiBonus": "For people with two or more bonuses in the period ({{names}}), only the bonus of the latest month was exported (one row per person; bonuses in the same month are combined)."
   },
   "premiumNotice": {
     "title": "Payment reconciliation",

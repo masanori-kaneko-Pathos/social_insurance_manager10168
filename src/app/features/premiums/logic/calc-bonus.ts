@@ -1,6 +1,8 @@
 /**
  * 賞与の保険料の計算
  * - 標準賞与額 ＝ 賞与額の1,000円未満を切り捨て
+ *   同じ月に2回以上払ったら、その月の合計で切り捨てる（健保法45条・厚年法24条の4）。
+ *   2回目以降の標準賞与額 ＝ 合計で切り捨てた額 − それまでの回の分（月の合計が正しくなるように。11/19）
  * - 保険料がかかるかは「月」ではなく「支払日」で判定する
  *   ・資格取得日より前に払った賞与：かからない（取得月でも）
  *   ・資格喪失月に払った賞与：かからない。ただし健保は標準賞与額が決まり、年度の累計には入る
@@ -97,13 +99,17 @@ export function calcBonuses(input: BonusInput): BonusPremiumResult[] {
   const healthCumByYear = new Map<string, number>(); // 年度|保険者 → 健保の標準賞与額の累計
   const priorKeyOf = new Map<number, string>(); // 年度 → 前の事業所の分を足した保険者の鍵（その年度の最初の保険者にだけ足す）
   const pensionSumByMonth = new Map<string, number>(); // 月 → 厚年の標準賞与額の合計
+  const amountByMonth = new Map<string, number>(); // 月 → その月にそれまでに払った賞与額の合計
 
   // 支払日の順に計算する（上限は先に払った賞与から順に埋まる）
   const sorted = [...input.bonuses].sort((a, b) => a.paidDate.localeCompare(b.paidDate));
 
   return sorted.map((b) => {
     const month = toYearMonth(b.paidDate);
-    const standardBonus = standardBonusOf(b.amount);
+    const paidBefore = amountByMonth.get(month) ?? 0;
+    standardBonusOf(b.amount); // 額のチェック
+    const standardBonus = standardBonusOf(paidBefore + b.amount) - standardBonusOf(paidBefore);
+    amountByMonth.set(month, paidBefore + b.amount);
     const rawHealth = bonusStatus(
       employee.health.enrolled,
       employee.health.acquiredDate,

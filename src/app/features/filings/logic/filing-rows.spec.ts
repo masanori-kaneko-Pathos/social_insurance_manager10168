@@ -4,7 +4,7 @@ import {
   bonusRow,
   FILING_COLUMNS,
   FilingEmployee,
-  firstPaidInMonth,
+  mergeSameMonth,
   irregularRemarks,
   kindCode,
   lossesIn,
@@ -255,14 +255,20 @@ describe('賞与支払届', () => {
     expect(r['basicPensionNumber70']).toBe('1234567890');
     expect(r['remarks']).toBe('1．70歳以上被用者');
   });
-  it('同じ月に先に払った賞与があれば、合算（初回支払日）', () => {
-    const pays = [
-      { paidDate: '2025-12-05', amounts: { e1: 10000 } },
-      { paidDate: '2025-12-22', amounts: { e1: 20000 } },
-    ];
-    expect(firstPaidInMonth('e1', '2025-12-22', pays)).toBe('2025-12-05');
-    expect(firstPaidInMonth('e1', '2025-12-05', pays)).toBeNull();
-    const r = bonusRow({ employee: emp({ birthDate: '1990-01-01' }), paidDate: '2025-12-22', cash: 20000, inKind: 0, firstPaidInMonth: '2025-12-05' });
+  it('同じ人・同じ月の賞与は1行に合算（支払日は最後の日、初回支払日を備考に）', () => {
+    const merged = mergeSameMonth([
+      { employeeId: 'e1', paidDate: '2025-12-22', cash: 20000, inKind: 0 },
+      { employeeId: 'e1', paidDate: '2025-12-05', cash: 10500, inKind: 3000 },
+      { employeeId: 'e2', paidDate: '2025-12-05', cash: 50000, inKind: 0 },
+      { employeeId: 'e1', paidDate: '2026-01-10', cash: 7000, inKind: 0 },
+    ]);
+    expect(merged).toEqual([
+      { employeeId: 'e1', paidDate: '2025-12-22', cash: 30500, inKind: 3000, firstPaidInMonth: '2025-12-05' },
+      { employeeId: 'e2', paidDate: '2025-12-05', cash: 50000, inKind: 0, firstPaidInMonth: null },
+      { employeeId: 'e1', paidDate: '2026-01-10', cash: 7000, inKind: 0, firstPaidInMonth: null },
+    ]);
+    const r = bonusRow({ employee: emp({ birthDate: '1990-01-01' }), ...merged[0] });
+    expect(r['total1000']).toBe('33,000');
     expect(r['remarks']).toBe('3．同一月内の賞与合算（初回支払日：5日）');
   });
 });

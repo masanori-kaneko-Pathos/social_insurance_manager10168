@@ -210,6 +210,8 @@ export class EmployeeService {
     input: Partial<EmployeeFormInput> | Partial<EmployeeInput>,
     /** 住所が変わった日（画面で入れたもの。なければ今日） */
     addressFactDate?: string,
+    /** 保存と一緒に残す届出の宿題（生年月日の訂正など。11/19） */
+    extraTasks: FilingTaskInput[] = [],
   ): Promise<void> {
     const { main, priv } = splitPrivate(input as Partial<EmployeeFormInput>);
     // 書き込みと変更履歴は同じ batch（HistoryService）
@@ -218,6 +220,11 @@ export class EmployeeService {
       await this.history.write(officeId, employeeId, 'employee', ref, 'update', { ...main });
     }
     if (Object.keys(priv).length > 0) await this.writePrivate(officeId, employeeId, priv, addressFactDate);
+    if (extraTasks.length > 0) {
+      const batch = writeBatch(db);
+      for (const t of extraTasks) this.tasks.addTo(batch, officeId, t);
+      await batch.commit();
+    }
   }
 
   /** 産休・育休だけを書き換える（ほかの項目には触らない） */

@@ -54,6 +54,8 @@ import {
   RATES_NOTICE_FROM,
   RATES_NOTICE_TO,
   ratesMissingTodo,
+  bonusNoneTodos,
+  bonusCumulativeTodos,
   residenceTodo,
   specificOfficeTodo,
   workPermitTodo,
@@ -64,6 +66,8 @@ import { countryName } from '../../../employees/logic/foreign-options';
 import { MyNumberService } from '../../../my-number/my-number.service';
 import { TodoBadgeService } from '../../todo-badge.service';
 import { TodoService } from '../../todo.service';
+import { BonusService } from '../../../premiums/bonus.service';
+import type { BonusPayment } from '../../../../core/models/bonus';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
 
 /** よく使うメニューの1つ */
@@ -124,6 +128,7 @@ export class Dashboard {
   private readonly api = inject(TodoService);
   private readonly badge = inject(TodoBadgeService);
   private readonly tasksApi = inject(FilingTaskService);
+  private readonly bonusApi = inject(BonusService);
   private readonly language = inject(LanguageService);
 
   /** 文の差し込みの国コードを、国の名前にする（海外勤務の To-do） */
@@ -169,6 +174,9 @@ export class Dashboard {
 
   /** 今の保険者の料率の「何月分から」（2〜4月だけ読む。それ以外の月は null のまま＝読まない） */
   private readonly rateFroms = signal<string[] | null>(null);
+
+  /** 賞与の支給（不支給報告書・累計申出書の To-do に使う。11/19） */
+  private readonly bonusPayments = signal<BonusPayment[]>([]);
 
   private readonly byId = computed(() => new Map(this.employees().map((e) => [e.id, e])));
 
@@ -238,6 +246,11 @@ export class Dashboard {
       ...(ratesMissing ? [extraItem(ratesMissing)] : []),
       ...(adjustment ? [extraItem(adjustment)] : []),
       ...insurerChangeTodos(o, this.today).map(extraItem),
+      ...bonusNoneTodos(o.bonusMonths ?? [], this.bonusPayments(), this.today).map(extraItem),
+      ...this.employees()
+        .filter((e) => e.priorBonusTotals)
+        .flatMap((e) => bonusCumulativeTodos(e, this.bonusPayments(), this.today))
+        .map(extraItem),
       ...ageItems(this.employees(), this.thisMonth, shiftMonth(this.thisMonth, 1), this.today),
       ...this.officeIssues().map(officeItem),
       ...this.tasks().map(taskItem),
@@ -447,6 +460,11 @@ export class Dashboard {
       this.contracts.set(new Map(active.map((e, i) => [e.id, lists[i]])));
       this.dismissalDocs.set(dismissals);
       void this.loadRateFroms(officeId);
+      this.bonusPayments.set([]);
+      this.bonusApi
+        .list(officeId)
+        .then((list) => this.bonusPayments.set(list))
+        .catch((err) => console.error(err));
     } catch (err) {
       console.error(err);
       this.errorKey.set('dashboard.todo.error');

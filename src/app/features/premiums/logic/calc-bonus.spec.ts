@@ -135,6 +135,16 @@ describe('calcBonuses：上限', () => {
     expect(second.pensionBase).toBe(500000);
   });
 
+  it('同じ月の2回の賞与は、合計で1,000円未満を切り捨てる（2回目は合計から1回目の分を引いた額）', () => {
+    const [first, second] = calc(AGE30, [
+      { paidDate: '2026-12-05', amount: 100500 },
+      { paidDate: '2026-12-25', amount: 200700 },
+    ]);
+    expect(first.standardBonus).toBe(100000);
+    expect(second.standardBonus).toBe(201000); // 301,200 → 301,000 − 100,000
+    expect(first.standardBonus + second.standardBonus).toBe(301000);
+  });
+
   it('上限に達した後の賞与は、健保の保険料が0円', () => {
     const rs = calc(AGE30, [
       { paidDate: '2026-06-30', amount: 6000000 },

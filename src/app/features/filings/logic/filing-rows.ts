@@ -392,17 +392,39 @@ export function bonusRow(x: BonusRowInput): FilingRow {
   };
 }
 
-/** 同じ人に、同じ月に先に払った賞与の支払日（いちばん早いもの） */
-export function firstPaidInMonth(
-  employeeId: string,
-  paidDate: DateStr,
-  payments: readonly { paidDate: DateStr; amounts: Record<string, number> }[],
-): DateStr | null {
-  const earlier = payments
-    .filter((p) => p.paidDate.slice(0, 7) === paidDate.slice(0, 7) && p.paidDate < paidDate && (p.amounts[employeeId] ?? 0) > 0)
-    .map((p) => p.paidDate)
-    .sort();
-  return earlier[0] ?? null;
+/** 賞与支払届に出す1回分の支払い（人ごと） */
+export interface BonusPaid {
+  employeeId: string;
+  paidDate: DateStr;
+  cash: number;
+  inKind: number;
+}
+
+/**
+ * 同じ人・同じ月の賞与を1行にまとめる（日本年金機構の記入方法：同一月に2回以上支払ったときは合算額を記入し、
+ * 支払日は最後に払った日、備考に「3．同一月内の賞与合算（初回支払日）」。11/19）
+ * 並びは 人の出てきた順 → 月の順
+ */
+export function mergeSameMonth(list: readonly BonusPaid[]): (BonusPaid & { firstPaidInMonth: DateStr | null })[] {
+  const groups = new Map<string, BonusPaid[]>();
+  for (const b of list) {
+    const key = `${b.employeeId}|${b.paidDate.slice(0, 7)}`;
+    const g = groups.get(key);
+    if (g) g.push(b);
+    else groups.set(key, [b]);
+  }
+  return [...groups.values()].map((g) => {
+    const sorted = [...g].sort((a, b) => a.paidDate.localeCompare(b.paidDate));
+    const last = sorted[sorted.length - 1];
+    const first = sorted[0];
+    return {
+      employeeId: last.employeeId,
+      paidDate: last.paidDate,
+      cash: sorted.reduce((s, b) => s + b.cash, 0),
+      inKind: sorted.reduce((s, b) => s + b.inKind, 0),
+      firstPaidInMonth: first.paidDate < last.paidDate ? first.paidDate : null,
+    };
+  });
 }
 
 // ===== 表にする =====

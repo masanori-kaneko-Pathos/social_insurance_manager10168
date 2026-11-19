@@ -25,8 +25,12 @@
 // - insurerChange：健康保険の保険者が変わる（協会けんぽ ⇄ 組合、組合 ⇄ 別の組合）。切り替えの2か月前から3か月後まで（11/17）
 //   手続きは保険者ごとに違うので、期限は決めず「案内」として出す。厚生年金保険の資格は続く（届は要らない）
 //   根拠：健康保険組合の編入の案内（Q&A）の実例。書類と期限は新しい保険者の案内に従う
+// - bonusNone：事業所の設定の「賞与の支払予定月」に、だれにも賞与を払っていない（11/19）
+//   → 賞与不支給報告書（日本年金機構。支払予定月の翌月末日まで）。先月・先々月の分を出す
+// - bonusCumulative：前の事業所の分と合わせて、健保の標準賞与額の年度の累計が上限（573万円）を超えた（11/19）
+//   → 本人が保険者に「健康保険標準賞与額累計申出書」を出す（同じ保険者で転職した人。出さないと上限が効かない）
 
-import { addDays, DateStr, daysInMonth, monthsBetween, shiftMonth, toYearMonth, YearMonth } from '../../../shared/utils/date';
+import { addDays, DateStr, daysInMonth, fiscalYearOf, monthsBetween, shiftMonth, toYearMonth, YearMonth } from '../../../shared/utils/date';
 import { contractAt } from '../../employees/logic/contract-form-model';
 import type { MyNumberEntry } from '../../../core/models/my-number';
 import { disposalDue, DisposalPerson, hasNumber } from '../../my-number/logic/my-number';
@@ -34,6 +38,9 @@ import { certificateEndingSoon, OverseasPerson, payAbroadEnrolled } from '../../
 import { countHeadcount, criteriaAt, HeadcountTarget, isSpecificApplied, WorkSchedule } from '../../employees/logic/coverage';
 import { FROM_THE_START, insurerHistoryOf, insurerKeyOf } from '../../office/office-settings';
 import type { HealthInsurer, InsurerPeriod } from '../../../core/models/office';
+import { bonusStatus, healthBonusCapOf, priorHealthOf, PriorBonusHolder, standardBonusOf } from '../../premiums/logic/calc-bonus';
+import { bonusesOf, BonusPaymentLike } from '../../premiums/logic/bonus-rows';
+import { CoverageInput, healthLostDate } from '../../employees/logic/coverage';
 
 export type ExtraKind =
   | 'residence'
@@ -49,7 +56,9 @@ export type ExtraKind =
   | 'overseasPayAbroad'
   | 'ratesMissing'
   | 'adjustmentDeadline'
-  | 'insurerChange';
+  | 'insurerChange'
+  | 'bonusNone'
+  | 'bonusCumulative';
 
 export interface ExtraTodo {
   kind: ExtraKind;
@@ -423,4 +432,59 @@ export function overseasPayAbroadTodo(p: OverseasPerson, today: DateStr): ExtraT
   const o = payAbroadEnrolled(p, today);
   if (!o) return null;
   return { kind: 'overseasPayAbroad', employeeId: p.id, date: o.from, params: { date: o.from, country: o.country } };
+}
+
+// ===== 賞与（11/19） =====
+
+/** 先月・先々月が支払予定月で、その月にだれにも賞与を払っていなければ To-do（期限：予定月の翌月末日） */
+export function bonusNoneTodos(
+  bonusMonths: readonly number[],
+  payments: readonly Pick<BonusPaymentLike, 'paidDate' | 'amounts'>[],
+  today: DateStr,
+): ExtraTodo[] {
+  const thisMonth = toYearMonth(today);
+  const paid = new Set(
+    payments.filter((p) => Object.values(p.amounts).some((a) => a > 0)).map((p) => toYearMonth(p.paidDate)),
+  );
+  const out: ExtraTodo[] = [];
+  for (const back of [2, 1]) {
+    const month = shiftMonth(thisMonth, -back);
+    if (!bonusMonths.includes(Number(month.slice(5, 7))) || paid.has(month)) continue;
+    const next = shiftMonth(month, 1);
+    const date = `${next}-${String(daysInMonth(next)).padStart(2, '0')}`;
+    out.push({ kind: 'bonusNone', employeeId: null, date, params: { year: month.slice(0, 4), month: Number(month.slice(5, 7)), date } });
+  }
+  return out;
+}
+
+export type CumulativePerson = CoverageInput & PriorBonusHolder & { id: string };
+
+/** 前の事業所の分がある人で、今年度・前年度の健保の標準賞与額の累計が上限を超えたら To-do */
+export function bonusCumulativeTodos(
+  p: CumulativePerson,
+  payments: BonusPaymentLike[],
+  today: DateStr,
+): ExtraTodo[] {
+  const thisYear = fiscalYearOf(toYearMonth(today));
+  const lost = healthLostDate(p);
+  const bonuses = bonusesOf(p.id, payments).filter(
+    (b) => bonusStatus(p.health.enrolled, p.health.acquiredDate, lost, b.paidDate) !== 'none',
+  );
+  const out: ExtraTodo[] = [];
+  for (const year of [thisYear - 1, thisYear]) {
+    const prior = priorHealthOf(p, year);
+    if (prior <= 0) continue;
+    // 同じ月の賞与は合計で千円未満を切り捨てる
+    const byMonth = new Map<string, number>();
+    for (const b of bonuses) {
+      const m = toYearMonth(b.paidDate);
+      if (fiscalYearOf(m) === year) byMonth.set(m, (byMonth.get(m) ?? 0) + b.amount);
+    }
+    const own = [...byMonth.values()].reduce((s, a) => s + standardBonusOf(a), 0);
+    const cap = healthBonusCapOf(year);
+    if (prior + own > cap) {
+      out.push({ kind: 'bonusCumulative', employeeId: p.id, date: null, params: { year, total: (prior + own).toLocaleString('ja-JP'), cap: cap.toLocaleString('ja-JP') } });
+    }
+  }
+  return out;
 }

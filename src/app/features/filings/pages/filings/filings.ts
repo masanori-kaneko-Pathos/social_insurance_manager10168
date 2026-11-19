@@ -39,7 +39,7 @@ import {
   filingFileName,
   FilingKind,
   FilingRow,
-  firstPaidInMonth,
+  mergeSameMonth,
   irregularRemarks,
   specialRemarks,
   specialRow,
@@ -368,7 +368,7 @@ export class FilingsPage {
     const payments = await this.bonusApi.list(officeId);
     const byId = new Map(this.employees!.map((e) => [e.id, e]));
     const bonusDates = new Map<string, string>();
-    return payments
+    const paid = payments
       .filter((p) => p.paidDate >= from && p.paidDate <= to)
       .flatMap((p) =>
         Object.entries(p.amounts)
@@ -381,24 +381,25 @@ export class FilingsPage {
               (eligibleOn(byId.get(id)!, p.paidDate) || isOver70Employee(byId.get(id)!, p.paidDate)) &&
               !isRemunerationBonus(id, p, payments),
           )
-          .map(([id, amount]) => {
-            const inKind = p.inKindAmounts?.[id] ?? 0;
-            // 届書作成プログラム向け：1人1行なので、同じ期間に2回以上あれば新しいほうを使う
-            const seen = bonusDates.get(id);
-            if (seen) this.multiBonus.add(id);
-            if (!seen || p.paidDate > seen) {
-              bonusDates.set(id, p.paidDate);
-              this.nenkinExtra.set(id, { previous: null, regular: null, bonus: { cash: amount, inKind } });
-            }
-            return bonusRow({
-              employee: byId.get(id)!,
-              paidDate: p.paidDate,
-              cash: amount,
-              inKind,
-              firstPaidInMonth: firstPaidInMonth(id, p.paidDate, payments),
-            });
-          }),
+          .map(([id, amount]) => ({ employeeId: id, paidDate: p.paidDate, cash: amount, inKind: p.inKindAmounts?.[id] ?? 0 })),
       );
+    // 同じ人・同じ月の賞与は1行に合算する（11/19）
+    return mergeSameMonth(paid).map((m) => {
+      // 届書作成プログラム向け：1人1行なので、同じ期間に別の月の賞与もあれば新しいほうを使う
+      const seen = bonusDates.get(m.employeeId);
+      if (seen) this.multiBonus.add(m.employeeId);
+      if (!seen || m.paidDate > seen) {
+        bonusDates.set(m.employeeId, m.paidDate);
+        this.nenkinExtra.set(m.employeeId, { previous: null, regular: null, bonus: { cash: m.cash, inKind: m.inKind } });
+      }
+      return bonusRow({
+        employee: byId.get(m.employeeId)!,
+        paidDate: m.paidDate,
+        cash: m.cash,
+        inKind: m.inKind,
+        firstPaidInMonth: m.firstPaidInMonth,
+      });
+    });
   }
 
   readonly reviewId = filingReviewId;

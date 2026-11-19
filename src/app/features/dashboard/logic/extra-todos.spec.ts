@@ -1,4 +1,4 @@
-import { adjustmentDeadlineTodo, insurerChangeTodos, ratesMissingTodo } from './extra-todos';
+import { adjustmentDeadlineTodo, insurerChangeTodos, ratesMissingTodo, bonusNoneTodos, bonusCumulativeTodos, CumulativePerson } from './extra-todos';
 import { cardReturnTodo, contractEndTodo, isShortTerm, myNumberTodos, noticeRequired, retireGuideTodo, voluntaryEligible } from './extra-todos';
 import {
   ExtraPerson,
@@ -257,5 +257,33 @@ describe('insurerChangeTodos：保険者の切り替え（11/17）', () => {
   });
   it('同じ組合のまま都道府県だけ変わったときも出さない', () => {
     expect(insurerChangeTodos(office([['0000-01', '13', kumiai('A健保')], ['2027-04', '27', kumiai('A健保')]]), '2027-04-01')).toEqual([]);
+  });
+});
+
+describe('賞与不支給報告書（11/19）', () => {
+  const pays = [{ paidDate: '2026-07-10', amounts: { e1: 300000 } }];
+  it('先月・先々月の支払予定月に払っていなければ、翌月末日を期限に出す', () => {
+    expect(bonusNoneTodos([9, 10], pays, '2026-11-19').map((t) => t.date)).toEqual(['2026-10-31', '2026-11-30']);
+  });
+  it('予定月に払っていれば出さない。予定月でなければ出さない', () => {
+    expect(bonusNoneTodos([10], [{ paidDate: '2026-10-20', amounts: { e1: 1 } }], '2026-11-19')).toEqual([]);
+    expect(bonusNoneTodos([6, 12], pays, '2026-11-19')).toEqual([]);
+  });
+});
+
+describe('標準賞与額の累計申出（11/19）', () => {
+  const emp = {
+    id: 'e1', birthDate: '1990-01-01', hireDate: '2026-06-01', retireDate: null,
+    health: { enrolled: true, acquiredDate: '2026-06-01', lostDate: null },
+    pension: { enrolled: true, acquiredDate: '2026-06-01', lostDate: null },
+    priorBonusTotals: { '2026': 5000000 },
+  } as unknown as CumulativePerson;
+  it('前の事業所の分と合わせて上限を超えたら出す', () => {
+    const t = bonusCumulativeTodos(emp, [{ id: 'b', paidDate: '2026-07-10', amounts: { e1: 800500 } }], '2026-11-19');
+    expect(t.length).toBe(1);
+    expect(t[0].params['total']).toBe('5,800,000');
+  });
+  it('超えなければ出さない', () => {
+    expect(bonusCumulativeTodos(emp, [{ id: 'b', paidDate: '2026-07-10', amounts: { e1: 700000 } }], '2026-11-19')).toEqual([]);
   });
 });

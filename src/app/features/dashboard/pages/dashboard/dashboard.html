@@ -442,6 +442,15 @@
                               'dashboard.todo.text.adjustmentDeadline' | transloco: it.extra!.params
                             }}
                           }
+                          @case ('bonusNone') {
+                            {{ 'dashboard.todo.text.bonusNone' | transloco: it.extra!.params }}
+                          }
+                          @case ('bonusCumulative') {
+                            {{ 'dashboard.todo.text.bonusCumulative' | transloco: it.extra!.params }}
+                          }
+                          @case ('birthDate') {
+                            {{ 'dashboard.todo.text.birthDate' | transloco: { date: it.date } }}
+                          }
                           @case ('insurerChange') {
                             {{
                               'dashboard.todo.text.insurerChange.' + it.extra!.params['direction']
@@ -585,6 +594,21 @@
                           @case ('adjustmentDeadline') {
                             <a [routerLink]="['/o', office()?.id, 'settings']"
                               >{{ 'dashboard.todo.toSettings' | transloco }} →</a
+                            >
+                          }
+                          @case ('bonusNone') {
+                            <a [routerLink]="['/o', office()?.id, 'bonuses']"
+                              >{{ 'dashboard.todo.toBonuses' | transloco }} →</a
+                            >
+                          }
+                          @case ('bonusCumulative') {
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
+                              >{{ 'dashboard.todo.toEmployee' | transloco }} →</a
+                            >
+                          }
+                          @case ('birthDate') {
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
+                              >{{ 'dashboard.todo.toEmployee' | transloco }} →</a
                             >
                           }
                           @case ('insurerChange') {

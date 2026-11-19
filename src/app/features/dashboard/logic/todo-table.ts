@@ -52,6 +52,8 @@ export function deadlineOf(it: BoardItem): { deadline: DateStr | null; note: Dea
     case 'myNumberDispose':
       // 保存期間が過ぎた日（ここから「できるだけ速やかに」廃棄）
       return { deadline: it.date, note: null };
+    case 'bonusNone':
+      // 賞与不支給報告書：支払予定月の翌月末日
     case 'adjustmentDeadline':
       // 届の期限ではなく、申出の期限（その月の末日）
     case 'overseasCertificate':
@@ -67,6 +69,8 @@ export function deadlineOf(it: BoardItem): { deadline: DateStr | null; note: Dea
       return it.date ? { deadline: filingDeadline(it.date), note: null } : { deadline: null, note: 'asap' };
     case 'address':
     case 'name':
+    case 'birthDate':
+    case 'bonusCumulative':
       // 被保険者住所変更届・氏名変更届：速やかに
       return { deadline: null, note: 'asap' };
     case 'contractEnd': {
