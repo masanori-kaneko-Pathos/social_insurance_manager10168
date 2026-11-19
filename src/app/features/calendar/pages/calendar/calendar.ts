@@ -34,6 +34,7 @@ export class CalendarPage {
     return {
       bonusMonths: o.bonusMonths ?? [],
       insurer: o.healthInsurer?.type === 'kumiai' ? ('kumiai' as const) : ('kyokai' as const),
+      deduction: payrollOf(o).deduction,
     };
   });
 

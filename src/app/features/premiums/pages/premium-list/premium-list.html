@@ -438,7 +438,8 @@
                 @if (r.result?.exemptPending) {
                   <span class="badge badge-warn" [title]="'premiumList.exemptPendingNote' | transloco">{{ 'premiumList.exemptPending' | transloco }}</span>
                 }
-                @if (r.lastMonth) {
+                <!-- 翌月控除の事業所だけ（当月控除なら毎月その月の分を引くので、2か月分にならない。11/19） -->
+                @if (r.lastMonth && payroll().deduction === 'next') {
                   <span class="badge badge-change" [title]="'premiumList.lastMonthNote' | transloco">{{ 'premiumList.lastMonth' | transloco }}</span>
                 }
                 @if (r.employee.multipleOffices) {

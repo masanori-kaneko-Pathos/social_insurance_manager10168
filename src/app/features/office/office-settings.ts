@@ -33,9 +33,8 @@ export const DEFAULT_PREMIUM: PremiumSettings = { ...DEFAULT_PREMIUM_OPTIONS };
 type OfficeLike = Pick<OfficeDoc, 'prefecture' | 'healthInsurer'> &
   Partial<Pick<OfficeDoc, 'insurerHistory' | 'payroll' | 'premium'>>;
 
-/** 控除は翌月控除だけ。前に「当月控除」で保存された事業所も 'next' として読む（11/19。健保法167条） */
 export function payrollOf(office: OfficeLike): PayrollSettings {
-  return { ...DEFAULT_PAYROLL, ...(office.payroll ?? {}), deduction: 'next' };
+  return { ...DEFAULT_PAYROLL, ...(office.payroll ?? {}) };
 }
 
 export function premiumOf(office: OfficeLike): PremiumSettings {
@@ -146,19 +145,16 @@ export function withInsurerChange(
   return [...kept, change];
 }
 
-/**
- * 何月に支払う給与から控除するか：11月分の保険料は12月に支払う給与から（翌月控除。健保法167条1項）
- * 退職する人の最後の給与だけは、前月分と当月分の2か月分を控除できる（lastPremiumMonth を参照）
- */
-export function deductionPayMonth(month: YearMonth, _payroll?: PayrollSettings): YearMonth {
-  return shiftMonth(month, 1);
+/** 何月に支払う給与から控除するか（翌月控除なら、11月分の保険料は12月に支払う給与から） */
+export function deductionPayMonth(month: YearMonth, payroll: PayrollSettings): YearMonth {
+  return payroll.deduction === 'next' ? shiftMonth(month, 1) : month;
 }
 
 /**
- * deductionPayMonth の逆：その月に払う給与から控除するのは、何月分の保険料か（11/16。11/19 翌月控除だけに）
- * 前の月の分（11月25日払いの給与から10月分）
+ * deductionPayMonth の逆：その月に払う給与から控除するのは、何月分の保険料か（11/16）
+ * 翌月控除なら前の月の分（11月25日払いの給与から10月分）、当月控除なら同じ月の分
  * 給与の取り込み・入力のあとの「この給与から控除する保険料を見る」で使う
  */
-export function premiumMonthOfPay(paidMonth: YearMonth, _payroll?: PayrollSettings): YearMonth {
-  return shiftMonth(paidMonth, -1);
+export function premiumMonthOfPay(paidMonth: YearMonth, payroll: PayrollSettings): YearMonth {
+  return payroll.deduction === 'next' ? shiftMonth(paidMonth, -1) : paidMonth;
 }

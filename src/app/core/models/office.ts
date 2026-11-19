@@ -24,12 +24,7 @@ export interface PayrollSettings {
   closingDay: number; // 締日
   payDay: number; // 支払日
   payMonth: 'current' | 'next'; // 支払日は締めた月の当月か翌月か
-  /**
-   * 保険料の控除：前月分を当月の給与から（翌月控除）だけ（11/19）
-   * 健康保険法167条1項・厚生年金保険法84条1項で、報酬から控除できるのは前月の標準報酬月額に係る保険料だけ。
-   * 当月控除は選べない。前に保存された 'current' は payrollOf で 'next' に直して読む（ルールは古いデータのため両方を通す）
-   */
-  deduction: 'next';
+  deduction: 'current' | 'next'; // 保険料の控除：当月分を当月の給与から／前月分を当月の給与から
 }
 
 /** 保険料の計算方法（method：本人負担の集め方、healthRounding：健保・介護・支援金の端数処理） */

@@ -43,6 +43,7 @@ export interface MonthTasks {
 export interface CalendarOffice {
   bonusMonths: number[];
   insurer: 'kyokai' | 'kumiai';
+  deduction: 'current' | 'next';
 }
 
 const t = (key: string, link: TaskLink, params?: YearTask['params']): YearTask => ({ key, link, outside: false, params });
@@ -55,20 +56,20 @@ export function monthlyTasks(): YearTask[] {
 
 /** 月ごとの業務（1月〜12月） */
 export function yearTasks(o: CalendarOffice): MonthTasks[] {
-  // 保険料は翌月控除だけ（11/19）：3月分の料率は4月の給与、9月分の新しい等級は10月の給与から
+  const next = o.deduction === 'next';
   const months: MonthTasks[] = Array.from({ length: 12 }, (_, i) => ({ month: i + 1, tasks: [] }));
   const add = (m: number, task: YearTask) => months[m - 1].tasks.push(task);
 
   add(1, out('withholdingSlip'));
   add(1, out('salaryReport'));
-  if (o.insurer === 'kyokai') add(3, t('ratesKyokai', 'rates', { payMonth: 4 }));
+  if (o.insurer === 'kyokai') add(3, t('ratesKyokai', 'rates', { payMonth: next ? 4 : 3 }));
   else add(3, t('ratesKumiai', 'rates'));
   add(4, t('raise', 'revisions'));
   add(4, out('employmentRate'));
   add(5, out('residentTax'));
   add(6, out('laborInsurance'));
   add(7, t('regular', 'regular'));
-  add(9, t('regularApply', 'premiums', { payMonth: 10 }));
+  add(9, t('regularApply', 'premiums', { payMonth: next ? 10 : 9 }));
   if (o.insurer === 'kyokai') {
     add(10, t('dependentList', 'employees'));
     add(12, t('dependentDue', 'employees'));

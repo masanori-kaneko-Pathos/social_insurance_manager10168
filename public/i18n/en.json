@@ -897,7 +897,7 @@
     },
     "deduction": {
       "next": "Next-month deduction (last month's premium from this month's pay)",
-      "lawNote": "Fixed by law (Health Insurance Act Art. 167(1), Employees' Pension Insurance Act Art. 84(1)). Only for an employee who is leaving, last month's and this month's premiums (two months) may be deducted from the final pay. Check employees marked \"Last month\" on the premium list."
+      "current": "Same-month deduction (this month's premium from this month's pay)"
     },
     "method": {
       "payroll": "Deducted from pay (50 sen (1/100 yen) or less rounded down)",
