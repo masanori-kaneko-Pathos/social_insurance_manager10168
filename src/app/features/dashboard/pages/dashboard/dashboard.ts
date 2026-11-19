@@ -7,6 +7,7 @@ import { CriteriaDoc } from '../../../../core/models/master';
 import { TodoDismissalDoc } from '../../../../core/models/office-records';
 import { shiftMonth, todayLocal, toYearMonth } from '../../../../shared/utils/date';
 import { ContractService } from '../../../employees/contract.service';
+import { contractAt } from '../../../employees/logic/contract-form-model';
 import { EmployeeService } from '../../../employees/employee.service';
 import { classify, reasonParams } from '../../../employees/logic/classify';
 import { CriteriaService } from '../../../office/criteria.service';
@@ -56,6 +57,7 @@ import {
   ratesMissingTodo,
   bonusNoneTodos,
   actualHoursTodo,
+  acquireAmountTodo,
   actualHoursThreshold,
   bonusCumulativeTodos,
   residenceTodo,
@@ -112,6 +114,13 @@ interface OpenAction {
  * To-do の材料は「従業員・契約・加入の基準・確認済み・確認待ちの依頼の数」。開くたびに計算し、結果は保存しない
  * 表にする決まり（期限・急ぎ・並べ方）は logic/todo-table.ts（spec あり）
  */
+/** 資格取得届に書いた報酬月額（取得日に効いている契約の見込み。届書の一覧と同じ） */
+function acquireReported(contracts: ContractDoc[], e: Employee): number | null {
+  const d = [e.health, e.pension].filter((x) => x.enrolled && x.acquiredDate).map((x) => x.acquiredDate!).sort()[0];
+  const c = d ? contractAt(contracts, d) : null;
+  return c ? c.expectedCash + c.expectedInKind : null;
+}
+
 @Component({
   selector: 'app-dashboard',
   imports: [PersonName, Icon, RouterLink, TranslocoPipe, TodoDialog],
@@ -178,7 +187,7 @@ export class Dashboard {
   private readonly rateFroms = signal<string[] | null>(null);
 
   /** 直近2か月の給与の実績（実際の労働時間の To-do に使う。従業員ID → 実績。11/19） */
-  private readonly recentPayrolls = signal<ReadonlyMap<string, { paidMonth: string; workMinutes: number | null }[]>>(new Map());
+  private readonly recentPayrolls = signal<ReadonlyMap<string, { paidMonth: string; workMinutes: number | null; fixed: number }[]>>(new Map());
 
   /** 賞与の支給（不支給報告書・累計申出書の To-do に使う。11/19） */
   private readonly bonusPayments = signal<BonusPayment[]>([]);
@@ -239,6 +248,8 @@ export class Dashboard {
           ),
           this.recentPayrolls().get(e.id) ?? [],
         ),
+        // 資格取得届の報酬月額（契約の見込み）より、入社後の固定的賃金が多い（手当の入れ漏れ。事例2。11/19）
+        acquireAmountTodo(e, acquireReported(contracts.get(e.id) ?? [], e), this.recentPayrolls().get(e.id) ?? []),
       ].filter((t) => t !== null),
     );
     const specific = specificOfficeTodo(
@@ -485,8 +496,8 @@ export class Dashboard {
       this.payrollApi
         .listOfOfficeMonths(officeId, active.map((e) => e.id), [shiftMonth(latest, -1), latest])
         .then((list) => {
-          const map = new Map<string, { paidMonth: string; workMinutes: number | null }[]>();
-          for (const p of list) map.set(p.employeeId, [...(map.get(p.employeeId) ?? []), { paidMonth: p.paidMonth, workMinutes: p.workMinutes }]);
+          const map = new Map<string, { paidMonth: string; workMinutes: number | null; fixed: number }[]>();
+          for (const p of list) map.set(p.employeeId, [...(map.get(p.employeeId) ?? []), { paidMonth: p.paidMonth, workMinutes: p.workMinutes, fixed: p.fixed }]);
           this.recentPayrolls.set(map);
         })
         .catch((err) => console.error(err));

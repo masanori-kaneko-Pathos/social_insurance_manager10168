@@ -161,7 +161,8 @@
         "bonusNone": "Bonus non-payment report",
         "bonusCumulative": "Cumulative bonus declaration",
         "birthDate": "Date of birth correction",
-        "actualHours": "Actual working hours"
+        "actualHours": "Actual working hours",
+        "acquireAmount": "Remuneration at acquisition"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. An Application to Enroll in EPI / EHI (資格取得届) is needed.",
@@ -222,7 +223,8 @@
         "bonusNone": "Bonuses are scheduled for {{month}}/{{year}}, but none are recorded. If none were paid, submit a \"Bonus non-payment report\" to the pension office by {{date}} (end of the following month; also to the health insurance society if applicable). If they were paid, record them and this item disappears. Once submitted, you can hide it with \"Checked\".",
         "bonusCumulative": "Including the previous employer, the cumulative standard bonus amount for health insurance in fiscal {{year}} is {{total}} yen, above the cap ({{cap}} yen). For the cap to apply, the employee must submit a \"Cumulative standard bonus declaration\" to the insurer (follow the insurer's instructions). The app already applies the cap. Once you have informed the employee, you can hide this with \"Checked\".",
         "birthDate": "The date of birth was corrected on {{date}}. If the acquisition notification was already filed, promptly submit a \"Date of birth correction notification\". Age thresholds (long-term care at 40/65, 70, 75) may change, so check premiums and filings too.",
-        "actualHours": "Actual working hours in the pay for {{first}} and {{second}} were {{h1}} and {{h2}} hours a week, at or above the threshold ({{limit}} hours) for two months in a row. Even if contracted hours are below it, if this continues or is expected to, coverage starts on {{date}} (the first day of the third month). Review the contract or file an acquisition notification. If it was temporary, hide it with \"Checked\"."
+        "actualHours": "Actual working hours in the pay for {{first}} and {{second}} were {{h1}} and {{h2}} hours a week, at or above the threshold ({{limit}} hours) for two months in a row. Even if contracted hours are below it, if this continues or is expected to, coverage starts on {{date}} (the first day of the third month). Review the contract or file an acquisition notification. If it was temporary, hide it with \"Checked\".",
+        "acquireAmount": "The fixed wage paid in {{month}} ({{fixed}} yen) is higher than the monthly remuneration on the acquisition notification ({{reported}} yen). Allowances such as commuting or housing that started late still belong in the acquisition amount: correct the expected pay in the contract and file a correction (put catch-up payments back in the months they belong to). If this is a raise decided after acquisition, hide it with \"Checked\"."
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -2042,7 +2044,7 @@
         "cycle": "For schedules that vary by week. The cycle total is averaged per week."
       },
       "scheduledWage": "Scheduled wage: base pay and allowances. Excludes one-off pay, bonuses, overtime/holiday/night premiums, attendance, commuting and family allowances.",
-      "expected": "Expected monthly pay: the amount on the Application to Enroll (資格取得届). Scheduled wage plus expected overtime, commuting allowance, etc. (copied from the scheduled wage if empty). If bonuses are paid 4+ times a year, also add the annual bonus of employees in similar work ÷ 12.",
+      "expected": "Expected monthly pay: the amount on the acquisition notification. Add expected overtime and allowances set by the rules, such as commuting and housing, including ones paid from the next month after an application (if blank, the scheduled wage is copied). For hourly or daily pay, use the average of people doing similar work in the previous month (Health Insurance Act Art. 42). Bonus-related remuneration for bonuses paid four or more times a year is added by the app when the notification is made.",
       "periodEnd": "Leave blank for no fixed term.",
       "student": "Daytime students are not covered as short-time workers (evening, correspondence, part-time school and students on leave are).",
       "special": {

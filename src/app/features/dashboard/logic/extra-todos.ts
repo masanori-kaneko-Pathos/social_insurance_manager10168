@@ -27,6 +27,7 @@
 //   根拠：健康保険組合の編入の案内（Q&A）の実例。書類と期限は新しい保険者の案内に従う
 // - bonusNone：事業所の設定の「賞与の支払予定月」に、だれにも賞与を払っていない（11/19）
 //   → 賞与不支給報告書（日本年金機構。支払予定月の翌月末日まで）。先月・先々月の分を出す
+// - acquireAmount：資格取得届の報酬月額より、入社後3か月以内の給与の固定的賃金が多い（手当の入れ漏れ。11/19）
 // - actualHours：所定は基準未満だが、実際の労働時間が連続する2か月とも基準以上（加入していない人。11/19）
 // - bonusCumulative：前の事業所の分と合わせて、健保の標準賞与額の年度の累計が上限（573万円）を超えた（11/19）
 //   → 本人が保険者に「健康保険標準賞与額累計申出書」を出す（同じ保険者で転職した人。出さないと上限が効かない）
@@ -62,7 +63,8 @@ export type ExtraKind =
   | 'insurerChange'
   | 'bonusNone'
   | 'bonusCumulative'
-  | 'actualHours';
+  | 'actualHours'
+  | 'acquireAmount';
 
 export interface ExtraTodo {
   kind: ExtraKind;
@@ -545,5 +547,32 @@ export function actualHoursTodo(
       limit: h(threshold),
       date,
     },
+  };
+}
+
+// ===== 資格取得時の報酬月額（11/19。調査指摘事例集 事例2） =====
+
+/**
+ * 資格取得届に書いた報酬月額（契約の見込み）より、入社後に払った給与の固定的賃金のほうが多い月があれば To-do
+ * 通勤手当・住宅手当などを、申請待ちで翌月以降に払い始めても、取得時の報酬月額に含める（訂正届が要る）
+ * 見るのは、取得した月から3か月以内に払った給与だけ（それより後の変動は随時改定の話）
+ */
+export function acquireAmountTodo(
+  p: { id: string; health: { enrolled: boolean; acquiredDate: DateStr | null }; pension: { enrolled: boolean; acquiredDate: DateStr | null } },
+  reported: number | null,
+  months: readonly { paidMonth: string; fixed: number }[],
+): ExtraTodo | null {
+  const acquired = [p.health, p.pension].filter((x) => x.enrolled && x.acquiredDate).map((x) => x.acquiredDate!).sort()[0];
+  if (!acquired || reported === null || reported <= 0) return null;
+  const from = toYearMonth(acquired);
+  const over = [...months]
+    .filter((m) => m.paidMonth >= from && m.paidMonth <= shiftMonth(from, 3) && m.fixed > reported)
+    .sort((a, b) => a.paidMonth.localeCompare(b.paidMonth))[0];
+  if (!over) return null;
+  return {
+    kind: 'acquireAmount',
+    employeeId: p.id,
+    date: acquired,
+    params: { reported: reported.toLocaleString('ja-JP'), month: over.paidMonth, fixed: over.fixed.toLocaleString('ja-JP') },
   };
 }

@@ -70,6 +70,7 @@ export function deadlineOf(it: BoardItem): { deadline: DateStr | null; note: Dea
       return it.date ? { deadline: filingDeadline(it.date), note: null } : { deadline: null, note: 'asap' };
     case 'address':
     case 'name':
+    case 'acquireAmount':
     case 'birthDate':
     case 'bonusCumulative':
       // 被保険者住所変更届・氏名変更届：速やかに

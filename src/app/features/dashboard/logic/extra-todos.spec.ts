@@ -1,4 +1,4 @@
-import { actualHoursThreshold, actualHoursTodo, adjustmentDeadlineTodo, insurerChangeTodos, ratesMissingTodo, bonusNoneTodos, bonusCumulativeTodos, CumulativePerson } from './extra-todos';
+import { acquireAmountTodo, actualHoursThreshold, actualHoursTodo, adjustmentDeadlineTodo, insurerChangeTodos, ratesMissingTodo, bonusNoneTodos, bonusCumulativeTodos, CumulativePerson } from './extra-todos';
 import { cardReturnTodo, contractEndTodo, isShortTerm, myNumberTodos, noticeRequired, retireGuideTodo, voluntaryEligible } from './extra-todos';
 import {
   ExtraPerson,
@@ -308,5 +308,18 @@ describe('実際の労働時間（調査指摘事例集 事例1。11/19）', () 
     expect(actualHoursTodo(p, 20 * 60, [{ paidMonth: '2026-09', workMinutes: null }, { paidMonth: '2026-10', workMinutes: 92 * 60 }])).toBeNull();
     expect(actualHoursTodo(p, 20 * 60, [{ paidMonth: '2026-08', workMinutes: 92 * 60 }, { paidMonth: '2026-10', workMinutes: 92 * 60 }])).toBeNull();
     expect(actualHoursTodo({ ...p, health: { enrolled: true } }, 20 * 60, [{ paidMonth: '2026-09', workMinutes: 92 * 60 }, { paidMonth: '2026-10', workMinutes: 92 * 60 }])).toBeNull();
+  });
+});
+
+describe('資格取得時の報酬月額（調査指摘事例集 事例2。11/19）', () => {
+  const p = { id: 'e1', health: { enrolled: true, acquiredDate: '2025-04-01' }, pension: { enrolled: true, acquiredDate: '2025-04-01' } };
+  it('取得届は基本給＋A・B手当の214,000円。5月の給与から通勤・住宅手当（236,000円）→ To-do', () => {
+    const t = acquireAmountTodo(p, 214000, [{ paidMonth: '2025-04', fixed: 214000 }, { paidMonth: '2025-05', fixed: 236000 }]);
+    expect(t?.params['month']).toBe('2025-05');
+    expect(t?.params['fixed']).toBe('236,000');
+  });
+  it('手当まで入れた236,000円で届けていれば出さない。取得から4か月目より後の変動も見ない', () => {
+    expect(acquireAmountTodo(p, 236000, [{ paidMonth: '2025-05', fixed: 236000 }])).toBeNull();
+    expect(acquireAmountTodo(p, 214000, [{ paidMonth: '2025-08', fixed: 250000 }])).toBeNull();
   });
 });
