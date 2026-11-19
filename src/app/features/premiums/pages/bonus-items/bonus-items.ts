@@ -98,7 +98,7 @@ export class BonusItems {
   );
 
   /**
-   * まだ決めていない名前：支給に出てくるが、どの項目にも当たらない名前（多い順）
+   * 未分類の賞与：支給に出てくるが、どの項目にも当たらない名前（多い順）
    * 項目を決めないままでも、名前ごとに回数で判定するので計算は正しい。ここで扱いを決めてもらう
    */
   readonly looseNames = computed<LooseName[]>(() => {
@@ -108,7 +108,9 @@ export class BonusItems {
       const name = p.nature?.trim() || DEFAULT_NATURE;
       counts.set(name, (counts.get(name) ?? 0) + 1);
     }
-    return [...counts].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'ja'));
+    return [...counts]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'ja'));
   });
 
   /** 「ほかの項目に入れる」で選んでいる項目（名前 → 項目ID） */
@@ -131,12 +133,20 @@ export class BonusItems {
     this.loading.set(true);
     this.errorKey.set(null);
     try {
-      const [items, payments] = await Promise.all([this.api.list(officeId), this.bonusApi.list(officeId)]);
+      const [items, payments] = await Promise.all([
+        this.api.list(officeId),
+        this.bonusApi.list(officeId),
+      ]);
       this.items.set(items);
       this.payments.set(payments);
-      // 賞与の入力・一覧の「項目にする」から来たとき：その名前で新しい項目を開く（1回だけ）
+      // 賞与の入力・一覧の「分類」から来たとき：その名前で新しい項目を開く（1回だけ）
       const name = this.route.snapshot.queryParamMap.get('name');
-      if (name && !this.draft() && this.context.isAdmin() && this.looseNames().some((l) => l.name === name)) {
+      if (
+        name &&
+        !this.draft() &&
+        this.context.isAdmin() &&
+        this.looseNames().some((l) => l.name === name)
+      ) {
         this.startNew(name);
       }
     } catch (err) {
@@ -152,20 +162,36 @@ export class BonusItems {
   startNew(name = ''): void {
     this.savedName.set(null);
     this.formErrors.set([]);
-    this.draft.set({ id: null, name, labels: '', treatment: 'count', plannedCount: '', ruleExisted: false, effectiveDate: this.today });
+    this.draft.set({
+      id: null,
+      name,
+      labels: '',
+      treatment: 'count',
+      plannedCount: '',
+      ruleExisted: false,
+      effectiveDate: this.today,
+    });
   }
 
   setJoinTarget(name: string, itemId: string): void {
     this.joinTarget.set({ ...this.joinTarget(), [name]: itemId });
   }
 
-  /** まだ決めていない名前を、選んだ項目の取り込みの名前に足す（扱いはその項目のもの） */
+  /** 未分類の賞与を、選んだ項目の取り込みの名前に足す（扱いはその項目のもの） */
   async join(name: string): Promise<void> {
     const officeId = this.context.current()?.id;
     const it = this.items().find((i) => i.id === this.joinTarget()[name]);
     if (!officeId || !it || this.saving()) return;
-    const input = { name: it.name, labels: [...it.labels, name], plannedCount: it.plannedCount, treatments: it.treatments };
-    const errors = validateItem(input, this.items().filter((i) => i.id !== it.id));
+    const input = {
+      name: it.name,
+      labels: [...it.labels, name],
+      plannedCount: it.plannedCount,
+      treatments: it.treatments,
+    };
+    const errors = validateItem(
+      input,
+      this.items().filter((i) => i.id !== it.id),
+    );
     if (errors.length > 0) {
       this.errorKey.set('bonusItem.error.' + errors[0]);
       return;
@@ -217,7 +243,13 @@ export class BonusItems {
       name: d.name.trim(),
       labels: parseLabels(d.labels, d.name),
       plannedCount: count,
-      treatments: withTreatment(before?.treatments ?? [], d.treatment, this.draftUsed(), d.effectiveDate || this.today, d.ruleExisted),
+      treatments: withTreatment(
+        before?.treatments ?? [],
+        d.treatment,
+        this.draftUsed(),
+        d.effectiveDate || this.today,
+        d.ruleExisted,
+      ),
     });
     const errors: (ItemError | 'labelInUse')[] = validateItem(
       input,
@@ -226,7 +258,8 @@ export class BonusItems {
     // 支給に使っている取り込みの名前は消せない（過去の支給がどの項目かわからなくなる）
     if (before) {
       const inUse = namesInUse(this.payments(), DEFAULT_NATURE);
-      if (before.labels.some((l) => inUse.has(l) && !input.labels.includes(l) && l !== input.name)) errors.push('labelInUse');
+      if (before.labels.some((l) => inUse.has(l) && !input.labels.includes(l) && l !== input.name))
+        errors.push('labelInUse');
     }
     this.formErrors.set(errors);
     if (errors.length > 0) return;

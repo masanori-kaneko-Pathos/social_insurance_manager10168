@@ -2,11 +2,20 @@ import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ColumnMapper } from '../../../../shared/components/column-mapper/column-mapper';
-import { ImportFix, ImportIssue, ImportIssues } from '../../../../shared/components/import-issues/import-issues';
+import {
+  ImportFix,
+  ImportIssue,
+  ImportIssues,
+} from '../../../../shared/components/import-issues/import-issues';
 import { ImportPicker } from '../../../../shared/components/import-picker/import-picker';
 import { CsvEncoding, downloadCsv } from '../../../../shared/csv/csv';
 import { isOurFormat } from '../../../../shared/import/column-map';
-import { IMPORT_ACCEPT, ImportFileError, readTables, SheetTable } from '../../../../shared/import/parse';
+import {
+  IMPORT_ACCEPT,
+  ImportFileError,
+  readTables,
+  SheetTable,
+} from '../../../../shared/import/parse';
 import { applyRowValues } from '../../../../shared/import/row-fix';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
@@ -51,7 +60,16 @@ interface Preview {
  */
 @Component({
   selector: 'app-bonus-import',
-  imports: [PersonName, IssueRow, ImportSteps, ImportPicker, ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
+  imports: [
+    PersonName,
+    IssueRow,
+    ImportSteps,
+    ImportPicker,
+    ColumnMapper,
+    ImportIssues,
+    RouterLink,
+    TranslocoPipe,
+  ],
   templateUrl: './bonus-import.html',
   styleUrl: '../../../employees/pages/employee-import/employee-import.css',
 })
@@ -66,7 +84,11 @@ export class BonusImport {
   readonly spec = BONUS_TABLE_SPEC;
   readonly headers = BONUS_CSV_HEADERS;
 
-  readonly loaded = signal<{ fileName: string; encoding: CsvEncoding | null; tables: SheetTable[] } | null>(null);
+  readonly loaded = signal<{
+    fileName: string;
+    encoding: CsvEncoding | null;
+    tables: SheetTable[];
+  } | null>(null);
   readonly mapping = signal(false);
   readonly preview = signal<Preview | null>(null);
   readonly errorKey = signal<string | null>(null);
@@ -78,7 +100,9 @@ export class BonusImport {
   /** 窓で直すときの欄の種類（11/17） */
   readonly fixFields = BONUS_FIX_FIELDS;
   /** 読んだのにまだ取り込んでいなければ、画面を離れる前に確かめる */
-  private readonly unsaved = watchUnsaved(() => (this.loaded() !== null || this.preview() !== null) && this.done() === null);
+  private readonly unsaved = watchUnsaved(
+    () => (this.loaded() !== null || this.preview() !== null) && this.done() === null,
+  );
 
   readonly rows = computed(() => this.preview()?.plan.rows ?? []);
 
@@ -87,11 +111,17 @@ export class BonusImport {
   /** ファイルに出てくる賞与の項目の名前と、当たる項目（まだ決めていなければ null） */
   readonly natureSummary = computed(() => {
     const index = itemIndex(this.items());
-    const names = [...new Set(this.rows().filter((r) => r.status !== 'error').map((r) => r.nature?.trim() || DEFAULT_NATURE))];
+    const names = [
+      ...new Set(
+        this.rows()
+          .filter((r) => r.status !== 'error')
+          .map((r) => r.nature?.trim() || DEFAULT_NATURE),
+      ),
+    ];
     return names.map((name) => ({ name, item: index.get(name)?.name ?? null }));
   });
   readonly hasLooseNames = computed(() => this.natureSummary().some((n) => n.item === null));
-  /** 取り込んだあとに出す：まだ決めていない名前があったか */
+  /** 取り込んだあとに出す：未分類の賞与があったか */
   readonly looseAfterImport = signal(false);
   readonly errorRows = computed(() => this.rows().filter((r) => r.status === 'error'));
   // ===== 行ごとのチェック（11/17）：外した人を抜いて、支払日ごとにまとめ直す =====
@@ -101,7 +131,12 @@ export class BonusImport {
   }
   readonly writes = computed(() => {
     const p = this.preview();
-    return p ? bonusWrites(p.plan.rows.filter((r) => this.kept(r.line)), p.existing) : [];
+    return p
+      ? bonusWrites(
+          p.plan.rows.filter((r) => this.kept(r.line)),
+          p.existing,
+        )
+      : [];
   });
   readonly peopleToWrite = computed(() => this.writes().reduce((n, w) => n + w.count, 0));
   readonly count = computed(() => {
@@ -147,7 +182,9 @@ export class BonusImport {
       }
     } catch (err) {
       console.error(err);
-      this.errorKey.set(err instanceof ImportFileError ? `importMap.error.${err.code}` : 'employeeCsv.error.read');
+      this.errorKey.set(
+        err instanceof ImportFileError ? `importMap.error.${err.code}` : 'employeeCsv.error.read',
+      );
     }
   }
 
@@ -200,7 +237,13 @@ export class BonusImport {
         retireDate: e.retireDate ?? null,
       }));
       const plan = planBonusImport(table, targets, payments);
-      this.preview.set({ fileName: file.fileName, encoding: file.encoding, plan, existing: payments, table: table.map((r) => [...r]) });
+      this.preview.set({
+        fileName: file.fileName,
+        encoding: file.encoding,
+        plan,
+        existing: payments,
+        table: table.map((r) => [...r]),
+      });
     } catch (err) {
       console.error(err);
       this.errorKey.set(errorKeyOf(err, 'employeeCsv.error.read'));

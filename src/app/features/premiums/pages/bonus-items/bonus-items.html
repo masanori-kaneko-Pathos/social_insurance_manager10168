@@ -1,11 +1,15 @@
 <div class="page-head">
   <div>
-    <a class="back" [routerLink]="['/o', context.current()?.id, 'bonuses']">← {{ 'bonusItem.back' | transloco }}</a>
+    <a class="back" [routerLink]="['/o', context.current()?.id, 'bonuses']"
+      >← {{ 'bonusItem.back' | transloco }}</a
+    >
     <h1>{{ 'bonusItem.title' | transloco }}</h1>
   </div>
   @if (context.isAdmin() && !draft()) {
     <div class="head-actions">
-      <button type="button" class="btn btn-primary" (click)="startNew()">{{ 'bonusItem.add' | transloco }}</button>
+      <button type="button" class="btn btn-primary" (click)="startNew()">
+        {{ 'bonusItem.add' | transloco }}
+      </button>
     </div>
   }
 </div>
@@ -46,16 +50,30 @@
               <td class="name">{{ r.item.name }}</td>
               <td class="wrap">{{ r.item.labels.length > 0 ? r.item.labels.join('・') : '—' }}</td>
               <td>
-                <span class="badge" [class]="'badge t-' + r.now">{{ 'bonusItem.treatment.' + r.now | transloco }}</span>
+                <span class="badge" [class]="'badge t-' + r.now">{{
+                  'bonusItem.treatment.' + r.now | transloco
+                }}</span>
                 @if (r.next; as n) {
-                  <span class="sub">{{ 'bonusItem.nextChange' | transloco: { year: n.fromYear, treatment: ('bonusItem.treatment.' + n.treatment | transloco) } }}</span>
+                  <span class="sub">{{
+                    'bonusItem.nextChange'
+                      | transloco
+                        : {
+                            year: n.fromYear,
+                            treatment: ('bonusItem.treatment.' + n.treatment | transloco),
+                          }
+                  }}</span>
                 }
               </td>
               <td class="num">{{ r.item.plannedCount ?? '—' }}</td>
               <td class="num">{{ 'bonusItem.usedCount' | transloco: { count: r.used } }}</td>
               @if (context.isAdmin()) {
                 <td class="toggle-col">
-                  <button type="button" class="btn btn-small" (click)="startEdit(r.item)" [disabled]="!!draft()">
+                  <button
+                    type="button"
+                    class="btn btn-small"
+                    (click)="startEdit(r.item)"
+                    [disabled]="!!draft()"
+                  >
                     {{ 'bonusItem.edit' | transloco }}
                   </button>
                 </td>
@@ -67,7 +85,7 @@
     </div>
   }
 
-  <!-- まだ決めていない名前：支給に出てくるが、どの項目にも入っていない名前（11/19） -->
+  <!-- 未分類の賞与：支給に出てくるが、どの項目にも入っていない名前（11/19） -->
   @if (looseNames().length > 0) {
     <section class="card loose">
       <h2>{{ 'bonusItem.loose.title' | transloco }}</h2>
@@ -79,7 +97,12 @@
             <span class="muted">{{ 'bonusItem.usedCount' | transloco: { count: l.count } }}</span>
             @if (context.isAdmin()) {
               <span class="loose-actions">
-                <button type="button" class="btn btn-small" (click)="startNew(l.name)" [disabled]="!!draft() || saving()">
+                <button
+                  type="button"
+                  class="btn btn-small"
+                  (click)="startNew(l.name)"
+                  [disabled]="!!draft() || saving()"
+                >
                   {{ 'bonusItem.loose.make' | transloco }}
                 </button>
                 @if (items().length > 0) {
@@ -123,13 +146,16 @@
             maxlength="30"
             [value]="d.name"
             (input)="patch({ name: $any($event.target).value })"
-            [class.is-invalid]="formErrors().includes('nameRequired') || formErrors().includes('duplicate')"
+            [class.is-invalid]="
+              formErrors().includes('nameRequired') || formErrors().includes('duplicate')
+            "
           />
           <span class="hint">{{ 'bonusItem.hint.name' | transloco }}</span>
         </div>
         <div class="field">
           <label for="item-labels">
-            {{ 'bonusItem.field.labels' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+            {{ 'bonusItem.field.labels' | transloco
+            }}<span class="optional">{{ 'common.optional' | transloco }}</span>
           </label>
           <input
             id="item-labels"
@@ -147,7 +173,12 @@
         <legend>{{ 'bonusItem.field.treatment' | transloco }}</legend>
         @for (t of treatments; track t) {
           <label class="choice" [class.on]="d.treatment === t">
-            <input type="radio" name="treatment" [checked]="d.treatment === t" (change)="patch({ treatment: t })" />
+            <input
+              type="radio"
+              name="treatment"
+              [checked]="d.treatment === t"
+              (change)="patch({ treatment: t })"
+            />
             <span>
               <strong>{{ 'bonusItem.treatment.' + t | transloco }}</strong>
               <span class="hint">{{ 'bonusItem.treatmentHint.' + t | transloco }}</span>
@@ -160,17 +191,29 @@
         <div class="grid">
           <div class="field">
             <label for="item-effective">{{ 'bonusItem.field.effectiveDate' | transloco }}</label>
-            <input id="item-effective" class="input short-date" type="date" [value]="d.effectiveDate" (input)="patch({ effectiveDate: $any($event.target).value })" />
+            <input
+              id="item-effective"
+              class="input short-date"
+              type="date"
+              [value]="d.effectiveDate"
+              (input)="patch({ effectiveDate: $any($event.target).value })"
+            />
             <span class="hint">{{ 'bonusItem.hint.effectiveDate' | transloco }}</span>
           </div>
         </div>
       }
       @if (draftUsed()) {
-        <p class="hint warn">{{ 'bonusItem.hint.fromNextYear' | transloco: { year: draftYear() } }}</p>
+        <p class="hint warn">
+          {{ 'bonusItem.hint.fromNextYear' | transloco: { year: draftYear() } }}
+        </p>
       } @else if (d.treatment === 'remuneration') {
         <!-- まだ使っていない項目：規程が前からあるか（新しく作った規程は、次の定時決定までは賞与。課長通知 1(3)・Q&A Q4。11/19） -->
         <label class="check rule-existed">
-          <input type="checkbox" [checked]="d.ruleExisted" (change)="patch({ ruleExisted: $any($event.target).checked })" />
+          <input
+            type="checkbox"
+            [checked]="d.ruleExisted"
+            (change)="patch({ ruleExisted: $any($event.target).checked })"
+          />
           {{ 'bonusItem.field.ruleExisted' | transloco: { year: draftYear() } }}
         </label>
         @if (!d.ruleExisted) {
@@ -182,7 +225,8 @@
         <div class="grid">
           <div class="field">
             <label for="item-count">
-              {{ 'bonusItem.field.plannedCount' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+              {{ 'bonusItem.field.plannedCount' | transloco
+              }}<span class="optional">{{ 'common.optional' | transloco }}</span>
             </label>
             <input
               id="item-count"
@@ -204,8 +248,12 @@
         <p class="field-error">{{ 'bonusItem.error.' + e | transloco }}</p>
       }
       <div class="actions">
-        <button type="button" class="btn" (click)="cancel()" [disabled]="saving()">{{ 'common.cancel' | transloco }}</button>
-        <button type="button" class="btn btn-primary" (click)="save()" [disabled]="saving()">{{ 'common.save' | transloco }}</button>
+        <button type="button" class="btn" (click)="cancel()" [disabled]="saving()">
+          {{ 'common.cancel' | transloco }}
+        </button>
+        <button type="button" class="btn btn-primary" (click)="save()" [disabled]="saving()">
+          {{ 'common.save' | transloco }}
+        </button>
       </div>
     </section>
   }

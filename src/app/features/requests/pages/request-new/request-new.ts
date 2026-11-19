@@ -12,10 +12,21 @@ import {
 import { DATE_RE, todayLocal } from '../../../../shared/utils/date';
 import { PersonListBar } from '../../../../shared/components/person-list-bar/person-list-bar';
 import { SortHeader } from '../../../../shared/components/sort-header/sort-header';
-import { defaultListOptions, filterAndSort, pageOf, PersonListOptions } from '../../../../shared/logic/person-list';
+import {
+  defaultListOptions,
+  filterAndSort,
+  pageOf,
+  PersonListOptions,
+} from '../../../../shared/logic/person-list';
 import { EmployeeService } from '../../../employees/employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
-import { customQuestion, fieldQuestion, REQUEST_FIELDS, RequestField, templateQuestions } from '../../logic/request-model';
+import {
+  customQuestion,
+  fieldQuestion,
+  REQUEST_FIELDS,
+  RequestField,
+  templateQuestions,
+} from '../../logic/request-model';
 import { RequestService } from '../../request.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
@@ -73,16 +84,27 @@ export class RequestNew {
   /** 絞り込みに合う人（全ページ。「すべて選ぶ」はこの人たち） */
   readonly visible = computed(() => {
     const a = this.accountFilter();
-    const rows = this.employees().filter((e) => a === 'all' || (a === 'linked' ? !!e.userUid : !e.userUid));
-    return filterAndSort(rows, this.listOptions(), (e) => e, () => null, () => false, {
-      dept: (e) => this.deptName(e) ?? '',
-    });
+    const rows = this.employees().filter(
+      (e) => a === 'all' || (a === 'linked' ? !!e.userUid : !e.userUid),
+    );
+    return filterAndSort(
+      rows,
+      this.listOptions(),
+      (e) => e,
+      () => null,
+      () => false,
+      {
+        dept: (e) => this.deptName(e) ?? '',
+      },
+    );
   });
   readonly shown = computed(() => pageOf(this.visible(), this.page(), this.listOptions().size));
 
   deptName(e: Employee): string | null {
     const id = e.org?.departmentId;
-    return id ? (this.context.current()?.departments?.find((d) => d.id === id)?.name ?? null) : null;
+    return id
+      ? (this.context.current()?.departments?.find((d) => d.id === id)?.name ?? null)
+      : null;
   }
 
   setAccountFilter(v: 'all' | 'linked' | 'none'): void {
@@ -108,7 +130,14 @@ export class RequestNew {
     return out;
   });
 
-  readonly usedFields = computed(() => new Set(this.questions().map((q) => q.field).filter((f) => f)));
+  readonly usedFields = computed(
+    () =>
+      new Set(
+        this.questions()
+          .map((q) => q.field)
+          .filter((f) => f),
+      ),
+  );
 
   constructor() {
     this.title.set(this.defaultTitle('onboarding'));
@@ -121,7 +150,9 @@ export class RequestNew {
   private async load(officeId: string): Promise<void> {
     try {
       const today = this.today;
-      const list = (await this.employeesApi.list(officeId)).filter((e) => !e.retireDate || e.retireDate >= today);
+      const list = (await this.employeesApi.list(officeId)).filter(
+        (e) => !e.retireDate || e.retireDate >= today,
+      );
       this.employees.set(list);
       const pre = this.route.snapshot.queryParamMap.get('employee');
       if (pre && list.some((e) => e.id === pre)) this.selected.set(new Set([pre]));
@@ -141,14 +172,17 @@ export class RequestNew {
     const old = this.type();
     this.type.set(type);
     // 題名を手で変えていなければ、ひな形の題名にそろえる
-    if (!this.title().trim() || this.title() === this.defaultTitle(old)) this.title.set(this.defaultTitle(type));
+    if (!this.title().trim() || this.title() === this.defaultTitle(old))
+      this.title.set(this.defaultTitle(type));
     // ひな形の質問に入れ替える（足した質問は残す）
     const custom = this.questions().filter((q) => !q.field);
     this.questions.set([...templateQuestions(type), ...custom]);
   }
 
   toggleRequired(id: string): void {
-    this.questions.update((list) => list.map((q) => (q.id === id ? { ...q, required: !q.required } : q)));
+    this.questions.update((list) =>
+      list.map((q) => (q.id === id ? { ...q, required: !q.required } : q)),
+    );
   }
 
   removeQuestion(id: string): void {
@@ -166,7 +200,7 @@ export class RequestNew {
     });
   }
 
-  /** 書き込み先のある項目を足す */
+  /** 書き込み先のある項目を追加する */
   addField(): void {
     const f = this.newField();
     if (!f || this.usedFields().has(f) || this.questions().length >= MAX_QUESTIONS) return;
@@ -180,7 +214,10 @@ export class RequestNew {
     if (!label || this.questions().length >= MAX_QUESTIONS) return;
     const choices = this.newType() === 'choice' ? this.newChoices().split(/[,、\n]/) : null;
     if (this.newType() === 'choice' && (choices ?? []).filter((c) => c.trim()).length < 2) return;
-    this.questions.update((list) => [...list, customQuestion(list, label, this.newType(), choices, this.newRequired())]);
+    this.questions.update((list) => [
+      ...list,
+      customQuestion(list, label, this.newType(), choices, this.newRequired()),
+    ]);
     this.newLabel.set('');
     this.newChoices.set('');
   }
@@ -188,7 +225,11 @@ export class RequestNew {
   canAddCustom(): boolean {
     if (!this.newLabel().trim()) return false;
     if (this.newType() !== 'choice') return true;
-    return this.newChoices().split(/[,、\n]/).filter((c) => c.trim()).length >= 2;
+    return (
+      this.newChoices()
+        .split(/[,、\n]/)
+        .filter((c) => c.trim()).length >= 2
+    );
   }
 
   // ===== あて先の操作 =====

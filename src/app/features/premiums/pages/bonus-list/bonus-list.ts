@@ -5,7 +5,12 @@ import { BonusPayment } from '../../../../core/models/bonus';
 import { Employee } from '../../../../core/models/employee';
 import { EmployeeService } from '../../../employees/employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
-import { everKumiai, premiumOf, insurerKeyOf, ratesForOffice } from '../../../office/office-settings';
+import {
+  everKumiai,
+  premiumOf,
+  insurerKeyOf,
+  ratesForOffice,
+} from '../../../office/office-settings';
 import { RateTables } from '../../../rates/logic/pick-rates';
 import { RateService } from '../../../rates/rate.service';
 import { BonusService } from '../../bonus.service';
@@ -13,7 +18,11 @@ import { BonusRow, buildBonusRow, collectBonusResults } from '../../logic/bonus-
 import { officeTotals } from '../../logic/premium-core';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { SortHeader } from '../../../../shared/components/sort-header/sort-header';
-import { defaultListOptions, filterAndSort, PersonListOptions } from '../../../../shared/logic/person-list';
+import {
+  defaultListOptions,
+  filterAndSort,
+  PersonListOptions,
+} from '../../../../shared/logic/person-list';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
 import {
   bonusFilterCount,
@@ -72,15 +81,14 @@ export class BonusList {
     const tables = this.tables();
     const office = this.context.current();
     if (!tables || !office) return [];
-    const ctx = { ratesFor: ratesForOffice(office, tables), insurerOf: insurerKeyOf(office), options: premiumOf(office) };
+    const ctx = {
+      ratesFor: ratesForOffice(office, tables),
+      insurerOf: insurerKeyOf(office),
+      options: premiumOf(office),
+    };
     const payments = this.payments();
     return payments.map((payment) => {
-      const c = collectBonusResults(
-        this.employees(),
-        payments,
-        ctx,
-        (d) => d === payment.paidDate,
-      );
+      const c = collectBonusResults(this.employees(), payments, ctx, (d) => d === payment.paidDate);
       return {
         payment,
         people: Object.values(payment.amounts).filter((n) => n > 0).length,
@@ -101,11 +109,17 @@ export class BonusList {
   readonly filterCount = computed(() => bonusFilterCount(this.options().filter));
   /** 絞り込みの「賞与の項目」の選択肢：支給に出てくる項目の名前 */
   readonly itemNames = computed(() =>
-    [...new Set(this.payments().flatMap((p) => (p.group ? [p.group] : [])))].sort((a, b) => a.localeCompare(b, 'ja')),
+    [...new Set(this.payments().flatMap((p) => (p.group ? [p.group] : [])))].sort((a, b) =>
+      a.localeCompare(b, 'ja'),
+    ),
   );
-  /** まだ決めていない名前（支給に出てくるが、どの項目にも入っていない。一覧の上で知らせる） */
+  /** 未分類の賞与（支給に出てくるが、どの項目にも入っていない。一覧の上で知らせる） */
   readonly looseNames = computed(() => [
-    ...new Set(this.payments().filter((p) => !p.group).map((p) => p.nature?.trim() || DEFAULT_NATURE)),
+    ...new Set(
+      this.payments()
+        .filter((p) => !p.group)
+        .map((p) => p.nature?.trim() || DEFAULT_NATURE),
+    ),
   ]);
   readonly shownRows = computed(() => {
     const o = this.options();
@@ -128,7 +142,9 @@ export class BonusList {
   /** 見出しを押す：同じ列なら向きを変える。初めての列は、支払日・数は大きい順、名称は五十音順から */
   sortBy(key: BonusListSort): void {
     this.options.update((o) =>
-      o.sort === key ? { ...o, dir: o.dir === 'asc' ? 'desc' : 'asc' } : { ...o, sort: key, dir: key === 'title' ? 'asc' : 'desc' },
+      o.sort === key
+        ? { ...o, dir: o.dir === 'asc' ? 'desc' : 'asc' }
+        : { ...o, sort: key, dir: key === 'title' ? 'asc' : 'desc' },
     );
   }
 
@@ -156,14 +172,23 @@ export class BonusList {
     const payments = this.payments();
     const payment = payments.find((p) => p.id === id);
     if (!payment || !tables || !office) return [];
-    const ctx = { ratesFor: ratesForOffice(office, tables), insurerOf: insurerKeyOf(office), options: premiumOf(office) };
+    const ctx = {
+      ratesFor: ratesForOffice(office, tables),
+      insurerOf: insurerKeyOf(office),
+      options: premiumOf(office),
+    };
     const list = this.employees().filter((e) => (payment.amounts[e.id] ?? 0) > 0);
-    return filterAndSort(list, this.peopleOptions(), (e) => e, () => null, () => false)
-      .map((employee) => ({
-        employee,
-        amount: payment.amounts[employee.id],
-        row: buildBonusRow(employee, payments, payment.paidDate, ctx),
-      }));
+    return filterAndSort(
+      list,
+      this.peopleOptions(),
+      (e) => e,
+      () => null,
+      () => false,
+    ).map((employee) => ({
+      employee,
+      amount: payment.amounts[employee.id],
+      row: buildBonusRow(employee, payments, payment.paidDate, ctx),
+    }));
   });
 
   /** 開いた支給の合計（賞与額・標準賞与額・本人負担。11/16） */

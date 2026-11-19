@@ -7,7 +7,11 @@
     </a>
     @if (context.isAdmin()) {
       <!-- 何回分もまとめて：ファイルの取り込みのページ（11/17） -->
-      <a class="btn" [routerLink]="['/o', context.current()?.id, 'import']" [queryParams]="{ kind: 'bonuses', from: 'bonuses' }">
+      <a
+        class="btn"
+        [routerLink]="['/o', context.current()?.id, 'import']"
+        [queryParams]="{ kind: 'bonuses', from: 'bonuses' }"
+      >
         {{ 'bonus.csv' | transloco }}
       </a>
       <a class="btn btn-primary" [routerLink]="['/o', context.current()?.id, 'bonuses', 'new']">
@@ -26,43 +30,93 @@
     <p>{{ 'bonus.empty' | transloco }}</p>
   </section>
 } @else {
-  <!-- まだ決めていない名前があるときだけ（11/19） -->
+  <!-- 未分類の賞与があるときだけ（11/19） -->
   @if (looseNames().length > 0) {
     <p class="loose-note">
-      {{ 'bonus.looseNote' | transloco: { count: looseNames().length, names: looseNames().join('、') } }}
-      <a [routerLink]="['/o', context.current()?.id, 'bonuses', 'items']">{{ 'bonus.toItems' | transloco }} →</a>
+      {{
+        'bonus.looseNote'
+          | transloco: { count: looseNames().length, names: looseNames().join('、') }
+      }}
+      <a [routerLink]="['/o', context.current()?.id, 'bonuses', 'items']"
+        >{{ 'bonus.toItems' | transloco }} →</a
+      >
     </p>
   }
 
   <!-- 絞り込み（ほかの一覧と同じ形のボタンとパネル）と、名称で探す（11/19） -->
   <div class="toolbar">
     <div class="filter-wrap" #filterWrap>
-      <button type="button" class="btn filter-btn" [class.on]="filterCount() > 0" [attr.aria-expanded]="filterOpen()" (click)="filterOpen.set(!filterOpen())">
-        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M2 3.5h12L9.5 9v4l-3 1.5V9z" /></svg>
+      <button
+        type="button"
+        class="btn filter-btn"
+        [class.on]="filterCount() > 0"
+        [attr.aria-expanded]="filterOpen()"
+        (click)="filterOpen.set(!filterOpen())"
+      >
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+          <path d="M2 3.5h12L9.5 9v4l-3 1.5V9z" />
+        </svg>
         {{ 'employee.filter.button' | transloco }}
-        @if (filterCount() > 0) { <span class="count">{{ filterCount() }}</span> }
+        @if (filterCount() > 0) {
+          <span class="count">{{ filterCount() }}</span>
+        }
       </button>
       @if (filterOpen()) {
         @let f = options().filter;
         <div class="filter-panel" animate.enter="panel-enter" animate.leave="panel-leave">
           <div class="filter-head">
             <strong>{{ 'employee.filter.title' | transloco }}</strong>
-            <button type="button" class="link" (click)="clearFilter()">{{ 'employee.filter.clear' | transloco }}</button>
+            <button type="button" class="link" (click)="clearFilter()">
+              {{ 'employee.filter.clear' | transloco }}
+            </button>
           </div>
           <fieldset class="range">
             <legend>{{ 'bonus.filter.period' | transloco }}</legend>
-            <input class="input" type="month" [value]="f.from" (change)="setFilter({ from: $any($event.target).value })" [attr.aria-label]="'employee.filter.from' | transloco" />
+            <input
+              class="input"
+              type="month"
+              [value]="f.from"
+              (change)="setFilter({ from: $any($event.target).value })"
+              [attr.aria-label]="'employee.filter.from' | transloco"
+            />
             <span>〜</span>
-            <input class="input" type="month" [value]="f.to" (change)="setFilter({ to: $any($event.target).value })" [attr.aria-label]="'employee.filter.to' | transloco" />
+            <input
+              class="input"
+              type="month"
+              [value]="f.to"
+              (change)="setFilter({ to: $any($event.target).value })"
+              [attr.aria-label]="'employee.filter.to' | transloco"
+            />
           </fieldset>
           <fieldset>
             <legend>{{ 'bonus.field.nature' | transloco }}</legend>
-            <label class="opt"><input type="radio" name="bonusItem" [checked]="f.item === itemAll" (change)="setFilter({ item: itemAll })" />{{ 'bonus.filter.allItems' | transloco }}</label>
+            <label class="opt"
+              ><input
+                type="radio"
+                name="bonusItem"
+                [checked]="f.item === itemAll"
+                (change)="setFilter({ item: itemAll })"
+              />{{ 'bonus.filter.allItems' | transloco }}</label
+            >
             @for (n of itemNames(); track n) {
-              <label class="opt"><input type="radio" name="bonusItem" [checked]="f.item === n" (change)="setFilter({ item: n })" />{{ n }}</label>
+              <label class="opt"
+                ><input
+                  type="radio"
+                  name="bonusItem"
+                  [checked]="f.item === n"
+                  (change)="setFilter({ item: n })"
+                />{{ n }}</label
+              >
             }
             @if (looseNames().length > 0) {
-              <label class="opt"><input type="radio" name="bonusItem" [checked]="f.item === itemLoose" (change)="setFilter({ item: itemLoose })" />{{ 'bonus.filter.looseItems' | transloco }}</label>
+              <label class="opt"
+                ><input
+                  type="radio"
+                  name="bonusItem"
+                  [checked]="f.item === itemLoose"
+                  (change)="setFilter({ item: itemLoose })"
+                />{{ 'bonus.filter.looseItems' | transloco }}</label
+              >
             }
           </fieldset>
         </div>
@@ -83,138 +137,208 @@
       <p>{{ 'bonus.filter.none' | transloco }}</p>
     </section>
   } @else {
-  <div class="card table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th><button type="button" class="sort" [class.on]="options().sort === 'paidDate'" (click)="sortBy('paidDate')">{{ 'bonus.col.paidDate' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('paidDate') }}</span></button></th>
-          <th><button type="button" class="sort" [class.on]="options().sort === 'title'" (click)="sortBy('title')">{{ 'bonus.col.title' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('title') }}</span></button></th>
-          <th class="num"><button type="button" class="sort" [class.on]="options().sort === 'people'" (click)="sortBy('people')">{{ 'bonus.col.people' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('people') }}</span></button></th>
-          <th class="num"><button type="button" class="sort" [class.on]="options().sort === 'amount'" (click)="sortBy('amount')">{{ 'bonus.col.amountTotal' | transloco }}<span class="arrow" aria-hidden="true">{{ arrow('amount') }}</span></button></th>
-          <th class="num">{{ 'bonus.col.payment' | transloco }}</th>
-          <th class="toggle-col"></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (r of shownRows(); track r.payment.id) {
-          <tr [class.is-open]="openId() === r.payment.id">
-            <td class="mono">
-              <a
-                class="name"
-                [routerLink]="['/o', context.current()?.id, 'bonuses', r.payment.id]"
-              >
-                {{ r.payment.paidDate }}
-              </a>
-            </td>
-            <td>
-              {{ r.payment.title ?? '—' }}
-              <!-- 賞与の項目（「賞与」以外のときだけ。11/19） -->
-              @if (itemOf(r) !== defaultNature) {
-                <span class="sub">{{ itemOf(r) }}</span>
-              }
-            </td>
-            <td class="num">{{ 'bonus.peopleCount' | transloco: { count: r.people } }}</td>
-            <td class="num">{{ yen(r.amountYen) }}</td>
-            <td class="num">
-              {{ yen(r.totalYen) }}
-              @if (r.problems > 0) {
-                <span class="badge badge-warn">{{ 'bonus.hasProblems' | transloco }}</span>
-              }
-            </td>
-            <td class="toggle-col">
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>
               <button
                 type="button"
-                class="btn btn-small"
-                [attr.aria-expanded]="openId() === r.payment.id"
-                (click)="toggle(r.payment.id)"
+                class="sort"
+                [class.on]="options().sort === 'paidDate'"
+                (click)="sortBy('paidDate')"
               >
-                {{ (openId() === r.payment.id ? 'bonus.closePeople' : 'bonus.openPeople') | transloco }}
+                {{ 'bonus.col.paidDate' | transloco
+                }}<span class="arrow" aria-hidden="true">{{ arrow('paidDate') }}</span>
               </button>
-            </td>
+            </th>
+            <th>
+              <button
+                type="button"
+                class="sort"
+                [class.on]="options().sort === 'title'"
+                (click)="sortBy('title')"
+              >
+                {{ 'bonus.col.title' | transloco
+                }}<span class="arrow" aria-hidden="true">{{ arrow('title') }}</span>
+              </button>
+            </th>
+            <th class="num">
+              <button
+                type="button"
+                class="sort"
+                [class.on]="options().sort === 'people'"
+                (click)="sortBy('people')"
+              >
+                {{ 'bonus.col.people' | transloco
+                }}<span class="arrow" aria-hidden="true">{{ arrow('people') }}</span>
+              </button>
+            </th>
+            <th class="num">
+              <button
+                type="button"
+                class="sort"
+                [class.on]="options().sort === 'amount'"
+                (click)="sortBy('amount')"
+              >
+                {{ 'bonus.col.amountTotal' | transloco
+                }}<span class="arrow" aria-hidden="true">{{ arrow('amount') }}</span>
+              </button>
+            </th>
+            <th class="num">{{ 'bonus.col.payment' | transloco }}</th>
+            <th class="toggle-col"></th>
           </tr>
-          @if (openId() === r.payment.id) {
-            <tr class="detail">
-              <td colspan="6">
-                <table class="people">
-                  <thead>
-                    <tr>
-                      <th><app-sort-header key="number" [(options)]="peopleOptions">{{ 'employee.field.employeeNumber' | transloco }}</app-sort-header></th>
-                      <th><app-sort-header key="kana" [(options)]="peopleOptions">{{ 'employee.field.name' | transloco }}</app-sort-header></th>
-                      <th class="num">{{ 'bonus.col.amount' | transloco }}</th>
-                      <th class="num">{{ 'bonus.col.standard' | transloco }}</th>
-                      <th class="num">{{ 'premium.col.employee' | transloco }}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (p of people(); track p.employee.id) {
-                      <tr>
-                        <td class="emp-no">{{ p.employee.employeeNumber ?? '' }}</td>
-                        <td><app-person-name [person]="p.employee" [link]="['/o', context.current()?.id, 'employees', p.employee.id]" /></td>
-                        <td class="num">{{ yen(p.amount) }}</td>
-                        @switch (p.row.state) {
-                          @case ('ok') {
-                            <td class="num">
-                              {{ yen(p.row.result!.standardBonus) }}
-                              @if (p.row.capped) {
-                                <span class="badge">{{ 'bonus.capped' | transloco }}</span>
-                              }
-                            </td>
-                            <td class="num strong">{{ yen(p.row.result!.employeeYen) }}</td>
-                          }
-                          @case ('counted') {
-                            <td class="num">{{ yen(p.row.result!.standardBonus) }}</td>
-                            <td class="muted wrap">{{ 'bonus.state.counted' | transloco }}<br />{{ 'bonus.state.countedNote' | transloco }}</td>
-                          }
-                          @case ('notCovered') {
-                            <td class="num muted">—</td>
-                            <td class="muted wrap">{{ 'bonus.state.notCovered' | transloco }}</td>
-                          }
-                          @case ('remuneration') {
-                            <td class="num muted">—</td>
-                            <td class="muted wrap">{{ 'bonus.state.remuneration' | transloco }}</td>
-                          }
-                          @case ('exempt') {
-                            <td class="num">{{ yen(p.row.result!.standardBonus) }}</td>
-                            <td class="muted wrap">{{ 'bonus.state.exempt' | transloco }}<br />{{ 'bonus.state.exemptNote' | transloco }}</td>
-                          }
-                          @case ('none') {
-                            <td class="muted wrap" colspan="2">{{ 'bonus.state.none' | transloco }}</td>
-                          }
-                          @default {
-                            <td class="warn" colspan="2">{{ 'premium.error.calc' | transloco }}</td>
-                          }
-                        }
-                      </tr>
-                    }
-                  </tbody>
-                  <tfoot>
-                    @let t = peopleTotals();
-                    <tr class="total">
-                      <th colspan="2">{{ 'bonus.total' | transloco }}</th>
-                      <td class="num">{{ yen(t.amount) }}</td>
-                      <td class="num">{{ yen(t.standard) }}</td>
-                      <td class="num strong">{{ yen(t.employee) }}</td>
-                    </tr>
-                  </tfoot>
-                </table>
+        </thead>
+        <tbody>
+          @for (r of shownRows(); track r.payment.id) {
+            <tr [class.is-open]="openId() === r.payment.id">
+              <td class="mono">
+                <a
+                  class="name"
+                  [routerLink]="['/o', context.current()?.id, 'bonuses', r.payment.id]"
+                >
+                  {{ r.payment.paidDate }}
+                </a>
+              </td>
+              <td>
+                {{ r.payment.title ?? '—' }}
+                <!-- 賞与の項目（「賞与」以外のときだけ。11/19） -->
+                @if (itemOf(r) !== defaultNature) {
+                  <span class="sub">{{ itemOf(r) }}</span>
+                }
+              </td>
+              <td class="num">{{ 'bonus.peopleCount' | transloco: { count: r.people } }}</td>
+              <td class="num">{{ yen(r.amountYen) }}</td>
+              <td class="num">
+                {{ yen(r.totalYen) }}
+                @if (r.problems > 0) {
+                  <span class="badge badge-warn">{{ 'bonus.hasProblems' | transloco }}</span>
+                }
+              </td>
+              <td class="toggle-col">
+                <button
+                  type="button"
+                  class="btn btn-small"
+                  [attr.aria-expanded]="openId() === r.payment.id"
+                  (click)="toggle(r.payment.id)"
+                >
+                  {{
+                    (openId() === r.payment.id ? 'bonus.closePeople' : 'bonus.openPeople')
+                      | transloco
+                  }}
+                </button>
               </td>
             </tr>
+            @if (openId() === r.payment.id) {
+              <tr class="detail">
+                <td colspan="6">
+                  <table class="people">
+                    <thead>
+                      <tr>
+                        <th>
+                          <app-sort-header key="number" [(options)]="peopleOptions">{{
+                            'employee.field.employeeNumber' | transloco
+                          }}</app-sort-header>
+                        </th>
+                        <th>
+                          <app-sort-header key="kana" [(options)]="peopleOptions">{{
+                            'employee.field.name' | transloco
+                          }}</app-sort-header>
+                        </th>
+                        <th class="num">{{ 'bonus.col.amount' | transloco }}</th>
+                        <th class="num">{{ 'bonus.col.standard' | transloco }}</th>
+                        <th class="num">{{ 'premium.col.employee' | transloco }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (p of people(); track p.employee.id) {
+                        <tr>
+                          <td class="emp-no">{{ p.employee.employeeNumber ?? '' }}</td>
+                          <td>
+                            <app-person-name
+                              [person]="p.employee"
+                              [link]="['/o', context.current()?.id, 'employees', p.employee.id]"
+                            />
+                          </td>
+                          <td class="num">{{ yen(p.amount) }}</td>
+                          @switch (p.row.state) {
+                            @case ('ok') {
+                              <td class="num">
+                                {{ yen(p.row.result!.standardBonus) }}
+                                @if (p.row.capped) {
+                                  <span class="badge">{{ 'bonus.capped' | transloco }}</span>
+                                }
+                              </td>
+                              <td class="num strong">{{ yen(p.row.result!.employeeYen) }}</td>
+                            }
+                            @case ('counted') {
+                              <td class="num">{{ yen(p.row.result!.standardBonus) }}</td>
+                              <td class="muted wrap">
+                                {{ 'bonus.state.counted' | transloco }}<br />{{
+                                  'bonus.state.countedNote' | transloco
+                                }}
+                              </td>
+                            }
+                            @case ('notCovered') {
+                              <td class="num muted">—</td>
+                              <td class="muted wrap">{{ 'bonus.state.notCovered' | transloco }}</td>
+                            }
+                            @case ('remuneration') {
+                              <td class="num muted">—</td>
+                              <td class="muted wrap">
+                                {{ 'bonus.state.remuneration' | transloco }}
+                              </td>
+                            }
+                            @case ('exempt') {
+                              <td class="num">{{ yen(p.row.result!.standardBonus) }}</td>
+                              <td class="muted wrap">
+                                {{ 'bonus.state.exempt' | transloco }}<br />{{
+                                  'bonus.state.exemptNote' | transloco
+                                }}
+                              </td>
+                            }
+                            @case ('none') {
+                              <td class="muted wrap" colspan="2">
+                                {{ 'bonus.state.none' | transloco }}
+                              </td>
+                            }
+                            @default {
+                              <td class="warn" colspan="2">
+                                {{ 'premium.error.calc' | transloco }}
+                              </td>
+                            }
+                          }
+                        </tr>
+                      }
+                    </tbody>
+                    <tfoot>
+                      @let t = peopleTotals();
+                      <tr class="total">
+                        <th colspan="2">{{ 'bonus.total' | transloco }}</th>
+                        <td class="num">{{ yen(t.amount) }}</td>
+                        <td class="num">{{ yen(t.standard) }}</td>
+                        <td class="num strong">{{ yen(t.employee) }}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </td>
+              </tr>
+            }
           }
-        }
-      </tbody>
-      <!-- 絞り込んだ支給の合計（人数は延べ。11/19） -->
-      <tfoot>
-        @let t = total();
-        <tr class="list-total">
-          <th scope="row" colspan="2">{{ 'bonus.listTotal' | transloco: { count: t.count } }}</th>
-          <td class="num">{{ 'bonus.peopleCount' | transloco: { count: t.people } }}</td>
-          <td class="num">{{ yen(t.amountYen) }}</td>
-          <td class="num strong">{{ yen(t.totalYen) }}</td>
-          <td class="toggle-col"></td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
+        </tbody>
+        <!-- 絞り込んだ支給の合計（人数は延べ。11/19） -->
+        <tfoot>
+          @let t = total();
+          <tr class="list-total">
+            <th scope="row" colspan="2">{{ 'bonus.listTotal' | transloco: { count: t.count } }}</th>
+            <td class="num">{{ 'bonus.peopleCount' | transloco: { count: t.people } }}</td>
+            <td class="num">{{ yen(t.amountYen) }}</td>
+            <td class="num strong">{{ yen(t.totalYen) }}</td>
+            <td class="toggle-col"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
   }
   <p class="hint">{{ 'bonus.hint.list' | transloco }}</p>
 }

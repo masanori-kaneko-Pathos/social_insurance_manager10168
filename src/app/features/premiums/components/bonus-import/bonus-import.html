@@ -2,7 +2,12 @@
   <!-- 段階の印（課題管理アプリと同じ。11/17） -->
   <app-import-steps [step]="done() ? 'done' : preview() ? 'check' : mapping() ? 'map' : 'pick'" />
   <!-- ファイルを選ぶ・ひな形・列の書き方を1行に（どの区分も同じ。11/17） -->
-  <app-import-picker [accept]="accept" [busy]="saving()" (picked)="onFile($event)" (template)="downloadTemplate()">
+  <app-import-picker
+    [accept]="accept"
+    [busy]="saving()"
+    (picked)="onFile($event)"
+    (template)="downloadTemplate()"
+  >
     <div columns>
       <p>{{ 'bonusCsv.lead' | transloco }}</p>
       <p>{{ 'bonusCsv.columnsHint' | transloco }}</p>
@@ -15,13 +20,17 @@
   @if (done(); as d) {
     <div class="alert alert-success">
       {{ 'bonusCsv.done' | transloco: { people: d.people, payments: d.payments } }}
-      <a [routerLink]="['/o', context.current()?.id, 'bonuses']">{{ 'bonusCsv.toList' | transloco }}</a>
+      <a [routerLink]="['/o', context.current()?.id, 'bonuses']">{{
+        'bonusCsv.toList' | transloco
+      }}</a>
     </div>
     @if (looseAfterImport()) {
-      <!-- まだ決めていない名前があれば、賞与の項目で扱いを決めてもらう（11/19） -->
+      <!-- 未分類の賞与があれば、賞与の項目で扱いを決めてもらう（11/19） -->
       <p class="items-note">
         {{ 'bonusCsv.itemsLoose' | transloco }}
-        <a [routerLink]="['/o', context.current()?.id, 'bonuses', 'items']">{{ 'bonusCsv.toItems' | transloco }} →</a>
+        <a [routerLink]="['/o', context.current()?.id, 'bonuses', 'items']"
+          >{{ 'bonusCsv.toItems' | transloco }} →</a
+        >
       </p>
     }
   }
@@ -32,7 +41,13 @@
 
   <!-- 見出しがうちと違うファイル：列を合わせる（確認画面から戻ったときに選んだ値が残るよう、隠すだけにする） -->
   @if (loaded(); as f) {
-    <app-column-mapper [hidden]="!mapping()" [tables]="f.tables" [spec]="spec" (confirmed)="onMapped($event)" (cancelled)="clear()" />
+    <app-column-mapper
+      [hidden]="!mapping()"
+      [tables]="f.tables"
+      [spec]="spec"
+      (confirmed)="onMapped($event)"
+      (cancelled)="clear()"
+    />
   }
 
   @if (preview(); as pv) {
@@ -41,13 +56,23 @@
       @if (pv.encoding) {
         <span class="sub">（{{ 'payrollCsv.encoding.' + pv.encoding | transloco }}）</span>
       }
-      <button type="button" class="btn redo" (click)="remap()" [disabled]="saving()">{{ 'importMap.redo' | transloco }}</button>
+      <button type="button" class="btn redo" (click)="remap()" [disabled]="saving()">
+        {{ 'importMap.redo' | transloco }}
+      </button>
     </p>
 
     <p>
       {{
         'bonusCsv.summary'
-          | transloco: { payments: writes().length, n: count().new, a: count().add, u: count().update, s: count().same, e: count().error }
+          | transloco
+            : {
+                payments: writes().length,
+                n: count().new,
+                a: count().add,
+                u: count().update,
+                s: count().same,
+                e: count().error,
+              }
       }}
     </p>
 
@@ -89,7 +114,9 @@
       @if (fix.notImported(pv.plan.rows); as n) {
         <span class="skip-note">{{ 'importFix.notImported' | transloco: { n: n } }}</span>
       }
-      <button type="button" class="btn" [disabled]="saving()" (click)="clear()">{{ 'common.cancel' | transloco }}</button>
+      <button type="button" class="btn" [disabled]="saving()" (click)="clear()">
+        {{ 'common.cancel' | transloco }}
+      </button>
       <button type="button" class="btn btn-primary" [disabled]="!canImport()" (click)="importCsv()">
         {{ 'bonusCsv.import' | transloco: { people: peopleToWrite(), payments: writes().length } }}
       </button>
@@ -99,7 +126,15 @@
       <table class="table">
         <thead>
           <tr>
-            <th class="pick-col"><input type="checkbox" [checked]="fix.allKept()" [disabled]="fix.busy()" (change)="fix.setAll($any($event.target).checked, pv.plan.rows)" [attr.aria-label]="'importFix.keepAll' | transloco" /></th>
+            <th class="pick-col">
+              <input
+                type="checkbox"
+                [checked]="fix.allKept()"
+                [disabled]="fix.busy()"
+                (change)="fix.setAll($any($event.target).checked, pv.plan.rows)"
+                [attr.aria-label]="'importFix.keepAll' | transloco"
+              />
+            </th>
             <th class="num">{{ 'employeeCsv.col.line' | transloco }}</th>
             <th>{{ 'employee.field.employeeNumber' | transloco }}</th>
             <th>{{ 'bonusCsv.col.employee' | transloco }}</th>
@@ -114,22 +149,40 @@
           @for (x of fix.withIssues(pv.plan.rows); track x.line) {
             @if (x.item; as r) {
               <tr [class.has-issue]="!!x.issue" [class.warn]="r.errors.length > 0">
-                <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line }" /></td>
+                <td class="pick-col">
+                  <input
+                    type="checkbox"
+                    [checked]="fix.kept(x.line)"
+                    [disabled]="!!x.issue || fix.busy()"
+                    (change)="fix.toggle(x.line)"
+                    [attr.aria-label]="'importFix.keep' | transloco: { line: x.line }"
+                  />
+                </td>
                 <td class="num">{{ r.line }}</td>
                 <td class="emp-no">{{ r.employee?.employeeNumber ?? '—' }}</td>
-                <td>@if (r.employee; as e) { <app-person-name [person]="e" /> } @else { {{ name(r) }} }</td>
+                <td>
+                  @if (r.employee; as e) {
+                    <app-person-name [person]="e" />
+                  } @else {
+                    {{ name(r) }}
+                  }
+                </td>
                 <td class="mono">{{ r.paidDate || '—' }}</td>
                 <td>
                   {{ r.title || '—' }}
                   <!-- 性質（年4回以上かを数えるまとまり。列は増やさず名称の下に。11/19） -->
                   @if (r.nature) {
-                    <br /><span class="sub">{{ 'bonusCsv.nature' | transloco: { name: r.nature } }}</span>
+                    <br /><span class="sub">{{
+                      'bonusCsv.nature' | transloco: { name: r.nature }
+                    }}</span>
                   }
                 </td>
                 <td class="num">
                   {{ yen(r.amount) }}
                   @if (r.inKind !== null && r.inKind > 0) {
-                    <br /><span class="sub">{{ 'bonusCsv.inKind' | transloco: { n: yen(r.inKind) } }}</span>
+                    <br /><span class="sub">{{
+                      'bonusCsv.inKind' | transloco: { n: yen(r.inKind) }
+                    }}</span>
                   }
                 </td>
                 <td>
@@ -144,7 +197,17 @@
                     }
                   }
                 </td>
-                <td class="act-col"><button type="button" class="btn btn-small" [class.btn-primary]="!!x.issue" [disabled]="fix.busy()" (click)="fix.openLine(x.line)">{{ 'importFix.check' | transloco }}</button></td>
+                <td class="act-col">
+                  <button
+                    type="button"
+                    class="btn btn-small"
+                    [class.btn-primary]="!!x.issue"
+                    [disabled]="fix.busy()"
+                    (click)="fix.openLine(x.line)"
+                  >
+                    {{ 'importFix.check' | transloco }}
+                  </button>
+                </td>
               </tr>
             } @else if (x.issue; as is) {
               <tr app-issue-row [issue]="is" [fix]="fix" [span]="6"></tr>

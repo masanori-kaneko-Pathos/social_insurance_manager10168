@@ -5,7 +5,7 @@
 export type BonusListSort = 'paidDate' | 'title' | 'people' | 'amount';
 export type SortDir = 'asc' | 'desc';
 
-/** 賞与の項目で絞る：all＝すべて／loose＝まだ決めていない名前／それ以外＝項目の名前 */
+/** 賞与の項目で絞る：all＝すべて／loose＝未分類の賞与／それ以外＝項目の名前 */
 export interface BonusListFilter {
   from: string; // 'YYYY-MM'（空なら制限なし）
   to: string;
@@ -43,7 +43,11 @@ export function itemNameOf(p: BonusListRowLike['payment'], defaultName: string):
   return p.group ?? (p.nature?.trim() || defaultName);
 }
 
-export function filterBonusRows<T extends BonusListRowLike>(rows: readonly T[], f: BonusListFilter, defaultName: string): T[] {
+export function filterBonusRows<T extends BonusListRowLike>(
+  rows: readonly T[],
+  f: BonusListFilter,
+  defaultName: string,
+): T[] {
   const q = f.query.trim().toLowerCase();
   return rows.filter((r) => {
     const month = r.payment.paidDate.slice(0, 7);
@@ -60,16 +64,30 @@ export function filterBonusRows<T extends BonusListRowLike>(rows: readonly T[], 
 }
 
 /** 並べ替え（同じ値なら支払日の新しい順） */
-export function sortBonusRows<T extends BonusListRowLike>(rows: readonly T[], sort: BonusListSort, dir: SortDir): T[] {
+export function sortBonusRows<T extends BonusListRowLike>(
+  rows: readonly T[],
+  sort: BonusListSort,
+  dir: SortDir,
+): T[] {
   const sign = dir === 'asc' ? 1 : -1;
   const value = (r: T): string | number =>
-    sort === 'paidDate' ? r.payment.paidDate : sort === 'title' ? (r.payment.title ?? '') : sort === 'people' ? r.people : r.amountYen;
+    sort === 'paidDate'
+      ? r.payment.paidDate
+      : sort === 'title'
+        ? (r.payment.title ?? '')
+        : sort === 'people'
+          ? r.people
+          : r.amountYen;
   return [...rows].sort((a, b) => {
     const va = value(a);
     const vb = value(b);
     const c = typeof va === 'number' ? va - (vb as number) : va.localeCompare(vb as string, 'ja');
     // 名称が空の行は、どちらの向きでも最後に
-    if (sort === 'title' && (!a.payment.title || !b.payment.title) && a.payment.title !== b.payment.title) {
+    if (
+      sort === 'title' &&
+      (!a.payment.title || !b.payment.title) &&
+      a.payment.title !== b.payment.title
+    ) {
       return a.payment.title ? -1 : 1;
     }
     return c !== 0 ? c * sign : b.payment.paidDate.localeCompare(a.payment.paidDate);
@@ -77,9 +95,19 @@ export function sortBonusRows<T extends BonusListRowLike>(rows: readonly T[], so
 }
 
 /** 合計の行（人数は延べ） */
-export function bonusRowsTotal(rows: readonly BonusListRowLike[]): { count: number; people: number; amountYen: number; totalYen: number } {
+export function bonusRowsTotal(rows: readonly BonusListRowLike[]): {
+  count: number;
+  people: number;
+  amountYen: number;
+  totalYen: number;
+} {
   return rows.reduce(
-    (s, r) => ({ count: s.count + 1, people: s.people + r.people, amountYen: s.amountYen + r.amountYen, totalYen: s.totalYen + r.totalYen }),
+    (s, r) => ({
+      count: s.count + 1,
+      people: s.people + r.people,
+      amountYen: s.amountYen + r.amountYen,
+      totalYen: s.totalYen + r.totalYen,
+    }),
     { count: 0, people: 0, amountYen: 0, totalYen: 0 },
   );
 }
