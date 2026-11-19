@@ -451,6 +451,9 @@
                           @case ('bonusNone') {
                             {{ 'dashboard.todo.text.bonusNone' | transloco: it.extra!.params }}
                           }
+                          @case ('childcareSpecial') {
+                            {{ 'dashboard.todo.text.childcareSpecial' | transloco: it.extra!.params }}
+                          }
                           @case ('bonusCumulative') {
                             {{ 'dashboard.todo.text.bonusCumulative' | transloco: it.extra!.params }}
                           }
@@ -619,6 +622,14 @@
                           @case ('bonusNone') {
                             <a [routerLink]="['/o', office()?.id, 'bonuses']"
                               >{{ 'dashboard.todo.toBonuses' | transloco }} →</a
+                            >
+                          }
+                          @case ('childcareSpecial') {
+                            <!-- 詳しい説明（申出書・添付書類・対象の月）は使い方に置き、To-do は短く（11/19） -->
+                            <a
+                              [routerLink]="['/o', office()?.id, 'help']"
+                              [queryParams]="{ q: 'help.topic.childcareSpecial.title' | transloco }"
+                              >{{ 'dashboard.todo.toHelp' | transloco }} →</a
                             >
                           }
                           @case ('bonusCumulative') {

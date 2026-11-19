@@ -162,7 +162,8 @@
         "bonusCumulative": "Cumulative bonus declaration",
         "birthDate": "Date of birth correction",
         "actualHours": "Actual working hours",
-        "acquireAmount": "Remuneration at acquisition"
+        "acquireAmount": "Remuneration at acquisition",
+        "childcareSpecial": "Childcare period special rule (pension)"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. An Application to Enroll in EPI / EHI (資格取得届) is needed.",
@@ -224,7 +225,8 @@
         "bonusCumulative": "Including the previous employer, the cumulative standard bonus amount for health insurance in fiscal {{year}} is {{total}} yen, above the cap ({{cap}} yen). For the cap to apply, the employee must submit a \"Cumulative standard bonus declaration\" to the insurer (follow the insurer's instructions). The app already applies the cap. Once you have informed the employee, you can hide this with \"Checked\".",
         "birthDate": "The date of birth was corrected on {{date}}. If the acquisition notification was already filed, promptly submit a \"Date of birth correction notification\". Age thresholds (long-term care at 40/65, 70, 75) may change, so check premiums and filings too.",
         "actualHours": "Actual working hours in the pay for {{first}} and {{second}} were {{h1}} and {{h2}} hours a week, at or above the threshold ({{limit}} hours) for two months in a row. Even if contracted hours are below it, if this continues or is expected to, coverage starts on {{date}} (the first day of the third month). Review the contract or file an acquisition notification. If it was temporary, hide it with \"Checked\".",
-        "acquireAmount": "The fixed wage paid in {{month}} ({{fixed}} yen) is higher than the monthly remuneration on the acquisition notification ({{reported}} yen). Allowances such as commuting or housing that started late still belong in the acquisition amount: correct the expected pay in the contract and file a correction (put catch-up payments back in the months they belong to). If this is a raise decided after acquisition, hide it with \"Checked\"."
+        "acquireAmount": "The fixed wage paid in {{month}} ({{fixed}} yen) is higher than the monthly remuneration on the acquisition notification ({{reported}} yen). Allowances such as commuting or housing that started late still belong in the acquisition amount: correct the expected pay in the contract and file a correction (put catch-up payments back in the months they belong to). If this is a raise decided after acquisition, hide it with \"Checked\".",
+        "childcareSpecial": "Raising a child under 3 since {{child}}; the pension standard monthly remuneration from {{month}} ({{now}} yen) is below the month before ({{base}}: {{pre}} yen). If the employee applies, premiums stay the same but the future pension uses the earlier amount. Tell the employee and mark as checked once the application is submitted."
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -287,7 +289,8 @@
       "toOverseas": "View overseas assignment",
       "toLoss": "Enter the loss-of-coverage date",
       "toOfficer": "Answer the officer items",
-      "toBonuses": "Go to bonuses"
+      "toBonuses": "Go to bonuses",
+      "toHelp": "Application and attachments (Help)"
     }
   },
   "nav": {
@@ -3376,6 +3379,10 @@
       "myNumber": {
         "title": "My Number (register, request, dispose)",
         "body": "Numbers are stored encrypted and never kept on screen or in Firestore. On the employee's Personal info tab, register the number yourself or ask the employee to provide it (they submit it from My Page; you show all digits, check them against the ID documents, then register or return it). Showing all digits and exporting require your password again, and views, registrations and disposals are logged. Two years after a departed employee loses coverage, a disposal to-do appears. For CSV, use the My Number column in the employee import, or “Import My Numbers (for registered employees)”."
+      },
+      "childcareSpecial": {
+        "title": "Childcare period special rule (pension)",
+        "body": "If the standard monthly remuneration of someone raising a child under 3 falls below the month before they started raising the child, they can apply so that premiums stay at the lower amount while the future pension uses the earlier amount (Employees' Pension Insurance Act Art. 26). Fathers are eligible too. It appears in the To-do list as \"Childcare period special rule (pension)\".\n\n■ What to submit\nThe childcare period special rule application, submitted by the company to the pension office.\n\n■ Attachments\n- Family register extract showing the relationship (original). Not needed if the company checks it and ticks \"confirmed\", or if both My Numbers are written (review may then take about a month)\n- Residence certificate showing the child's birth date and that they live together (issued within 90 days, original). Not needed if both My Numbers are written\n\n■ Months covered\n- From the month the child was born (or raising started, for adopted children) to the month before the child turns 3\n- Up to two years back from the month before the application\n- Compared with the standard in the month before raising started (if not insured then, the latest month within the prior year; ask about the previous employer)\n\n■ Applying again\nThe rule ends when an exempt childcare or maternity leave starts; apply again after the leave. Also apply again after changing jobs.\n\n■ Children the app finds\nFrom leave records (birth date on maternity leave, child's birth date on childcare leave) and dependents with the child relationship. Children recorded in neither (e.g. a spouse's dependent) are not found, so check with the employee."
       }
     }
   },

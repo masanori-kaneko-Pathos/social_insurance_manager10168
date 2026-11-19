@@ -13,6 +13,7 @@ export const HELP_TOPICS = [
   'regular',
   'irregular',
   'leave',
+  'childcareSpecial',
   'care',
   'agreement',
   'csv',

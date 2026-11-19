@@ -1,3 +1,4 @@
+import { childcareSpecialEnd, childcareSpecialTodo, childStartsOf } from './extra-todos';
 import { acquireAmountTodo, actualHoursThreshold, actualHoursTodo, adjustmentDeadlineTodo, insurerChangeTodos, ratesMissingTodo, bonusNoneTodos, bonusCumulativeTodos, CumulativePerson } from './extra-todos';
 import { cardReturnTodo, contractEndTodo, isShortTerm, myNumberTodos, noticeRequired, retireGuideTodo, voluntaryEligible } from './extra-todos';
 import {
@@ -321,5 +322,65 @@ describe('資格取得時の報酬月額（調査指摘事例集 事例2。11/19
   it('手当まで入れた236,000円で届けていれば出さない。取得から4か月目より後の変動も見ない', () => {
     expect(acquireAmountTodo(p, 236000, [{ paidMonth: '2025-05', fixed: 236000 }])).toBeNull();
     expect(acquireAmountTodo(p, 214000, [{ paidMonth: '2025-08', fixed: 250000 }])).toBeNull();
+  });
+});
+
+describe('養育期間標準報酬月額特例（厚生年金保険法26条。11/19）', () => {
+  const p = { id: 'e1', retireDate: null, pension: { enrolled: true, acquiredDate: '2020-04-01' } };
+  // 2025-05-20 に出産。前月（2025-04）は 300,000円。育休から戻って 2026-07 分から 220,000円に
+  const history = [
+    { from: '2020-04', pension: 300000 },
+    { from: '2026-07', pension: 220000 },
+  ];
+
+  it('子が3歳になるまでの最後の月は、3歳の誕生日の月の前月', () => {
+    expect(childcareSpecialEnd('2025-05-20')).toBe('2028-04');
+    expect(childcareSpecialEnd('2025-01-01')).toBe('2027-12');
+  });
+
+  it('生まれる前の月より下がった月があれば出す（前の額・下がった月・額）', () => {
+    const t = childcareSpecialTodo(p, ['2025-05-20'], history, '2026-11-19')!;
+    expect(t.kind).toBe('childcareSpecial');
+    const { base, pre, month, now, until } = t.params;
+    expect({ base, pre, month, now, until }).toEqual({ base: '2025-04', pre: '300,000', month: '2026-07', now: '220,000', until: '2028-04' });
+  });
+
+  it('下がっていない・上がった人には出さない', () => {
+    expect(childcareSpecialTodo(p, ['2025-05-20'], [{ from: '2020-04', pension: 300000 }, { from: '2026-07', pension: 320000 }], '2026-11-19')).toBeNull();
+  });
+
+  it('子が生まれたあとに入社した人（基準月の額がわからない）には出さない', () => {
+    expect(childcareSpecialTodo({ ...p, pension: { enrolled: true, acquiredDate: '2025-06-01' } }, ['2025-05-20'], [{ from: '2025-06', pension: 300000 }, { from: '2026-07', pension: 220000 }], '2026-11-19')).toBeNull();
+  });
+
+  it('子が3歳を過ぎても、さかのぼれる2年のうちに下がった月があれば出す。2年より前だけなら出さない', () => {
+    // 2028-04 まで対象。2029-11 なら 2027-11〜2028-04 が範囲
+    expect(childcareSpecialTodo(p, ['2025-05-20'], history, '2029-11-19')).not.toBeNull();
+    // 2030-06 なら範囲は 2028-06〜 → 3歳を過ぎていて範囲がない
+    expect(childcareSpecialTodo(p, ['2025-05-20'], history, '2030-06-01')).toBeNull();
+  });
+
+  it('退職した人・厚生年金に入っていない人には出さない', () => {
+    expect(childcareSpecialTodo({ ...p, retireDate: '2026-10-31' }, ['2025-05-20'], history, '2026-11-19')).toBeNull();
+    expect(childcareSpecialTodo({ ...p, pension: { enrolled: false, acquiredDate: null } }, ['2025-05-20'], history, '2026-11-19')).toBeNull();
+  });
+
+  it('子の養育開始日：産休の出産日・育休の子の生年月日（実子以外は養育開始日）・扶養家族の子。介護休業や「1以外の子」は数えない', () => {
+    const leave = (o: object) => ({ kind: 'childcare', birthDate: null, childBirthDate: null, childType: null, custodyStart: null, ...o });
+    expect(
+      childStartsOf(
+        [
+          leave({ kind: 'maternity', birthDate: '2025-05-20' }),
+          leave({ childBirthDate: '2025-05-20', childType: 'natural' }),
+          leave({ childBirthDate: '2024-01-10', childType: 'other', custodyStart: '2024-09-01' }),
+          leave({ kind: 'care', childBirthDate: '2023-01-01' }),
+        ],
+        [
+          { relationship: 'child', birthDate: '2026-02-02' },
+          { relationship: 'otherChild', birthDate: '2026-03-03' },
+          { relationship: 'spouse', birthDate: '1990-01-01' },
+        ],
+      ).sort(),
+    ).toEqual(['2024-09-01', '2025-05-20', '2026-02-02']);
   });
 });

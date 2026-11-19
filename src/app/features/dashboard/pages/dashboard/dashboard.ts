@@ -58,6 +58,8 @@ import {
   bonusNoneTodos,
   actualHoursTodo,
   acquireAmountTodo,
+  childcareSpecialTodo,
+  childStartsOf,
   actualHoursThreshold,
   bonusCumulativeTodos,
   residenceTodo,
@@ -70,6 +72,8 @@ import { countryName } from '../../../employees/logic/foreign-options';
 import { MyNumberService } from '../../../my-number/my-number.service';
 import { TodoBadgeService } from '../../todo-badge.service';
 import { TodoService } from '../../todo.service';
+import { DependentService } from '../../../employees/dependent.service';
+import { RemunerationService } from '../../../employees/remuneration.service';
 import { BonusService } from '../../../premiums/bonus.service';
 import type { BonusPayment } from '../../../../core/models/bonus';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
@@ -140,6 +144,8 @@ export class Dashboard {
   private readonly badge = inject(TodoBadgeService);
   private readonly tasksApi = inject(FilingTaskService);
   private readonly bonusApi = inject(BonusService);
+  private readonly dependentsApi = inject(DependentService);
+  private readonly remunerationsApi = inject(RemunerationService);
   private readonly language = inject(LanguageService);
 
   /** 文の差し込みの国コードを、国の名前にする（海外勤務の To-do） */
@@ -188,6 +194,9 @@ export class Dashboard {
 
   /** 直近2か月の給与の実績（実際の労働時間の To-do に使う。従業員ID → 実績。11/19） */
   private readonly recentPayrolls = signal<ReadonlyMap<string, { paidMonth: string; workMinutes: number | null; fixed: number }[]>>(new Map());
+
+  /** 養育特例の材料：3歳未満の子がいるかもしれない人の、子の養育開始日と厚生年金の標準報酬月額の履歴（11/19） */
+  private readonly childcare = signal<ReadonlyMap<string, { starts: string[]; history: { from: string; pension: number }[] }>>(new Map());
 
   /** 賞与の支給（不支給報告書・累計申出書の To-do に使う。11/19） */
   private readonly bonusPayments = signal<BonusPayment[]>([]);
@@ -250,6 +259,8 @@ export class Dashboard {
         ),
         // 資格取得届の報酬月額（契約の見込み）より、入社後の固定的賃金が多い（手当の入れ漏れ。事例2。11/19）
         acquireAmountTodo(e, acquireReported(contracts.get(e.id) ?? [], e), this.recentPayrolls().get(e.id) ?? []),
+        // 3歳未満の子を養育していて、厚生年金の標準報酬月額が子の生まれる前より下がった（厚生年金保険法26条。11/19）
+        childcareSpecialTodo(e, this.childcare().get(e.id)?.starts ?? [], this.childcare().get(e.id)?.history ?? [], this.today),
       ].filter((t) => t !== null),
     );
     const specific = specificOfficeTodo(
@@ -472,6 +483,28 @@ export class Dashboard {
     }
   }
 
+  /**
+   * 養育特例の材料を読む（画面の表示は待たない）
+   * 厚生年金に入っている人の扶養家族を読み、休業の記録と合わせて「5年以内に養育を始めた子」がいる人だけ、
+   * 標準報酬月額の履歴を読む（特例は子が3歳まで＋さかのぼり2年）
+   */
+  private async loadChildcare(officeId: string, active: readonly Employee[]): Promise<void> {
+    try {
+      const enrolled = active.filter((e) => e.pension.enrolled);
+      const deps = await Promise.all(enrolled.map((e) => this.dependentsApi.list(officeId, e.id).catch(() => [])));
+      const since = shiftMonth(this.thisMonth, -60);
+      const targets = enrolled
+        .map((e, i) => ({ e, starts: childStartsOf(e.leaves ?? [], deps[i]).filter((d) => d.slice(0, 7) >= since) }))
+        .filter((x) => x.starts.length > 0);
+      const histories = await Promise.all(targets.map((x) => this.remunerationsApi.list(officeId, x.e.id)));
+      this.childcare.set(
+        new Map(targets.map((x, i) => [x.e.id, { starts: x.starts, history: histories[i].map((r) => ({ from: r.from, pension: r.pension.standard })) }])),
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
   /** 材料をまとめて読む（契約は在籍している人の分だけ） */
   private async load(officeId: string): Promise<void> {
     this.loading.set(true);
@@ -491,6 +524,8 @@ export class Dashboard {
       void this.loadRateFroms(officeId);
       this.bonusPayments.set([]);
       this.recentPayrolls.set(new Map());
+      this.childcare.set(new Map());
+      void this.loadChildcare(officeId, active);
       // 直近2か月の給与の実績（実労働時間を入れた人だけが To-do の対象。1回の問い合わせ）
       const latest = this.payMonth();
       this.payrollApi

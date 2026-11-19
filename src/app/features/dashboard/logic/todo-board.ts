@@ -74,6 +74,7 @@ export const BOARD_ORDER: readonly BoardKind[] = [
   'acquireAmount',
   'bonusNone',
   'bonusCumulative',
+  'childcareSpecial',
   'birthDate',
   'myNumberDispose',
   'addressKumiai',
@@ -114,6 +115,7 @@ export const SECTION_OF: Record<BoardKind, Section> = {
   acquireAmount: 'now',
   bonusNone: 'now',
   bonusCumulative: 'soon',
+  childcareSpecial: 'soon',
   birthDate: 'now',
   myNumberDispose: 'soon',
   noContract: 'missing',
@@ -138,6 +140,7 @@ export const DISMISSABLE: ReadonlySet<BoardKind> = new Set<BoardKind>([
   'actualHours', // 一時的な残業で、続く見込みがないと確かめたら消す
   'bonusNone', // 不支給報告書を出したら消す（支払予定月にあとから賞与を入れれば、そもそも出なくなる）
   'bonusCumulative', // 本人に案内した（申出書を出した）ら消す
+  'childcareSpecial', // 申出書を出した（本人が出さないと決めた）ら消す
   'retireGuide', // 本人に案内したら消す
   'cardReturn', // 回収した（または回収不能届を書いた）ら消す
   'contractEnd', // 同じ条件のまま自動で更新する場合など。次の契約か退職日を入れれば、そもそも出なくなる

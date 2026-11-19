@@ -31,6 +31,9 @@
 // - actualHours：所定は基準未満だが、実際の労働時間が連続する2か月とも基準以上（加入していない人。11/19）
 // - bonusCumulative：前の事業所の分と合わせて、健保の標準賞与額の年度の累計が上限（573万円）を超えた（11/19）
 //   → 本人が保険者に「健康保険標準賞与額累計申出書」を出す（同じ保険者で転職した人。出さないと上限が効かない）
+// - childcareSpecial：3歳未満の子を養育していて、厚生年金の標準報酬月額が子の生まれた月の前月より下がった（11/19）
+//   → 「厚生年金保険 養育期間標準報酬月額特例申出書」（事業主経由。厚生年金保険法26条）。保険料は下がった額のまま、
+//   年金の計算だけ前の額で数える。さかのぼれるのは申出の月の前月までの2年間。男女とも対象
 
 import { addDays, DateStr, daysInMonth, fiscalYearOf, monthsBetween, shiftMonth, toYearMonth, YearMonth } from '../../../shared/utils/date';
 import { contractAt } from '../../employees/logic/contract-form-model';
@@ -64,7 +67,8 @@ export type ExtraKind =
   | 'bonusNone'
   | 'bonusCumulative'
   | 'actualHours'
-  | 'acquireAmount';
+  | 'acquireAmount'
+  | 'childcareSpecial';
 
 export interface ExtraTodo {
   kind: ExtraKind;
@@ -575,4 +579,75 @@ export function acquireAmountTodo(
     date: acquired,
     params: { reported: reported.toLocaleString('ja-JP'), month: over.paidMonth, fixed: over.fixed.toLocaleString('ja-JP') },
   };
+}
+
+// ===== 養育期間標準報酬月額特例（厚生年金保険法26条。11/19） =====
+
+/** 子が3歳になるまでの最後の月：3歳に達した日（誕生日の前日）の翌日＝誕生日の属する月の前月 */
+export function childcareSpecialEnd(childBirthDate: DateStr): YearMonth {
+  const [y, m] = childBirthDate.split('-').map(Number);
+  return shiftMonth(`${y + 3}-${String(m).padStart(2, '0')}`, -1);
+}
+
+/** その月に効いている厚生年金の標準報酬月額（その月より前の最新の決定） */
+function pensionStandardAt(history: readonly { from: YearMonth; pension: number }[], month: YearMonth): number | null {
+  const h = history.filter((x) => x.from <= month).sort((a, b) => b.from.localeCompare(a.from))[0];
+  return h ? h.pension : null;
+}
+
+/**
+ * 3歳未満の子を養育している人で、子の生まれた月（養育を始めた月）から今月までのうち、
+ * 厚生年金の標準報酬月額が「基準月（生まれた月の前月）」より低い月がある → 養育期間標準報酬月額特例申出書の案内
+ * - 子の生年月日は、休業（産休の出産日・育休の子の生年月日／実子以外は養育開始日）と、扶養家族の「子」から集める
+ * - 基準月に厚生年金に入っていない人（子が生まれたあとに入社した人など）は、前の会社の額がわからないので出さない
+ *   （本当は基準月の前1年以内の直近の月の額。本人に聞いて申し出る）
+ * - さかのぼれるのは、申出の月の前月までの2年間（今月を申出の月と考える）
+ * - 育休・産休（保険料の免除）が始まると特例は終わり、終わったあとにもう一度申し出る（保険料の免除中は額が変わらないので、ここでは分けない）
+ */
+export function childcareSpecialTodo(
+  p: { id: string; retireDate: DateStr | null; pension: { enrolled: boolean; acquiredDate: DateStr | null } },
+  childStarts: readonly DateStr[],
+  history: readonly { from: YearMonth; pension: number }[],
+  today: DateStr,
+): ExtraTodo | null {
+  if (!active(p, today) || !p.pension.enrolled || !p.pension.acquiredDate) return null;
+  const thisMonth = toYearMonth(today);
+  for (const start of [...new Set(childStarts)].sort().reverse()) {
+    const from = toYearMonth(start);
+    const base = shiftMonth(from, -1);
+    if (toYearMonth(p.pension.acquiredDate) > base) continue;
+    const pre = pensionStandardAt(history, base);
+    if (pre === null) continue;
+    const lower = [from, shiftMonth(thisMonth, -24)].sort()[1];
+    const upper = [childcareSpecialEnd(start), thisMonth].sort()[0];
+    if (lower > upper) continue;
+    // 範囲の中で効いている決定（範囲の初めに効いているものと、範囲の中で始まるもの）
+    const months = [lower, ...history.map((h) => h.from).filter((m) => m > lower && m <= upper)];
+    const low = months.map((m) => ({ m, v: pensionStandardAt(history, m) })).find((x) => x.v !== null && x.v < pre);
+    if (!low) continue;
+    return {
+      kind: 'childcareSpecial',
+      employeeId: p.id,
+      date: start,
+      params: { child: start, base, pre: pre.toLocaleString('ja-JP'), month: low.m, now: low.v!.toLocaleString('ja-JP'), until: childcareSpecialEnd(start) },
+    };
+  }
+  return null;
+}
+
+/** 養育する子の「養育を始めた日」：休業の記録（産休の出産日・育休の子の生年月日、実子以外は養育開始日）と、扶養家族の子の生年月日 */
+export function childStartsOf(
+  leaves: readonly { kind: string; birthDate: DateStr | null; childBirthDate: DateStr | null; childType: string | null; custodyStart: DateStr | null }[],
+  dependents: readonly { relationship: string; birthDate: DateStr }[],
+): DateStr[] {
+  const out = new Set<DateStr>();
+  for (const l of leaves) {
+    if (l.kind === 'maternity' && l.birthDate) out.add(l.birthDate);
+    if (l.kind === 'childcare' || l.kind === 'paternity') {
+      const d = l.childType === 'other' ? (l.custodyStart ?? l.childBirthDate) : l.childBirthDate;
+      if (d) out.add(d);
+    }
+  }
+  for (const d of dependents) if (d.relationship === 'child' && d.birthDate) out.add(d.birthDate);
+  return [...out];
 }
