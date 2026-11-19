@@ -41,8 +41,8 @@ export type Direction = 'up' | 'down' | 'unclear';
 export interface StartMonth {
   month: string;
   direction: Direction;
-  /** fixed：固定的賃金の額が変わった／retro：遡及支払がある／manual：人が足した */
-  source: 'fixed' | 'retro' | 'manual';
+  /** fixed：固定的賃金の額が変わった／retro：遡及支払がある／manual：人が足した／furlough：一時帰休の始まり・終わり（11/19） */
+  source: 'fixed' | 'retro' | 'manual' | 'furlough';
 }
 
 /**
@@ -61,9 +61,27 @@ export function findStartMonths(
   // 比べる相手は、前の月の実績。ただし固定的賃金が0円の月（休業中など）は飛ばして、最後に払った月と比べる
   // （育休明けに「0円 → 19万円で上がった」と読まないため。休業前の27万円 → 19万円なら「下がった」）
   let last: Payroll | null = null;
+  const furlough = (m: string) => payrolls.get(m)?.state === 'furlough';
   for (const m of months) {
     const p = payrolls.get(m)!;
     const prev = payrolls.get(shiftMonth(m, -1));
+    // 一時帰休（低額な休業手当）：始まった月から、3か月を超えて続いたら（4か月目の初めも一時帰休なら）候補
+    // 終わって通常の報酬に戻った月も候補。一時帰休の間の固定的賃金の変動は、戻った月から数える
+    // （日本年金機構「標準報酬月額の定時決定及び随時改定の事務取扱いに関する事例集」5(2) 問1・2・5・6。11/19）
+    // 休職（休職給）の月は起算月にしない。休職中に固定的賃金が変わったら、戻った月を起算月にする（事例集 4 問8。11/19）
+    // → 休職の月は「最後に払った月」にも入れず、戻った月を休職の前の月と比べる
+    if (p.state === 'suspended') continue;
+    if (furlough(m)) {
+      if (!furlough(shiftMonth(m, -1)) && [1, 2, 3].every((i) => furlough(shiftMonth(m, i)))) {
+        found.set(m, { month: m, direction: 'down', source: 'furlough' });
+      }
+      continue;
+    }
+    if (prev && furlough(shiftMonth(m, -1))) {
+      found.set(m, { month: m, direction: 'up', source: 'furlough' });
+      if (p.fixed > 0) last = p;
+      continue;
+    }
     // 日割りの月（計算期間の途中で変わった月）は起算月にしない。1か月分そろった次の月を起算月にする（事例7。11/19）
     const at = p.prorated ? shiftMonth(m, 1) : m;
     if (p.fixed > 0 && last && prev && p.fixed !== last.fixed) {
@@ -87,9 +105,11 @@ function nonFixedOf(p: Payroll): number {
 
 /**
  * 固定的賃金が変わった向き
- * 前の月から、固定的賃金が上がって非固定的賃金（時間外手当など）が0円になったときは、
- * 管理職になって時間外手当がなくなったなど、増減の関連がはっきりしないので unclear（上がっても下がっても改定の対象。事例6。11/19）
- * 逆（固定的賃金が下がって変動的な手当が新しく出た）は、ふつうの残業が出ただけと見分けられないので、人が「はっきりしない」で足す
+ * 前の月から、固定的賃金が上がって非固定的賃金（時間外手当など）が0円になったときは unclear（向きは要確認）
+ * - 管理職になって時間外手当を廃止したなら、増減の関連がはっきりしないので上下どちらも対象（調査指摘事例集 事例6・事例集 4 問5）
+ * - たまたま0円だっただけなら、平均が逆向きに動いた改定は対象外（事例集 4 問4）
+ * 額だけでは見分けられないので、候補には出して、画面の説明で人に決めてもらう（11/19）
+ * 逆（固定的賃金が下がって変動的な手当が新しく出た）は、ふつうの残業が出ただけと見分けられないので、人が足す
  */
 function directionOf(before: Payroll, after: Payroll, adjacent: boolean): Direction {
   const up = after.fixed > before.fixed;

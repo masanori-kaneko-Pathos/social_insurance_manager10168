@@ -24,6 +24,10 @@
       </span>
       @if (v.item.type === 'irregular') {
         <span class="sub">{{ 'revision.source.' + v.item.result.start.source | transloco }}・{{ 'revision.direction.' + v.item.result.start.direction | transloco }}</span>
+        @if (v.item.result.start.source === 'fixed' && v.item.result.start.direction === 'unclear') {
+          <!-- 固定的賃金が上がって時間外などが0円になった月：廃止なら上下どちらも対象、たまたま0円なら逆向きは対象外（11/19） -->
+          <span class="sub warn" [title]="'revision.unclearNote' | transloco">{{ 'revision.unclearShort' | transloco }}</span>
+        }
         @if (v.group === 'candidate' && v.item.result.annual?.candidate) {
           <span class="badge badge-info">{{ 'revision.annual.badge' | transloco }}</span>
         }

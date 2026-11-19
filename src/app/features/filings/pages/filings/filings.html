@@ -40,6 +40,10 @@
   </button>
 </section>
 <p class="hint">{{ 'filing.hint.' + kind() | transloco }}</p>
+<!-- 組合健保の事業所：健康保険の届は健康保険組合へ、厚生年金保険の届は年金事務所へ（11/19） -->
+@if (context.current()?.healthInsurer?.type === 'kumiai') {
+  <p class="hint">{{ 'filing.hint.kumiai' | transloco }}</p>
+}
 
 @if (errorKey(); as key) {
   <div class="alert alert-danger">{{ key | transloco }}</div>

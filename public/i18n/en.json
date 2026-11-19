@@ -2019,7 +2019,7 @@
     "student": {
       "none": "Not a student",
       "daytime": "Daytime student",
-      "other": "Evening / correspondence / on leave"
+      "other": "Evening / correspondence / on leave / will keep working here after graduating"
     },
     "dispatch": {
       "none": "None",
@@ -2046,7 +2046,7 @@
       "scheduledWage": "Scheduled wage: base pay and allowances. Excludes one-off pay, bonuses, overtime/holiday/night premiums, attendance, commuting and family allowances.",
       "expected": "Expected monthly pay: the amount on the acquisition notification. Add expected overtime and allowances set by the rules, such as commuting and housing, including ones paid from the next month after an application (if blank, the scheduled wage is copied). For hourly or daily pay, use the average of people doing similar work in the previous month (Health Insurance Act Art. 42). Bonus-related remuneration for bonuses paid four or more times a year is added by the app when the notification is made.",
       "periodEnd": "Leave blank for no fixed term.",
-      "student": "Daytime students are not covered as short-time workers (evening, correspondence, part-time school and students on leave are).",
+      "student": "Daytime students are not covered as short-time workers. Night, correspondence and part-time-course students, students on leave, and students with a certificate of expected graduation who will keep working here after graduating are covered.",
       "special": {
         "daily": "Insured from the day employment continues beyond one month.",
         "seasonal": "Insured from the start if planned to continue beyond 4 months. Enter the end date.",
@@ -2364,12 +2364,13 @@
     "source": {
       "fixed": "Fixed wage changed",
       "retro": "Retroactive pay",
-      "manual": "Added manually"
+      "manual": "Added manually",
+      "furlough": "Furlough started or ended"
     },
     "direction": {
       "up": "up",
       "down": "down",
-      "unclear": "Unclear (both directions count)"
+      "unclear": "direction to confirm"
     },
     "col": {
       "month": "Paid month",
@@ -2442,7 +2443,9 @@
       "hint": "Write \"年間平均\" in the remarks of the monthly change notification and attach the statement (form example 1) and the consent form (form example 2). For employees who do not consent, use the normal \"Apply\"."
     },
     "inKindMerged": "(in-kind not itemized)",
-    "inKindMergedTitle": "In this month, in-kind remuneration is included in the pay amount with no separate figure. Check the payslip in your payroll software to see whether a change in in-kind remuneration (such as moving into company housing) should trigger a revision."
+    "inKindMergedTitle": "In this month, in-kind remuneration is included in the pay amount with no separate figure. Check the payslip in your payroll software to see whether a change in in-kind remuneration (such as moving into company housing) should trigger a revision.",
+    "unclearShort": "Overtime etc. dropped to zero: if abolished, both directions count",
+    "unclearNote": "Overtime and similar pay dropped to zero in the month the fixed wage rose. If the allowance was abolished (e.g. promotion to manager), a revision applies whether the average rose or fell; if it was zero by chance, a revision in the opposite direction does not apply."
   },
   "employeeCsv": {
     "lead": "One row per employee with basic data and the first employment contract. Social insurance enrollment and standard remuneration are calculated from the contract and shown for review (columns can override them).",
@@ -3701,7 +3704,8 @@
       "regular": "People whose annual determination was applied (those who keep the previous amount are not listed).",
       "irregular": "Monthly changes applied from the revision candidates.",
       "bonus": "People insured on the payment date.",
-      "blank": "Dates are in the Japanese era. My Number and address fields are not included. Remarks only include what the app knows. This is not the electronic submission format."
+      "blank": "Dates are in the Japanese era. My Number and address fields are not included. Remarks only include what the app knows. This is not the electronic submission format.",
+      "kumiai": "This office uses a health insurance society: file the health insurance part with the society and the pension part with the pension office (check the society's own forms and instructions)."
     },
     "col": {
       "insuredNumber": "Insured number",
@@ -4272,7 +4276,7 @@
   },
   "wageChange": {
     "title": "Changes in fixed wages (added or removed by hand)",
-    "lead": "The start month for a revision is found automatically from months where the fixed wage amount changed. Add changes the amounts cannot show: hourly, daily or per-km unit prices, a non-fixed allowance (such as a shift allowance) newly paid or ended, in-kind values or contract hours. If the direction is unclear (e.g. fixed wage down while a variable allowance starts in the same month), choose \"unclear\" (set automatically when the fixed wage rises and overtime drops to zero). Candidates are recalculated from three months starting with the added month.",
+    "lead": "The start month for a revision is found automatically from months where the fixed wage amount changed. Add changes the amounts cannot show: hourly, daily or per-km unit prices, a non-fixed allowance (such as a shift allowance) newly paid or ended, in-kind values (including official revisions such as the October 2026 housing values) or contract hours. If the direction is unclear (e.g. fixed wage down while a variable allowance starts in the same month), choose \"direction to confirm\" (proposed automatically when the fixed wage rises and overtime drops to zero). Candidates are recalculated from three months starting with the added month.",
     "empty": "No changes have been added or removed by hand.",
     "add": "Add a change in fixed wages",
     "save": "Add",
