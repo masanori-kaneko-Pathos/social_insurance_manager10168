@@ -112,3 +112,6 @@
     <p class="hint">{{ 'filing.hint.blank' | transloco }}</p>
   }
 }
+
+<!-- 資格の取得・喪失の確認を本人に知らせる（健康保険法49条・厚生年金保険法29条。11/19） -->
+<app-decision-notice-card [initialMonth]="today.slice(0, 7)" initialKind="qualification" />

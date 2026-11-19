@@ -3210,7 +3210,28 @@
       "lead": "Your standard monthly remuneration has been set from {{m}}/{{y}}",
       "health": "Health insurance: grade {{hg}}, ¥{{hs}}",
       "pension": "Employees' pension: grade {{pg}}, ¥{{ps}}",
-      "premium": "You can check the breakdown of your monthly premiums on this page."
+      "premium": "You can check the breakdown of your monthly premiums on this page.",
+      "appeal": "If you disagree with this decision, you may request a review in writing or orally from the Social Insurance Examiner (at the Regional Bureau of Health and Welfare) within three months from the day after you learned of it."
+    },
+    "bonusDecision": {
+      "title": "Standard bonus decided (paid {{date}})",
+      "lead": "The standard bonus for the bonus paid on {{date}} has been decided.",
+      "health": "Health insurance: {{hs}} yen",
+      "pension": "Pension: {{ps}} yen",
+      "premium": "Premium on this bonus (your share): {{yen}} yen"
+    },
+    "qualification": {
+      "title": {
+        "acquire": "Coverage started ({{date}})",
+        "loss": "Coverage ended ({{date}})"
+      },
+      "lead": {
+        "acquire": "Your coverage under {{ins}} has been confirmed to start on {{date}}.",
+        "loss": "Your coverage under {{ins}} has been confirmed to end on {{date}}."
+      },
+      "health": "health insurance",
+      "pension": "employees' pension insurance",
+      "and": " and "
     }
   },
   "todoAction": {
@@ -4373,26 +4394,52 @@
     "fileHint": "CSV or Excel (xlsx, xls)."
   },
   "decisionNotice": {
-    "title": "Send decision notices to employees (My Page)",
-    "lead": "When the notice of standard remuneration decision or revision arrives from the pension office (or the health insurance society), check it and tell each employee (employers must promptly inform insured persons once notified). People whose standard remuneration starts in the chosen month are listed.",
+    "title": "Notify employees of decisions (My Page)",
+    "lead": "When the pension office (or health insurance society) notifies you of confirmed coverage start or end, or of decisions on standard monthly remuneration or standard bonus, check and promptly pass them on to the employee (Health Insurance Act Art. 49, Employees' Pension Insurance Act Art. 29; penalties apply). Keep the notices for two years.",
     "month": "From month",
     "empty": "No one has a standard remuneration starting in {{month}}.",
     "all": "Select all",
     "col": {
       "employee": "Employee",
-      "reason": "Reason",
-      "state": "Status"
+      "reason": "Decision",
+      "state": "Status",
+      "extra": {
+        "bonus": "Employee share",
+        "qualification": "Date"
+      }
     },
     "state": {
       "sent": "Sent",
-      "noAccount": "No My Page yet (visible once created)"
+      "noAccount": "No My Page yet (visible once created)",
+      "noCopy": "No My Page / hand a copy"
     },
     "send": "Send to {{n}} selected",
     "sent": "Sent to {{n}} employees' My Page.",
-    "hint": "My Page shows the month, grades and amounts in the employee's language. No email is sent. If anything differs from the official notice, fix the standard remuneration first.",
+    "hint": "My Page shows the decision in the employee's language, with the right to request a review within three months. No email is sent. For employees without My Page, hand them a copy of the notice (insured person's copy) you received. If a former employee cannot be reached, report this to the pension office (or society) (Art. 49(3), Art. 29(3)).",
     "error": {
       "load": "Could not load the data for decision notices.",
       "send": "Could not send. Please try again later."
+    },
+    "kindLabel": "Decision to notify",
+    "kind": {
+      "monthly": "Standard monthly remuneration",
+      "bonus": "Standard bonus",
+      "qualification": "Coverage start/end"
+    },
+    "monthOf": {
+      "monthly": "Effective month",
+      "bonus": "Month paid",
+      "qualification": "Month of start/end"
+    },
+    "emptyOf": {
+      "monthly": "No standard monthly remuneration starts in {{month}}.",
+      "bonus": "No standard bonus was decided for bonuses paid in {{month}}.",
+      "qualification": "No one started or ended coverage in {{month}}."
+    },
+    "what": {
+      "bonus": "Bonus paid {{date}}",
+      "acquire": "Coverage started",
+      "loss": "Coverage ended"
     }
   },
   "rateImport": {

@@ -1,6 +1,6 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { EmployeeRequest, InboxNotification } from '../../../../core/models/office-records';
 import { monthsBetween, shiftMonth, todayLocal, toYearMonth } from '../../../../shared/utils/date';
 import { formatPostalCode } from '../../../../shared/utils/text';
@@ -13,7 +13,14 @@ import { MeHeader } from '../../components/me-header/me-header';
 import { MeContext } from '../../me-context.service';
 import { MeInboxService } from '../../me-inbox.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
-import { DecisionNotice, parseDecision } from '../../../premiums/logic/decision-notice';
+import {
+  BonusDecisionNotice,
+  DecisionNotice,
+  parseBonusDecision,
+  parseDecision,
+  parseQualification,
+  QualificationNotice,
+} from '../../../premiums/logic/decision-notice';
 import { formatYen } from '../../../../shared/utils/number';
 
 /** 保険料を並べる月数（今月を含めて） */
@@ -33,6 +40,7 @@ const PREMIUM_MONTHS = 6;
 })
 export class MyPage implements OnInit {
   readonly me = inject(MeContext);
+  private readonly transloco = inject(TranslocoService);
   private readonly requestsApi = inject(RequestService);
   private readonly router = inject(Router);
 
@@ -106,6 +114,33 @@ export class MyPage implements OnInit {
       hs: d.health ? formatYen(d.health.standard) : '',
       pg: d.pension?.grade ?? '',
       ps: d.pension ? formatYen(d.pension.standard) : '',
+    };
+  }
+
+  /** 賞与支払時の決定（標準賞与額。11/19） */
+  bonusDecisionOf(n: InboxNotification): BonusDecisionNotice | null {
+    return n.kind === 'notice' ? parseBonusDecision(n.link) : null;
+  }
+
+  bonusParams(d: BonusDecisionNotice): Record<string, string | number> {
+    return {
+      date: d.paidDate,
+      hs: d.health === null ? '' : formatYen(d.health),
+      ps: d.pension === null ? '' : formatYen(d.pension),
+      yen: formatYen(d.employeeYen),
+    };
+  }
+
+  /** 資格の取得・喪失（11/19） */
+  qualificationOf(n: InboxNotification): QualificationNotice | null {
+    return n.kind === 'notice' ? parseQualification(n.link) : null;
+  }
+
+  qualificationParams(d: QualificationNotice): Record<string, string | number> {
+    const t = (k: string) => this.transloco.translate(k);
+    return {
+      date: d.date,
+      ins: [d.health && t('me.qualification.health'), d.pension && t('me.qualification.pension')].filter(Boolean).join(t('me.qualification.and')),
     };
   }
 

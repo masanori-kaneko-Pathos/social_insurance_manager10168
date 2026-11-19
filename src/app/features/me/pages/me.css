@@ -131,6 +131,16 @@ h3 {
   white-space: pre-wrap;
 }
 
+.inbox .body p {
+  margin: 0 0 2px;
+}
+
+/* 決定の通知の審査請求の教示（11/19） */
+.inbox .body .appeal {
+  margin-top: var(--space-xs);
+  font-size: var(--font-xs);
+}
+
 /* 依頼と申請 */
 .requests {
   margin: 0;

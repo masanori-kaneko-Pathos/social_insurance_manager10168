@@ -27,6 +27,10 @@
                 <span class="kind">{{ 'me.kind.' + n.kind | transloco }}</span>
                 @if (decisionOf(n); as d) {
                   <span class="title">{{ 'me.decision.title' | transloco: decisionParams(d) }}</span>
+                } @else if (bonusDecisionOf(n); as d) {
+                  <span class="title">{{ 'me.bonusDecision.title' | transloco: bonusParams(d) }}</span>
+                } @else if (qualificationOf(n); as d) {
+                  <span class="title">{{ 'me.qualification.title.' + d.event | transloco: qualificationParams(d) }}</span>
                 } @else {
                   <span class="title">{{ n.title }}</span>
                 }
@@ -38,6 +42,22 @@
                   @if (d.health) { <p>{{ 'me.decision.health' | transloco: decisionParams(d) }}</p> }
                   @if (d.pension) { <p>{{ 'me.decision.pension' | transloco: decisionParams(d) }}</p> }
                   <p>{{ 'me.decision.premium' | transloco }}</p>
+                  <p class="appeal">{{ 'me.decision.appeal' | transloco }}</p>
+                </div>
+              } @else if (bonusDecisionOf(n); as d) {
+                <!-- 賞与支払時の決定：標準賞与額と、その賞与の本人負担の保険料（11/19） -->
+                <div class="body">
+                  <p>{{ 'me.bonusDecision.lead' | transloco: bonusParams(d) }}</p>
+                  @if (d.health !== null) { <p>{{ 'me.bonusDecision.health' | transloco: bonusParams(d) }}</p> }
+                  @if (d.pension !== null) { <p>{{ 'me.bonusDecision.pension' | transloco: bonusParams(d) }}</p> }
+                  <p>{{ 'me.bonusDecision.premium' | transloco: bonusParams(d) }}</p>
+                  <p class="appeal">{{ 'me.decision.appeal' | transloco }}</p>
+                </div>
+              } @else if (qualificationOf(n); as d) {
+                <!-- 資格の取得・喪失（11/19） -->
+                <div class="body">
+                  <p>{{ 'me.qualification.lead.' + d.event | transloco: qualificationParams(d) }}</p>
+                  <p class="appeal">{{ 'me.decision.appeal' | transloco }}</p>
                 </div>
               } @else if (n.body) {
                 <p class="body">{{ n.body }}</p>

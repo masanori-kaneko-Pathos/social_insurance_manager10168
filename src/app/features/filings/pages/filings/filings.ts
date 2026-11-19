@@ -27,6 +27,7 @@ import { PayrollService } from '../../../payrolls/payroll.service';
 import { RegularService } from '../../../payrolls/regular.service';
 import { RevisionService } from '../../../payrolls/revision.service';
 import { BonusService } from '../../../premiums/bonus.service';
+import { DecisionNoticeCard } from '../../../premiums/components/decision-notice-card/decision-notice-card';
 import { eligibleOn } from '../../../premiums/logic/bonus-rows';
 import { isOver70Employee } from '../../../employees/logic/coverage';
 import { acquireBonusRemunerationOf, bonusRemunerationOf, enrolledFromOf, irregularBonusYearOf, isNotCovered, isRemunerationBonus } from '../../../premiums/logic/bonus-nature';
@@ -58,7 +59,7 @@ import { errorKeyOf } from '../../../../shared/utils/error-key';
  */
 @Component({
   selector: 'app-filings',
-  imports: [MonthPicker, ReviewBox, RouterLink, TranslocoPipe],
+  imports: [DecisionNoticeCard, MonthPicker, ReviewBox, RouterLink, TranslocoPipe],
   templateUrl: './filings.html',
   styleUrl: './filings.css',
 })

@@ -24,6 +24,8 @@ import {
   PersonListOptions,
 } from '../../../../shared/logic/person-list';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
+import { DecisionNoticeCard } from '../../components/decision-notice-card/decision-notice-card';
+import { todayLocal } from '../../../../shared/utils/date';
 import {
   bonusFilterCount,
   BonusListFilter,
@@ -60,7 +62,7 @@ interface ListRow {
     '(document:click)': 'onDocumentClick($event)',
     '(document:keydown.escape)': 'filterOpen.set(false)',
   },
-  imports: [PersonName, RouterLink, SortHeader, TranslocoPipe],
+  imports: [DecisionNoticeCard, PersonName, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './bonus-list.html',
   styleUrl: './bonus-list.css',
 })
@@ -126,6 +128,8 @@ export class BonusList {
     return sortBonusRows(filterBonusRows(this.rows(), o.filter, DEFAULT_NATURE), o.sort, o.dir);
   });
   readonly total = computed(() => bonusRowsTotal(this.shownRows()));
+  /** 決定の通知の初めの月：いちばん新しい支給の月（11/19） */
+  readonly noticeMonth = computed(() => this.payments()[0]?.paidDate.slice(0, 7) ?? todayLocal().slice(0, 7));
 
   itemOf(r: ListRow): string {
     return itemNameOf(r.payment, DEFAULT_NATURE);

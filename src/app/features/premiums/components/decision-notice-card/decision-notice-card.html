@@ -4,8 +4,18 @@
   </button>
   @if (open()) {
     <p class="hint">{{ 'decisionNotice.lead' | transloco }}</p>
+
+    <!-- 何を知らせるか（年金機構の通知書の欄。11/19） -->
+    <div class="kinds" role="tablist" [attr.aria-label]="'decisionNotice.kindLabel' | transloco">
+      @for (k of kinds; track k) {
+        <button type="button" role="tab" class="kind" [class.on]="kind() === k" [attr.aria-selected]="kind() === k" (click)="setKind(k)">
+          {{ 'decisionNotice.kind.' + k | transloco }}
+        </button>
+      }
+    </div>
+
     <div class="field month">
-      <label for="dn-month">{{ 'decisionNotice.month' | transloco }}</label>
+      <label for="dn-month">{{ 'decisionNotice.monthOf.' + kind() | transloco }}</label>
       <input id="dn-month" class="input" type="month" [value]="month()" (change)="setMonth($any($event.target).value)" />
     </div>
 
@@ -19,7 +29,7 @@
     @if (loading()) {
       <p class="muted">{{ 'common.loading' | transloco }}</p>
     } @else if (rows().length === 0) {
-      <p class="muted">{{ 'decisionNotice.empty' | transloco: { month: month() } }}</p>
+      <p class="muted">{{ 'decisionNotice.emptyOf.' + kind() | transloco: { month: month() } }}</p>
     } @else {
       <div class="table-wrap">
         <table class="list">
@@ -33,27 +43,29 @@
               <th>{{ 'decisionNotice.col.reason' | transloco }}</th>
               <th class="num">{{ 'remuneration.field.health' | transloco }}</th>
               <th class="num">{{ 'remuneration.field.pension' | transloco }}</th>
+              @if (kind() !== 'monthly') {
+                <th [class.num]="kind() === 'bonus'">{{ 'decisionNotice.col.extra.' + kind() | transloco }}</th>
+              }
               <th>{{ 'decisionNotice.col.state' | transloco }}</th>
             </tr>
           </thead>
           <tbody>
-            @for (r of rows(); track r.employee.id) {
+            @for (r of rows(); track r.key) {
               <tr>
-                <td><input type="checkbox" [checked]="selected().has(r.employee.id)" (change)="check(r.employee.id, $any($event.target).checked)" [attr.aria-label]="name(r.employee)" /></td>
+                <td><input type="checkbox" [checked]="selected().has(r.key)" (change)="check(r.key, $any($event.target).checked)" [attr.aria-label]="name(r.employee)" /></td>
                 <td>
                   @if (r.employee.employeeNumber) { <span class="emp-no">{{ r.employee.employeeNumber }}</span> }
                   <app-person-name [person]="r.employee" layout="inline" />
                 </td>
-                <td>{{ 'remuneration.reason.' + r.decision.reason | transloco }}</td>
-                <td class="num">
-                  @if (r.decision.health; as h) { {{ 'remuneration.gradeShort' | transloco: { grade: h.grade } }} {{ yen(h.standard) }} } @else { — }
-                </td>
-                <td class="num">
-                  @if (r.decision.pension; as p) { {{ 'remuneration.gradeShort' | transloco: { grade: p.grade } }} {{ yen(p.standard) }} } @else { — }
-                </td>
+                <td>{{ r.what.key | transloco: r.what.params }}</td>
+                <td class="num">{{ r.health }}</td>
+                <td class="num">{{ r.pension }}</td>
+                @if (kind() !== 'monthly') {
+                  <td [class.num]="kind() === 'bonus'" class="mono">{{ r.extra }}</td>
+                }
                 <td>
                   @if (r.sent) { <span class="badge">{{ 'decisionNotice.state.sent' | transloco }}</span> }
-                  @if (!r.hasAccount) { <span class="sub">{{ 'decisionNotice.state.noAccount' | transloco }}</span> }
+                  @if (!r.hasAccount) { <span class="sub">{{ 'decisionNotice.state.noCopy' | transloco }}</span> }
                 </td>
               </tr>
             }
