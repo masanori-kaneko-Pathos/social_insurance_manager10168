@@ -165,3 +165,35 @@ describe('ケース7：賞与に係る報酬がある会社に、新しく入っ
     expect(acquireBonusRemunerationOf('N', '2026-10-01', others, plain)).toBeNull();
   });
 });
+
+describe('事例10（調査指摘事例集）：6・12・3月の業績手当に、7月1日の規程の改訂で7月分を足した', () => {
+  // 規程を変えた日（2025-07-01）と、アプリで項目を直した日（2025-08-10）は違う
+  const t = withTreatment(COUNT, 'remuneration', true, '2025-07-01');
+  const raw = [
+    pay('2024-12-10', ['A'], 'Q', 75000), pay('2025-03-10', ['A'], 'Q', 75000), pay('2025-06-10', ['A'], 'Q', 30000),
+    pay('2025-07-10', ['A'], 'Q', 60000), pay('2025-12-10', ['A'], 'Q', 75000),
+  ];
+  const pays = resolveItems(raw, item(t, 4), '賞与');
+  it('7月1日に効く規程は、その年（2025年）の定時決定から', () => {
+    expect(t).toEqual([{ fromYear: 0, treatment: 'count' }, { fromYear: 2025, treatment: 'remuneration' }]);
+  });
+  it('7月の60千円は賞与（賞与支払届を出す。○）。12月からは報酬', () => {
+    expect(remu(pays, '2025-07-10')).toBe(false);
+    expect(remu(pays, '2025-12-10')).toBe(true);
+  });
+  it('2025年の定時決定：受けたであろう額 ÷ 12 ＝ 2万円を足す（資料の「賞与に係る報酬 2万円」）', () => {
+    expect(bonusRemunerationOf('A', 2025, pays).monthly).toBe(20000);
+  });
+});
+
+describe('事例11（調査指摘事例集）：3か月ごとの業績手当（基準に届かなければ払わない）', () => {
+  // 必ず払うとは限らない規程は「年4回以上の賞与」ではなく「回数で判定」（Q&A Q8）
+  const raw = [
+    pay('2024-07-10', ['A', 'B']), pay('2024-10-10', ['A', 'C']), pay('2025-01-10', ['A', 'B', 'C']), pay('2025-04-10', ['A', 'B', 'C']),
+    pay('2025-10-10', ['A', 'B', 'C']),
+  ];
+  it('7月1日前の1年に、A は4回 → 報酬。B・C は3回 → 賞与（○）', () => {
+    const pays = resolveItems(raw, item(COUNT), '賞与');
+    expect(['A', 'B', 'C'].map((w) => remu(pays, '2025-10-10', w))).toEqual([true, false, false]);
+  });
+});

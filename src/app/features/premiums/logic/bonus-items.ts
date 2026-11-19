@@ -42,10 +42,13 @@ export function currentTreatment(rule: Pick<ItemRule, 'treatments'>): BonusTreat
   return [...rule.treatments].sort((a, b) => b.fromYear - a.fromYear)[0] ?? null;
 }
 
-/** 次の7月1日の年（今日が7月1日より前ならその年、7月1日からは次の年） */
-export function nextDecisionYear(today: DateStr): number {
-  const y = Number(today.slice(0, 4));
-  return today.slice(5) < '07-01' ? y : y + 1;
+/**
+ * その日に効いた規程が、どの年の定時決定から効くか
+ * 7月1日の時点で定められていればその年（7月1日に効く規程を含む）、7月2日からは次の年（局部長通知 1(1)。事例10。11/19）
+ */
+export function nextDecisionYear(effective: DateStr): number {
+  const y = Number(effective.slice(0, 4));
+  return effective.slice(5) <= '07-01' ? y : y + 1;
 }
 
 /** 名前（項目の名前・取り込みの名前） → 項目 */

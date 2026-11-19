@@ -8,7 +8,7 @@ import { TodoDismissalDoc } from '../../../../core/models/office-records';
 import { shiftMonth, todayLocal, toYearMonth } from '../../../../shared/utils/date';
 import { ContractService } from '../../../employees/contract.service';
 import { EmployeeService } from '../../../employees/employee.service';
-import { reasonParams } from '../../../employees/logic/classify';
+import { classify, reasonParams } from '../../../employees/logic/classify';
 import { CriteriaService } from '../../../office/criteria.service';
 import { payrollOf } from '../../../office/office-settings';
 import { latestPaidMonth } from '../../../payrolls/logic/payroll-rows';
@@ -55,6 +55,8 @@ import {
   RATES_NOTICE_TO,
   ratesMissingTodo,
   bonusNoneTodos,
+  actualHoursTodo,
+  actualHoursThreshold,
   bonusCumulativeTodos,
   residenceTodo,
   specificOfficeTodo,
@@ -175,6 +177,9 @@ export class Dashboard {
   /** 今の保険者の料率の「何月分から」（2〜4月だけ読む。それ以外の月は null のまま＝読まない） */
   private readonly rateFroms = signal<string[] | null>(null);
 
+  /** 直近2か月の給与の実績（実際の労働時間の To-do に使う。従業員ID → 実績。11/19） */
+  private readonly recentPayrolls = signal<ReadonlyMap<string, { paidMonth: string; workMinutes: number | null }[]>>(new Map());
+
   /** 賞与の支給（不支給報告書・累計申出書の To-do に使う。11/19） */
   private readonly bonusPayments = signal<BonusPayment[]>([]);
 
@@ -221,6 +226,19 @@ export class Dashboard {
         retireGuideTodo(e, o.healthInsurer.type, this.today),
         overseasCertificateTodo(e, this.today),
         overseasPayAbroadTodo(e, this.today),
+        // 所定は基準未満でも、実際の労働時間が2か月続けて基準以上（調査指摘事例集 事例1。11/19）
+        actualHoursTodo(
+          e,
+          actualHoursThreshold(
+            classify(
+              { birthDate: e.birthDate, optInDate: e.optInDate, optOutDate: e.optOutDate ?? null, contracts: contracts.get(e.id) ?? [], officer: e.org?.officer ?? null },
+              office,
+              criteria,
+              this.today,
+            ),
+          ),
+          this.recentPayrolls().get(e.id) ?? [],
+        ),
       ].filter((t) => t !== null),
     );
     const specific = specificOfficeTodo(
@@ -461,6 +479,17 @@ export class Dashboard {
       this.dismissalDocs.set(dismissals);
       void this.loadRateFroms(officeId);
       this.bonusPayments.set([]);
+      this.recentPayrolls.set(new Map());
+      // 直近2か月の給与の実績（実労働時間を入れた人だけが To-do の対象。1回の問い合わせ）
+      const latest = this.payMonth();
+      this.payrollApi
+        .listOfOfficeMonths(officeId, active.map((e) => e.id), [shiftMonth(latest, -1), latest])
+        .then((list) => {
+          const map = new Map<string, { paidMonth: string; workMinutes: number | null }[]>();
+          for (const p of list) map.set(p.employeeId, [...(map.get(p.employeeId) ?? []), { paidMonth: p.paidMonth, workMinutes: p.workMinutes }]);
+          this.recentPayrolls.set(map);
+        })
+        .catch((err) => console.error(err));
       this.bonusApi
         .list(officeId)
         .then((list) => this.bonusPayments.set(list))

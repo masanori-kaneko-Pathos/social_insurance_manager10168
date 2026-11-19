@@ -1,4 +1,4 @@
-import { adjustmentDeadlineTodo, insurerChangeTodos, ratesMissingTodo, bonusNoneTodos, bonusCumulativeTodos, CumulativePerson } from './extra-todos';
+import { actualHoursThreshold, actualHoursTodo, adjustmentDeadlineTodo, insurerChangeTodos, ratesMissingTodo, bonusNoneTodos, bonusCumulativeTodos, CumulativePerson } from './extra-todos';
 import { cardReturnTodo, contractEndTodo, isShortTerm, myNumberTodos, noticeRequired, retireGuideTodo, voluntaryEligible } from './extra-todos';
 import {
   ExtraPerson,
@@ -285,5 +285,28 @@ describe('標準賞与額の累計申出（11/19）', () => {
   });
   it('超えなければ出さない', () => {
     expect(bonusCumulativeTodos(emp, [{ id: 'b', paidDate: '2026-07-10', amounts: { e1: 700000 } }], '2026-11-19')).toEqual([]);
+  });
+});
+
+describe('実際の労働時間（調査指摘事例集 事例1。11/19）', () => {
+  const p = { id: 'e1', health: { enrolled: false }, pension: { enrolled: false } };
+  const nums = { stdWeeklyMinutes: 40 * 60, minWeeklyMinutes: 20 * 60 } as never;
+  it('基準：特定適用事業所でなければ所定の4分の3、特定適用事業所で20時間未満なら20時間。加入しているなら見ない', () => {
+    expect(actualHoursThreshold({ category: 'excluded', reason: 'notSpecific', nums })).toBe(30 * 60);
+    expect(actualHoursThreshold({ category: 'excluded', reason: 'under20h', nums })).toBe(20 * 60);
+    expect(actualHoursThreshold({ category: 'shortTime', reason: 'shortTimeRequirements', nums })).toBeNull();
+    expect(actualHoursThreshold({ category: 'excluded', reason: 'student', nums })).toBeNull();
+  });
+  it('連続する2か月とも週20時間以上 → 3か月目の初日に取得の To-do', () => {
+    // 月 90時間 → 週 20.7時間
+    const t = actualHoursTodo(p, 20 * 60, [{ paidMonth: '2026-09', workMinutes: 90 * 60 }, { paidMonth: '2026-10', workMinutes: 92 * 60 }]);
+    expect(t?.date).toBe('2026-11-01');
+    expect(t?.params['h1']).toBe(20.8);
+  });
+  it('1か月でも基準未満・実労働時間がない・月が続いていない・加入済みなら出さない', () => {
+    expect(actualHoursTodo(p, 20 * 60, [{ paidMonth: '2026-09', workMinutes: 80 * 60 }, { paidMonth: '2026-10', workMinutes: 92 * 60 }])).toBeNull();
+    expect(actualHoursTodo(p, 20 * 60, [{ paidMonth: '2026-09', workMinutes: null }, { paidMonth: '2026-10', workMinutes: 92 * 60 }])).toBeNull();
+    expect(actualHoursTodo(p, 20 * 60, [{ paidMonth: '2026-08', workMinutes: 92 * 60 }, { paidMonth: '2026-10', workMinutes: 92 * 60 }])).toBeNull();
+    expect(actualHoursTodo({ ...p, health: { enrolled: true } }, 20 * 60, [{ paidMonth: '2026-09', workMinutes: 92 * 60 }, { paidMonth: '2026-10', workMinutes: 92 * 60 }])).toBeNull();
   });
 });

@@ -160,7 +160,8 @@
         "insurerChange": "Change of health insurer",
         "bonusNone": "Bonus non-payment report",
         "bonusCumulative": "Cumulative bonus declaration",
-        "birthDate": "Date of birth correction"
+        "birthDate": "Date of birth correction",
+        "actualHours": "Actual working hours"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. An Application to Enroll in EPI / EHI (資格取得届) is needed.",
@@ -220,7 +221,8 @@
         "insurerChangeCommon": "Documents and deadlines differ by insurer, so follow the new insurer's instructions. Employees' pension coverage continues (no filing needed). Premiums keep using the current grades. Dismiss with \"Checked\" when done.",
         "bonusNone": "Bonuses are scheduled for {{month}}/{{year}}, but none are recorded. If none were paid, submit a \"Bonus non-payment report\" to the pension office by {{date}} (end of the following month; also to the health insurance society if applicable). If they were paid, record them and this item disappears. Once submitted, you can hide it with \"Checked\".",
         "bonusCumulative": "Including the previous employer, the cumulative standard bonus amount for health insurance in fiscal {{year}} is {{total}} yen, above the cap ({{cap}} yen). For the cap to apply, the employee must submit a \"Cumulative standard bonus declaration\" to the insurer (follow the insurer's instructions). The app already applies the cap. Once you have informed the employee, you can hide this with \"Checked\".",
-        "birthDate": "The date of birth was corrected on {{date}}. If the acquisition notification was already filed, promptly submit a \"Date of birth correction notification\". Age thresholds (long-term care at 40/65, 70, 75) may change, so check premiums and filings too."
+        "birthDate": "The date of birth was corrected on {{date}}. If the acquisition notification was already filed, promptly submit a \"Date of birth correction notification\". Age thresholds (long-term care at 40/65, 70, 75) may change, so check premiums and filings too.",
+        "actualHours": "Actual working hours in the pay for {{first}} and {{second}} were {{h1}} and {{h2}} hours a week, at or above the threshold ({{limit}} hours) for two months in a row. Even if contracted hours are below it, if this continues or is expected to, coverage starts on {{date}} (the first day of the third month). Review the contract or file an acquisition notification. If it was temporary, hide it with \"Checked\"."
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -2365,7 +2367,7 @@
     "direction": {
       "up": "up",
       "down": "down",
-      "unclear": "direction to confirm"
+      "unclear": "Unclear (both directions count)"
     },
     "col": {
       "month": "Paid month",
@@ -3285,7 +3287,7 @@
       },
       "payroll": {
         "title": "Entering payroll records",
-        "body": "On the payroll screen, enter the amount paid in money, fixed wages and payment basis days for each month paid. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and retroactive pay columns. For one person and one month, you can also use \"Enter a month\" on the employee page."
+        "body": "On the payroll screen, enter the amount paid in money, fixed wages and payment basis days for each month paid. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and retroactive pay columns. For one person and one month, you can also use \"Enter a month\" on the employee page. Enter in \"retroactive pay\" only differences from raises decided retroactively. Allowances paid late because of a late application or a mistake go back into the month they should have been paid (that month becomes the start month for a revision). Mark \"prorated\" for months where a mid-period hire, transfer or new allowance means a full month was not paid (that month is not used as a start month; counting begins the next month)."
       },
       "inKind": {
         "title": "Remuneration provided in kind (housing, dormitories, meals)",
@@ -4268,7 +4270,7 @@
   },
   "wageChange": {
     "title": "Changes in fixed wages (added or removed by hand)",
-    "lead": "Start months for irregular revisions are found automatically from months where the fixed-wage amount changed. Changes that the amount alone cannot reveal, such as a new hourly or daily rate, a change in benefits in kind or in contract hours, are added here. Candidates are recalculated from the three months starting with the added month.",
+    "lead": "The start month for a revision is found automatically from months where the fixed wage amount changed. Add changes the amounts cannot show: hourly, daily or per-km unit prices, a non-fixed allowance (such as a shift allowance) newly paid or ended, in-kind values or contract hours. If the direction is unclear (e.g. fixed wage down while a variable allowance starts in the same month), choose \"unclear\" (set automatically when the fixed wage rises and overtime drops to zero). Candidates are recalculated from three months starting with the added month.",
     "empty": "No changes have been added or removed by hand.",
     "add": "Add a change in fixed wages",
     "save": "Add",
@@ -4484,7 +4486,7 @@
     },
     "treatmentHint": {
       "count": "Remuneration if the same person received it 4+ times in the year before July 1; otherwise a bonus.",
-      "remuneration": "Paid 4+ times a year under the rules. No bonus report; annual total ÷ 12 is added to remuneration at the regular decision.",
+      "remuneration": "Paid every time, 4+ times a year under the rules. No bonus report; annual total ÷ 12 is added at the regular decision. Rules like \"top performers only\" or \"may be paid\" use \"Decide by count\".",
       "none": "Gifts such as wedding or sympathy money. Neither a bonus nor remuneration."
     },
     "nextChange": "From the {{year}} regular decision: {{treatment}}",
@@ -4497,14 +4499,16 @@
       "labels": "Import names",
       "treatment": "Social insurance",
       "plannedCount": "Scheduled count per year",
-      "ruleExisted": "This rule already existed (paid 4+ times a year since before July 1 of {{year}})"
+      "ruleExisted": "This rule already existed (paid 4+ times a year since before July 1 of {{year}})",
+      "effectiveDate": "Rule effective date"
     },
     "hint": {
       "name": "The name chosen when entering a bonus. Renaming keeps past payments in this item.",
       "labels": "Names in your payroll software CSV, separated by commas.",
-      "fromNextYear": "This item is already used, so the change applies from the {{year}} regular decision (July 1, {{year}}). Earlier payments keep the previous treatment.",
+      "fromNextYear": "This item is already used, so the change applies from the {{year}} regular decision (payments from September {{year}}). Earlier payments keep the previous treatment.",
       "plannedCount": "In the year the rule changes, if there are fewer payments than this, the \"would have received\" amount is estimated as average × this count (employees who joined mid-year and long-standing rules use actual amounts). Editable in the regular decision.",
-      "newRule": "Payments under a new rule stay bonuses until the next regular decision (payments from September {{year}}); a bonus report is filed. If 4+ payments are made before then, they count as remuneration by count."
+      "newRule": "Payments under a new rule stay bonuses until the next regular decision (payments from September {{year}}); a bonus report is filed. If 4+ payments are made before then, they count as remuneration by count.",
+      "effectiveDate": "Rules effective by July 1 apply from that year's regular decision; from July 2, from the next year's."
     },
     "placeholder": {
       "labels": "Summer bonus, Winter bonus"

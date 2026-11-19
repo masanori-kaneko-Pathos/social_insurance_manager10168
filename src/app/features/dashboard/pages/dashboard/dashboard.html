@@ -442,6 +442,9 @@
                               'dashboard.todo.text.adjustmentDeadline' | transloco: it.extra!.params
                             }}
                           }
+                          @case ('actualHours') {
+                            {{ 'dashboard.todo.text.actualHours' | transloco: it.extra!.params }}
+                          }
                           @case ('bonusNone') {
                             {{ 'dashboard.todo.text.bonusNone' | transloco: it.extra!.params }}
                           }
@@ -594,6 +597,13 @@
                           @case ('adjustmentDeadline') {
                             <a [routerLink]="['/o', office()?.id, 'settings']"
                               >{{ 'dashboard.todo.toSettings' | transloco }} →</a
+                            >
+                          }
+                          @case ('actualHours') {
+                            <a
+                              [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
+                              [queryParams]="{ tab: 'employment' }"
+                              >{{ 'dashboard.todo.toContractCheck' | transloco }} →</a
                             >
                           }
                           @case ('bonusNone') {

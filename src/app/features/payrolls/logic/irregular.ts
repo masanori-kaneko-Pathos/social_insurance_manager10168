@@ -64,10 +64,12 @@ export function findStartMonths(
   for (const m of months) {
     const p = payrolls.get(m)!;
     const prev = payrolls.get(shiftMonth(m, -1));
+    // 日割りの月（計算期間の途中で変わった月）は起算月にしない。1か月分そろった次の月を起算月にする（事例7。11/19）
+    const at = p.prorated ? shiftMonth(m, 1) : m;
     if (p.fixed > 0 && last && prev && p.fixed !== last.fixed) {
-      found.set(m, { month: m, direction: p.fixed > last.fixed ? 'up' : 'down', source: 'fixed' });
+      found.set(at, { month: at, direction: directionOf(last, p, last === prev), source: 'fixed' });
     } else if (p.retro > 0) {
-      found.set(m, { month: m, direction: 'up', source: 'retro' });
+      found.set(at, { month: at, direction: 'up', source: 'retro' });
     }
     if (p.fixed > 0) last = p;
   }
@@ -76,6 +78,23 @@ export function findStartMonths(
     else found.set(w.month, { month: w.month, direction: w.direction, source: 'manual' });
   }
   return [...found.values()].sort((a, b) => a.month.localeCompare(b.month));
+}
+
+/** 非固定的賃金（支払額 − 固定的賃金 − 遡及支払額） */
+function nonFixedOf(p: Payroll): number {
+  return Math.max(0, payTotal(p) - p.fixed - p.retro);
+}
+
+/**
+ * 固定的賃金が変わった向き
+ * 前の月から、固定的賃金が上がって非固定的賃金（時間外手当など）が0円になったときは、
+ * 管理職になって時間外手当がなくなったなど、増減の関連がはっきりしないので unclear（上がっても下がっても改定の対象。事例6。11/19）
+ * 逆（固定的賃金が下がって変動的な手当が新しく出た）は、ふつうの残業が出ただけと見分けられないので、人が「はっきりしない」で足す
+ */
+function directionOf(before: Payroll, after: Payroll, adjacent: boolean): Direction {
+  const up = after.fixed > before.fixed;
+  if (up && adjacent && nonFixedOf(before) > 0 && nonFixedOf(after) === 0) return 'unclear';
+  return up ? 'up' : 'down';
 }
 
 export type IrregularStatus =

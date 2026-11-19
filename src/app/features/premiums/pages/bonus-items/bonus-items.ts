@@ -29,6 +29,8 @@ interface Draft {
   plannedCount: string;
   /** 「年4回以上の賞与」の規程が前からある（新しく作った規程なら、次の定時決定までは賞与。11/19） */
   ruleExisted: boolean;
+  /** 規程が効く日（扱いを変えたとき、どの年の定時決定から効くかを決める。初期値は今日。事例10。11/19） */
+  effectiveDate: string;
 }
 
 /** 支給に出てくるが、どの項目にも入っていない名前（11/19） */
@@ -67,6 +69,8 @@ export class BonusItems {
   readonly treatments = BONUS_TREATMENTS;
   readonly today = todayLocal();
   readonly nextYear = nextDecisionYear(this.today);
+  /** 編集中の「規程が効く日」から出した、効き始める定時決定の年 */
+  readonly draftYear = computed(() => nextDecisionYear(this.draft()?.effectiveDate || this.today));
   /** 今の定時決定の年（次の7月1日の前の年） */
   private readonly thisYear = this.nextYear - 1;
 
@@ -148,7 +152,7 @@ export class BonusItems {
   startNew(name = ''): void {
     this.savedName.set(null);
     this.formErrors.set([]);
-    this.draft.set({ id: null, name, labels: '', treatment: 'count', plannedCount: '', ruleExisted: false });
+    this.draft.set({ id: null, name, labels: '', treatment: 'count', plannedCount: '', ruleExisted: false, effectiveDate: this.today });
   }
 
   setJoinTarget(name: string, itemId: string): void {
@@ -189,6 +193,7 @@ export class BonusItems {
       treatment: currentTreatment(it)?.treatment ?? 'count',
       plannedCount: it.plannedCount === null ? '' : String(it.plannedCount),
       ruleExisted: treatmentAt(it, 0) === 'remuneration',
+      effectiveDate: this.today,
     });
   }
 
@@ -212,7 +217,7 @@ export class BonusItems {
       name: d.name.trim(),
       labels: parseLabels(d.labels, d.name),
       plannedCount: count,
-      treatments: withTreatment(before?.treatments ?? [], d.treatment, this.draftUsed(), this.today, d.ruleExisted),
+      treatments: withTreatment(before?.treatments ?? [], d.treatment, this.draftUsed(), d.effectiveDate || this.today, d.ruleExisted),
     });
     const errors: (ItemError | 'labelInUse')[] = validateItem(
       input,

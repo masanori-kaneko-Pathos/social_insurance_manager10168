@@ -155,16 +155,26 @@
           </label>
         }
       </fieldset>
+      <!-- 規程が効く日：どの年の定時決定から効くか（7月1日の時点で定められていればその年。事例10。11/19） -->
+      @if (draftUsed() || (d.treatment === 'remuneration' && !d.ruleExisted)) {
+        <div class="grid">
+          <div class="field">
+            <label for="item-effective">{{ 'bonusItem.field.effectiveDate' | transloco }}</label>
+            <input id="item-effective" class="input short-date" type="date" [value]="d.effectiveDate" (input)="patch({ effectiveDate: $any($event.target).value })" />
+            <span class="hint">{{ 'bonusItem.hint.effectiveDate' | transloco }}</span>
+          </div>
+        </div>
+      }
       @if (draftUsed()) {
-        <p class="hint warn">{{ 'bonusItem.hint.fromNextYear' | transloco: { year: nextYear } }}</p>
+        <p class="hint warn">{{ 'bonusItem.hint.fromNextYear' | transloco: { year: draftYear() } }}</p>
       } @else if (d.treatment === 'remuneration') {
         <!-- まだ使っていない項目：規程が前からあるか（新しく作った規程は、次の定時決定までは賞与。課長通知 1(3)・Q&A Q4。11/19） -->
         <label class="check rule-existed">
           <input type="checkbox" [checked]="d.ruleExisted" (change)="patch({ ruleExisted: $any($event.target).checked })" />
-          {{ 'bonusItem.field.ruleExisted' | transloco: { year: nextYear } }}
+          {{ 'bonusItem.field.ruleExisted' | transloco: { year: draftYear() } }}
         </label>
         @if (!d.ruleExisted) {
-          <p class="hint warn">{{ 'bonusItem.hint.newRule' | transloco: { year: nextYear } }}</p>
+          <p class="hint warn">{{ 'bonusItem.hint.newRule' | transloco: { year: draftYear() } }}</p>
         }
       }
 

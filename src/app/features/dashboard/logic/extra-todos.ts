@@ -27,6 +27,7 @@
 //   根拠：健康保険組合の編入の案内（Q&A）の実例。書類と期限は新しい保険者の案内に従う
 // - bonusNone：事業所の設定の「賞与の支払予定月」に、だれにも賞与を払っていない（11/19）
 //   → 賞与不支給報告書（日本年金機構。支払予定月の翌月末日まで）。先月・先々月の分を出す
+// - actualHours：所定は基準未満だが、実際の労働時間が連続する2か月とも基準以上（加入していない人。11/19）
 // - bonusCumulative：前の事業所の分と合わせて、健保の標準賞与額の年度の累計が上限（573万円）を超えた（11/19）
 //   → 本人が保険者に「健康保険標準賞与額累計申出書」を出す（同じ保険者で転職した人。出さないと上限が効かない）
 
@@ -35,6 +36,7 @@ import { contractAt } from '../../employees/logic/contract-form-model';
 import type { MyNumberEntry } from '../../../core/models/my-number';
 import { disposalDue, DisposalPerson, hasNumber } from '../../my-number/logic/my-number';
 import { certificateEndingSoon, OverseasPerson, payAbroadEnrolled } from '../../employees/logic/overseas';
+import type { Classification } from '../../employees/logic/classify';
 import { countHeadcount, criteriaAt, HeadcountTarget, isSpecificApplied, WorkSchedule } from '../../employees/logic/coverage';
 import { FROM_THE_START, insurerHistoryOf, insurerKeyOf } from '../../office/office-settings';
 import type { HealthInsurer, InsurerPeriod } from '../../../core/models/office';
@@ -59,7 +61,8 @@ export type ExtraKind =
   | 'adjustmentDeadline'
   | 'insurerChange'
   | 'bonusNone'
-  | 'bonusCumulative';
+  | 'bonusCumulative'
+  | 'actualHours';
 
 export interface ExtraTodo {
   kind: ExtraKind;
@@ -491,4 +494,56 @@ export function bonusCumulativeTodos(
     }
   }
   return out;
+}
+
+// ===== 実際の労働時間（11/19。調査指摘事例集 事例1） =====
+
+/**
+ * 契約の時間では加入しない人の、実際の労働時間で見る基準（週の分）
+ * - 4分の3に届かず、特定適用事業所でない：所定労働時間の4分の3
+ * - 特定適用事業所で、週20時間に届かない：週20時間（基準の表の値）
+ * - それ以外（加入している・学生・賃金など時間以外の理由）：見ない（null）
+ */
+export function actualHoursThreshold(c: Pick<Classification, 'category' | 'reason' | 'nums'>): number | null {
+  if (c.category !== 'excluded' || !c.nums) return null;
+  if (c.reason === 'notSpecific' && c.nums.stdWeeklyMinutes) return Math.ceil((c.nums.stdWeeklyMinutes * 3) / 4);
+  if (c.reason === 'under20h' && c.nums.minWeeklyMinutes) return c.nums.minWeeklyMinutes;
+  return null;
+}
+
+/** 1か月の実労働時間（分）→ 週（分）：× 12 ÷ 52（1分未満切り捨て） */
+export function weeklyOfMonthly(minutes: number): number {
+  return Math.floor((minutes * 12) / 52);
+}
+
+/**
+ * 所定は基準未満でも、実際の労働時間が連続する2か月とも基準以上なら To-do（加入していない人だけ）
+ * 引き続き同じ状態が続いている（見込まれる）なら、3か月目の初日に資格取得（日本年金機構「調査指摘・改善指導事例集」事例1）
+ * 続くかどうかは人が判断する（「確認した」で消せる）。月は給与を払った月で見る
+ */
+export function actualHoursTodo(
+  p: { id: string; health: { enrolled: boolean }; pension: { enrolled: boolean } },
+  threshold: number | null,
+  months: readonly { paidMonth: string; workMinutes: number | null }[],
+): ExtraTodo | null {
+  if (threshold === null || p.health.enrolled || p.pension.enrolled) return null;
+  const sorted = [...months].sort((a, b) => a.paidMonth.localeCompare(b.paidMonth)).slice(-2);
+  if (sorted.length < 2 || shiftMonth(sorted[0].paidMonth, 1) !== sorted[1].paidMonth) return null;
+  const weekly = sorted.map((m) => (m.workMinutes === null ? null : weeklyOfMonthly(m.workMinutes)));
+  if (weekly.some((w) => w === null || w < threshold)) return null;
+  const date = `${shiftMonth(sorted[1].paidMonth, 1)}-01`;
+  const h = (m: number) => Math.round((m / 60) * 10) / 10;
+  return {
+    kind: 'actualHours',
+    employeeId: p.id,
+    date,
+    params: {
+      first: sorted[0].paidMonth,
+      second: sorted[1].paidMonth,
+      h1: h(weekly[0]!),
+      h2: h(weekly[1]!),
+      limit: h(threshold),
+      date,
+    },
+  };
 }

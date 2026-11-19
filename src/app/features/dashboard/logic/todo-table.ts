@@ -40,6 +40,7 @@ export function filingDeadline(factDate: DateStr): DateStr {
 export function deadlineOf(it: BoardItem): { deadline: DateStr | null; note: DeadlineNote } {
   switch (it.kind) {
     case 'acquire':
+    case 'actualHours':
     case 'agreement':
     case 'certificateEnd':
     case 'upcoming':

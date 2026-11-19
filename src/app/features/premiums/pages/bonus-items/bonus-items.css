@@ -334,3 +334,7 @@ h2 {
   margin-top: var(--space-sm);
   font-size: var(--font-sm);
 }
+
+.input.short-date {
+  max-width: 12em;
+}
