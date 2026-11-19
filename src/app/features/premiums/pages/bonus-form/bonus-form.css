@@ -309,3 +309,11 @@ td.calc {
   background: var(--color-bg);
   white-space: normal;
 }
+
+/* 年4回以上の賞与の説明（たたんだ中。11/19） */
+.fold-notes {
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}

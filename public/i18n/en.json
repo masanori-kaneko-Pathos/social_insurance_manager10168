@@ -1429,7 +1429,9 @@
       "paidDate": "Premiums depend on the payment date (none before coverage starts or on/after it ends).",
       "needDate": "Enter the payment date to show eligible employees.",
       "standard": "Standard Bonus Amount (SBA) = bonus amount rounded down to the nearest 1,000 yen. Caps: health etc. JPY 5.73M per fiscal year (Apr–Mar); pension etc. JPY 1.5M per month.",
-      "nature": "Whether a bonus is paid 4+ times a year is counted per nature, regardless of its name. Keep summer, winter and year-end bonuses of the same nature as \"賞与\"; give a different name to a payment of a different nature (inflation allowance, president's award, quarterly incentive, etc.).",
+      "natureShort": "Empty means \"賞与\". Name only payments of a different nature.",
+      "fourTimesTitle": "About bonuses paid 4+ times a year (nature and counting)",
+      "nature": "Payments are counted per nature, regardless of their name. Keep summer, winter and year-end bonuses as \"賞与\"; name payments of a different nature (inflation allowance, quarterly incentive, etc.).",
       "countAs": "Count an exceptionally split payment once, and do not count a payment made only this year.",
       "fourTimes": "If the same employee received payments of the same nature 4+ times in the year before July 1, payments from September are \"bonus as remuneration\" for that employee only: no bonus premium and no bonus payment report (the annual amount ÷ 12 is added at the annual determination). In the year the rule is created, it stays a bonus until the next annual determination.",
       "hidden": "({{count}} not insured on the payment date are hidden)",
@@ -1807,15 +1809,15 @@
       "badge": "4+ bonuses",
       "checkBadge": "{{n}} bonuses",
       "title": "Bonus treated as remuneration (4+ times a year)",
-      "window": "Bonuses paid from {{from}} to {{to}} (the year before July 1) are counted by their nature. If the same nature was paid 4 or more times, it is remuneration: the annual amount ÷ 12 is added to each month.",
+      "window": "Payments from {{from}} to {{to}} (the year before July 1) are counted by nature.",
       "nature": "{{name}}: {{count}} times, {{total}} yen",
-      "checkNote": "{{n}} bonuses were paid in this period, but each nature was paid 3 times or fewer, so they stay bonuses. On the bonus screen, check that bonuses of the same nature share the same nature name (the count is per nature, not by the interval).",
+      "checkNote": "{{n}} bonuses in this period, but each nature was paid 3 times or fewer, so they stay bonuses. On the bonus screen, check that bonuses of the same nature share one name.",
       "annual": "Annual amount",
       "monthly": "÷ 12 = {{n}} yen added to each month",
       "monthlyFixed": "Decided with {{n}} yen added to each month.",
       "reset": "Use the calculated amount",
       "included": "Includes {{n}} yen bonus remuneration",
-      "hint": "If the pay rules changed during the year and the bonus newly became 4+ times a year, enter the amount the employee would have received in the year before July 1 under the new rules. A change in the bonus amount alone does not trigger an occasional revision."
+      "hint": "If the pay rules changed during the year, enter the amount the employee would have received under the new rules."
     }
   },
   "payrollCsv": {

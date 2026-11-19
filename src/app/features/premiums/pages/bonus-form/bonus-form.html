@@ -111,7 +111,7 @@
             <option [value]="n"></option>
           }
         </datalist>
-        <span class="hint">{{ 'bonus.hint.nature' | transloco }}</span>
+        <span class="hint">{{ 'bonus.hint.natureShort' | transloco }}</span>
       </div>
 
       <div class="field">
@@ -127,11 +127,18 @@
             <option [value]="c" [selected]="c === countAs()">{{ 'bonus.countAs.' + c | transloco }}</option>
           }
         </select>
-        <span class="hint">{{ 'bonus.hint.countAs' | transloco }}</span>
       </div>
     </div>
     <p class="hint">{{ 'bonus.hint.standard' | transloco }}</p>
-    <p class="hint">{{ 'bonus.hint.fourTimes' | transloco }}</p>
+    <!-- 年4回以上の賞与のくわしい説明は、ふだんはたたむ（画面の文を減らす。共通の .fold。11/19） -->
+    <details class="fold">
+      <summary>{{ 'bonus.hint.fourTimesTitle' | transloco }}</summary>
+      <ul class="fold-notes">
+        <li>{{ 'bonus.hint.nature' | transloco }}</li>
+        <li>{{ 'bonus.hint.countAs' | transloco }}</li>
+        <li>{{ 'bonus.hint.fourTimes' | transloco }}</li>
+      </ul>
+    </details>
   </section>
 
   @if (!dateOk()) {
