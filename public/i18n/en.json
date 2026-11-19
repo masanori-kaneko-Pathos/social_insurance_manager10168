@@ -573,7 +573,7 @@
       "other": "Other"
     },
     "lossReason": {
-      "retire": "Leaving etc.",
+      "retire": "Leaving etc. (including leaving coverage after a contract change)",
       "death": "Death",
       "age75": "Reached age 75",
       "disability": "Disability certification",
@@ -3294,7 +3294,7 @@
       },
       "payroll": {
         "title": "Entering payroll records",
-        "body": "On the payroll screen, enter the amount paid in money, fixed wages and payment basis days for each month paid. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and retroactive pay columns. For one person and one month, you can also use \"Enter a month\" on the employee page. Enter in \"retroactive pay\" only differences from raises decided retroactively. Allowances paid late because of a late application or a mistake go back into the month they should have been paid (that month becomes the start month for a revision). Mark \"prorated\" for months where a mid-period hire, transfer or new allowance means a full month was not paid (that month is not used as a start month; counting begins the next month). Payment basis days are calendar days for monthly pay, days worked for daily pay, and total hours ÷ daily scheduled hours for hourly pay. For months where a retroactive pay cut was deducted, enter the amount before the deduction."
+        "body": "On the payroll screen, enter the amount paid in money, fixed wages and payment basis days for each month paid. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and retroactive pay columns. For one person and one month, you can also use \"Enter a month\" on the employee page. Enter in \"retroactive pay\" only differences from raises decided retroactively. Allowances paid late because of a late application or a mistake go back into the month they should have been paid (that month becomes the start month for a revision). Mark \"prorated\" for months where a mid-period hire, transfer or new allowance means a full month was not paid (that month is not used as a start month; counting begins the next month). Payment basis days are calendar days for monthly pay, days worked for daily pay, and total hours ÷ daily scheduled hours for hourly pay. For months where a retroactive pay cut was deducted, enter the amount before the deduction. One-off or up-to-three-times-a-year payments (e.g. a sign-on allowance or year-end allowance) do not go into payroll records; register them as bonuses (bonus payment report). Monthly allowances go into payroll records even if they share a payslip line with such payments."
       },
       "inKind": {
         "title": "Remuneration provided in kind (housing, dormitories, meals)",
