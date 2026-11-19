@@ -117,6 +117,8 @@ export interface AcquireInput {
   hasDependents: boolean | null;
   /** 取得日の区分が短時間労働者 */
   shortTime: boolean;
+  /** 資格取得時の賞与に係る報酬（同様の賞与を受ける者の平均。通貨に足す。局部長通知 2(2)。11/19） */
+  bonusMonthly?: number;
 }
 
 const ACQUISITION_TYPE: Record<FilingEmployee['acquisitionType'], string> = {
@@ -129,7 +131,8 @@ export function acquireRow(x: AcquireInput): FilingRow | null {
   const e = x.employee;
   const date = acquiredDateOf(e);
   if (!date) return null;
-  const ex = x.expected;
+  const bonus = x.bonusMonthly ?? 0;
+  const ex = x.expected ? { cash: x.expected.cash + bonus, inKind: x.expected.inKind } : null;
   return {
     ...person(e),
     kind: kindCode(e.sex, x.pensionFund),
@@ -146,6 +149,7 @@ export function acquireRow(x: AcquireInput): FilingRow | null {
       x.shortTime && '3．短時間労働者の取得（特定適用事業所等）',
       e.rehired && '4．退職後の継続再雇用者の取得',
       !!e.optInDate && '6．特定減額特例対象者の任意取得',
+      bonus > 0 && !!ex && `その他（賞与に係る報酬 ${yen(bonus)}円を含む）`,
     ]),
     confirmationCard: e.needsConfirmationCard ? '発行が必要' : '',
     dateIso: date,

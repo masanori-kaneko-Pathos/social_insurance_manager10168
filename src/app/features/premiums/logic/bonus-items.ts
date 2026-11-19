@@ -112,6 +112,8 @@ export function withRename(before: ItemLike | null, after: ItemLike): ItemLike {
 /**
  * 扱いを変える
  * - まだ支給に使っていない項目：最初から（fromYear 0）の1つに置き換える
+ *   ただし「年4回以上の賞与」は、規程を新しく作ったなら次の定時決定までは賞与（課長通知 1(3)・令和5年 Q&A Q4）
+ *   → 前からある規程（ruleExisted）でなければ、それまでは「回数で判定」にしておく（11/19）
  * - 使っている項目：次の定時決定の年から。同じ年の変更は上書き、今と同じなら何もしない
  */
 export function withTreatment(
@@ -119,8 +121,13 @@ export function withTreatment(
   treatment: BonusTreatment,
   used: boolean,
   today: DateStr,
+  ruleExisted = false,
 ): BonusTreatmentPeriod[] {
-  if (!used || treatments.length === 0) return [{ fromYear: 0, treatment }];
+  if (!used || treatments.length === 0) {
+    return treatment === 'remuneration' && !ruleExisted
+      ? [{ fromYear: 0, treatment: 'count' }, { fromYear: nextDecisionYear(today), treatment }]
+      : [{ fromYear: 0, treatment }];
+  }
   const from = nextDecisionYear(today);
   const kept = treatments.filter((t) => t.fromYear < from);
   if (treatmentAt({ treatments: kept }, from) === treatment) return kept.length > 0 ? kept : [{ fromYear: 0, treatment }];

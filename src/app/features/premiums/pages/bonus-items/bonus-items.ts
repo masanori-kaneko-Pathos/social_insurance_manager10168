@@ -27,6 +27,8 @@ interface Draft {
   labels: string;
   treatment: BonusTreatment;
   plannedCount: string;
+  /** 「年4回以上の賞与」の規程が前からある（新しく作った規程なら、次の定時決定までは賞与。11/19） */
+  ruleExisted: boolean;
 }
 
 /** 支給に出てくるが、どの項目にも入っていない名前（11/19） */
@@ -146,7 +148,7 @@ export class BonusItems {
   startNew(name = ''): void {
     this.savedName.set(null);
     this.formErrors.set([]);
-    this.draft.set({ id: null, name, labels: '', treatment: 'count', plannedCount: '' });
+    this.draft.set({ id: null, name, labels: '', treatment: 'count', plannedCount: '', ruleExisted: false });
   }
 
   setJoinTarget(name: string, itemId: string): void {
@@ -186,6 +188,7 @@ export class BonusItems {
       labels: it.labels.join('、'),
       treatment: currentTreatment(it)?.treatment ?? 'count',
       plannedCount: it.plannedCount === null ? '' : String(it.plannedCount),
+      ruleExisted: treatmentAt(it, 0) === 'remuneration',
     });
   }
 
@@ -209,7 +212,7 @@ export class BonusItems {
       name: d.name.trim(),
       labels: parseLabels(d.labels, d.name),
       plannedCount: count,
-      treatments: withTreatment(before?.treatments ?? [], d.treatment, this.draftUsed(), this.today),
+      treatments: withTreatment(before?.treatments ?? [], d.treatment, this.draftUsed(), this.today, d.ruleExisted),
     });
     const errors: (ItemError | 'labelInUse')[] = validateItem(
       input,

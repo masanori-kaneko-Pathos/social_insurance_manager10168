@@ -34,7 +34,7 @@ import { WageChangeCard, WageChangeRow } from '../../components/wage-change-card
 import { DecisionNoticeCard } from '../../../premiums/components/decision-notice-card/decision-notice-card';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
 import { BonusService } from '../../../premiums/bonus.service';
-import { bonusRemunerationOf } from '../../../premiums/logic/bonus-nature';
+import { bonusRemunerationOf, enrolledFromOf } from '../../../premiums/logic/bonus-nature';
 
 interface View {
   key: string; // 行の目印（従業員ID・種類・起算月）
@@ -145,7 +145,7 @@ export class RevisionsPage {
       const wageRows: WageChangeRow[] = [];
       for (const { e, payrolls, remunerations, contracts, wageChanges } of perPerson) {
         const byMonth = new Map(payrolls.map((p: Payroll): [string, Payroll] => [p.paidMonth, p]));
-        const bonusMonthlyFor = (y: number) => bonusRemunerationOf(e.id, y, bonusPayments).monthly;
+        const bonusMonthlyFor = (y: number) => bonusRemunerationOf(e.id, y, bonusPayments, enrolledFromOf(e)).monthly;
         const items = revisionItems(
           { employee: e, contracts, payrolls: byMonth, remunerations, wageChanges, bonusMonthlyFor },
           ctx,

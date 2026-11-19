@@ -30,6 +30,7 @@ import { BonusService } from '../../../premiums/bonus.service';
 import {
   BonusRemuneration,
   bonusRemunerationOf,
+  enrolledFromOf,
   NaturePaymentLike,
   monthlyOf,
   windowOf,
@@ -241,10 +242,10 @@ export class RegularPage {
             ...dayRulesOf({ employee, contracts: contracts[i] }, revisionCtx),
           };
           const decision = decisions.get(employee.id) ?? null;
-          const bonusAuto = bonusRemunerationOf(employee.id, year, bonusPayments);
+          const bonusAuto = bonusRemunerationOf(employee.id, year, bonusPayments, enrolledFromOf(employee));
           // 反映済みなら保存した額、まだなら7/1前1年の実績から出した額
           const bonusMonthly = decision?.bonusMonthly ?? bonusAuto.monthly;
-          const bonusMonthlyFor = (y: number) => bonusRemunerationOf(employee.id, y, bonusPayments).monthly;
+          const bonusMonthlyFor = (y: number) => bonusRemunerationOf(employee.id, y, bonusPayments, enrolledFromOf(employee)).monthly;
           return {
             employee,
             input,

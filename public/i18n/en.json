@@ -1120,7 +1120,9 @@
     "hint": {
       "amount": "Yen. Commas are optional."
     },
-    "pensionOff": "No employees' pension coverage in this month (age 70 or over, etc.), so no pension grade is chosen. Only health insurance premiums are calculated."
+    "pensionOff": "No employees' pension coverage in this month (age 70 or over, etc.), so no pension grade is chosen. Only health insurance premiums are calculated.",
+    "acquireBonus": "This office pays bonuses four or more times a year ({{natures}}). At acquisition, add the average of people receiving similar bonuses ({{people}} people, {{n}} yen) to the monthly amount.",
+    "acquireBonusAdd": "Add to monthly amount"
   },
   "premium": {
     "title": "Premiums (monthly)",
@@ -4494,13 +4496,15 @@
       "name": "Item name",
       "labels": "Import names",
       "treatment": "Social insurance",
-      "plannedCount": "Scheduled count per year"
+      "plannedCount": "Scheduled count per year",
+      "ruleExisted": "This rule already existed (paid 4+ times a year since before July 1 of {{year}})"
     },
     "hint": {
       "name": "The name chosen when entering a bonus. Renaming keeps past payments in this item.",
       "labels": "Names in your payroll software CSV, separated by commas.",
       "fromNextYear": "This item is already used, so the change applies from the {{year}} regular decision (July 1, {{year}}). Earlier payments keep the previous treatment.",
-      "plannedCount": "In the first year, if there are fewer payments than this, the annual amount is estimated as average × this count (editable in the regular decision)."
+      "plannedCount": "In the year the rule changes, if there are fewer payments than this, the \"would have received\" amount is estimated as average × this count (employees who joined mid-year and long-standing rules use actual amounts). Editable in the regular decision.",
+      "newRule": "Payments under a new rule stay bonuses until the next regular decision (payments from September {{year}}); a bonus report is filed. If 4+ payments are made before then, they count as remuneration by count."
     },
     "placeholder": {
       "labels": "Summer bonus, Winter bonus"
@@ -4519,7 +4523,7 @@
     "how": {
       "count": "Payments are counted per person and per item, regardless of their titles. Put summer and winter bonuses in the same item to count them together.",
       "labels": "Renaming moves the old name to import names. Items cannot be deleted.",
-      "change": "Counts use the year before July 1, so changes apply from the next July 1. Reports already filed do not change."
+      "change": "Counts use the year before July 1, so changes apply from the next July 1. Reports already filed do not change. New \"four or more per year\" rules also stay bonuses until the next regular decision."
     },
     "loose": {
       "title": "Names not set yet",

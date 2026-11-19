@@ -19,6 +19,9 @@ import { latest } from '../../../rates/logic/pick-rates';
 import { CapMark, withCapRevisions } from '../../../rates/logic/cap-revision';
 import { RateService } from '../../../rates/rate.service';
 import { RemunerationService } from '../../remuneration.service';
+import { EmployeeService } from '../../employee.service';
+import { BonusService } from '../../../premiums/bonus.service';
+import { acquireBonusRemunerationOf, AcquireBonusRemuneration } from '../../../premiums/logic/bonus-nature';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
@@ -38,7 +41,38 @@ export class RemunerationCard implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(RemunerationService);
   private readonly rates = inject(RateService);
+  private readonly employeesApi = inject(EmployeeService);
+  private readonly bonusApi = inject(BonusService);
   readonly context = inject(OfficeContext);
+
+  /**
+   * 資格取得時の賞与に係る報酬（年4回以上の賞与がある会社だけ。同様の賞与を受ける者の平均。局部長通知 2(2)。11/19）
+   * 追加の窓を開いたときに1回だけ読む（ふだんの詳細の画面では読まない）
+   */
+  readonly acquireBonus = signal<AcquireBonusRemuneration | null>(null);
+  private acquireBonusLoaded = false;
+  private async loadAcquireBonus(): Promise<void> {
+    const officeId = this.context.current()?.id;
+    const e = this.employee();
+    const date = e.health.acquiredDate ?? e.pension.acquiredDate;
+    if (this.acquireBonusLoaded || !officeId || !date) return;
+    this.acquireBonusLoaded = true;
+    try {
+      const [others, payments] = await Promise.all([this.employeesApi.list(officeId), this.bonusApi.list(officeId)]);
+      this.acquireBonus.set(acquireBonusRemunerationOf(e.id, date, others, payments));
+    } catch (err) {
+      console.error(err); // 読めなくても、報酬月額は手で入れられる
+    }
+  }
+
+  /** 報酬月額に、賞与に係る報酬の平均を足す */
+  addAcquireBonus(): void {
+    const b = this.acquireBonus();
+    if (!b) return;
+    const now = parseYen(this.form.controls.monthlyAmount.value) ?? 0;
+    this.form.controls.monthlyAmount.setValue(formatYen(now + b.monthly));
+    this.form.controls.monthlyAmount.markAsDirty();
+  }
 
   readonly employee = input.required<Employee>();
 
@@ -188,6 +222,7 @@ export class RemunerationCard implements OnInit {
     this.form.controls.from.enable();
     this.errorKey.set(null);
     this.editing.set('new');
+    void this.loadAcquireBonus();
   }
 
   startEdit(row: RemunerationDoc): void {

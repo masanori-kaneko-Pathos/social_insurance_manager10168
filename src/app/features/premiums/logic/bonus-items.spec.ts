@@ -43,17 +43,19 @@ describe('賞与の項目（11/19）', () => {
     expect(isRemunerationBonus('e1', p, [p])).toBe(false);
   });
 
-  it('年4回以上の賞与：回数を待たずに報酬。最初の年は 平均 × 規程の回数 を見込みにする', () => {
-    const items = [item('四半期インセンティブ', [], 'remuneration', 4)];
+  it('年4回以上の賞与：規程を変えた年は、平均 × 規程の回数を見込みにする（規程がずっと続く項目・途中入社は実績。bonus-scenarios.spec）', () => {
+    const items = [{ name: '四半期インセンティブ', labels: [], plannedCount: 4, treatments: [{ fromYear: 0, treatment: 'count' as const }, { fromYear: 2026, treatment: 'remuneration' as const }] }];
     const pays = resolveItems(
       [
         { id: 'a', paidDate: '2025-09-30', amounts: { e1: 60000 }, nature: '四半期インセンティブ' },
         { id: 'b', paidDate: '2025-12-26', amounts: { e1: 90000 }, nature: '四半期インセンティブ' },
+        { id: 'c', paidDate: '2026-09-30', amounts: { e1: 75000 }, nature: '四半期インセンティブ' },
       ],
       items,
       '賞与',
     );
-    expect(isRemunerationBonus('e1', pays[0], pays)).toBe(true);
+    expect(isRemunerationBonus('e1', pays[0], pays)).toBe(false); // 次の定時決定までは賞与
+    expect(isRemunerationBonus('e1', pays[2], pays)).toBe(true);
     const r = bonusRemunerationOf('e1', 2026, pays);
     expect(r.natures[0].estimated).toBe(true);
     expect(r.annual).toBe(300000); // (60,000 + 90,000) ÷ 2回 × 4回

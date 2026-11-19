@@ -56,6 +56,13 @@
           }
         </div>
       </div>
+      <!-- 資格取得時：年4回以上の賞与がある会社なら、賞与に係る報酬の平均を足す（局部長通知 2(2)。11/19） -->
+      @if (form.controls.reason.value === 'acquisition' && editing() === 'new' && acquireBonus(); as b) {
+        <p class="hint warn acquire-bonus">
+          {{ 'remuneration.acquireBonus' | transloco: { natures: b.natures.join('・'), n: yen(b.monthly), people: b.people } }}
+          <button type="button" class="btn btn-small" (click)="addAcquireBonus()">{{ 'remuneration.acquireBonusAdd' | transloco }}</button>
+        </p>
+      }
 
       <div class="grid">
         @for (k of kinds; track k) {

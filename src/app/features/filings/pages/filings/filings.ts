@@ -29,7 +29,7 @@ import { RevisionService } from '../../../payrolls/revision.service';
 import { BonusService } from '../../../premiums/bonus.service';
 import { eligibleOn } from '../../../premiums/logic/bonus-rows';
 import { isOver70Employee } from '../../../employees/logic/coverage';
-import { bonusRemunerationOf, irregularBonusYearOf, isNotCovered, isRemunerationBonus } from '../../../premiums/logic/bonus-nature';
+import { acquireBonusRemunerationOf, bonusRemunerationOf, enrolledFromOf, irregularBonusYearOf, isNotCovered, isRemunerationBonus } from '../../../premiums/logic/bonus-nature';
 import {
   acquiredDateOf,
   acquireRow,
@@ -195,7 +195,7 @@ export class FilingsPage {
       return !!d && d >= from && d <= to;
     });
     if (targets.length === 0) return [];
-    const criteria = await this.criteriaApi.list();
+    const [criteria, bonusPayments] = await Promise.all([this.criteriaApi.list(), this.bonusApi.list(officeId)]);
     const rows = await Promise.all(
       targets.map(async (e) => {
         const [contracts, dependents] = await Promise.all([
@@ -216,6 +216,8 @@ export class FilingsPage {
           expected: c ? { cash: c.expectedCash, inKind: c.expectedInKind } : null,
           hasDependents: dependents === null ? null : dependents.length > 0,
           shortTime: category === 'shortTime',
+          // 年4回以上の賞与がある会社：同様の賞与を受ける者の賞与に係る報酬の平均を、報酬月額に足す（11/19）
+          bonusMonthly: acquireBonusRemunerationOf(e.id, date, this.employees!, bonusPayments)?.monthly ?? 0,
         });
       }),
     );
@@ -291,7 +293,12 @@ export class FilingsPage {
     // 年4回以上の賞与（賞与に係る報酬）：随時改定で足した額を、支給の記録から出し直す（11/19）
     const bonusPayments = decisions.length > 0 ? await this.bonusApi.list(officeId) : [];
     const bonusOf = (employeeId: string, revisedFrom: string) =>
-      bonusRemunerationOf(employeeId, irregularBonusYearOf(revisedFrom), bonusPayments);
+      bonusRemunerationOf(
+        employeeId,
+        irregularBonusYearOf(revisedFrom),
+        bonusPayments,
+        byId.has(employeeId) ? enrolledFromOf(byId.get(employeeId)!) : null,
+      );
     const bonusMonthlyOf = (employeeId: string, revisedFrom: string) => bonusOf(employeeId, revisedFrom).monthly;
     // 特例改定：初月の1か月分だけ（月額変更届（特例改定用）。支払基礎日数は記録した日数。下がったときは勤務しなかった日も含む）
     const specialRows = Promise.all(

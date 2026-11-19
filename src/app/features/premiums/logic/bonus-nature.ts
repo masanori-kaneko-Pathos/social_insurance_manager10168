@@ -117,13 +117,19 @@ export interface BonusRemuneration {
   months: number[];
 }
 
-/** 定時決定（Y）で報酬月額に足す「賞与に係る報酬」 */
+/**
+ * 定時決定（Y）で報酬月額に足す「賞与に係る報酬」
+ * enrolledFrom：その人が被保険者になった日（11/19）。7月1日前の1年の途中から入った人は、
+ * 規程を変えた年でも「受けたであろう額」にせず、実際に受けた額 ÷ 12 にする（局部長通知 2(1)ア）
+ */
 export function bonusRemunerationOf(
   employeeId: string,
   year: number,
   payments: readonly NaturePaymentLike[],
+  enrolledFrom: DateStr | null = null,
 ): BonusRemuneration {
   const w = windowOf(year);
+  const wholeYear = !enrolledFrom || enrolledFrom <= w.from;
   const byNature = new Map<string, NatureTotal>();
   const forced = new Map<string, number | null>(); // 扱いが「年4回以上の賞与」のまとまり → 規程の回数
   for (const p of payments) {
@@ -131,7 +137,12 @@ export function bonusRemunerationOf(
     const treatment = treatmentAt(p.rule, year);
     if (treatment === 'none') continue;
     const n = natureOf(p);
-    if (treatment === 'remuneration') forced.set(n, p.rule?.plannedCount ?? null);
+    // 見込み（受けたであろう額）は、規程を変えてこの年から報酬になった項目で、1年まるごと被保険者だった人だけ
+    // （規程がずっと続いている項目・途中で入った人は、実際に受けた額 ÷ 12。局部長通知 2(1)ア・イ。11/19）
+    if (treatment === 'remuneration') {
+      const changedThisYear = treatmentAt(p.rule, year - 1) !== 'remuneration';
+      forced.set(n, changedThisYear && wholeYear ? (p.rule?.plannedCount ?? null) : null);
+    }
     const t = byNature.get(n) ?? { nature: n, count: 0, total: 0 };
     if (countAsOf(p) === 'normal') t.count++;
     t.total += (p.amounts[employeeId] ?? 0) + (p.inKindAmounts?.[employeeId] ?? 0);
@@ -163,6 +174,15 @@ export function bonusRemunerationOf(
   return { year, natures, annual, monthly: monthlyOf(annual), months: [...new Set(months)] };
 }
 
+/** 被保険者になった日（健保と厚年の早いほう。どちらもなければ null）：bonusRemunerationOf の enrolledFrom に渡す（11/19） */
+export function enrolledFromOf(e: {
+  health: { acquiredDate: DateStr | null };
+  pension: { acquiredDate: DateStr | null };
+}): DateStr | null {
+  const ds = [e.health.acquiredDate, e.pension.acquiredDate].filter((d): d is DateStr => !!d).sort();
+  return ds[0] ?? null;
+}
+
 /** 年額 ÷ 12（1円未満切り捨て） */
 export function monthlyOf(annual: number): number {
   return Math.floor(Math.max(0, annual) / 12);
@@ -176,4 +196,39 @@ export function monthlyOf(annual: number): number {
 export function irregularBonusYearOf(revisedFrom: string): number {
   const y = Number(revisedFrom.slice(0, 4));
   return Number(revisedFrom.slice(5, 7)) >= 7 ? y : y - 1;
+}
+
+/** 資格取得時の賞与に係る報酬（局部長通知 2(2)。11/19） */
+export interface AcquireBonusRemuneration {
+  /** 平均（1円未満切り捨て）。報酬月額に足す額 */
+  monthly: number;
+  /** 平均に使った人数 */
+  people: number;
+  /** 報酬になっている賞与の項目（性質）の名前 */
+  natures: string[];
+}
+
+/**
+ * 資格取得時の賞与に係る報酬：同様の業務に従事し、同様の賞与を受ける者の賞与に係る報酬の平均
+ * - 取得日に効いている定時決定の年（periodYearOf）で、賞与に係る報酬がある人（本人以外）の月額の平均
+ * - 「同様の業務」はアプリでは決められないので、画面で直してもらう（ここでは同じ事業所の全員の平均を初期値にする）
+ * - 該当する人がいなければ null
+ */
+export function acquireBonusRemunerationOf(
+  employeeId: string,
+  acquiredDate: DateStr,
+  others: readonly { id: string; health: { acquiredDate: DateStr | null }; pension: { acquiredDate: DateStr | null } }[],
+  payments: readonly NaturePaymentLike[],
+): AcquireBonusRemuneration | null {
+  const year = periodYearOf(acquiredDate);
+  const list = others
+    .filter((o) => o.id !== employeeId)
+    .map((o) => bonusRemunerationOf(o.id, year, payments, enrolledFromOf(o)))
+    .filter((r) => r.monthly > 0);
+  if (list.length === 0) return null;
+  return {
+    monthly: Math.floor(list.reduce((s, r) => s + r.monthly, 0) / list.length),
+    people: list.length,
+    natures: [...new Set(list.flatMap((r) => r.natures.map((n) => n.nature)))].sort((a, b) => a.localeCompare(b, 'ja')),
+  };
 }
