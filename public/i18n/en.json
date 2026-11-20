@@ -1140,7 +1140,7 @@
       "amount": "Yen. Commas are optional."
     },
     "pensionOff": "No employees' pension coverage in this month (age 70 or over, etc.), so no pension grade is chosen. Only health insurance premiums are calculated.",
-    "acquireBonus": "This office pays bonuses four or more times a year ({{natures}}). At acquisition, add the average of people receiving similar bonuses ({{people}} people, {{n}} yen) to the monthly amount.",
+    "acquireBonus": "This office pays bonuses four or more times a year ({{natures}}). At acquisition, add the average bonus-related remuneration of people in similar work receiving similar bonuses. The amount below is the average of everyone receiving it in this office ({{people}} people, {{n}} yen). To exclude people in different work, adjust the monthly amount by hand after adding (then write the filing remark yourself).",
     "acquireBonusAdd": "Add to monthly amount"
   },
   "premium": {

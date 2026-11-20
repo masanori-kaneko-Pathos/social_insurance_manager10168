@@ -14,6 +14,7 @@ import { RateService } from '../../../rates/rate.service';
 import { BonusService } from '../../bonus.service';
 import { DecisionNoticeService, NoticeItem } from '../../decision-notice.service';
 import { buildBonusRow } from '../../logic/bonus-rows';
+import { recipientsOf } from '../../logic/bonus-nature';
 import { PENSION_BONUS_CAP_PER_MONTH } from '../../logic/calc-bonus';
 import {
   bonusDecisionTextJa,
@@ -196,9 +197,9 @@ export class DecisionNoticeCard implements OnInit {
     const byId = new Map(employees.map((e) => [e.id, e]));
     const rows: Row[] = [];
     for (const p of payments.filter((x) => x.paidDate.startsWith(month))) {
-      for (const [id, amount] of Object.entries(p.amounts)) {
+      for (const id of recipientsOf(p)) {
         const e = byId.get(id);
-        if (!e || !(amount > 0)) continue;
+        if (!e) continue;
         const row = buildBonusRow(e, payments, p.paidDate, ctx);
         const r = row.result;
         if (!r || !(row.state === 'ok' || row.state === 'counted' || row.state === 'exempt')) continue;

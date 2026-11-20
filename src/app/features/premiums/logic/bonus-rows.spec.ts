@@ -226,3 +226,18 @@ describe('75歳以上の70歳以上被用者の賞与（11/19）', () => {
     expect(r.over70).toBeTrue();
   });
 });
+
+describe('現物の賞与（11/20）', () => {
+  it('通貨 300,000＋現物 50,000 → 賞与額 350,000 で計算する', async () => {
+    const { bonusesOf } = await import('./bonus-rows');
+    expect(bonusesOf('a', [{ id: 'p', paidDate: '2026-07-10', amounts: { a: 300000 }, inKindAmounts: { a: 50000 } }])).toEqual([
+      { paidDate: '2026-07-10', amount: 350000 },
+    ]);
+  });
+  it('現物だけの支給も賞与として数える', async () => {
+    const { bonusesOf } = await import('./bonus-rows');
+    expect(bonusesOf('a', [{ id: 'p', paidDate: '2026-07-10', amounts: {}, inKindAmounts: { a: 80000 } }])).toEqual([
+      { paidDate: '2026-07-10', amount: 80000 },
+    ]);
+  });
+});

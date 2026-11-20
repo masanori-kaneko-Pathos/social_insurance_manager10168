@@ -39,7 +39,7 @@ import {
   itemNameOf,
   sortBonusRows,
 } from '../../logic/bonus-list-view';
-import { DEFAULT_NATURE } from '../../logic/bonus-nature';
+import { bonusTotalOf, DEFAULT_NATURE, recipientsOf } from '../../logic/bonus-nature';
 
 /** 開いた支給の、1人ずつの行 */
 interface PersonRow {
@@ -93,8 +93,9 @@ export class BonusList {
       const c = collectBonusResults(this.employees(), payments, ctx, (d) => d === payment.paidDate);
       return {
         payment,
-        people: Object.values(payment.amounts).filter((n) => n > 0).length,
-        amountYen: Object.values(payment.amounts).reduce((s, n) => s + (n > 0 ? n : 0), 0),
+        // 通貨＋現物（11/20）
+        people: recipientsOf(payment).length,
+        amountYen: recipientsOf(payment).reduce((s, id) => s + bonusTotalOf(payment, id), 0),
         totalYen: officeTotals(c.results).reduce((s, t) => s + t.totalYen, 0),
         problems: c.problemCount,
       };
@@ -181,7 +182,7 @@ export class BonusList {
       insurerOf: insurerKeyOf(office),
       options: premiumOf(office),
     };
-    const list = this.employees().filter((e) => (payment.amounts[e.id] ?? 0) > 0);
+    const list = this.employees().filter((e) => bonusTotalOf(payment, e.id) > 0);
     return filterAndSort(
       list,
       this.peopleOptions(),
@@ -190,7 +191,7 @@ export class BonusList {
       () => false,
     ).map((employee) => ({
       employee,
-      amount: payment.amounts[employee.id],
+      amount: bonusTotalOf(payment, employee.id),
       row: buildBonusRow(employee, payments, payment.paidDate, ctx),
     }));
   });

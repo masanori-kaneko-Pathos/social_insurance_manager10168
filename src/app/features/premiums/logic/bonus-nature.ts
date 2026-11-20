@@ -73,7 +73,23 @@ export function windowOf(year: number): { from: DateStr; to: DateStr } {
   return { from: `${year - 1}-07-01`, to: `${year}-06-30` };
 }
 
-const paidTo = (employeeId: string, p: NaturePaymentLike) => (p.amounts[employeeId] ?? 0) > 0;
+/**
+ * その人の賞与額＝通貨＋現物（11/20）
+ * 現物で払った賞与も標準賞与額の対象（健保法45条・厚年法24条の4。賞与支払届の「通貨」「現物」の合計）
+ * 計算・回数・人数はすべてこの額で見る（現物だけの支給も「払った」）
+ */
+export function bonusTotalOf(p: Pick<NaturePaymentLike, 'amounts' | 'inKindAmounts'>, employeeId: string): number {
+  const cash = p.amounts[employeeId] ?? 0;
+  const inKind = p.inKindAmounts?.[employeeId] ?? 0;
+  return (cash > 0 ? cash : 0) + (inKind > 0 ? inKind : 0);
+}
+
+/** 支給を受けた人（通貨か現物のどちらかが 0 円より多い） */
+export function recipientsOf(p: Pick<NaturePaymentLike, 'amounts' | 'inKindAmounts'>): string[] {
+  return [...new Set([...Object.keys(p.amounts), ...Object.keys(p.inKindAmounts ?? {})])].filter((id) => bonusTotalOf(p, id) > 0);
+}
+
+const paidTo = (employeeId: string, p: NaturePaymentLike) => bonusTotalOf(p, employeeId) > 0;
 const inWindow = (p: NaturePaymentLike, w: { from: DateStr; to: DateStr }) => p.paidDate >= w.from && p.paidDate <= w.to;
 
 /** Y年7月1日前の1年に、その人がその性質の支給を受けた回数（分割の続き・その年限りは数えない） */
@@ -145,7 +161,7 @@ export function bonusRemunerationOf(
     }
     const t = byNature.get(n) ?? { nature: n, count: 0, total: 0 };
     if (countAsOf(p) === 'normal') t.count++;
-    t.total += (p.amounts[employeeId] ?? 0) + (p.inKindAmounts?.[employeeId] ?? 0);
+    t.total += bonusTotalOf(p, employeeId);
     byNature.set(n, t);
   }
   const natures = [...byNature.values()]

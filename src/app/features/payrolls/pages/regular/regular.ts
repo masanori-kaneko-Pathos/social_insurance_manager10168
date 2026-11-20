@@ -27,6 +27,7 @@ import {
   remunerationAt,
 } from '../../logic/regular';
 import { BonusService } from '../../../premiums/bonus.service';
+import { bonusTotalOf } from '../../../premiums/logic/bonus-nature';
 import {
   BonusRemuneration,
   bonusRemunerationOf,
@@ -487,7 +488,7 @@ function bonusCountOf(employeeId: string, year: number, payments: readonly Natur
   const w = windowOf(year);
   return payments.filter(
     (p) =>
-      (p.amounts[employeeId] ?? 0) > 0 &&
+      bonusTotalOf(p, employeeId) > 0 &&
       (p.countAs ?? 'normal') === 'normal' &&
       p.paidDate >= w.from &&
       p.paidDate <= w.to,

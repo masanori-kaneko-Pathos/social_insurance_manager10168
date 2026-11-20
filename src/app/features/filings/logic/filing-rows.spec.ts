@@ -272,3 +272,13 @@ describe('賞与支払届', () => {
     expect(r['remarks']).toBe('3．同一月内の賞与合算（初回支払日：5日）');
   });
 });
+
+describe('addedAcquireBonus：取得届に賞与に係る報酬を足すか（11/20）', () => {
+  it('決定の額が「見込み＋平均」なら足す。見込みのままなら足さない', async () => {
+    const { addedAcquireBonus } = await import('./filing-rows');
+    expect(addedAcquireBonus(260000, 240000, 20000)).toBe(20000);
+    expect(addedAcquireBonus(240000, 240000, 20000)).toBe(0);
+    expect(addedAcquireBonus(null, 240000, 20000)).toBe(0);
+    expect(addedAcquireBonus(260000, 240000, 0)).toBe(0);
+  });
+});

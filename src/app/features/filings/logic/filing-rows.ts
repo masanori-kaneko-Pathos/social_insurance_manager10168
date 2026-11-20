@@ -443,3 +443,13 @@ export function toCells(kind: FilingKind, row: FilingRow): string[] {
 export function filingFileName(label: string, period: string, today: DateStr): string {
   return `${label}_${period}_${today}.csv`;
 }
+
+/**
+ * 資格取得時決定の報酬月額に、賞与に係る報酬の平均を足してあるか（足してあればその額、なければ 0。11/20）
+ * 「同様の業務に従事し、同様の賞与を受ける者」はアプリでは決められないので、届に自動では足さない。
+ * 報酬月額のカードで［報酬月額に足す］を押した（決定の額 ＝ 契約の見込み ＋ 平均）ときだけ、届にも足す
+ */
+export function addedAcquireBonus(decided: number | null, expected: number | null, average: number): number {
+  if (average <= 0 || decided == null || expected == null) return 0;
+  return decided - expected === average ? average : 0;
+}

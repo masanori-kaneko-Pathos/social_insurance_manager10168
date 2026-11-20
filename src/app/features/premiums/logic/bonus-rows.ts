@@ -15,7 +15,7 @@ import { DateStr, YearMonth } from '../../../shared/utils/date';
 import { EmployeeBonus, bonusStatus, calcBonuses, PriorBonusHolder } from './calc-bonus';
 import { PremiumSplit, splitContribution } from './premium-core';
 import { LeaveHolder } from '../../employees/logic/leave';
-import { countOf, isNotCovered, isRemunerationBonus, NaturePaymentLike, natureOf, periodYearOf } from './bonus-nature';
+import { bonusTotalOf, countOf, isNotCovered, isRemunerationBonus, NaturePaymentLike, natureOf, periodYearOf } from './bonus-nature';
 
 /** 計算に使う支給の形（BonusPayment をそのまま渡せる。性質・数え方は年4回以上の判定に使う。11/19） */
 export type BonusPaymentLike = NaturePaymentLike;
@@ -37,8 +37,9 @@ const HEALTH_PARTS: PremiumPart[] = ['health', 'care', 'childSupport'];
 export function bonusesOf(employeeId: string, payments: BonusPaymentLike[]): EmployeeBonus[] {
   const list: EmployeeBonus[] = [];
   for (const p of payments) {
-    const amount = p.amounts[employeeId];
-    if (amount && amount > 0 && !isNotCovered(p) && !isRemunerationBonus(employeeId, p, payments))
+    // 通貨＋現物（現物の賞与も標準賞与額に入る。11/20）
+    const amount = bonusTotalOf(p, employeeId);
+    if (amount > 0 && !isNotCovered(p) && !isRemunerationBonus(employeeId, p, payments))
       list.push({ paidDate: p.paidDate, amount });
   }
   return list;
@@ -157,7 +158,7 @@ export function buildBonusRow(
   return {
     ...(result ? splitContribution(result) : EMPTY_SPLIT),
     state:
-      payment && (payment.amounts[employee.id] ?? 0) > 0 && isNotCovered(payment)
+      payment && bonusTotalOf(payment, employee.id) > 0 && isNotCovered(payment)
         ? 'notCovered'
         : remuneration
           ? 'remuneration'
@@ -190,7 +191,7 @@ export function collectBonusResults(
   const results: BonusPremiumResult[] = [];
   let problemCount = 0;
   for (const e of employees) {
-    const hasAny = payments.some((p) => pick(p.paidDate) && (p.amounts[e.id] ?? 0) > 0);
+    const hasAny = payments.some((p) => pick(p.paidDate) && bonusTotalOf(p, e.id) > 0);
     if (!hasAny) continue;
     const calc = calcFor(e, payments, ctx);
     if (calc.error) {
@@ -234,7 +235,7 @@ export function bonusResultsByEmployee(
 ): Map<string, BonusPremiumResult[]> {
   const map = new Map<string, BonusPremiumResult[]>();
   for (const e of employees) {
-    if (!payments.some((p) => pick(p.paidDate) && (p.amounts[e.id] ?? 0) > 0)) continue;
+    if (!payments.some((p) => pick(p.paidDate) && bonusTotalOf(p, e.id) > 0)) continue;
     const calc = calcFor(e, payments, ctx);
     if (calc.error) continue;
     const list = calc.results.filter((r) => pick(r.paidDate) && r.missing.length === 0);

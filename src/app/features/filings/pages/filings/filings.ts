@@ -30,26 +30,8 @@ import { BonusService } from '../../../premiums/bonus.service';
 import { DecisionNoticeCard } from '../../../premiums/components/decision-notice-card/decision-notice-card';
 import { eligibleOn } from '../../../premiums/logic/bonus-rows';
 import { isOver70Employee } from '../../../employees/logic/coverage';
-import { acquireBonusRemunerationOf, bonusRemunerationOf, enrolledFromOf, irregularBonusYearOf, isNotCovered, isRemunerationBonus } from '../../../premiums/logic/bonus-nature';
-import {
-  acquiredDateOf,
-  acquireRow,
-  bonusRow,
-  FILING_COLUMNS,
-  FILING_KINDS,
-  filingFileName,
-  FilingKind,
-  FilingRow,
-  mergeSameMonth,
-  irregularRemarks,
-  specialRemarks,
-  specialRow,
-  lossesIn,
-  lossRow,
-  regularRemarks,
-  revisionRow,
-  toCells,
-} from '../../logic/filing-rows';
+import { acquireBonusRemunerationOf, bonusRemunerationOf, enrolledFromOf, irregularBonusYearOf, isNotCovered, isRemunerationBonus, recipientsOf } from '../../../premiums/logic/bonus-nature';
+import { acquiredDateOf, acquireRow, addedAcquireBonus, bonusRow, FILING_COLUMNS, FILING_KINDS, filingFileName, FilingKind, FilingRow, irregularRemarks, lossesIn, lossRow, mergeSameMonth, regularRemarks, revisionRow, specialRemarks, specialRow, toCells } from '../../logic/filing-rows';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /**
@@ -199,9 +181,10 @@ export class FilingsPage {
     const [criteria, bonusPayments] = await Promise.all([this.criteriaApi.list(), this.bonusApi.list(officeId)]);
     const rows = await Promise.all(
       targets.map(async (e) => {
-        const [contracts, dependents] = await Promise.all([
+        const [contracts, dependents, rems] = await Promise.all([
           this.contractsApi.list(officeId, e.id),
           this.dependentsApi.list(officeId, e.id).catch(() => null),
+          this.remunerationsApi.list(officeId, e.id).catch(() => []),
         ]);
         const date = acquiredDateOf(e)!;
         const c = contractAt(contracts, date);
@@ -217,8 +200,14 @@ export class FilingsPage {
           expected: c ? { cash: c.expectedCash, inKind: c.expectedInKind } : null,
           hasDependents: dependents === null ? null : dependents.length > 0,
           shortTime: category === 'shortTime',
-          // 年4回以上の賞与がある会社：同様の賞与を受ける者の賞与に係る報酬の平均を、報酬月額に足す（11/19）
-          bonusMonthly: acquireBonusRemunerationOf(e.id, date, this.employees!, bonusPayments)?.monthly ?? 0,
+          // 年4回以上の賞与がある会社：賞与に係る報酬は「同様の業務に従事し、同様の賞与を受ける者」の平均（局部長通知 2(2)）
+          // だれが「同様」かはアプリでは決められないので、自動では足さない。報酬月額のカードで本人が［報酬月額に足す］を
+          // 押した（資格取得時決定の報酬月額 ＝ 契約の見込み ＋ 平均）ときだけ、届にも足して備考に書く（11/20）
+          bonusMonthly: addedAcquireBonus(
+            rems.find((r) => r.reason === 'acquisition' && r.from === date.slice(0, 7))?.monthlyAmount ?? null,
+            c ? c.expectedCash + c.expectedInKind : null,
+            acquireBonusRemunerationOf(e.id, date, this.employees!, bonusPayments)?.monthly ?? 0,
+          ),
         });
       }),
     );
@@ -384,17 +373,17 @@ export class FilingsPage {
       // 賞与の項目で「社会保険の対象外」にした支給（祝い金など）は届に出さない（11/19）
       .filter((p) => p.paidDate >= from && p.paidDate <= to && !isNotCovered(p))
       .flatMap((p) =>
-        Object.entries(p.amounts)
+        // 通貨か現物のどちらかを受けた人（現物だけの賞与も届に出す。11/20）
+        recipientsOf(p)
           // 年4回以上の「賞与に係る報酬」は賞与支払届を出さない（定時決定で報酬月額に足す。11/19）
           // 70歳以上被用者（75歳以上で健保もない人を含む）は保険料がなくても届を出す（厚生年金保険法27条。11/19）
           .filter(
-            ([id, amount]) =>
-              amount > 0 &&
+            (id) =>
               byId.has(id) &&
               (eligibleOn(byId.get(id)!, p.paidDate) || isOver70Employee(byId.get(id)!, p.paidDate)) &&
               !isRemunerationBonus(id, p, payments),
           )
-          .map(([id, amount]) => ({ employeeId: id, paidDate: p.paidDate, cash: amount, inKind: p.inKindAmounts?.[id] ?? 0 })),
+          .map((id) => ({ employeeId: id, paidDate: p.paidDate, cash: p.amounts[id] ?? 0, inKind: p.inKindAmounts?.[id] ?? 0 })),
       );
     // 同じ人・同じ月の賞与は1行に合算する（11/19）
     return mergeSameMonth(paid).map((m) => {

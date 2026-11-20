@@ -51,7 +51,7 @@ import { FROM_THE_START, insurerHistoryOf, insurerKeyOf } from '../../office/off
 import type { HealthInsurer, InsurerPeriod } from '../../../core/models/office';
 import { bonusStatus, healthBonusCapOf, priorHealthOf, PriorBonusHolder, standardBonusOf } from '../../premiums/logic/calc-bonus';
 import { bonusesOf, BonusPaymentLike } from '../../premiums/logic/bonus-rows';
-import { isNotCovered } from '../../premiums/logic/bonus-nature';
+import { isNotCovered, recipientsOf } from '../../premiums/logic/bonus-nature';
 import { CoverageInput, healthLostDate } from '../../employees/logic/coverage';
 
 export type ExtraKind =
@@ -457,14 +457,14 @@ export function overseasPayAbroadTodo(p: OverseasPerson, today: DateStr): ExtraT
 /** 先月・先々月が支払予定月で、その月にだれにも賞与を払っていなければ To-do（期限：予定月の翌月末日） */
 export function bonusNoneTodos(
   bonusMonths: readonly number[],
-  payments: readonly Pick<BonusPaymentLike, 'paidDate' | 'amounts' | 'rule'>[],
+  payments: readonly Pick<BonusPaymentLike, 'paidDate' | 'amounts' | 'inKindAmounts' | 'rule'>[],
   today: DateStr,
 ): ExtraTodo[] {
   const thisMonth = toYearMonth(today);
   // 社会保険の対象外の項目（祝い金など）だけを払った月は、賞与を払っていない扱い
   const paid = new Set(
     payments
-      .filter((p) => !isNotCovered(p) && Object.values(p.amounts).some((a) => a > 0))
+      .filter((p) => !isNotCovered(p) && recipientsOf(p).length > 0)
       .map((p) => toYearMonth(p.paidDate)),
   );
   const out: ExtraTodo[] = [];
@@ -481,14 +481,14 @@ export function bonusNoneTodos(
 /** 賞与を払った日ごとに「賞与支払届」（期限：支払日を含めて5日。60日より前の支払は出さない。11/20） */
 export const BONUS_REPORT_DAYS = 60;
 export function bonusReportTodos(
-  payments: readonly Pick<BonusPaymentLike, 'paidDate' | 'amounts' | 'rule'>[],
+  payments: readonly Pick<BonusPaymentLike, 'paidDate' | 'amounts' | 'inKindAmounts' | 'rule'>[],
   today: DateStr,
 ): ExtraTodo[] {
   const since = addDays(today, -BONUS_REPORT_DAYS);
   const people = new Map<DateStr, Set<string>>();
   for (const p of payments) {
     if (isNotCovered(p) || p.paidDate > today || p.paidDate < since) continue;
-    const ids = Object.entries(p.amounts).filter(([, a]) => a > 0).map(([id]) => id);
+    const ids = recipientsOf(p);
     if (ids.length === 0) continue;
     const set = people.get(p.paidDate) ?? new Set<string>();
     ids.forEach((id) => set.add(id));

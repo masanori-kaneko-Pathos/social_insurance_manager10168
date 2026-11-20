@@ -9,6 +9,7 @@ import { RateTables } from '../../../rates/logic/pick-rates';
 import { RateService } from '../../../rates/rate.service';
 import { BonusService } from '../../bonus.service';
 import { BonusRow, buildBonusRow } from '../../logic/bonus-rows';
+import { bonusTotalOf } from '../../logic/bonus-nature';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { fiscalYearOf, todayLocal, toYearMonth } from '../../../../shared/utils/date';
 import { parseYen } from '../../../rates/logic/grade';
@@ -51,10 +52,10 @@ export class BonusCard implements OnInit {
     const ctx = { ratesFor: ratesForOffice(office, tables), insurerOf: insurerKeyOf(office), options: premiumOf(office) };
     const payments = this.payments();
     return payments
-      .filter((p) => (p.amounts[e.id] ?? 0) > 0)
+      .filter((p) => bonusTotalOf(p, e.id) > 0)
       .map((payment) => ({
         payment,
-        amount: payment.amounts[e.id],
+        amount: bonusTotalOf(payment, e.id),
         ...buildBonusRow(e, payments, payment.paidDate, ctx),
       }));
   });
