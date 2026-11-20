@@ -128,3 +128,21 @@ tr.future td {
   opacity: 0.5;
   cursor: default;
 }
+
+/* 入れ忘れの札は、入力済み／在籍のすぐ左に右寄せ（11/20） */
+td.badge-cell {
+  text-align: right;
+  padding-right: 0;
+}
+
+/* 入力済み／在籍の列は中身の幅まで縮める（札を数字に近づける）。
+   ただし「9999 / 9999」が入る幅は残して、人数が多くても札と重ならないようにする（11/20） */
+th.saved-col,
+td.saved-col {
+  width: 1%;
+  white-space: nowrap;
+}
+td.saved-col {
+  min-width: 11ch;
+  font-variant-numeric: tabular-nums;
+}

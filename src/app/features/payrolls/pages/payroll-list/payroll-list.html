@@ -50,8 +50,10 @@
         <tr>
           <th>{{ 'payroll.col.paidMonth' | transloco }}</th>
           <th>{{ 'payroll.col.period' | transloco }}</th>
-          <th class="num">{{ 'payroll.col.saved' | transloco }}</th>
+          <!-- 給与の合計額（支払額＋現物）→ 入れ忘れの札 → 入力済み／在籍（数字は右端にそろえる。11/20） -->
+          <th class="num">{{ 'payroll.col.monthTotal' | transloco }}</th>
           <th></th>
+          <th class="num saved-col">{{ 'payroll.col.saved' | transloco }}</th>
         </tr>
       </thead>
       <tbody>
@@ -66,14 +68,25 @@
               }
             </td>
             <td class="mono">{{ md(r.period.start) }}〜{{ md(r.period.end) }}</td>
-            <td class="num">{{ r.saved }} / {{ r.employed }}</td>
-            <td>
+            <td class="num">
+              @if (r.saved === 0) {
+                <span class="muted">—</span>
+              } @else if (totals().get(r.month); as t) {
+                {{ yen(t) }}{{ 'payroll.sum.unit' | transloco }}
+              } @else if (totals().has(r.month)) {
+                0{{ 'payroll.sum.unit' | transloco }}
+              } @else {
+                <span class="muted">…</span>
+              }
+            </td>
+            <td class="badge-cell">
               @if (r.missing > 0) {
                 <span class="badge badge-warn">
                   {{ 'payroll.missingCount' | transloco: { count: r.missing } }}
                 </span>
               }
             </td>
+            <td class="num saved-col">{{ r.saved }} / {{ r.employed }}</td>
           </tr>
         }
       </tbody>

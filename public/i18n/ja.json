@@ -1685,7 +1685,8 @@
       "hours": "実労働時間",
       "prorated": "日割り",
       "state": "状態",
-      "total": "合計"
+      "total": "合計",
+      "monthTotal": "給与の合計額"
     },
     "tag": {
       "notSaved": "未入力",
@@ -1755,7 +1756,10 @@
     },
     "listRange": "{{fromY}}年{{fromM}}月〜{{toY}}年{{toM}}月",
     "sum": {
-      "label": "合計（絞り込んだ {{n}}人・うち支払額の入力 {{entered}}人）"
+      "label": "合計（絞り込んだ {{n}}人・うち支払額の入力 {{entered}}人）",
+      "all": "給与の合計額（全員）",
+      "unit": "円",
+      "allSub": "支払額＋現物・入力済み {{entered}} / {{n}}人"
     }
   },
   "regular": {

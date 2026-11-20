@@ -134,6 +134,29 @@ export class PayrollService {
     return out;
   }
 
+  /**
+   * 月ごとの給与の合計額（支払額＋現物。月の一覧の「合計額」の欄。11/20）
+   * 合計は索引に持たせず（取り込み・従業員のページなど、書く場所が多くてずれやすい）、その月の実績を読んで足す。
+   * 1か月 ＝ その月に入っている人の数だけ読む。一覧は件数を先に出し、合計はあとから埋める
+   */
+  async totalsByMonth(officeId: string, months: readonly string[]): Promise<Map<string, number>> {
+    const out = new Map<string, number>();
+    await Promise.all(
+      months.map(async (m) => {
+        const docs = await countedGetDocs(
+          query(collectionGroup(db, 'payrolls'), where('officeId', '==', officeId), where('paidMonth', '==', m)),
+        );
+        let sum = 0;
+        for (const d of docs.docs) {
+          const p = d.data() as Partial<PayrollInput>;
+          sum += (p.cash ?? 0) + (p.inKind ?? 0);
+        }
+        out.set(m, sum);
+      }),
+    );
+    return out;
+  }
+
   private strip(data: Record<string, unknown>): Payroll {
     // createdAt・updatedAt は画面で使わないので落とす
     const { createdAt: _c, updatedAt: _u, ...rest } = data;

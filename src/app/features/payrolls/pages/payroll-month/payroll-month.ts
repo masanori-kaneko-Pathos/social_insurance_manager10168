@@ -305,6 +305,17 @@ export class PayrollMonth {
   }
 
   /** 合計の列（支払額＋現物）。読めないときは「—」 */
+  /** この月の全員の合計（絞り込みに関係なく。見出しの右に出す。11/20） */
+  allSums() {
+    return sumPayrolls(
+      this.views().map((v) => ({
+        cash: v.form.controls.cash.value,
+        fixed: v.form.controls.fixed.value,
+        inKind: v.form.controls.inKind.value,
+      })),
+    );
+  }
+
   /** 絞り込んだ人全員の合計（ページをまたいで数える。入力中の値も入る。11/20） */
   sums() {
     return sumPayrolls(

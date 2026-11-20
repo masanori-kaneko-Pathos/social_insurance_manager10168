@@ -460,3 +460,35 @@ tfoot .sum-row > td.num {
   padding-right: calc(var(--space-md) + 1px);
   font-variant-numeric: tabular-nums;
 }
+
+/* 見出しの右：この月の全員の支払額の合計（11/20） */
+.month-total {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  margin-left: auto;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.month-total .label {
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.month-total strong {
+  font-size: var(--font-lg);
+  font-variant-numeric: tabular-nums;
+}
+
+.month-total .unit {
+  font-size: var(--font-sm);
+}
+
+.month-total small {
+  margin-left: var(--space-sm);
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}

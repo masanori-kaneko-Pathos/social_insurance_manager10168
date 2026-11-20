@@ -1685,7 +1685,8 @@
       "hours": "Hours worked",
       "prorated": "Prorated",
       "state": "Status",
-      "total": "Total"
+      "total": "Total",
+      "monthTotal": "Total pay"
     },
     "tag": {
       "notSaved": "Not entered",
@@ -1755,7 +1756,10 @@
     },
     "listRange": "{{fromM}}/{{fromY}} – {{toM}}/{{toY}}",
     "sum": {
-      "label": "Total ({{n}} filtered, {{entered}} with pay entered)"
+      "label": "Total ({{n}} filtered, {{entered}} with pay entered)",
+      "all": "Total pay (everyone)",
+      "unit": " yen",
+      "allSub": "Cash + in kind · entered {{entered}} / {{n}}"
     }
   },
   "regular": {

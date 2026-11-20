@@ -44,6 +44,8 @@ export class PayrollList {
   private readonly employees = signal<Employee[]>([]);
   /** 月 → その月に実績が入っている人（月の索引。読んだ月だけ入る） */
   private readonly savedIds = signal<ReadonlyMap<string, ReadonlySet<string>>>(new Map());
+  /** 月ごとの給与の合計額（支払額＋現物）。件数のあとから埋める（11/20） */
+  readonly totals = signal<Map<string, number>>(new Map());
   readonly loading = signal(true);
   readonly errorKey = signal<string | null>(null);
 
@@ -156,6 +158,18 @@ export class PayrollList {
     } finally {
       this.loading.set(false);
     }
+    // 合計額は件数を出したあとで読む（一覧を待たせない。読めなくても一覧はそのまま。11/20）
+    const need = months.filter((m) => !this.totals().has(m));
+    if (need.length > 0) {
+      this.payrollApi
+        .totalsByMonth(office.id, need)
+        .then((got) => this.totals.update((cur) => new Map([...cur, ...got])))
+        .catch((err) => console.error(err));
+    }
+  }
+
+  yen(n: number): string {
+    return n.toLocaleString('ja-JP');
   }
 
   /** '2026-10-01' → '10/1' */
