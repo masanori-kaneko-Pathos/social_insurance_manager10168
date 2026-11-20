@@ -407,6 +407,30 @@ h3 {
   padding-left: calc(var(--space-sm) + 0.8em);
 }
 
+/* 番号の分だけ目次の幅を広げる（長い見出しが折り返さないように。11/20） */
+.layout.with-toc {
+  grid-template-columns: 13.5em minmax(0, 760px);
+}
+
+/* 目次の欄に番号を付ける（上から順に入れていく案内。「あといくつ」「今どこ」が分かる。はじめの登録でも編集でも同じ。11/20） */
+.layout.with-toc .toc {
+  counter-reset: toc-step;
+}
+
+.layout.with-toc .toc a.sub {
+  counter-increment: toc-step;
+}
+
+.layout.with-toc .toc a.sub::before {
+  content: counter(toc-step) '.';
+  display: inline-block;
+  min-width: 1.5em;
+  margin-right: 0.3em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-sub);
+}
+
 /* 目次で飛んだとき、見出しが画面の端に貼り付きすぎないように */
 .page [id^='sec-'] {
   scroll-margin-top: var(--space-lg);
