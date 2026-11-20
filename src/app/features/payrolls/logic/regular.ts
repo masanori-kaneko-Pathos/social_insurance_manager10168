@@ -34,7 +34,8 @@ export interface Standards {
 }
 
 /** 1か月が平均に使えない理由（furloughResolved：7/1までに解消した一時帰休の月。11/19） */
-export type MonthSkip = 'noRecord' | 'shortDays' | 'partialAcquisition' | 'suspended' | 'furloughResolved';
+/** beforeAcquisition：給与の計算期間が資格を取る前に終わっている月（4/1入社・翌月払いの4月払いなど。払う給与がないので「未入力」ではない。11/20） */
+export type MonthSkip = 'noRecord' | 'beforeAcquisition' | 'shortDays' | 'partialAcquisition' | 'suspended' | 'furloughResolved';
 
 export interface MonthUse {
   month: string; // 支払った月
@@ -142,10 +143,14 @@ function useMonth(
   minDays: number = REGULAR_MIN_DAYS,
   bonusMonthly = 0,
 ): MonthUse {
-  if (!payroll) return { month, payroll: null, used: false, skip: 'noRecord', amount: 0, minDays };
+  const p = periodOf(month, schedule);
+  if (!payroll) {
+    // 計算期間が資格を取る前に終わっていれば、その月は払う給与がない（入社前）。除くだけで「未入力」にはしない（11/20）
+    const before = acquiredDate != null && acquiredDate > p.end;
+    return { month, payroll: null, used: false, skip: before ? 'beforeAcquisition' : 'noRecord', amount: 0, minDays };
+  }
   // 賞与に係る報酬は各月の報酬に足す（局部長通知 2(1)。算定基礎届も各月の額に足して書く）
   const amount = payTotal(payroll) + bonusMonthly;
-  const p = periodOf(month, schedule);
   let skip: MonthSkip | null = null;
   if (acquiredDate != null && acquiredDate > p.start && acquiredDate <= p.end) {
     skip = 'partialAcquisition'; // 保険者算定⑤
@@ -170,7 +175,7 @@ function useMonths(
   const bonus = x.bonusMonthly ?? 0;
   const months = list.map((m) => useMonth(m, x.payrolls.get(m), acquired, x.schedule, minDaysAt(m), bonus));
   const partAt = x.partAt;
-  if (!partAt || months.some((m) => m.used) || !months.every((m) => m.skip === 'noRecord' || partAt(m.month))) {
+  if (!partAt || months.some((m) => m.used) || !months.every((m) => m.skip === 'noRecord' || m.skip === 'beforeAcquisition' || partAt(m.month))) {
     return months;
   }
   return months.map((m) =>

@@ -93,6 +93,8 @@
                     @if (m.payroll.retro > 0) {
                       <div class="sub">{{ 'regular.retro' | transloco: { n: yen(m.payroll.retro) } }}</div>
                     }
+                  } @else if (m.skip === 'beforeAcquisition') {
+                    <div class="sub">—</div>
                   } @else {
                     <a [routerLink]="['/o', context.current()?.id, 'payrolls', m.month]">
                       {{ 'regular.noRecord' | transloco }}
@@ -197,7 +199,7 @@
                       @for (m of a.months; track m.month) {
                         <div class="am" [class.skipped]="!m.used">
                           <div class="sub">{{ m.month }}</div>
-                          <div>{{ m.payroll ? yen(m.amount) : ('regular.noRecord' | transloco) }}</div>
+                          <div>{{ m.payroll ? yen(m.amount) : m.skip === 'beforeAcquisition' ? '—' : ('regular.noRecord' | transloco) }}</div>
                         </div>
                       }
                     </div>

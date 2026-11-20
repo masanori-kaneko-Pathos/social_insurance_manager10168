@@ -175,6 +175,27 @@ describe('decideRegular：使う月', () => {
     expect(r.average).toBe(300000);
     expect(r.change).toBeNull(); // 従前がない
   });
+
+  it('翌月払い・4/1 取得：4月払い（3月分）は入社前なので未入力ではなく除く → 5・6月で平均（11/20）', () => {
+    const r = decideRegular(
+      input({
+        employee: emp('2027-04-01'),
+        remunerations: [],
+        payrolls: new Map([pay('2027-05', 240000), pay('2027-06', 250000)]),
+      }),
+    );
+    expect(r.months[0].skip).toBe('beforeAcquisition');
+    expect(r.status).toBe('decided');
+    expect(r.average).toBe(245000);
+  });
+
+  it('翌月払い・3/1 取得で4月払いがない → 入社後の月なので未入力（incomplete）のまま', () => {
+    const r = decideRegular(
+      input({ employee: emp('2027-03-01'), remunerations: [], payrolls: new Map([pay('2027-05', 240000), pay('2027-06', 250000)]) }),
+    );
+    expect(r.months[0].skip).toBe('noRecord');
+    expect(r.status).toBe('incomplete');
+  });
 });
 
 describe('decideRegular：休職の月', () => {

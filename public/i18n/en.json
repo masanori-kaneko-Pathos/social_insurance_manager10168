@@ -1789,6 +1789,7 @@
     "retro": "retro {{n}}",
     "noRecord": "Not entered",
     "skip": {
+      "beforeAcquisition": "* before joining",
       "shortDays": "* under {{n}} days",
       "partialAcquisition": "* joined mid-month",
       "suspended": "* on leave",

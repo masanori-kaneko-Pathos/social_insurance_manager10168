@@ -1789,6 +1789,7 @@
     "retro": "遡及 {{n}}",
     "noRecord": "未入力",
     "skip": {
+      "beforeAcquisition": "※入社前",
       "shortDays": "※{{n}}日未満",
       "partialAcquisition": "※途中入社",
       "suspended": "※休職",
