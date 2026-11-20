@@ -11,6 +11,8 @@ import { RemunerationInput } from '../../core/models/remuneration';
 @Injectable({ providedIn: 'root' })
 export class RegularService {
   private readonly history = inject(HistoryService);
+  /** 1回の batch に入れる人数（1人3件 × 150人 ＝ 450件。上限の500件に余裕を残す） */
+  private static readonly PEOPLE_PER_BATCH = 150;
 
   private emp(officeId: string, employeeId: string) {
     return ['offices', officeId, 'employees', employeeId] as const;
@@ -45,23 +47,28 @@ export class RegularService {
     items: readonly { decision: RegularDecision; remuneration: RemunerationInput; decisionExists: boolean }[],
   ): Promise<void> {
     if (items.length === 0) return;
-    if (items.length * 3 > 500) throw new Error('too many changes in one batch'); // 記録・標準報酬・履歴
-    const batch = writeBatch(db);
-    for (const { decision: d, remuneration: r, decisionExists } of items) {
-      const base = this.emp(d.officeId, d.employeeId);
-      const decRef = doc(collection(db, ...base, 'regularDecisions'), d.year);
-      if (decisionExists) {
-        batch.update(decRef, { ...d, updatedAt: serverTimestamp() });
-      } else {
-        batch.set(decRef, { ...d, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+    // 1人につき 記録・標準報酬・履歴 の3件。Firestore は1回の batch に500件までなので、150人（450件）ずつに分けて書く。
+    // 前は167人以上をまとめて反映するとエラーで止まっていた（200人の事業所で「まとめて反映」が効かない。11/20）。
+    // 1人の3件は必ず同じ batch に入る（記録だけ・標準報酬だけ、にはならない）。
+    // 途中の batch で失敗したら、そこまでの人は反映済み・残りは未反映で、もう一度押せば残りだけ反映される
+    for (let i = 0; i < items.length; i += RegularService.PEOPLE_PER_BATCH) {
+      const batch = writeBatch(db);
+      for (const { decision: d, remuneration: r, decisionExists } of items.slice(i, i + RegularService.PEOPLE_PER_BATCH)) {
+        const base = this.emp(d.officeId, d.employeeId);
+        const decRef = doc(collection(db, ...base, 'regularDecisions'), d.year);
+        if (decisionExists) {
+          batch.update(decRef, { ...d, updatedAt: serverTimestamp() });
+        } else {
+          batch.set(decRef, { ...d, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+        }
+        batch.set(doc(collection(db, ...base, 'remunerations'), r.from), {
+          ...r,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+        this.history.addTo(batch, d.officeId, d.employeeId, `remunerations/${r.from}`, changesOf(null, { ...r }));
       }
-      batch.set(doc(collection(db, ...base, 'remunerations'), r.from), {
-        ...r,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-      this.history.addTo(batch, d.officeId, d.employeeId, `remunerations/${r.from}`, changesOf(null, { ...r }));
+      await batch.commit();
     }
-    await batch.commit();
   }
 }

@@ -420,6 +420,8 @@ export class RegularPage {
       this.savedCount.set(n);
     } catch (err) {
       console.error(err);
+      // 大人数は何回かに分けて書くので、途中まで反映されていることがある。表を読み直してから知らせる（11/20）
+      await this.load(this.year()).catch(() => undefined);
       this.errorKey.set(errorKeyOf(err, 'regular.error.save'));
     } finally {
       this.saving.set(false);

@@ -289,7 +289,17 @@
         </tbody>
       </table>
     </div>
-    <app-pager variant="bottom" [total]="filtered().length" [(page)]="page" [size]="listOptions().size" />
+    <!-- 「まとめて反映」は、ページ送りの帯の右に置く（画面の下に貼り付くので、表の一番下まで送らなくても押せる。給与の「保存する」と同じ。11/20） -->
+    <app-pager variant="bottom" [total]="filtered().length" [(page)]="page" [size]="listOptions().size" [showBand]="context.isAdmin() && reflectable().length > 0">
+      @if (context.isAdmin() && reflectable().length > 0) {
+        <button bandEnd type="button" class="btn btn-solid" (click)="reflectAll()" [disabled]="saving()">
+          {{ 'regular.reflectAll' | transloco: { n: reflectable().length } }}
+        </button>
+      }
+    </app-pager>
+    @if (context.isAdmin() && reflectable().length > 0) {
+      <p class="sub skip-note">{{ 'regular.reflectAllHint' | transloco }}</p>
+    }
     <p class="sub skip-note">{{ 'regular.skipNote' | transloco }}</p>
 
     @if (errorKey(); as key) {
@@ -299,14 +309,6 @@
       <div class="alert alert-success">{{ 'regular.saved' | transloco: { n: savedCount() } }}</div>
     }
 
-    @if (context.isAdmin() && reflectable().length > 0) {
-      <div class="actions">
-        <span class="sub">{{ 'regular.reflectAllHint' | transloco }}</span>
-        <button type="button" class="btn btn-solid" (click)="reflectAll()" [disabled]="saving()">
-          {{ 'regular.reflectAll' | transloco: { n: reflectable().length } }}
-        </button>
-      </div>
-    }
   }
 
   @if (excluded().length > 0) {
