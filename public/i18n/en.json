@@ -119,7 +119,7 @@
       "hint": "Only current employees are shown. Ages 40, 65 and 75 apply to health insurance members; age 70 to pension members. Filings are a guide.",
       "error": "Couldn't load employees.",
       "pension": {
-        "60": "Pension: depending on the date of birth, a \"special old-age employees' pension\" may be paid before age 65 (for those with 1 year or more of employees' pension coverage). The Japan Pension Service sends the claim form to the person 3 months before the starting age.",
+        "60": "Pension: the special old-age employees' pension (paid before 65) applies only to men born on or before April 1, 1961 and women born on or before April 1, 1966 with at least one year of employees' pension coverage. Others receive it from 65 (early receipt is possible if they choose). Eligible people receive a claim form from the Japan Pension Service three months before their starting age.",
         "65": "Pension: old-age basic and employees' pensions start at 65. A claim is required; the Japan Pension Service sends the claim form 3 months before the 65th birthday, and it can be submitted from the day before the birthday (unclaimed amounts may be lost after 5 years). Please inform the employee."
       }
     },
@@ -265,7 +265,7 @@
       "toFilings": "Open the acquisition filing list",
       "toBonusFiling": "Go to filings (bonus report)",
       "toLossFiling": "Go to filings (loss report)",
-      "bonusPeople": "{{count}} recipients (one report for all)",
+      "bonusPeople": "{{count}} recipients",
       "toMyNumber": "Go to My Number",
       "toRenew": "Register the next contract (renew)",
       "toRetire": "Enter the retirement date (do not renew)",

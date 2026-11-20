@@ -423,17 +423,30 @@ td.calc .link-btn {
 }
 
 /* 突き合わせの表：カードの幅に収める（見出しの「差（告知額 − アプリ）」が切れないように。11/20） */
-.notice table {
+.notice-table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.notice-table table {
   width: 100%;
+  min-width: 0;
   table-layout: fixed;
 }
 
-.notice table th:first-child {
-  width: 40%;
+.notice-table th:first-child {
+  width: 34%;
 }
 
-.notice table :is(th, td) {
+.notice-table :is(th, td) {
   white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* 告知額の入力は欄の幅に合わせる（はみ出して表を押し広げないように） */
+.notice-table .notice-input {
+  width: 100%;
+  max-width: 9em;
 }
 
 .ok {

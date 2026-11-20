@@ -615,3 +615,11 @@ h1 {
   font-size: var(--font-sm);
   color: var(--color-text-sub);
 }
+
+/* 開いた行の説明は、表の列の幅を決めないようにする（開くと列の幅がずれるのを防ぐ。11/20）
+   width: 0 で幅の計算から外し、min-width: 100% で行いっぱいに広げる */
+.detail td > * {
+  width: 0;
+  min-width: 100%;
+  box-sizing: border-box;
+}

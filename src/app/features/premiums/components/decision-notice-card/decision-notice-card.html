@@ -1,6 +1,7 @@
 <section class="card">
   <button type="button" class="toggle" [attr.aria-expanded]="open()" (click)="toggle()">
-    {{ 'decisionNotice.title' | transloco }} {{ open() ? '▲' : '▼' }}
+    <!-- 開閉の印はほかの折りたたみと同じ ▷（開くと90度回る）。11/20 -->
+    <span class="mark" aria-hidden="true">▷</span>{{ 'decisionNotice.title' | transloco }}
   </button>
   @if (open()) {
     <p class="hint">{{ 'decisionNotice.lead' | transloco }}</p>

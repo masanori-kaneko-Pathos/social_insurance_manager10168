@@ -204,6 +204,8 @@
       <p class="hint">
         {{ 'premiumNotice.lead' | transloco: { arrival: arrival(), due: dueDate() } }}
       </p>
+      <!-- 表は枠の中に入れる：画面が狭くても切れずに横へ送れる（11/20） -->
+      <div class="notice-table">
       <table>
         <thead>
           <tr>
@@ -239,6 +241,7 @@
           </tr>
         </tbody>
       </table>
+      </div>
 
       @if (nc.status === 'diff' || nc.status === 'rounding' || noticeReasons().size > 0) {
         <fieldset class="reasons">
