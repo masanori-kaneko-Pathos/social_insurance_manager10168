@@ -85,6 +85,16 @@
       }
     </p>
   }
+  <!-- 定時決定がまだ反映されていない人（前の標準報酬のまま計算している。11/19） -->
+  @if (regularPending(); as rp) {
+    <div class="alert alert-warning" role="alert">
+      <strong>{{ 'premiumList.regularPending.title' | transloco: { year: rp.year, count: rp.ids.length } }}</strong>
+      <p>{{ 'premiumList.regularPending.body' | transloco }}</p>
+      <a [routerLink]="['/o', context.current()?.id, 'regular', rp.year]">{{ 'premiumList.regularPending.toRegular' | transloco: { year: rp.year } }}</a>
+      ・
+      <a [routerLink]="['/o', context.current()?.id, 'revisions']">{{ 'premiumList.regularPending.toRevisions' | transloco }}</a>
+    </div>
+  }
   <!-- 計算できなかった人（合計から抜けているので、見落とさないよう一番上に出す） -->
   @if (problems().length > 0) {
     <div class="alert alert-warning" role="alert">

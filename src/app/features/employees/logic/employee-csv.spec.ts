@@ -88,7 +88,17 @@ describe('readEmployeeCsv', () => {
     expect(leaves[0].birthDate).toBe('2026-09-15');
     expect(leaves[1].childBirthDate).toBe('2026-09-15');
     expect(leaves[1].plannedEnd).toBe('2027-09-14');
-    expect(leaves[0].filed).toBeNull(); // 申出日が空なら申出がまだ
+    // 申出日が空なら申出済み・日付不明（免除する。11/19 夜に変更）
+    expect(leaves[0].filed).not.toBeNull();
+    expect(leaves[0].filed?.filedOn).toBeNull();
+    expect(leaves[0].filed?.start).toBe('2026-08-01');
+  });
+  it('休業の申出日に「未申出」と書けば申出がまだ（免除しない。11/19）', () => {
+    for (const w of ['未申出', 'まだ', 'ＮＯ']) {
+      const r = readEmployeeCsv(table({ ...BASE, leave1Kind: '育休', leave1Start: '2026-11-11', leave1End: '2027-09-14', leave1Birth: '2026-09-15', leave1Filed: w }));
+      expect(r.rows[0].errors).toEqual([]);
+      expect(r.rows[0].parsed!.leaves[0].filed).toBeNull();
+    }
   });
   it('休業の申出日があれば「届を出した」と同じ形で入る。読めない日付はエラー（11/19）', () => {
     const r = readEmployeeCsv(

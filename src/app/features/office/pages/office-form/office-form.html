@@ -662,6 +662,10 @@
             <span class="field-error">{{ e | transloco }}</span>
           }
         </div>
+        <!-- 今の人数でも前の基準を超えるのに、該当した月が遅い（11/19） -->
+        @if (hasWarning('lateSpecific') && earliestSpecific(); as from) {
+          <p class="warn">{{ 'office.coverage.warn.lateSpecific' | transloco: { from: from } }}</p>
+        }
       }
 
       <!-- 厚生年金基金 -->
@@ -752,6 +756,8 @@
               {{ 'office.deduction.current' | transloco }}
             </label>
           </div>
+          <!-- 法律の原則は前月分の控除。当月控除は労使協定で選ぶ例外（健保法167条・厚年法84条、労基法24条。11/19） -->
+          <span class="hint">{{ 'office.hint.deduction' | transloco }}</span>
         </div>
       </div>
 

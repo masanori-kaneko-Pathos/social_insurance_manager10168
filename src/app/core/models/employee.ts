@@ -182,7 +182,7 @@ export type ChildType = (typeof CHILD_TYPES)[number];
 
 /** 最後に出した届の中身（今の中身と比べて、変更届・延長・終了届が要るかを出す） */
 export interface FiledLeave {
-  filedOn: string; // 届を出した日
+  filedOn: string | null; // 届を出した日（null：申出は済んでいるが日付が分からない。取り込みで申出日が空だった。11/19）
   start: string;
   plannedEnd: string | null;
   end: string | null;

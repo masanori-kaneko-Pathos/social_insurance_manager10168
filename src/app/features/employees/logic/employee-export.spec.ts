@@ -85,6 +85,7 @@ describe('employeeExportTable（従業員データの書き出し）', () => {
     expect(p.monthlyAmount).toBe(110000); // 資格取得時決定の記録
     expect(p.remunerationFrom).toBe('2026-04');
     expect(p.leaves.map((l) => [l.kind, l.start, l.plannedEnd])).toEqual([['childcare', '2026-06-01', '2027-05-31']]);
+    expect(p.leaves[0].filed).toBeNull(); // 申出がまだの休業は「未申出」で出て、取り込むと申出がまだに戻る（11/19）
     expect(row.values.department).toBe('総務部');
     expect(row.values.myNumber).toBe(''); // マイナンバーは書き出さない
   });

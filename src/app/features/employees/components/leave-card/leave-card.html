@@ -233,7 +233,11 @@
                     <div class="sub">{{ 'leave.deadline' | transloco: { date: r.filing.deadline } }}</div>
                   }
                   @if (r.leave.filed; as f) {
-                    <div class="sub">{{ 'leave.filedOn' | transloco: { date: f.filedOn } }}</div>
+                    @if (f.filedOn) {
+                      <div class="sub">{{ 'leave.filedOn' | transloco: { date: f.filedOn } }}</div>
+                    } @else {
+                      <div class="sub">{{ 'leave.filedOnUnknown' | transloco }}</div>
+                    }
                   }
                 }
               </td>

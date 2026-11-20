@@ -71,6 +71,7 @@ import {
 } from '../../logic/premium-list-view';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
+import { regularPending } from '../../logic/regular-pending';
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -303,6 +304,26 @@ export class PremiumList {
   /** 計算できなかった人（表の上に警告として出す） */
   readonly problems = computed(() =>
     this.rows().filter((r) => r.state === 'missing' || r.state === 'error'),
+  );
+
+  /**
+   * 定時決定がまだ反映されていない人（9月分〜翌年8月分。11/19）
+   * 反映するまでは前の標準報酬で計算しているので、一覧の上で知らせて定時決定の画面へつなぐ
+   */
+  readonly regularPending = computed(() =>
+    regularPending(
+      this.rows()
+        .filter((r) => r.state === 'ok' || r.state === 'exempt')
+        .map((r) => ({
+          id: r.employee.id,
+          health: r.employee.health,
+          pension: r.employee.pension,
+          // 一斉改定で足した行（capRevised）は定時決定ではないので除く
+          remunerations: (this.remunerations().get(r.employee.id) ?? []).filter((x) => !(x as { capRevised?: readonly string[] }).capRevised?.length),
+        })),
+      this.month(),
+      todayLocal(),
+    ),
   );
 
   /** 計算できた人の結果（合計の部品に渡す。11/17） */

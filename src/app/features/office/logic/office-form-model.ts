@@ -149,6 +149,7 @@ export function coverageErrors(v: CoverageFormValue): CoverageErrors {
 export type CoverageWarning =
   | 'noStandardHours' // 所定が空：4分の3基準が判定できない
   | 'maybeSpecific' // 該当しないのに、人数が基準以上
+  | 'lateSpecific' // 該当した月が、今の人数で基準を超えていた最初の時期より後（11/19）
   | 'bonusAsPay'; // 賞与が年4回以上
 
 export interface WarningContext {
@@ -156,6 +157,23 @@ export interface WarningContext {
   headcount: number | null;
   /** 今の基準の人数（masterCriteria。規模の要件がなければ null） */
   sizeMin: number | null;
+  /** 加入の基準の履歴（masterCriteria。省くと「該当した月」の注意は出さない。11/19） */
+  criteria?: readonly SizeCriteria[];
+}
+
+export interface SizeCriteria {
+  from: string; // 'YYYY-MM'
+  sizeMin: number | null; // null ＝ 規模の要件なし
+}
+
+/**
+ * 今の人数のままだったとして、特定適用事業所の基準を超えていた最初の時期（11/19）
+ * 基準は 2016-10 に 501人、2022-10 に 101人、2024-10 に 51人…と下がっていくので、
+ * 古い順に見て、人数が基準以上になる最初の行の月。どの行にも当たらなければ null
+ */
+export function earliestSpecificMonth(headcount: number, criteria: readonly SizeCriteria[]): string | null {
+  const rows = [...criteria].sort((a, b) => a.from.localeCompare(b.from));
+  return rows.find((r) => r.sizeMin === null || headcount >= r.sizeMin)?.from ?? null;
 }
 
 /** 注意（保存はできる） */
@@ -169,6 +187,12 @@ export function coverageWarnings(v: CoverageFormValue, ctx: WarningContext): Cov
     ctx.headcount >= ctx.sizeMin
   ) {
     w.push('maybeSpecific');
+  }
+  // 該当した月が遅すぎないか：特定適用事業所は人数で決まる（健保法3条・厚年法附則。1年のうち6か月以上、基準を超える見込み）。
+  // 会社は途中で大きくなるので今の人数では決まらないが、今の人数でも前の基準を超えるなら、通知書の年月を確かめてもらう
+  if (v.specific !== 'none' && YEAR_MONTH_RE.test(v.specificSince) && ctx.headcount !== null && ctx.criteria) {
+    const from = earliestSpecificMonth(ctx.headcount, ctx.criteria);
+    if (from && v.specificSince > from) w.push('lateSpecific');
   }
   if (normalizeMonths(v.bonusMonths).length >= BONUS_TIMES_AS_PAY) w.push('bonusAsPay');
   return w;

@@ -74,6 +74,7 @@ import {
   CoverageWarning,
   coverageErrors,
   coverageWarnings,
+  earliestSpecificMonth,
   fromCoverageForm,
   MONTHS_OF_YEAR,
   SpecificChoice,
@@ -465,7 +466,14 @@ export class OfficeForm {
     return coverageWarnings(this.coverageValue(), {
       headcount: typed ?? this.headcount()?.counted ?? null,
       sizeMin: this.criteriaNow()?.sizeMin ?? null,
+      criteria: this.criteriaRows() ?? undefined,
     });
+  });
+
+  /** 今の人数で基準を超えていた最初の時期（「該当した月」の注意に出す。11/19） */
+  readonly earliestSpecific = computed(() => {
+    const n = parseNat(this.coverageValue().insuredCount) ?? this.headcount()?.counted ?? null;
+    return n === null ? null : earliestSpecificMonth(n, this.criteriaRows() ?? []);
   });
 
   readonly myOffices = signal<Office[]>([]);

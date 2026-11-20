@@ -2,6 +2,7 @@ import {
   coverageErrors,
   CoverageFormValue,
   coverageWarnings,
+  earliestSpecificMonth,
   emptyCoverageForm,
   fromCoverageForm,
   normalizeMonths,
@@ -80,6 +81,30 @@ describe('coverageErrors：保存できない理由', () => {
   it('人数は空か0以上の整数', () => {
     expect(coverageErrors({ ...usual(), insuredCount: '五十' }).insuredCount).toBe('count');
     expect(coverageErrors({ ...usual(), insuredCount: '0' })).toEqual({});
+  });
+});
+
+describe('earliestSpecificMonth：今の人数で基準を超えていた最初の時期（11/19）', () => {
+  const rows = [
+    { from: '2016-10', sizeMin: 501 },
+    { from: '2022-10', sizeMin: 101 },
+    { from: '2024-10', sizeMin: 51 },
+    { from: '2027-10', sizeMin: 36 },
+    { from: '2035-10', sizeMin: null },
+  ];
+  it('160人なら 2022-10、600人なら 2016-10、40人なら 2027-10、5人なら 2035-10', () => {
+    expect(earliestSpecificMonth(160, rows)).toBe('2022-10');
+    expect(earliestSpecificMonth(600, rows)).toBe('2016-10');
+    expect(earliestSpecificMonth(51, rows)).toBe('2024-10');
+    expect(earliestSpecificMonth(40, rows)).toBe('2027-10');
+    expect(earliestSpecificMonth(5, rows)).toBe('2035-10');
+  });
+  it('該当した月がそれより後なら lateSpecific。同じ月・前なら出さない', () => {
+    const v = { ...usual(), specific: 'applied' as const, specificSince: '2026-11' };
+    expect(coverageWarnings(v, { headcount: 160, sizeMin: 51, criteria: rows })).toEqual(['lateSpecific']);
+    expect(coverageWarnings({ ...v, specificSince: '2022-10' }, { headcount: 160, sizeMin: 51, criteria: rows })).toEqual([]);
+    expect(coverageWarnings(v, { headcount: 160, sizeMin: 51 })).toEqual([]); // 基準の履歴がなければ出さない
+    expect(coverageWarnings(v, { headcount: null, sizeMin: 51, criteria: rows })).toEqual([]);
   });
 });
 

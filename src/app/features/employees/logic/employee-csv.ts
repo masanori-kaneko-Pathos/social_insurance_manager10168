@@ -306,6 +306,9 @@ export function pick<T extends string>(dict: Dict<T>, s: string): T | null | und
   return dict[t] ?? dict[t.toLowerCase()] ?? undefined;
 }
 
+/** 申出日の列で「申出がまだ」を表す言葉（NFKC・小文字にして比べる） */
+const NOT_FILED_WORDS = ['未申出', 'まだ', '申出前', 'なし', 'no', 'not filed'];
+
 function readLeave(
   v: Partial<Record<EmployeeColumn, string>>,
   n: 1 | 2,
@@ -325,7 +328,11 @@ function readLeave(
   const start = readDate(v[startCol] ?? '');
   const end = readDate(v[endCol] ?? '');
   const birth = readDate(v[birthCol] ?? '');
-  const filedOn = readDate(v[filedCol] ?? '');
+  // 申出日：日付 → 申出済み／空 → 申出済み・日付不明（休業を登録する会社はふつう申出も済ませている。11/19）
+  // ／「未申出」など → 申出がまだ（保険料は免除しない）
+  const filedRaw = (v[filedCol] ?? '').trim();
+  const notFiled = NOT_FILED_WORDS.includes(filedRaw.normalize('NFKC').toLowerCase());
+  const filedOn = notFiled || filedRaw === '' ? null : readDate(filedRaw);
   if (!start) errors.push({ column: startCol, code: 'date' });
   if (end === undefined) errors.push({ column: endCol, code: 'date' });
   if (birth === undefined) errors.push({ column: birthCol, code: 'date' });
@@ -345,10 +352,10 @@ function readLeave(
     l.childBirthDate = birth || null;
     l.childType = 'natural';
   }
-  // 申出日があれば「届を出した」と同じ形で写す（免除は申出をした休業だけ。健保法159条・159条の3。11/19）
-  if (filedOn) {
+  // 申出済みなら「届を出した」と同じ形で写す（免除は申出をした休業だけ。健保法159条・159条の3。11/19）
+  if (!notFiled) {
     l.filed = {
-      filedOn,
+      filedOn: filedOn ?? null,
       start: l.start,
       plannedEnd: l.plannedEnd,
       end: l.end,

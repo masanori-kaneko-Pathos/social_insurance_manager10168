@@ -42,7 +42,9 @@ export function hoursText(minutes: number): string {
 function leaveCells(l: Leave | undefined): [string, string, string, string, string] {
   if (!l) return ['', '', '', '', ''];
   const birth = l.kind === 'maternity' ? (l.birthDate ?? l.expectedBirthDate) : l.childBirthDate;
-  return [LEAVE[l.kind], l.start, l.end ?? l.plannedEnd ?? '', birth ?? '', l.filed?.filedOn ?? ''];
+  // 申出日：日付／申出済み・日付不明は空／申出がまだは「未申出」（取り込むと同じ状態に戻る。11/19）
+  const filed = l.filed ? (l.filed.filedOn ?? '') : '未申出';
+  return [LEAVE[l.kind], l.start, l.end ?? l.plannedEnd ?? '', birth ?? '', filed];
 }
 
 /** 1人分の行（列は EMPLOYEE_COLUMNS の順） */

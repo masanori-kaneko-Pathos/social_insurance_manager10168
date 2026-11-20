@@ -38,8 +38,8 @@ export interface LeaveLike {
   plannedEnd?: DateStr | null; // 終了予定日
   /** 出生時育休：休業中に働いた日数（14日の数え方から除く） */
   workDays?: number | null;
-  /** 申出書（産前産後休業取得者申出書・育児休業等取得者申出書）を出した記録。ない・null は申出がまだ（11/19） */
-  filed?: { filedOn: string } | null;
+  /** 申出書（産前産後休業取得者申出書・育児休業等取得者申出書）を出した記録。ない・null は申出がまだ（11/19）。filedOn が null は申出済み・日付不明 */
+  filed?: { filedOn: string | null } | null;
 }
 
 /** 休業の記録を持つもの（Employee をそのまま渡せる） */

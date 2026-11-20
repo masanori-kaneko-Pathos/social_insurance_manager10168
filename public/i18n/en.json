@@ -867,7 +867,8 @@
       "nameEn": "Enter the English name if there is one.",
       "groupName": "Offices with the same label are listed together in the office menu. Example: Kanto sites, Head office and plant",
       "agreementRounding": "Usually \"No agreement\". If the company and employees have a special agreement, the employee share is rounded that way (the same for the Japan Health Insurance Association, health insurance societies and pension). The company's payment stays the total rounded down to the yen.",
-      "kumiaiRatesNext": "You can enter the rates below (or later in the rates window)."
+      "kumiaiRatesNext": "You can enter the rates below (or later in the rates window).",
+      "deduction": "By law, only the previous month's premium may be deducted from pay (Health Insurance Act Art. 167, Employees' Pension Insurance Act Art. 84; both the previous and current month only when the employee leaves). To deduct the current month's premium, conclude a wage-deduction labor-management agreement (Labor Standards Act Art. 24)."
     },
     "postal": {
       "search": "Find address",
@@ -977,7 +978,8 @@
       "warn": {
         "noStandardHours": "The 3/4 rule cannot be judged while the schedule is blank.",
         "maybeSpecific": "If headcount is expected to reach the threshold ({{n}} or more) for 6+ months a year, the office becomes a specified applicable office. Check notices from the Japan Pension Service.",
-        "bonusAsPay": "Payments made 4 or more times a year are treated as remuneration, not bonuses."
+        "bonusAsPay": "Payments made 4 or more times a year are treated as remuneration, not bonuses.",
+        "lateSpecific": "With the current headcount, the threshold has been exceeded since {{from}}. Specific applicable office status is determined by headcount, so the office may have qualified earlier. Check the date on the pension office's notice (short-time workers are judged as not insured before the month entered here)."
       },
       "error": {
         "hours": "Enter hours as \"40:00\".",
@@ -1319,7 +1321,13 @@
     "bonusCapHealth": "Health insurance uses {{base}} yen, up to the annual cap (5.73 million yen).",
     "bonusCapPension": "Pension uses {{base}} yen, up to the monthly cap (1.5 million yen).",
     "sameMonth": "In and out same month",
-    "sameMonthNote": "Pension coverage started and ended in the same month. The premium for that month applies, but if the person joins another employer's pension or the National Pension (category 1 or 3) in the same month, the pension office will notify you and the pension premium is not due (return the employee share to the person). Health and long-term care premiums are not affected."
+    "sameMonthNote": "Pension coverage started and ended in the same month. The premium for that month applies, but if the person joins another employer's pension or the National Pension (category 1 or 3) in the same month, the pension office will notify you and the pension premium is not due (return the employee share to the person). Health and long-term care premiums are not affected.",
+    "regularPending": {
+      "title": "{{count}} people do not yet have the {{year}} annual determination applied",
+      "body": "Until the annual determination (standard monthly remuneration recalculated from April–June pay, effective from September) is applied, this month's premiums use the previous standard monthly remuneration. Apply it after checking the pension office's notice.",
+      "toRegular": "Go to the {{year}} annual determination",
+      "toRevisions": "Go to revision candidates (irregular / after leave)"
+    }
   },
   "rateDialog": {
     "title": "Health insurance rates",
@@ -1604,6 +1612,7 @@
     },
     "markFiled": "Mark as filed",
     "filedOn": "Last filed {{date}}",
+    "filedOnUnknown": "Filed (date unknown — check your copy of the application)",
     "deadline": "Due about {{date}}",
     "bornOn": "Born {{date}}",
     "expectedOn": "Expected {{date}}",
@@ -2458,7 +2467,7 @@
     "templateHint": "It has a header row and 2 example rows. Edit it in Excel (UTF-8 or Shift_JIS).",
     "template": "Download template",
     "columnsTitle": "How to fill in the columns",
-    "columnsHint": "Required: employee number, last name kana, birth date, hire date, employment type, pay type, weekly hours, monthly days, scheduled wage (and last name for Japanese nationals). Dates as 2026-04-01; hours as 40:00. Values can be the Japanese words or codes (regular, part, hourly, etc.). Leave enrollment blank to decide by category. Basic pension number (10 digits), insured person number and My Number (12 digits, stored encrypted) can also be entered. If a leave application date is empty, the application has not been filed and maternity/childcare premiums are not exempted.",
+    "columnsHint": "Required: employee number, last name kana, birth date, hire date, employment type, pay type, weekly hours, monthly days, scheduled wage (and last name for Japanese nationals). Dates as 2026-04-01; hours as 40:00. Values can be the Japanese words or codes (regular, part, hourly, etc.). Leave enrollment blank to decide by category. Basic pension number (10 digits), insured person number and My Number (12 digits, stored encrypted) can also be entered. If a leave application date is empty, the leave is treated as filed (date unknown) and maternity/childcare premiums are exempted. Enter \"未申出\" if the application has not been filed yet (no exemption).",
     "choose": "Choose file",
     "missingColumns": "Required columns are missing:",
     "hasErrors": "{{n}} row(s) have errors. Fix them and choose the file again (nothing is imported while errors remain).",
