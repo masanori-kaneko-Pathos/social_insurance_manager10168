@@ -4000,7 +4000,7 @@
     "docType": {
       "label": "ID documents checked",
       "hint": "Confirm both the number and the identity, and record the documents used.",
-      "card": "My Number Card",
+      "card": "My Number Card (including the smartphone My Number Card)",
       "noticeCard": "Notification card + photo ID",
       "residentRecord": "Resident record with number + photo ID",
       "other": "Other"
@@ -4084,6 +4084,7 @@
         "registered": "Submitted"
       },
       "lead": "Your employer asks for your My Number for social insurance filings.",
+      "purpose": "Purpose of use: health insurance and employees' pension filings (acquisition, loss, dependent change, National Pension category 3 notifications, etc.). It is not used for any other purpose. The number is stored encrypted and disposed of when no longer needed.",
       "returned": "Returned (reason: {{note}}). Please enter it again.",
       "docType": "Documents you have",
       "docHint": "Your employer uses them to confirm the number and your identity. Show the originals as your employer instructs.",

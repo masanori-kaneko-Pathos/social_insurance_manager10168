@@ -12,6 +12,8 @@
 
       @if (canSubmit()) {
         <p>{{ (dependent() ? 'myNumber.family.me.lead' : 'myNumber.me.lead') | transloco }}</p>
+        <!-- 利用目的を、番号を受け取る前に示す（個人情報保護法21条・番号法9条の範囲。11/20） -->
+        <p class="hint">{{ 'myNumber.me.purpose' | transloco }}</p>
         @if (en.status === 'returned' && en.note) {
           <p class="field-error">{{ 'myNumber.me.returned' | transloco: { note: en.note } }}</p>
         }
