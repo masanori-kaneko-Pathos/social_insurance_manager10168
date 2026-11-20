@@ -911,3 +911,177 @@ table.sticky-head > thead th {
   border-bottom: 0;
   box-shadow: inset 0 -1px 0 var(--color-border);
 }
+
+/* ========== 見た目の仕上げ（11/20）==========
+   セピア（クリームの地＋焦げ茶の文字）をやめて、中立の白・墨色にする。オレンジは「押すもの・今いる場所」だけに使う。
+   ライトだけに効かせる（ダークは今のまま）。消せば元の見た目に戻る */
+:root:not([data-theme='dark']) {
+  --color-bg: #f6f6f4;
+  --color-surface: #ffffff;
+  --color-header-bg: #ffffff;
+  --color-header-text: #1f1d1b;
+  --color-text: #2b2825;
+  --color-text-strong: #141210;
+  --color-text-sub: #6f6a65;
+  --color-border: #ebe9e6;
+  --color-border-strong: #dcd9d5;
+  --color-primary: #e8701e;
+  --color-primary-hover: #d4600f;
+  --color-on-primary: #ffffff;
+  --color-highlight: #fdf0e5;
+  --color-highlight-soft: #fbf7f2;
+  --color-hover: #f7f6f4;
+  --color-tab-active: #c4550c;
+  --color-input: #ffffff;
+  --color-warning-bg: #fff8e1;
+  --color-warning-text: #6d5200;
+  --color-warning-border: #f3dc8f;
+  --shadow-card: 0 0 0 1px rgb(20 18 16 / 5%), 0 1px 3px rgb(20 18 16 / 4%);
+  --shadow-btn: 0 1px 1px rgb(20 18 16 / 4%);
+  --shadow-btn-hover: 0 1px 2px rgb(20 18 16 / 8%);
+  --btn-edge: 0 0 0 transparent;
+  --btn-primary-edge: 0 0 0 transparent;
+  --radius-lg: 12px;
+}
+
+/* 文字：日本語の詰め（palt）で締まって見せる。見出しは墨色で少し小さく */
+:root:not([data-theme='dark']) body {
+  font-feature-settings: 'palt';
+  letter-spacing: 0.02em;
+  -webkit-font-smoothing: antialiased;
+}
+:root:not([data-theme='dark']) h1 {
+  color: var(--color-text-strong);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+:root:not([data-theme='dark']) :is(h2, h3) {
+  color: var(--color-text-strong);
+}
+
+/* リンク：下線を消して、指したときだけ */
+:root:not([data-theme='dark']) a:where(:link, :visited) {
+  color: var(--color-tab-active);
+  text-decoration: none;
+}
+:root:not([data-theme='dark']) a:where(:link, :visited):hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* 氏名のリンクは本文の色（一覧が橙だらけにならないように） */
+:root:not([data-theme='dark']) .person-name:where(a) {
+  color: var(--color-text-strong);
+  font-weight: 600;
+}
+:root:not([data-theme='dark']) .person-name:where(a):hover {
+  color: var(--color-tab-active);
+}
+
+/* ボタン：薄い縁の白・角8px・高さそろえ。決定は橙で塗って白い文字 */
+:root:not([data-theme='dark']) .btn {
+  border-color: var(--color-border-strong);
+  border-radius: 8px;
+  font-weight: 500;
+  color: var(--color-text);
+  text-decoration: none;
+}
+:root:not([data-theme='dark']) .btn:hover:not(:disabled) {
+  background: var(--color-hover);
+  transform: none;
+}
+:root:not([data-theme='dark']) .btn.btn-primary {
+  color: var(--color-tab-active);
+  border-color: #f1c39d;
+  background: #fff;
+}
+:root:not([data-theme='dark']) .btn.btn-primary:hover:not(:disabled) {
+  background: var(--color-highlight);
+}
+:root:not([data-theme='dark']) .btn.btn-solid {
+  color: #fff;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+:root:not([data-theme='dark']) .btn.btn-solid:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+/* 入力欄 */
+:root:not([data-theme='dark']) .input {
+  border-color: var(--color-border-strong);
+  border-radius: 8px;
+}
+:root:not([data-theme='dark']) .input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgb(232 112 30 / 15%);
+}
+
+/* ヘッダーとサイドバー：白・細い線。今いる場所は淡い橙の地＋左の線（枠で囲まない） */
+:root:not([data-theme='dark']) .side-nav.side-nav {
+  background: #fff;
+  border-right: 1px solid var(--color-border);
+}
+:root:not([data-theme='dark']) .side-nav.side-nav a {
+  color: var(--color-text-sub);
+  font-weight: 500;
+}
+:root:not([data-theme='dark']) .side-nav.side-nav a:hover:not(.active) {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+:root:not([data-theme='dark']) .side-nav.side-nav a.active {
+  color: var(--color-tab-active);
+  background: var(--color-highlight);
+  box-shadow: inset 3px 0 0 var(--color-primary);
+  font-weight: 600;
+}
+:root:not([data-theme='dark']) .side-nav.side-nav a.active app-icon {
+  color: var(--color-tab-active);
+}
+
+/* 表（カードの中の一覧）：見出しは小さく灰色の帯、行は細い線と指したときの色、数字は等幅 */
+:root:not([data-theme='dark']) .card.table-wrap,
+:root:not([data-theme='dark']) .table-wrap.card {
+  padding: 0;
+  overflow-x: auto;
+}
+:root:not([data-theme='dark']) .table-wrap :is(th, td) {
+  border-bottom-color: var(--color-border);
+}
+:root:not([data-theme='dark']) .table-wrap thead th {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-text-sub);
+  background: #fafaf9;
+  border-bottom: 1px solid var(--color-border);
+}
+:root:not([data-theme='dark']) .table-wrap tbody tr:hover > :is(td, th) {
+  background: var(--color-hover);
+}
+:root:not([data-theme='dark']) .table-wrap tbody tr:last-child > :is(td, th) {
+  border-bottom: none;
+}
+:root:not([data-theme='dark']) .emp-no {
+  color: var(--color-text-sub);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 知らせ：左に色の線、角を合わせる */
+:root:not([data-theme='dark']) .alert {
+  border-radius: 10px;
+}
+:root:not([data-theme='dark']) .alert.alert-warning {
+  border: 1px solid var(--color-warning-border);
+  border-left: 4px solid #e5b52a;
+}
+
+/* アプリの名前は墨色（リンクの橙にしない） */
+:root:not([data-theme='dark']) .app-home.app-home {
+  color: var(--color-text-strong);
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}

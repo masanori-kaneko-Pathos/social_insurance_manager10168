@@ -126,6 +126,47 @@
   font-weight: 600;
 }
 
+/* しまう・出すボタン（サイドバーのいちばん上。小さく・薄く。11/20） */
+.nav-collapse {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  font: inherit;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+}
+
+.nav-collapse:hover {
+  color: var(--color-text);
+  background: var(--color-hover);
+}
+
+.nav-collapse:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.nav-collapse .chev {
+  display: inline-block;
+  width: 18px;
+  text-align: center;
+  font-size: var(--font-md);
+  line-height: 1;
+}
+
+.side-nav.collapsed .nav-collapse {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
 /* ===== しまったとき：アイコンだけ（押せばそのメニューへ。名前は指したときに出る） ===== */
 .side-nav {
   transition:
@@ -231,7 +272,8 @@
     display: inline;
   }
 
-  .nav-toggle {
+  .nav-toggle,
+  .nav-collapse {
     display: none;
   }
 }

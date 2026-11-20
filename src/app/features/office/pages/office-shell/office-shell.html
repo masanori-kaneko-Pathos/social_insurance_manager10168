@@ -54,6 +54,18 @@
     [class.collapsed]="navCollapsed()"
     [attr.aria-label]="'nav.label' | transloco"
   >
+    <!-- しまう・出すボタン（サイドバーは画面に貼り付くので、ページの下に行っても押せる。ヘッダーの□と同じ動き。11/20） -->
+    <button
+      type="button"
+      class="nav-collapse"
+      [attr.aria-expanded]="!navCollapsed()"
+      [attr.aria-label]="(navCollapsed() ? 'nav.expand' : 'nav.collapse') | transloco"
+      [title]="(navCollapsed() ? 'nav.expand' : 'nav.collapse') | transloco"
+      (click)="toggleNav()"
+    >
+      <span class="chev" aria-hidden="true">{{ navCollapsed() ? '»' : '«' }}</span>
+      <span class="label">{{ 'nav.collapse' | transloco }}</span>
+    </button>
     <!-- 見出しは置かず、細い線で区切る：ホーム → 毎月の作業 → 人 → 年1回・随時 → 設定 -->
     <a
       [routerLink]="['/o', officeId()]"
