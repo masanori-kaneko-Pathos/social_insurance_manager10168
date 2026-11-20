@@ -31,6 +31,12 @@
     }
   </div>
 </div>
+<!-- 控除の時期を切り替えた月：その給与から2か月分を引く（11/20） -->
+@if (doubleDeduction()) {
+  <div class="alert alert-warning" role="status">
+    {{ 'premiumList.doubleDeduction' | transloco: { pay: monthParts(payMonth()).m } }}
+  </div>
+}
 
 @if (loading()) {
   <p class="muted">{{ 'common.loading' | transloco }}</p>
@@ -456,7 +462,7 @@
                   <span class="badge badge-warn" [title]="'premiumList.exemptPendingNote' | transloco">{{ 'premiumList.exemptPending' | transloco }}</span>
                 }
                 <!-- 翌月控除の事業所だけ（当月控除なら毎月その月の分を引くので、2か月分にならない。11/19） -->
-                @if (r.lastMonth && payroll().deduction === 'next') {
+                @if (r.lastMonth && deductionNow() === 'next') {
                   <span class="badge badge-change" [title]="'premiumList.lastMonthNote' | transloco">{{ 'premiumList.lastMonth' | transloco }}</span>
                 }
                 <!-- 厚生年金の同月得喪：同じ月にほかで厚生年金・国民年金に入ると、厚生年金保険料はあとで返ってくる（11/19） -->

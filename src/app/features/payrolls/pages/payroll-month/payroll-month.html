@@ -317,9 +317,14 @@
       {{ 'payroll.savedCount' | transloco: { count: savedCount() } }}
       <span class="next-steps">
         {{ 'common.next' | transloco }}
-        <a [routerLink]="['/o', context.current()?.id, 'premiums']" [queryParams]="{ month: premiumMonth() }">{{
-          'payroll.next.premiums' | transloco: { paid: monthNum(month()), month: monthNum(premiumMonth()) }
-        }} ›</a>
+        @if (premiumCount() === 0) {
+          <!-- 当月控除 → 翌月控除に切り替えた月は、この給与から控除しない（11/20） -->
+          <span>{{ 'payroll.next.noDeduction' | transloco: { paid: monthNum(month()) } }}</span>
+        } @else {
+          <a [routerLink]="['/o', context.current()?.id, 'premiums']" [queryParams]="{ month: premiumMonth() }">{{
+            'payroll.next.premiums' | transloco: { paid: monthNum(month()), month: monthNum(premiumMonth()) }
+          }} ›</a>
+        }
         <a [routerLink]="['/o', context.current()?.id, 'revisions']">{{ 'payroll.next.revisions' | transloco }} ›</a>
       </span>
     </div>

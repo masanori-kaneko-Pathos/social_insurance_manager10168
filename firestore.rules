@@ -273,7 +273,25 @@ service cloud.firestore {
         && validBonusMonths(d.bonusMonths)
         // 保険料調整制度を使い始めた月（任意。11/16 より前の文書にはない。作るときは書かず、設定の保存で足す）
         && (!('premiumAdjustment' in d) || d.premiumAdjustment == null
-            || (d.premiumAdjustment is map && exactKeys(d.premiumAdjustment, ['since']) && isMonth(d.premiumAdjustment.since)));
+            || (d.premiumAdjustment is map && exactKeys(d.premiumAdjustment, ['since']) && isMonth(d.premiumAdjustment.since)))
+        // 保険料の控除の時期の履歴（任意。11/20。設定の画面の編集だけが書く）
+        // 古い順。最初の行は「最初から」、最後の行は今の設定（payroll.deduction）と同じ
+        && (!('deductionHistory' in d) || d.deductionHistory == null || validDeductionHistory(d));
+    }
+
+    function validDeductionPeriod(p) {
+      return p is map && exactKeys(p, ['from', 'deduction'])
+        && p.from is string && p.from.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
+        && p.deduction in ['current', 'next'];
+    }
+
+    function validDeductionHistory(d) {
+      return d.deductionHistory is list
+        && d.deductionHistory.size() >= 2 && d.deductionHistory.size() <= 50
+        && validDeductionPeriod(d.deductionHistory[0])
+        && d.deductionHistory[0].from == '0000-01'
+        && validDeductionPeriod(d.deductionHistory[d.deductionHistory.size() - 1])
+        && d.deductionHistory[d.deductionHistory.size() - 1].deduction == d.payroll.deduction;
     }
 
     match /offices/{officeId} {

@@ -877,7 +877,8 @@
       "groupName": "Offices with the same label are listed together in the office menu. Example: Kanto sites, Head office and plant",
       "agreementRounding": "Usually \"No agreement\". If the company and employees have a special agreement, the employee share is rounded that way (the same for the Japan Health Insurance Association, health insurance societies and pension). The company's payment stays the total rounded down to the yen.",
       "kumiaiRatesNext": "You can enter the rates below (or later in the rates window).",
-      "deduction": "By law, only the previous month's premium may be deducted from pay (Health Insurance Act Art. 167, Employees' Pension Insurance Act Art. 84; both the previous and current month only when the employee leaves). To deduct the current month's premium, conclude a wage-deduction labor-management agreement (Labor Standards Act Art. 24)."
+      "deduction": "By law, only the previous month's premium may be deducted from pay (Health Insurance Act Art. 167, Employees' Pension Insurance Act Art. 84; both the previous and current month only when the employee leaves). To deduct the current month's premium, conclude a wage-deduction labor-management agreement (Labor Standards Act Art. 24).",
+      "deductionCurrentWarn": "By law, the principle is to deduct the previous month's premium from this month's pay (next-month deduction; Health Insurance Act Art. 167, Employees' Pension Insurance Act Art. 84). If you deduct the same month's premium, confirm that a wage deduction agreement (Labor Standards Act Art. 24) or your work rules / pay regulations provide for it."
     },
     "postal": {
       "search": "Find address",
@@ -1084,6 +1085,12 @@
       },
       "titleChange": "New society's rates (from the month of the change)",
       "leadChange": "Enter the rates from the society's notice by hand or import a file. You can leave this empty and enter them later with \"View rates\" in the table below."
+    },
+    "deductionFrom": {
+      "label": "Premium month the change starts from",
+      "invalid": "Choose this month or later (past months' deduction records are not changed).",
+      "toCurrent": "Next-month → same-month: the pay in the chosen month deducts two months (the previous month and that month). Earlier months keep their records. Same-month deduction requires a wage deduction agreement. Change your payroll software from the same month and tell employees.",
+      "toNext": "Same-month → next-month: nothing is deducted from the pay in the chosen month; that month's premium is deducted from the next month's pay. Earlier months keep their records. Change your payroll software from the same month and tell employees."
     }
   },
   "remuneration": {
@@ -1337,7 +1344,8 @@
       "body": "Until the annual determination (standard monthly remuneration recalculated from April–June pay, effective from September) is applied, this month's premiums use the previous standard monthly remuneration. Apply it after checking the pension office's notice.",
       "toRegular": "Go to the {{year}} annual determination",
       "toRevisions": "Go to revision candidates (irregular / after leave)"
-    }
+    },
+    "doubleDeduction": "Because the deduction timing was switched to same-month, the pay for month {{pay}} deducts two months: the previous month and this month."
   },
   "rateDialog": {
     "title": "Health insurance rates",
@@ -1766,7 +1774,8 @@
     },
     "next": {
       "premiums": "See the premiums deducted from the {{paid}} pay (for month {{month}})",
-      "revisions": "Check revision candidates"
+      "revisions": "Check revision candidates",
+      "noDeduction": "No premium is deducted from the pay for month {{paid}} (the month the deduction timing switched to next-month)"
     },
     "listRange": "{{fromM}}/{{fromY}} – {{toM}}/{{toY}}",
     "sum": {

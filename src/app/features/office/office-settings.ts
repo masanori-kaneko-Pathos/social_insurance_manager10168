@@ -4,6 +4,7 @@
  * 古いデータ（設定や履歴の項目がない事業所）も、ここで初期値に埋めてから使う。
  */
 import {
+  DeductionPeriod,
   HealthInsurer,
   InsurerPeriod,
   OfficeDoc,
@@ -145,9 +146,59 @@ export function withInsurerChange(
   return [...kept, change];
 }
 
+/** 控除の時期の履歴の「最初から」（11/20） */
+export const DEDUCTION_FROM_START = '0000-01';
+
+/**
+ * その月分の保険料の控除の時期（11/20）
+ * 履歴があれば「from がその月以前の最後の行」、なければ今の設定。履歴は保存のたびに「最後の行 ＝ 今の設定」になる
+ */
+export function deductionAt(
+  month: YearMonth,
+  payroll: PayrollSettings,
+  history?: readonly DeductionPeriod[] | null,
+): PayrollSettings['deduction'] {
+  if (!history || history.length === 0) return payroll.deduction;
+  let hit: DeductionPeriod | null = null;
+  for (const h of history) if (h.from <= month && (!hit || h.from >= hit.from)) hit = h;
+  return (hit ?? history[0]).deduction;
+}
+
 /** 何月に支払う給与から控除するか（翌月控除なら、11月分の保険料は12月に支払う給与から） */
-export function deductionPayMonth(month: YearMonth, payroll: PayrollSettings): YearMonth {
-  return payroll.deduction === 'next' ? shiftMonth(month, 1) : month;
+export function deductionPayMonth(
+  month: YearMonth,
+  payroll: PayrollSettings,
+  history?: readonly DeductionPeriod[] | null,
+): YearMonth {
+  return deductionAt(month, payroll, history) === 'next' ? shiftMonth(month, 1) : month;
+}
+
+/**
+ * その月に払う給与から控除する保険料の月（0〜2か月。11/20）
+ * 翌月控除 → 当月控除に変えた月は2か月分（前の月の分と、その月の分）、当月控除 → 翌月控除に変えた月は0か月（控除なし）
+ */
+export function premiumMonthsOfPay(
+  paidMonth: YearMonth,
+  payroll: PayrollSettings,
+  history?: readonly DeductionPeriod[] | null,
+): YearMonth[] {
+  return [shiftMonth(paidMonth, -1), paidMonth].filter((m) => deductionPayMonth(m, payroll, history) === paidMonth);
+}
+
+/**
+ * 控除の時期を「from 月分から deduction に」変えた履歴（11/20）
+ * from 以降の古い行は捨て、最初の行がなければ「最初から今の設定」を置く。同じ時期なら行を足さない
+ */
+export function withDeductionChange(
+  history: readonly DeductionPeriod[] | null | undefined,
+  current: PayrollSettings['deduction'],
+  change: DeductionPeriod,
+): DeductionPeriod[] {
+  const base: DeductionPeriod[] =
+    history && history.length > 0 ? [...history] : [{ from: DEDUCTION_FROM_START, deduction: current }];
+  const kept = base.sort((a, b) => a.from.localeCompare(b.from)).filter((h) => h.from < change.from);
+  if (kept.length > 0 && kept[kept.length - 1].deduction === change.deduction) return kept;
+  return [...kept, change];
 }
 
 /**
@@ -155,6 +206,13 @@ export function deductionPayMonth(month: YearMonth, payroll: PayrollSettings): Y
  * 翌月控除なら前の月の分（11月25日払いの給与から10月分）、当月控除なら同じ月の分
  * 給与の取り込み・入力のあとの「この給与から控除する保険料を見る」で使う
  */
-export function premiumMonthOfPay(paidMonth: YearMonth, payroll: PayrollSettings): YearMonth {
-  return payroll.deduction === 'next' ? shiftMonth(paidMonth, -1) : paidMonth;
+export function premiumMonthOfPay(
+  paidMonth: YearMonth,
+  payroll: PayrollSettings,
+  history?: readonly DeductionPeriod[] | null,
+): YearMonth {
+  // 切り替えの月（0か月・2か月）は、その時期で見た月を返す（リンク用。中身は premiumMonthsOfPay で見る。11/20）
+  const months = premiumMonthsOfPay(paidMonth, payroll, history);
+  if (months.length > 0) return months[months.length - 1];
+  return deductionAt(paidMonth, payroll, history) === 'next' ? shiftMonth(paidMonth, -1) : paidMonth;
 }

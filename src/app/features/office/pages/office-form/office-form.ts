@@ -36,6 +36,7 @@ import {
   insurerHistoryOf,
   kumiaiRun,
   payrollOf,
+  withDeductionChange,
   premiumOf,
   samePeriod,
   spanOf,
@@ -186,6 +187,8 @@ export class OfficeForm {
       payMonth: [DEFAULT_PAYROLL.payMonth as PayrollSettings['payMonth']],
       payDay: [DEFAULT_PAYROLL.payDay],
       deduction: [DEFAULT_PAYROLL.deduction as PayrollSettings['deduction']],
+      // 控除の時期を変えるとき：何月分の保険料から変えるか（編集だけ。11/20）
+      deductionFrom: [''],
       method: [DEFAULT_PREMIUM.method as CollectionMethod],
       healthRounding: [DEFAULT_PREMIUM.healthRounding as HealthRounding],
       // 労使協定（特約）の端数処理（'' ＝ 法律どおり。11/16）
@@ -421,6 +424,18 @@ export class OfficeForm {
   readonly months = MONTHS_OF_YEAR;
   /** 人数を数える月・基準を選ぶ月（今月） */
   readonly thisMonth = toYearMonth(todayLocal());
+  /** 控除の時期を、保存済みの設定から変えようとしているか（編集だけ。11/20） */
+  readonly deductionChanged = computed(() => {
+    const o = this.office();
+    return !!o && this.value().deduction !== payrollOf(o).deduction;
+  });
+  readonly deductionTo = computed(() => this.value().deduction);
+  /** 何月分から変えるか：今月より前は選べない（過去の控除の記録を書き換えないため。11/20） */
+  readonly deductionFromInvalid = computed(() => {
+    if (!this.deductionChanged()) return false;
+    const from = this.value().deductionFrom;
+    return !MONTH.test(from) || from < this.thisMonth;
+  });
 
   readonly coverageValue = computed<CoverageFormValue>(() => this.value().coverage);
   readonly coverageErrs = computed(() => coverageErrors(this.coverageValue()));
@@ -638,6 +653,8 @@ export class OfficeForm {
       payMonth: payroll.payMonth,
       payDay: payroll.payDay,
       deduction: payroll.deduction,
+      // 控除の時期を変えるときの初期値：来月分から（11/20）
+      deductionFrom: shiftMonth(this.thisMonth, 1),
       method: premium.method,
       healthRounding: premium.healthRounding,
       agreementRounding: premium.agreementRounding ?? '',
@@ -908,6 +925,7 @@ export class OfficeForm {
       !coverage ||
       this.standardMissing().length > 0 ||
       (this.isEdit && this.adjustmentSinceMissing()) ||
+      this.deductionFromInvalid() ||
       (this.insurerChanged() && !MONTH.test(changeFrom.value)) ||
       this.readFirstRates() === false ||
       this.ratesBlocked()
@@ -970,6 +988,15 @@ export class OfficeForm {
           insurerHistory: history,
           // 保険料調整制度は編集のときだけ書く（作るときの項目の決まりを変えないため）
           premiumAdjustment: v.adjustmentOn && MONTH.test(v.adjustmentSince) ? { since: v.adjustmentSince } : null,
+          // 控除の時期を変えたら「何月分から」を履歴に足す（変えていなければ書かない＝今の履歴のまま。11/20）
+          ...(this.deductionChanged()
+            ? {
+                deductionHistory: withDeductionChange(office.deductionHistory, payrollOf(office).deduction, {
+                  from: v.deductionFrom,
+                  deduction: v.deduction,
+                }),
+              }
+            : {}),
         };
         const firstRate = this.readFirstRates();
         await this.offices.update(office.id, input, this.tasksOf(this.pendingChanges()));

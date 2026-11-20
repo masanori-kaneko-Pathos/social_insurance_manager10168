@@ -89,6 +89,11 @@ export interface OfficeDoc {
   bonusMonths: number[]; // 賞与の支払予定月（1〜12）
   /** 保険料調整制度（2026年10月〜）を使い始めた月。使っていなければ null・なし（11/16。設定の画面の編集だけが書く） */
   premiumAdjustment?: PremiumAdjustment | null;
+  /**
+   * 保険料の控除の時期の履歴（古い順。11/20）。from は「何月分の保険料から」。最初の行は '0000-01'（最初から）
+   * 控除の時期を一度も変えていない事業所にはない → すべての月が payroll.deduction。最後の行は payroll.deduction と同じ
+   */
+  deductionHistory?: DeductionPeriod[] | null;
   memberUids: string[];
   memberRoles: Record<string, OfficeRole>;
   /** 代表（管理者の中の1人。作った人から始まり、交代できる）。古い事業所にはない → 名簿の最初の人 */
@@ -107,6 +112,11 @@ export interface Office extends OfficeDoc {
 }
 
 /** 画面から保存する形（メンバーと日時は係が付ける） */
+export interface DeductionPeriod {
+  from: string;
+  deduction: 'current' | 'next';
+}
+
 export type OfficeInput = Omit<OfficeDoc, 'memberUids' | 'memberRoles' | 'ownerUid' | 'createdAt' | 'updatedAt'>;
 
 /** 今の登録・編集画面が扱う項目（それ以外はまとまりごとに保存する） */

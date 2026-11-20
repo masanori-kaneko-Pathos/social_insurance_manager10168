@@ -8,6 +8,9 @@ import {
   insurerHistoryOf,
   payrollOf,
   premiumMonthOfPay,
+  premiumMonthsOfPay,
+  withDeductionChange,
+  deductionAt,
   premiumOf,
   withInsurerChange,
   kumiaiRun,
@@ -179,5 +182,47 @@ describe('premiumMonthOfPay（給与から控除するのは何月分か。11/16
     expect(premiumMonthOfPay('2026-11', pay('next'))).toBe('2026-10');
     expect(premiumMonthOfPay('2026-01', pay('next'))).toBe('2025-12');
     expect(premiumMonthOfPay('2026-11', pay('current'))).toBe('2026-11');
+  });
+});
+
+describe('控除の時期の履歴（11/20）', () => {
+  const next = { ...DEFAULT_PAYROLL, deduction: 'next' as const };
+  const cur = { ...DEFAULT_PAYROLL, deduction: 'current' as const };
+  // 2026-12月分から、翌月控除 → 当月控除
+  const toCurrent = withDeductionChange(null, 'next', { from: '2026-12', deduction: 'current' });
+
+  it('最初の行は「最初から今の設定」。同じ時期への変更は行を足さない', () => {
+    expect(toCurrent).toEqual([
+      { from: '0000-01', deduction: 'next' },
+      { from: '2026-12', deduction: 'current' },
+    ]);
+    expect(withDeductionChange(toCurrent, 'current', { from: '2027-03', deduction: 'current' })).toEqual(toCurrent);
+  });
+
+  it('切り替えの前の月は前の時期、あとの月は新しい時期（履歴がなければ今の設定）', () => {
+    expect(deductionAt('2026-11', cur, toCurrent)).toBe('next');
+    expect(deductionAt('2026-12', cur, toCurrent)).toBe('current');
+    expect(deductionAt('2026-11', cur, null)).toBe('current');
+  });
+
+  it('翌月 → 当月：11月分は12月払い、12月分も12月払い → 12月払いの給与から2か月分', () => {
+    expect(deductionPayMonth('2026-11', cur, toCurrent)).toBe('2026-12');
+    expect(deductionPayMonth('2026-12', cur, toCurrent)).toBe('2026-12');
+    expect(premiumMonthsOfPay('2026-12', cur, toCurrent)).toEqual(['2026-11', '2026-12']);
+    expect(premiumMonthsOfPay('2026-11', cur, toCurrent)).toEqual(['2026-10']);
+    expect(premiumMonthsOfPay('2027-01', cur, toCurrent)).toEqual(['2027-01']);
+  });
+
+  it('当月 → 翌月：12月分から翌月控除 → 12月払いの給与からは控除しない', () => {
+    const toNext = withDeductionChange(null, 'current', { from: '2026-12', deduction: 'next' });
+    expect(premiumMonthsOfPay('2026-11', next, toNext)).toEqual(['2026-11']);
+    expect(premiumMonthsOfPay('2026-12', next, toNext)).toEqual([]);
+    expect(premiumMonthsOfPay('2027-01', next, toNext)).toEqual(['2026-12']);
+    expect(premiumMonthOfPay('2026-12', next, toNext)).toBe('2026-11');
+  });
+
+  it('履歴がない事業所は今までどおり', () => {
+    expect(premiumMonthsOfPay('2026-11', next)).toEqual(['2026-10']);
+    expect(premiumMonthsOfPay('2026-11', cur)).toEqual(['2026-11']);
   });
 });

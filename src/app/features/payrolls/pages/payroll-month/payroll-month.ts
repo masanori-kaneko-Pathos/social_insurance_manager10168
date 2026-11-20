@@ -30,7 +30,7 @@ import {
   payrollRows,
   periodOf,
 } from '../../logic/payroll-rows';
-import { payrollOf, premiumMonthOfPay } from '../../../office/office-settings';
+import { payrollOf, premiumMonthOfPay, premiumMonthsOfPay } from '../../../office/office-settings';
 import { MonthPicker } from '../../../../shared/components/month-picker/month-picker';
 import { shiftMonth, daysInclusive, daysInMonth, todayLocal, toYearMonth } from '../../../../shared/utils/date';
 import { PayrollChange, PayrollService } from '../../payroll.service';
@@ -138,7 +138,14 @@ export class PayrollMonth {
   /** この月に払う給与から控除する保険料の月（次の一歩のリンク用。11/16） */
   readonly premiumMonth = computed(() => {
     const office = this.context.current();
-    return office && this.month() ? premiumMonthOfPay(this.month(), payrollOf(office)) : this.month();
+    return office && this.month()
+      ? premiumMonthOfPay(this.month(), payrollOf(office), office.deductionHistory)
+      : this.month();
+  });
+  /** この月に払う給与から控除する保険料の月の数（控除の時期を切り替えた月は 0 か 2。11/20） */
+  readonly premiumCount = computed(() => {
+    const office = this.context.current();
+    return office && this.month() ? premiumMonthsOfPay(this.month(), payrollOf(office), office.deductionHistory).length : 1;
   });
   readonly monthNum = (ym: string) => Number(ym.slice(5, 7));
 

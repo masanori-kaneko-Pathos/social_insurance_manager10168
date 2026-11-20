@@ -758,6 +758,24 @@
           </div>
           <!-- 法律の原則は前月分の控除。当月控除は労使協定で選ぶ例外（健保法167条・厚年法84条、労基法24条。11/19） -->
           <span class="hint">{{ 'office.hint.deduction' | transloco }}</span>
+          @if (deductionTo() === 'current') {
+            <!-- 当月控除を選んだら、原則（前月分の控除）と確認先を知らせる（新規・編集とも。11/20） -->
+            <div class="alert alert-warning" role="alert">{{ 'office.hint.deductionCurrentWarn' | transloco }}</div>
+          }
+          @if (deductionChanged()) {
+            <!-- 控除の時期を変える：何月分の保険料から（今月より前は選べない。履歴に残して過去の月はそのまま。11/20） -->
+            <div class="deduction-from">
+              <label for="deductionFrom">{{ 'office.deductionFrom.label' | transloco }}<span class="req" aria-hidden="true">※</span></label>
+              <input id="deductionFrom" class="input" type="month" formControlName="deductionFrom" [min]="thisMonth"
+                     [class.is-invalid]="submitTried() && deductionFromInvalid()" />
+              @if (submitTried() && deductionFromInvalid()) {
+                <span class="field-error">{{ 'office.deductionFrom.invalid' | transloco }}</span>
+              }
+              <div class="alert alert-warning" role="status">
+                {{ (deductionTo() === 'current' ? 'office.deductionFrom.toCurrent' : 'office.deductionFrom.toNext') | transloco }}
+              </div>
+            </div>
+          }
         </div>
       </div>
 

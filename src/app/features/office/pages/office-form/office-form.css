@@ -474,3 +474,14 @@ h3 {
   text-align: right;
 }
 
+
+/* 控除の時期を変える月（11/20） */
+.deduction-from {
+  display: grid;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+  max-width: 40em;
+}
+.deduction-from .input {
+  max-width: 12em;
+}

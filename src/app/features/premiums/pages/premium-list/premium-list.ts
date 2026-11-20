@@ -15,7 +15,9 @@ import { OfficeContext } from '../../../office/office-context.service';
 import {
   DEFAULT_PAYROLL,
   DEFAULT_PREMIUM,
+  deductionAt,
   deductionPayMonth,
+  premiumMonthsOfPay,
   everKumiai,
   insurerFor,
   payrollOf,
@@ -777,7 +779,17 @@ export class PremiumList {
   // ===== 表示の小道具 =====
 
   /** 何月に支払う給与から控除するか */
-  readonly payMonth = computed(() => deductionPayMonth(this.month(), this.payroll()));
+  readonly payMonth = computed(() =>
+    deductionPayMonth(this.month(), this.payroll(), this.context.current()?.deductionHistory),
+  );
+  /** この月分の控除の時期（履歴があればその月の時期。11/20） */
+  readonly deductionNow = computed(() =>
+    deductionAt(this.month(), this.payroll(), this.context.current()?.deductionHistory),
+  );
+  /** 控除の時期の切り替えで、控除する給与で2か月分をまとめて引く月か（翌月控除 → 当月控除。11/20） */
+  readonly doubleDeduction = computed(
+    () => premiumMonthsOfPay(this.payMonth(), this.payroll(), this.context.current()?.deductionHistory).length === 2,
+  );
 
   // ===== 保険料の立替（ボタンを押したときだけ、控除する支払月の給与を読む） =====
 

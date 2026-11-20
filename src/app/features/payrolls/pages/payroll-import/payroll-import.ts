@@ -422,7 +422,7 @@ export class PayrollImport {
   /** その月に払う給与から控除するのは何月分の保険料か（事業所の控除方法による） */
   premiumMonth(paidMonth: string): string {
     const office = this.context.current();
-    return office ? premiumMonthOfPay(paidMonth, payrollOf(office)) : paidMonth;
+    return office ? premiumMonthOfPay(paidMonth, payrollOf(office), office.deductionHistory) : paidMonth;
   }
 
   /** '2026-11' → 11月 */
