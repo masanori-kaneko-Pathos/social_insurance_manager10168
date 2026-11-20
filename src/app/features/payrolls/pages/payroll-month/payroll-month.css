@@ -228,13 +228,15 @@ thead th:nth-child(1) {
 }
 
 tbody td:nth-child(2) {
-  left: 6.5em; /* 社員番号の欄の幅（col.cw-number） */
+  left: calc(
+    var(--font-sm) * 6.5
+  ); /* 社員番号の欄の幅（col.cw-number）。em は見出しと本文で大きさが違うので使わない */
   box-shadow: inset -1px 0 0 var(--color-border);
 }
 
 /* 見出しの氏名：右の縦線と、ほかの見出しと同じ下の線の両方（片方だけだと下の線が消える。11/18） */
 thead th:nth-child(2) {
-  left: 6.5em;
+  left: calc(var(--font-sm) * 6.5);
   box-shadow:
     inset -1px 0 0 var(--color-border),
     inset 0 -1px 0 var(--color-border);
