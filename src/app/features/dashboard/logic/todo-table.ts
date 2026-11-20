@@ -62,6 +62,11 @@ export function deadlineOf(it: BoardItem): { deadline: DateStr | null; note: Dea
     case 'residence':
       // 届の期限ではなく、在留期間の満了日（更新の申請は満了日まで）
       return { deadline: it.date, note: null };
+    case 'bonusReport':
+      // 賞与支払届：支払日から5日以内
+    case 'acquireReport':
+    case 'lossReport':
+      // 資格取得届・資格喪失届：取得日・喪失日から5日以内
     case 'officeNameAddress':
     case 'officeRelation':
     case 'dependentChange':

@@ -216,6 +216,9 @@
                           layout="inline"
                         />
                       </span>
+                    } @else if (it.kind === 'bonusReport') {
+                      <!-- 賞与支払届は支払日ごとに1枚（支給を受けた全員を載せる）なので、人ではなく人数を出す（11/20） -->
+                      <span class="who-count">{{ 'dashboard.todo.bonusPeople' | transloco: { count: it.extra?.params?.['count'] } }}</span>
                     } @else {
                       —
                     }
@@ -452,6 +455,15 @@
                           @case ('bonusNone') {
                             {{ 'dashboard.todo.text.bonusNone' | transloco: it.extra!.params }}
                           }
+                          @case ('bonusReport') {
+                            {{ 'dashboard.todo.text.bonusReport' | transloco: it.extra!.params }}
+                          }
+                          @case ('acquireReport') {
+                            {{ 'dashboard.todo.text.acquireReport' | transloco: it.extra!.params }}
+                          }
+                          @case ('lossReport') {
+                            {{ 'dashboard.todo.text.lossReport' | transloco: it.extra!.params }}
+                          }
                           @case ('childcareSpecial') {
                             {{ 'dashboard.todo.text.childcareSpecial' | transloco: it.extra!.params }}
                           }
@@ -623,6 +635,27 @@
                           @case ('bonusNone') {
                             <a [routerLink]="['/o', office()?.id, 'bonuses']"
                               >{{ 'dashboard.todo.toBonuses' | transloco }} →</a
+                            >
+                          }
+                          @case ('bonusReport') {
+                            <a
+                              [routerLink]="['/o', office()?.id, 'filings']"
+                              [queryParams]="{ kind: 'bonus', from: it.date?.slice(0, 7) }"
+                              >{{ 'dashboard.todo.toBonusFiling' | transloco }} →</a
+                            >
+                          }
+                          @case ('acquireReport') {
+                            <a
+                              [routerLink]="['/o', office()?.id, 'filings']"
+                              [queryParams]="{ kind: 'acquire', from: it.date?.slice(0, 7) }"
+                              >{{ 'dashboard.todo.toFilings' | transloco }} →</a
+                            >
+                          }
+                          @case ('lossReport') {
+                            <a
+                              [routerLink]="['/o', office()?.id, 'filings']"
+                              [queryParams]="{ kind: 'loss', from: it.date?.slice(0, 7) }"
+                              >{{ 'dashboard.todo.toLossFiling' | transloco }} →</a
                             >
                           }
                           @case ('childcareSpecial') {

@@ -73,6 +73,9 @@ export const BOARD_ORDER: readonly BoardKind[] = [
   'actualHours',
   'acquireAmount',
   'bonusNone',
+  'bonusReport',
+  'acquireReport',
+  'lossReport',
   'bonusCumulative',
   'childcareSpecial',
   'birthDate',
@@ -114,6 +117,9 @@ export const SECTION_OF: Record<BoardKind, Section> = {
   actualHours: 'now',
   acquireAmount: 'now',
   bonusNone: 'now',
+  bonusReport: 'now',
+  acquireReport: 'now',
+  lossReport: 'now',
   bonusCumulative: 'soon',
   childcareSpecial: 'soon',
   birthDate: 'now',
@@ -139,6 +145,9 @@ export const DISMISSABLE: ReadonlySet<BoardKind> = new Set<BoardKind>([
   'acquireAmount', // 取得後に決まった昇給など、入れ漏れではないと確かめたら消す
   'actualHours', // 一時的な残業で、続く見込みがないと確かめたら消す
   'bonusNone', // 不支給報告書を出したら消す（支払予定月にあとから賞与を入れれば、そもそも出なくなる）
+  'bonusReport', // 賞与支払届を出したら消す
+  'acquireReport', // 資格取得届を出したら消す
+  'lossReport', // 資格喪失届を出したら消す
   'bonusCumulative', // 本人に案内した（申出書を出した）ら消す
   'childcareSpecial', // 申出書を出した（本人が出さないと決めた）ら消す
   'retireGuide', // 本人に案内したら消す

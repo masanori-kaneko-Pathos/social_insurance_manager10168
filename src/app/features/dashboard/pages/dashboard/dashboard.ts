@@ -56,6 +56,8 @@ import {
   RATES_NOTICE_TO,
   ratesMissingTodo,
   bonusNoneTodos,
+  bonusReportTodos,
+  enrollmentReportTodos,
   actualHoursTodo,
   acquireAmountTodo,
   childcareSpecialTodo,
@@ -287,6 +289,8 @@ export class Dashboard {
       ...(adjustment ? [extraItem(adjustment)] : []),
       ...insurerChangeTodos(o, this.today).map(extraItem),
       ...bonusNoneTodos(o.bonusMonths ?? [], this.bonusPayments(), this.today).map(extraItem),
+      ...bonusReportTodos(this.bonusPayments(), this.today).map(extraItem),
+      ...this.employees().flatMap((e) => enrollmentReportTodos(e, this.today)).map(extraItem),
       ...this.employees()
         .filter((e) => e.priorBonusTotals)
         .flatMap((e) => bonusCumulativeTodos(e, this.bonusPayments(), this.today))

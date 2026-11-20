@@ -29,6 +29,11 @@
 //   → 賞与不支給報告書（日本年金機構。支払予定月の翌月末日まで）。先月・先々月の分を出す
 // - acquireAmount：資格取得届の報酬月額より、入社後3か月以内の給与の固定的賃金が多い（手当の入れ漏れ。11/19）
 // - actualHours：所定は基準未満だが、実際の労働時間が連続する2か月とも基準以上（加入していない人。11/19）
+// - bonusReport：賞与を払った（社会保険の対象の支給）→ 賞与支払届（支払日から5日以内。健保法施行規則27条・厚年法施行規則19条。11/20）
+//   支払日ごとに1件。払った日から60日のあいだ出す（出したら「確認した」で消す）
+// - acquireReport・lossReport：資格を取った・なくした（登録済みの人）→ 資格取得届・資格喪失届（その日から5日以内。
+//   健保法施行規則24条・29条、厚年法施行規則15条・22条。11/20）。その日から60日のあいだ出す（出したら「確認した」で消す）
+//   加入していない人の「加入の判断」（acquire）・「喪失の判断」（lose）とは別。こちらは届を出したかの確認
 // - bonusCumulative：前の事業所の分と合わせて、健保の標準賞与額の年度の累計が上限（573万円）を超えた（11/19）
 //   → 本人が保険者に「健康保険標準賞与額累計申出書」を出す（同じ保険者で転職した人。出さないと上限が効かない）
 // - childcareSpecial：3歳未満の子を養育していて、厚生年金の標準報酬月額が子の生まれた月の前月より下がった（11/19）
@@ -65,6 +70,9 @@ export type ExtraKind =
   | 'adjustmentDeadline'
   | 'insurerChange'
   | 'bonusNone'
+  | 'bonusReport'
+  | 'acquireReport'
+  | 'lossReport'
   | 'bonusCumulative'
   | 'actualHours'
   | 'acquireAmount'
@@ -467,6 +475,56 @@ export function bonusNoneTodos(
     const date = `${next}-${String(daysInMonth(next)).padStart(2, '0')}`;
     out.push({ kind: 'bonusNone', employeeId: null, date, params: { year: month.slice(0, 4), month: Number(month.slice(5, 7)), date } });
   }
+  return out;
+}
+
+/** 賞与を払った日ごとに「賞与支払届」（期限：支払日を含めて5日。60日より前の支払は出さない。11/20） */
+export const BONUS_REPORT_DAYS = 60;
+export function bonusReportTodos(
+  payments: readonly Pick<BonusPaymentLike, 'paidDate' | 'amounts' | 'rule'>[],
+  today: DateStr,
+): ExtraTodo[] {
+  const since = addDays(today, -BONUS_REPORT_DAYS);
+  const people = new Map<DateStr, Set<string>>();
+  for (const p of payments) {
+    if (isNotCovered(p) || p.paidDate > today || p.paidDate < since) continue;
+    const ids = Object.entries(p.amounts).filter(([, a]) => a > 0).map(([id]) => id);
+    if (ids.length === 0) continue;
+    const set = people.get(p.paidDate) ?? new Set<string>();
+    ids.forEach((id) => set.add(id));
+    people.set(p.paidDate, set);
+  }
+  return [...people.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, ids]) => ({ kind: 'bonusReport' as const, employeeId: null, date, params: { date, count: ids.size } }));
+}
+
+/** 資格取得届・資格喪失届の期限（取得日・喪失日を含めて5日）。60日より前と、これからの日は出さない（11/20） */
+export const ENROLLMENT_REPORT_DAYS = 60;
+export interface EnrollmentReportPerson {
+  id: string;
+  birthDate: DateStr;
+  retireDate: DateStr | null;
+  health: { enrolled: boolean; acquiredDate: DateStr | null; lostDate: DateStr | null };
+  pension: { enrolled: boolean; acquiredDate: DateStr | null; lostDate: DateStr | null };
+}
+export function enrollmentReportTodos(p: EnrollmentReportPerson, today: DateStr): ExtraTodo[] {
+  const since = addDays(today, -ENROLLMENT_REPORT_DAYS);
+  const inRange = (d: DateStr | null): d is DateStr => !!d && d >= since && d <= today;
+  const out: ExtraTodo[] = [];
+  const parts = [p.health, p.pension].filter((x) => x.enrolled);
+  // 健保と厚年で日が違えば、それぞれ1件（70歳で厚年だけ、など。届は同じ様式）
+  const acquired = [...new Set(parts.map((x) => x.acquiredDate).filter(inRange))].sort();
+  for (const date of acquired) out.push({ kind: 'acquireReport', employeeId: p.id, date, params: { date } });
+  // 喪失日：記録の日か退職日の翌日。健保は75歳の誕生日も（後期高齢者。喪失届が要る）
+  // 厚年の70歳到達は「70歳到達届」なので、年齢の To-do に任せてここでは出さない
+  const left = (x: { lostDate: DateStr | null }) => x.lostDate ?? (p.retireDate ? addDays(p.retireDate, 1) : null);
+  const healthLost = p.health.enrolled
+    ? healthLostDate({ birthDate: p.birthDate, health: { ...p.health, lostDate: left(p.health) }, pension: p.pension })
+    : null;
+  const pensionLost = p.pension.enrolled ? left(p.pension) : null;
+  const lost = [...new Set([healthLost, pensionLost].filter(inRange))].sort();
+  for (const date of lost) out.push({ kind: 'lossReport', employeeId: p.id, date, params: { date } });
   return out;
 }
 

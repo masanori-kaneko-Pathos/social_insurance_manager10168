@@ -609,3 +609,9 @@ h1 {
   margin-left: var(--space-sm);
   white-space: nowrap;
 }
+
+/* 賞与支払届の To-do：従業員の欄に人数（11/20） */
+.who-count {
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}

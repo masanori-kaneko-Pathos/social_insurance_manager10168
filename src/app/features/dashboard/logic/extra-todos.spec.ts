@@ -1,5 +1,5 @@
 import { childcareSpecialEnd, childcareSpecialTodo, childStartsOf } from './extra-todos';
-import { acquireAmountTodo, actualHoursThreshold, actualHoursTodo, adjustmentDeadlineTodo, insurerChangeTodos, ratesMissingTodo, bonusNoneTodos, bonusCumulativeTodos, CumulativePerson } from './extra-todos';
+import { acquireAmountTodo, actualHoursThreshold, actualHoursTodo, adjustmentDeadlineTodo, insurerChangeTodos, ratesMissingTodo, bonusNoneTodos, bonusCumulativeTodos, bonusReportTodos, enrollmentReportTodos, CumulativePerson } from './extra-todos';
 import { cardReturnTodo, contractEndTodo, isShortTerm, myNumberTodos, noticeRequired, retireGuideTodo, voluntaryEligible } from './extra-todos';
 import {
   ExtraPerson,
@@ -269,6 +269,63 @@ describe('賞与不支給報告書（11/19）', () => {
   it('予定月に払っていれば出さない。予定月でなければ出さない', () => {
     expect(bonusNoneTodos([10], [{ paidDate: '2026-10-20', amounts: { e1: 1 } }], '2026-11-19')).toEqual([]);
     expect(bonusNoneTodos([6, 12], pays, '2026-11-19')).toEqual([]);
+  });
+});
+
+describe('enrollmentReportTodos：資格取得届・資格喪失届（11/20）', () => {
+  const en = (acquiredDate: string | null, lostDate: string | null = null) => ({ enrolled: true, acquiredDate, lostDate });
+  it('11/2 取得 → 取得届。11/15 退職 → 喪失日 11/16 で喪失届', () => {
+    const t = enrollmentReportTodos({ id: 'a', birthDate: '1990-01-01', retireDate: '2026-11-15', health: en('2026-11-02'), pension: en('2026-11-02') }, '2026-11-20');
+    expect(t.map((x) => [x.kind, x.date])).toEqual([
+      ['acquireReport', '2026-11-02'],
+      ['lossReport', '2026-11-16'],
+    ]);
+  });
+  it('60日より前・これからの日は出さない。加入していない保険は見ない', () => {
+    expect(enrollmentReportTodos({ id: 'a', birthDate: '1990-01-01', retireDate: null, health: en('2026-09-20'), pension: en('2026-12-01') }, '2026-11-20')).toEqual([]);
+    expect(
+      enrollmentReportTodos({ id: 'a', birthDate: '1990-01-01', retireDate: '2026-11-01', health: { enrolled: false, acquiredDate: '2026-11-01', lostDate: null }, pension: { enrolled: false, acquiredDate: null, lostDate: null } }, '2026-11-20'),
+    ).toEqual([]);
+  });
+  it('11/10 に75歳：記録に喪失日がなくても、健保の喪失届1件（厚年はもうない）', () => {
+    const t = enrollmentReportTodos(
+      { id: 'a', birthDate: '1951-11-10', retireDate: null, health: en('2013-04-01'), pension: { enrolled: false, acquiredDate: null, lostDate: null } },
+      '2026-11-20',
+    );
+    expect(t.map((x) => [x.kind, x.date])).toEqual([['lossReport', '2026-11-10']]);
+  });
+  it('70歳到達（厚年の喪失）は年齢の To-do に任せて出さない', () => {
+    expect(enrollmentReportTodos({ id: 'a', birthDate: '1956-11-01', retireDate: null, health: en('2016-04-01'), pension: en('2016-04-01') }, '2026-11-20')).toEqual([]);
+  });
+});
+
+describe('bonusReportTodos：賞与支払届（11/20）', () => {
+  it('支払日ごとに1件。同じ日の支給はまとめて人数を数える', () => {
+    const t = bonusReportTodos(
+      [
+        { paidDate: '2026-11-10', amounts: { a: 2000000, b: 0 } },
+        { paidDate: '2026-11-10', amounts: { a: 1000, c: 300000 } },
+        { paidDate: '2026-10-25', amounts: { d: 100000 } },
+      ],
+      '2026-11-20',
+    );
+    expect(t.map((x) => [x.date, x.params['count']])).toEqual([
+      ['2026-10-25', 1],
+      ['2026-11-10', 2],
+    ]);
+  });
+  it('60日より前・これからの支払・0円だけ・社会保険の対象外の項目は出さない', () => {
+    expect(
+      bonusReportTodos(
+        [
+          { paidDate: '2026-07-10', amounts: { a: 1 } },
+          { paidDate: '2026-12-10', amounts: { a: 1 } },
+          { paidDate: '2026-11-01', amounts: { a: 0 } },
+          { paidDate: '2026-11-02', amounts: { a: 1 }, rule: { treatments: [{ fromYear: 0, treatment: 'none' }] } as never },
+        ],
+        '2026-11-20',
+      ),
+    ).toEqual([]);
   });
 });
 
