@@ -46,6 +46,7 @@ h2 {
 .summary {
   display: flex;
   flex-wrap: wrap;
+  align-items: center; /* 「変わった人だけ表示」のボタンと文の高さをそろえる（11/20） */
   gap: var(--space-md);
   margin: 0 0 var(--space-md);
   font-size: var(--font-sm);
@@ -59,9 +60,26 @@ h2 {
   color: var(--color-warning-text);
 }
 
+/* 「前月から変わった人：◯人」は押せる文字（押すとその人だけに絞る。絞っている間は地に色。11/20） */
 .changed-note {
-  color: var(--color-text);
+  padding: 0 var(--space-xs);
+  font: inherit;
   font-weight: 600;
+  color: var(--color-text);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.changed-note:hover {
+  color: var(--color-primary);
+}
+
+.changed-note.on {
+  background: var(--color-highlight);
 }
 
 /* 警告 */

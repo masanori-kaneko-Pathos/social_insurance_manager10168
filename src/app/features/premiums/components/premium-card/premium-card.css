@@ -108,6 +108,90 @@ tbody th {
   padding-left: calc(1em + var(--space-xs));
 }
 
+/* ===== 年表：本人負担が変わった月と理由（表の上。11/20）=====
+   左に縦の線と点、右に「前の月 → その月」の額と理由。月を押すと下の表のその月の計算が開く */
+.changes {
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+h3 {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-sm);
+  font-weight: 600;
+}
+
+.changes-none {
+  margin: 0;
+  font-size: var(--font-sm);
+}
+
+.timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.timeline > li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 8.5em 1fr;
+  gap: 0 var(--space-md);
+  padding: 0 0 var(--space-md) var(--space-md);
+  font-size: var(--font-sm);
+  border-left: 2px solid var(--color-border-strong);
+}
+
+.timeline > li:last-child {
+  padding-bottom: 0;
+}
+
+/* 点（縦の線の上に重ねる） */
+.timeline > li::before {
+  content: '';
+  position: absolute;
+  top: 0.45em;
+  left: -6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.when {
+  white-space: nowrap;
+}
+
+.amount {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.before,
+.arrow,
+.diff {
+  color: var(--color-text-sub);
+}
+
+.diff {
+  margin-left: var(--space-xs);
+  font-size: var(--font-xs);
+}
+
+.reasons {
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-sub);
+}
+
+@media (max-width: 600px) {
+  .timeline > li {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* 根拠：拠出金は保険料ではないので、線で区切って薄く出す */
 .contribution-head {
   margin-top: var(--space-sm);

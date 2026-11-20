@@ -53,10 +53,21 @@
     @if (hiddenCount() > 0) {
       <span class="muted">{{ 'premiumList.hidden' | transloco: { count: hiddenCount() } }}</span>
     }
-    @if (changedCount() > 0) {
-      <span class="changed-note">{{
-        'premiumList.changedCount' | transloco: { count: changedCount() }
-      }}</span>
+    @if (changedCount() > 0 || onlyChanged()) {
+      <!-- 押せる文字：押すと前月から変わった人だけに絞り、もう一度押すと全員に戻る（合計は全員分のまま。11/20） -->
+      <button
+        type="button"
+        class="changed-note"
+        [class.on]="onlyChanged()"
+        [attr.aria-pressed]="onlyChanged()"
+        [title]="(onlyChanged() ? 'premiumList.changedOnly.titleOn' : 'premiumList.changedOnly.titleOff') | transloco"
+        (click)="toggleOnlyChanged()"
+      >
+        {{ 'premiumList.changedCount' | transloco: { count: changedCount() } }}
+      </button>
+      @if (onlyChanged()) {
+        <span class="muted">{{ 'premiumList.changedOnly.rest' | transloco: { count: rows().length - changedCount() } }}</span>
+      }
     }
     @if (context.isAdmin() && rows().length > 0) {
       <!-- 出力は1つのボタンにまとめる（開くと CSV・Excel を選ぶ） -->

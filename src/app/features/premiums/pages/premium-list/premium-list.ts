@@ -275,12 +275,22 @@ export class PremiumList {
   /** 探す・絞る（従業員の一覧と同じ条件）・ページ。合計は絞り込みに関係なく全員分（11/13） */
   readonly listOptions = signal<PersonListOptions>(defaultListOptions());
   readonly page = signal(1);
-  readonly filteredRows = computed(() =>
-    sortPremiumRows(
-      filterAndSort(this.rows(), this.listOptions(), (r) => r.employee, () => null, () => false),
+  /** 前月から変わった人だけを表に出す（合計は全員分のまま。直してほしい行は隠さない。11/20） */
+  readonly onlyChanged = signal(false);
+  readonly filteredRows = computed(() => {
+    const only = this.onlyChanged();
+    return sortPremiumRows(
+      filterAndSort(this.rows(), this.listOptions(), (r) => r.employee, () => null, () => false).filter(
+        (r) => !only || r.changes.length > 0 || r.state === 'missing' || r.state === 'error',
+      ),
       this.sort(),
-    ),
-  );
+    );
+  });
+
+  toggleOnlyChanged(): void {
+    this.onlyChanged.update((v) => !v);
+    this.page.set(1);
+  }
   private readonly shown = computed(() => pageOf(this.filteredRows(), this.page(), this.listOptions().size));
   readonly sortedRows = computed(() => this.shown().rows);
 
@@ -626,7 +636,7 @@ export class PremiumList {
   /** 絞り込み・探す を使っているか（使っていれば、出力は絞り込んだ人だけ＋小計。11/16） */
   readonly isFiltered = computed(() => {
     const o = this.listOptions();
-    return listFilterCount(o) > 0 || o.query.trim() !== '';
+    return listFilterCount(o) > 0 || o.query.trim() !== '' || this.onlyChanged();
   });
 
   /** 出力の窓に出す人数（絞り込んでいれば絞り込んだ人、なければ全員） */

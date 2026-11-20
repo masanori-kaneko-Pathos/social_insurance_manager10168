@@ -21,6 +21,48 @@
         }}
       </p>
     }
+    <!-- 年表：本人負担が前の月から変わった月と理由（「なぜ今月から天引きが変わったか」に答える。11/20） -->
+    @if (rows().length > 1) {
+      <div class="changes">
+        <h3>{{ 'premium.changes.title' | transloco }}</h3>
+        @if (changes().length === 0) {
+          <p class="muted changes-none">{{ 'premium.changes.none' | transloco }}</p>
+        } @else {
+          <ol class="timeline">
+            @for (c of changes(); track c.month) {
+              <li [class.future]="isFuture(c.month)">
+                <div class="when">
+                  @if (changeHasDetail(c.month)) {
+                    <button type="button" class="toggle" [title]="'premium.changes.open' | transloco" (click)="openChange(c.month)">
+                      {{ 'premium.monthLabel' | transloco: monthParts(c.month) }}
+                    </button>
+                  } @else {
+                    <span>{{ 'premium.monthLabel' | transloco: monthParts(c.month) }}</span>
+                  }
+                </div>
+                <div class="what">
+                  <p class="amount">
+                    <span class="before">{{ 'premium.changes.yen' | transloco: { n: yen(c.before) } }}</span>
+                    <span class="arrow" aria-hidden="true">→</span>
+                    <strong>{{ 'premium.changes.yen' | transloco: { n: yen(c.after) } }}</strong>
+                    @if (c.after !== c.before) {
+                      <span class="diff">{{ 'premium.changes.diff' | transloco: { n: diffText(c) } }}</span>
+                    }
+                  </p>
+                  <ul class="reasons">
+                    @for (r of c.reasons; track $index) {
+                      <li>{{ reasonKey(r) | transloco: reasonParams(r) }}</li>
+                    } @empty {
+                      <li>{{ 'premium.changes.reason.other' | transloco }}</li>
+                    }
+                  </ul>
+                </div>
+              </li>
+            }
+          </ol>
+        }
+      </div>
+    }
     <div class="table-wrap">
       <table>
         <thead>

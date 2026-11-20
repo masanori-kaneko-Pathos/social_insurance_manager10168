@@ -1207,7 +1207,43 @@
       "floor": "Agreement: round down",
       "ceil": "Agreement: round up"
     },
-    "formulaBonus": "JPY {{base}} (standard bonus) × {{rate}} = JPY {{total}}"
+    "formulaBonus": "JPY {{base}} (standard bonus) × {{rate}} = JPY {{total}}",
+    "changes": {
+      "title": "Months when the premium changed",
+      "none": "The employee share did not change from the previous month in this period.",
+      "open": "Open the calculation for this month",
+      "yen": "¥{{n}}",
+      "diff": "({{n}} yen from the previous month)",
+      "reason": {
+        "start": "Premiums started (from the month coverage was acquired).",
+        "end": "Premiums ended (from the month coverage was lost).",
+        "exemptStart": "The premium exemption for maternity or childcare leave started.",
+        "exemptEnd": "The premium exemption for maternity or childcare leave ended.",
+        "base": {
+          "health": "The standard monthly remuneration changed from ¥{{from}} to ¥{{to}} (health insurance grade {{fromGrade}} → {{toGrade}}).",
+          "pension": "The standard monthly remuneration for employees' pension changed from ¥{{from}} to ¥{{to}} (grade {{fromGrade}} → {{toGrade}})."
+        },
+        "partStart": {
+          "health": "Health insurance premiums started.",
+          "care": "Long-term care insurance premiums started (for example, on reaching age 40).",
+          "childSupport": "The child and childcare support contribution started.",
+          "pension": "Employees' pension premiums started."
+        },
+        "partEnd": {
+          "health": "Health insurance premiums ended (for example, on reaching age 75).",
+          "care": "Long-term care insurance premiums ended (for example, on reaching age 65).",
+          "childSupport": "The child and childcare support contribution ended.",
+          "pension": "Employees' pension premiums ended (for example, on reaching age 70)."
+        },
+        "rate": {
+          "health": "The health insurance rate changed from {{from}} to {{to}}.",
+          "care": "The long-term care insurance rate changed from {{from}} to {{to}}.",
+          "childSupport": "The child and childcare support rate changed from {{from}} to {{to}}.",
+          "pension": "The employees' pension rate changed from {{from}} to {{to}}."
+        },
+        "other": "Due to rounding or a difference in the reduction. Open the month to check the calculation."
+      }
+    }
   },
   "premiumList": {
     "title": "Premiums",
@@ -1345,7 +1381,12 @@
       "toRegular": "Go to the {{year}} annual determination",
       "toRevisions": "Go to revision candidates (irregular / after leave)"
     },
-    "doubleDeduction": "Because the deduction timing was switched to same-month, the pay for month {{pay}} deducts two months: the previous month and this month."
+    "doubleDeduction": "Because the deduction timing was switched to same-month, the pay for month {{pay}} deducts two months: the previous month and this month.",
+    "changedOnly": {
+      "titleOff": "Click to show only people whose premium changed from last month",
+      "titleOn": "Click to show everyone again",
+      "rest": "only (the other {{count}} are the same as last month; totals cover everyone)"
+    }
   },
   "rateDialog": {
     "title": "Health insurance rates",

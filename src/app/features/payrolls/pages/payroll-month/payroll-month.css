@@ -228,9 +228,7 @@ thead th:nth-child(1) {
 }
 
 tbody td:nth-child(2) {
-  left: calc(
-    var(--font-sm) * 6.5
-  ); /* 社員番号の欄の幅（col.cw-number）。em は見出しと本文で大きさが違うので使わない */
+  left: calc(var(--font-sm) * 6.5); /* 社員番号の欄の幅（col.cw-number）。em は見出しと本文で大きさが違うので使わない */
   box-shadow: inset -1px 0 0 var(--color-border);
 }
 
@@ -325,6 +323,19 @@ tr.has-error td {
   color: var(--color-text-sub);
   font-size: 12px;
   white-space: nowrap;
+}
+
+/* 「現物を分ける」：文字だけのボタン（ほかの画面の .link-btn と同じ。11/20：書き方が抜けていて生のボタンになっていた） */
+.link-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  color: inherit;
+  text-decoration: underline;
+  white-space: nowrap;
+  cursor: pointer;
 }
 
 /* 「‹ 年月 › 今月」（保険料の一覧と同じ形。11/12） */

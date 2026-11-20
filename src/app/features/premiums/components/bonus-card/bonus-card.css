@@ -115,3 +115,25 @@ td.num {
   font-size: var(--font-sm);
   color: var(--color-text-sub);
 }
+
+/* 文字だけのボタン（キャンセル・削除）。ほかのカード（契約など）と同じ見た目（11/20：書き方が抜けていて生のボタンになっていた） */
+.link {
+  padding: 0 var(--space-xs);
+  font: inherit;
+  font-size: var(--font-sm);
+  color: var(--color-text);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.link.danger {
+  color: var(--color-danger-text);
+  font-weight: 600;
+}

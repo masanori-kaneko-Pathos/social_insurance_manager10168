@@ -102,7 +102,7 @@
             <button type="button" class="link" (click)="priorOpen.set(false)">{{ 'common.cancel' | transloco }}</button>
           </div>
         } @else {
-          <button type="button" class="link" (click)="priorOpen.set(true)">{{ 'bonus.prior.add' | transloco }}</button>
+          <button type="button" class="btn btn-small" (click)="priorOpen.set(true)">{{ 'bonus.prior.add' | transloco }}</button>
         }
         <p class="hint">{{ 'bonus.prior.hint' | transloco }}</p>
       }

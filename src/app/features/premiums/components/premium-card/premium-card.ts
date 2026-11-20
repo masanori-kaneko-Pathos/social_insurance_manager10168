@@ -29,6 +29,7 @@ import { withCapRevisions } from '../../../rates/logic/cap-revision';
 import { formatPercent } from '../../../rates/logic/rate-format';
 import { RateService } from '../../../rates/rate.service';
 import { calcMonthly } from '../../logic/calc-monthly';
+import { ChangeReason, PremiumChange, premiumChanges } from '../../logic/premium-changes';
 import { splitContribution } from '../../logic/premium-core';
 import { formatMilli } from '../../logic/rounding';
 import { PremiumBreakdown } from '../premium-breakdown/premium-breakdown';
@@ -134,6 +135,12 @@ export class PremiumCard implements OnInit {
     });
   });
 
+  /**
+   * 本人負担が前の月から変わった月と理由（新しい順。表の上の年表。11/20）
+   * 表に並べた月の中で見比べる（最初の月は前の月がないので出ない）
+   */
+  readonly changes = computed<PremiumChange[]>(() => premiumChanges(this.rows()).reverse());
+
   /** 読み込みが終わったら、focusMonth の行を開いて画面の真ん中へ（1回だけ） */
   private focused = false;
   private readonly focusEffect = effect(() => {
@@ -179,6 +186,43 @@ export class PremiumCard implements OnInit {
 
   toggle(month: YearMonth): void {
     this.openMonth.update((m) => (m === month ? null : month));
+  }
+
+  /** 年表の月を押したら、その月の計算を開いて表の行へ送る */
+  openChange(month: YearMonth): void {
+    this.openMonth.set(month);
+    setTimeout(() => document.getElementById(`premium-${month}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' }));
+  }
+
+  /** 年表の月に、開いて見る計算があるか（免除・かからない月は行を開けない） */
+  changeHasDetail(month: YearMonth): boolean {
+    const row = this.rows().find((r) => r.month === month);
+    return !!row && this.hasDetail(row);
+  }
+
+  /** 前の月との差（+2,430円／−36,600円） */
+  diffText(c: PremiumChange): string {
+    const d = c.after - c.before;
+    return `${d > 0 ? '+' : '−'}${this.yen(Math.abs(d))}`;
+  }
+
+  /** 理由の文のキー（保険の種類ごとに文を分けてある） */
+  reasonKey(r: ChangeReason): string {
+    const base = `premium.changes.reason.${r.kind}`;
+    return 'part' in r ? `${base}.${r.part}` : base;
+  }
+
+  reasonParams(r: ChangeReason): Record<string, string> {
+    if (r.kind === 'base') {
+      return {
+        from: this.yen(r.from),
+        to: this.yen(r.to),
+        fromGrade: r.fromGrade == null ? '—' : String(r.fromGrade),
+        toGrade: r.toGrade == null ? '—' : String(r.toGrade),
+      };
+    }
+    if (r.kind === 'rate') return { from: formatPercent(r.from), to: formatPercent(r.to) };
+    return {};
   }
 
   // ===== 表示の小道具 =====
