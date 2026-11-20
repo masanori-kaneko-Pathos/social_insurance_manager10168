@@ -763,7 +763,8 @@
 
       <!-- 賞与の支払予定月と現物（「やること」の入れ忘れの候補に使う） -->
       <div formGroupName="coverage">
-        <h3>{{ 'office.coverage.bonusTitle' | transloco }}</h3>
+        <!-- 賞与の一覧の「変更する」から飛んでくる場所（#bonus-months。11/20） -->
+        <h3 id="bonus-months">{{ 'office.coverage.bonusTitle' | transloco }}</h3>
         <div
           class="months"
           role="group"

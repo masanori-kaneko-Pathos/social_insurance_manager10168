@@ -1,6 +1,6 @@
 import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { BonusPayment } from '../../../../core/models/bonus';
 import { Employee } from '../../../../core/models/employee';
 import { EmployeeService } from '../../../employees/employee.service';
@@ -71,6 +71,13 @@ export class BonusList {
   private readonly bonusApi = inject(BonusService);
   private readonly rates = inject(RateService);
   readonly context = inject(OfficeContext);
+  private readonly transloco = inject(TranslocoService);
+
+  /** 支払予定月の表示（「7月・12月」。11/20） */
+  monthsText(months: readonly number[]): string {
+    const sep = this.transloco.getActiveLang() === 'en' ? ', ' : '・';
+    return [...months].sort((a, b) => a - b).map((m) => this.transloco.translate('bonus.monthOf', { m })).join(sep);
+  }
 
   private readonly employees = signal<Employee[]>([]);
   private readonly payments = signal<BonusPayment[]>([]);

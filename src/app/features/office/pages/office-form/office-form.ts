@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
+import { afterNextRender, Component, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
@@ -596,6 +596,11 @@ export class OfficeForm {
       const o = this.context.current();
       if (o) this.fillFrom(o);
       if (this.readOnly) this.form.disable();
+      // ほかのページから「#bonus-months」などの場所を指定して開いたら、そこまで送る（11/20）
+      const fragment = this.route.snapshot.fragment;
+      if (fragment) {
+        afterNextRender(() => document.getElementById(fragment)?.scrollIntoView({ block: 'start' }));
+      }
     } else {
       const uid = this.auth.user()?.uid;
       if (uid) {

@@ -225,3 +225,12 @@ tfoot .list-total td {
 td.sub-col {
   color: var(--color-text-sub);
 }
+
+/* 賞与の支払予定月（11/20） */
+.bonus-months {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-xs) var(--space-sm);
+  margin: 0 0 var(--space-md);
+}

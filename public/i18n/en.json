@@ -1479,7 +1479,7 @@
       "fourTimesTitle": "About bonuses paid 4+ times a year (item and counting)",
       "nature": "Payments are counted per item, regardless of their title. Keep summer, winter and year-end bonuses as \"賞与\"; use a separate item for payments counted separately (inflation allowance, quarterly incentive, etc.). Set each item's treatment on the Bonus items page.",
       "countAs": "Count an exceptionally split payment once, and do not count a payment made only this year.",
-      "fourTimes": "If the same employee received payments of the same item 4+ times in the year before July 1, payments from September are \"bonus as remuneration\" for that employee only: no bonus premium and no bonus payment report (the annual amount ÷ 12 is added at the annual determination). In the year the rule is created, it stays a bonus until the next annual determination.",
+      "fourTimes": "If the same employee received payments of the same item 4+ times in the year before July 1, payments from July 1 are \"bonus as remuneration\" for that employee only: no bonus premium and no bonus payment report (the annual amount ÷ 12 is added at the annual determination). In the year the rule is created, it stays a bonus until the next annual determination.",
       "hidden": "({{count}} not insured on the payment date are hidden)",
       "deduct": "The employee share is deducted from this bonus and paid together with that month's monthly premiums.",
       "unsaved": "Unsaved changes",
@@ -1558,7 +1558,12 @@
       "search": "Search by title or bonus item",
       "none": "No payments match the conditions."
     },
-    "listTotal": "Total ({{count}} payments)"
+    "listTotal": "Total ({{count}} payments)",
+    "plannedMonths": "Scheduled bonus months",
+    "plannedMonthsNone": "None registered",
+    "plannedMonthsNote": "(registered with the Japan Pension Service)",
+    "plannedMonthsEdit": "Change",
+    "monthOf": "{{m}}"
   },
   "leave": {
     "title": "Leave",
