@@ -98,30 +98,26 @@
   <div class="card table-wrap">
     <!-- Enter・矢印キーで次のセルへ（表計算ソフトと同じ動き） -->
     <table appEnterNext="grid" class="fixed-cols sticky-head" [class.all]="showAll()">
-      <!-- 欄の幅を固定（表示する行が変わっても揺れないように。幅の種類は styles.css の col.cw-*。11/18） -->
+      <!-- 欄の幅を固定（表示する行が変わっても揺れないように。幅の種類は styles.css の col.cw-*。11/18）
+           項目を増やすときは、今ある欄は動かさずに右へ足す。残りの幅は最後の空の欄が受け持つ（11/20） -->
       <colgroup>
         <col class="cw-number" />
-        <!-- 氏名の欄は、残りの幅を受け持つ（欄の間がむやみに空かないように）。項目を増やした表示では幅を決める -->
-        <col [class.cw-name]="showAll()" />
-        <!-- 項目を増やした表示では、部署・雇用形態を隠す（細かく入れる場面なので。絞り込みで足りる。11/18） -->
-        @if (!showAll()) {
-          <col class="cw-dept" />
-          <col class="cw-type" />
-        }
+        <col class="c-name" />
+        <col class="cw-dept" />
+        <col class="cw-type" />
         <col class="c-money" />
-        @if (showAll()) {
-          <col class="c-inkind" />
-          <col class="cw-yen" />
-        }
         <col class="c-money" />
         <col class="cw-days" />
         @if (showAll()) {
+          <col class="c-inkind" />
+          <col class="cw-yen" />
           <col class="c-money" />
           <col class="cw-short" />
           <col class="cw-days" />
           <col class="cw-short" />
           <col class="c-state" />
         }
+        <col />
       </colgroup>
       <thead>
         <tr>
@@ -129,15 +125,9 @@
           <th><app-sort-header key="number" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.employeeNumber' | transloco }}</app-sort-header></th>
           <th><app-sort-header key="kana" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.name' | transloco }}</app-sort-header></th>
           <!-- 部署・雇用形態（担当が分かれていても、自分の受け持ちが目で見て分かるように。11/13） -->
-          @if (!showAll()) {
-            <th><app-sort-header key="dept" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.department' | transloco }}</app-sort-header></th>
-            <th><app-sort-header key="employment" [(options)]="listOptions" [(page)]="page">{{ 'employee.list.employment' | transloco }}</app-sort-header></th>
-          }
+          <th><app-sort-header key="dept" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.department' | transloco }}</app-sort-header></th>
+          <th><app-sort-header key="employment" [(options)]="listOptions" [(page)]="page">{{ 'employee.list.employment' | transloco }}</app-sort-header></th>
           <th class="num">{{ 'payroll.col.cash' | transloco }}</th>
-          @if (showAll()) {
-            <th class="num">{{ 'payroll.col.inKind' | transloco }}</th>
-            <th class="num">{{ 'payroll.col.total' | transloco }}</th>
-          }
           <th class="num">{{ 'payroll.col.fixed' | transloco }}</th>
           <th class="num days-th">
             @if (context.isAdmin()) {
@@ -172,12 +162,15 @@
             }
           </th>
           @if (showAll()) {
+            <th class="num">{{ 'payroll.col.inKind' | transloco }}</th>
+            <th class="num">{{ 'payroll.col.total' | transloco }}</th>
             <th class="num">{{ 'payroll.col.retro' | transloco }}</th>
             <th class="num">{{ 'payroll.col.absentDays' | transloco }}</th>
             <th class="num">{{ 'payroll.col.hours' | transloco }}</th>
             <th>{{ 'payroll.col.prorated' | transloco }}</th>
             <th>{{ 'payroll.col.state' | transloco }}</th>
           }
+          <th class="filler" aria-hidden="true"></th>
         </tr>
       </thead>
       <tbody>
@@ -192,6 +185,10 @@
                 }
                 @if (!v.row.insured) {
                   <span class="badge badge-sub">{{ 'payroll.tag.notInsured' | transloco }}</span>
+                }
+                <!-- 対象期間に休業（産休・育休など）が重なる人（0円・0日でも入れ忘れではないと分かるように。11/20） -->
+                @if (onLeave(v.employee)) {
+                  <span class="badge badge-sub">{{ 'payroll.tag.onLeave' | transloco }}</span>
                 }
                 @if (v.row.partial) {
                   <span class="badge badge-warn">{{ 'payroll.tag.partial' | transloco }}</span>
@@ -210,18 +207,22 @@
               </div>
             </td>
             <!-- 長い部署の名前は「…」で切り、全部はマウスを乗せると出る -->
-            @if (!showAll()) {
-              <td class="org dept" [attr.title]="deptName(v.employee)">{{ deptName(v.employee) ?? '—' }}</td>
-              <td class="org">
-                @if (contractOf(v)?.employmentType; as t) {
-                  {{ 'contract.employmentType.' + t | transloco }}
-                } @else {
-                  <span class="muted">—</span>
-                }
-              </td>
-            }
+            <td class="org dept" [attr.title]="deptName(v.employee)">{{ deptName(v.employee) ?? '—' }}</td>
+            <td class="org">
+              @if (contractOf(v)?.employmentType; as t) {
+                {{ 'contract.employmentType.' + t | transloco }}
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
             <td class="num">
               <input class="input num w-money" formControlName="cash" inputmode="numeric" />
+            </td>
+            <td class="num">
+              <input class="input num w-money" formControlName="fixed" inputmode="numeric" />
+            </td>
+            <td class="num">
+              <input class="input num w-days" formControlName="days" inputmode="numeric" />
             </td>
             @if (showAll()) {
               <td class="num" data-field="inKind">
@@ -238,14 +239,6 @@
                 </div>
               </td>
               <td class="num">{{ total(v) }}</td>
-            }
-            <td class="num">
-              <input class="input num w-money" formControlName="fixed" inputmode="numeric" />
-            </td>
-            <td class="num">
-              <input class="input num w-days" formControlName="days" inputmode="numeric" />
-            </td>
-            @if (showAll()) {
               <td class="num" data-field="retro">
                 <input class="input num w-money" formControlName="retro" inputmode="numeric" />
               </td>
@@ -264,10 +257,11 @@
                 </select>
               </td>
             }
+            <td class="filler" aria-hidden="true"></td>
           </tr>
           @if (rowErrors().get(v.employee.id); as errs) {
             <tr class="error-row">
-              <td [attr.colspan]="showAll() ? 12 : 7">
+              <td [attr.colspan]="showAll() ? 15 : 8">
                 @for (e of errs; track e) {
                   <span>{{ 'payroll.rowError.' + e | transloco }}</span>
                 }
@@ -276,6 +270,25 @@
           }
         }
       </tbody>
+      <!-- 合計（絞り込んだ人全員。ページをまたいで足す。給与ソフトの支給総額と突き合わせる。11/20） -->
+      @if (sums(); as s) {
+        <tfoot>
+          <tr class="sum-row">
+            <th colspan="4" scope="row">
+              {{ 'payroll.sum.label' | transloco: { n: filtered().length, entered: s.count } }}
+            </th>
+            <td class="num">{{ yenText(s.cash) }}</td>
+            <td class="num">{{ yenText(s.fixed) }}</td>
+            <td></td>
+            @if (showAll()) {
+              <td class="num">{{ yenText(s.inKind) }}</td>
+              <td class="num">{{ yenText(s.total) }}</td>
+              <td colspan="5"></td>
+            }
+            <td class="filler" aria-hidden="true"></td>
+          </tr>
+        </tfoot>
+      }
     </table>
   </div>
   <!-- 「保存する」は、直したときだけ下の帯の右に出す（直した行は黄色。賞与と同じ。11/18） -->

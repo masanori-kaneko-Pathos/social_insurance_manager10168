@@ -96,6 +96,17 @@ export function insuredDuring(e: PayrollEmployee, p: Period): boolean {
   return enrolledDuring(e.health, p) || enrolledDuring(e.pension, p);
 }
 
+/**
+ * 対象期間に1日でも休業（産休・育休など）していたか（給与の一覧の「休業」の札。11/20）
+ * 終了日がなければ予定日、それもなければ続いているとみなす
+ */
+export function onLeaveDuring(
+  e: { leaves?: readonly { start: string; end?: string | null; plannedEnd?: string | null }[] },
+  p: Period,
+): boolean {
+  return (e.leaves ?? []).some((l) => l.start <= p.end && (l.end ?? l.plannedEnd ?? '9999-12-31') >= p.start);
+}
+
 // ===== 支払基礎日数の候補 =====
 
 /**

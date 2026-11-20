@@ -854,7 +854,8 @@
 
     @if (!readOnly && pendingChanges(); as c) {
       <!-- 届が要る変更：保存すると To-do に届出の宿題が出る -->
-      <section class="card change-notice" role="status">
+      <section id="sec-change" class="card change-notice" role="status">
+        <h2>{{ 'office.change.title' | transloco }}</h2>
         <p>
           @if (c.nameAddress.length > 0) {
             {{ 'office.change.nameAddress' | transloco }}

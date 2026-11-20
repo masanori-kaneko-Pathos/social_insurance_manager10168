@@ -257,13 +257,14 @@
         <div class="alert alert-danger">{{ k | transloco }}</div>
       }
       @if (context.isAdmin()) {
+        <!-- 保存のボタンは右下（ほかの画面と同じ。11/20） -->
         <div class="notice-actions">
-          <button type="button" class="btn btn-solid" [disabled]="noticeSaving()" (click)="saveNotice()">
-            {{ (noticeSaving() ? 'common.saving' : 'premiumNotice.save') | transloco }}
-          </button>
           @if (noticeSaved()) {
             <span class="ok" role="status">{{ 'common.saved' | transloco }}</span>
           }
+          <button type="button" class="btn btn-solid" [disabled]="noticeSaving()" (click)="saveNotice()">
+            {{ (noticeSaving() ? 'common.saving' : 'premiumNotice.save') | transloco }}
+          </button>
         </div>
       }
       <p class="hint">{{ 'premiumNotice.hint' | transloco }}</p>

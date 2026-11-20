@@ -203,3 +203,25 @@ tfoot .list-total td {
   color: var(--color-warning-text);
   border-radius: var(--radius-sm);
 }
+
+/* 内訳の開閉（保険料一覧と同じオレンジの文字。11/20） */
+.link-toggle {
+  padding: 0;
+  font: inherit;
+  font-size: var(--font-sm);
+  color: var(--color-primary);
+  white-space: nowrap;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.link-toggle:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* 分類の欄（名称より一段薄く。11/20） */
+td.sub-col {
+  color: var(--color-text-sub);
+}

@@ -14,6 +14,7 @@ import {
   candidateDays,
   PayrollRowText,
   readRow,
+  sumPayrolls,
   RowError,
   sameInput,
   textOf,
@@ -23,6 +24,7 @@ import {
   ExtraField,
   extraFields,
   latestPaidMonth,
+  onLeaveDuring,
   Period,
   PayrollRow,
   payrollRows,
@@ -107,6 +109,12 @@ export class PayrollMonth {
   readonly showAll = toSignal(this.route.queryParamMap.pipe(map((q) => q.get('all') === '1')), {
     initialValue: false,
   });
+
+  /** 対象期間に休業が重なる人（「休業」の札。11/20） */
+  onLeave(e: Employee): boolean {
+    const p = this.period();
+    return p ? onLeaveDuring(e, p) : false;
+  }
 
   readonly periodDays = computed(() => {
     const p = this.period();
@@ -297,6 +305,21 @@ export class PayrollMonth {
   }
 
   /** 合計の列（支払額＋現物）。読めないときは「—」 */
+  /** 絞り込んだ人全員の合計（ページをまたいで数える。入力中の値も入る。11/20） */
+  sums() {
+    return sumPayrolls(
+      this.filtered().map((v) => ({
+        cash: v.form.controls.cash.value,
+        fixed: v.form.controls.fixed.value,
+        inKind: v.form.controls.inKind.value,
+      })),
+    );
+  }
+
+  yenText(n: number): string {
+    return n.toLocaleString('ja-JP');
+  }
+
   total(v: ViewRow): string {
     const t = totalOf(v.form.controls.cash.value, v.form.controls.inKind.value);
     return t === null ? '—' : t.toLocaleString('ja-JP');

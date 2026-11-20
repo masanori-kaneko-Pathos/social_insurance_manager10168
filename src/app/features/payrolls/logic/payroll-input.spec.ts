@@ -1,8 +1,20 @@
 import { emptyPayrollInput } from '../../../core/models/payroll';
-import { candidateDays, PayrollRowText, readRow, sameInput, textOf, totalOf } from './payroll-input';
+import { candidateDays, PayrollRowText, readRow, sameInput, sumPayrolls, textOf, totalOf } from './payroll-input';
 import { formatHours, parseHours, parseNat } from '../../../shared/utils/number';
 
 const blank = (): PayrollRowText => textOf(null);
+
+describe('sumPayrolls（給与の一覧の合計。11/20）', () => {
+  it('入っている欄だけ足す。支払額が入っている人を数える', () => {
+    const s = sumPayrolls([
+      { cash: '270,000', fixed: '270000', inKind: '' },
+      { cash: '320000', fixed: '300000', inKind: '20000' },
+      { cash: '', fixed: '', inKind: '' },
+      { cash: 'abc', fixed: '', inKind: '' },
+    ]);
+    expect(s).toEqual({ count: 2, cash: 590000, fixed: 570000, inKind: 20000, total: 610000 });
+  });
+});
 
 describe('parseNat', () => {
   it('カンマ・全角を読む', () => {

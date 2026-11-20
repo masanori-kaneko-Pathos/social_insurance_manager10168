@@ -131,6 +131,29 @@ export function candidateDays(suggested: number, absentText: string): number {
 }
 
 /** 「合計」の列：支払額＋現物（入力中の文字から）。支払額が空・読めない、現物が読めないなら null */
+/** 給与の一覧の合計（絞り込んだ人ぶん。空欄・読めない欄は数えない。11/20） */
+export interface PayrollSums {
+  /** 支払額が入っている人の数 */
+  count: number;
+  cash: number;
+  fixed: number;
+  inKind: number;
+  /** 支払額＋現物 */
+  total: number;
+}
+
+export function sumPayrolls(rows: readonly { cash: string; fixed: string; inKind: string }[]): PayrollSums {
+  const n = (s: string) => parseNat(s) ?? 0;
+  let count = 0, cash = 0, fixed = 0, inKind = 0;
+  for (const r of rows) {
+    if (typeof parseNat(r.cash) === 'number') count++;
+    cash += n(r.cash);
+    fixed += n(r.fixed);
+    inKind += n(r.inKind);
+  }
+  return { count, cash, fixed, inKind, total: cash + inKind };
+}
+
 export function totalOf(cash: string, inKind: string): number | null {
   const c = parseNat(cash);
   const k = parseNat(inKind);

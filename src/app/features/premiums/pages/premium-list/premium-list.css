@@ -417,8 +417,23 @@ td.calc .link-btn {
 .notice-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--space-sm);
-  margin-top: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+/* 突き合わせの表：カードの幅に収める（見出しの「差（告知額 − アプリ）」が切れないように。11/20） */
+.notice table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.notice table th:first-child {
+  width: 40%;
+}
+
+.notice table :is(th, td) {
+  white-space: normal;
 }
 
 .ok {

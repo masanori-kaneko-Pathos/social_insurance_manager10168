@@ -18,43 +18,24 @@
   min-width: 0;
 }
 
-.app-name {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-/* 左上の□：サイドバーをしまう・出すボタン（押せる範囲は広く、見た目は小さな四角のまま） */
+/* しまう・出すボタン（サイドバーのいちばん上。パネルの形のアイコン。11/20） */
 .nav-toggle {
   display: inline-grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  margin-left: -6px;
+  flex: none;
+  width: 32px;
+  height: 32px;
   padding: 0;
+  color: var(--color-text-sub);
   background: none;
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
 }
 
-.nav-toggle::before {
-  content: '';
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
-  background: var(--color-primary);
-  transition: transform var(--dur-base) var(--ease-out);
-}
-
 .nav-toggle:hover {
+  color: var(--color-text);
   background: var(--color-hover);
-}
-
-.nav-toggle:hover::before {
-  transform: scale(1.2);
 }
 
 .nav-toggle:focus-visible {
@@ -62,9 +43,95 @@
   outline-offset: 1px;
 }
 
+/* サイドバーのいちばん上の行：ボタン → アプリの名前（Claude のサイドバーの形。11/20） */
+.nav-top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  /* ヘッダーと同じ高さ56px。下の線をヘッダーの線と同じ位置に引く（サイドバーの上と左右の余白を打ち消して端まで。11/20） */
+  height: 56px;
+  flex: none;
+  margin: calc(-1 * var(--space-md)) calc(-1 * var(--space-sm)) var(--space-sm);
+  padding: 0 var(--space-md) 0 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* メニューの項目（.side-nav a）の形を受け継がないように、名前の形をここで決め直す */
+.side-nav .nav-top a.app-home,
+.side-nav .nav-top a.app-home:hover {
+  display: block;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.nav-top .app-home.app-home {
+  overflow: hidden;
+  font-size: var(--font-sm);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--color-text-strong);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-decoration: none;
+}
+
+/* しまったとき：名前を隠して、ボタンだけ真ん中に */
+.side-nav.collapsed .nav-top {
+  justify-content: center;
+  margin-left: calc(-1 * var(--space-xs));
+  margin-right: calc(-1 * var(--space-xs));
+  padding: 0;
+}
+
+.side-nav.collapsed .nav-top a.app-home {
+  display: none;
+}
+
+/* 開くときのガタつきを止める（11/20）
+   - 名前は折り返さない・横にはみ出た分は隠す（開いている途中で縦に並んで、縦のスクロールバーが一瞬出るのを防ぐ）
+   - 名前は、サイドバーがほぼ開いてから、ふわっと出す */
+.side-nav {
+  overflow-x: hidden;
+}
+
+.side-nav .label,
+.nav-top .app-home {
+  white-space: nowrap;
+}
+
+.side-nav:not(.collapsed) .label,
+.side-nav:not(.collapsed) .nav-top .app-home {
+  animation: nav-label-in var(--dur-fast) var(--ease-out) var(--dur-base) both;
+}
+
+@keyframes nav-label-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .side-nav:not(.collapsed) .label,
+  .side-nav:not(.collapsed) .nav-top .app-home {
+    animation: none;
+  }
+}
+
+/* 右の列：ヘッダーと本文を縦に（11/20） */
+.shell-right {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .shell-body {
   display: flex;
-  min-height: calc(100vh - 56px);
+  min-height: 100vh;
 }
 
 .side-nav {
@@ -72,7 +139,8 @@
   flex-direction: column;
   gap: var(--space-xs);
   flex-shrink: 0;
-  width: 200px;
+  /* アプリの名前（社会保険管理システム）が1行に入る幅（11/20：200 → 220px） */
+  width: 220px;
   padding: var(--space-lg) var(--space-sm);
   /* ヘッダーと同じ地（ダークでは、いちばん後ろの黒に近い灰色。カードだけが焦げ茶で浮く） */
   background: var(--color-header-bg);
@@ -126,47 +194,6 @@
   font-weight: 600;
 }
 
-/* しまう・出すボタン（サイドバーのいちばん上。小さく・薄く。11/20） */
-.nav-collapse {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-xs);
-  padding: var(--space-xs) var(--space-md);
-  font: inherit;
-  font-size: var(--font-xs);
-  color: var(--color-text-sub);
-  background: none;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  text-align: left;
-}
-
-.nav-collapse:hover {
-  color: var(--color-text);
-  background: var(--color-hover);
-}
-
-.nav-collapse:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 1px;
-}
-
-.nav-collapse .chev {
-  display: inline-block;
-  width: 18px;
-  text-align: center;
-  font-size: var(--font-md);
-  line-height: 1;
-}
-
-.side-nav.collapsed .nav-collapse {
-  justify-content: center;
-  padding-left: 0;
-  padding-right: 0;
-}
-
 /* ===== しまったとき：アイコンだけ（押せばそのメニューへ。名前は指したときに出る） ===== */
 .side-nav {
   transition:
@@ -203,9 +230,9 @@
   transition: max-width var(--dur-base) var(--ease-out);
 }
 
-/* サイドバーをしまったら、空いた幅（200px → 60px の差）だけ本文を広げる（左に詰めるだけにしない） */
+/* サイドバーをしまったら、空いた幅（220px → 60px の差）だけ本文を広げる（左に詰めるだけにしない） */
 .shell-body.nav-collapsed .shell-main {
-  max-width: calc(1080px + 140px);
+  max-width: calc(1080px + 160px);
 }
 
 /* ヘッダー：左（アプリ名・事業所）は縮んでよい、右（ベル・設定）は縮まない（狭い画面で重ならないように。11/18） */
@@ -273,8 +300,25 @@
   }
 
   .nav-toggle,
-  .nav-collapse {
+  .nav-top {
     display: none;
+  }
+
+  /* 狭い画面：ヘッダー → 横に並べたメニュー → 本文 の順（右の列をほどいて並べ直す。11/20） */
+  .shell-right {
+    display: contents;
+  }
+
+  .app-header {
+    order: 0;
+  }
+
+  .side-nav {
+    order: 1;
+  }
+
+  .shell-main {
+    order: 2;
   }
 }
 /* 印刷：ヘッダーとサイドバーを隠して、本文だけを紙いっぱいに（届書の一覧など） */

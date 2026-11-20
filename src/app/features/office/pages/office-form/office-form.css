@@ -249,8 +249,9 @@ h3 {
 }
 
 /* 届が要る変更の知らせ（保存の前） */
+/* ほかのカードと同じ形（オレンジの線はなし。目次から飛べる。11/20） */
 .change-notice {
-  border-left: 4px solid var(--color-primary);
+  scroll-margin-top: var(--space-md);
 }
 .change-notice p {
   margin: 0 0 var(--space-sm);

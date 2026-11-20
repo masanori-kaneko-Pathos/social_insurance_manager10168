@@ -783,7 +783,7 @@
       "title": "Cancel this registration",
       "lead": "Removes a person registered by mistake (for example, registered twice). Do not use this for people who left; enter the retirement date instead. This cannot be undone.",
       "open": "Cancel this registration",
-      "removes": "This also removes the person's contracts, standard remuneration, payroll records, dependents, leaves, change history and their amounts in bonus payments.",
+      "removes": "This also removes the person's contracts, standard remuneration, payroll, dependents, leaves, change history and their amounts in bonus payments.",
       "blocked": "People in submitted filing records (with a submission date), with My Number records or with a My Page account cannot be removed. They are taken out of unsubmitted filing records.",
       "type": "To confirm, type \"{{word}}\"",
       "confirm": "Cancel and remove",
@@ -963,7 +963,7 @@
         "insuredCount": "If blank, the app counts employees of this office. If the corporation has other offices, enter the total.",
         "pensionFund": "Very few offices are members. Used for the Application to Enroll (資格取得届).",
         "bonus": "Used to check Bonus Payment Reports (賞与支払届) and non-payment reports.",
-        "inKind": "Used for the office change notification (types of benefits in kind). Amounts can be calculated from the official valuation table with \"Calculate by rates\" in payroll records."
+        "inKind": "Used for the office change notification (types of benefits in kind). Amounts can be calculated from the official valuation table with \"Calculate by rates\" in payroll."
       },
       "count": "Count",
       "counting": "Counting…",
@@ -1000,7 +1000,8 @@
       "relation": "The employer, corporate number, scheduled bonus months or types of in-kind remuneration will change. When you save, an \"Office information change notification\" appears in the To-do list.",
       "prefecture": "When the prefecture changes, the competent pension office changes and the Kyokai Kenpo rate may change (add \"from which month\" in the insurer/location history).",
       "factDate": "Date of change",
-      "factDateHint": "The deadline is within 5 days, counting this date as day 1."
+      "factDateHint": "The deadline is within 5 days, counting this date as day 1.",
+      "title": "Changes that need a filing"
     },
     "department": {
       "title": "Departments",
@@ -1022,7 +1023,7 @@
     "open": {
       "nameEn": "This office has an English name",
       "group": "Show together with other offices (when you manage several)",
-      "inKind": "Housing or meals are provided in kind",
+      "inKind": "Benefits in kind are provided",
       "filing": "Office symbol and numbers are already assigned"
     },
     "part": {
@@ -1435,7 +1436,8 @@
       "amount": "Bonus amount",
       "standard": "Standard Bonus Amount (SBA) (標準賞与額)",
       "employee": "Employee",
-      "amountTotal": "Total bonus"
+      "amountTotal": "Total bonus",
+      "item": "Category"
     },
     "peopleCount": "{{count}}",
     "hasProblems": "Some can't be calculated",
@@ -1644,7 +1646,7 @@
     }
   },
   "payroll": {
-    "listTitle": "Payroll records",
+    "listTitle": "Payroll",
     "listLead": "Enter the payroll results (total pay, fixed wages, payment basis days) for each month paid. They are used for the annual SMR determination and SMR revisions.",
     "inputLatest": "Enter {{month}} payroll",
     "prevYear": "← Previous 12 months",
@@ -1664,9 +1666,9 @@
     "save": "Save",
     "saving": "Saving…",
     "savedCount": "Saved ({{count}} employees)",
-    "cardTitle": "Payroll records",
+    "cardTitle": "Payroll",
     "cardEmpty": "No records yet.",
-    "toList": "Go to payroll records",
+    "toList": "Go to payroll",
     "toRegular": "Annual SMR determination {{year}}",
     "csv": "Import / export CSV",
     "col": {
@@ -1688,6 +1690,7 @@
     "tag": {
       "notSaved": "Not entered",
       "notInsured": "Not insured",
+      "onLeave": "On leave",
       "partial": "Joined or left mid-period",
       "extra": "Other columns have values",
       "extraTitle": "Click to show this column",
@@ -1723,7 +1726,7 @@
       "inKindMerged": "In months marked \"Not itemized\", in-kind remuneration is included in the pay amount (the imported file had no in-kind column). Totals and premiums are still correct, but changes in in-kind remuneration (a change in fixed wages, such as moving into company housing) cannot be detected, so enter the in-kind amount with \"Enter separately\" when you know it."
     },
     "error": {
-      "load": "Could not load payroll records.",
+      "load": "Could not load payroll.",
       "save": "Could not save. Please try again later.",
       "rows": "Some rows have problems. Fix them and save again (nothing was saved).",
       "badMonth": "The month is not valid."
@@ -1750,7 +1753,10 @@
       "premiums": "See the premiums deducted from the {{paid}} pay (for month {{month}})",
       "revisions": "Check revision candidates"
     },
-    "listRange": "{{fromM}}/{{fromY}} – {{toM}}/{{toY}}"
+    "listRange": "{{fromM}}/{{fromY}} – {{toM}}/{{toY}}",
+    "sum": {
+      "label": "Total ({{n}} filtered, {{entered}} with pay entered)"
+    }
   },
   "regular": {
     "title": "Annual SMR determination {{year}} (定時決定, teiji kettei)",
@@ -1887,7 +1893,7 @@
     },
     "import": {
       "done": "Imported {{n}} records.",
-      "toList": "Go to payroll records",
+      "toList": "Go to payroll",
       "partial": "Saving failed partway. {{done}} of {{total}} records were saved. Import the same file again to add only the rest (saved records show as unchanged).",
       "progress": "Saving… {{done}} / {{total}}",
       "missingColumns": "Required columns are missing:",
@@ -1947,7 +1953,7 @@
       "allOrNothing": "Fix rows with errors here, or import with them left unchecked (only those rows are skipped). Saving is done in batches of 500."
     },
     "error": {
-      "load": "Could not load employees or payroll records.",
+      "load": "Could not load employees or payroll.",
       "range": "Select a valid period (the start is after the end).",
       "tooLong": "Select 24 months or fewer.",
       "read": "Could not read the file. Make sure it is a CSV file.",
@@ -2367,7 +2373,7 @@
   },
   "revision": {
     "title": "SMR revision candidates",
-    "lead": "Candidates for SMR revision after a pay change (随時改定, zuiji kaitei) and revision after maternity/childcare leave (産休・育休終了時改定), based on payroll records. Only those starting from {{from}} are shown (the 2-year limitation period as a guide).",
+    "lead": "Candidates for SMR revision after a pay change (随時改定, zuiji kaitei) and revision after maternity/childcare leave (産休・育休終了時改定), based on payroll. Only those starting from {{from}} are shown (the 2-year limitation period as a guide).",
     "span": "Start {{start}} → revised from {{revised}}",
     "leaveEnd": "Leave ended {{date}}",
     "type": {
@@ -3326,8 +3332,8 @@
         "body": "Entering a retirement date fills in the coverage-end date (the next day) and the reason. If a contract change means the person is no longer insured, open the Coverage-end Report window from \"Review enrollment\" in the to-do list. Reaching age 75 can also be filed from the age milestone item."
       },
       "payroll": {
-        "title": "Entering payroll records",
-        "body": "On the payroll screen, enter the amount paid in money, fixed wages and payment basis days for each month paid. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and retroactive pay columns. For one person and one month, you can also use \"Enter a month\" on the employee page. Enter in \"retroactive pay\" only differences from raises decided retroactively. Allowances paid late because of a late application or a mistake go back into the month they should have been paid (that month becomes the start month for a revision). Mark \"prorated\" for months where a mid-period hire, transfer or new allowance means a full month was not paid (that month is not used as a start month; counting begins the next month). Payment basis days are calendar days for monthly pay, days worked for daily pay, and total hours ÷ daily scheduled hours for hourly pay. For months where a retroactive pay cut was deducted, enter the amount before the deduction. One-off or up-to-three-times-a-year payments (e.g. a sign-on allowance or year-end allowance) do not go into payroll records; register them as bonuses (bonus payment report). Monthly allowances go into payroll records even if they share a payslip line with such payments."
+        "title": "Entering payroll",
+        "body": "On the payroll screen, enter the amount paid in money, fixed wages and payment basis days for each month paid. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and retroactive pay columns. For one person and one month, you can also use \"Enter a month\" on the employee page. Enter in \"retroactive pay\" only differences from raises decided retroactively. Allowances paid late because of a late application or a mistake go back into the month they should have been paid (that month becomes the start month for a revision). Mark \"prorated\" for months where a mid-period hire, transfer or new allowance means a full month was not paid (that month is not used as a start month; counting begins the next month). Payment basis days are calendar days for monthly pay, days worked for daily pay, and total hours ÷ daily scheduled hours for hourly pay. For months where a retroactive pay cut was deducted, enter the amount before the deduction. One-off or up-to-three-times-a-year payments (e.g. a sign-on allowance or year-end allowance) do not go into payroll; register them as bonuses (bonus payment report). Monthly allowances go into payroll even if they share a payslip line with such payments."
       },
       "inKind": {
         "title": "Remuneration provided in kind (housing, dormitories, meals)",
@@ -3339,7 +3345,7 @@
       },
       "irregular": {
         "title": "SMR revision after a pay change (随時改定, Remuneration Change Report)",
-        "body": "When fixed wages change and the average of the three months from that month moves the SMR by two grades or more (one grade at the upper or lower limit), the SMR is revised. Candidates appear on the revision candidates screen from payroll records, together with revisions after maternity or childcare leave."
+        "body": "When fixed wages change and the average of the three months from that month moves the SMR by two grades or more (one grade at the upper or lower limit), the SMR is revised. Candidates appear on the revision candidates screen from payroll, together with revisions after maternity or childcare leave."
       },
       "leave": {
         "title": "Premium exemption for maternity and childcare leave",
@@ -3355,7 +3361,7 @@
       },
       "csv": {
         "title": "Importing CSV, Excel and PDF files",
-        "body": "Employees and payroll records can be imported from CSV, Excel or PDF files. This app's template CSV goes straight to the review screen. Files with different headers, such as files exported from payroll or HR software, go through the \"Match columns\" screen, where you check which column goes to which field. Fields missing from the file can be filled with \"Same value for everyone\". Japanese era dates (R8.4.1) and Excel dates are read, and half-width katakana is converted to full width. Shift_JIS CSV saved from Excel can also be read."
+        "body": "Employees and payroll can be imported from CSV, Excel or PDF files. This app's template CSV goes straight to the review screen. Files with different headers, such as files exported from payroll or HR software, go through the \"Match columns\" screen, where you check which column goes to which field. Fields missing from the file can be filled with \"Same value for everyone\". Japanese era dates (R8.4.1) and Excel dates are read, and half-width katakana is converted to full width. Shift_JIS CSV saved from Excel can also be read."
       },
       "myPage": {
         "title": "Employee My Page and requests",
@@ -3557,7 +3563,7 @@
       "payroll": "Enter pay paid in month {{m}}",
       "premiums": "Premiums",
       "employees": "Employees",
-      "payrollsView": "Payroll records",
+      "payrollsView": "Payroll",
       "addEmployee": "Add employee",
       "import": "Import / Export",
       "request": "Requests",
@@ -3861,7 +3867,7 @@
     "outside": "Outside this app",
     "hint": "Tasks outside this app (year-end adjustment, resident tax, labor insurance renewal, etc.) are listed in gray so they are not missed. Bonus months come from the office settings.",
     "task": {
-      "payroll": "Enter payroll records (after payday)",
+      "payroll": "Enter payroll (after payday)",
       "payment": "Pay last month's premiums (notice arrives around the 20th; reconcile in the premium list)",
       "joinLeave": "Joiners and leavers (acquisition and loss filings within 5 days)",
       "watchRevision": "Monthly changes for employees whose fixed wages changed (revision candidates)",
@@ -4124,9 +4130,9 @@
     "prev": "Previous page",
     "next": "Next page",
     "bonusState": {
-      "all": "All",
-      "empty": "No amount yet",
-      "filled": "Amount entered"
+      "all": "Paid: all",
+      "empty": "Paid: no",
+      "filled": "Paid: yes"
     }
   },
   "welcome": {
@@ -4288,7 +4294,7 @@
       "noConsent": "Get the employee's written consent (statement and consent form) before registering.",
       "noPay": "A month with no pay (fully absent) cannot be used.",
       "shortDays": "Not enough payment basis days.",
-      "priorMissing": "No payroll records for the two months before the filing month. Import them first (all three months must meet the payment basis days).",
+      "priorMissing": "No payroll for the two months before the filing month. Import them first (all three months must meet the payment basis days).",
       "priorShortDays": "One of the two months before the filing month does not meet the payment basis days.",
       "shortInsured": "Not eligible: insured for less than three months including the first month.",
       "lost": "Not eligible: loses coverage the month after the first month (no premium is charged that month).",

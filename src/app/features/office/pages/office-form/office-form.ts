@@ -500,6 +500,8 @@ export class OfficeForm {
       { id: 'sec-coverage', key: 'office.section.coverage', sub: true },
       { id: 'sec-payroll', key: 'office.section.payroll', sub: true },
     ];
+    // 届が要る変更があるとき（保存すると To-do に届出が出る）。保存の前に見落とさないように目次にも出す（11/20）
+    if (!this.readOnly && this.pendingChanges()) items.push({ id: 'sec-change', key: 'office.change.title', sub: true });
     if (this.isEdit && this.isOwner()) items.push({ id: 'sec-delete', key: 'office.delete.title' });
     return items;
   });

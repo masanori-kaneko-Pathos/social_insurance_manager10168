@@ -961,11 +961,12 @@ table.sticky-head > thead th {
 }
 
 /* リンク：下線を消して、指したときだけ */
-:root:not([data-theme='dark']) a:where(:link, :visited) {
+/* :where で包んで重さを0にする（部品が自分で決めた色＝ホームのタイルなどを上書きしない。11/20） */
+:where(:root:not([data-theme='dark'])) a:where(:link, :visited) {
   color: var(--color-tab-active);
   text-decoration: none;
 }
-:root:not([data-theme='dark']) a:where(:link, :visited):hover {
+:where(:root:not([data-theme='dark'])) a:where(:link, :visited):hover {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -1023,21 +1024,21 @@ table.sticky-head > thead th {
   background: #fff;
   border-right: 1px solid var(--color-border);
 }
-:root:not([data-theme='dark']) .side-nav.side-nav a {
+:root:not([data-theme='dark']) .side-nav.side-nav > a {
   color: var(--color-text-sub);
   font-weight: 500;
 }
-:root:not([data-theme='dark']) .side-nav.side-nav a:hover:not(.active) {
+:root:not([data-theme='dark']) .side-nav.side-nav > a:hover:not(.active) {
   background: var(--color-hover);
   color: var(--color-text);
 }
-:root:not([data-theme='dark']) .side-nav.side-nav a.active {
+:root:not([data-theme='dark']) .side-nav.side-nav > a.active {
   color: var(--color-tab-active);
   background: var(--color-highlight);
   box-shadow: inset 3px 0 0 var(--color-primary);
   font-weight: 600;
 }
-:root:not([data-theme='dark']) .side-nav.side-nav a.active app-icon {
+:root:not([data-theme='dark']) .side-nav.side-nav > a.active app-icon {
   color: var(--color-tab-active);
 }
 
@@ -1078,10 +1079,25 @@ table.sticky-head > thead th {
   border-left: 4px solid #e5b52a;
 }
 
-/* アプリの名前は墨色（リンクの橙にしない） */
-:root:not([data-theme='dark']) .app-home.app-home {
-  color: var(--color-text-strong);
-  text-decoration: none;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+/* たたむ部品（details.fold）の印：▷ → 開くと ▽ に回る（ライト・ダークとも。11/20） */
+.fold > summary::before {
+  content: '▷';
+  display: inline-block;
+  width: auto;
+  height: auto;
+  border: none;
+  border-radius: 0;
+  font-size: 0.8em;
+  line-height: 1;
+  transform: rotate(0deg);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.fold[open] > summary::before {
+  content: '▷';
+  transform: rotate(90deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .fold > summary::before {
+    transition: none;
+  }
 }

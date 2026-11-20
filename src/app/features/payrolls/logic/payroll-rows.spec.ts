@@ -6,6 +6,7 @@ import {
   insuredDuring,
   latestPaidMonth,
   missingPayrolls,
+  onLeaveDuring,
   PayrollEmployee,
   payrollRows,
   periodOf,
@@ -108,6 +109,18 @@ describe('在籍・加入と、日数の候補', () => {
   it('喪失日が期間の初日なら、その期間は加入していない', () => {
     const lostOnFirst = emp('L', '2020-04-01', '2026-09-30', '2026-10-01');
     expect(insuredDuring(lostOnFirst, periodOf('2026-11', MONTH_END_NEXT))).toBeFalse();
+  });
+});
+
+describe('onLeaveDuring（休業の札。11/20）', () => {
+  const p = { start: '2026-05-01', end: '2026-05-31' };
+  it('期間に1日でも重なれば休業。終了日・予定日がなければ続いている', () => {
+    expect(onLeaveDuring({ leaves: [{ start: '2026-05-31', end: '2026-08-31' }] }, p)).toBeTrue();
+    expect(onLeaveDuring({ leaves: [{ start: '2026-01-20', end: '2026-05-01' }] }, p)).toBeTrue();
+    expect(onLeaveDuring({ leaves: [{ start: '2026-01-20', end: null, plannedEnd: null }] }, p)).toBeTrue();
+    expect(onLeaveDuring({ leaves: [{ start: '2026-01-20', end: '2026-04-30' }] }, p)).toBeFalse();
+    expect(onLeaveDuring({ leaves: [{ start: '2026-06-01', end: null, plannedEnd: '2027-03-31' }] }, p)).toBeFalse();
+    expect(onLeaveDuring({}, p)).toBeFalse();
   });
 });
 

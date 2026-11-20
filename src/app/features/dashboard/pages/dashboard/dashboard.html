@@ -275,7 +275,8 @@
                           }}
                         </button>
                       }
-                      @if (canDismiss(it)) {
+                      <!-- 「確認」の窓がある To-do は、窓の中で片づける（「確認」と「確認した」を並べない。11/20） -->
+                      @if (canDismiss(it) && (!requestOf(it) || it.kind === 'upcoming')) {
                         <button
                           type="button"
                           class="btn btn-small"

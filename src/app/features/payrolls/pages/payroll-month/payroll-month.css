@@ -161,7 +161,17 @@ button.badge-link:hover {
 /* ===== 11/18：表の幅・見出しと左の2列の固定 ===== */
 /* 氏名の欄が残りの幅を受け持つので、表の最小の幅で氏名の幅を守る */
 table.fixed-cols {
-  min-width: 70em;
+  min-width: 62em;
+}
+
+/* 氏名の欄は幅を決める。残りの幅は最後の空の欄（.filler）が受け持つので、項目を増やしても今ある欄は動かない（11/20） */
+col.c-name {
+  width: 13em;
+}
+
+th.filler,
+td.filler {
+  padding: 0;
 }
 
 /* 項目を増やした表示（部署・雇用形態は隠す）：本文より広いので、カードの中で横にスクロールする。
@@ -172,8 +182,8 @@ table.fixed-cols {
 }
 
 table.fixed-cols.all {
-  width: max-content;
-  min-width: 100%;
+  /* 足した7つの欄の分だけ広げる（足りなければカードの中で横にスクロール。11/20） */
+  min-width: 117em;
 }
 
 col.c-money {
@@ -430,4 +440,23 @@ td.dept {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+/* 合計の行（表のいちばん下。11/20） */
+tfoot .sum-row > * {
+  font-weight: 700;
+  background: var(--color-highlight-soft);
+  border-top: 2px solid var(--color-border-strong);
+  border-bottom: none;
+  white-space: nowrap;
+}
+
+tfoot .sum-row > th {
+  text-align: left;
+  font-size: var(--font-sm);
+}
+
+tfoot .sum-row > td.num {
+  padding-right: calc(var(--space-md) + 1px);
+  font-variant-numeric: tabular-nums;
 }

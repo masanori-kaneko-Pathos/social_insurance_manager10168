@@ -163,6 +163,8 @@
                 }}<span class="arrow" aria-hidden="true">{{ arrow('title') }}</span>
               </button>
             </th>
+            <!-- 分類（年4回以上かを数えるまとまり）は名称と別の欄に（11/20） -->
+            <th>{{ 'bonus.col.item' | transloco }}</th>
             <th class="num">
               <button
                 type="button"
@@ -200,13 +202,8 @@
                   {{ r.payment.paidDate }}
                 </a>
               </td>
-              <td>
-                {{ r.payment.title ?? '—' }}
-                <!-- 賞与の項目（「賞与」以外のときだけ。11/19） -->
-                @if (itemOf(r) !== defaultNature) {
-                  <span class="sub">{{ itemOf(r) }}</span>
-                }
-              </td>
+              <td>{{ r.payment.title ?? '—' }}</td>
+              <td class="sub-col">{{ itemOf(r) }}</td>
               <td class="num">{{ 'bonus.peopleCount' | transloco: { count: r.people } }}</td>
               <td class="num">{{ yen(r.amountYen) }}</td>
               <td class="num">
@@ -216,22 +213,20 @@
                 }
               </td>
               <td class="toggle-col">
+                <!-- 保険料一覧の「内訳 ▽／△」と同じ形（オレンジの文字。11/20） -->
                 <button
                   type="button"
-                  class="btn btn-small"
+                  class="link-toggle"
                   [attr.aria-expanded]="openId() === r.payment.id"
                   (click)="toggle(r.payment.id)"
                 >
-                  {{
-                    (openId() === r.payment.id ? 'bonus.closePeople' : 'bonus.openPeople')
-                      | transloco
-                  }}
+                  {{ 'bonus.openPeople' | transloco }} {{ openId() === r.payment.id ? '△' : '▽' }}
                 </button>
               </td>
             </tr>
             @if (openId() === r.payment.id) {
               <tr class="detail">
-                <td colspan="6">
+                <td colspan="7">
                   <table class="people">
                     <thead>
                       <tr>
@@ -330,7 +325,7 @@
         <tfoot>
           @let t = total();
           <tr class="list-total">
-            <th scope="row" colspan="2">{{ 'bonus.listTotal' | transloco: { count: t.count } }}</th>
+            <th scope="row" colspan="3">{{ 'bonus.listTotal' | transloco: { count: t.count } }}</th>
             <td class="num">{{ 'bonus.peopleCount' | transloco: { count: t.people } }}</td>
             <td class="num">{{ yen(t.amountYen) }}</td>
             <td class="num strong">{{ yen(t.totalYen) }}</td>
