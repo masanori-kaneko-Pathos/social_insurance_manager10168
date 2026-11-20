@@ -20,11 +20,12 @@
 } @else {
   @let s = summary();
   <section class="card summary">
-    <span>{{ 'regular.sum.all' | transloco: { n: s.all } }}</span>
-    <span>{{ 'regular.sum.up' | transloco: { n: s.up } }}</span>
-    <span>{{ 'regular.sum.down' | transloco: { n: s.down } }}</span>
-    <span>{{ 'regular.sum.same' | transloco: { n: s.same } }}</span>
-    <span>{{ 'regular.sum.keep' | transloco: { n: s.keep } }}</span>
+    <!-- 押せる文字：押すとその人だけに絞り、もう一度押すと全員に戻る（絞るのは1つだけ。11/20） -->
+    <button type="button" class="sum-btn" [class.on]="changeFilter() === null" [attr.aria-pressed]="changeFilter() === null" (click)="toggleChange(null)">{{ 'regular.sum.all' | transloco: { n: s.all } }}</button>
+    <button type="button" class="sum-btn" [class.on]="changeFilter() === 'up'" [attr.aria-pressed]="changeFilter() === 'up'" (click)="toggleChange('up')">{{ 'regular.sum.up' | transloco: { n: s.up } }}</button>
+    <button type="button" class="sum-btn" [class.on]="changeFilter() === 'down'" [attr.aria-pressed]="changeFilter() === 'down'" (click)="toggleChange('down')">{{ 'regular.sum.down' | transloco: { n: s.down } }}</button>
+    <button type="button" class="sum-btn" [class.on]="changeFilter() === 'same'" [attr.aria-pressed]="changeFilter() === 'same'" (click)="toggleChange('same')">{{ 'regular.sum.same' | transloco: { n: s.same } }}</button>
+    <button type="button" class="sum-btn" [class.on]="changeFilter() === 'keep'" [attr.aria-pressed]="changeFilter() === 'keep'" (click)="toggleChange('keep')">{{ 'regular.sum.keep' | transloco: { n: s.keep } }}</button>
     @if (s.incomplete > 0) {
       <span class="badge badge-warn">{{ 'regular.sum.incomplete' | transloco: { n: s.incomplete } }}</span>
     }

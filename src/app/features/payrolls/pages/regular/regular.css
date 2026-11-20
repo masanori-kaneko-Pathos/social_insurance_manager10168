@@ -321,3 +321,26 @@ app-decision-notice-card {
   font-size: var(--font-xs);
   color: var(--color-warning-text);
 }
+
+/* 集計の文字は押せる（押すとその人だけに絞る。選んでいるものは地に色。保険料一覧の「前月から変わった人」と同じ形。11/20） */
+.sum-btn {
+  padding: 2px var(--space-xs);
+  font: inherit;
+  color: var(--color-text);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.sum-btn:hover {
+  color: var(--color-primary);
+}
+
+.sum-btn.on {
+  font-weight: 600;
+  text-decoration: none;
+  background: var(--color-highlight);
+}

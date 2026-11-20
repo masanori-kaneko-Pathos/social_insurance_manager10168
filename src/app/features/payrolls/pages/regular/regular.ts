@@ -130,6 +130,24 @@ export class RegularPage {
     return list ? contractAt(list, `${this.year()}-07-01`) : null;
   }
 
+  /**
+   * 上の集計（上がる・下がる・同じ・従前のまま）を押して絞る（1つだけ。同じものをもう一度押すと全員に戻る。11/20）
+   * 表に出す人だけを絞る。集計の数と「まとめて反映」の対象は変わらない
+   */
+  readonly changeFilter = signal<'up' | 'down' | 'same' | 'keep' | null>(null);
+
+  toggleChange(kind: 'up' | 'down' | 'same' | 'keep' | null): void {
+    this.changeFilter.update((cur) => (cur === kind ? null : kind));
+    this.page.set(1);
+  }
+
+  private matchesChange(v: View): boolean {
+    const f = this.changeFilter();
+    if (f === null) return true;
+    if (f === 'keep') return v.result.status === 'keep';
+    return v.result.status === 'decided' && v.result.change === f;
+  }
+
   readonly filtered = computed(() =>
     filterAndSort(
       this.targets(),
@@ -138,7 +156,7 @@ export class RegularPage {
       (v) => this.contractOf(v),
       (v) => v.septemberExists, // 「入れたかどうか」＝ 9月分を反映したか
       { dept: (v) => this.deptName(v.employee) ?? '' },
-    ),
+    ).filter((v) => this.matchesChange(v)),
   );
   readonly shown = computed(() => pageOf(this.filtered(), this.page(), this.listOptions().size));
 
