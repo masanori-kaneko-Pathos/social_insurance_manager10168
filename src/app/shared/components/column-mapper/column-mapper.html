@@ -19,6 +19,15 @@
   @if (noteKey(); as k) {
     <p class="sub note">{{ k | transloco }}</p>
   }
+  @if (restored()) {
+    <p class="sub note restored">
+      {{ 'importMap.restored' | transloco }}
+      <button type="button" class="btn btn-small" (click)="useAuto()">{{ 'importMap.useAuto' | transloco }}</button>
+    </p>
+  }
+  @if (hasSummable()) {
+    <p class="sub note">{{ 'importMap.sumNote' | transloco }}</p>
+  }
 
   <ng-template #fieldRow let-f>
     <tr>
@@ -44,6 +53,29 @@
             <option [value]="'c:' + $index" [selected]="sourceValue(f.key) === 'c:' + $index">{{ columnName($index) }}</option>
           }
         </select>
+        @if (canSum(f) && sourceValue(f.key).startsWith('c:')) {
+          <!-- 金額の項目は、ほかの列を足せる（基本給＋役職手当＋通勤手当 → 固定的賃金 など。11/24） -->
+          @if (plusOf(f.key).length > 0) {
+            <div class="plus-list">
+              @for (i of plusOf(f.key); track i) {
+                <span class="tag plus-tag">
+                  ＋ {{ columnName(i) }}
+                  <button type="button" class="plus-remove" (click)="removePlus(f.key, i)"
+                          [attr.aria-label]="('importMap.plusRemove' | transloco: { col: columnName(i) })">×</button>
+                </span>
+              }
+            </div>
+          }
+          @if (plusChoices(f.key).length > 0) {
+            <select class="input plus-add" (change)="addPlus(f.key, $any($event.target).value); $any($event.target).value = ''"
+                    [attr.aria-label]="('importMap.plusAdd' | transloco) + '：' + f.header">
+              <option value="" selected>{{ 'importMap.plusAdd' | transloco }}</option>
+              @for (i of plusChoices(f.key); track i) {
+                <option [value]="'' + i">{{ columnName(i) }}</option>
+              }
+            </select>
+          }
+        }
         @if (sourceValue(f.key) === 'fixed') {
           <input
             class="input fixed"

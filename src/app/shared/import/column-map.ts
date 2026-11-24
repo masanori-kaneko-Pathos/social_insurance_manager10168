@@ -34,8 +34,16 @@ export interface ImportField<K extends string = string> {
   orFrom?: readonly K[];
 }
 
-/** うちの項目ごとの「どこから取るか」。null ＝ 使わない */
-export type Source = { col: number } | { fixed: string } | null;
+/**
+ * うちの項目ごとの「どこから取るか」。null ＝ 使わない
+ * plus：金額の項目だけ。col の列にこれらの列を足す（基本給＋役職手当＋通勤手当 → 固定的賃金 など。11/24）
+ */
+export type Source = { col: number; plus?: number[] } | { fixed: string } | null;
+
+/** 列を足して1つの項目にできるか（金額の項目だけ） */
+export function canSum(f: Pick<ImportField, 'kind'>): boolean {
+  return f.kind === 'number';
+}
 export type Mapping<K extends string = string> = Partial<Record<K, Source>>;
 
 // ===== 見出しを当てる =====
@@ -99,10 +107,73 @@ export function missingRequired<K extends string>(
 export function unusedColumns(headers: readonly string[], mapping: Mapping): number[] {
   const used = new Set(
     Object.values(mapping)
-      .filter((s): s is { col: number } => !!s && 'col' in s)
-      .map((s) => s.col),
+      .filter((s): s is { col: number; plus?: number[] } => !!s && 'col' in s)
+      .flatMap((s) => [s.col, ...(s.plus ?? [])]),
   );
   return headers.map((_, i) => i).filter((i) => !used.has(i) && headers[i].trim() !== '');
+}
+
+// ===== 割り当てを覚える（事業所ごと・取り込みの種類ごと。11/24） =====
+
+/**
+ * 覚えておく形：列は「位置」ではなく「見出しの名前」で持つ（翌月のファイルで列の順が変わっても合うように）
+ * null ＝ 人が「使わない」を選んだ
+ */
+export type SavedSource = { col: string; plus?: string[] } | { fixed: string } | null;
+export type SavedMapping = Record<string, SavedSource>;
+
+/** 今の割り当て → 覚えておく形 */
+export function toSavedMapping(headers: readonly string[], mapping: Mapping): SavedMapping {
+  const out: SavedMapping = {};
+  for (const [key, s] of Object.entries(mapping)) {
+    if (s === undefined) continue;
+    if (s === null) out[key] = null;
+    else if ('col' in s) {
+      const plus = (s.plus ?? []).map((i) => headers[i] ?? '').filter((h) => h.trim() !== '');
+      out[key] = { col: headers[s.col] ?? '', ...(plus.length > 0 ? { plus } : {}) };
+    } else out[key] = { fixed: s.fixed };
+  }
+  return out;
+}
+
+/**
+ * 覚えておいた形 → 今のファイルの割り当て
+ * - 見出しの名前で列を探す（全角半角・空白の違いは無視）。見つからない列は、自動で当てた結果に戻す
+ * - 足した列のうち見つからないものは外す
+ * - 覚えていない項目（あとで増えた項目）は、自動で当てた結果
+ */
+export function fromSavedMapping<K extends string>(
+  headers: readonly string[],
+  fields: readonly ImportField<K>[],
+  saved: SavedMapping,
+  guessed: Mapping<K>,
+): Mapping<K> {
+  const index = new Map<string, number>();
+  headers.forEach((h, i) => {
+    const k = headerKey(h);
+    if (k && !index.has(k)) index.set(k, i);
+  });
+  const find = (name: string) => index.get(headerKey(name));
+  const out: Mapping<K> = {};
+  for (const f of fields) {
+    if (!(f.key in saved)) {
+      if (guessed[f.key] !== undefined) out[f.key] = guessed[f.key];
+      continue;
+    }
+    const s = saved[f.key];
+    if (s === null) out[f.key] = null;
+    else if ('fixed' in s) out[f.key] = { fixed: s.fixed };
+    else {
+      const col = find(s.col);
+      if (col === undefined) {
+        if (guessed[f.key] !== undefined) out[f.key] = guessed[f.key];
+        continue;
+      }
+      const plus = (s.plus ?? []).map(find).filter((i): i is number => i !== undefined && i !== col);
+      out[f.key] = plus.length > 0 ? { col, plus } : { col };
+    }
+  }
+  return out;
 }
 
 // ===== 値の言い直し =====
@@ -217,6 +288,22 @@ export function splitName(raw: string): [string, string] {
   return m ? [m[1], m[2].trim()] : [t, ''];
 }
 
+/**
+ * 金額の列を足す（11/24）。空のセルは0。全部空なら空。
+ * 数でないセルがあれば、そのセルの文字をそのまま返す（足さずに、確認画面で「正しく入力されていません」のエラーにする）
+ */
+export function sumCells(raws: readonly string[]): string {
+  const vals = raws.map((r) => normalizeNumber(r));
+  if (vals.every((v) => v === '')) return '';
+  let sum = 0;
+  for (const [i, v] of vals.entries()) {
+    if (v === '') continue;
+    if (!/^-?\d+$/.test(v)) return raws[i].trim();
+    sum += Number(v);
+  }
+  return String(sum);
+}
+
 // ===== うちの表を作る =====
 
 /** 1行ぶんの値（うちの項目 → 言い直した文字） */
@@ -241,6 +328,10 @@ export function convertRow<K extends string, O extends K>(
   for (const f of spec.fields) {
     const s = mapping[f.key];
     if (!s) continue;
+    if ('col' in s && s.plus?.length && canSum(f)) {
+      v[f.key] = sumCells([s.col, ...s.plus].map((i) => cells[i] ?? ''));
+      continue;
+    }
     const raw = 'col' in s ? (cells[s.col] ?? '') : s.fixed;
     v[f.key] = normalizeValue(f.kind, raw);
   }

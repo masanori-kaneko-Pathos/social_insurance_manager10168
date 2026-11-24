@@ -994,6 +994,20 @@ service cloud.firestore {
         allow delete: if false;
       }
 
+      // ----- 取り込みの「列を合わせる」の割り当て（ID ＝ 取り込みの種類。11/24） -----
+      // 列は見出しの名前で持つ。中身の形はアプリで確かめる（項目は取り込みごとに違うので、ここでは大きさだけ）
+      match /importMappings/{key} {
+        allow read: if isMember(officeId);
+        allow create, update: if isAdmin(officeId)
+          && key.matches('^[a-zA-Z0-9-]{1,40}$')
+          && exactKeys(request.resource.data, ['key', 'fields', 'updatedBy', 'updatedAt'])
+          && request.resource.data.key == key
+          && request.resource.data.fields is map && request.resource.data.fields.size() <= 80
+          && request.resource.data.updatedBy == request.auth.uid
+          && request.resource.data.updatedAt == request.time;
+        allow delete: if isAdmin(officeId);
+      }
+
       // ----- 担当者のダブルチェック（ID ＝ 対象の鍵：filing_様式_期間・notice_月） -----
       // 管理者が「確認を頼む」→ 頼んだ人とは別のメンバー（一般でもよい）が「確認した」。頼んだ本人は確認できない
       match /reviews/{reviewId} {

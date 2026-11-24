@@ -310,6 +310,9 @@
         <app-column-mapper
           [tables]="f.tables"
           [spec]="deductionSpec"
+          memoryKey="deductions"
+          [officeId]="context.current()?.id ?? null"
+          [canSave]="context.isAdmin()"
           (confirmed)="onDeductionMapped($event)"
           (cancelled)="cancelDeduction()"
         />

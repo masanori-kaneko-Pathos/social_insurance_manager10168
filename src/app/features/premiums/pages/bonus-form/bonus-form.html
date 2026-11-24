@@ -33,7 +33,7 @@
       <div class="alert alert-danger">{{ e | transloco }}</div>
     }
     @if (importFile(); as f) {
-      <app-column-mapper [tables]="f.tables" [spec]="importSpec" (confirmed)="onImportMapped($event)" (cancelled)="cancelImport()" />
+      <app-column-mapper [tables]="f.tables" [spec]="importSpec" memoryKey="bonus-amounts" [officeId]="context.current()?.id ?? null" [canSave]="context.isAdmin()" (confirmed)="onImportMapped($event)" (cancelled)="cancelImport()" />
     }
     @if (importResult(); as res) {
       <div class="alert import-result" role="status">

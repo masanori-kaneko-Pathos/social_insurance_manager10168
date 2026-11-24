@@ -3506,7 +3506,12 @@
       "empty": "The file has no header row with at least one data row.",
       "noText": "No text could be read from the PDF (scanned PDFs cannot be read).",
       "tooManyPages": "The PDF has too many pages (up to 20)."
-    }
+    },
+    "sumNote": "Amount fields can add up several columns of the file (for example: base pay + position allowance + commuting allowance → fixed wages). Pick a column, then choose from \"+ Add a column\". Check your company’s rules for which allowances to add.",
+    "plusAdd": "+ Add a column",
+    "plusRemove": "Stop adding {{col}}",
+    "restored": "Using the assignment last used in this office (matched by column headings). When you continue, the current assignment is remembered for next time.",
+    "useAuto": "Use automatic matching"
   },
   "members": {
     "title": "Members",

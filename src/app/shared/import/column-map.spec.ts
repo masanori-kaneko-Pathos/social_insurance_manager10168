@@ -14,6 +14,12 @@ import {
   splitName,
   toOurTable,
   unusedColumns,
+  canSum,
+  fromSavedMapping,
+  toSavedMapping,
+  sumCells,
+  Mapping,
+  OurTableSpec,
 } from './column-map';
 
 type K = 'no' | 'name' | 'hire' | 'a' | 'b' | 'ab';
@@ -166,5 +172,95 @@ describe('column-map：うちの表を作る', () => {
       finish: (v) => ({ ...v, ab: String(Number(v.a) * Number(v.b)) }),
     });
     expect(out).toEqual([['AB'], ['12']]);
+  });
+});
+
+describe('列を足して1つの項目にする（金額の項目だけ。11/24）', () => {
+  type K = 'no' | 'fixed' | 'days';
+  const fields: ImportField<K>[] = [
+    { key: 'no', header: '社員番号', words: [] },
+    { key: 'fixed', header: '固定的賃金', words: [], kind: 'number' },
+    { key: 'days', header: '支払基礎日数', words: [], kind: 'days' },
+  ];
+  const spec: OurTableSpec<K, K> = { fields, out: ['no', 'fixed', 'days'], outHeader: (k) => k };
+  // 給与ソフトの書き出し：基本給・役職手当・通勤手当・残業手当が別の列
+  const table = [
+    ['社員番号', '基本給', '役職手当', '通勤手当', '残業手当', '出勤日数'],
+    ['0001', '250,000', '30,000', '12,340', '45,000', '21'],
+    ['0002', '220,000', '', '8,000', '0', '20'],
+    ['0003', '200,000', 'なし', '5,000', '', '19'],
+  ];
+  const mapping: Mapping<K> = { no: { col: 0 }, fixed: { col: 1, plus: [2, 3] }, days: { col: 5 } };
+
+  it('基本給＋役職手当＋通勤手当 → 固定的賃金（残業手当は足さない）。空のセルは0', () => {
+    const out = toOurTable(table, mapping, spec);
+    expect(out[1]).toEqual(['0001', '292340', '21']);
+    expect(out[2]).toEqual(['0002', '228000', '20']);
+  });
+
+  it('数でないセルがあれば足さずにその文字のまま（確認画面のエラーにする）', () => {
+    expect(toOurTable(table, mapping, spec)[3][1]).toBe('なし');
+  });
+
+  it('全部空なら空（0円にはしない）', () => {
+    expect(sumCells(['', ' ', ''])).toBe('');
+    expect(sumCells(['1,000円', '２０００'])).toBe('3000');
+  });
+
+  it('足した列も「使っている列」に数える', () => {
+    expect(unusedColumns(table[0], mapping)).toEqual([4]);
+  });
+
+  it('金額でない項目は足さない（日数に plus があっても1列目だけ）', () => {
+    const m: Mapping<K> = { ...mapping, days: { col: 5, plus: [1] } };
+    expect(toOurTable(table, m, spec)[1][2]).toBe('21');
+    expect(canSum(fields[1])).toBeTrue();
+    expect(canSum(fields[2])).toBeFalse();
+  });
+});
+
+describe('割り当てを覚える（見出しの名前で。11/24）', () => {
+  type K = 'no' | 'month' | 'cash' | 'fixed' | 'days';
+  const fields: ImportField<K>[] = [
+    { key: 'no', header: '社員番号', words: [] },
+    { key: 'month', header: '支払った月', words: [] },
+    { key: 'cash', header: '支払額', words: [], kind: 'number' },
+    { key: 'fixed', header: '固定的賃金', words: [], kind: 'number' },
+    { key: 'days', header: '支払基礎日数', words: [], kind: 'days' },
+  ];
+  const oct = ['社員番号', '支給年月', '総支給額', '基本給', '役職手当', '通勤手当', '出勤日数'];
+  const m: Mapping<K> = { no: { col: 0 }, month: { col: 1 }, cash: { col: 2 }, fixed: { col: 3, plus: [4, 5] }, days: null };
+
+  it('列は位置ではなく見出しの名前で覚える。「使わない」も覚える', () => {
+    expect(toSavedMapping(oct, m)).toEqual({
+      no: { col: '社員番号' },
+      month: { col: '支給年月' },
+      cash: { col: '総支給額' },
+      fixed: { col: '基本給', plus: ['役職手当', '通勤手当'] },
+      days: null,
+    });
+  });
+
+  it('翌月のファイルで列の順が変わっても、同じ見出しの列に戻る', () => {
+    const nov = ['支給年月', '社員番号', '基本給', '通勤手当', '役職手当', '総支給額', '出勤日数'];
+    const back = fromSavedMapping(nov, fields, toSavedMapping(oct, m), { days: { col: 6 } });
+    expect(back).toEqual({ no: { col: 1 }, month: { col: 0 }, cash: { col: 5 }, fixed: { col: 2, plus: [4, 3] }, days: null });
+  });
+
+  it('見出しが見つからない列は自動で当てた結果に戻し、足した列は見つかるものだけ。覚えていない項目は自動の結果', () => {
+    const dec = ['社員番号', '支給年月', '総支給額（円）', '基本給', '通勤手当', '出勤日数'];
+    const saved = toSavedMapping(oct, m);
+    delete saved['days'];
+    const back = fromSavedMapping(dec, fields, saved, { cash: { col: 2 }, days: { col: 5 } });
+    expect(back.cash).toEqual({ col: 2 });
+    expect(back.fixed).toEqual({ col: 3, plus: [4] });
+    expect(back.days).toEqual({ col: 5 });
+  });
+
+  it('全角・空白の違いは同じ見出しとみなす。全員に同じ値もそのまま', () => {
+    const saved = { no: { col: '社員番号' }, month: { fixed: '2026-10' } };
+    const back = fromSavedMapping(['社員 番号', 'ほか'], fields, saved, {});
+    expect(back.no).toEqual({ col: 0 });
+    expect(back.month).toEqual({ fixed: '2026-10' });
   });
 });

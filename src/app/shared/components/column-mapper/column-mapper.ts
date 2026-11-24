@@ -1,18 +1,23 @@
-import { Component, computed, input, linkedSignal, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, linkedSignal, output, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { TranslocoPipe } from '@jsverse/transloco';
 import {
+  canSum,
   convertRow,
+  fromSavedMapping,
   guessMapping,
   ImportField,
   Mapping,
   missingRequired,
   OurTableSpec,
+  SavedMapping,
   Source,
   toOurTable,
+  toSavedMapping,
   unusedColumns,
 } from '../../import/column-map';
 import { SheetTable } from '../../import/parse';
+import { ImportMappingService } from '../../services/import-mapping.service';
 
 /** 例として見せる行の数 */
 const SAMPLE_ROWS = 3;
@@ -37,6 +42,13 @@ export class ColumnMapper {
   readonly spec = input.required<OurTableSpec<any, any>>();
   /** 項目どうしの計算があるときの注意（翻訳キー） */
   readonly noteKey = input<string | null>(null);
+  /**
+   * 割り当てを覚えておく鍵（取り込みの種類。payrolls・bonuses など）と事業所。両方あれば前回の割り当てを使い、
+   * canSave（管理者）なら「この対応で確認する」で覚える（11/24）
+   */
+  readonly memoryKey = input<string | null>(null);
+  readonly officeId = input<string | null>(null);
+  readonly canSave = input(false);
   readonly confirmed = output<string[][]>();
   readonly cancelled = output<void>();
 
@@ -47,16 +59,45 @@ export class ColumnMapper {
   private readonly fields = computed<readonly ImportField[]>(() => this.spec().fields);
   private readonly guessed = computed(() => guessMapping(this.headers(), this.fields()));
 
-  /** 今の対応（シートを変えたら、自動で当て直す） */
-  readonly mapping = linkedSignal<Mapping>(() => ({ ...this.guessed() }));
+  private readonly mappingApi = inject(ImportMappingService);
+  /** 前回この事業所で使った割り当て（なければ null） */
+  private readonly saved = signal<SavedMapping | null>(null);
+  /** 前回の割り当てを使っているか */
+  readonly restored = computed(() => this.saved() !== null);
+  /** はじめの割り当て：前回の割り当てがあればそれ（見つからない列は自動の結果）、なければ自動で当てた結果 */
+  private readonly initial = computed<Mapping>(() => {
+    const saved = this.saved();
+    return saved ? fromSavedMapping(this.headers(), this.fields(), saved, this.guessed()) : this.guessed();
+  });
 
-  /** 上に出す項目：必須と、自動で結べたもの。残りは「そのほかの項目」に畳む（選んでも行が動かないよう、当てた時点で決める） */
+  /** 今の対応（シートを変えたら、当て直す） */
+  readonly mapping = linkedSignal<Mapping>(() => ({ ...this.initial() }));
+
+  /** 上に出す項目：必須と、はじめから結べたもの。残りは「そのほかの項目」に畳む（選んでも行が動かないよう、当てた時点で決める） */
   readonly mainFields = computed(() =>
-    this.fields().filter((f) => f.required || this.guessed()[f.key]),
+    this.fields().filter((f) => f.required || this.initial()[f.key]),
   );
   readonly moreFields = computed(() =>
-    this.fields().filter((f) => !f.required && !this.guessed()[f.key]),
+    this.fields().filter((f) => !f.required && !this.initial()[f.key]),
   );
+
+  constructor() {
+    // 前回の割り当てを読む（読めなくても自動の当て方で続けられる）
+    effect(() => {
+      const key = this.memoryKey();
+      const office = this.officeId();
+      if (!key || !office) return;
+      this.mappingApi
+        .get(office, key)
+        .then((m) => this.saved.set(m))
+        .catch((err) => console.error(err));
+    });
+  }
+
+  /** 前回の割り当てをやめて、自動で当てた結果に戻す */
+  useAuto(): void {
+    this.saved.set(null);
+  }
 
   readonly samples = computed(() =>
     this.table()
@@ -66,6 +107,8 @@ export class ColumnMapper {
       .map((r) => convertRow(r, this.mapping(), this.spec())),
   );
   readonly missing = computed(() => missingRequired(this.fields(), this.mapping()));
+  /** 列を足せる項目があるか（あれば上に説明を出す。11/24） */
+  readonly hasSummable = computed(() => this.fields().some((f) => canSum(f)));
   readonly unused = computed(() => unusedColumns(this.headers(), this.mapping()));
 
   // ===== 表示 =====
@@ -95,6 +138,24 @@ export class ColumnMapper {
     return s && 'fixed' in s ? s.fixed : '';
   }
 
+  canSum(f: ImportField): boolean {
+    return canSum(f);
+  }
+
+  /** 足した列（金額の項目で、ファイルの列から取るときだけ） */
+  plusOf(key: string): number[] {
+    const s = this.mapping()[key];
+    return s && 'col' in s ? (s.plus ?? []) : [];
+  }
+
+  /** 「＋列を足す」に出す列：まだ使っていない列だけ（その項目の列・足した列は出さない） */
+  plusChoices(key: string): number[] {
+    const s = this.mapping()[key];
+    if (!s || !('col' in s)) return [];
+    const taken = new Set([s.col, ...(s.plus ?? [])]);
+    return this.headers().map((_, i) => i).filter((i) => !taken.has(i) && this.headers()[i].trim() !== '');
+  }
+
   example(key: string, i: number): string {
     return this.samples()[i]?.[key] ?? '';
   }
@@ -108,8 +169,26 @@ export class ColumnMapper {
   onSource(key: string, value: string): void {
     let s: Source = null;
     if (value === 'fixed') s = { fixed: this.fixedOf(key) };
-    else if (value.startsWith('c:')) s = { col: Number(value.slice(2)) };
+    else if (value.startsWith('c:')) {
+      // 足した列は残す（いま選んだ列と同じものだけ外す）
+      const col = Number(value.slice(2));
+      const plus = this.plusOf(key).filter((i) => i !== col);
+      s = plus.length > 0 ? { col, plus } : { col };
+    }
     this.mapping.update((m) => ({ ...m, [key]: s }));
+  }
+
+  addPlus(key: string, value: string): void {
+    const s = this.mapping()[key];
+    if (!s || !('col' in s) || value === '') return;
+    this.mapping.update((m) => ({ ...m, [key]: { col: s.col, plus: [...(s.plus ?? []), Number(value)] } }));
+  }
+
+  removePlus(key: string, col: number): void {
+    const s = this.mapping()[key];
+    if (!s || !('col' in s)) return;
+    const plus = (s.plus ?? []).filter((i) => i !== col);
+    this.mapping.update((m) => ({ ...m, [key]: plus.length > 0 ? { col: s.col, plus } : { col: s.col } }));
   }
 
   onFixed(key: string, text: string): void {
@@ -118,6 +197,12 @@ export class ColumnMapper {
 
   confirm(): void {
     if (this.missing().length > 0) return;
+    const key = this.memoryKey();
+    const office = this.officeId();
+    if (key && office && this.canSave()) {
+      // 覚えるのは取り込みの手助けなので、失敗しても取り込みは止めない
+      this.mappingApi.save(office, key, toSavedMapping(this.headers(), this.mapping())).catch((err) => console.error(err));
+    }
     this.confirmed.emit(toOurTable(this.table(), this.mapping(), this.spec()));
   }
 }

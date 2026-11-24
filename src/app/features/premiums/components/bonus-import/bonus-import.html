@@ -45,6 +45,9 @@
       [hidden]="!mapping()"
       [tables]="f.tables"
       [spec]="spec"
+      memoryKey="bonuses"
+      [officeId]="context.current()?.id ?? null"
+      [canSave]="context.isAdmin()"
       (confirmed)="onMapped($event)"
       (cancelled)="clear()"
     />

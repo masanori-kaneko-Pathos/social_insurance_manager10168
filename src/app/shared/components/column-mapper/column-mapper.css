@@ -65,6 +65,8 @@ h3 {
 }
 
 .example {
+  /* 狭い画面で1文字ずつに潰れないよう、最小の幅を持たせて枠の中で横に送る（11/24） */
+  min-width: 7em;
   max-width: 12em;
   overflow-wrap: anywhere;
   font-variant-numeric: tabular-nums;
@@ -84,4 +86,42 @@ h3 {
   justify-content: flex-end;
   gap: var(--space-sm);
   margin-top: var(--space-md);
+}
+
+/* 足した列（金額の項目。11/24） */
+.plus-list {
+  margin-top: var(--space-xs);
+}
+
+.plus-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.plus-remove {
+  border: 0;
+  background: none;
+  padding: 0 2px;
+  color: var(--color-text-sub);
+  cursor: pointer;
+  font-size: var(--font-sm);
+  line-height: 1;
+}
+
+.plus-remove:hover {
+  color: var(--color-danger-text);
+}
+
+.source .plus-add {
+  margin-top: var(--space-xs);
+  color: var(--color-text-sub);
+}
+
+/* 前回の割り当てを使っているときの1行（11/24） */
+.restored {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
 }
