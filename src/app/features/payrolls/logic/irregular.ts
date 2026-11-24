@@ -192,9 +192,12 @@ export function findStartMonths(
   return [...found.values()].sort((a, b) => a.month.localeCompare(b.month));
 }
 
-/** 非固定的賃金（支払額 − 固定的賃金 − 遡及支払額） */
+/**
+ * 非固定的賃金（通貨によるものの額 − 固定的賃金 − 遡及支払額）
+ * 現物は固定的賃金の側なので入れない（年間平均の判定と同じ。11/24 に payTotal から直した）
+ */
 function nonFixedOf(p: Payroll): number {
-  return Math.max(0, payTotal(p) - p.fixed - p.retro);
+  return Math.max(0, p.cash - p.fixed - p.retro);
 }
 
 /**
