@@ -101,6 +101,9 @@ export function readRow(t: PayrollRowText, periodDays: number): RowResult {
     workMinutes: workMinutes ?? null,
     prorated: t.prorated,
     state: t.state,
+    // 表・CSV の総支給額の入力は内訳なし（内訳は行の下の「内訳」で入れる。11/24）
+    lines: null,
+    fixedFull: null,
   };
   const checks = validatePayroll(input, periodDays);
   return checks.length > 0 ? { kind: 'invalid', errors: checks } : { kind: 'ok', input };
@@ -117,7 +120,9 @@ export function sameInput(a: PayrollInput, b: PayrollInput): boolean {
     a.absentDays === b.absentDays &&
     a.workMinutes === b.workMinutes &&
     a.prorated === b.prorated &&
-    a.state === b.state
+    a.state === b.state &&
+    a.fixedFull === b.fixedFull &&
+    JSON.stringify(a.lines) === JSON.stringify(b.lines)
   );
 }
 

@@ -20,7 +20,7 @@
 // ※ アプリの読み：現物は固定的なもの（社宅・食事）として固定的賃金の側に入れる。非固定 ＝ 支払額 − 固定的賃金 − 遡及支払額
 // ※ 月の途中の資格取得の月（Q8）は、まだ除いていない（入社月の実績は支払基礎日数で外れることが多い）
 
-import { inKindYen, payTotal, type Payroll } from '../../../core/models/payroll';
+import { fixedForChange, inKindYen, payTotal, type Payroll } from '../../../core/models/payroll';
 import type { WageChange } from '../../../core/models/revision';
 import type { StandardRemuneration } from '../../../core/models/remuneration';
 import { shiftMonth } from '../../../shared/utils/date';
@@ -79,17 +79,18 @@ export function findStartMonths(
     }
     if (prev && furlough(shiftMonth(m, -1))) {
       found.set(m, { month: m, direction: 'up', source: 'furlough' });
-      if (p.fixed > 0) last = p;
+      if (fixedForChange(p) > 0) last = p;
       continue;
     }
     // 日割りの月（計算期間の途中で変わった月）は起算月にしない。1か月分そろった次の月を起算月にする（事例7。11/19）
     const at = p.prorated ? shiftMonth(m, 1) : m;
-    if (p.fixed > 0 && last && prev && p.fixed !== last.fixed) {
+    // 比べるのは欠勤控除を引く前の額（内訳がある月。欠勤の月を変動と見ないため。11/24）
+    if (fixedForChange(p) > 0 && last && prev && fixedForChange(p) !== fixedForChange(last)) {
       found.set(at, { month: at, direction: directionOf(last, p, last === prev), source: 'fixed' });
     } else if (p.retro > 0) {
       found.set(at, { month: at, direction: 'up', source: 'retro' });
     }
-    if (p.fixed > 0) last = p;
+    if (fixedForChange(p) > 0) last = p;
   }
   for (const w of wageChanges) {
     if (w.source === 'dismissed') found.delete(w.month);
@@ -112,7 +113,7 @@ function nonFixedOf(p: Payroll): number {
  * 逆（固定的賃金が下がって変動的な手当が新しく出た）は、ふつうの残業が出ただけと見分けられないので、人が足す
  */
 function directionOf(before: Payroll, after: Payroll, adjacent: boolean): Direction {
-  const up = after.fixed > before.fixed;
+  const up = fixedForChange(after) > fixedForChange(before);
   if (up && adjacent && nonFixedOf(before) > 0 && nonFixedOf(after) === 0) return 'unclear';
   return up ? 'up' : 'down';
 }

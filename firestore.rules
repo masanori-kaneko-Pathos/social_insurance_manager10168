@@ -561,8 +561,14 @@ service cloud.firestore {
         // ----- 給与の実績（ID ＝ 支払った月） -----
         match /payrolls/{paidMonth} {
           function validPayrollRecord(d) {
-            return exactKeys(d, ['officeId', 'employeeId', 'paidMonth', 'cash', 'fixed', 'inKind', 'retro',
+            // lines・fixedFull は 11/24 に足した任意の項目（給与明細の内訳と、欠勤控除を引く前の毎月決まった額）
+            return d.keys().hasAll(['officeId', 'employeeId', 'paidMonth', 'cash', 'fixed', 'inKind', 'retro',
                                  'days', 'absentDays', 'workMinutes', 'prorated', 'state', 'createdAt', 'updatedAt'])
+              && d.keys().hasOnly(['officeId', 'employeeId', 'paidMonth', 'cash', 'fixed', 'inKind', 'retro',
+                                 'days', 'absentDays', 'workMinutes', 'prorated', 'state', 'createdAt', 'updatedAt',
+                                 'lines', 'fixedFull'])
+              && (!('lines' in d) || d.lines == null || (d.lines is list && d.lines.size() >= 1 && d.lines.size() <= 40))
+              && (!('fixedFull' in d) || d.fixedFull == null || yen(d.fixedFull))
               // collectionGroup で読むときのための項目。パスと一致させる
               && d.officeId == officeId && d.employeeId == employeeId
               && d.paidMonth == paidMonth && isMonth(paidMonth)
@@ -810,6 +816,22 @@ service cloud.firestore {
         allow create: if isAdmin(officeId) && validBonusItem(request.resource.data) && created(request.resource.data);
         allow update: if isAdmin(officeId) && validBonusItem(request.resource.data) && updated(request.resource.data);
         allow delete: if false;
+      }
+
+      // ----- 給与の項目（給与明細の項目名と、社会保険での分類。11/24。core/models/payroll-item.ts） -----
+      // 消してもよい（給与の実績は、行に分類を写して持つので計算は変わらない）
+      match /payrollItems/{itemId} {
+        function validPayrollItem(d) {
+          return exactKeys(d, ['name', 'labels', 'category', 'createdAt', 'updatedAt'])
+            && d.name is string && d.name.size() > 0 && d.name.size() <= 30
+            && d.labels is list && d.labels.size() <= 20
+            && d.category in ['base', 'fixedAllowance', 'commute', 'variable', 'deduction', 'retro', 'excluded'];
+        }
+
+        allow read: if isMember(officeId);
+        allow create: if isAdmin(officeId) && validPayrollItem(request.resource.data) && created(request.resource.data);
+        allow update: if isAdmin(officeId) && validPayrollItem(request.resource.data) && updated(request.resource.data);
+        allow delete: if isAdmin(officeId);
       }
 
       // ----- 招待（ID ＝ 招待コード）-----

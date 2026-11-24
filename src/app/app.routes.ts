@@ -203,6 +203,12 @@ export const routes: Routes = withUnsavedGuard([
               ),
           },
           {
+            // 給与の項目と分類（給与明細の項目名 → 社会保険での分類。11/24）。'payrolls/:month' より先に置く
+            path: 'payrolls/items',
+            loadComponent: () =>
+              import('./features/payrolls/pages/payroll-items/payroll-items').then((m) => m.PayrollItems),
+          },
+          {
             path: 'payrolls/:month',
             data: { wide: true }, // 広い画面では表を横に伸ばす（11/16）
             loadComponent: () =>

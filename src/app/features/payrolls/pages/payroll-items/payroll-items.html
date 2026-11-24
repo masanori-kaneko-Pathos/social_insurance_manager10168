@@ -1,0 +1,134 @@
+<div class="page-head">
+  <div>
+    <a class="back" [routerLink]="['/o', context.current()?.id, 'payrolls']">← {{ 'payrollItem.back' | transloco }}</a>
+    <h1>{{ 'payrollItem.title' | transloco }}</h1>
+  </div>
+  @if (context.isAdmin() && !draft()) {
+    <div class="head-actions">
+      <button type="button" class="btn btn-primary" (click)="startNew()">{{ 'payrollItem.add' | transloco }}</button>
+    </div>
+  }
+</div>
+
+<p class="lead">{{ 'payrollItem.lead' | transloco }}</p>
+
+@if (savedName(); as name) {
+  <div class="alert alert-success" role="status">{{ 'payrollItem.saved' | transloco: { name } }}</div>
+}
+
+@if (loading()) {
+  <p class="muted">{{ 'common.loading' | transloco }}</p>
+} @else {
+  @if (errorKey(); as key) {
+    <div class="alert alert-danger">{{ key | transloco }}</div>
+  }
+  <div class="card table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ 'payrollItem.col.name' | transloco }}</th>
+          <th>{{ 'payrollItem.col.labels' | transloco }}</th>
+          <th>{{ 'payrollItem.col.category' | transloco }}</th>
+          <th>{{ 'payrollItem.col.treatment' | transloco }}</th>
+          @if (context.isAdmin()) {
+            <th class="toggle-col"></th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of rows(); track r.value.name) {
+          <tr [class.is-open]="draft() && draft()!.name === r.value.name">
+            <td class="name">
+              {{ r.value.name }}
+              @if (!r.item) {
+                <span class="sub">{{ 'payrollItem.default' | transloco }}</span>
+              }
+            </td>
+            <td class="wrap">{{ r.value.labels.length > 0 ? r.value.labels.join('・') : '—' }}</td>
+            <td>
+              <!-- 毎月決まった額に数える分類は色を付ける（基本給は給与の形しだいなので同じ色） -->
+              <span class="cat" [class]="'cat c-' + r.value.category">{{ 'payrollItem.category.' + r.value.category | transloco }}</span>
+            </td>
+            <td class="wrap muted">{{ 'payrollItem.treatment.' + r.value.category | transloco }}</td>
+            @if (context.isAdmin()) {
+              <td class="toggle-col">
+                <button type="button" class="btn btn-small" (click)="startEdit(r)" [disabled]="!!draft() || saving()">
+                  {{ (r.item ? 'payrollItem.edit' : 'payrollItem.recategorize') | transloco }}
+                </button>
+                @if (r.item; as it) {
+                  <button type="button" class="btn btn-small" (click)="remove(it)" [disabled]="!!draft() || saving()">
+                    {{ 'payrollItem.delete' | transloco }}
+                  </button>
+                }
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (draft(); as d) {
+    <section class="card edit">
+      <h2>{{ (d.id ? 'payrollItem.editTitle' : 'payrollItem.addTitle') | transloco }}</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="pi-name">{{ 'payrollItem.field.name' | transloco }}</label>
+          <input
+            id="pi-name"
+            class="input"
+            maxlength="30"
+            [value]="d.name"
+            (input)="patch({ name: $any($event.target).value })"
+            [class.is-invalid]="formErrors().includes('nameRequired') || formErrors().includes('duplicate')"
+          />
+          <span class="hint">{{ 'payrollItem.hint.name' | transloco }}</span>
+        </div>
+        <div class="field">
+          <label for="pi-labels">
+            {{ 'payrollItem.field.labels' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span>
+          </label>
+          <input
+            id="pi-labels"
+            class="input"
+            [value]="d.labels"
+            [placeholder]="'payrollItem.placeholder.labels' | transloco"
+            (input)="patch({ labels: $any($event.target).value })"
+          />
+          <span class="hint">{{ 'payrollItem.hint.labels' | transloco }}</span>
+        </div>
+      </div>
+
+      <fieldset class="choices">
+        <legend>{{ 'payrollItem.field.category' | transloco }}</legend>
+        @for (c of categories; track c) {
+          <label class="choice" [class.on]="d.category === c">
+            <input type="radio" name="category" [checked]="d.category === c" (change)="patch({ category: c })" />
+            <span>
+              <strong>{{ 'payrollItem.category.' + c | transloco }}</strong>
+              <span class="hint">{{ 'payrollItem.exampleLabel' | transloco: { list: ('payrollItem.example.' + c | transloco) } }}</span>
+              <span class="hint">{{ 'payrollItem.treatment.' + c | transloco }}</span>
+            </span>
+          </label>
+        }
+      </fieldset>
+
+      @for (e of formErrors(); track e) {
+        <p class="field-error">{{ 'payrollItem.error.' + e | transloco }}</p>
+      }
+      <div class="actions">
+        <button type="button" class="btn" (click)="cancel()" [disabled]="saving()">{{ 'common.cancel' | transloco }}</button>
+        <button type="button" class="btn btn-primary" (click)="save()" [disabled]="saving()">{{ 'common.save' | transloco }}</button>
+      </div>
+    </section>
+  }
+
+  <details class="fold">
+    <summary>{{ 'payrollItem.howTitle' | transloco }}</summary>
+    <ul class="fold-notes">
+      <li>{{ 'payrollItem.how.saved' | transloco }}</li>
+      <li>{{ 'payrollItem.how.unknown' | transloco }}</li>
+      <li>{{ 'payrollItem.how.fixed' | transloco }}</li>
+    </ul>
+  </details>
+}

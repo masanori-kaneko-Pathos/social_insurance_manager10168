@@ -1,3 +1,4 @@
+import { fixedForChange } from '../../../../core/models/payroll';
 import { Component, computed, HostListener, effect, ElementRef, inject, signal, untracked, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -580,7 +581,7 @@ export class Dashboard {
         .listOfOfficeMonths(officeId, active.map((e) => e.id), [shiftMonth(latest, -1), latest])
         .then((list) => {
           const map = new Map<string, { paidMonth: string; workMinutes: number | null; fixed: number }[]>();
-          for (const p of list) map.set(p.employeeId, [...(map.get(p.employeeId) ?? []), { paidMonth: p.paidMonth, workMinutes: p.workMinutes, fixed: p.fixed }]);
+          for (const p of list) map.set(p.employeeId, [...(map.get(p.employeeId) ?? []), { paidMonth: p.paidMonth, workMinutes: p.workMinutes, fixed: fixedForChange(p) }]);
           this.recentPayrolls.set(map);
         })
         .catch((err) => console.error(err));

@@ -21,8 +21,8 @@ import { summarize } from '../employees/logic/history';
 /** 履歴に残す項目（給与の実績の入力の項目だけ。誰の・どの月かは記録の target で分かる） */
 function inputOf(p: PayrollInput | null | undefined): Record<string, unknown> | null {
   if (!p) return null;
-  const { cash, fixed, inKind, retro, days, absentDays, workMinutes, prorated, state } = p;
-  return { cash, fixed, inKind, retro, days, absentDays, workMinutes, prorated, state };
+  const { cash, fixed, inKind, retro, days, absentDays, workMinutes, prorated, state, lines, fixedFull } = p;
+  return { cash, fixed, inKind, retro, days, absentDays, workMinutes, prorated, state, lines: lines ?? null, fixedFull: fixedFull ?? null };
 }
 
 /**
@@ -160,7 +160,8 @@ export class PayrollService {
   private strip(data: Record<string, unknown>): Payroll {
     // createdAt・updatedAt は画面で使わないので落とす
     const { createdAt: _c, updatedAt: _u, ...rest } = data;
-    return rest as unknown as Payroll;
+    // 内訳（11/24）がない前の文書は、内訳なし
+    return { lines: null, fixedFull: null, ...rest } as unknown as Payroll;
   }
 
   /** 1人の全部（新しい順） */

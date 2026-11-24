@@ -1,4 +1,5 @@
 import { Timestamp } from 'firebase/firestore';
+import { PayrollItemCategory } from './payroll-item';
 
 // 毎月の給与の実績（1人 × 1か月 ＝ 1件）
 // 置き場所：offices/{officeId}/employees/{employeeId}/payrolls/{YYYY-MM}（ID ＝ 支払った月）
@@ -6,6 +7,17 @@ import { Timestamp } from 'firebase/firestore';
 
 /** その月の状態。産休・育休は employees.leaves から出すのでここには持たない */
 export type PayrollState = 'normal' | 'suspended' | 'furlough'; // 通常／休職／一時帰休
+
+/**
+ * 給与明細の1行（11/24）。項目名と分類は、保存したときのものを写して持つ
+ * （あとで給与の項目の分類を変えても、保存済みの月の計算は変わらない）
+ * amount は円・0以上の整数。欠勤控除なども正の数で持ち、分類で引く
+ */
+export interface PayrollLine {
+  name: string;
+  category: PayrollItemCategory;
+  amount: number;
+}
 
 /** 画面で入力する項目 */
 export interface PayrollInput {
@@ -30,6 +42,16 @@ export interface PayrollInput {
   /** 計算期間の途中で入社・変更があり、1か月分が出ていない月 */
   prorated: boolean;
   state: PayrollState;
+  /**
+   * 給与明細の内訳（11/24）。null ＝ 内訳なし（前のデータ・総支給額だけの CSV）
+   * 内訳があるときは、cash・fixed・retro は内訳から出した値（payrolls/logic/payroll-lines.ts）
+   */
+  lines: PayrollLine[] | null;
+  /**
+   * 欠勤控除を引く前の、毎月決まった額（11/24。固定的賃金が変わったかを見るのに使う）
+   * fixed は実際に払った分（欠勤の月は少ない）なので、そのまま比べると欠勤の月を変動と見てしまう。null ＝ 内訳なし（fixed で見る）
+   */
+  fixedFull: number | null;
 }
 
 /** アプリの中の形 */
@@ -69,5 +91,12 @@ export function emptyPayrollInput(): PayrollInput {
     workMinutes: null,
     prorated: false,
     state: 'normal',
+    lines: null,
+    fixedFull: null,
   };
+}
+
+/** 固定的賃金が変わったかを見る額（欠勤控除を引く前。内訳がない月は払った額。11/24） */
+export function fixedForChange(p: Pick<PayrollInput, 'fixed' | 'fixedFull'>): number {
+  return p.fixedFull ?? p.fixed;
 }

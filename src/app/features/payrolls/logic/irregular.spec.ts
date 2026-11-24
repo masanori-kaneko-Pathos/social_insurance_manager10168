@@ -49,6 +49,15 @@ describe('findStartMonths：起算月の候補', () => {
       { month: '2026-05', direction: 'down', source: 'fixed' },
     ]);
   });
+  it('内訳がある月は、欠勤控除を引く前の額で比べる（欠勤の月を変動と見ない。11/24）', () => {
+    const [m3, p3] = pay('2026-03', 215600, 205000);
+    const [m4, p4] = pay('2026-04', 195000, 184400); // 欠勤控除 20,600 円で払った分が下がった月
+    const m = new Map([
+      [m3, { ...p3, fixedFull: 205000 }],
+      [m4, { ...p4, fixedFull: 205000 }],
+    ]);
+    expect(findStartMonths(m)).toEqual([]);
+  });
   it('残業代だけ変わった月は候補にしない（非固定的賃金だけの変動）', () => {
     const m = new Map([pay('2026-03', 215600, 205000), pay('2026-04', 260000, 205000)]);
     expect(findStartMonths(m)).toEqual([]);

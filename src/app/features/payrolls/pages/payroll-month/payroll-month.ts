@@ -36,6 +36,7 @@ import { shiftMonth, daysInclusive, daysInMonth, todayLocal, toYearMonth } from 
 import { PayrollChange, PayrollService } from '../../payroll.service';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
+import { toHalfWidth } from '../../../../shared/utils/text';
 import { InKindCalculator } from '../../components/in-kind-calculator/in-kind-calculator';
 import { EnterNext } from '../../../../shared/directives/enter-next';
 import { PersonListBar } from '../../../../shared/components/person-list-bar/person-list-bar';
@@ -351,6 +352,14 @@ export class PayrollMonth {
     const pay = this.contractOf(v)?.payType;
     if (pay !== 'monthly' && pay !== 'dailyMonthly') return null;
     return candidateDays(v.row.suggestedDays, v.form.controls.absentDays.value);
+  }
+
+  /** 月給の人で、入れた日数が候補と違う → 候補の日数（空欄・同じなら null。11/24） */
+  daysDiffer(v: ViewRow): number | null {
+    const c = this.candidate(v);
+    const text = v.form.controls.days.value.trim();
+    if (c === null || text === '') return null;
+    return Number(toHalfWidth(text)) === c ? null : c;
   }
 
   fillCandidate(v: ViewRow): void {

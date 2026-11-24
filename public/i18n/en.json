@@ -1828,7 +1828,7 @@
       "notSaved": "Not entered",
       "notInsured": "Not insured",
       "onLeave": "On leave",
-      "partial": "Joined or left mid-period",
+      "partial": "Mid-period join/leave",
       "extra": "Other columns have values",
       "extraTitle": "Click to show this column",
       "extraClose": "Click to go back to the basic view"
@@ -1857,7 +1857,7 @@
       "cash": "Gross pay: the total of the payments on the payslip, including the commuting allowance (even the tax-free part). Not the net pay. If the payslip has no gross pay line, use net pay plus total deductions. Divide 3- or 6-month commuter passes by month, and leave out travel expense refunds and congratulatory or condolence payments.",
       "fixed": "Of which: same every month: the total of pay that is the same amount every month, such as base pay, commuter pass allowance, position allowance and fixed overtime allowance. Leave out overtime paid by hours worked, and pay calculated as hourly rate × hours or daily rate × days (when such a rate changes, use \"Add a fixed wage change\" on the revision candidates). When this amount changes from the previous month, the person appears as a revision candidate.",
       "inKind": "Remuneration provided in kind (現物給与): company housing, dormitories and meals are converted to yen with the value set by the government for each prefecture, minus what the employee pays (different from the tax valuation). Use \"Calculate\" for meals and housing.",
-      "days": "Work days subject to remuneration payment (支払基礎日数): calendar days of the period for monthly salary; \"company-set days − days absent\" for monthly salary with absence deductions; days worked (including paid leave) for daily or hourly pay.",
+      "days": "Payment basis days: for monthly pay, the calendar days (30, 31 and so on, minus absences), not the days worked. If absences are deducted from the company's set number of days, use that number minus absences. For daily or hourly pay, the days worked (including paid leave). For monthly-paid people, the suggestion appears under the field when a different number is entered.",
       "blank": "Empty rows are not saved. Clearing a saved row and saving deletes that month's record.",
       "hours": "Hours worked: enter as \"160:30\" (160 h 30 min) or \"160.5\".",
       "inKindMerged": "In months marked \"Not itemized\", in-kind remuneration is included in the gross pay (the imported file had no in-kind column). Totals and premiums are still correct, but changes in in-kind remuneration (such as moving into company housing) cannot be detected, so enter the in-kind amount with \"Enter separately\" when you know it.",
@@ -1886,8 +1886,8 @@
       "emptyOnly": "Only where empty",
       "daysUnit": "days",
       "apply": "Fill in",
-      "candidate": "Fill monthly-paid people with the suggestion (calendar days − absences)",
-      "note": "Hourly and daily-paid people are skipped for suggestions. Press Save to keep the values."
+      "candidate": "Enter the suggested days for monthly-paid people",
+      "note": "The suggestion is the calendar days employed minus days absent. Hourly and daily-paid people are skipped. The days are saved with \"Save\"."
     },
     "next": {
       "premiums": "See the premiums deducted from the {{paid}} pay (for month {{month}})",
@@ -1900,7 +1900,8 @@
       "all": "Total pay (everyone)",
       "unit": " yen",
       "allSub": "Gross pay + in kind · entered {{entered}} / {{n}}"
-    }
+    },
+    "premiumNote": "Premiums are calculated from the standard monthly remuneration, not from the pay amounts entered here."
   },
   "regular": {
     "title": "Annual SMR determination {{year}} (定時決定, teiji kettei)",
@@ -4885,5 +4886,80 @@
     "scopeAll": "Exports everyone ({{n}}), one row each, in the order shown (no total rows).",
     "scopeBonus": "Exports the {{n}} people with a bonus amount, one row each, in employee number order (no total row).",
     "scopePayroll": "Exports {{n}} rows for {{range}}, one row per person per month (months not entered have empty amounts)."
+  },
+  "payrollItem": {
+    "title": "Payroll items and categories",
+    "back": "Payroll",
+    "add": "Add an item",
+    "addTitle": "Add an item",
+    "editTitle": "Edit the item",
+    "lead": "Set the social insurance category for each payslip item name. When entering a breakdown, the category is filled in from the item name. Common item names are provided as defaults, and their categories can be changed.",
+    "saved": "Saved \"{{name}}\".",
+    "default": "Default",
+    "edit": "Edit",
+    "recategorize": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Delete \"{{name}}\"? Saved payroll calculations do not change. If it has the same name as a default, the default category applies again.",
+    "col": {
+      "name": "Payslip item name",
+      "labels": "Other names",
+      "category": "Category",
+      "treatment": "Treatment"
+    },
+    "field": {
+      "name": "Payslip item name",
+      "labels": "Other names",
+      "category": "Category"
+    },
+    "hint": {
+      "name": "Use the name as written on the payslip.",
+      "labels": "Other ways of writing the same item (such as headers in payroll software CSVs), separated by commas."
+    },
+    "placeholder": {
+      "labels": "e.g. Team leader allowance"
+    },
+    "category": {
+      "base": "Base pay",
+      "fixedAllowance": "Fixed allowance",
+      "commute": "Commuting allowance",
+      "variable": "Variable allowance",
+      "deduction": "Absence or lateness deduction",
+      "retro": "Back pay for a raise",
+      "excluded": "Not remuneration"
+    },
+    "example": {
+      "base": "base pay, monthly salary, hourly wage, director pay",
+      "fixedAllowance": "position, job, housing, family, qualification, fixed overtime allowance",
+      "commute": "commuter pass, daily transport allowance",
+      "variable": "overtime, holiday, late-night, attendance, commission, overtime beyond the fixed amount",
+      "deduction": "absence deduction, lateness deduction",
+      "retro": "retroactive raise difference",
+      "excluded": "travel expense refunds, congratulatory or condolence payments"
+    },
+    "treatment": {
+      "base": "Counted in gross pay. Counted as the same every month for monthly and daily-monthly pay, not for hourly or daily pay",
+      "fixedAllowance": "Counted in gross pay and as the same every month",
+      "commute": "Counted in gross pay and as the same every month (to notice moves and fare changes)",
+      "variable": "Counted in gross pay, not as the same every month",
+      "deduction": "Subtracted from gross pay. The same-every-month amount is checked before the deduction",
+      "retro": "Counted in gross pay, left out of the averages for the annual determination and revisions",
+      "excluded": "Not counted in gross pay"
+    },
+    "error": {
+      "load": "Could not load the payroll items.",
+      "save": "Could not save. Please try again later.",
+      "nameRequired": "Enter the payslip item name.",
+      "nameTooLong": "Item names can be up to 30 characters.",
+      "tooManyLabels": "Up to 20 other names.",
+      "duplicate": "An item with the same name (including other names) is already registered.",
+      "category": "Choose a category."
+    },
+    "howTitle": "About categories",
+    "how": {
+      "saved": "When payroll is saved, the item names and categories are copied into that month's breakdown. Changing a category later does not change saved months.",
+      "unknown": "A month cannot be saved while it has an item name without a category. Choosing a category while entering the breakdown also registers it here.",
+      "fixed": "\"Same every month\" is used to find changes from the previous month and suggest revision candidates. Premiums themselves are calculated from the standard monthly remuneration, which is based on gross pay."
+    },
+    "exampleLabel": "e.g. {{list}}"
   }
 }

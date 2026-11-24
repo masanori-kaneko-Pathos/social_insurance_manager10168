@@ -5,6 +5,7 @@
   </div>
   @if (context.isAdmin() && latest()) {
     <div class="head-actions">
+      <a class="btn" [routerLink]="['/o', context.current()?.id, 'payrolls', 'items']">{{ 'payrollItem.title' | transloco }}</a>
       <a class="btn" [routerLink]="['/o', context.current()?.id, 'import']" [queryParams]="{ kind: 'payrolls', from: 'payrolls' }">
         {{ 'payroll.csv' | transloco }}
       </a>

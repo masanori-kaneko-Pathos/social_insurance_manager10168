@@ -57,6 +57,18 @@
     <p class="muted">{{ 'payroll.readonly' | transloco }}</p>
   }
 
+  <!-- 明細の控除額と見比べる入口（保存しなくても出す）。入れた額では今月の保険料は変わらないことも、ここで伝える（11/24） -->
+  <div class="premium-link">
+    @if (premiumCount() === 0) {
+      <span>{{ 'payroll.next.noDeduction' | transloco: { paid: monthNum(month()) } }}</span>
+    } @else {
+      <a [routerLink]="['/o', context.current()?.id, 'premiums']" [queryParams]="{ month: premiumMonth() }">{{
+        'payroll.next.premiums' | transloco: { paid: monthNum(month()), month: monthNum(premiumMonth()) }
+      }} ›</a>
+    }
+    <span class="muted">{{ 'payroll.premiumNote' | transloco }}</span>
+  </div>
+
   <div class="toolbar">
     <a [routerLink]="[]" [queryParams]="{ all: showAll() ? null : 1 }" queryParamsHandling="merge">
       {{ (showAll() ? 'payroll.showBasic' : 'payroll.showAll') | transloco }}
@@ -231,7 +243,13 @@
               <input class="input num w-money" formControlName="fixed" inputmode="numeric" />
             </td>
             <td class="num">
-              <input class="input num w-days" formControlName="days" inputmode="numeric" />
+              <!-- 月給の人：候補（在籍した暦日数 − 欠勤日数）を薄く出し、違う日数を入れたら候補を並べる（勤務日数を入れる間違いに気づけるように。11/24） -->
+              <input class="input num w-days" formControlName="days" inputmode="numeric" [attr.placeholder]="candidate(v)" />
+              @if (context.isAdmin() && daysDiffer(v); as c) {
+                <button type="button" class="days-fix" [title]="'payroll.candidateTitle' | transloco" (click)="fillCandidate(v)">
+                  {{ 'payroll.candidate' | transloco: { days: c } }}
+                </button>
+              }
             </td>
             @if (showAll()) {
               <td class="num" data-field="inKind">

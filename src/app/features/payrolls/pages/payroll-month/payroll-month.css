@@ -1,3 +1,7 @@
+:host {
+  --font-table: 13px; /* 入力の表の字（11/24） */
+}
+
 .back {
   display: inline-block;
   margin-bottom: var(--space-sm);
@@ -63,6 +67,12 @@ table {
   font-size: var(--font-sm);
 }
 
+/* 入力の表は、本文より一段小さい字（氏名・金額・入力欄。横幅を入力の欄に回す。11/24）
+   欄の幅（col の em）もこの大きさで決まるので、字に合わせて表ごと縮む */
+table.fixed-cols {
+  font-size: var(--font-table);
+}
+
 th,
 td {
   padding: var(--space-xs) var(--space-sm);
@@ -120,6 +130,36 @@ input.num {
 
 .tags {
   margin-top: 2px;
+  white-space: normal; /* 札が氏名の欄からはみ出さないように、収まらなければ次の行へ（11/24） */
+}
+
+.tags .badge {
+  margin-bottom: 2px;
+  white-space: nowrap; /* 札の中では折り返さない（札ごと次の行へ） */
+}
+
+/* 給与明細の控除額と見比べる入口（表の上。11/24） */
+.premium-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-xs) var(--space-md);
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-sm);
+}
+
+/* 支払基礎日数：候補と違う日数を入れたとき、入力欄の下に候補を出す（押すと入る。11/24） */
+.days-fix {
+  display: block;
+  margin: 2px 0 0 auto;
+  padding: 0;
+  font: inherit;
+  font-size: var(--font-xs);
+  color: var(--color-warning-text);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
 }
 
 .badge {
@@ -161,12 +201,26 @@ button.badge-link:hover {
 /* ===== 11/18：表の幅・見出しと左の2列の固定 ===== */
 /* 氏名の欄が残りの幅を受け持つので、表の最小の幅で氏名の幅を守る */
 table.fixed-cols {
-  min-width: 64em; /* 「うち毎月決まった額」の欄を広げた分（11/24） */
+  min-width: 56em; /* 氏名・部署・雇用形態を詰めた（11/24） */
 }
 
 /* 氏名の欄は幅を決める。残りの幅は最後の空の欄（.filler）が受け持つので、項目を増やしても今ある欄は動かない（11/20） */
 col.c-name {
-  width: 13em;
+  width: 10.5em; /* 氏名とフリガナは2段。長いフリガナ（ハセガワ ケンタロウ）が1行に入る幅（11/24 に 13em から詰めた） */
+}
+
+/* 部署・雇用形態は、ほかの表より小さい字で狭く（入力の欄に幅を回す。11/24） */
+table.fixed-cols col.cw-dept {
+  width: 7.5em;
+}
+
+table.fixed-cols col.cw-type {
+  width: 5em;
+}
+
+/* 表の中の入力欄は低く（行の高さを詰める。11/24） */
+table.fixed-cols .input {
+  height: 32px;
 }
 
 th.filler,
@@ -183,7 +237,7 @@ td.filler {
 
 table.fixed-cols.all {
   /* 足した7つの欄の分だけ広げる（足りなければカードの中で横にスクロール。11/20） */
-  min-width: 123em; /* 「1か月分そろわない月」の欄を広げた分を足す（11/24） */
+  min-width: 115em; /* 欄を広げた分を足し、氏名・部署・雇用形態を詰めた分を引く（11/24） */
 }
 
 col.c-money {
@@ -237,13 +291,13 @@ thead th:nth-child(1) {
 }
 
 tbody td:nth-child(2) {
-  left: calc(var(--font-sm) * 6.5); /* 社員番号の欄の幅（col.cw-number）。em は見出しと本文で大きさが違うので使わない */
+  left: calc(var(--font-table) * 6.5); /* 社員番号の欄の幅（col.cw-number）。em は見出しと本文で大きさが違うので使わない */
   box-shadow: inset -1px 0 0 var(--color-border);
 }
 
 /* 見出しの氏名：右の縦線と、ほかの見出しと同じ下の線の両方（片方だけだと下の線が消える。11/18） */
 thead th:nth-child(2) {
-  left: calc(var(--font-sm) * 6.5);
+  left: calc(var(--font-table) * 6.5);
   box-shadow:
     inset -1px 0 0 var(--color-border),
     inset 0 -1px 0 var(--color-border);
@@ -383,13 +437,13 @@ td.mono {
 
 /* 部署・雇用形態の列 */
 td.org {
-  font-size: var(--font-sm);
+  font-size: var(--font-xs);
   white-space: nowrap;
 }
 
 /* 部署の名前が長いときは「…」で切る（全部は title で出る） */
 td.dept {
-  max-width: 9em;
+  max-width: 8em;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -450,6 +504,16 @@ td.dept {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
+}
+
+/* 窓の中のボタンは、文が長くても枠の中で折り返す（11/24） */
+.bulk-panel .btn {
+  height: auto;
+  min-height: 32px;
+  padding: var(--space-xs) var(--space-sm);
+  white-space: normal;
+  text-align: left;
+  line-height: 1.4;
 }
 
 .bulk-note {
