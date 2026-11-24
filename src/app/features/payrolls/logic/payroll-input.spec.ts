@@ -1,5 +1,5 @@
 import { emptyPayrollInput } from '../../../core/models/payroll';
-import { candidateDays, PayrollRowText, readRow, sameInput, sumPayrolls, textOf, totalOf } from './payroll-input';
+import { candidateDays, PayrollRowText, readEntry, readRow, sameInput, sumPayrolls, textOf, totalOf } from './payroll-input';
 import { formatHours, parseHours, parseNat } from '../../../shared/utils/number';
 
 const blank = (): PayrollRowText => textOf(null);
@@ -135,5 +135,37 @@ describe('現物の「内訳なし」（画面の行）', () => {
   });
   it('0 と null は別のものとして比べる', () => {
     expect(sameInput({ ...emptyPayrollInput(), inKind: 0 }, { ...emptyPayrollInput(), inKind: null })).toBeFalse();
+  });
+});
+
+describe('readEntry：内訳つきの1人分（11/24）', () => {
+  const empty = textOf(null);
+  it('内訳があれば、総支給額・毎月決まった額・昇給差額は内訳から出し、行と引く前の額も持つ', () => {
+    const r = readEntry(
+      { ...empty, days: '30' },
+      [
+        { name: '基本給', category: 'base', amount: '250,000' },
+        { name: '欠勤控除', category: 'deduction', amount: '10000' },
+        { name: '昇給差額', category: 'retro', amount: '5000' },
+      ],
+      'monthly',
+      30,
+    );
+    expect(r.kind).toBe('ok');
+    if (r.kind !== 'ok') return;
+    expect(r.input.cash).toBe(245000);
+    expect(r.input.fixed).toBe(240000);
+    expect(r.input.fixedFull).toBe(250000);
+    expect(r.input.retro).toBe(5000);
+    expect(r.input.lines?.length).toBe(3);
+  });
+  it('分類が決まっていない行があれば lines の誤り。行がなければ今までどおり（内訳なし）', () => {
+    const bad = readEntry({ ...empty, days: '30' }, [{ name: 'サンキュー手当', category: null, amount: '1000' }], 'monthly', 30);
+    expect(bad).toEqual({ kind: 'invalid', errors: ['lines'] });
+    const plain = readEntry({ ...empty, cash: '200000', fixed: '200000', days: '30' }, [{ name: '', category: null, amount: '' }], null, 30);
+    expect(plain.kind === 'ok' && plain.input.lines).toBeNull();
+    // ひな形の行を並べただけ（金額なし）も内訳なし：総支給額の欄から読む
+    const names = readEntry({ ...empty, cash: '200000', fixed: '200000', days: '30' }, [{ name: '基本給', category: 'base', amount: '' }], null, 30);
+    expect(names.kind === 'ok' && names.input.cash).toBe(200000);
   });
 });

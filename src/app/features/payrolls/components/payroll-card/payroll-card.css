@@ -78,7 +78,7 @@ td.num {
 }
 
 /* ===== 1か月分の入力 ===== */
-.entry {
+.entry-box {
   margin: var(--space-sm) 0 var(--space-md);
   padding: var(--space-md);
   border: 1px solid var(--color-border);

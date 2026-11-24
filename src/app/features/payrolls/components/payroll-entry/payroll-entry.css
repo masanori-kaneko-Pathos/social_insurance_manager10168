@@ -1,0 +1,265 @@
+/* 給与明細の内訳（行の下に開く。11/24） */
+.entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--space-lg);
+  padding: var(--space-md) var(--space-lg) var(--space-lg);
+  white-space: normal;
+  font-size: var(--font-sm);
+}
+
+@media (max-width: 860px) {
+  .entry {
+    grid-template-columns: 1fr;
+  }
+}
+
+h3 {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--color-text-sub);
+}
+
+.entry-side h3 ~ h3 {
+  margin-top: var(--space-md);
+}
+
+.muted {
+  color: var(--color-text-sub);
+}
+
+.hint {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.input {
+  height: 32px;
+  width: 100%;
+}
+
+.copy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  align-items: baseline;
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-xs);
+}
+
+.link-btn {
+  padding: 0;
+  font: inherit;
+  color: var(--color-primary);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* 明細の行 */
+.lines {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.lines td {
+  padding: 4px 6px 4px 0;
+  border: 0;
+  vertical-align: middle;
+}
+
+.l-cat {
+  width: 11em;
+}
+
+.l-amount {
+  width: 9.5em;
+}
+
+.l-del {
+  width: 2em;
+  text-align: center;
+}
+
+.x {
+  padding: 0 4px;
+  font-size: var(--font-md);
+  line-height: 1;
+  color: var(--color-text-sub);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.x:hover {
+  color: var(--color-danger-text);
+}
+
+.cat {
+  display: inline-block;
+  padding: 1px 8px;
+  font-size: var(--font-xs);
+  white-space: nowrap;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-sub);
+}
+
+/* 毎月決まった額に数える分類（給与の項目の画面と同じ色） */
+.cat.c-base,
+.cat.c-fixedAllowance,
+.cat.c-commute {
+  background: var(--color-highlight);
+  border-color: transparent;
+  color: var(--color-text);
+}
+
+.cat-pick {
+  font-size: var(--font-xs);
+}
+
+/* 控除の行：金額の前に「−」（入れるのは正の数でよい） */
+.amount {
+  position: relative;
+}
+
+.amount.minus::before {
+  content: '−';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-sub);
+  pointer-events: none;
+}
+
+tr.unset .input {
+  border-color: var(--color-danger-text);
+}
+
+tr.line-err td {
+  padding: 0 0 4px;
+  font-size: var(--font-xs);
+  color: var(--color-danger-text);
+}
+
+tr.line-err span + span::before {
+  content: '・';
+}
+
+.line-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-top: var(--space-xs);
+  font-size: var(--font-xs);
+}
+
+.items-link {
+  margin-left: var(--space-xs);
+}
+
+.hint.replace {
+  margin-top: var(--space-xs);
+  text-align: right;
+}
+
+.field-error {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-xs);
+  color: var(--color-danger-text);
+}
+
+/* 合計 */
+.sums {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: end;
+  column-gap: var(--space-md);
+  row-gap: 2px;
+  margin: var(--space-md) 0 0;
+}
+
+.sums dt,
+.sums dd {
+  margin: 0;
+  text-align: right;
+}
+
+.sums dd {
+  font-variant-numeric: tabular-nums;
+}
+
+.sums .big {
+  font-size: var(--font-md);
+  font-weight: 700;
+}
+
+/* 内訳なし・右の欄 */
+.row2,
+.row3 {
+  display: grid;
+  gap: var(--space-sm) var(--space-md);
+}
+
+.row2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.row3 {
+  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: var(--space-sm);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+}
+
+.field label {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.field.calc {
+  justify-content: flex-end;
+  padding-bottom: 6px;
+  font-size: var(--font-xs);
+}
+
+.merged {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.days-fix {
+  align-self: flex-end;
+  padding: 0;
+  font: inherit;
+  font-size: var(--font-xs);
+  color: var(--color-warning-text);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.check {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: var(--space-md);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}

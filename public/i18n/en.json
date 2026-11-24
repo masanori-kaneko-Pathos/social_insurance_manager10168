@@ -1822,7 +1822,9 @@
       "prorated": "Partial month",
       "state": "Status",
       "total": "Total",
-      "monthTotal": "Total pay"
+      "monthTotal": "Total pay",
+      "fixedShort": "Same every month",
+      "status": "Entry"
     },
     "tag": {
       "notSaved": "Not entered",
@@ -1850,12 +1852,13 @@
       "daysOutOfRange": "Payment basis days exceed the days in the pay period",
       "absentOutOfRange": "Days absent exceed the days in the pay period",
       "minutesOutOfRange": "Hours worked are too long",
-      "badState": "Select the status again"
+      "badState": "Select the status again",
+      "lines": "The breakdown has an item without a category or an amount that cannot be read"
     },
     "hint": {
       "list": "\"Missing\" counts employees insured during the pay period who have no record yet (only months whose pay day has passed).",
-      "cash": "Gross pay: the total of the payments on the payslip, including the commuting allowance (even the tax-free part). Not the net pay. If the payslip has no gross pay line, use net pay plus total deductions. Divide 3- or 6-month commuter passes by month, and leave out travel expense refunds and congratulatory or condolence payments.",
-      "fixed": "Of which: same every month: the total of pay that is the same amount every month, such as base pay, commuter pass allowance, position allowance and fixed overtime allowance. Leave out overtime paid by hours worked, and pay calculated as hourly rate × hours or daily rate × days (when such a rate changes, use \"Add a fixed wage change\" on the revision candidates). When this amount changes from the previous month, the person appears as a revision candidate.",
+      "cash": "Gross pay: calculated from the breakdown. It includes the commuting allowance (even the tax-free part) and is after absence deductions. Not the net pay.",
+      "fixed": "Same every month: calculated from the breakdown categories (base pay for monthly-paid people, fixed allowances and commuting allowance, before absence deductions). When it changes from the previous month, the person appears as a revision candidate.",
       "inKind": "Remuneration provided in kind (現物給与): company housing, dormitories and meals are converted to yen with the value set by the government for each prefecture, minus what the employee pays (different from the tax valuation). Use \"Calculate\" for meals and housing.",
       "days": "Payment basis days: for monthly pay, the calendar days (30, 31 and so on, minus absences), not the days worked. If absences are deducted from the company's set number of days, use that number minus absences. For daily or hourly pay, the days worked (including paid leave). For monthly-paid people, the suggestion appears under the field when a different number is entered.",
       "blank": "Empty rows are not saved. Clearing a saved row and saving deletes that month's record.",
@@ -1901,7 +1904,14 @@
       "unit": " yen",
       "allSub": "Gross pay + in kind · entered {{entered}} / {{n}}"
     },
-    "premiumNote": "Premiums are calculated from the standard monthly remuneration, not from the pay amounts entered here."
+    "premiumNote": "Premiums are calculated from the standard monthly remuneration, not from the pay amounts entered here.",
+    "openHint": "Press \"Breakdown\" to enter the payslip breakdown.",
+    "breakdown": "Breakdown",
+    "status": {
+      "saved": "Entered",
+      "edited": "Changed",
+      "unclassified": "Category not set"
+    }
   },
   "regular": {
     "title": "Annual SMR determination {{year}} (定時決定, teiji kettei)",
@@ -3882,7 +3892,37 @@
     "editing": "Already entered (saving overwrites it)",
     "notEmployed": "This employee was not employed during this pay period. Check the month.",
     "more": "In kind, back pay, absences, hours, status",
-    "inKindHint": "To calculate housing or meal amounts, use \"Calculate\" on the month page."
+    "inKindHint": "To calculate housing or meal amounts, use \"Calculate\" on the month page.",
+    "lines": {
+      "title": "Payment breakdown",
+      "name": "Item name",
+      "category": "Category",
+      "amount": "Amount",
+      "pickCategory": "Choose a category…",
+      "add": "Add a line",
+      "remove": "Delete the line",
+      "none": "This month has no breakdown (only the gross pay is entered).",
+      "start": "Enter the breakdown",
+      "error": {
+        "name": "Enter the item name (up to 30 characters)",
+        "category": "Choose a category (it is also registered in payroll items and categories)",
+        "amount": "Enter the amount as a whole number of 0 or more",
+        "negative": "Deductions exceed payments, so the gross pay is negative",
+        "empty": "Enter at least one breakdown line",
+        "tooMany": "Up to 40 breakdown lines"
+      },
+      "makeTemplate": "Use these items as the office template",
+      "templateDone": "Saved as the office template",
+      "replacing": "When you enter amounts, the current gross pay of {{amount}} yen is replaced by the breakdown total."
+    },
+    "side": {
+      "days": "Days and hours",
+      "inKind": "In kind (housing, meals, etc.)",
+      "prorated": "A partial month, such as the month of joining"
+    },
+    "close": "Close",
+    "saveNext": "Save and go to the next person",
+    "saveOnly": "Save"
   },
   "filing": {
     "title": "Filing lists",
@@ -4960,6 +5000,17 @@
       "unknown": "A month cannot be saved while it has an item name without a category. Choosing a category while entering the breakdown also registers it here.",
       "fixed": "\"Same every month\" is used to find changes from the previous month and suggest revision candidates. Premiums themselves are calculated from the standard monthly remuneration, which is based on gross pay."
     },
-    "exampleLabel": "e.g. {{list}}"
+    "exampleLabel": "e.g. {{list}}",
+    "template": {
+      "title": "Breakdown template",
+      "lead": "The item names, in order, that are listed when a breakdown is started. If the person has a breakdown for the previous month, that order is used first. Lines with no amount are not saved, so allowances that do not apply can be left blank.",
+      "notSaved": "Not saved yet, so the app example (base pay, fixed overtime allowance, commuting allowance) is used.",
+      "noCategory": "Category not set",
+      "up": "Move up",
+      "down": "Move down",
+      "add": "Add",
+      "addPlaceholder": "Item name (e.g. housing allowance)",
+      "saved": "Saved"
+    }
   }
 }

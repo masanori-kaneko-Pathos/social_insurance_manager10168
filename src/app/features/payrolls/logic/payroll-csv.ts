@@ -424,7 +424,8 @@ export function classifyImport(
   for (const it of items) {
     const old = existing.get(`${it.employeeId}|${it.paidMonth}`);
     if (!old) created.push(it);
-    else if (sameInput(old, it.input)) unchanged.push(it);
+    // CSV は内訳を持たない：数字が同じなら、保存済みの内訳を消さないよう「変わらない」にする（11/24）
+    else if (sameInput({ ...old, lines: null, fixedFull: null }, it.input)) unchanged.push(it);
     else updated.push(it);
   }
   return { created, updated, unchanged };

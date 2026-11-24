@@ -14,10 +14,9 @@
     </div>
   </div>
 
-  <!-- 1か月分の入力（管理者だけ。チェックは月の画面と同じ） -->
+  <!-- 1か月分の入力（管理者だけ。月の画面の「内訳」と同じ部品。11/24） -->
   @if (editMonth(); as m) {
-    @let d = draft();
-    <form class="entry" (submit)="$event.preventDefault(); save()">
+    <div class="entry-box">
       <div class="entry-head">
         <label class="field">
           <span>{{ 'payroll.col.paidMonth' | transloco }}</span>
@@ -31,92 +30,27 @@
       @if (notEmployed()) {
         <div class="alert alert-warning">{{ 'payrollEntry.notEmployed' | transloco }}</div>
       }
-
-      <div class="entry-grid">
-        <label class="field">
-          <span>{{ 'payroll.col.cash' | transloco }}</span>
-          <input class="input num" inputmode="numeric" [value]="d.cash" (input)="set('cash', $any($event.target).value)" />
-        </label>
-        <label class="field">
-          <span>{{ 'payroll.col.fixed' | transloco }}</span>
-          <input class="input num" inputmode="numeric" [value]="d.fixed" (input)="set('fixed', $any($event.target).value)" />
-        </label>
-        <label class="field">
-          <span>{{ 'payroll.col.days' | transloco }}</span>
-          <span class="with-btn">
-            <input class="input num days" inputmode="numeric" [value]="d.days" (input)="set('days', $any($event.target).value)" />
-            <button type="button" class="link-btn" (click)="fillCandidate()">
-              {{ 'payroll.candidate' | transloco: { days: candidate() } }}
-            </button>
-          </span>
-        </label>
-      </div>
-
-      <details class="fold">
-        <summary>{{ 'payrollEntry.more' | transloco }}</summary>
-        <div class="entry-grid">
-          <label class="field">
-            <span>{{ 'payroll.col.inKind' | transloco }}</span>
-            @if (d.inKindMerged) {
-              <span class="merged" [title]="'payroll.inKindMergedTitle' | transloco">
-                {{ 'payroll.inKindMerged' | transloco }}
-                <button type="button" class="link-btn" (click)="set('inKindMerged', false)">{{ 'payroll.splitInKind' | transloco }}</button>
-              </span>
-            } @else {
-              <input class="input num" inputmode="numeric" [value]="d.inKind" (input)="set('inKind', $any($event.target).value)" />
-            }
-          </label>
-          <label class="field">
-            <span>{{ 'payroll.col.retro' | transloco }}</span>
-            <input class="input num" inputmode="numeric" [value]="d.retro" (input)="set('retro', $any($event.target).value)" />
-          </label>
-          <label class="field">
-            <span>{{ 'payroll.col.absentDays' | transloco }}</span>
-            <input class="input num" inputmode="numeric" [value]="d.absentDays" (input)="set('absentDays', $any($event.target).value)" />
-          </label>
-          <label class="field">
-            <span>{{ 'payroll.col.hours' | transloco }}</span>
-            <input class="input num" [value]="d.hours" (input)="set('hours', $any($event.target).value)" />
-          </label>
-          <label class="field">
-            <span>{{ 'payroll.col.state' | transloco }}</span>
-            <select class="input" [value]="d.state" (change)="set('state', $any($event.target).value)">
-              @for (st of states; track st) {
-                <option [value]="st" [selected]="d.state === st">{{ 'payroll.state.' + st | transloco }}</option>
-              }
-            </select>
-          </label>
-          <label class="check">
-            <input type="checkbox" [checked]="d.prorated" (change)="set('prorated', $any($event.target).checked)" />
-            {{ 'payroll.col.prorated' | transloco }}
-          </label>
-        </div>
-        <p class="hint">{{ 'payrollEntry.inKindHint' | transloco }}</p>
-      </details>
-
-      <p class="total">
-        {{ 'payroll.col.total' | transloco }}：{{ total() === null ? '—' : yen(total()!) }}
-      </p>
-
-      @if (errors().length > 0) {
-        <ul class="alert alert-danger errors">
-          @for (e of errors(); track e) {
-            <li>{{ 'payroll.rowError.' + e | transloco }}</li>
-          }
-        </ul>
-      }
+      <app-payroll-entry
+        [form]="form"
+        [(lines)]="lines"
+        [items]="payrollItems()"
+        [payType]="payType()"
+        [candidate]="candidate()"
+        [prevLines]="prevLines()"
+        [template]="template()"
+        [itemsLink]="['/o', context.current()?.id, 'payrolls', 'items']"
+        [errors]="errors()"
+        [hasNext]="false"
+        [inKindCalc]="false"
+        [saving]="saving()"
+        (save)="save()"
+        (closed)="close()"
+        (saveTemplate)="saveTemplate($event)"
+      />
       @if (saveError()) {
         <div class="alert alert-danger">{{ 'payroll.error.save' | transloco }}</div>
       }
-      <p class="hint">{{ 'payroll.hint.blank' | transloco }}</p>
-
-      <div class="entry-actions">
-        <button type="submit" class="btn btn-solid" [disabled]="saving()">
-          {{ (saving() ? 'payroll.saving' : 'payroll.save') | transloco }}
-        </button>
-        <button type="button" class="btn" (click)="close()">{{ 'common.cancel' | transloco }}</button>
-      </div>
-    </form>
+    </div>
   }
 
   @if (loading()) {

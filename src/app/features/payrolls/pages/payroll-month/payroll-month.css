@@ -201,7 +201,7 @@ button.badge-link:hover {
 /* ===== 11/18：表の幅・見出しと左の2列の固定 ===== */
 /* 氏名の欄が残りの幅を受け持つので、表の最小の幅で氏名の幅を守る */
 table.fixed-cols {
-  min-width: 56em; /* 氏名・部署・雇用形態を詰めた（11/24） */
+  min-width: 60em; /* 状態・内訳の欄を足した（11/24） */
 }
 
 /* 氏名の欄は幅を決める。残りの幅は最後の空の欄（.filler）が受け持つので、項目を増やしても今ある欄は動かない（11/20） */
@@ -577,4 +577,54 @@ tfoot .sum-row > td.num {
   margin-left: var(--space-sm);
   font-size: var(--font-xs);
   color: var(--color-text-sub);
+}
+
+/* ===== 11/24：一覧は表示だけ・内訳は行の下に開く ===== */
+col.c-status {
+  width: 7.5em;
+}
+
+col.c-open {
+  width: 5em;
+}
+
+/* 「内訳 ▽」（保険料一覧の「内訳」と同じ見た目） */
+td.open-col {
+  text-align: right;
+}
+
+td.open-col .link-btn {
+  color: var(--color-primary);
+}
+
+.badge-danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border: 1px solid transparent;
+}
+
+/* 開いている行と、その下の内訳 */
+tr.is-open > td {
+  background: var(--color-highlight);
+}
+
+tr.detail > td {
+  padding: 0;
+  white-space: normal;
+  background: var(--color-surface);
+  box-shadow: inset 0 -2px 0 var(--color-highlight);
+}
+
+/* 開いた行の下の現物の計算（内訳の下に出す） */
+.in-kind-box {
+  padding: 0 var(--space-lg) var(--space-lg);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }

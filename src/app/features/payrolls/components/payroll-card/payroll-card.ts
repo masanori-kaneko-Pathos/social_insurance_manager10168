@@ -1,11 +1,19 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { FormBuilder } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
-import { Payroll, PAYROLL_STATES } from '../../../../core/models/payroll';
+import { Payroll, PayrollState } from '../../../../core/models/payroll';
+import { PayrollItem, PayrollItemInput } from '../../../../core/models/payroll-item';
+import { ContractDoc, PayType } from '../../../../core/models/contract';
+import { ContractService } from '../../../employees/contract.service';
+import { contractAt } from '../../../employees/logic/contract-form-model';
+import { PayrollItemService } from '../../payroll-item.service';
+import { categoryOf, hasAmounts, LineDraft, startDrafts, toDrafts } from '../../logic/payroll-lines';
+import { PayrollEntry, PayrollRowForm } from '../payroll-entry/payroll-entry';
 import { ToastService } from '../../../../shared/services/toast.service';
-import { daysInclusive, todayLocal } from '../../../../shared/utils/date';
-import { candidateDays, PayrollRowText, readRow, RowError, sameInput, textOf, totalOf } from '../../logic/payroll-input';
+import { daysInclusive, shiftMonth, todayLocal } from '../../../../shared/utils/date';
+import { candidateDays, PayrollRowText, readEntry, RowError, sameInput, textOf } from '../../logic/payroll-input';
 import { OfficeContext } from '../../../office/office-context.service';
 import { formatHours } from '../../../../shared/utils/number';
 import { employedDuring, latestPaidMonth, periodOf, suggestDays } from '../../logic/payroll-rows';
@@ -19,7 +27,7 @@ import { errorKeyOf } from '../../../../shared/utils/error-key';
  */
 @Component({
   selector: 'app-payroll-card',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [PayrollEntry, RouterLink, TranslocoPipe],
   templateUrl: './payroll-card.html',
   styleUrl: './payroll-card.css',
 })
@@ -68,12 +76,19 @@ export class PayrollCard {
     return `${md(start)}〜${md(end)}`;
   }
 
-  // ===== 1か月分の入力（管理者だけ） =====
+  // ===== 1か月分の入力（管理者だけ。月の画面の「内訳」と同じ部品 app-payroll-entry。11/24） =====
 
-  readonly states = PAYROLL_STATES;
+  private readonly fb = inject(FormBuilder).nonNullable;
+  private readonly itemsApi = inject(PayrollItemService);
+  private readonly contractsApi = inject(ContractService);
   /** 入力している月（null は閉じている） */
   readonly editMonth = signal<string | null>(null);
-  readonly draft = signal<PayrollRowText>(textOf(null));
+  form: PayrollRowForm = this.buildForm(textOf(null));
+  readonly lines = signal<LineDraft[] | null>(null);
+  readonly payrollItems = signal<PayrollItem[]>([]);
+  /** 事業所の内訳のひな形（null ＝ まだない：アプリの例を並べる） */
+  readonly template = signal<string[] | null>(null);
+  private readonly contracts = signal<ContractDoc[]>([]);
   readonly errors = signal<RowError[]>([]);
   readonly saving = signal(false);
   readonly saveError = signal(false);
@@ -97,25 +112,83 @@ export class PayrollCard {
     const p = this.editPeriod();
     return !!p && !employedDuring(this.employee(), p);
   });
-  /** 日数の候補（在籍していた暦日数 − 欠勤日数） */
-  readonly candidate = computed(() => {
+  /** 期間の終わりの給与の形（基本給を毎月決まった額に数えるか・日数の候補を出すか） */
+  readonly payType = computed<PayType | null>(() => {
     const p = this.editPeriod();
-    return p ? candidateDays(suggestDays(this.employee(), p), this.draft().absentDays) : 0;
+    return p ? (contractAt(this.contracts(), p.end)?.payType ?? null) : null;
   });
-  readonly total = computed(() => totalOf(this.draft().cash, this.draft().inKind));
+  /** 日数の候補（月給・日給月給の人だけ。在籍していた暦日数 − 欠勤日数） */
+  candidate(): number | null {
+    const p = this.editPeriod();
+    const t = this.payType();
+    if (!p || (t !== 'monthly' && t !== 'dailyMonthly')) return null;
+    return candidateDays(suggestDays(this.employee(), p), this.form.controls.absentDays.value);
+  }
+  /** 前の月の内訳（項目名を写す） */
+  private prevLinesOf(month: string) {
+    return this.savedOf(shiftMonth(month, -1))?.lines ?? null;
+  }
+  readonly prevLines = computed(() => {
+    const m = this.editMonth();
+    return m ? this.prevLinesOf(m) : null;
+  });
+
+  /** 今の項目名の並びを、事業所のひな形にする */
+  async saveTemplate(names: string[]): Promise<void> {
+    const office = this.context.current();
+    if (!office) return;
+    try {
+      await this.itemsApi.saveTemplate(office.id, names);
+      this.template.set(names);
+    } catch (err) {
+      console.error(err);
+      this.saveError.set(true);
+    }
+  }
+
+  private buildForm(t: PayrollRowText): PayrollRowForm {
+    return this.fb.group({
+      cash: t.cash,
+      fixed: t.fixed,
+      inKind: t.inKind,
+      inKindMerged: t.inKindMerged,
+      retro: t.retro,
+      days: t.days,
+      absentDays: t.absentDays,
+      hours: t.hours,
+      prorated: t.prorated,
+      state: this.fb.control<PayrollState>(t.state),
+    });
+  }
 
   /** 開く：月を渡さなければ、支払日を過ぎた最新の月 */
   open(month?: string): void {
     const office = this.context.current();
     if (!office) return;
     this.startEdit(month ?? latestPaidMonth(todayLocal(), payrollOf(office)));
+    // 給与の項目・契約（読めなくても入力はできる）
+    this.itemsApi.list(office.id).then((x) => this.payrollItems.set(x)).catch((err) => console.error(err));
+    this.itemsApi
+      .template(office.id)
+      .then((t) => {
+        this.template.set(t);
+        // ひな形が読めたら、まだ金額を入れていない新しい月の行を並べ直す
+        if (this.editMonth() && !this.editingSaved() && !hasAmounts(this.lines())) {
+          this.lines.set(startDrafts(this.prevLines(), t, this.payrollItems()));
+        }
+      })
+      .catch((err) => console.error(err));
+    this.contractsApi.list(office.id, this.employee().id).then((x) => this.contracts.set(x)).catch((err) => console.error(err));
   }
 
-  /** 月を変えたら、その月の保存済みを入れ直す（なければ空） */
+  /** 月を変えたら、その月の保存済みを入れ直す（なければ内訳の1行目から） */
   startEdit(month: string): void {
     if (!/^\d{4}-\d{2}$/.test(month)) return;
+    const saved = this.savedOf(month);
     this.editMonth.set(month);
-    this.draft.set(textOf(this.savedOf(month)));
+    this.form = this.buildForm(textOf(saved));
+    // まだない月は、前の月の項目名 → 事業所のひな形 → アプリの例 を並べる
+    this.lines.set(saved ? (saved.lines ? toDrafts(saved.lines) : null) : startDrafts(this.prevLinesOf(month), this.template(), this.payrollItems()));
     this.errors.set([]);
     this.saveError.set(false);
   }
@@ -124,19 +197,11 @@ export class PayrollCard {
     this.editMonth.set(null);
   }
 
-  set<K extends keyof PayrollRowText>(key: K, value: PayrollRowText[K]): void {
-    this.draft.update((d) => ({ ...d, [key]: value }));
-  }
-
-  fillCandidate(): void {
-    this.set('days', String(this.candidate()));
-  }
-
   async save(): Promise<void> {
     const office = this.context.current();
     const month = this.editMonth();
     if (!office || !month || this.saving()) return;
-    const r = readRow(this.draft(), this.editPeriodDays());
+    const r = readEntry(this.form.getRawValue(), this.lines(), this.payType(), this.editPeriodDays());
     const before = this.editingSaved();
     if (r.kind === 'invalid') {
       this.errors.set(r.errors);
@@ -156,6 +221,15 @@ export class PayrollCard {
     this.saveError.set(false);
     this.saving.set(true);
     try {
+      // 内訳で分類を選んだ、まだ分類の決まっていない項目名を「給与の項目と分類」に登録する
+      const known: PayrollItemInput[] = [...this.payrollItems()];
+      for (const l of input?.lines ?? []) {
+        if (categoryOf(l.name, known) === null) {
+          const it = { name: l.name, labels: [], category: l.category };
+          await this.itemsApi.create(office.id, it);
+          known.push(it);
+        }
+      }
       await this.api.saveMonth(office.id, month, [
         { employeeId: this.employee().id, input, exists: !!before, before },
       ]);

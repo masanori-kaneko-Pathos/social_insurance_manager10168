@@ -1,7 +1,9 @@
 // 月の表の1行（画面の文字）⇔ PayrollInput（保存する数値）
 // 画面はすべて文字で持ち、「保存する」を押したときにここで数値に直す（共通ルール4：保存するまで保存しない）
 
+import type { PayType } from '../../../core/models/contract';
 import { PayrollInput, PayrollState } from '../../../core/models/payroll';
+import { hasAmounts, LineDraft, readLines, totalsOf } from './payroll-lines';
 import { PayrollError, validatePayroll } from './payroll-rows';
 import { formatHours, parseHours, parseNat } from '../../../shared/utils/number';
 
@@ -53,7 +55,7 @@ export function textOf(p: PayrollInput | null): PayrollRowText {
 }
 
 export type RowError =
-  PayrollError | 'unreadable' | 'cashRequired' | 'fixedRequired' | 'daysRequired';
+  PayrollError | 'unreadable' | 'cashRequired' | 'fixedRequired' | 'daysRequired' | 'lines';
 
 export type RowResult =
   | { kind: 'blank' } // 何も入れていない行（保存しない。保存済みなら消す）
@@ -124,6 +126,24 @@ export function sameInput(a: PayrollInput, b: PayrollInput): boolean {
     a.fixedFull === b.fixedFull &&
     JSON.stringify(a.lines) === JSON.stringify(b.lines)
   );
+}
+
+/**
+ * 内訳つきの1人分を読む（11/24。月の画面の「内訳」）
+ * - drafts が null か、金額が1つも入っていない ＝ 内訳なし：今までどおり総支給額・毎月決まった額の文字から読む
+ * - 内訳がある：行を読み、総支給額・毎月決まった額・昇給差額は内訳から出す（文字の欄は使わない）。
+ *   読めない行・分類が決まっていない行があれば 'lines'（行ごとの誤りは readLines で画面に出す）
+ */
+export function readEntry(t: PayrollRowText, drafts: readonly LineDraft[] | null, payType: PayType | null, periodDays: number): RowResult {
+  // 金額が1つも入っていなければ内訳なし（ひな形の行を並べただけの月は、今までどおり総支給額の欄から読む）
+  if (!hasAmounts(drafts)) return readRow(t, periodDays);
+  const r = readLines(drafts!);
+  if (!r.lines) return { kind: 'invalid', errors: ['lines'] };
+  const tot = totalsOf(r.lines, payType);
+  const n = (v: number) => (v === 0 ? '' : String(v));
+  const row = readRow({ ...t, cash: String(tot.cash), fixed: String(tot.fixed), retro: n(tot.retro) }, periodDays);
+  if (row.kind !== 'ok') return row;
+  return { kind: 'ok', input: { ...row.input, lines: r.lines, fixedFull: tot.fixedFull } };
 }
 
 /**

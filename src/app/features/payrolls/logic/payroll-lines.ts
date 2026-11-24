@@ -6,6 +6,7 @@ import type { PayType } from '../../../core/models/contract';
 import type { PayrollLine } from '../../../core/models/payroll';
 import {
   DEFAULT_PAYROLL_ITEMS,
+  DEFAULT_TEMPLATE_NAMES,
   PAYROLL_ITEM_CATEGORIES,
   PayrollItemCategory,
   PayrollItemInput,
@@ -65,7 +66,7 @@ export type LinesError = 'negative' | 'empty' | 'tooMany';
 export const MAX_LINES = 40;
 
 export interface LinesRead {
-  /** 行ごとの誤り（添字 ＝ 行の位置）。空の行（名前も金額もない）は飛ばすので誤りなし */
+  /** 行ごとの誤り（添字 ＝ 行の位置）。金額が空の行は飛ばす（保存しない）ので誤りなし */
   lineErrors: Map<number, LineError[]>;
   errors: LinesError[];
   /** 誤りがなければ、保存する行 */
@@ -86,7 +87,8 @@ export function readLines(drafts: readonly LineDraft[]): LinesRead {
   const lines: PayrollLine[] = [];
   drafts.forEach((d, i) => {
     const name = d.name.trim();
-    if (!name && !d.amount.trim()) return; // 空の行は飛ばす
+    // 金額が空の行は保存しない（ひな形の行のうち、その人に関係ない手当は空のままでよい。11/24）
+    if (!d.amount.trim()) return;
     const errs: LineError[] = [];
     if (!name || name.length > 30) errs.push('name');
     if (!d.category || !PAYROLL_ITEM_CATEGORIES.includes(d.category)) errs.push('category');
@@ -108,6 +110,25 @@ export function readLines(drafts: readonly LineDraft[]): LinesRead {
 /** 保存済みの行 → 入力中の行 */
 export function toDrafts(lines: readonly PayrollLine[]): LineDraft[] {
   return lines.map((l) => ({ name: l.name, category: l.category, amount: l.amount.toLocaleString('ja-JP') }));
+}
+
+/** 金額が1つでも入っているか（入っていなければ内訳なしとして読む） */
+export function hasAmounts(drafts: readonly LineDraft[] | null): boolean {
+  return (drafts ?? []).some((d) => d.amount.trim() !== '');
+}
+
+/**
+ * 内訳を入れ始めるときの行（11/24）：その人の前の月の項目名 → 事業所のひな形 → アプリの例 の順
+ * 分類は項目名から付ける（決まらない名前は空。入力の中で選ぶ）
+ */
+export function startDrafts(
+  prev: readonly PayrollLine[] | null,
+  template: readonly string[] | null,
+  items: readonly PayrollItemInput[],
+): LineDraft[] {
+  if (prev && prev.length > 0) return copyNames(prev);
+  const names = template && template.length > 0 ? template : DEFAULT_TEMPLATE_NAMES;
+  return names.map((name) => ({ name, category: categoryOf(name, items), amount: '' }));
 }
 
 /** 前の月の項目名だけを写す（金額は写さない。昇給した月に前の額のまま保存する間違いを防ぐため） */

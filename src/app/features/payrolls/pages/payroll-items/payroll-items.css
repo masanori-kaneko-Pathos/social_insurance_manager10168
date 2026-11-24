@@ -367,3 +367,49 @@ td.name .sub {
 .toggle-col .btn + .btn {
   margin-left: var(--space-xs);
 }
+
+/* 内訳のひな形（11/24） */
+.template {
+  margin-top: var(--space-md);
+}
+
+.template-list {
+  margin: var(--space-sm) 0;
+  padding-left: 1.5em;
+}
+
+.template-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 4px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.t-name {
+  min-width: 10em;
+  font-weight: 600;
+}
+
+.t-actions {
+  display: flex;
+  gap: var(--space-xs);
+  margin-left: auto;
+}
+
+.cat.unset {
+  border-color: var(--color-danger-text);
+  color: var(--color-danger-text);
+}
+
+.template-add {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  max-width: 28em;
+}
+
+.template .actions {
+  align-items: center;
+}

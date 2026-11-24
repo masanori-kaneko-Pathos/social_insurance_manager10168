@@ -68,6 +68,61 @@
     </table>
   </div>
 
+  <!-- 内訳のひな形：内訳を入れ始めるときに並べる項目名の順（その人の前の月の内訳があれば、そちらが先。11/24） -->
+  <section class="card template">
+    <h2>{{ 'payrollItem.template.title' | transloco }}</h2>
+    <p class="hint">{{ 'payrollItem.template.lead' | transloco }}</p>
+    @if (savedTemplate() === null) {
+      <p class="hint">{{ 'payrollItem.template.notSaved' | transloco }}</p>
+    }
+    <ol class="template-list">
+      @for (n of templateNames(); track n; let i = $index; let last = $last) {
+        <li>
+          <span class="t-name">{{ n }}</span>
+          @if (categoryOfName(n); as c) {
+            <span class="cat" [class]="'cat c-' + c">{{ 'payrollItem.category.' + c | transloco }}</span>
+          } @else {
+            <span class="cat unset">{{ 'payrollItem.template.noCategory' | transloco }}</span>
+          }
+          @if (context.isAdmin()) {
+            <span class="t-actions">
+              <button type="button" class="btn btn-small" [disabled]="i === 0" [attr.aria-label]="'payrollItem.template.up' | transloco" (click)="moveName(i, -1)">↑</button>
+              <button type="button" class="btn btn-small" [disabled]="last" [attr.aria-label]="'payrollItem.template.down' | transloco" (click)="moveName(i, 1)">↓</button>
+              <button type="button" class="btn btn-small" (click)="removeName(i)">{{ 'payrollItem.delete' | transloco }}</button>
+            </span>
+          }
+        </li>
+      }
+    </ol>
+    @if (context.isAdmin()) {
+      <div class="template-add">
+        <input
+          class="input"
+          maxlength="30"
+          list="pi-template-names"
+          [placeholder]="'payrollItem.template.addPlaceholder' | transloco"
+          [value]="newName()"
+          (input)="newName.set($any($event.target).value)"
+          (keydown.enter)="$event.preventDefault(); addName()"
+        />
+        <datalist id="pi-template-names">
+          @for (n of names(); track n) {
+            <option [value]="n"></option>
+          }
+        </datalist>
+        <button type="button" class="btn btn-small" (click)="addName()">{{ 'payrollItem.template.add' | transloco }}</button>
+      </div>
+      <div class="actions">
+        @if (templateSaved()) {
+          <span class="muted">{{ 'payrollItem.template.saved' | transloco }}</span>
+        }
+        <button type="button" class="btn btn-primary" [disabled]="saving() || !templateDirty()" (click)="saveTemplate()">
+          {{ 'common.save' | transloco }}
+        </button>
+      </div>
+    }
+  </section>
+
   @if (draft(); as d) {
     <section class="card edit">
       <h2>{{ (d.id ? 'payrollItem.editTitle' : 'payrollItem.addTitle') | transloco }}</h2>

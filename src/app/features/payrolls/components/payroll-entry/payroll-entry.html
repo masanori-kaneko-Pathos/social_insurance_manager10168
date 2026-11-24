@@ -1,0 +1,207 @@
+<div class="entry" [formGroup]="form()">
+  <!-- 左：給与明細の支給 -->
+  <div class="entry-main">
+    <h3>{{ 'payrollEntry.lines.title' | transloco }}</h3>
+
+    @if (lines(); as ls) {
+      <datalist [id]="listId">
+        @for (n of names(); track n) {
+          <option [value]="n"></option>
+        }
+      </datalist>
+      <table class="lines">
+        <tbody>
+          @for (d of ls; track $index; let i = $index) {
+            <tr [attr.data-line]="i" [class.unset]="showLineErrors() && lineErrorsOf(i).length > 0">
+              <td class="l-name">
+                <input
+                  class="input"
+                  data-f="name"
+                  maxlength="30"
+                  [attr.list]="listId"
+                  [attr.aria-label]="'payrollEntry.lines.name' | transloco"
+                  [value]="d.name"
+                  [disabled]="!canEdit()"
+                  (input)="setName(i, $any($event.target).value)"
+                />
+              </td>
+              <td class="l-cat">
+                @if (unknown(d)) {
+                  <!-- 分類が決まっていない項目名：その場で選ぶ（保存すると「給与の項目と分類」にも登録する） -->
+                  <select
+                    class="input cat-pick"
+                    [class.is-invalid]="!d.category"
+                    [attr.aria-label]="'payrollEntry.lines.category' | transloco"
+                    [disabled]="!canEdit()"
+                    (change)="setCategory(i, $any($event.target).value)"
+                  >
+                    <option value="" [selected]="!d.category">{{ 'payrollEntry.lines.pickCategory' | transloco }}</option>
+                    @for (c of categories; track c) {
+                      <option [value]="c" [selected]="d.category === c">{{ 'payrollItem.category.' + c | transloco }}</option>
+                    }
+                  </select>
+                } @else if (d.category) {
+                  <span class="cat" [class]="'cat c-' + d.category">{{ 'payrollItem.category.' + d.category | transloco }}</span>
+                }
+              </td>
+              <td class="l-amount">
+                <div class="amount" [class.minus]="isMinus(d)">
+                  <input
+                    class="input num"
+                    data-f="amount"
+                    inputmode="numeric"
+                    [attr.aria-label]="'payrollEntry.lines.amount' | transloco"
+                    [value]="d.amount"
+                    [disabled]="!canEdit()"
+                    (input)="setAmount(i, $any($event.target).value)"
+                    (keydown.enter)="onAmountEnter(i, $event)"
+                  />
+                </div>
+              </td>
+              <td class="l-del">
+                @if (canEdit()) {
+                  <button type="button" class="x" [attr.aria-label]="'payrollEntry.lines.remove' | transloco" (click)="removeLine(i)">×</button>
+                }
+              </td>
+            </tr>
+            @if (lineErrorsOf(i).length > 0) {
+              <tr class="line-err">
+                <td colspan="4">
+                  @for (e of lineErrorsOf(i); track e) {
+                    <span>{{ 'payrollEntry.lines.error.' + e | transloco }}</span>
+                    @if (e === 'category' && itemsLink(); as link) {
+                      <a class="items-link" [routerLink]="link" target="_blank">{{ 'payrollItem.title' | transloco }}</a>
+                    }
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+      @if (canEdit()) {
+        <div class="line-tools">
+          <button type="button" class="link-btn" (click)="addLine()">＋ {{ 'payrollEntry.lines.add' | transloco }}</button>
+          <!-- 今の項目名の並びを、事業所のひな形にする（新しく入った人・最初の月に並ぶ。11/24） -->
+          @if (templateDone()) {
+            <span class="muted">{{ 'payrollEntry.lines.templateDone' | transloco }}</span>
+          } @else if (differsFromTemplate()) {
+            <button type="button" class="link-btn" (click)="makeTemplate()">{{ 'payrollEntry.lines.makeTemplate' | transloco }}</button>
+          }
+        </div>
+      }
+      @if (showLineErrors()) {
+        @for (e of read().errors; track e) {
+          <p class="field-error">{{ 'payrollEntry.lines.error.' + e | transloco }}</p>
+        }
+      }
+
+      <!-- 金額を入れるまでは「—」（0円と見えて、前の値が消えたように見えないように） -->
+      <dl class="sums">
+        <dt>{{ 'payroll.col.cash' | transloco }}</dt>
+        <dd class="big">{{ hasAmounts() ? yen(totals().cash) + ' 円' : '—' }}</dd>
+        <dt class="muted">{{ 'payroll.col.fixed' | transloco }}</dt>
+        <dd class="muted">{{ hasAmounts() ? yen(totals().fixedFull) + ' 円' : '—' }}</dd>
+        @if (totals().retro > 0) {
+          <dt class="muted">{{ 'payroll.col.retro' | transloco }}</dt>
+          <dd class="muted">{{ yen(totals().retro) }} 円</dd>
+        }
+      </dl>
+      @if (replacing(); as before) {
+        <p class="hint replace">{{ 'payrollEntry.lines.replacing' | transloco: { amount: yen(before) } }}</p>
+      }
+    } @else {
+      <!-- 内訳なし（前のデータ・総支給額だけの取り込み）：今までどおり額を直接入れられる。内訳はいつでも入れ始められる -->
+      <p class="hint">{{ 'payrollEntry.lines.none' | transloco }}</p>
+      <div class="row3">
+        <div class="field">
+          <label>{{ 'payroll.col.cash' | transloco }}</label>
+          <input class="input num" formControlName="cash" inputmode="numeric" />
+        </div>
+        <div class="field">
+          <label>{{ 'payroll.col.fixed' | transloco }}</label>
+          <input class="input num" formControlName="fixed" inputmode="numeric" />
+        </div>
+        <div class="field">
+          <label>{{ 'payroll.col.retro' | transloco }}</label>
+          <input class="input num" formControlName="retro" inputmode="numeric" />
+        </div>
+      </div>
+      @if (canEdit()) {
+        <button type="button" class="btn btn-small" (click)="startLines()">{{ 'payrollEntry.lines.start' | transloco }}</button>
+      }
+    }
+  </div>
+
+  <!-- 右：日数・時間・現物 -->
+  <div class="entry-side">
+    <h3>{{ 'payrollEntry.side.days' | transloco }}</h3>
+    <div class="row2">
+      <div class="field">
+        <label>{{ 'payroll.col.days' | transloco }}</label>
+        <input class="input num" formControlName="days" inputmode="numeric" [attr.placeholder]="candidate()" />
+        @if (canEdit() && daysOff(); as c) {
+          <button type="button" class="days-fix" [title]="'payroll.candidateTitle' | transloco" (click)="fillCandidate()">
+            {{ 'payroll.candidate' | transloco: { days: c } }}
+          </button>
+        }
+      </div>
+      <div class="field">
+        <label>{{ 'payroll.col.absentDays' | transloco }}</label>
+        <input class="input num" formControlName="absentDays" inputmode="numeric" />
+      </div>
+      <div class="field">
+        <label>{{ 'payroll.col.hours' | transloco }}</label>
+        <input class="input num" formControlName="hours" />
+      </div>
+      <div class="field">
+        <label>{{ 'payroll.col.state' | transloco }}</label>
+        <select class="input" formControlName="state">
+          @for (s of states; track s) {
+            <option [value]="s">{{ 'payroll.state.' + s | transloco }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <h3>{{ 'payroll.col.inKind' | transloco }}</h3>
+    <div class="row2">
+      <div class="field">
+        <label>{{ 'payrollEntry.side.inKind' | transloco }}</label>
+        @if (form().controls.inKindMerged.value) {
+          <span class="merged" [title]="'payroll.inKindMergedTitle' | transloco">{{ 'payroll.inKindMerged' | transloco }}</span>
+          @if (canEdit()) {
+            <button type="button" class="link-btn" (click)="splitInKind()">{{ 'payroll.splitInKind' | transloco }}</button>
+          }
+        } @else {
+          <input class="input num" formControlName="inKind" inputmode="numeric" />
+        }
+      </div>
+      @if (canEdit() && inKindCalc()) {
+        <div class="field calc">
+          <button type="button" class="link-btn" (click)="openInKind.emit()">{{ 'inKind.open' | transloco }}</button>
+        </div>
+      }
+    </div>
+
+    <label class="check">
+      <input type="checkbox" formControlName="prorated" />
+      {{ 'payrollEntry.side.prorated' | transloco }}
+    </label>
+
+    @for (e of errors(); track e) {
+      @if (e !== 'lines') {
+        <p class="field-error">{{ 'payroll.rowError.' + e | transloco }}</p>
+      }
+    }
+
+    <div class="actions">
+      <button type="button" class="btn" (click)="closed.emit()">{{ 'payrollEntry.close' | transloco }}</button>
+      @if (canEdit()) {
+        <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save.emit()">
+          {{ (hasNext() ? 'payrollEntry.saveNext' : 'payrollEntry.saveOnly') | transloco }}
+        </button>
+      }
+    </div>
+  </div>
+</div>

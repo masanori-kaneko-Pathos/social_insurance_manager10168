@@ -1,5 +1,5 @@
 import { PayrollLine } from '../../../core/models/payroll';
-import { categoryOf, copyNames, itemNames, readAmount, readLines, totalsOf } from './payroll-lines';
+import { categoryOf, copyNames, itemNames, readAmount, readLines, startDrafts, totalsOf } from './payroll-lines';
 
 const L = (name: string, category: PayrollLine['category'], amount: number): PayrollLine => ({ name, category, amount });
 
@@ -52,6 +52,7 @@ describe('readLines：入力中の行を読む', () => {
     const r = readLines([
       { name: '基本給', category: 'base', amount: '２５０，０００円' },
       { name: '', category: null, amount: '' },
+      { name: '住宅手当', category: 'fixedAllowance', amount: '' }, // 金額が空の行は保存しない（ひな形の行）
       { name: '欠勤控除', category: 'deduction', amount: '−11,290' },
     ]);
     expect(r.lines).toEqual([L('基本給', 'base', 250000), L('欠勤控除', 'deduction', 11290)]);
@@ -101,5 +102,17 @@ describe('項目名と分類', () => {
       { name: '基本給', category: 'base', amount: '' },
       { name: '職務手当', category: 'fixedAllowance', amount: '' },
     ]);
+  });
+});
+
+describe('startDrafts：内訳を入れ始めるときの行', () => {
+  it('前の月の項目名 → 事業所のひな形 → アプリの例 の順。分類は項目名から付ける', () => {
+    expect(startDrafts(SLIP.slice(0, 1), ['住宅手当'], []).map((d) => d.name)).toEqual(['基本給']);
+    const t = startDrafts(null, ['基本給', 'リーダー手当'], []);
+    expect(t).toEqual([
+      { name: '基本給', category: 'base', amount: '' },
+      { name: 'リーダー手当', category: null, amount: '' },
+    ]);
+    expect(startDrafts([], null, []).map((d) => d.name)).toEqual(['基本給', '固定残業手当', '通勤手当']);
   });
 });

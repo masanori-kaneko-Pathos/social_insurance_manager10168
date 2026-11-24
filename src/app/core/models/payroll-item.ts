@@ -52,6 +52,18 @@ export interface PayrollItem extends PayrollItemDoc {
 export type PayrollItemInput = Pick<PayrollItemDoc, 'name' | 'labels' | 'category'>;
 
 /**
+ * 給与の内訳のひな形：offices/{officeId}/payrollTemplates/default（11/24）
+ * 内訳を入れ始めるときに並べる項目名の順。その人の前の月の内訳があれば、そちらを使う
+ */
+export interface PayrollTemplateDoc {
+  names: string[];
+  updatedAt: Timestamp;
+}
+
+/** 事業所のひな形がまだないときに並べる例 */
+export const DEFAULT_TEMPLATE_NAMES: readonly string[] = ['基本給', '固定残業手当', '通勤手当'];
+
+/**
  * よくある給与明細の項目名（事業所で登録していなくても、この名前なら分類が決まる）
  * 固定残業手当は決まった額の手当（固定的賃金。超過分は別の項目で月ごとに変わる手当）
  */

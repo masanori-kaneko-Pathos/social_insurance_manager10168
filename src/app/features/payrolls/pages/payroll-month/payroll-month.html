@@ -70,41 +70,9 @@
   </div>
 
   <div class="toolbar">
-    <a [routerLink]="[]" [queryParams]="{ all: showAll() ? null : 1 }" queryParamsHandling="merge">
-      {{ (showAll() ? 'payroll.showBasic' : 'payroll.showAll') | transloco }}
-    </a>
-    <!-- 現物給与の計算は表の上に1つだけ（行ごとのボタンは置かない。窓の中で入れる人を選ぶ。11/18） -->
-    @if (showAll() && context.isAdmin()) {
-      <button type="button" class="btn btn-small" [title]="'inKind.openTitle' | transloco" (click)="inKindPicking.set(!inKindPicking())">
-        {{ 'inKind.open' | transloco }}
-      </button>
-    }
+    <span class="muted">{{ 'payroll.openHint' | transloco }}</span>
+    <a [routerLink]="['/o', context.current()?.id, 'payrolls', 'items']">{{ 'payrollItem.title' | transloco }}</a>
   </div>
-
-  <!-- 現物給与の計算：入れる人を選ぶ（表の上のボタンから。11/18） -->
-  @if (inKindPicking()) {
-    <label class="in-kind-pick">
-      <span>{{ 'inKind.pickPerson' | transloco }}</span>
-      <select class="input" [value]="inKindFor()?.employee?.id ?? ''" (change)="pickInKind($any($event.target).value)">
-        <option value="">{{ 'inKind.pickNone' | transloco }}</option>
-        @for (x of filtered(); track x.employee.id) {
-          <option [value]="x.employee.id">{{ x.employee.employeeNumber ? x.employee.employeeNumber + '　' : '' }}{{ x.employee.lastName }} {{ x.employee.firstName }}</option>
-        }
-      </select>
-    </label>
-  }
-  <!-- 現物給与の計算（1人分。「この額を入れる」で現物の欄に入る） -->
-  @if (inKindFor(); as v) {
-    <app-in-kind-calculator
-      [month]="month()"
-      [prefecture]="context.current()?.prefecture ?? ''"
-      [kumiai]="context.current()?.healthInsurer?.type === 'kumiai'"
-      [employeeName]="v.employee.lastName + ' ' + v.employee.firstName"
-      [dispatched]="inKindDispatched()"
-      (apply)="applyInKind(v, $event)"
-      (closed)="inKindFor.set(null); inKindPicking.set(false)"
-    />
-  }
 
   <!-- 探す・絞る・並べる・ページ（入れた値は、ページを移っても保存するまで残る） -->
   <app-person-list-bar
@@ -117,10 +85,9 @@
   />
 
   <div class="card table-wrap">
-    <!-- Enter・矢印キーで次のセルへ（表計算ソフトと同じ動き） -->
-    <table appEnterNext="grid" class="fixed-cols sticky-head" [class.all]="showAll()">
-      <!-- 欄の幅を固定（表示する行が変わっても揺れないように。幅の種類は styles.css の col.cw-*。11/18）
-           項目を増やすときは、今ある欄は動かさずに右へ足す。残りの幅は最後の空の欄が受け持つ（11/20） -->
+    <!-- 一覧は表示だけ。入力は「内訳」で行の下に開く（11/24。横に項目を並べない） -->
+    <table class="fixed-cols sticky-head">
+      <!-- 欄の幅を固定（表示する行が変わっても揺れないように。幅の種類は styles.css の col.cw-*） -->
       <colgroup>
         <col class="cw-number" />
         <col class="c-name" />
@@ -129,30 +96,21 @@
         <col class="c-money" />
         <col class="c-fixed" />
         <col class="cw-days" />
-        @if (showAll()) {
-          <col class="c-inkind" />
-          <col class="cw-yen" />
-          <col class="c-money" />
-          <col class="cw-short" />
-          <col class="cw-days" />
-          <col class="c-partial" />
-          <col class="c-state" />
-        }
-        <col />
+        <col class="c-status" />
+        <col class="c-open" />
       </colgroup>
       <thead>
         <tr>
           <!-- 社員番号 → 氏名（ほかの表と同じ順。どちらも見出しを押すと並び替え。11/13） -->
           <th><app-sort-header key="number" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.employeeNumber' | transloco }}</app-sort-header></th>
           <th><app-sort-header key="kana" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.name' | transloco }}</app-sort-header></th>
-          <!-- 部署・雇用形態（担当が分かれていても、自分の受け持ちが目で見て分かるように。11/13） -->
           <th><app-sort-header key="dept" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.department' | transloco }}</app-sort-header></th>
           <th><app-sort-header key="employment" [(options)]="listOptions" [(page)]="page">{{ 'employee.list.employment' | transloco }}</app-sort-header></th>
           <th class="num">{{ 'payroll.col.cash' | transloco }}</th>
-          <th class="num">{{ 'payroll.col.fixed' | transloco }}</th>
+          <th class="num">{{ 'payroll.col.fixedShort' | transloco }}</th>
           <th class="num days-th">
             @if (context.isAdmin()) {
-              <!-- 見出しを押すと、絞り込んだ人にまとめて日数を入れる窓（11/13。行ごとの「候補」ボタンの代わり） -->
+              <!-- 見出しを押すと、絞り込んだ人にまとめて日数を入れる窓（11/13）。入れた行は下の帯の「保存する」で保存 -->
               <div class="bulk-wrap" #bulkWrap>
                 <button type="button" class="bulk-btn" [attr.aria-expanded]="bulkOpen()" (click)="toggleBulk()">
                   {{ 'payroll.col.days' | transloco }} ▾
@@ -182,28 +140,18 @@
               {{ 'payroll.col.days' | transloco }}
             }
           </th>
-          @if (showAll()) {
-            <th class="num">{{ 'payroll.col.inKind' | transloco }}</th>
-            <th class="num">{{ 'payroll.col.total' | transloco }}</th>
-            <th class="num">{{ 'payroll.col.retro' | transloco }}</th>
-            <th class="num">{{ 'payroll.col.absentDays' | transloco }}</th>
-            <th class="num">{{ 'payroll.col.hours' | transloco }}</th>
-            <th>{{ 'payroll.col.prorated' | transloco }}</th>
-            <th>{{ 'payroll.col.state' | transloco }}</th>
-          }
-          <th class="filler" aria-hidden="true"></th>
+          <th>{{ 'payroll.col.status' | transloco }}</th>
+          <th><span class="sr-only">{{ 'payroll.breakdown' | transloco }}</span></th>
         </tr>
       </thead>
       <tbody>
         @for (v of shown().rows; track v.employee.id) {
-          <tr [formGroup]="v.form" [attr.data-row]="v.employee.id" [class.has-error]="rowErrors().has(v.employee.id)" [class.edited]="v.form.dirty">
+          @let isOpen = openId() === v.employee.id;
+          <tr [attr.data-row]="v.employee.id" [class.is-open]="isOpen" [class.has-error]="rowErrors().has(v.employee.id)" [class.edited]="v.form.dirty">
             <td class="emp-no">{{ v.employee.employeeNumber ?? '—' }}</td>
             <td>
               <app-person-name [person]="v.employee" [link]="['/o', context.current()?.id, 'employees', v.employee.id]" />
               <div class="tags">
-                @if (!v.row.saved) {
-                  <span class="badge badge-sub">{{ 'payroll.tag.notSaved' | transloco }}</span>
-                }
                 @if (!v.row.insured) {
                   <span class="badge badge-sub">{{ 'payroll.tag.notInsured' | transloco }}</span>
                 }
@@ -213,17 +161,6 @@
                 }
                 @if (v.row.partial) {
                   <span class="badge badge-warn">{{ 'payroll.tag.partial' | transloco }}</span>
-                }
-                <!-- 隠れている列に値がある：列ごとに札を出す。押すとその列を出して送る。開いているときに押すと元の表示に戻す（11/18） -->
-                @for (f of extraOf(v); track f) {
-                  <button
-                    type="button"
-                    class="badge badge-warn badge-link"
-                    [title]="(showAll() ? 'payroll.tag.extraClose' : 'payroll.tag.extraTitle') | transloco"
-                    (click)="toggleExtra(v, f)"
-                  >
-                    {{ 'payroll.col.' + f | transloco }}
-                  </button>
                 }
               </div>
             </td>
@@ -236,59 +173,63 @@
                 <span class="muted">—</span>
               }
             </td>
-            <td class="num">
-              <input class="input num w-money" formControlName="cash" inputmode="numeric" />
-            </td>
-            <td class="num">
-              <input class="input num w-money" formControlName="fixed" inputmode="numeric" />
-            </td>
-            <td class="num">
-              <!-- 月給の人：候補（在籍した暦日数 − 欠勤日数）を薄く出し、違う日数を入れたら候補を並べる（勤務日数を入れる間違いに気づけるように。11/24） -->
-              <input class="input num w-days" formControlName="days" inputmode="numeric" [attr.placeholder]="candidate(v)" />
-              @if (context.isAdmin() && daysDiffer(v); as c) {
-                <button type="button" class="days-fix" [title]="'payroll.candidateTitle' | transloco" (click)="fillCandidate(v)">
-                  {{ 'payroll.candidate' | transloco: { days: c } }}
-                </button>
+            <td class="num">{{ yenOf(v.form.controls.cash.value) }}</td>
+            <td class="num">{{ fixedText(v) }}</td>
+            <td class="num">{{ v.form.controls.days.value || '—' }}</td>
+            <td>
+              @switch (status(v)) {
+                @case ('saved') { <span class="badge badge-sub">{{ 'payroll.status.saved' | transloco }}</span> }
+                @case ('edited') { <span class="badge badge-warn">{{ 'payroll.status.edited' | transloco }}</span> }
+                @case ('unclassified') { <span class="badge badge-danger">{{ 'payroll.status.unclassified' | transloco }}</span> }
+                @default { <span class="badge badge-warn">{{ 'payroll.tag.notSaved' | transloco }}</span> }
               }
             </td>
-            @if (showAll()) {
-              <td class="num" data-field="inKind">
-                <div class="days">
-                  @if (v.form.controls.inKindMerged.value) {
-                    <!-- 給与ソフトが支払額に含めていて、分けた額がない -->
-                    <span class="merged" [title]="'payroll.inKindMergedTitle' | transloco">{{ 'payroll.inKindMerged' | transloco }}</span>
-                    @if (context.isAdmin()) {
-                      <button type="button" class="link-btn" (click)="splitInKind(v)">{{ 'payroll.splitInKind' | transloco }}</button>
-                    }
-                  } @else {
-                    <input class="input num w-money" formControlName="inKind" inputmode="numeric" />
-                  }
-                </div>
-              </td>
-              <td class="num">{{ total(v) }}</td>
-              <td class="num" data-field="retro">
-                <input class="input num w-money" formControlName="retro" inputmode="numeric" />
-              </td>
-              <td class="num" data-field="absentDays">
-                <input class="input num w-days" formControlName="absentDays" inputmode="numeric" />
-              </td>
-              <td class="num" data-field="hours">
-                <input class="input num w-hours" formControlName="hours" />
-              </td>
-              <td data-field="prorated"><input type="checkbox" formControlName="prorated" /></td>
-              <td data-field="state">
-                <select class="input" formControlName="state">
-                  @for (s of states; track s) {
-                    <option [value]="s">{{ 'payroll.state.' + s | transloco }}</option>
-                  }
-                </select>
-              </td>
-            }
-            <td class="filler" aria-hidden="true"></td>
+            <td class="open-col">
+              <!-- 保険料一覧の「内訳」と同じ：文字のリンクで、行のすぐ下に開く -->
+              <button type="button" class="link-btn" [attr.aria-expanded]="isOpen" (click)="toggleOpen(v)">
+                {{ 'payroll.breakdown' | transloco }} {{ isOpen ? '△' : '▽' }}
+              </button>
+            </td>
           </tr>
-          @if (rowErrors().get(v.employee.id); as errs) {
+          @if (isOpen) {
+            <tr class="detail">
+              <td colspan="9">
+                <app-payroll-entry
+                  [form]="v.form"
+                  [(lines)]="v.lines"
+                  [items]="items()"
+                  [payType]="contractOf(v)?.payType ?? null"
+                  [candidate]="candidate(v)"
+                  [prevLines]="prevLinesOf(v)"
+                  [template]="template()"
+                  [itemsLink]="['/o', context.current()?.id, 'payrolls', 'items']"
+                  [canEdit]="context.isAdmin()"
+                  [errors]="rowErrors().get(v.employee.id) ?? []"
+                  [hasNext]="!!nextOf(v)"
+                  [saving]="saving()"
+                  (save)="saveOne(v)"
+                  (closed)="openId.set(null)"
+                  (openInKind)="openInKind(v)"
+                  (saveTemplate)="saveTemplate($event)"
+                />
+                @if (inKindFor() === v) {
+                  <div class="in-kind-box">
+                    <app-in-kind-calculator
+                      [month]="month()"
+                      [prefecture]="context.current()?.prefecture ?? ''"
+                      [kumiai]="context.current()?.healthInsurer?.type === 'kumiai'"
+                      [employeeName]="v.employee.lastName + ' ' + v.employee.firstName"
+                      [dispatched]="inKindDispatched()"
+                      (apply)="applyInKind(v, $event)"
+                      (closed)="inKindFor.set(null)"
+                    />
+                  </div>
+                }
+              </td>
+            </tr>
+          } @else if (rowErrors().get(v.employee.id); as errs) {
             <tr class="error-row">
-              <td [attr.colspan]="showAll() ? 15 : 8">
+              <td colspan="9">
                 @for (e of errs; track e) {
                   <span>{{ 'payroll.rowError.' + e | transloco }}</span>
                 }
@@ -305,20 +246,12 @@
               {{ 'payroll.sum.label' | transloco: { n: filtered().length, entered: s.count } }}
             </th>
             <td class="num">{{ yenText(s.cash) }}</td>
-            <td class="num">{{ yenText(s.fixed) }}</td>
-            <td></td>
-            @if (showAll()) {
-              <td class="num">{{ yenText(s.inKind) }}</td>
-              <td class="num">{{ yenText(s.total) }}</td>
-              <td colspan="5"></td>
-            }
-            <td class="filler" aria-hidden="true"></td>
+            <td colspan="4"></td>
           </tr>
         </tfoot>
       }
     </table>
   </div>
-  <!-- 「保存する」は、直したときだけ下の帯の右に出す（直した行は黄色。賞与と同じ。11/18） -->
   <app-pager variant="bottom" [total]="filtered().length" [(page)]="page" [size]="listOptions().size" [showBand]="anyDirty()">
     @if (context.isAdmin() && anyDirty()) {
       <button bandEnd type="button" class="btn btn-solid" (click)="save()" [disabled]="saving()">
@@ -350,16 +283,12 @@
 
 
   <ul class="hint">
-    <!-- 給与明細を上から見ながら入れる順（11/24） -->
     <li>{{ 'payroll.hint.paidMonth' | transloco }}</li>
     <li>{{ 'payroll.hint.cash' | transloco }}</li>
     <li>{{ 'payroll.hint.fixed' | transloco }}</li>
     <li>{{ 'payroll.hint.days' | transloco }}</li>
     <li>{{ 'payroll.hint.inKind' | transloco }}</li>
-    <li>{{ 'payroll.hint.inKindMerged' | transloco }}</li>
-    <li>{{ 'payroll.hint.retro' | transloco }}</li>
     <li>{{ 'payroll.hint.prorated' | transloco }}</li>
-    <li>{{ 'payroll.hint.hours' | transloco }}</li>
     <li>{{ 'payroll.hint.blank' | transloco }}</li>
   </ul>
 }

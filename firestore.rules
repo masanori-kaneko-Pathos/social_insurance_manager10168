@@ -834,6 +834,20 @@ service cloud.firestore {
         allow delete: if isAdmin(officeId);
       }
 
+      // ----- 給与の内訳のひな形（ID は default だけ。内訳を入れ始めるときに並べる項目名の順。11/24） -----
+      match /payrollTemplates/{templateId} {
+        function validPayrollTemplate(d) {
+          return exactKeys(d, ['names', 'updatedAt'])
+            && templateId == 'default'
+            && d.names is list && d.names.size() <= 40
+            && d.updatedAt == request.time;
+        }
+
+        allow read: if isMember(officeId);
+        allow create, update: if isAdmin(officeId) && validPayrollTemplate(request.resource.data);
+        allow delete: if isAdmin(officeId);
+      }
+
       // ----- 招待（ID ＝ 招待コード）-----
       // 従業員の招待（kind: employee）は、下の update で本人が使う。
       // メンバーの招待（kind: member）を使うのは関数 siAcceptMemberInvite（メールの確認・アドレスの一致を関数が確かめる）

@@ -1,7 +1,8 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { PAYROLL_ITEM_CATEGORIES, PayrollItem, PayrollItemCategory } from '../../../../core/models/payroll-item';
+import { DEFAULT_TEMPLATE_NAMES, PAYROLL_ITEM_CATEGORIES, PayrollItem, PayrollItemCategory } from '../../../../core/models/payroll-item';
+import { categoryOf, itemKey, itemNames } from '../../logic/payroll-lines';
 import { OfficeContext } from '../../../office/office-context.service';
 import { PayrollItemService } from '../../payroll-item.service';
 import { itemRows, parseItemLabels, PayrollItemError, PayrollItemRow, validatePayrollItem } from '../../logic/payroll-items';
@@ -51,12 +52,73 @@ export class PayrollItems {
     this.loading.set(true);
     this.errorKey.set(null);
     try {
-      this.items.set(await this.api.list(officeId));
+      const [items, template] = await Promise.all([this.api.list(officeId), this.api.template(officeId)]);
+      this.items.set(items);
+      this.savedTemplate.set(template);
+      this.templateNames.set([...(template ?? DEFAULT_TEMPLATE_NAMES)]);
     } catch (err) {
       console.error(err);
       this.errorKey.set('payrollItem.error.load');
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  // ===== 内訳のひな形（内訳を入れ始めるときに並べる項目名の順。11/24） =====
+
+  /** 保存済みのひな形（null ＝ まだない：アプリの例を並べている） */
+  readonly savedTemplate = signal<string[] | null>(null);
+  /** 編集中のひな形 */
+  readonly templateNames = signal<string[]>([]);
+  readonly newName = signal('');
+  readonly templateSaved = signal(false);
+  readonly names = computed(() => itemNames(this.items()));
+  readonly templateDirty = computed(() => {
+    const saved = this.savedTemplate() ?? [...DEFAULT_TEMPLATE_NAMES];
+    const now = this.templateNames();
+    return this.savedTemplate() === null || now.length !== saved.length || now.some((n, i) => n !== saved[i]);
+  });
+
+  /** その名前の分類（札に出す。決まっていなければ null） */
+  categoryOfName(name: string): PayrollItemCategory | null {
+    return categoryOf(name, this.items());
+  }
+
+  moveName(i: number, d: -1 | 1): void {
+    const list = [...this.templateNames()];
+    const j = i + d;
+    if (j < 0 || j >= list.length) return;
+    [list[i], list[j]] = [list[j], list[i]];
+    this.templateNames.set(list);
+    this.templateSaved.set(false);
+  }
+
+  removeName(i: number): void {
+    this.templateNames.set(this.templateNames().filter((_, k) => k !== i));
+    this.templateSaved.set(false);
+  }
+
+  addName(): void {
+    const n = this.newName().trim();
+    if (!n || n.length > 30 || this.templateNames().some((x) => itemKey(x) === itemKey(n)) || this.templateNames().length >= 40) return;
+    this.templateNames.set([...this.templateNames(), n]);
+    this.newName.set('');
+    this.templateSaved.set(false);
+  }
+
+  async saveTemplate(): Promise<void> {
+    const officeId = this.context.current()?.id;
+    if (!officeId || this.saving()) return;
+    this.saving.set(true);
+    try {
+      await this.api.saveTemplate(officeId, this.templateNames());
+      this.savedTemplate.set([...this.templateNames()]);
+      this.templateSaved.set(true);
+    } catch (err) {
+      console.error(err);
+      this.errorKey.set('payrollItem.error.save');
+    } finally {
+      this.saving.set(false);
     }
   }
 
