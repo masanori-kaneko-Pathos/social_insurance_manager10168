@@ -27,7 +27,7 @@ import {
 import { noRates, pickRates, RateTables } from '../../../rates/logic/pick-rates';
 import { withCapRevisions } from '../../../rates/logic/cap-revision';
 import { RateService } from '../../../rates/rate.service';
-import { healthPartTotals, officeTotals } from '../../logic/premium-core';
+import { employeeYenOfPart, healthPartTotals, officeTotals } from '../../logic/premium-core';
 import { buildPremiumRow, PremiumRow } from '../../logic/premium-rows';
 import { calcMonthly } from '../../logic/calc-monthly';
 import { PremiumTotals } from '../../components/premium-totals/premium-totals';
@@ -52,7 +52,7 @@ import { downloadXlsx } from '../../../../shared/xlsx/download-xlsx';
 import { Payroll } from '../../../../core/models/payroll';
 import { PayrollService } from '../../../payrolls/payroll.service';
 import { advanceAmount, advanceState } from '../../logic/advance';
-import { checkNotice, DIFF_REASONS, DiffReason, dueDateOf, NOTICE_CATEGORIES, NoticeCategory, noticeArrivalOf } from '../../logic/notice-check';
+import { checkNotice, noticeLabelKey, DIFF_REASONS, DiffReason, dueDateOf, NOTICE_CATEGORIES, NoticeCategory, noticeArrivalOf } from '../../logic/notice-check';
 import { PremiumNoticeService } from '../../premium-notice.service';
 import { ReviewBox } from '../../../reviews/components/review-box/review-box';
 import { noticeReviewId } from '../../../reviews/logic/review';
@@ -149,15 +149,11 @@ export class PremiumList {
 
   /**
    * 本人負担の内訳（1つの保険の分）
-   * 合算して端数処理する事業所では、保険ごとの額は決まらないので、端数処理の前の額（銭まで）を参考に出す
+   * 合算して端数処理する事業所では、健保 → ＋支援金 → ＋介護 の順に端数処理した差し引きの額（円。合計は合算の額と同じ。11/24）
    */
   partEmployee(r: PremiumRow, part: PremiumPart): string {
-    for (const g of r.result?.groups ?? []) {
-      const line = g.lines.find((l) => l.part === part);
-      if (!line) continue;
-      return g.lines.length === 1 ? this.yen(g.employeeYen) : formatMilli(line.employeeMilli);
-    }
-    return '—';
+    const y = employeeYenOfPart(r.result, part);
+    return y == null ? '—' : this.yen(y);
   }
 
   toggleParts(): void {
@@ -539,6 +535,14 @@ export class PremiumList {
 
   readonly noticeCheck = computed(() => checkNotice(this.appTotals(), this.noticeAmounts()));
   readonly dueDate = computed(() => dueDateOf(this.month()));
+  /** この月は組合健保か（健保の行は年金事務所の告知額ではなく、組合からの請求額と比べる。11/24） */
+  readonly kumiaiMonth = computed(() => {
+    const o = this.context.current();
+    return !!o && insurerFor(o, this.month())?.healthInsurer.type === 'kumiai';
+  });
+  noticeLabel(c: NoticeCategory): string {
+    return noticeLabelKey(c, this.kumiaiMonth());
+  }
   readonly arrival = computed(() => noticeArrivalOf(this.month()));
 
   setNoticeText(c: NoticeCategory, v: string): void {
@@ -727,6 +731,11 @@ export class PremiumList {
         care: !!r.care,
         healthEmployeeYen: r.healthEmployeeYen,
         pensionEmployeeYen: r.pension ? r.pensionEmployeeYen : null,
+        healthParts: {
+          health: employeeYenOfPart(r.result, 'health'),
+          care: employeeYenOfPart(r.result, 'care'),
+          childSupport: employeeYenOfPart(r.result, 'childSupport'),
+        },
       })),
       this.month(),
       this.payMonth(),

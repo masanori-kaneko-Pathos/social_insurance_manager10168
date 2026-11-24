@@ -78,6 +78,28 @@ describe('並行稼働の検算（最終テスト 約100人・gen.py と比べ�
     expect(diffs).toEqual([]);
   });
 
+  it('毎月の事業所の納付額（告知額にあたる数字）と本人負担の合計が、予想とすべて一致する', () => {
+    type T = Record<string, Record<string, { total: number; employee: number; separate: number }>>;
+    const want = PARALLEL_FIXTURE.expected.totals as unknown as T;
+    const diffs: string[] = [];
+    for (const m of MONTHS) {
+      for (const t of r.totals.get(m) ?? []) {
+        const w = want[m]?.[t.category];
+        if (!w || w.total !== t.totalYen || w.employee !== t.employeeYen)
+          diffs.push(`${m} ${t.category}: 予想 ${JSON.stringify(w)} / アプリ ${t.totalYen}・本人 ${t.employeeYen}`);
+      }
+    }
+    expect(diffs).toEqual([]);
+  });
+
+  it('賞与の月は、月額と賞与を足してから切り捨てる（2025-12分の拠出金：別々に切り捨てると1円少ない）', () => {
+    type T = Record<string, Record<string, { total: number; separate: number }>>;
+    const dec = (PARALLEL_FIXTURE.expected.totals as unknown as T)['2025-12']['childContribution'];
+    const app = r.totals.get('2025-12')!.find((t) => t.category === 'childContribution')!;
+    expect(dec.separate).toBe(dec.total - 1);
+    expect(app.totalYen).toBe(dec.total);
+  });
+
   it('事業所の合計：会社負担 ＝ 納付額 − 本人負担の合計（毎月）', () => {
     for (const [, totals] of r.totals) {
       for (const t of totals) expect(t.employerYen).toBe(t.totalYen - t.employeeYen);

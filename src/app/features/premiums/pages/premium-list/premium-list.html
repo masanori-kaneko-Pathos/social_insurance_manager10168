@@ -213,7 +213,7 @@
         <span class="fold-toggle"><span class="when-closed">{{ 'premiumList.breakdown' | transloco }} ▽</span><span class="when-open">{{ 'premiumList.breakdown' | transloco }} △</span></span>
       </summary>
       <p class="hint">
-        {{ 'premiumNotice.lead' | transloco: { arrival: arrival(), due: dueDate() } }}
+        {{ (kumiaiMonth() ? 'premiumNotice.leadKumiai' : 'premiumNotice.lead') | transloco: { arrival: arrival(), due: dueDate() } }}
       </p>
       <!-- 表は枠の中に入れる：画面が狭くても切れずに横へ送れる（11/20） -->
       <div class="notice-table">
@@ -222,14 +222,14 @@
           <tr>
             <th></th>
             <th class="num">{{ 'premiumNotice.col.app' | transloco }}</th>
-            <th class="num">{{ 'premiumNotice.col.notice' | transloco }}</th>
+            <th class="num">{{ (kumiaiMonth() ? 'premiumNotice.col.noticeKumiai' : 'premiumNotice.col.notice') | transloco }}</th>
             <th class="num">{{ 'premiumNotice.col.diff' | transloco }}</th>
           </tr>
         </thead>
         <tbody>
           @for (l of nc.lines; track l.category) {
             <tr>
-              <th scope="row">{{ 'premiumList.category.' + l.category | transloco }}</th>
+              <th scope="row">{{ noticeLabel(l.category) | transloco }}</th>
               <td class="num">{{ yen(l.app) }}</td>
               <td class="num">
                 <input
@@ -238,7 +238,7 @@
                   [value]="noticeText()[l.category]"
                   [disabled]="!context.isAdmin()"
                   (input)="setNoticeText(l.category, $any($event.target).value)"
-                  [attr.aria-label]="('premiumList.category.' + l.category | transloco) + ' ' + ('premiumNotice.col.notice' | transloco)"
+                  [attr.aria-label]="(noticeLabel(l.category) | transloco) + ' ' + ('premiumNotice.col.notice' | transloco)"
                 />
               </td>
               <td class="num" [class.diff-cell]="l.diff">{{ l.diff == null ? '—' : (l.diff > 0 ? '+' : '') + yen(l.diff) }}</td>
@@ -253,6 +253,9 @@
         </tbody>
       </table>
       </div>
+      @if (kumiaiMonth()) {
+        <p class="hint">{{ 'premiumNotice.kumiaiHint' | transloco }}</p>
+      }
 
       @if (nc.status === 'diff' || noticeReasons().size > 0) {
         <fieldset class="reasons">

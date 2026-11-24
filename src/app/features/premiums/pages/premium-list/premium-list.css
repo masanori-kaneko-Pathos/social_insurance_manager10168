@@ -382,11 +382,6 @@ td.calc .link-btn {
   color: var(--color-success-text);
 }
 
-.notice .s-rounding {
-  background: var(--color-warning-bg);
-  color: var(--color-warning-text);
-}
-
 .notice .s-diff {
   background: var(--color-danger-bg);
   color: var(--color-danger-text);

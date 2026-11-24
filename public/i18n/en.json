@@ -1203,6 +1203,7 @@
       "total": "Total",
       "rounded": "After rounding (combined)",
       "sum": "Total",
+      "partsNote": "* The employee shares of health insurance, long-term care insurance and the child and childcare support contribution are split from the combined rounded amount by rounding health insurance, then + child and childcare support contribution, then + long-term care insurance, and taking the differences (they add up to the \"after rounding\" amount).",
       "contributionNote": "* The contribution is employer-only and not in the total",
       "formulaTitle": "Calculation (standard remuneration × rate, rounding)",
       "adjustment": "* The premium adjustment scheme lowers the employee share by {{n}} yen (the employer pays it for now; it is deducted from premiums three months later)",
@@ -3901,6 +3902,9 @@
   "premiumNotice": {
     "title": "Payment reconciliation",
     "lead": "Enter the amounts from the premium payment notice (arrives around the 20th of the next month, about {{arrival}}) and compare them with the app totals (monthly plus bonuses paid this month). The payment deadline is {{due}}.",
+    "leadKumiai": "Enter the amounts on the premium payment notice from the pension office (arriving around the 20th of the next month, around {{arrival}}) for employees’ pension and child and childcare contributions, and the amount billed by the health insurance society for health insurance, and compare them with the app’s totals (monthly + bonuses paid this month). Payment to the pension office is due by {{due}}.",
+    "kumiaiHealth": "Health insurance (society bill)",
+    "kumiaiHint": "For offices in a health insurance society, health insurance premiums (including long-term care and the child and childcare support contribution) are collected by the society and do not appear on the pension office notice. Enter the amount billed by the society. Rounding of amounts under 1 yen follows the society’s rules, so a 1-yen difference can occur.",
     "status": {
       "notEntered": "Notice amounts not entered",
       "match": "Match",
@@ -3909,7 +3913,8 @@
     "col": {
       "app": "App total",
       "notice": "Notice amount",
-      "diff": "Difference (notice − app)"
+      "diff": "Difference (notice − app)",
+      "noticeKumiai": "Notice / society bill"
     },
     "reasonsTitle": "Reasons for the difference (check what you confirmed)",
     "reason": {
@@ -3924,7 +3929,7 @@
     "excludedNow": "{{count}} now",
     "note": "Note",
     "save": "Save reconciliation",
-    "hint": "The app totals add everyone's full premiums and round down below 1 yen, as the Japan Pension Service does. For months without bonuses, they should match the notice exactly. If they differ, check the reasons above. The notice is authoritative: adjust the difference in the employer share and submit any missing filings.",
+    "hint": "Like the Japan Pension Service, the app adds up everyone’s full amounts (monthly and bonuses paid this month) and then rounds down to the yen for each insurance. It should match the pension office notice to the yen. If it does not, check the reasons above. The notice amount is authoritative: adjust the difference in the employer’s share, and file any missing notifications.",
     "error": {
       "save": "Could not save. Please try again later."
     }

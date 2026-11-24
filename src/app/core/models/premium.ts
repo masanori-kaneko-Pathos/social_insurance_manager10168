@@ -54,6 +54,11 @@ export interface PremiumGroup {
   totalMilli: Milli;
   employeeYen: number; // 本人負担（端数処理の後）
   employerMilli: Milli; // 会社負担の目安 ＝ 全額 − 本人負担（小数が出ることがある）
+  /**
+   * 2つ以上の保険をまとめて端数処理した単位の、保険ごとの本人負担（円。差し引きで出す。合計は employeeYen と同じ。11/24）
+   * 健保 → 健保＋支援金 → 健保＋支援金＋介護 の順にそれぞれ端数処理し、前との差をその保険の額にする（給与明細に保険ごとの行を書くため）
+   */
+  partsYen?: Partial<Record<PremiumPart, number>>;
 }
 
 /** 保険料がかかるはずなのに計算できなかった理由 */

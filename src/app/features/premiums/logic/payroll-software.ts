@@ -16,11 +16,15 @@ export interface SoftwareRow {
   care: boolean;
   healthEmployeeYen: number; // 本人負担 健保等（介護・支援金を含む）
   pensionEmployeeYen: number | null;
+  /** 健保等のうち、保険ごとの本人負担（給与明細に別の行で書く会社のため。合計は healthEmployeeYen と同じ。11/24） */
+  healthParts?: { health: number | null; care: number | null; childSupport: number | null };
 }
 
 export const SOFTWARE_HEADER = [
   '社員番号', '氏名', '対象月', '控除する給与の月', '健保 標準報酬月額', '厚年 標準報酬月額', '介護保険（1＝あり）',
   '本人負担 健保等', '本人負担 厚年', '本人負担 合計',
+  // 健保等の内訳（後ろに足した。前の列の位置は変えない。11/24）
+  '健保等のうち 健康保険', '健保等のうち 介護保険', '健保等のうち 子ども・子育て支援金',
 ] as const;
 
 export function softwareExportRows(rows: readonly SoftwareRow[], month: string, payMonth: string): string[][] {
@@ -37,6 +41,10 @@ export function softwareExportRows(rows: readonly SoftwareRow[], month: string, 
       String(r.healthEmployeeYen),
       r.pensionEmployeeYen == null ? '' : String(r.pensionEmployeeYen),
       String(r.healthEmployeeYen + (r.pensionEmployeeYen ?? 0)),
+      ...(['health', 'care', 'childSupport'] as const).map((k) => {
+        const v = r.healthParts?.[k];
+        return v == null ? '' : String(v);
+      }),
     ]),
   ];
 }

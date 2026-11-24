@@ -30,6 +30,28 @@ export function makeLine(
   return { part, base, grade, rate, totalMilli, employeeMilli: employeeMilli - reduction, reductionMilli: reduction };
 }
 
+/** 差し引きで保険ごとの額を出すときの順（健保 → 支援金 → 介護。ほかは後ろ） */
+const PARTS_ORDER: PremiumPart[] = ['health', 'childSupport', 'care', 'pension', 'childContribution'];
+
+/**
+ * まとめて端数処理する単位の、保険ごとの本人負担（円）。11/24
+ * 決まった順に足しながら端数処理し、前との差をその保険の額にする。最後の額はまとめて端数処理した額と同じになる。
+ * 例（410,000円・東京・令和8年度の本人分）：健保 20,192.5 → 20,192 ／ ＋支援金 20,664 → 472 ／ ＋介護 23,985 → 3,321
+ */
+export function partsYenOf(lines: readonly PremiumLine[], options: PremiumOptions): Partial<Record<PremiumPart, number>> {
+  const ordered = [...lines].sort((a, b) => PARTS_ORDER.indexOf(a.part) - PARTS_ORDER.indexOf(b.part));
+  const out: Partial<Record<PremiumPart, number>> = {};
+  let milli = 0;
+  let before = 0;
+  for (const l of ordered) {
+    milli += l.employeeMilli;
+    const upTo = roundEmployee(milli, options.method, options.agreementRounding ?? null);
+    out[l.part] = (out[l.part] ?? 0) + upTo - before;
+    before = upTo;
+  }
+  return out;
+}
+
 function makeGroup(lines: PremiumLine[], options: PremiumOptions): PremiumGroup {
   const totalMilli = lines.reduce((s, l) => s + l.totalMilli, 0);
   const employeeMilli = lines.reduce((s, l) => s + l.employeeMilli, 0);
@@ -40,7 +62,17 @@ function makeGroup(lines: PremiumLine[], options: PremiumOptions): PremiumGroup 
     totalMilli,
     employeeYen,
     employerMilli: totalMilli - yenToMilli(employeeYen),
+    ...(lines.length > 1 ? { partsYen: partsYenOf(lines, options) } : {}),
   };
+}
+
+/** 保険ごとの本人負担（円）。1つだけの単位はその額、まとめた単位は差し引きの額（partsYen）。かからない保険は null */
+export function employeeYenOfPart(result: PremiumResult | null | undefined, part: PremiumPart): number | null {
+  for (const g of result?.groups ?? []) {
+    if (!g.parts.includes(part)) continue;
+    return g.lines.length === 1 ? g.employeeYen : (g.partsYen?.[part] ?? null);
+  }
+  return null;
 }
 
 /**

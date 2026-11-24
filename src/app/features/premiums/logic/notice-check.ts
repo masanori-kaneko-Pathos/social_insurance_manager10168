@@ -13,6 +13,15 @@ import { addDays, DateStr, daysInMonth, shiftMonth, YearMonth } from '../../../s
 export type NoticeCategory = 'health' | 'pension' | 'childContribution';
 export const NOTICE_CATEGORIES: readonly NoticeCategory[] = ['health', 'pension', 'childContribution'];
 
+/**
+ * 突き合わせの行の名前（翻訳のキー）
+ * 組合健保の月は、健康保険（介護・支援金を含む）を健康保険組合が集める。年金事務所の告知書に健保の行はないので、
+ * 健保の行は「健康保険組合からの請求額」と比べる（厚年・拠出金は年金事務所の告知額のまま。11/24）
+ */
+export function noticeLabelKey(category: NoticeCategory, kumiai: boolean): string {
+  return kumiai && category === 'health' ? 'premiumNotice.kumiaiHealth' : `premiumList.category.${category}`;
+}
+
 /** 告知額（円）。入れていなければ null */
 export type NoticeAmounts = Record<NoticeCategory, number | null>;
 

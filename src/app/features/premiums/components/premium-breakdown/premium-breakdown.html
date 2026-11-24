@@ -44,6 +44,9 @@
     }
   </tfoot>
 </table>
+@if (hasParts()) {
+  <p class="slip-note">{{ 'premium.slip.partsNote' | transloco }}</p>
+}
 @if (slip().contribution) {
   <p class="slip-note">{{ 'premium.slip.contributionNote' | transloco }}</p>
 }

@@ -1,8 +1,8 @@
 // 1人・1か月の保険料を「給与明細の形」にする（保険ごとに 本人・会社・全額）。11/16
 // Angular・Firebase に依存しない純粋な関数
 //
-// - 端数処理は「まとめて1回」（合算なら 健保・介護・支援金）。保険ごとの本人分は端数処理の前の額
-//   → まとめた単位に2つ以上の保険があるときは、その下に「端数処理のあと」の行を出す
+// - 端数処理は「まとめて1回」（合算なら 健保・介護・支援金）。保険ごとの本人分は差し引きの額（円。partsYen。11/24）
+//   → まとめた単位に2つ以上の保険があるときは、その下に「端数処理のあと」の行（＝保険ごとの合計）を出す
 // - 拠出金は保険料ではなく会社だけが納めるので、合計の下に別に出す（合計には入れない）
 
 import type { Milli, PremiumPart, PremiumResult } from '../../../core/models/premium';
@@ -56,11 +56,14 @@ export function premiumSlip(result: PremiumResult): Slip {
       continue;
     }
     for (const l of g.lines) {
+      // 差し引きの額があれば円、なければ（古い結果）端数処理の前の額
+      const yen = g.partsYen?.[l.part];
+      const employeeMilli = yen == null ? l.employeeMilli : yen * 1000;
       rows.push({
         kind: 'line',
         parts: [l.part],
-        employeeMilli: l.employeeMilli,
-        employerMilli: l.totalMilli - l.employeeMilli,
+        employeeMilli,
+        employerMilli: l.totalMilli - employeeMilli,
         totalMilli: l.totalMilli,
       });
     }

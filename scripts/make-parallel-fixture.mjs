@@ -22,7 +22,15 @@ for (const [no, e] of Object.entries(exp.expected)) {
 }
 const bonus = exp.bonus.map((b) => ({ no: b.no, paid: b.paid, h: b.healthYen ?? null, p: b.pensionYen ?? null }));
 const office = exp.office ?? null;
-const totals = exp.totals ?? null;
+// 事業所の納付額（何月分 → 制度 → 納付額・本人負担の合計・月額と賞与を別々に切り捨てた額）
+const totals = exp.totals
+  ? Object.fromEntries(
+      Object.entries(exp.totals).map(([m, t]) => [
+        m,
+        Object.fromEntries(Object.entries(t).map(([c, v]) => [c, { total: v.totalYen, employee: v.employeeYen, separate: v.separateYen }])),
+      ]),
+    )
+  : null;
 
 const out = `// 自動で作ったファイル（scripts/make-parallel-fixture.mjs）。手で直さない
 // 元：${dir.replace(/\\/g, '/')}（CSV・expected.json）、seed/master-*.json

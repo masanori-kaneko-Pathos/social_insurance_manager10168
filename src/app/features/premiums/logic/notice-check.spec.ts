@@ -1,5 +1,5 @@
 import type { OfficeTotal } from '../../../core/models/premium';
-import { checkNotice, dueDateOf, noticeArrivalOf } from './notice-check';
+import { checkNotice, noticeLabelKey, dueDateOf, noticeArrivalOf } from './notice-check';
 
 const T = (health: number, pension: number, child: number): OfficeTotal[] => [
   { category: 'health', totalYen: health, employeeYen: 0, employerYen: 0 },
@@ -38,5 +38,17 @@ describe('checkNotice：告知額との突き合わせ', () => {
   });
   it('賞与のある月も、1円でも違えば diff（月額と賞与を足してから切り捨てるので端数ではずれない。11/24）', () => {
     expect(checkNotice(T(100, 200, 3), { health: 101, pension: 199, childContribution: 3 }).status).toBe('diff');
+  });
+});
+
+describe('noticeLabelKey：突き合わせの行の名前（組合健保の月は健保だけ組合の請求額。11/24）', () => {
+  it('協会けんぽの月は、3行とも年金事務所の告知額', () => {
+    expect(noticeLabelKey('health', false)).toBe('premiumList.category.health');
+    expect(noticeLabelKey('pension', false)).toBe('premiumList.category.pension');
+  });
+  it('組合健保の月は、健保の行だけ「健康保険組合からの請求額」。厚年・拠出金は年金事務所のまま', () => {
+    expect(noticeLabelKey('health', true)).toBe('premiumNotice.kumiaiHealth');
+    expect(noticeLabelKey('pension', true)).toBe('premiumList.category.pension');
+    expect(noticeLabelKey('childContribution', true)).toBe('premiumList.category.childContribution');
   });
 });

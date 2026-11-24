@@ -58,3 +58,13 @@ describe('premiumSlip：保険料調整制度の軽減（11/16）', () => {
     expect(premiumSlip(result([health])).reductionMilli).toBe(0);
   });
 });
+
+describe('premiumSlip：差し引きの内訳（11/24）', () => {
+  it('partsYen があれば、保険ごとの行の本人分は円。会社分はその保険の全額 − 本人分', () => {
+    const g = { ...group([line('health', 33490000, 16745000), line('care', 5508000, 2754000), line('childSupport', 782000, 391000)], 19890), partsYen: { health: 16745, childSupport: 391, care: 2754 } };
+    const s = premiumSlip(result([g]));
+    expect(s.rows.slice(0, 3).map((r) => r.employeeMilli)).toEqual([16745000, 2754000, 391000]);
+    expect(s.rows[1].employerMilli).toBe(5508000 - 2754000);
+    expect(s.rows[3].employeeMilli).toBe(19890000);
+  });
+});
