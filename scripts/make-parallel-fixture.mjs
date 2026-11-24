@@ -22,6 +22,43 @@ for (const [no, e] of Object.entries(exp.expected)) {
 }
 const bonus = exp.bonus.map((b) => ({ no: b.no, paid: b.paid, h: b.healthYen ?? null, p: b.pensionYen ?? null }));
 const office = exp.office ?? null;
+
+// ---- 小さくする（11/24）：設定を変えた予想は、基本の予想と違う所だけを持つ ----
+const baseHP = (no, m) => {
+  const x = monthly[no]?.[m];
+  return x && typeof x === 'object' ? { h: x.h, p: x.p } : { h: null, p: null };
+};
+/** 人 → 月 → {h,p} のうち、基本と同じものを落とす */
+const onlyDiff = (mon) => {
+  const out = {};
+  for (const [no, byM] of Object.entries(mon ?? {})) {
+    for (const [m, x] of Object.entries(byM)) {
+      const b = baseHP(no, m);
+      if (b.h !== x.h || b.p !== x.p) (out[no] ??= {})[m] = { h: x.h, p: x.p };
+    }
+  }
+  return out;
+};
+const variants = exp.variants
+  ? Object.fromEntries(Object.entries(exp.variants).map(([k, v]) => [k, { ...v, monthly: onlyDiff(v.monthly) }]))
+  : null;
+const slim = (v) => (v ? { ...v, monthly: onlyDiff(v.monthly) } : null);
+/** 控除：給与の月 → 何月分 は全員同じなので1つだけ。人ごとは額だけ */
+const deductions = exp.deductions
+  ? Object.fromEntries(
+      Object.entries(exp.deductions).map(([k, v]) => {
+        const pays = {};
+        const yen = {};
+        for (const [no, byPay] of Object.entries(v.byPerson)) {
+          for (const [pay, x] of Object.entries(byPay)) {
+            pays[pay] ??= x.months;
+            (yen[no] ??= {})[pay] = x.yen;
+          }
+        }
+        return [k, { setting: v.setting, history: v.history, pays, yen }];
+      }),
+    )
+  : null;
 // 事業所の納付額（何月分 → 制度 → 納付額・本人負担の合計・月額と賞与を別々に切り捨てた額）
 const totals = exp.totals
   ? Object.fromEntries(
@@ -46,7 +83,7 @@ export const PARALLEL_FIXTURE = ${JSON.stringify(
     master: json('seed/master-rates.json'),
     gradeTables: json('seed/master-grades.json'),
     criteria: json('seed/master-criteria.json'),
-    expected: { monthly, bonus, office, totals, variants: exp.variants ?? null, kumiai: exp.kumiai ?? null },
+    expected: { monthly, bonus, office, totals, variants, kumiai: slim(exp.kumiai), move: slim(exp.move), deductions },
   },
   null,
   0,

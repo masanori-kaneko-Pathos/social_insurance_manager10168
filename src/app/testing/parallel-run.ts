@@ -17,7 +17,7 @@ import { RemunerationDoc, RemunerationInput } from '../core/models/remuneration'
 import { Payroll } from '../core/models/payroll';
 import { readEmployeeCsv, planImport } from '../features/employees/logic/employee-csv';
 import { planHistoryImport, readHistoryCsv } from '../features/employees/logic/history-csv';
-import { insurerKeyOf, payrollOf, premiumOf, ratesForOffice } from '../features/office/office-settings';
+import { insurerKeyOf, payrollOf, premiumMonthsOfPay, premiumOf, ratesForOffice } from '../features/office/office-settings';
 import { readPayrollCsv } from '../features/payrolls/logic/payroll-csv';
 import { buildRegularView, canReflectRegular, regularReflectItem, regularTargets } from '../features/payrolls/logic/regular-views';
 import { personRevisions, revisionRemuneration } from '../features/payrolls/logic/revision-reflect';
@@ -28,7 +28,7 @@ import { officeTotals } from '../features/premiums/logic/premium-core';
 import { buildPremiumRow } from '../features/premiums/logic/premium-rows';
 import { pickGradeTable } from '../features/rates/logic/grade';
 import { parseCsv } from '../shared/csv/csv';
-import { monthsBetween, YearMonth } from '../shared/utils/date';
+import { monthsBetween, shiftMonth, YearMonth } from '../shared/utils/date';
 
 /** 検算に使う事業所（画面の事業所の設定と同じ項目。保存しないので Office の一部だけ） */
 export type RunOffice = Parameters<typeof payrollOf>[0] & {
@@ -36,6 +36,8 @@ export type RunOffice = Parameters<typeof payrollOf>[0] & {
   standardHours: { weeklyMinutes: number; monthlyDays: number } | null;
   specificApplication: { since: string | null; voluntary: boolean; insuredCount: number | null };
   departments?: { id: string; name: string }[];
+  /** 控除の時期の履歴（翌月控除 → 当月控除 などに変えた月。11/20） */
+  deductionHistory?: { from: string; deduction: 'current' | 'next' }[] | null;
 };
 
 export interface ParallelRunInput {
@@ -86,6 +88,11 @@ export interface ParallelRunResult {
   bonuses: BonusLine[];
   /** 何月分 → 事業所の合計（月額＋その月の賞与。告知額にあたる） */
   totals: Map<YearMonth, OfficeTotal[]>;
+  /**
+   * 社員番号 → 給与を払う月 → その給与から控除する月額の保険料（本人負担。健保等＋厚年）と、何月分か。11/24
+   * 控除する月がすべて months の中にある給与の月だけ（範囲の外の月が混ざる給与は出さない）
+   */
+  deductions: Map<string, Map<YearMonth, { months: YearMonth[]; yen: number }>>;
 }
 
 const table = (text: string) => parseCsv(text.replace(/^﻿/, ''));
@@ -290,7 +297,27 @@ export function runParallel(input: ParallelRunInput): ParallelRunResult {
     }
   }
 
-  return { problems, decisions, months, bonuses, totals };
+  // 給与から控除する額（翌月控除・当月控除、切り替えの月は0か月・2か月。画面：保険料一覧の「この給与から控除する保険料」）
+  const deductions = new Map<string, Map<YearMonth, { months: YearMonth[]; yen: number }>>();
+  const inRange = new Set(input.months);
+  const payMonths = monthsBetween(input.months[0], shiftLast(input.months));
+  for (const [no, byMonth] of months) {
+    const out = new Map<YearMonth, { months: YearMonth[]; yen: number }>();
+    for (const pay of payMonths) {
+      const ms = premiumMonthsOfPay(pay, schedule, office.deductionHistory ?? null);
+      if (!ms.every((m) => inRange.has(m))) continue;
+      const yen = ms.reduce((s, m) => s + (byMonth.get(m)?.healthYen ?? 0) + (byMonth.get(m)?.pensionYen ?? 0), 0);
+      out.set(pay, { months: ms, yen });
+    }
+    deductions.set(no, out);
+  }
+
+  return { problems, decisions, months, bonuses, totals, deductions };
+}
+
+/** 最後の月の翌月（翌月控除なら、最後の月の分はその翌月の給与から引く） */
+function shiftLast(ms: readonly YearMonth[]): YearMonth {
+  return shiftMonth(ms[ms.length - 1], 1);
 }
 
 /** 'YYYY-MM' から 'YYYY-MM' まで */
