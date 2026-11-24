@@ -316,6 +316,11 @@ export interface OurTableSpec<K extends string, O extends K> {
   outHeader: (k: O) => string;
   /** 項目どうしの計算（氏名を分ける・1日の分から週の時間 など）。空の項目だけを埋める */
   finish?: (v: RowValues<K>) => RowValues<K>;
+  /**
+   * 項目に結ばなかった列のうち、そのまま後ろに付けて渡す列（見出しで決める。11/24）
+   * 給与の内訳（基本給・通勤手当など、給与の項目に当たる見出しの列）を、読み取りまで残すため
+   */
+  passThrough?: (header: string) => boolean;
 }
 
 /** 1行を言い直す（finish まで） */
@@ -344,13 +349,15 @@ export function toOurTable<K extends string, O extends K>(
   mapping: Mapping<K>,
   spec: OurTableSpec<K, O>,
 ): string[][] {
-  const [, ...body] = table;
-  const header = spec.out.map(spec.outHeader);
+  const [head = [], ...body] = table;
+  const pass = spec.passThrough;
+  const extra = pass ? head.map((h, i) => (pass(h) ? i : -1)).filter((i) => i >= 0) : [];
+  const header = [...spec.out.map(spec.outHeader), ...extra.map((i) => head[i])];
   const rows = body
     .filter((r) => r.some((c) => c.trim() !== ''))
     .map((cells) => {
       const v = convertRow(cells, mapping, spec);
-      return spec.out.map((k) => v[k] ?? '');
+      return [...spec.out.map((k) => v[k] ?? ''), ...extra.map((i) => cells[i] ?? '')];
     });
   return [header, ...rows];
 }

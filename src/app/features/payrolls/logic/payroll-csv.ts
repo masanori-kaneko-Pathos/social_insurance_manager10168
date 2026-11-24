@@ -4,7 +4,10 @@
 import { Payroll, PayrollInput, PayrollState } from '../../../core/models/payroll';
 import { isBlankRow } from '../../../shared/csv/csv';
 import { toHalfWidth } from '../../../shared/utils/text';
-import { PayrollRowText, readRow, RowError, sameInput } from './payroll-input';
+import { PayrollRowText, readEntry, RowError, sameInput } from './payroll-input';
+import type { PayType } from '../../../core/models/contract';
+import type { PayrollItemCategory, PayrollItemInput } from '../../../core/models/payroll-item';
+import { categoryOf, itemKey, LineDraft } from './payroll-lines';
 import { formatHours } from '../../../shared/utils/number';
 import { employedDuring, PayrollEmployee, PaySchedule, periodOf } from './payroll-rows';
 import { daysInclusive } from '../../../shared/utils/date';
@@ -249,7 +252,9 @@ export type ImportErrorCode =
   | 'notEmployed'
   | 'duplicate'
   | 'badProrated'
-  | 'badState';
+  | 'badState'
+  // 内訳の列の合計が、総支給額の列と合わない（列が抜けている・総支給額に別のものが入っている。11/24）
+  | 'linesMismatch';
 
 export interface ImportItem {
   line: number; // ファイルの行番号（見出しが1行目）
@@ -278,7 +283,37 @@ export interface ImportRead {
   hasInKindColumn: boolean;
 }
 
+/** 給与の内訳の列（見出しが給与の項目名に当たる列。11/24） */
+interface LineColumn {
+  index: number;
+  name: string;
+  category: PayrollItemCategory;
+}
+
+/**
+ * 見出しのうち、うちの列でなく、給与の項目名（事業所の項目・よくある名前・CSVの見出し）に当たる列
+ * 例：基本給・固定残業手当・非課税通勤手当・欠勤控除。当たらない見出しは今までどおり読み飛ばす
+ */
+export function lineColumnsOf(
+  header: readonly string[],
+  used: ReadonlySet<number>,
+  items: readonly PayrollItemInput[],
+): LineColumn[] {
+  const out: LineColumn[] = [];
+  header.forEach((h, index) => {
+    if (used.has(index)) return;
+    const name = h.trim();
+    const category = name ? categoryOf(name, items) : null;
+    if (category) out.push({ index, name, category });
+  });
+  return out;
+}
+
 export interface ReadOptions {
+  /** 給与の項目（内訳の列を見分ける。11/24。なければよくある名前だけで見分ける） */
+  items?: readonly PayrollItemInput[];
+  /** その人のその月の給与の形（基本給を毎月決まった額に数えるか。分からなければ null ＝ 月給と見る） */
+  payTypeOf?: (employeeId: string, paidMonth: string) => PayType | null;
   /**
    * 現物の列がないファイルの扱い
    * - zero：現物はない（0）
@@ -306,7 +341,10 @@ export function readPayrollCsv(
     result.missingColumns = [...PAYROLL_REQUIRED];
     return result;
   }
-  const { index, missing } = mapHeader(rows[0]);
+  const { index, missing: missingOurs } = mapHeader(rows[0]);
+  // 内訳の列があれば、総支給額・毎月決まった額は内訳から出すので、列がなくてもよい（11/24）
+  const lineCols = lineColumnsOf(rows[0], new Set(Object.values(index) as number[]), opts.items ?? []);
+  const missing = lineCols.length > 0 ? missingOurs.filter((c) => c !== 'cash' && c !== 'fixed') : missingOurs;
   if (missing.length > 0) {
     result.missingColumns = missing;
     return result;
@@ -383,7 +421,16 @@ export function readPayrollCsv(
       prorated: prorated ?? false,
       state: state ?? 'normal',
     };
-    const r = readRow(text, periodDays);
+    // 内訳の列がある：その列から内訳を読み、総支給額などは内訳から出す。金額が1つもなければ今までどおり
+    const drafts: LineDraft[] | null =
+      lineCols.length > 0 ? lineCols.map((c) => ({ name: c.name, category: c.category, amount: row[c.index] ?? '' })) : null;
+    const payType = employee && paidMonth && opts.payTypeOf ? opts.payTypeOf(employee.id, paidMonth) : null;
+    const r = readEntry(text, drafts, payType, periodDays);
+    // 総支給額の列も書いてあれば、内訳の合計と合うかを見る（列の抜け・別のものの混入に気づくため）
+    if (r.kind === 'ok' && r.input.lines && text.cash.trim() !== '') {
+      const written = Number(text.cash.normalize('NFKC').replace(/[,，円\s]/g, ''));
+      if (Number.isFinite(written) && written !== r.input.cash) codes.push('linesMismatch');
+    }
     if (r.kind === 'blank') {
       // ひな形の未記入の行：人や月が読めていれば読み飛ばす（ほかのエラーがあればエラー）。
       // 番号が空で氏名でも決まらない行も、保存するものがないので読み飛ばす
@@ -424,8 +471,8 @@ export function classifyImport(
   for (const it of items) {
     const old = existing.get(`${it.employeeId}|${it.paidMonth}`);
     if (!old) created.push(it);
-    // CSV は内訳を持たない：数字が同じなら、保存済みの内訳を消さないよう「変わらない」にする（11/24）
-    else if (sameInput({ ...old, lines: null, fixedFull: null }, it.input)) unchanged.push(it);
+    // 内訳の列がない CSV：数字が同じなら、保存済みの内訳を消さないよう「変わらない」にする（11/24）
+    else if (sameInput(it.input.lines ? old : { ...old, lines: null, fixedFull: null }, it.input)) unchanged.push(it);
     else updated.push(it);
   }
   return { created, updated, unchanged };
@@ -488,13 +535,36 @@ export function buildPayrollCsv(
   months: readonly string[],
   schedule: PaySchedule,
   lang: CsvLang,
+  lineNames: readonly string[] = [],
 ): string[][] {
-  const header = PAYROLL_COLUMNS.map((c) => PAYROLL_HEADERS[lang][c]);
+  const header = [...PAYROLL_COLUMNS.map((c) => PAYROLL_HEADERS[lang][c]), ...lineNames];
   const rows = payrollExportRows(employees, payrolls, months, schedule).map((r) => {
     const v = payrollCells(r, lang);
-    return PAYROLL_COLUMNS.map((c) => v[c]);
+    return [...PAYROLL_COLUMNS.map((c) => v[c]), ...lineNames.map((n) => lineAmount(r.saved, n))];
   });
   return [header, ...rows];
+}
+
+/**
+ * 書き出す内訳の列（11/24）：事業所のひな形の順 → 保存済みの内訳に出てくる順。同じ名前は1つ
+ * この列のまま取り込めば、内訳ごと戻る（総支給額の列と合うかも確かめる）
+ */
+export function exportLineNames(payrolls: readonly Payroll[], template: readonly string[] | null): string[] {
+  const out: string[] = [];
+  const add = (n: string) => {
+    if (!out.some((o) => itemKey(o) === itemKey(n))) out.push(n);
+  };
+  const used = payrolls.some((p) => p.lines && p.lines.length > 0);
+  if (!used && !template) return [];
+  for (const n of template ?? []) add(n);
+  for (const p of payrolls) for (const l of p.lines ?? []) add(l.name);
+  return out;
+}
+
+/** その行のその項目の金額（同じ名前の行は足す。なければ空） */
+function lineAmount(s: Payroll | null, name: string): string {
+  const hit = (s?.lines ?? []).filter((l) => itemKey(l.name) === itemKey(name));
+  return hit.length > 0 ? String(hit.reduce((a, l) => a + l.amount, 0)) : '';
 }
 
 /** 給与_伊藤テスト中商事_2026-04〜2026-06_20261106.csv（画面の名前「給与」に合わせた。11/24） */
@@ -552,6 +622,7 @@ export const PAYROLL_TABLE_SPEC: OurTableSpec<PayrollColumn, PayrollColumn> = {
 
 /** エラーのコード → 画面で直す欄（11/16。取り込み画面の「その場で直す」） */
 export const PAYROLL_FIX: Readonly<Record<string, readonly PayrollColumn[]>> = {
+  linesMismatch: ['cash'],
   noEmployeeNumber: ['employeeNumber', 'name'],
   unknownEmployee: ['employeeNumber'],
   ambiguousEmployee: ['employeeNumber'],

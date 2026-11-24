@@ -22,53 +22,7 @@
   @if (errorKey(); as key) {
     <div class="alert alert-danger">{{ key | transloco }}</div>
   }
-  <div class="card table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>{{ 'payrollItem.col.name' | transloco }}</th>
-          <th>{{ 'payrollItem.col.labels' | transloco }}</th>
-          <th>{{ 'payrollItem.col.category' | transloco }}</th>
-          <th>{{ 'payrollItem.col.treatment' | transloco }}</th>
-          @if (context.isAdmin()) {
-            <th class="toggle-col"></th>
-          }
-        </tr>
-      </thead>
-      <tbody>
-        @for (r of rows(); track r.value.name) {
-          <tr [class.is-open]="draft() && draft()!.name === r.value.name">
-            <td class="name">
-              {{ r.value.name }}
-              @if (!r.item) {
-                <span class="sub">{{ 'payrollItem.default' | transloco }}</span>
-              }
-            </td>
-            <td class="wrap">{{ r.value.labels.length > 0 ? r.value.labels.join('・') : '—' }}</td>
-            <td>
-              <!-- 毎月決まった額に数える分類は色を付ける（基本給は給与の形しだいなので同じ色） -->
-              <span class="cat" [class]="'cat c-' + r.value.category">{{ 'payrollItem.category.' + r.value.category | transloco }}</span>
-            </td>
-            <td class="wrap muted">{{ 'payrollItem.treatment.' + r.value.category | transloco }}</td>
-            @if (context.isAdmin()) {
-              <td class="toggle-col">
-                <button type="button" class="btn btn-small" (click)="startEdit(r)" [disabled]="!!draft() || saving()">
-                  {{ (r.item ? 'payrollItem.edit' : 'payrollItem.recategorize') | transloco }}
-                </button>
-                @if (r.item; as it) {
-                  <button type="button" class="btn btn-small" (click)="remove(it)" [disabled]="!!draft() || saving()">
-                    {{ 'payrollItem.delete' | transloco }}
-                  </button>
-                }
-              </td>
-            }
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
-
-  <!-- 内訳のひな形：内訳を入れ始めるときに並べる項目名の順（その人の前の月の内訳があれば、そちらが先。11/24） -->
+  <!-- 事業所の給与項目（内訳のひな形）：内訳を入れ始めるときに並べる項目名の順。いちばん上に置く（11/24） -->
   <section class="card template">
     <h2>{{ 'payrollItem.template.title' | transloco }}</h2>
     <p class="hint">{{ 'payrollItem.template.lead' | transloco }}</p>
@@ -88,43 +42,20 @@
             <span class="t-actions">
               <button type="button" class="btn btn-small" [disabled]="i === 0" [attr.aria-label]="'payrollItem.template.up' | transloco" (click)="moveName(i, -1)">↑</button>
               <button type="button" class="btn btn-small" [disabled]="last" [attr.aria-label]="'payrollItem.template.down' | transloco" (click)="moveName(i, 1)">↓</button>
-              <button type="button" class="btn btn-small" (click)="removeName(i)">{{ 'payrollItem.delete' | transloco }}</button>
+              <button type="button" class="btn btn-small" (click)="removeName(i)">{{ 'payrollItem.template.remove' | transloco }}</button>
             </span>
           }
         </li>
       }
     </ol>
-    @if (context.isAdmin()) {
-      <div class="template-add">
-        <input
-          class="input"
-          maxlength="30"
-          list="pi-template-names"
-          [placeholder]="'payrollItem.template.addPlaceholder' | transloco"
-          [value]="newName()"
-          (input)="newName.set($any($event.target).value)"
-          (keydown.enter)="$event.preventDefault(); addName()"
-        />
-        <datalist id="pi-template-names">
-          @for (n of names(); track n) {
-            <option [value]="n"></option>
-          }
-        </datalist>
-        <button type="button" class="btn btn-small" (click)="addName()">{{ 'payrollItem.template.add' | transloco }}</button>
-      </div>
-      <div class="actions">
-        @if (templateSaved()) {
-          <span class="muted">{{ 'payrollItem.template.saved' | transloco }}</span>
-        }
-        <button type="button" class="btn btn-primary" [disabled]="saving() || !templateDirty()" (click)="saveTemplate()">
-          {{ 'common.save' | transloco }}
-        </button>
-      </div>
+    @if (templateSaved()) {
+      <p class="muted saved-note">{{ 'payrollItem.template.saved' | transloco }}</p>
     }
   </section>
 
+  <!-- 項目の追加・編集の枠は、事業所の給与項目と一覧のあいだに出し、そこまで送る（11/24） -->
   @if (draft(); as d) {
-    <section class="card edit">
+    <section class="card edit" #editCard>
       <h2>{{ (d.id ? 'payrollItem.editTitle' : 'payrollItem.addTitle') | transloco }}</h2>
       <div class="grid">
         <div class="field">
@@ -154,6 +85,11 @@
         </div>
       </div>
 
+      <label class="check in-template">
+        <input type="checkbox" [checked]="d.inTemplate" (change)="patch({ inTemplate: $any($event.target).checked })" />
+        {{ 'payrollItem.field.inTemplate' | transloco }}
+      </label>
+
       <fieldset class="choices">
         <legend>{{ 'payrollItem.field.category' | transloco }}</legend>
         @for (c of categories; track c) {
@@ -177,6 +113,64 @@
       </div>
     </section>
   }
+
+  <div class="card table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ 'payrollItem.col.name' | transloco }}</th>
+          <th>{{ 'payrollItem.col.labels' | transloco }}</th>
+          <th>{{ 'payrollItem.col.category' | transloco }}</th>
+          <th>{{ 'payrollItem.col.treatment' | transloco }}</th>
+          <th class="in-col">{{ 'payrollItem.col.inTemplate' | transloco }}</th>
+          @if (context.isAdmin()) {
+            <th class="toggle-col"></th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of rows(); track r.value.name) {
+          <tr [class.is-open]="draft() && draft()!.name === r.value.name">
+            <td class="name">
+              {{ r.value.name }}
+              @if (!r.item) {
+                <span class="sub">{{ 'payrollItem.default' | transloco }}</span>
+              }
+            </td>
+            <td class="wrap">{{ r.value.labels.length > 0 ? r.value.labels.join('・') : '—' }}</td>
+            <td>
+              <!-- 毎月決まった額に数える分類は色を付ける（基本給は給与の形しだいなので同じ色） -->
+              <span class="cat" [class]="'cat c-' + r.value.category">{{ 'payrollItem.category.' + r.value.category | transloco }}</span>
+            </td>
+            <td class="wrap muted">{{ 'payrollItem.treatment.' + r.value.category | transloco }}</td>
+            <!-- 事業所の給与項目に入れる（入れると上の並びの最後に足す） -->
+            <td class="in-col">
+              <input
+                type="checkbox"
+                [checked]="inTemplate(r.value.name)"
+                [disabled]="!context.isAdmin() || saving()"
+                [attr.aria-label]="'payrollItem.col.inTemplate' | transloco"
+                (change)="toggleTemplate(r.value.name, $any($event.target).checked)"
+              />
+            </td>
+            @if (context.isAdmin()) {
+              <td class="toggle-col">
+                <button type="button" class="btn btn-small" (click)="startEdit(r)" [disabled]="!!draft() || saving()">
+                  {{ (r.item ? 'payrollItem.edit' : 'payrollItem.recategorize') | transloco }}
+                </button>
+                @if (r.item; as it) {
+                  <button type="button" class="btn btn-small" (click)="remove(it)" [disabled]="!!draft() || saving()">
+                    {{ 'payrollItem.delete' | transloco }}
+                  </button>
+                }
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
 
   <details class="fold">
     <summary>{{ 'payrollItem.howTitle' | transloco }}</summary>

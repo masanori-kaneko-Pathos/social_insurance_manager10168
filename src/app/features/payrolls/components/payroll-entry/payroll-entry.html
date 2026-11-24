@@ -2,6 +2,8 @@
   <!-- 左：給与明細の支給 -->
   <div class="entry-main">
     <h3>{{ 'payrollEntry.lines.title' | transloco }}</h3>
+    <!-- 行は明細どおり、計算は分類で（課税・非課税の通勤手当など、分かれていれば分けたままでよい。11/24） -->
+    <p class="hint">{{ 'payrollEntry.lines.splitNote' | transloco }}</p>
 
     @if (lines(); as ls) {
       <datalist [id]="listId">

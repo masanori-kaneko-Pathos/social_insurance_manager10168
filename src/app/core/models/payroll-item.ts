@@ -38,7 +38,7 @@ export const FIXED_CATEGORIES: readonly PayrollItemCategory[] = ['fixedAllowance
 
 export interface PayrollItemDoc {
   name: string;
-  /** ほかの言い方（給与ソフトの CSV の見出しなど。名前を変えたら古い名前もここに入る） */
+  /** CSVの見出し（給与ソフトの CSV の見出しなど。名前を変えたら古い名前もここに入る） */
   labels: string[];
   category: PayrollItemCategory;
   createdAt: Timestamp;
@@ -76,12 +76,14 @@ export const DEFAULT_PAYROLL_ITEMS: readonly PayrollItemInput[] = [
   { name: '家族手当', labels: ['扶養手当'], category: 'fixedAllowance' },
   { name: '地域手当', labels: ['勤務地手当'], category: 'fixedAllowance' },
   { name: '固定残業手当', labels: ['固定残業代', '固定割増手当', 'みなし残業手当'], category: 'fixedAllowance' },
-  {
-    name: '通勤手当',
-    labels: ['通勤費', '交通費', '非課税通勤手当', '課税通勤手当', '通勤手当（非課税）', '通勤手当（課税）'],
-    category: 'commute',
-  },
-  { name: '時間外手当', labels: ['残業手当', '時間外勤務手当', '時間外労働手当', '法定内残業手当'], category: 'variable' },
+  // 明細で別の行に分かれることが多いものは、それぞれ独立した項目にする（分けたまま入れられるように。11/24）
+  // 課税・非課税は社会保険の扱いに関係しない（どちらも報酬）
+  { name: '通勤手当', labels: ['通勤費', '交通費'], category: 'commute' },
+  { name: '非課税通勤手当', labels: ['通勤手当（非課税）'], category: 'commute' },
+  { name: '課税通勤手当', labels: ['通勤手当（課税）'], category: 'commute' },
+  { name: '時間外手当', labels: ['残業手当', '時間外勤務手当', '時間外労働手当'], category: 'variable' },
+  { name: '法定内残業手当', labels: [], category: 'variable' },
+  { name: '時間外手当（60時間超）', labels: ['時間外労働手当（60時間超過・追加割増分）', '60時間超残業手当'], category: 'variable' },
   { name: '休日出勤手当', labels: ['休日手当', '法定休日労働手当', '所定休日労働手当'], category: 'variable' },
   { name: '深夜手当', labels: ['深夜労働手当', '深夜勤務手当'], category: 'variable' },
   { name: '固定残業手当の超過分', labels: ['固定割増手当超過額', '固定残業代超過分'], category: 'variable' },

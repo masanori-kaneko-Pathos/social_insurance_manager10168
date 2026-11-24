@@ -15,6 +15,8 @@ import { EmployeeService } from '../../../employees/employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import {
   buildPayrollCsv,
+  exportLineNames,
+  lineColumnsOf,
   PAYROLL_COLUMNS,
   payrollExportRows,
   classifyImport,
@@ -36,6 +38,13 @@ import { payrollOf, premiumMonthOfPay } from '../../../office/office-settings';
 import { applyRowValues, columnsForCodes, resolveHeader, rowRecord } from '../../../../shared/import/row-fix';
 import { ImportFix, ImportIssue, ImportIssues } from '../../../../shared/components/import-issues/import-issues';
 import { PartialSaveError, PayrollService } from '../../payroll.service';
+import { PayrollItemService } from '../../payroll-item.service';
+import { ContractService } from '../../../employees/contract.service';
+import { contractAt } from '../../../employees/logic/contract-form-model';
+import { ContractDoc } from '../../../../core/models/contract';
+import { PayrollItem } from '../../../../core/models/payroll-item';
+import { categoryOf } from '../../logic/payroll-lines';
+import { periodOf } from '../../logic/payroll-rows';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
@@ -61,6 +70,7 @@ const CSV_ERRORS = new Set([
   'duplicate',
   'badProrated',
   'badState',
+  'linesMismatch',
 ]);
 
 interface Preview {
@@ -116,7 +126,21 @@ export class PayrollImport {
   // ----- 取り込み -----
   readonly preview = signal<Preview | null>(null);
   readonly accept = IMPORT_ACCEPT;
-  readonly tableSpec = PAYROLL_TABLE_SPEC;
+  /**
+   * 列を合わせる画面の決まり。給与の項目名に当たる見出しの列（基本給・非課税通勤手当など）は、
+   * 項目に結ばなくても後ろに付けて残し、内訳として読む（11/24）
+   */
+  readonly tableSpec = computed(() => ({
+    ...PAYROLL_TABLE_SPEC,
+    passThrough: (h: string) => categoryOf(h.trim(), this.payrollItems()) !== null,
+  }));
+  /** 給与の項目と、内訳のひな形（内訳の列を見分ける・書き出す。11/24） */
+  readonly payrollItems = signal<PayrollItem[]>([]);
+  private template: string[] | null = null;
+  /** 従業員ごとの契約（内訳の列があるファイルのときだけ読む。基本給を毎月決まった額に数えるか） */
+  private contracts: Map<string, ContractDoc[]> | null = null;
+  private readonly itemsApi = inject(PayrollItemService);
+  private readonly contractsApi = inject(ContractService);
   /** 読んだファイル。見出しがうちと違えば「列を合わせる」画面を出す（mapping が true の間） */
   readonly loaded = signal<{ fileName: string; encoding: CsvEncoding | null; tables: SheetTable[] } | null>(null);
   readonly mapping = signal(false);
@@ -172,6 +196,11 @@ export class PayrollImport {
     this.loading.set(true);
     try {
       this.employees = await this.employeesApi.list(office.id);
+      // 給与の項目・ひな形は、読めなくても取り込める（よくある名前だけで内訳の列を見分ける）
+      await Promise.all([
+        this.itemsApi.list(office.id).then((x) => this.payrollItems.set(x)).catch((err) => console.error(err)),
+        this.itemsApi.template(office.id).then((t) => (this.template = t)).catch((err) => console.error(err)),
+      ]);
       // 保存済みの実績は、ここでは読まない（使う月が決まってから ensureMonths で読む）
       this.saved = new Map();
       this.loadedMonths = new Set();
@@ -230,7 +259,9 @@ export class PayrollImport {
     const months = await this.exportMonths(office.id);
     if (!months) return;
     const lang = this.lang();
-    const rows = buildPayrollCsv(this.employees, [...this.saved.values()], months, payrollOf(office), lang);
+    // 内訳の列（ひな形の順 → 保存済みの内訳に出てくる順）も付ける。そのまま取り込めば内訳ごと戻る（11/24）
+    const saved = [...this.saved.values()];
+    const rows = buildPayrollCsv(this.employees, saved, months, payrollOf(office), lang, exportLineNames(saved, this.template));
     downloadCsv(safeFileName(payrollFileName(office.name, this.from, this.to, todayLocal(), lang)), rows);
   }
 
@@ -394,7 +425,17 @@ export class PayrollImport {
     const file = this.loaded();
     if (!office || !file) return;
     try {
-      const read = readPayrollCsv(table, this.employees, payrollOf(office), { inKindMissing: this.inKindMissing() });
+      // 内訳の列があるファイル：給与の形を見るため、契約を読む（1回だけ）
+      if (table.length > 0 && lineColumnsOf(table[0], new Set(), this.payrollItems()).length > 0 && !this.contracts) {
+        const lists = await Promise.all(this.employees.map((e) => this.contractsApi.list(office.id, e.id).catch(() => [])));
+        this.contracts = new Map(this.employees.map((e, i) => [e.id, lists[i]]));
+      }
+      const schedule = payrollOf(office);
+      const read = readPayrollCsv(table, this.employees, schedule, {
+        inKindMissing: this.inKindMissing(),
+        items: this.payrollItems(),
+        payTypeOf: (id, month) => contractAt(this.contracts?.get(id) ?? [], periodOf(month, schedule).end)?.payType ?? null,
+      });
       // 「新規・上書き・変わらない」を数えるために、ファイルにある月の保存済みの実績だけ読む
       try {
         await this.ensureMonths(

@@ -369,8 +369,14 @@ td.name .sub {
 }
 
 /* 内訳のひな形（11/24） */
-.template {
-  margin-top: var(--space-md);
+.template,
+.edit {
+  margin-bottom: var(--space-md);
+}
+
+/* 自動で送ったとき、上の帯に隠れないように */
+.edit {
+  scroll-margin-top: 80px;
 }
 
 .template-list {
@@ -412,4 +418,23 @@ td.name .sub {
 
 .template .actions {
   align-items: center;
+}
+
+/* 一覧の「事業所の給与項目に入れる」（11/24） */
+th.in-col,
+td.in-col {
+  width: 7em;
+  text-align: center;
+}
+
+.check.in-template {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: var(--space-sm) 0;
+}
+
+.saved-note {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-xs);
 }

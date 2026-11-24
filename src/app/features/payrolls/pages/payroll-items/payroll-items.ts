@@ -1,8 +1,8 @@
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, signal, untracked, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { DEFAULT_TEMPLATE_NAMES, PAYROLL_ITEM_CATEGORIES, PayrollItem, PayrollItemCategory } from '../../../../core/models/payroll-item';
-import { categoryOf, itemKey, itemNames } from '../../logic/payroll-lines';
+import { categoryOf, itemKey } from '../../logic/payroll-lines';
 import { OfficeContext } from '../../../office/office-context.service';
 import { PayrollItemService } from '../../payroll-item.service';
 import { itemRows, parseItemLabels, PayrollItemError, PayrollItemRow, validatePayrollItem } from '../../logic/payroll-items';
@@ -13,6 +13,10 @@ interface Draft {
   name: string;
   labels: string;
   category: PayrollItemCategory | null;
+  /** 事業所の給与項目に入れる（新しい項目は最初からオン） */
+  inTemplate: boolean;
+  /** 編集を始めたときの名前（名前を変えたら、並びの中の名前も変える） */
+  before: string;
 }
 
 /**
@@ -64,24 +68,41 @@ export class PayrollItems {
     }
   }
 
-  // ===== 内訳のひな形（内訳を入れ始めるときに並べる項目名の順。11/24） =====
+  // ===== 事業所の給与項目（内訳のひな形：内訳を入れ始めるときに並べる項目名の順。11/24） =====
+  // 「追加」は右上の「項目を追加する」だけ。並べるかは一覧のチェックと入力枠のチェックで決め、変えたらすぐ保存する
 
-  /** 保存済みのひな形（null ＝ まだない：アプリの例を並べている） */
+  /** 保存済みの並び（null ＝ まだない：アプリの例を並べている） */
   readonly savedTemplate = signal<string[] | null>(null);
-  /** 編集中のひな形 */
+  /** 今の並び（まだ保存していなければアプリの例） */
   readonly templateNames = signal<string[]>([]);
-  readonly newName = signal('');
   readonly templateSaved = signal(false);
-  readonly names = computed(() => itemNames(this.items()));
-  readonly templateDirty = computed(() => {
-    const saved = this.savedTemplate() ?? [...DEFAULT_TEMPLATE_NAMES];
-    const now = this.templateNames();
-    return this.savedTemplate() === null || now.length !== saved.length || now.some((n, i) => n !== saved[i]);
-  });
 
   /** その名前の分類（札に出す。決まっていなければ null） */
   categoryOfName(name: string): PayrollItemCategory | null {
     return categoryOf(name, this.items());
+  }
+
+  /** 事業所の給与項目に入っているか */
+  inTemplate(name: string): boolean {
+    return this.templateNames().some((n) => itemKey(n) === itemKey(name));
+  }
+
+  /** 並びを変えて、すぐ保存する */
+  private async setTemplate(names: string[]): Promise<void> {
+    const officeId = this.context.current()?.id;
+    if (!officeId) return;
+    const before = this.templateNames();
+    this.templateNames.set(names);
+    this.templateSaved.set(false);
+    try {
+      await this.api.saveTemplate(officeId, names);
+      this.savedTemplate.set([...names]);
+      this.templateSaved.set(true);
+    } catch (err) {
+      console.error(err);
+      this.templateNames.set(before);
+      this.errorKey.set('payrollItem.error.save');
+    }
   }
 
   moveName(i: number, d: -1 | 1): void {
@@ -89,41 +110,23 @@ export class PayrollItems {
     const j = i + d;
     if (j < 0 || j >= list.length) return;
     [list[i], list[j]] = [list[j], list[i]];
-    this.templateNames.set(list);
-    this.templateSaved.set(false);
+    void this.setTemplate(list);
   }
 
+  /** 並びから外す（項目そのものは消さない） */
   removeName(i: number): void {
-    this.templateNames.set(this.templateNames().filter((_, k) => k !== i));
-    this.templateSaved.set(false);
+    void this.setTemplate(this.templateNames().filter((_, k) => k !== i));
   }
 
-  addName(): void {
-    const n = this.newName().trim();
-    if (!n || n.length > 30 || this.templateNames().some((x) => itemKey(x) === itemKey(n)) || this.templateNames().length >= 40) return;
-    this.templateNames.set([...this.templateNames(), n]);
-    this.newName.set('');
-    this.templateSaved.set(false);
-  }
-
-  async saveTemplate(): Promise<void> {
-    const officeId = this.context.current()?.id;
-    if (!officeId || this.saving()) return;
-    this.saving.set(true);
-    try {
-      await this.api.saveTemplate(officeId, this.templateNames());
-      this.savedTemplate.set([...this.templateNames()]);
-      this.templateSaved.set(true);
-    } catch (err) {
-      console.error(err);
-      this.errorKey.set('payrollItem.error.save');
-    } finally {
-      this.saving.set(false);
-    }
+  /** 一覧のチェック：入れると並びの最後に足し、外すと並びから外す */
+  toggleTemplate(name: string, on: boolean): void {
+    const list = this.templateNames();
+    if (on && !this.inTemplate(name) && list.length < 40) void this.setTemplate([...list, name]);
+    if (!on) void this.setTemplate(list.filter((n) => itemKey(n) !== itemKey(name)));
   }
 
   startNew(): void {
-    this.open({ id: null, name: '', labels: '', category: null });
+    this.open({ id: null, name: '', labels: '', category: null, inTemplate: true, before: '' });
   }
 
   /** 事業所の項目は直す。初期値の行は、同じ名前で事業所の項目を作る（分類を決め直す） */
@@ -133,13 +136,23 @@ export class PayrollItems {
       name: r.value.name,
       labels: r.value.labels.join('、'),
       category: r.value.category,
+      inTemplate: this.inTemplate(r.value.name),
+      before: r.value.name,
     });
   }
+
+  private readonly editCard = viewChild<ElementRef<HTMLElement>>('editCard');
 
   private open(d: Draft): void {
     this.savedName.set(null);
     this.formErrors.set([]);
     this.draft.set(d);
+    // 入力の枠まで送って、項目名にカーソルを置く（枠は一覧の上に出るので、下の行から押しても見失わない）
+    setTimeout(() => {
+      const el = this.editCard()?.nativeElement;
+      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      el?.querySelector<HTMLInputElement>('#pi-name')?.focus({ preventScroll: true });
+    });
   }
 
   cancel(): void {
@@ -167,6 +180,14 @@ export class PayrollItems {
     try {
       if (d.id) await this.api.update(officeId, d.id, input);
       else await this.api.create(officeId, input);
+      // 事業所の給与項目：チェックどおりに入れる・外す。名前を変えたら、並びの位置はそのままで名前だけ変える
+      const list = this.templateNames();
+      const at = d.before ? list.findIndex((n) => itemKey(n) === itemKey(d.before)) : -1;
+      let next = list;
+      if (d.inTemplate && at >= 0) next = list.map((n, k) => (k === at ? name : n));
+      else if (d.inTemplate && !this.inTemplate(name)) next = [...list, name];
+      else if (!d.inTemplate) next = list.filter((n) => itemKey(n) !== itemKey(name) && itemKey(n) !== itemKey(d.before));
+      if (next.length !== list.length || next.some((n, k) => n !== list[k])) await this.setTemplate(next);
       this.draft.set(null);
       this.savedName.set(name);
       await this.load(officeId);

@@ -79,7 +79,7 @@ describe('readLines：入力中の行を読む', () => {
 });
 
 describe('項目名と分類', () => {
-  it('事業所の項目（名前・ほかの言い方）→ よくある名前 の順。どちらにもなければ null', () => {
+  it('事業所の項目（名前・CSVの見出し）→ よくある名前 の順。どちらにもなければ null', () => {
     const items = [{ name: 'リーダー手当', labels: ['ﾘｰﾀﾞｰ手当'], category: 'fixedAllowance' as const }];
     expect(categoryOf('リーダー手当', items)).toBe('fixedAllowance');
     expect(categoryOf(' ﾘｰﾀﾞｰ 手当', items)).toBe('fixedAllowance');

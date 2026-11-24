@@ -11,13 +11,13 @@ export interface PayrollItemRow {
   value: PayrollItemInput;
 }
 
-/** 名前・ほかの言い方の鍵の全部 */
+/** 名前・CSVの見出しの鍵の全部 */
 function keysOf(it: PayrollItemInput): string[] {
   return [it.name, ...it.labels].map(itemKey).filter(Boolean);
 }
 
 /**
- * 一覧：事業所の項目 → 初期値（事業所の項目と名前・ほかの言い方が重なる初期値は出さない。事業所の分類が勝つ）
+ * 一覧：事業所の項目 → 初期値（事業所の項目と名前・CSVの見出しが重なる初期値は出さない。事業所の分類が勝つ）
  * 並びは、それぞれ初期値の並び（よく出る順）→ 名前の順
  */
 export function itemRows(items: readonly PayrollItem[]): PayrollItemRow[] {
@@ -32,7 +32,7 @@ export function itemRows(items: readonly PayrollItem[]): PayrollItemRow[] {
   return [...own, ...defaults];
 }
 
-/** ほかの言い方：読点・カンマ・改行で区切る（名前と同じもの・重なりは落とす） */
+/** CSVの見出し：読点・カンマ・改行で区切る（名前と同じもの・重なりは落とす） */
 export function parseItemLabels(text: string, name: string): string[] {
   const out: string[] = [];
   for (const raw of text.split(/[,、，\n]/)) {

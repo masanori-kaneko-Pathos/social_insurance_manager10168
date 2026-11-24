@@ -1,7 +1,7 @@
 import { emptyPayrollInput, Payroll } from '../../../core/models/payroll';
 import { parseCsv, toCsv } from '../../../shared/csv/csv';
 import { guessMapping, missingRequired, toOurTable } from '../../../shared/import/column-map';
-import { buildPayrollCsv, classifyImport, isInKindMerged, CsvEmployee, makeMatcher, PAYROLL_IMPORT_FIELDS, PAYROLL_TABLE_SPEC, mapHeader, parseFlag, parseMonth, parseState, payrollFileName, readPayrollCsv } from './payroll-csv';
+import { buildPayrollCsv, exportLineNames, classifyImport, isInKindMerged, CsvEmployee, makeMatcher, PAYROLL_IMPORT_FIELDS, PAYROLL_TABLE_SPEC, mapHeader, parseFlag, parseMonth, parseState, payrollFileName, readPayrollCsv } from './payroll-csv';
 import { monthsBetween } from '../../../shared/utils/date';
 import { PaySchedule } from './payroll-rows';
 
@@ -312,5 +312,65 @@ describe('現物の「内訳なし」', () => {
     expect(isInKindMerged(' 内訳なし ')).toBeTrue();
     expect(isInKindMerged('Included in pay')).toBeTrue();
     expect(isInKindMerged('0')).toBeFalse();
+  });
+});
+
+describe('内訳の列（11/24）', () => {
+  const rows = (text: string) => parseCsv(text);
+
+  it('見出しが給与の項目名の列は内訳として読む。総支給額・毎月決まった額の列がなくてもよい（課税・非課税の通勤手当は分けたまま）', () => {
+    const r = readPayrollCsv(
+      rows('社員番号,支払月,支払基礎日数,基本給,非課税通勤手当,課税通勤手当,欠勤控除,メモ\n0012,2026-10,30,300000,10000,60000,5000,何か'),
+      EMPS,
+      S,
+    );
+    expect(r.missingColumns).toEqual([]);
+    expect(r.errors).toEqual([]);
+    const it0 = r.items[0].input;
+    expect(it0.cash).toBe(365000);
+    expect(it0.fixedFull).toBe(370000);
+    expect(it0.lines?.map((l) => `${l.name}:${l.category}`)).toEqual([
+      '基本給:base',
+      '非課税通勤手当:commute',
+      '課税通勤手当:commute',
+      '欠勤控除:deduction',
+    ]);
+  });
+
+  it('総支給額の列もあれば、内訳の合計と合うかを見る', () => {
+    const r = readPayrollCsv(rows('社員番号,支払月,総支給額,支払基礎日数,基本給,通勤手当\n0012,2026-10,320000,30,300000,10000'), EMPS, S);
+    expect(r.errors[0].codes).toContain('linesMismatch');
+  });
+
+  it('内訳の列の金額が空の行は、今までどおり総支給額の列から読む（内訳なし）', () => {
+    const r = readPayrollCsv(rows('社員番号,支払月,総支給額,うち毎月決まった額,支払基礎日数,基本給\n0012,2026-10,300000,300000,30,'), EMPS, S);
+    expect(r.items[0].input.lines).toBeNull();
+    expect(r.items[0].input.cash).toBe(300000);
+  });
+
+  it('書き出し → 取り込みで内訳ごと戻る（ひな形の列 → 保存済みの内訳の順）', () => {
+    const lines = [
+      { name: '基本給', category: 'base' as const, amount: 300000 },
+      { name: '非課税通勤手当', category: 'commute' as const, amount: 10000 },
+    ];
+    const saved: Payroll[] = [
+      { ...emptyPayrollInput(), officeId: 'o', employeeId: 'A', paidMonth: '2026-10', cash: 310000, fixed: 310000, fixedFull: 310000, days: 30, lines },
+    ];
+    const names = exportLineNames(saved, ['基本給', '固定残業手当']);
+    expect(names).toEqual(['基本給', '固定残業手当', '非課税通勤手当']);
+    const out = buildPayrollCsv([A], saved, ['2026-10'], S, 'ja', names);
+    const back = readPayrollCsv(out, EMPS, S);
+    expect(back.errors).toEqual([]);
+    expect(back.items[0].input.lines).toEqual(lines);
+    expect(classifyImport(back.items, new Map([['A|2026-10', saved[0]]])).unchanged.length).toBe(1);
+  });
+
+  it('列を合わせる画面：給与の項目名の列は、結ばなくても後ろに付けて残す', () => {
+    const t = toOurTable(
+      [['従業員コード', '支給年月', '総支給額', '固定給', '出勤日数', '基本給', '謎の列']],
+      { employeeNumber: { col: 0 }, paidMonth: { col: 1 }, cash: { col: 2 }, fixed: { col: 3 }, days: { col: 4 } },
+      { ...PAYROLL_TABLE_SPEC, passThrough: (h) => h === '基本給' },
+    );
+    expect(t[0].slice(-1)).toEqual(['基本給']);
   });
 });

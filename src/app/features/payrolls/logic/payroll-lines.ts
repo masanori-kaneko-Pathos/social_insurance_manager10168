@@ -144,7 +144,7 @@ export function itemKey(name: string): string {
 }
 
 /**
- * 項目名の分類を決める：事業所で登録した項目（名前・ほかの言い方）→ アプリのよくある名前 の順
+ * 項目名の分類を決める：事業所で登録した項目（名前・CSVの見出し）→ アプリのよくある名前 の順
  * どちらにもなければ null（分類が決まっていない。決めるまで保存できない）
  */
 export function categoryOf(name: string, items: readonly PayrollItemInput[]): PayrollItemCategory | null {

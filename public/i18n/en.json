@@ -2101,10 +2101,11 @@
       "badProrated": "Enter 1 or leave Partial month blank",
       "badState": "Status must be Normal, Leave of absence or Temporary layoff",
       "unknownName": "No employee has this name (entering the employee number is more reliable)",
-      "ambiguousName": "More than one employee has this name. Enter the employee number"
+      "ambiguousName": "More than one employee has this name. Enter the employee number",
+      "linesMismatch": "The breakdown columns do not add up to the gross pay column (a breakdown column is missing, or the gross pay includes something else)"
     },
     "hint": {
-      "columns": "Columns are read by header name (any order; unknown columns are ignored). Required: employee number, pay month, gross pay, of which: same every month, payment basis days. The earlier headers (month paid, paid in money, fixed wages, retroactive pay, prorated) are also read. Rows without an employee number are matched by name.",
+      "columns": "Columns are read by header name (any order; unknown columns are ignored). Required: employee number, pay month, gross pay, of which: same every month, payment basis days. Columns whose header is a payroll item name (base pay, tax-free commuting allowance, absence deduction, etc.; names and CSV headers in payroll items and categories) are read as the breakdown. With breakdown columns, the gross pay and other totals come from the breakdown, and a gross pay column, if present, is checked against it. The earlier headers (month paid, paid in money, fixed wages, retroactive pay, prorated) are also read. Rows without an employee number are matched by name.",
       "excel": "CSV files saved by Excel (Shift_JIS) can be read as is, including months Excel turned into dates like 2026/10/1 and employee numbers that lost leading zeros.",
       "allOrNothing": "Fix rows with errors here, or import with them left unchecked (only those rows are skipped). Saving is done in batches of 500."
     },
@@ -3913,7 +3914,8 @@
       },
       "makeTemplate": "Use these items as the office template",
       "templateDone": "Saved as the office template",
-      "replacing": "When you enter amounts, the current gross pay of {{amount}} yen is replaced by the breakdown total."
+      "replacing": "When you enter amounts, the current gross pay of {{amount}} yen is replaced by the breakdown total.",
+      "splitNote": "Enter lines as they are split on the payslip. Lines in the same category are added together."
     },
     "side": {
       "days": "Days and hours",
@@ -4933,7 +4935,7 @@
     "add": "Add an item",
     "addTitle": "Add an item",
     "editTitle": "Edit the item",
-    "lead": "Set the social insurance category for each payslip item name. When entering a breakdown, the category is filled in from the item name. Common item names are provided as defaults, and their categories can be changed.",
+    "lead": "Set the social insurance category for each payslip item name. When entering a breakdown, the category is filled in from the item name. Lines that are split on the payslip (such as taxable and tax-free commuting allowance) can stay as separate items; lines in the same category are added together.",
     "saved": "Saved \"{{name}}\".",
     "default": "Default",
     "edit": "Edit",
@@ -4942,18 +4944,20 @@
     "confirmDelete": "Delete \"{{name}}\"? Saved payroll calculations do not change. If it has the same name as a default, the default category applies again.",
     "col": {
       "name": "Payslip item name",
-      "labels": "Other names",
+      "labels": "CSV headers",
       "category": "Category",
-      "treatment": "Treatment"
+      "treatment": "Treatment",
+      "inTemplate": "Office item"
     },
     "field": {
       "name": "Payslip item name",
-      "labels": "Other names",
-      "category": "Category"
+      "labels": "CSV headers",
+      "category": "Category",
+      "inTemplate": "Include in office payroll items (listed when a breakdown is started)"
     },
     "hint": {
       "name": "Use the name as written on the payslip.",
-      "labels": "Other ways of writing the same item (such as headers in payroll software CSVs), separated by commas."
+      "labels": "Enter these when payroll software CSVs use a different header for this item. Separate them with commas."
     },
     "placeholder": {
       "labels": "e.g. Team leader allowance"
@@ -4990,8 +4994,8 @@
       "save": "Could not save. Please try again later.",
       "nameRequired": "Enter the payslip item name.",
       "nameTooLong": "Item names can be up to 30 characters.",
-      "tooManyLabels": "Up to 20 other names.",
-      "duplicate": "An item with the same name (including other names) is already registered.",
+      "tooManyLabels": "Up to 20 CSV headers.",
+      "duplicate": "An item with the same name (including CSV headers) is already registered.",
       "category": "Choose a category."
     },
     "howTitle": "About categories",
@@ -5002,15 +5006,14 @@
     },
     "exampleLabel": "e.g. {{list}}",
     "template": {
-      "title": "Breakdown template",
-      "lead": "The item names, in order, that are listed when a breakdown is started. If the person has a breakdown for the previous month, that order is used first. Lines with no amount are not saved, so allowances that do not apply can be left blank.",
+      "title": "Office payroll items",
+      "lead": "The items checked in the list below are listed in this order when a breakdown is started. If the person has a breakdown for the previous month, that order is used first. Lines with no amount are not saved, so allowances that do not apply can be left blank.",
       "notSaved": "Not saved yet, so the app example (base pay, fixed overtime allowance, commuting allowance) is used.",
       "noCategory": "Category not set",
       "up": "Move up",
       "down": "Move down",
-      "add": "Add",
-      "addPlaceholder": "Item name (e.g. housing allowance)",
-      "saved": "Saved"
+      "saved": "Order saved",
+      "remove": "Remove"
     }
   }
 }
