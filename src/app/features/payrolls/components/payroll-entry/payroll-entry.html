@@ -66,7 +66,6 @@
     }
     <p class="hint">
       {{ (hasAmounts() ? 'payrollEntry.lines.fromLines' : 'payrollEntry.lines.direct') | transloco }}
-      {{ 'payrollEntry.lines.splitNote' | transloco }}
     </p>
 
     @if (lines(); as ls) {

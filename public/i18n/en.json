@@ -3987,13 +3987,12 @@
       },
       "makeTemplate": "Use these items as the office payroll items",
       "templateDone": "Saved as the office payroll items",
-      "splitNote": "Enter lines as they are split on the payslip. Lines in the same category are added together.",
-      "direct": "If the payslip only shows totals, enter them in the fields above (non-fixed wages are calculated). When amounts are entered in the breakdown, the fields above are calculated from it.",
-      "fromLines": "The fields above are calculated from the breakdown (clear all breakdown amounts to enter them directly).",
+      "direct": "Enter payslip lines and the fields above are calculated (if the payslip only shows totals, enter them above).",
+      "fromLines": "The fields above are calculated from the lines.",
       "forMonth": "Original month",
       "forThis": "This month",
       "forOption": "Paid {{y}}-{{m}}",
-      "forMonthNote": "For a line that settles pay forgotten or miscalculated in an earlier month, choose that month in \"Original month\" (it is counted as remuneration for that month). For a raise decided retroactively, use the \"Retroactive pay\" category. It can only be allocated when that month has a payroll record.",
+      "forMonthNote": "For settled forgotten pay, choose the month it was due in \"Original month\"; for a retroactive raise, use the \"Retroactive pay\" category.",
       "forOptionShort": "Paid in month {{m}}"
     },
     "side": {
@@ -4005,11 +4004,11 @@
     "saveNext": "Save and go to the next person",
     "saveOnly": "Save",
     "note": {
-      "cash": "Excludes non-remuneration payments",
-      "fixed": "Includes commuting · after absence deductions",
-      "nonFixed": "Overtime, commission, etc. (automatic)",
-      "retro": "Difference for a retroactive raise",
-      "days": "Monthly: calendar days − absences / hourly or daily: days worked",
+      "cash": "Remuneration only",
+      "fixed": "Incl. commuting, after deductions",
+      "nonFixed": "Overtime, commission, etc.",
+      "retro": "Retroactive raise",
+      "days": "Monthly: days − absences / hourly: days worked",
       "inKind": "Price table amount − employee payment",
       "prorated": "The pay amount changed in the middle of the pay period"
     },
@@ -4017,7 +4016,7 @@
       "total": "Total (money + in kind): ¥{{total}}",
       "merged": "Total: ¥{{total}} (in-kind remuneration is included in the amount paid in money)",
       "otherMonth": "Of which, allocated to original months: ¥{{amount}}",
-      "note": "The annual determination, revisions and notifications use this total as monthly remuneration."
+      "note": "This is used as the monthly remuneration."
     }
   },
   "filing": {
