@@ -1586,7 +1586,7 @@
     "cappedPension": "Pension etc. calculated on JPY {{n}} (monthly cap)",
     "csv": "Import CSV",
     "export": {
-      "button": "Export (CSV)",
+      "button": "Export as CSV",
       "savedFirst": "Save before exporting",
       "file": "bonus_insurance",
       "col": {
@@ -4712,7 +4712,9 @@
       "enrollment": "Hire, leaving and coverage",
       "contract": "Employment contract",
       "foreign": "Foreign nationals",
-      "leave": "Leave"
+      "leave": "Leave",
+      "bonus": "Bonus",
+      "pay": "Pay"
     },
     "premium": {
       "employeeNumber": "Employee number",
@@ -4741,6 +4743,32 @@
       "age": "Age (reference date)",
       "healthStandardNow": "Health standard (reference date)",
       "pensionStandardNow": "Pension standard (reference date)"
+    },
+    "payroll": {
+      "kana": "Kana",
+      "department": "Department",
+      "payTotal": "Total pay (money + in kind)"
+    },
+    "bonus": {
+      "number": "Employee No.",
+      "name": "Name",
+      "paidDate": "Paid date",
+      "amount": "Bonus",
+      "standard": "Standard bonus",
+      "health": "Health etc. (employee)",
+      "pension": "Pension (employee)",
+      "employee": "Employee total",
+      "employer": "Employer (estimate)",
+      "note": "Note",
+      "kana": "Kana",
+      "department": "Department",
+      "healthBase": "Health standard bonus (after cap)",
+      "pensionBase": "Pension standard bonus (after cap)",
+      "healthPart": "Employee share: health",
+      "carePart": "Employee share: long-term care",
+      "childSupportPart": "Employee share: child support levy",
+      "total": "Total premium",
+      "contribution": "Child contribution (employer)"
     }
   },
   "exportDialog": {
@@ -4772,6 +4800,8 @@
       "save": "Could not save the template. Please try again later."
     },
     "scopeFiltered": "Exports the {{n}} filtered people, one row each, in the order shown (no total rows).",
-    "scopeAll": "Exports everyone ({{n}}), one row each, in the order shown (no total rows)."
+    "scopeAll": "Exports everyone ({{n}}), one row each, in the order shown (no total rows).",
+    "scopeBonus": "Exports the {{n}} people with a bonus amount, one row each, in employee number order (no total row).",
+    "scopePayroll": "Exports {{n}} rows for {{range}}, one row per person per month (months not entered have empty amounts)."
   }
 }

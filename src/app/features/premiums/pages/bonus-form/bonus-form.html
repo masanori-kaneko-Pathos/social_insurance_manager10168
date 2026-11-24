@@ -157,7 +157,8 @@
       <p>{{ 'bonus.hint.needDate' | transloco }}</p>
     </section>
   } @else {
-    <p class="summary">
+    <!-- 出力のメニュー（details）を入れるので div（p の中には置けない。11/24） -->
+    <div class="summary">
       <span class="muted">
         {{ 'premium.method.' + options().method | transloco }}・{{
           'premium.rounding.' + options().healthRounding | transloco
@@ -166,15 +167,36 @@
       {{ 'bonus.peopleCount' | transloco: { count: peopleCount() } }}
       <span>{{ 'bonus.amountTotal' | transloco: { n: yen(amountTotal()) } }}</span>
       <!-- 書き出し：給与ソフトに渡す社会保険の本人負担まで（差引支給額は給与ソフトで。11/18） -->
+      <!-- 保険料一覧と同じ「出力 ▾」に、項目を選んで出力を足した（11/24） -->
       @if (!isNew) {
-        <button type="button" class="btn btn-small" [disabled]="dirty()" [attr.title]="dirty() ? ('bonus.export.savedFirst' | transloco) : null" (click)="exportCsv()">
-          {{ 'bonus.export.button' | transloco }}
-        </button>
+        <!-- 押せないときの説明は details に付ける（summary は押せないあいだ、マウスを受けないため） -->
+        <details class="menu" appCloseOnOutside [attr.title]="dirty() ? ('bonus.export.savedFirst' | transloco) : null">
+          <summary class="btn btn-small" [class.disabled]="dirty()">
+            {{ 'premiumList.export' | transloco }} ▾
+          </summary>
+          @if (!dirty()) {
+            <div class="menu-list" role="menu">
+              <button type="button" role="menuitem" (click)="exportCsvFromMenu($event)">{{ 'bonus.export.button' | transloco }}</button>
+              <button type="button" role="menuitem" (click)="openExport($event)">{{ 'exportDialog.open' | transloco }}</button>
+            </div>
+          }
+        </details>
+        <app-export-dialog
+          dataset="bonuses"
+          [catalog]="exportCatalog()"
+          [rows]="exportItems()"
+          [defaultKeys]="exportDefaultKeys"
+          [fileStem]="exportStem()"
+          [sheetName]="'bonus.listTitle' | transloco"
+          [scopeText]="'exportDialog.scopeBonus' | transloco: { n: exportItems().length }"
+          [officeId]="context.current()?.id ?? null"
+          [canSave]="context.isAdmin()"
+        />
       }
       @if (hiddenCount() > 0) {
         <span class="muted">{{ 'bonus.hint.hidden' | transloco: { count: hiddenCount() } }}</span>
       }
-    </p>
+    </div>
 
     @if (problemCount() > 0) {
       <div class="alert alert-warning" role="alert">

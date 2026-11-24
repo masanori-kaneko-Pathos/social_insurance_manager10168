@@ -48,6 +48,7 @@ h2 {
 .summary {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-md);
   margin: 0 0 var(--space-md);
   font-size: var(--font-sm);

@@ -418,6 +418,51 @@ export function classifyImport(
 
 // ===== 書き出し =====
 
+/** 書き出す1行のもと（1人 × 1か月。saved がなければ未入力の月） */
+export interface PayrollExportRow<E extends CsvEmployee = CsvEmployee> {
+  employee: E;
+  month: string;
+  saved: Payroll | null;
+}
+
+/** 期間に在籍していた人を、月の順・渡された人の順で並べる（今の CSV と「項目を選んで出力」で共通。11/24） */
+export function payrollExportRows<E extends CsvEmployee>(
+  employees: readonly E[],
+  payrolls: readonly Payroll[],
+  months: readonly string[],
+  schedule: PaySchedule,
+): PayrollExportRow<E>[] {
+  const saved = new Map(payrolls.map((p) => [`${p.employeeId}|${p.paidMonth}`, p]));
+  const out: PayrollExportRow<E>[] = [];
+  for (const month of months) {
+    const p = periodOf(month, schedule);
+    for (const e of employees) {
+      if (!employedDuring(e, p)) continue;
+      out.push({ employee: e, month, saved: saved.get(`${e.id}|${month}`) ?? null });
+    }
+  }
+  return out;
+}
+
+/** 1行の各列の文字（入力済みの月は数字入り、未入力の月は数字の欄が空） */
+export function payrollCells(r: PayrollExportRow, lang: CsvLang): Record<PayrollColumn, string> {
+  const { employee: e, saved: s } = r;
+  return {
+    employeeNumber: e.employeeNumber ?? '',
+    name: `${e.lastName} ${e.firstName}`,
+    paidMonth: r.month,
+    cash: s ? String(s.cash) : '',
+    fixed: s ? String(s.fixed) : '',
+    days: s ? String(s.days) : '',
+    inKind: !s ? '' : s.inKind === null ? IN_KIND_MERGED_LABEL[lang] : s.inKind ? String(s.inKind) : '',
+    retro: s && s.retro ? String(s.retro) : '',
+    absentDays: s?.absentDays != null ? String(s.absentDays) : '',
+    hours: s?.workMinutes != null ? formatHours(s.workMinutes) : '',
+    prorated: s?.prorated ? '1' : '',
+    state: s ? STATE_LABELS[lang][s.state] : '',
+  };
+}
+
 /**
  * 書き出しの行（見出し＋1人×1か月）。期間に在籍していた人を、月の順・渡された人の順で並べる
  * 入力済みの月は数字入り、未入力の月は数字の欄が空（＝ ひな形）
@@ -429,35 +474,15 @@ export function buildPayrollCsv(
   schedule: PaySchedule,
   lang: CsvLang,
 ): string[][] {
-  const saved = new Map(payrolls.map((p) => [`${p.employeeId}|${p.paidMonth}`, p]));
   const header = PAYROLL_COLUMNS.map((c) => PAYROLL_HEADERS[lang][c]);
-  const rows: string[][] = [header];
-  for (const month of months) {
-    const p = periodOf(month, schedule);
-    for (const e of employees) {
-      if (!employedDuring(e, p)) continue;
-      const s = saved.get(`${e.id}|${month}`);
-      const v: Record<PayrollColumn, string> = {
-        employeeNumber: e.employeeNumber ?? '',
-        name: `${e.lastName} ${e.firstName}`,
-        paidMonth: month,
-        cash: s ? String(s.cash) : '',
-        fixed: s ? String(s.fixed) : '',
-        days: s ? String(s.days) : '',
-        inKind: !s ? '' : s.inKind === null ? IN_KIND_MERGED_LABEL[lang] : s.inKind ? String(s.inKind) : '',
-        retro: s && s.retro ? String(s.retro) : '',
-        absentDays: s?.absentDays != null ? String(s.absentDays) : '',
-        hours: s?.workMinutes != null ? formatHours(s.workMinutes) : '',
-        prorated: s?.prorated ? '1' : '',
-        state: s ? STATE_LABELS[lang][s.state] : '',
-      };
-      rows.push(PAYROLL_COLUMNS.map((c) => v[c]));
-    }
-  }
-  return rows;
+  const rows = payrollExportRows(employees, payrolls, months, schedule).map((r) => {
+    const v = payrollCells(r, lang);
+    return PAYROLL_COLUMNS.map((c) => v[c]);
+  });
+  return [header, ...rows];
 }
 
-/** 給与の実績_伊藤テスト中商事_2026-04〜2026-06_20261106.csv */
+/** 給与_伊藤テスト中商事_2026-04〜2026-06_20261106.csv（画面の名前「給与」に合わせた。11/24） */
 export function payrollFileName(
   officeName: string,
   from: string,
@@ -465,7 +490,7 @@ export function payrollFileName(
   today: string,
   lang: CsvLang,
 ): string {
-  const title = lang === 'ja' ? '給与の実績' : 'payroll';
+  const title = lang === 'ja' ? '給与' : 'payroll';
   const range = from === to ? from : `${from}〜${to}`;
   return `${title}_${officeName}_${range}_${today.replace(/-/g, '')}.csv`;
 }

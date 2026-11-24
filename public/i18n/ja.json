@@ -1586,7 +1586,7 @@
     "cappedPension": "厚年等は {{n}}円で計算（月の上限）",
     "csv": "CSVで取り込む",
     "export": {
-      "button": "書き出す（CSV）",
+      "button": "CSV で出力する",
       "savedFirst": "保存してから書き出してください",
       "file": "賞与の社会保険料",
       "col": {
@@ -4712,7 +4712,9 @@
       "enrollment": "入社・退職・加入",
       "contract": "雇用契約",
       "foreign": "外国籍",
-      "leave": "休業"
+      "leave": "休業",
+      "bonus": "賞与",
+      "pay": "給与の額"
     },
     "premium": {
       "employeeNumber": "社員番号",
@@ -4741,6 +4743,32 @@
       "age": "年齢（基準日）",
       "healthStandardNow": "健保 標準報酬月額（基準日）",
       "pensionStandardNow": "厚年 標準報酬月額（基準日）"
+    },
+    "payroll": {
+      "kana": "フリガナ",
+      "department": "部署",
+      "payTotal": "報酬の合計（支払額＋現物）"
+    },
+    "bonus": {
+      "number": "社員番号",
+      "name": "氏名",
+      "paidDate": "支払日",
+      "amount": "賞与額",
+      "standard": "標準賞与額",
+      "health": "健康保険等（本人）",
+      "pension": "厚生年金保険（本人）",
+      "employee": "本人負担の合計",
+      "employer": "会社負担（目安）",
+      "note": "備考",
+      "kana": "フリガナ",
+      "department": "部署",
+      "healthBase": "健保 標準賞与額（上限後）",
+      "pensionBase": "厚年 標準賞与額（上限後）",
+      "healthPart": "本人負担 うち健康保険",
+      "carePart": "本人負担 うち介護保険",
+      "childSupportPart": "本人負担 うち子ども・子育て支援金",
+      "total": "全額",
+      "contribution": "拠出金（会社）"
     }
   },
   "exportDialog": {
@@ -4772,6 +4800,8 @@
       "save": "テンプレートを保存できませんでした。時間をおいてもう一度お試しください。"
     },
     "scopeFiltered": "絞り込んだ {{n}}人を、画面の並び順で1人1行に出力します（合計の行は付けません）。",
-    "scopeAll": "全員（{{n}}人）を、画面の並び順で1人1行に出力します（合計の行は付けません）。"
+    "scopeAll": "全員（{{n}}人）を、画面の並び順で1人1行に出力します（合計の行は付けません）。",
+    "scopeBonus": "賞与額が入っている {{n}}人を、社員番号の順で1人1行に出力します（合計の行は付けません）。",
+    "scopePayroll": "{{range}} の {{n}}行を、1人×1か月で1行に出力します（未入力の月は数字の欄が空です）。"
   }
 }

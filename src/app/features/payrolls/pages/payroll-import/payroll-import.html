@@ -1,4 +1,4 @@
-<!-- 給与の実績（ファイルの取り込みのページの1区分。11/17） -->
+<!-- 給与（ファイルの取り込みのページの1区分。11/17） -->
 @if (!context.isAdmin()) {
   <div class="alert alert-warning">{{ 'payrollCsv.adminOnly' | transloco }}</div>
 } @else if (loading()) {
@@ -35,6 +35,8 @@
           <button type="button" class="btn" (click)="exportCsv()">
             {{ 'payrollCsv.export.button' | transloco }}
           </button>
+          <!-- 同じ期間で、列を選んで出す（11/24） -->
+          <button type="button" class="btn" (click)="openExport()">{{ 'exportDialog.open' | transloco }}</button>
         </div>
         @if (exportErrorKey(); as key) {
           <div class="alert alert-danger">{{ key | transloco }}</div>
@@ -46,6 +48,17 @@
         <p>{{ 'payrollCsv.import.columnsHint' | transloco: { cols: headersJa } }}</p>
       </div>
     </app-import-picker>
+    <app-export-dialog
+      dataset="payrolls"
+      [catalog]="exportCatalog()"
+      [rows]="exportItems()"
+      [defaultKeys]="exportDefaultKeys"
+      [fileStem]="exportStem()"
+      [sheetName]="'payroll.listTitle' | transloco"
+      [scopeText]="exportScope()"
+      [officeId]="context.current()?.id ?? null"
+      [canSave]="context.isAdmin()"
+    />
 
     @if (errorKey(); as key) {
       <div class="alert alert-danger">{{ key | transloco }}</div>

@@ -1102,7 +1102,7 @@ table.sticky-head > thead th {
   }
 }
 
-/* ===== 出力のメニュー（「出力 ▾」。保険料一覧の CSS から全画面の決まりに移した。11/24） ===== */
+/* ===== 出力のメニュー（「出力 ▾」。保険料一覧の CSS から全画面の決まりに移した。） ===== */
 details.menu {
   position: relative;
   display: inline-block;
@@ -1173,4 +1173,10 @@ details.menu > summary::-webkit-details-marker {
 .menu-list.menu-right {
   left: auto;
   right: 0;
+}
+
+/* 出力のメニュー：押せないとき（読み込み中・保存前など）。従業員一覧の CSS から移した（11/24） */
+details.menu > summary.disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }

@@ -447,12 +447,6 @@ th .arrow.default {
   margin-top: var(--space-sm);
 }
 
-/* 出力のメニュー：読み込み中・対象がいないときは押せない（11/24） */
-details.menu > summary.disabled {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
 /* メニューの説明は長いので、少し広く（11/24） */
 .head-actions .menu-list {
   width: 24em;

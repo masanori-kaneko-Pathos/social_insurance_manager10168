@@ -1,4 +1,5 @@
 import { BonusRow } from './bonus-rows';
+import { milliText } from './premium-csv';
 
 /** 書き出す1人分（画面の行から作る） */
 export interface BonusExportInput {
@@ -37,17 +38,9 @@ export function bonusExportTable(
       ok ? String(r.healthEmployeeYen) : '',
       ok && r.result!.pensionStatus === 'charged' ? String(r.pensionEmployeeYen) : '',
       ok ? String(r.result!.employeeYen) : '',
-      ok ? milliToText(r.premiumEmployerMilli) : '',
+      ok ? milliText(r.premiumEmployerMilli) : '',
       ok ? '' : p.note,
     ]);
   }
   return out;
-}
-
-/** 1/1000 円 → 「12345.6」（末尾の0は付けない） */
-function milliToText(milli: number): string {
-  const yen = Math.trunc(milli / 1000);
-  const frac = Math.abs(milli % 1000);
-  if (frac === 0) return String(yen);
-  return `${yen}.${String(frac).padStart(3, '0').replace(/0+$/, '')}`;
 }

@@ -1,7 +1,7 @@
 import { bonusExportTable, BonusExportInput } from './bonus-export';
 
 const H = ['no', 'name', 'date', 'amount', 'std', 'health', 'pension', 'sum', 'employer', 'note'];
-function person(over: Partial<BonusExportInput> & { row?: Partial<BonusExportInput['row']> }): BonusExportInput {
+function person(over: Omit<Partial<BonusExportInput>, 'row'> & { row?: Partial<BonusExportInput['row']> }): BonusExportInput {
   return {
     employeeNumber: 'E001',
     name: '山本 誠',

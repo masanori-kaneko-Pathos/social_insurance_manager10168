@@ -2,6 +2,8 @@ import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ImportPicker } from '../../../../shared/components/import-picker/import-picker';
+import { ExportDialog } from '../../../../shared/components/export-dialog/export-dialog';
+import { PayrollExportItem, payrollExportColumns } from '../../logic/payroll-export-columns';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
 import { Payroll } from '../../../../core/models/payroll';
@@ -13,6 +15,8 @@ import { EmployeeService } from '../../../employees/employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import {
   buildPayrollCsv,
+  PAYROLL_COLUMNS,
+  payrollExportRows,
   classifyImport,
   CsvLang,
   ImportItem,
@@ -69,7 +73,7 @@ interface Preview {
 
 @Component({
   selector: 'app-payroll-import',
-  imports: [PersonName, Pager, IssueRow, ImportSteps, ImportPicker, ColumnMapper, HalfWidthDigits, ImportIssues, RouterLink, TranslocoPipe, FormsModule],
+  imports: [PersonName, Pager, IssueRow, ImportSteps, ImportPicker, ColumnMapper, ExportDialog, HalfWidthDigits, ImportIssues, RouterLink, TranslocoPipe, FormsModule],
   templateUrl: './payroll-import.html',
   styleUrl: './payroll-import.css',
 })
@@ -197,29 +201,67 @@ export class PayrollImport {
 
   // ===== 書き出し =====
 
-  async exportCsv(): Promise<void> {
-    const office = this.context.current();
-    if (!office || !this.context.isAdmin()) return;
+  /** 選んだ期間の月を読む（期間がおかしい・読めないときは知らせて null） */
+  private async exportMonths(officeId: string): Promise<string[] | null> {
     this.exportErrorKey.set(null);
     if (!this.from || !this.to || this.from > this.to) {
       this.exportErrorKey.set('payrollCsv.error.range');
-      return;
+      return null;
     }
     const months = monthsBetween(this.from, this.to);
     if (months.length > MAX_MONTHS) {
       this.exportErrorKey.set('payrollCsv.error.tooLong');
-      return;
+      return null;
     }
     try {
-      await this.ensureMonths(office.id, months);
+      await this.ensureMonths(officeId, months);
     } catch (err) {
       console.error(err);
       this.exportErrorKey.set(errorKeyOf(err, 'payrollCsv.error.load'));
-      return;
+      return null;
     }
+    return months;
+  }
+
+  async exportCsv(): Promise<void> {
+    const office = this.context.current();
+    if (!office || !this.context.isAdmin()) return;
+    const months = await this.exportMonths(office.id);
+    if (!months) return;
     const lang = this.lang();
     const rows = buildPayrollCsv(this.employees, [...this.saved.values()], months, payrollOf(office), lang);
     downloadCsv(safeFileName(payrollFileName(office.name, this.from, this.to, todayLocal(), lang)), rows);
+  }
+
+  // ===== 項目を選んで出力（11/24） =====
+  private readonly exportDialog = viewChild(ExportDialog);
+  readonly exportDefaultKeys = PAYROLL_COLUMNS;
+  /** 窓に渡す行（開くときに、選んだ期間で作る） */
+  readonly exportItems = signal<PayrollExportItem[]>([]);
+  readonly exportStem = signal('');
+  readonly exportScope = signal('');
+  /** 見出しは取り込みと同じ言葉（言語は窓を開いたとき） */
+  readonly exportCatalog = signal(payrollExportColumns({ lang: 'ja', t: (k) => k, deptName: () => '' }));
+
+  async openExport(): Promise<void> {
+    const office = this.context.current();
+    if (!office || !this.context.isAdmin()) return;
+    const months = await this.exportMonths(office.id);
+    if (!months) return;
+    const lang = this.lang();
+    const items = payrollExportRows(this.employees, [...this.saved.values()], months, payrollOf(office));
+    this.exportCatalog.set(
+      payrollExportColumns({
+        lang,
+        t: (k) => this.transloco.translate(k),
+        deptName: (id) => office.departments?.find((d) => d.id === id)?.name ?? '',
+      }),
+    );
+    this.exportItems.set(items);
+    this.exportStem.set(payrollFileName(office.name, this.from, this.to, todayLocal(), lang).replace(/\.csv$/, ''));
+    const range = this.from === this.to ? this.from : `${this.from}〜${this.to}`;
+    this.exportScope.set(this.transloco.translate('exportDialog.scopePayroll', { range, n: items.length }));
+    void this.exportDialog()?.open();
   }
 
   /** 期間を「前の3か月」などにすばやく合わせる */

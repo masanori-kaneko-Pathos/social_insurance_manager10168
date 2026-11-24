@@ -1,8 +1,11 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { downloadCsv, safeFileName } from '../../../../shared/csv/csv';
 import { bonusExportTable } from '../../logic/bonus-export';
+import { BONUS_DEFAULT_KEYS, BonusExportItem, bonusExportColumns, bonusExportItems } from '../../logic/bonus-export-columns';
+import { ExportDialog } from '../../../../shared/components/export-dialog/export-dialog';
+import { CloseOnOutside } from '../../../../shared/directives/close-on-outside';
 import { BonusPayment, BonusPaymentInput } from '../../../../core/models/bonus';
 import { Employee } from '../../../../core/models/employee';
 import { OfficeTotal } from '../../../../core/models/premium';
@@ -72,7 +75,7 @@ interface DateNote {
 
 @Component({
   selector: 'app-bonus-form',
-  imports: [PersonName, ColumnMapper, EnterNext, HalfWidthDigits, Pager, PersonListBar, PremiumBreakdown, PremiumTotals, RouterLink, SortHeader, TranslocoPipe],
+  imports: [PersonName, CloseOnOutside, ColumnMapper, EnterNext, ExportDialog, HalfWidthDigits, Pager, PersonListBar, PremiumBreakdown, PremiumTotals, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './bonus-form.html',
   styleUrl: './bonus-form.css',
 })
@@ -466,19 +469,17 @@ export class BonusForm {
 
   // ===== 書き出し（給与ソフトに渡す、社会保険の本人負担まで。11/18） =====
   private readonly transloco = inject(TranslocoService);
-  /** 保存した内容だけを書き出す（直している途中の額が混ざらないように） */
-  exportCsv(): void {
-    const office = this.context.current();
-    if (!office || this.dirty() || !this.dateOk()) return;
+  /** 書き出す人（社員番号の順。CSV と「項目を選んで出力」で共通） */
+  private exportPeople(): BonusExportItem[] {
     const t = (k: string) => this.transloco.translate(k);
-    const cols = ['number', 'name', 'paidDate', 'amount', 'standard', 'health', 'pension', 'employee', 'employer', 'note'];
-    const people = [...this.rows()]
+    return [...this.rows()]
       .sort((a, b) => (a.employee.employeeNumber ?? '').localeCompare(b.employee.employeeNumber ?? '', 'ja', { numeric: true }))
       .map((r) => ({
         employeeNumber: r.employee.employeeNumber ?? null,
         name: `${r.employee.lastName} ${r.employee.firstName}`.trim(),
         amountYen: this.amounts()[r.employee.id] ?? 0,
         row: r,
+        employee: r.employee,
         note:
           r.state === 'none' && r.over70
             ? t('bonus.state.over70')
@@ -486,8 +487,45 @@ export class BonusForm {
             ? t('bonus.state.' + r.state)
             : r.state === 'ok' ? '' : t(this.missingKey(r)),
       }));
-    const table = bonusExportTable(cols.map((c) => t('bonus.export.col.' + c)), this.paidDate(), people);
-    downloadCsv(safeFileName(`${t('bonus.export.file')}_${office.name}_${this.paidDate()}.csv`), table);
+  }
+
+  /** 保存した内容だけを書き出す（直している途中の額が混ざらないように） */
+  exportCsv(): void {
+    const office = this.context.current();
+    if (!office || this.dirty() || !this.dateOk()) return;
+    const t = (k: string) => this.transloco.translate(k);
+    const cols = ['number', 'name', 'paidDate', 'amount', 'standard', 'health', 'pension', 'employee', 'employer', 'note'];
+    const table = bonusExportTable(cols.map((c) => t('bonus.export.col.' + c)), this.paidDate(), this.exportPeople());
+    downloadCsv(safeFileName(`${this.exportStem()}.csv`), table);
+  }
+
+  exportCsvFromMenu(ev: Event): void {
+    (ev.target as HTMLElement).closest('details')?.removeAttribute('open');
+    this.exportCsv();
+  }
+
+  // ===== 項目を選んで出力（11/24） =====
+  private readonly exportDialog = viewChild(ExportDialog);
+  readonly exportDefaultKeys = BONUS_DEFAULT_KEYS;
+  /** 窓に渡す人（開くときに作る。額の入っている人だけ） */
+  readonly exportItems = signal<BonusExportItem[]>([]);
+  readonly exportCatalog = computed(() => {
+    const office = this.context.current();
+    return bonusExportColumns({
+      t: (k) => this.transloco.translate(k),
+      deptName: (id) => office?.departments?.find((d) => d.id === id)?.name ?? '',
+      paidDate: this.paidDate(),
+    });
+  });
+  readonly exportStem = computed(
+    () => `${this.transloco.translate('bonus.export.file')}_${this.context.current()?.name ?? ''}_${this.paidDate()}`,
+  );
+
+  openExport(ev: Event): void {
+    (ev.target as HTMLElement).closest('details')?.removeAttribute('open');
+    if (this.dirty() || !this.dateOk()) return;
+    this.exportItems.set(bonusExportItems(this.exportPeople()));
+    void this.exportDialog()?.open();
   }
 
   missingKey(r: FormRow): string {
