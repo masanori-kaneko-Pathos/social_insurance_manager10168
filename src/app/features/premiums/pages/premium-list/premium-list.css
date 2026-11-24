@@ -739,3 +739,105 @@ details.fold[open]::details-content {
   font-size: var(--font-sm);
   color: var(--color-text-sub);
 }
+
+/* 期間ごとの会社負担の集計へのリンク（見出しの横。11/24） */
+.period-link {
+  font-size: var(--font-sm);
+}
+
+/* ===== 月次確定（11/24） ===== */
+.close-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-md);
+  font-size: var(--font-sm);
+}
+
+.close-bar .badge {
+  margin-left: 0;
+}
+
+.badge-closed {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.close-cancel {
+  margin-left: auto;
+}
+
+.close-diff h2 {
+  margin-top: 0;
+}
+
+.close-diff-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin: var(--space-sm) 0;
+}
+
+.close-open {
+  margin: 0;
+  font-weight: 600;
+}
+
+.settle-month {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-sm);
+}
+
+.settle-month .input {
+  width: 11em;
+  height: 32px;
+}
+
+.close-table tr.done td {
+  color: var(--color-text-sub);
+}
+
+.close-status {
+  white-space: nowrap;
+}
+
+.close-status .badge {
+  margin-left: 0;
+  margin-right: var(--space-xs);
+}
+
+.close-status .settled {
+  margin-right: var(--space-xs);
+  font-size: var(--font-xs);
+  color: var(--color-success-text);
+}
+
+.close-status .link-btn {
+  padding: 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: var(--font-xs);
+  color: var(--color-primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.close-summary {
+  margin-top: var(--space-md);
+}
+
+.close-summary .hint {
+  margin-bottom: var(--space-xs);
+}
+
+/* 氏名の欄の札は、氏名の下の行に出す（隣の列に重ならないように） */
+.close-table td .badge {
+  display: table;
+  margin: 2px 0 0;
+}

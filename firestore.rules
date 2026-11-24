@@ -1039,6 +1039,45 @@ service cloud.firestore {
         allow delete: if false;
       }
 
+      // ----- 月次確定（ID ＝ 保険料の月。11/24） -----
+      // 「この月はこの額で控除した」記録。作成と取り消し（削除）だけで、書き換えない
+      // people の中身（1人ずつの額）はルールで1件ずつ確かめられないので、大きさだけ（賞与の amounts と同じ扱い）
+      match /monthCloses/{month} {
+        allow read: if isMember(officeId);
+        allow create: if isAdmin(officeId)
+          && exactKeys(request.resource.data, ['month', 'people', 'count', 'employeeYen', 'premiumTotalMilli',
+                                               'contributionMilli', 'closedBy', 'closedByName', 'closedAt'])
+          && request.resource.data.month == month && isMonth(month)
+          && request.resource.data.people is map && request.resource.data.people.size() <= 20000
+          && request.resource.data.count == request.resource.data.people.size()
+          && request.resource.data.employeeYen is int
+          && request.resource.data.premiumTotalMilli is int
+          && request.resource.data.contributionMilli is int
+          && request.resource.data.closedBy == request.auth.uid
+          && optStr(request.resource.data.closedByName, 200)
+          && request.resource.data.closedAt == request.time;
+        allow update: if false;
+        allow delete: if isAdmin(officeId);
+
+        // 精算の記録（ID ＝ 従業員ID）。精算した給与の月と、そのときの差額。作成と削除だけ
+        match /settlements/{employeeId} {
+          allow read: if isMember(officeId);
+          allow create: if isAdmin(officeId)
+            && exists(/databases/$(database)/documents/offices/$(officeId)/monthCloses/$(month))
+            && exactKeys(request.resource.data, ['employeeId', 'payMonth', 'diffEmployeeYen', 'diffTotalMilli',
+                                                 'diffContributionMilli', 'recordedBy', 'recordedAt'])
+            && request.resource.data.employeeId == employeeId
+            && isMonth(request.resource.data.payMonth)
+            && request.resource.data.diffEmployeeYen is int
+            && request.resource.data.diffTotalMilli is int
+            && request.resource.data.diffContributionMilli is int
+            && request.resource.data.recordedBy == request.auth.uid
+            && request.resource.data.recordedAt == request.time;
+          allow update: if false;
+          allow delete: if isAdmin(officeId);
+        }
+      }
+
       // ----- 取り込みの「列を合わせる」の割り当て（ID ＝ 取り込みの種類。11/24） -----
       // 列は見出しの名前で持つ。中身の形はアプリで確かめる（項目は取り込みごとに違うので、ここでは大きさだけ）
       match /importMappings/{key} {

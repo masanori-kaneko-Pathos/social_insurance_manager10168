@@ -3,7 +3,53 @@
   <div class="entry-main">
     <h3>{{ 'payrollEntry.lines.title' | transloco }}</h3>
     <!-- 行は明細どおり、計算は分類で（課税・非課税の通勤手当など、分かれていれば分けたままでよい。11/24） -->
-    <p class="hint">{{ 'payrollEntry.lines.splitNote' | transloco }}</p>
+    <!--
+      合計の欄はいつも同じ場所に置く（11/24）。
+      内訳に金額がなければ直接入れられる（総支給額が書いてある明細から、ぱっと入れたいとき）。
+      内訳に金額を入れると、内訳から計算した値を読み取りだけで出す（固定的賃金は欠勤控除を引く前）
+    -->
+    <!-- 総支給額 ＝ 固定的賃金 ＋ 非固定的賃金 ＋ 昇給差額（非固定的賃金はいつも自動で計算する。11/24） -->
+    <div class="row4 totals">
+      @if (hasAmounts()) {
+        <div class="field">
+          <label>{{ 'payroll.col.cash' | transloco }}</label>
+          <input class="input num computed" [value]="yen(totals().cash)" readonly tabindex="-1" />
+        </div>
+        <div class="field">
+          <label>{{ 'payroll.col.fixed' | transloco }}</label>
+          <input class="input num computed" [value]="yen(totals().fixed)" readonly tabindex="-1" />
+        </div>
+        <div class="field">
+          <label>{{ 'payroll.col.nonFixed' | transloco }}</label>
+          <input class="input num computed" [value]="yen(totals().nonFixed)" readonly tabindex="-1" />
+        </div>
+        <div class="field">
+          <label>{{ 'payroll.col.retro' | transloco }}</label>
+          <input class="input num computed" [value]="totals().retro ? yen(totals().retro) : ''" readonly tabindex="-1" />
+        </div>
+      } @else {
+        <div class="field">
+          <label>{{ 'payroll.col.cash' | transloco }}</label>
+          <input class="input num" formControlName="cash" inputmode="numeric" />
+        </div>
+        <div class="field">
+          <label>{{ 'payroll.col.fixed' | transloco }}</label>
+          <input class="input num" formControlName="fixed" inputmode="numeric" />
+        </div>
+        <div class="field">
+          <label>{{ 'payroll.col.nonFixed' | transloco }}</label>
+          <input class="input num computed" [value]="directNonFixed()" readonly tabindex="-1" />
+        </div>
+        <div class="field">
+          <label>{{ 'payroll.col.retro' | transloco }}</label>
+          <input class="input num" formControlName="retro" inputmode="numeric" />
+        </div>
+      }
+    </div>
+    <p class="hint">
+      {{ (hasAmounts() ? 'payrollEntry.lines.fromLines' : 'payrollEntry.lines.direct') | transloco }}
+      {{ 'payrollEntry.lines.splitNote' | transloco }}
+    </p>
 
     @if (lines(); as ls) {
       <datalist [id]="listId">
@@ -98,40 +144,6 @@
         }
       }
 
-      <!-- 金額を入れるまでは「—」（0円と見えて、前の値が消えたように見えないように） -->
-      <dl class="sums">
-        <dt>{{ 'payroll.col.cash' | transloco }}</dt>
-        <dd class="big">{{ hasAmounts() ? yen(totals().cash) + ' 円' : '—' }}</dd>
-        <dt class="muted">{{ 'payroll.col.fixed' | transloco }}</dt>
-        <dd class="muted">{{ hasAmounts() ? yen(totals().fixedFull) + ' 円' : '—' }}</dd>
-        @if (totals().retro > 0) {
-          <dt class="muted">{{ 'payroll.col.retro' | transloco }}</dt>
-          <dd class="muted">{{ yen(totals().retro) }} 円</dd>
-        }
-      </dl>
-      @if (replacing(); as before) {
-        <p class="hint replace">{{ 'payrollEntry.lines.replacing' | transloco: { amount: yen(before) } }}</p>
-      }
-    } @else {
-      <!-- 内訳なし（前のデータ・総支給額だけの取り込み）：今までどおり額を直接入れられる。内訳はいつでも入れ始められる -->
-      <p class="hint">{{ 'payrollEntry.lines.none' | transloco }}</p>
-      <div class="row3">
-        <div class="field">
-          <label>{{ 'payroll.col.cash' | transloco }}</label>
-          <input class="input num" formControlName="cash" inputmode="numeric" />
-        </div>
-        <div class="field">
-          <label>{{ 'payroll.col.fixed' | transloco }}</label>
-          <input class="input num" formControlName="fixed" inputmode="numeric" />
-        </div>
-        <div class="field">
-          <label>{{ 'payroll.col.retro' | transloco }}</label>
-          <input class="input num" formControlName="retro" inputmode="numeric" />
-        </div>
-      </div>
-      @if (canEdit()) {
-        <button type="button" class="btn btn-small" (click)="startLines()">{{ 'payrollEntry.lines.start' | transloco }}</button>
-      }
     }
   </div>
 

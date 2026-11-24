@@ -7,6 +7,7 @@
 // 3. 保険料の徴収の時効は2年（健保法193条・厚年法92条）。納期限（翌月末）から2年を過ぎた月は expired
 //    → 追加徴収・返金の合計は、時効になっていない月だけで出す（時効の月も一覧には出す）
 // 4. 結果は元のデータとは別に保存する（recalcs）。元の資格・標準報酬は書き換えない
+// 5. 月次確定した月は、「訂正前」に確定時の額（実際に控除した額）を使う（11/24。month-close.ts）
 
 import type { RecalcMonth, RecalcPeriod } from '../../../core/models/employee-records';
 import type { PremiumOptions } from '../../../core/models/premium';
@@ -17,6 +18,7 @@ import type { CoverageInput, Enrollment } from '../../employees/logic/coverage';
 import type { LeaveHolder } from '../../employees/logic/leave';
 import { latest } from '../../rates/logic/pick-rates';
 import { calcMonthly, RemunerationLike } from './calc-monthly';
+import type { ClosedAmount } from './month-close';
 
 export interface RecalcCorrection {
   /** 訂正後の資格（省略 ＝ 今のまま） */
@@ -35,6 +37,8 @@ export interface RecalcInput {
   ratesAt: (month: YearMonth) => RatesForMonth;
   options?: PremiumOptions;
   today: DateStr;
+  /** 月次確定した月の、この人の確定時の額（確定していない月・確定時にいなかった月は null。省くと今のデータを訂正前にする） */
+  closedAt?: (month: YearMonth) => ClosedAmount | null;
 }
 
 export interface RecalcResult {
@@ -82,7 +86,12 @@ export function recalc(x: RecalcInput): RecalcResult {
 
   for (const month of monthsBetween(x.from, x.to)) {
     const rates = x.ratesAt(month);
-    const before = calcMonthly({ month, employee: x.employee, remunerations: x.remunerations, rates, options: x.options });
+    const calcBefore = calcMonthly({ month, employee: x.employee, remunerations: x.remunerations, rates, options: x.options });
+    // 確定した月は、確定時の額（実際に控除した額）が訂正前
+    const closed = x.closedAt?.(month) ?? null;
+    const before = closed
+      ? { employeeYen: closed.e, totalMilli: closed.t + closed.c, employerMilli: closed.t + closed.c - closed.e * 1000, missing: [] }
+      : calcBefore;
 
     // 訂正後：資格と、その月の標準報酬を置き換える
     const p = periodAt(x.correction.periods, month);

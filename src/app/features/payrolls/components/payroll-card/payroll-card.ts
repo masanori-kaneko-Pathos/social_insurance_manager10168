@@ -112,7 +112,7 @@ export class PayrollCard {
     const p = this.editPeriod();
     return !!p && !employedDuring(this.employee(), p);
   });
-  /** 期間の終わりの給与の形（基本給を毎月決まった額に数えるか・日数の候補を出すか） */
+  /** 期間の終わりの給与の形（基本給を固定的賃金に数えるか・日数の候補を出すか） */
   readonly payType = computed<PayType | null>(() => {
     const p = this.editPeriod();
     return p ? (contractAt(this.contracts(), p.end)?.payType ?? null) : null;
@@ -173,7 +173,7 @@ export class PayrollCard {
       .then((t) => {
         this.template.set(t);
         // ひな形が読めたら、まだ金額を入れていない新しい月の行を並べ直す
-        if (this.editMonth() && !this.editingSaved() && !hasAmounts(this.lines())) {
+        if (this.editMonth() && !this.editingSaved()?.lines && !hasAmounts(this.lines())) {
           this.lines.set(startDrafts(this.prevLines(), t, this.payrollItems()));
         }
       })
@@ -188,7 +188,8 @@ export class PayrollCard {
     this.editMonth.set(month);
     this.form = this.buildForm(textOf(saved));
     // まだない月は、前の月の項目名 → 事業所のひな形 → アプリの例 を並べる
-    this.lines.set(saved ? (saved.lines ? toDrafts(saved.lines) : null) : startDrafts(this.prevLinesOf(month), this.template(), this.payrollItems()));
+    // 内訳のある月はその行、ない月（新しい月・前のデータ）は、前の月の項目名 → 事業所の給与項目 → アプリの例 を並べる
+    this.lines.set(saved?.lines ? toDrafts(saved.lines) : startDrafts(this.prevLinesOf(month), this.template(), this.payrollItems()));
     this.errors.set([]);
     this.saveError.set(false);
   }

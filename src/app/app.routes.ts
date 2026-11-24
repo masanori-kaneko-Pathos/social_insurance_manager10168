@@ -154,6 +154,12 @@ export const routes: Routes = withUnsavedGuard([
               ),
           },
           {
+            // 期間ごとの会社負担の集計（11/24）
+            path: 'premiums/period',
+            loadComponent: () =>
+              import('./features/premiums/pages/premium-period/premium-period').then((m) => m.PremiumPeriod),
+          },
+          {
             path: 'premiums',
             data: { wide: true }, // 広い画面では表を横に伸ばす（11/16）
             loadComponent: () =>

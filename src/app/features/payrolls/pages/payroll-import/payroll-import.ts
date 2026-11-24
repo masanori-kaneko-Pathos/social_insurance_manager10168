@@ -137,7 +137,7 @@ export class PayrollImport {
   /** 給与の項目と、内訳のひな形（内訳の列を見分ける・書き出す。11/24） */
   readonly payrollItems = signal<PayrollItem[]>([]);
   private template: string[] | null = null;
-  /** 従業員ごとの契約（内訳の列があるファイルのときだけ読む。基本給を毎月決まった額に数えるか） */
+  /** 従業員ごとの契約（内訳の列があるファイルのときだけ読む。基本給を固定的賃金に数えるか） */
   private contracts: Map<string, ContractDoc[]> | null = null;
   private readonly itemsApi = inject(PayrollItemService);
   private readonly contractsApi = inject(ContractService);

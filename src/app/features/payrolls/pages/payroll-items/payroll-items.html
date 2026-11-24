@@ -139,7 +139,7 @@
             </td>
             <td class="wrap">{{ r.value.labels.length > 0 ? r.value.labels.join('・') : '—' }}</td>
             <td>
-              <!-- 毎月決まった額に数える分類は色を付ける（基本給は給与の形しだいなので同じ色） -->
+              <!-- 固定的賃金に数える分類は色を付ける（基本給は給与の形しだいなので同じ色） -->
               <span class="cat" [class]="'cat c-' + r.value.category">{{ 'payrollItem.category.' + r.value.category | transloco }}</span>
             </td>
             <td class="wrap muted">{{ 'payrollItem.treatment.' + r.value.category | transloco }}</td>

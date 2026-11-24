@@ -1,5 +1,7 @@
 <div class="page-head">
   <h1>{{ 'premiumList.title' | transloco }}</h1>
+  <!-- 期間ごとの会社負担の集計へ（決算の未払金・人件費。11/24） -->
+  <a class="period-link" [routerLink]="['/o', context.current()?.id, 'premiums', 'period']">{{ 'premiumPeriod.title' | transloco }}</a>
   <div class="period">
     <button
       type="button"
@@ -107,6 +109,116 @@
       </label>
     }
   </div>
+  <!-- 月次確定：「この月はこの額で控除した」記録（確定後も編集は止めない。差があれば札で知らせる。11/24） -->
+  @if (savedClose() !== undefined && (savedClose() || context.isAdmin())) {
+    <div class="close-bar">
+      @if (savedClose(); as c) {
+        <span class="badge badge-closed">{{ 'monthClose.closed' | transloco }}</span>
+        <span class="muted">{{ 'monthClose.closedBy' | transloco: { at: closedAtText(), name: c.closedByName ?? '—', count: c.count } }}</span>
+        @if (closeDiffs().length > 0) {
+          <!-- 押せる文字：押すと差額の表を開く・もう一度で閉じる -->
+          <button
+            type="button"
+            class="changed-note"
+            [class.on]="showCloseDiff()"
+            [attr.aria-pressed]="showCloseDiff()"
+            (click)="toggleCloseDiff()"
+          >
+            {{ (closeOpen().count > 0 ? 'monthClose.changedAfter' : 'monthClose.allSettled') | transloco: { count: closeOpen().count || closeDiffs().length } }}
+          </button>
+        }
+        @if (context.isAdmin()) {
+          <button type="button" class="btn btn-small close-cancel" [disabled]="closeBusy()" (click)="cancelClose()">
+            {{ 'monthClose.cancel' | transloco }}
+          </button>
+        }
+      } @else {
+        <button type="button" class="btn btn-small" [disabled]="closeBusy() || !!closeBlock()" (click)="closeMonth()">
+          {{ 'monthClose.close' | transloco: { month: monthParts(month()).m } }}
+        </button>
+        <span class="muted">{{ (closeBlock() ?? 'monthClose.lead') | transloco }}</span>
+      }
+    </div>
+  }
+  @if (closeError(); as k) {
+    <div class="alert alert-danger" role="alert">{{ k | transloco }}</div>
+  }
+  @if (showCloseDiff() && savedClose()) {
+    @let ot = closeOpen();
+    <section class="card close-diff">
+      <h2>{{ 'monthClose.diff.title' | transloco }}</h2>
+      <p class="hint">{{ 'monthClose.diff.lead' | transloco }}</p>
+      <div class="close-diff-head">
+        <p class="close-open" role="status">
+          @if (ot.count > 0) {
+            {{ 'monthClose.diff.open' | transloco: { count: ot.count, employee: signedYen(ot.employeeYen), employer: signedMilli(ot.employerMilli) } }}
+          } @else {
+            {{ 'monthClose.diff.noOpen' | transloco }}
+          }
+        </p>
+        @if (context.isAdmin()) {
+          <label class="settle-month">
+            {{ 'monthClose.diff.payMonth' | transloco }}
+            <input type="month" class="input" [value]="settleMonth()" (input)="settleMonth.set($any($event.target).value)" />
+          </label>
+        }
+      </div>
+      <div class="table-wrap">
+        <table class="close-table">
+          <thead>
+            <tr>
+              <th>{{ 'employee.field.employeeNumber' | transloco }}</th>
+              <th>{{ 'employee.field.name' | transloco }}</th>
+              <th class="num">{{ 'monthClose.diff.col.closed' | transloco }}</th>
+              <th class="num">{{ 'monthClose.diff.col.now' | transloco }}</th>
+              <th class="num">{{ 'monthClose.diff.col.employee' | transloco }}</th>
+              <th class="num">{{ 'monthClose.diff.col.employer' | transloco }}</th>
+              <th>{{ 'monthClose.diff.col.status' | transloco }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (d of closeDiffs(); track d.id) {
+              <tr [class.done]="d.status === 'settled' || d.expired">
+                <td class="emp-no">{{ d.employee?.employeeNumber ?? '—' }}</td>
+                <td>
+                  @if (d.employee; as e) {
+                    <app-person-name [person]="e" [link]="['/o', context.current()?.id, 'employees', e.id]" />
+                  } @else {
+                    <span class="muted">{{ 'monthClose.diff.unknown' | transloco }}</span>
+                  }
+                  @if (d.retired) {
+                    <span class="badge badge-warn" [title]="'monthClose.diff.retiredNote' | transloco">{{ 'monthClose.diff.retired' | transloco }}</span>
+                  }
+                </td>
+                <td class="num">{{ yen(d.closed.e) }}</td>
+                <td class="num">{{ yen(d.now.e) }}</td>
+                <td class="num strong">{{ signedYen(d.diffEmployeeYen) }}</td>
+                <td class="num">{{ signedMilli(d.diffEmployerMilli) }}</td>
+                <td class="close-status">
+                  @if (d.expired) {
+                    <span class="badge badge-care" [title]="'monthClose.diff.expiredNote' | transloco">{{ 'monthClose.diff.expired' | transloco }}</span>
+                  } @else if (d.status === 'settled') {
+                    <span class="settled">{{ 'monthClose.diff.settled' | transloco: monthParts(d.settlement!.payMonth) }}</span>
+                    @if (context.isAdmin()) {
+                      <button type="button" class="link-btn" [disabled]="closeBusy()" (click)="unsettle(d)">{{ 'monthClose.diff.unsettle' | transloco }}</button>
+                    }
+                  } @else {
+                    @if (d.status === 'changedAfterSettle') {
+                      <span class="badge badge-warn">{{ 'monthClose.diff.changedAfterSettle' | transloco: monthParts(d.settlement!.payMonth) }}</span>
+                    }
+                    @if (context.isAdmin()) {
+                      <button type="button" class="btn btn-small" [disabled]="closeBusy()" (click)="settle(d)">{{ 'monthClose.diff.settle' | transloco }}</button>
+                    }
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="hint">{{ 'monthClose.diff.hint' | transloco }}</p>
+    </section>
+  }
   @if (advanceReady()) {
     <p class="advance-note" role="status">
       {{ 'premiumList.advance.result' | transloco: { count: advances().size, payMonth: monthParts(payMonth()).m } }}
@@ -269,6 +381,44 @@
       @if (kumiaiMonth()) {
         <p class="hint">{{ 'premiumNotice.kumiaiHint' | transloco }}</p>
       }
+      <!-- 確定した月の差額：遡った届が処理されると、告知の「前月までの精算額」に載る（押したときだけ読む。11/24） -->
+      <div class="close-summary">
+        <p class="hint">{{ 'monthClose.summary.lead' | transloco }}</p>
+        @if (closeSummary(); as list) {
+          @if (list.length === 0) {
+            <p class="muted">{{ 'monthClose.summary.none' | transloco }}</p>
+          } @else {
+            <div class="notice-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{{ 'monthClose.summary.col.month' | transloco }}</th>
+                    <th class="num">{{ 'monthClose.summary.col.count' | transloco }}</th>
+                    <th class="num">{{ 'monthClose.summary.col.premium' | transloco }}</th>
+                    <th class="num">{{ 'monthClose.summary.col.contribution' | transloco }}</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (x of list; track x.month) {
+                    <tr>
+                      <th scope="row"><a [routerLink]="[]" [queryParams]="{ month: x.month }" queryParamsHandling="merge">{{ 'premium.monthLabel' | transloco: monthParts(x.month) }}</a></th>
+                      <td class="num">{{ x.count }}</td>
+                      <td class="num">{{ signedMilli(x.totalMilli) }}</td>
+                      <td class="num">{{ signedMilli(x.contributionMilli) }}</td>
+                      <td>@if (x.expired) { <span class="badge badge-care">{{ 'monthClose.diff.expired' | transloco }}</span> }</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        } @else {
+          <button type="button" class="btn btn-small" [disabled]="closeSummaryBusy()" (click)="loadCloseSummary()">
+            {{ 'monthClose.summary.load' | transloco }}
+          </button>
+        }
+      </div>
 
       @if (nc.status === 'diff' || noticeReasons().size > 0) {
         <fieldset class="reasons">

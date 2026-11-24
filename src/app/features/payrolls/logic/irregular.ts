@@ -22,6 +22,7 @@
 
 import { fixedForChange, inKindYen, payTotal, type Payroll } from '../../../core/models/payroll';
 import type { WageChange } from '../../../core/models/revision';
+import type { PayType } from '../../../core/models/contract';
 import type { StandardRemuneration } from '../../../core/models/remuneration';
 import { shiftMonth } from '../../../shared/utils/date';
 import { gradeOf } from '../../rates/logic/grade';
@@ -41,26 +42,88 @@ export type Direction = 'up' | 'down' | 'unclear';
 export interface StartMonth {
   month: string;
   direction: Direction;
-  /** fixed：固定的賃金の額が変わった／retro：遡及支払がある／manual：人が足した／furlough：一時帰休の始まり・終わり（11/19） */
-  source: 'fixed' | 'retro' | 'manual' | 'furlough';
+  /**
+   * fixed：固定的賃金の額が変わった／retro：遡及支払がある／manual：人が足した／furlough：一時帰休の始まり・終わり（11/19）
+   * inKind：現物給与（社宅・食事など）の額が変わった。入居・退去、本人負担の変更、価額の改正（11/24）
+   * contract：雇用契約の時給・日給・所定労働時間・給与の形が変わった（11/24）
+   */
+  source: 'fixed' | 'retro' | 'manual' | 'furlough' | 'contract' | 'inKind';
+}
+
+/** 雇用契約の変更から起算月を出すときの、契約の形（11/24） */
+export interface ContractLike {
+  from: string;
+  payType: PayType;
+  hourlyWage: number | null;
+  dailyWage: number | null;
+  weeklyMinutes: number;
+}
+
+/**
+ * 雇用契約の変更から、随時改定の起算月を出す（11/24）
+ * 時給・日給の人は、働いた時間で給与の額が動くので、額の比較では固定的賃金の変動を見つけられない。代わりに契約を見る：
+ * - 時給・日給（単価）が変わった（事例集「時給単価の変更」）
+ * - 所定労働時間が変わった（時給は同じでも、契約時間の変更は固定的賃金の変動。事例集 問1-3）
+ * - 給与の形が変わった（日給から月給へ など。給与体系の変更）
+ * 起算月は、新しい契約で1か月分そろった最初の支払月（計算期間の初日が、新しい契約の開始日以後の月）
+ * periodStart：支払月 → その計算期間の初日
+ */
+export function contractStartMonths(
+  contracts: readonly ContractLike[],
+  periodStart: (paidMonth: string) => string,
+): StartMonth[] {
+  const list = [...contracts].sort((a, b) => a.from.localeCompare(b.from));
+  const out: StartMonth[] = [];
+  const unit = (c: ContractLike) => (c.payType === 'hourly' ? c.hourlyWage : c.payType === 'daily' ? c.dailyWage : null);
+  const byUnit = (c: ContractLike) => c.payType === 'hourly' || c.payType === 'daily';
+  for (let i = 1; i < list.length; i++) {
+    const a = list[i - 1];
+    const b = list[i];
+    if (!byUnit(a) && !byUnit(b)) continue; // 月給どうしは給与の額で見つけられる
+    let direction: Direction | null = null;
+    if (a.payType !== b.payType) direction = 'unclear';
+    else if ((unit(a) ?? 0) !== (unit(b) ?? 0)) direction = (unit(b) ?? 0) > (unit(a) ?? 0) ? 'up' : 'down';
+    else if (a.weeklyMinutes !== b.weeklyMinutes) direction = b.weeklyMinutes > a.weeklyMinutes ? 'up' : 'down';
+    if (!direction) continue;
+    // 新しい契約の開始日を含む支払月から数えて、計算期間の初日が開始日以後になる最初の月
+    let m = b.from.slice(0, 7);
+    for (let k = 0; k < 3 && periodStart(m) < b.from; k++) m = shiftMonth(m, 1);
+    out.push({ month: m, direction, source: 'contract' });
+  }
+  return out;
 }
 
 /**
  * 起算月の候補を出す
  * - 給与の実績の fixed（固定的賃金）が、前の月の実績と変わった月（前の月が0円なら、最後に払った月と比べる）
  * - 遡及支払額（retro）がある月（さかのぼった昇給の差額を払った月。26ページの記入例）
+ * - 現物給与（inKind）の額が、前の月の実績と変わった月（11/24）
+ *   現物給与は固定的賃金。価額の改正も固定的賃金の変動に当たる（日本年金機構「現物給与の価額 Q&A」Q3）
+ *   入居・退去の月は日割りなので（同 Q7）、その月の額が前後の月の間にあれば日割りの月とみなし、次の月を起算月にする（事例7と同じ）
+ *   現物の内訳なし（null：給与ソフトが支払額に足している）の月とは比べない（人が足す）
  * - wageChanges で人が足した月（manual）を足し、外した月（dismissed）を除く
  * 同じ月に複数あれば1つにまとめる（人が足したもの → 額の変化 → 遡及 の順に向きを採る）
  */
 export function findStartMonths(
   payrolls: ReadonlyMap<string, Payroll>,
   wageChanges: readonly WageChange[] = [],
+  opts: {
+    /**
+     * その支払月の固定的賃金を、額で比べてよいか（11/24）。時給・日給の人の内訳なしの月は、固定的賃金に
+     * 時給×時間が入っていて働いた時間で動くので、額では比べない（契約の変更 contractStarts で見つける）
+     */
+    amountComparable?: (paidMonth: string) => boolean;
+    /** 雇用契約の変更から出した起算月（contractStartMonths） */
+    contractStarts?: readonly StartMonth[];
+  } = {},
 ): StartMonth[] {
   const found = new Map<string, StartMonth>();
   const months = [...payrolls.keys()].sort();
   // 比べる相手は、前の月の実績。ただし固定的賃金が0円の月（休業中など）は飛ばして、最後に払った月と比べる
   // （育休明けに「0円 → 19万円で上がった」と読まないため。休業前の27万円 → 19万円なら「下がった」）
   let last: Payroll | null = null;
+  // 現物給与の比べる相手（前の月の現物の額。内訳なしの月・休職・一時帰休の月は飛ばす。11/24）
+  let lastKind: number | null = null;
   const furlough = (m: string) => payrolls.get(m)?.state === 'furlough';
   for (const m of months) {
     const p = payrolls.get(m)!;
@@ -82,16 +145,46 @@ export function findStartMonths(
       if (fixedForChange(p) > 0) last = p;
       continue;
     }
+    // 現物給与が変わったか（前の月にも実績があり、どちらも現物の額が分かっているとき）
+    const kind = p.inKind ?? null;
+    const kindChanged = !!prev && kind !== null && lastKind !== null && kind !== lastKind;
+    const kindDiff = kindChanged ? kind! - lastKind! : 0;
+    // 現物の日割りの月：この月の額が、前の月と次の月の額の間にある（入居・退去の月。Q7）
+    const nextKind = payrolls.get(shiftMonth(m, 1))?.inKind ?? null;
+    const kindProrated =
+      kindChanged && nextKind !== null && nextKind !== kind! &&
+      Math.min(lastKind!, nextKind) < kind! && kind! < Math.max(lastKind!, nextKind);
+    if (kind !== null) lastKind = kind;
     // 日割りの月（計算期間の途中で変わった月）は起算月にしない。1か月分そろった次の月を起算月にする（事例7。11/19）
-    const at = p.prorated ? shiftMonth(m, 1) : m;
+    const at = p.prorated || kindProrated ? shiftMonth(m, 1) : m;
+    // 額で比べられない月（時給・日給の人の内訳なしの月）は飛ばし、比べる相手もいったん空にする（11/24）
+    // 内訳のある月は、時給×時間を除いた額（fixedFull）で比べられる
+    if (p.fixedFull === null && opts.amountComparable && !opts.amountComparable(m)) {
+      // 時給・日給の人でも、現物給与の変化は額で比べられる（社宅への入居など。契約は変わらない）
+      if (kindChanged) found.set(at, { month: at, direction: kindDiff > 0 ? 'up' : 'down', source: 'inKind' });
+      else if (p.retro > 0) found.set(at, { month: at, direction: 'up', source: 'retro' });
+      last = null;
+      continue;
+    }
     // 比べるのは欠勤控除を引く前の額（内訳がある月。欠勤の月を変動と見ないため。11/24）
-    if (fixedForChange(p) > 0 && last && prev && fixedForChange(p) !== fixedForChange(last)) {
-      found.set(at, { month: at, direction: directionOf(last, p, last === prev), source: 'fixed' });
+    const fixedChanged = fixedForChange(p) > 0 && !!last && !!prev && fixedForChange(p) !== fixedForChange(last);
+    if (fixedChanged && !kindChanged) {
+      found.set(at, { month: at, direction: directionOf(last!, p, last === prev), source: 'fixed' });
+    } else if (kindChanged) {
+      // 現物給与も固定的賃金なので、向きは通貨の固定的賃金と現物の変化を合わせて決める（打ち消し合えば要確認）
+      const total = kindDiff + (fixedChanged ? fixedForChange(p) - fixedForChange(last!) : 0);
+      found.set(at, {
+        month: at,
+        direction: total > 0 ? 'up' : total < 0 ? 'down' : 'unclear',
+        source: fixedChanged ? 'fixed' : 'inKind',
+      });
     } else if (p.retro > 0) {
       found.set(at, { month: at, direction: 'up', source: 'retro' });
     }
     if (fixedForChange(p) > 0) last = p;
   }
+  // 契約の変更は、額の変化より先に採る（向きが契約ではっきりしているため）
+  for (const c of opts.contractStarts ?? []) found.set(c.month, c);
   for (const w of wageChanges) {
     if (w.source === 'dismissed') found.delete(w.month);
     else found.set(w.month, { month: w.month, direction: w.direction, source: 'manual' });

@@ -23,7 +23,7 @@ import { contractAt } from '../../employees/logic/contract-form-model';
 import { coverageForMonth } from '../../employees/logic/coverage';
 import { pickGradeTable } from '../../rates/logic/grade';
 import { withCapRevisions } from '../../rates/logic/cap-revision';
-import { findStartMonths, IrregularResult, judgeIrregular } from './irregular';
+import { ContractLike, contractStartMonths, findStartMonths, IrregularResult, judgeIrregular } from './irregular';
 import { judgeLeaveEnd, LeaveEndResult } from './leave-end';
 import { PaySchedule, periodOf } from './payroll-rows';
 import { GradeRows, Remuneration } from './regular';
@@ -37,7 +37,8 @@ export type RevisionEmployee = Pick<
 
 export interface RevisionPerson {
   employee: RevisionEmployee;
-  contracts: (ClassifyContract & Pick<ContractDoc, 'employmentType'>)[];
+  /** 給与の形・時給・日給は、契約から随時改定の起算月を出すのに使う（11/24。ないときは出さない） */
+  contracts: (ClassifyContract & Pick<ContractDoc, 'employmentType'> & Partial<Pick<ContractDoc, 'payType' | 'hourlyWage' | 'dailyWage'>>)[];
   payrolls: ReadonlyMap<string, Payroll>;
   remunerations: readonly Remuneration[];
   wageChanges?: readonly WageChange[];
@@ -127,7 +128,16 @@ export function revisionItems(p: RevisionPerson, ctx: RevisionContext): Revision
   }
 
   // 随時改定
-  for (const start of findStartMonths(p.payrolls, p.wageChanges ?? [])) {
+  // 時給・日給の人は、契約の時給・日給・所定労働時間の変更から起算月を出し、内訳なしの月は額では比べない（11/24）
+  const withPay: ContractLike[] = p.contracts.flatMap((c) =>
+    c.payType ? [{ from: c.from, payType: c.payType, hourlyWage: c.hourlyWage ?? null, dailyWage: c.dailyWage ?? null, weeklyMinutes: c.weeklyMinutes }] : [],
+  );
+  const contractStarts = contractStartMonths(withPay, (m) => periodOf(m, ctx.schedule).start);
+  const amountComparable = (m: string) => {
+    const c = contractAt(withPay, periodOf(m, ctx.schedule).end);
+    return !c || (c.payType !== 'hourly' && c.payType !== 'daily');
+  };
+  for (const start of findStartMonths(p.payrolls, p.wageChanges ?? [], { amountComparable, contractStarts })) {
     if (start.month < ctx.fromMonth) continue;
     const revisedFrom = shiftMonth(start.month, 3);
     const r = judgeIrregular({

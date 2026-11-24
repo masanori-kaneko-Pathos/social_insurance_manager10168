@@ -125,6 +125,20 @@ describe('recalc', () => {
     expect(r.expiredEmployeeYen).toBeGreaterThan(0);
     expect(r.diffEmployeeYen).toBeGreaterThan(0); // 9・10月分
   });
+
+  it('月次確定した月は、確定時の額を訂正前にする（標準報酬をもう編集してしまった後でも差額が出る。11/24）', () => {
+    // 今のデータは 32万（編集済み）。4〜6月は 30万のときに確定していた
+    const now = [rem('2026-04', 320, 23, 20)];
+    const plain = recalc(input({ remunerations: now }));
+    expect(plain.diffEmployeeYen).toBe(0); // 確定がなければ、編集した後は差額が出ない
+    const closedAt = (m: string) =>
+      m >= '2026-04' && m <= '2026-06' ? { e: month(m).employeeYen, t: month(m).totalMilli, c: 0 } : null;
+    const r = recalc(input({ remunerations: now, closedAt }));
+    const per = month('2026-04', now).employeeYen - month('2026-04').employeeYen;
+    expect(r.months.find((m) => m.month === '2026-04')!.beforeEmployeeYen).toBe(month('2026-04').employeeYen);
+    expect(r.diffEmployeeYen).toBe(per * 3);
+    expect(r.months.find((m) => m.month === '2026-07')!.beforeEmployeeYen).toBe(r.months.find((m) => m.month === '2026-07')!.afterEmployeeYen);
+  });
 });
 
 describe('periodOf：画面の1行 → 期間', () => {

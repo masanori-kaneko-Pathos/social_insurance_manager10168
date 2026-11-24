@@ -20,15 +20,17 @@ describe('totalsOf：内訳から総支給額・毎月決まった額を出す',
     expect(t.fixedFull).toBe(335000);
     expect(t.fixed).toBe(323710);
     expect(t.retro).toBe(0);
+    expect(t.nonFixed).toBe(12480);
     // 今までの計算が読む値どうしの決まり（ルールと同じ）
     expect(t.fixed <= t.cash).toBeTrue();
   });
 
-  it('時給：基本給（時給×時間）は毎月決まった額に入れない。控除は月ごとに変わる分から引く', () => {
-    const t = totalsOf([L('基本給', 'base', 150000), L('通勤手当', 'commute', 6000), L('遅刻早退控除', 'deduction', 1200)], 'hourly');
-    expect(t.cash).toBe(154800);
+  it('時給：基本給（時給×時間）も固定的賃金（法律どおり）。変動を見つける額からは除く', () => {
+    const t = totalsOf([L('基本給', 'base', 150000), L('通勤手当', 'commute', 6000), L('時間外手当', 'variable', 3000), L('遅刻早退控除', 'deduction', 1200)], 'hourly');
+    expect(t.cash).toBe(157800);
+    expect(t.fixed).toBe(154800);
+    expect(t.nonFixed).toBe(3000);
     expect(t.fixedFull).toBe(6000);
-    expect(t.fixed).toBe(6000);
   });
 
   it('報酬にならない行は入れない。昇給差額は総支給額に入り、昇給差額として別に返す', () => {
@@ -40,10 +42,10 @@ describe('totalsOf：内訳から総支給額・毎月決まった額を出す',
   });
 
   it('払った分の毎月決まった額は、総支給額から昇給差額を除いた額を超えない', () => {
-    const t = totalsOf([L('通勤手当', 'commute', 20000), L('基本給', 'base', 10000), L('遅刻早退控除', 'deduction', 15000)], 'hourly');
-    expect(t.cash).toBe(15000);
-    expect(t.fixed).toBe(15000);
-    expect(t.fixedFull).toBe(20000);
+    const t = totalsOf([L('通勤手当', 'commute', 20000), L('基本給', 'base', 10000), L('昇給差額', 'retro', 5000), L('欠勤控除', 'deduction', 26000)], 'monthly');
+    expect(t.cash).toBe(9000);
+    expect(t.fixed).toBe(4000);
+    expect(t.nonFixed).toBe(0);
   });
 });
 

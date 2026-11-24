@@ -1783,7 +1783,7 @@
   },
   "payroll": {
     "listTitle": "Payroll",
-    "listLead": "For each pay month, enter the gross pay, the part that is the same every month and the payment basis days from the payslip. They are used for the annual determination and revisions.",
+    "listLead": "For each pay month, enter the payslip payments (gross pay, fixed wages) and payment basis days. They are used for the annual determination and revisions.",
     "inputLatest": "Enter {{month}} payroll",
     "prevYear": "← Previous 12 months",
     "nextYear": "Next 12 months →",
@@ -1813,7 +1813,7 @@
       "saved": "Entered / employed",
       "employee": "Employee",
       "cash": "Gross pay",
-      "fixed": "Of which: same every month",
+      "fixed": "Of which: fixed wages",
       "days": "Basis days (支払基礎日数)",
       "inKind": "In kind (現物)",
       "retro": "Of which: back pay for a raise",
@@ -1823,8 +1823,9 @@
       "state": "Status",
       "total": "Total",
       "monthTotal": "Total pay",
-      "fixedShort": "Same every month",
-      "status": "Entry"
+      "fixedShort": "Fixed wages",
+      "status": "Entry",
+      "nonFixed": "Of which: non-fixed wages"
     },
     "tag": {
       "notSaved": "Not entered",
@@ -1843,11 +1844,11 @@
     "rowError": {
       "unreadable": "Some fields cannot be read as numbers",
       "cashRequired": "Enter the gross pay",
-      "fixedRequired": "Enter the part that is the same every month (0 if none)",
+      "fixedRequired": "Enter the fixed wages (0 if none)",
       "daysRequired": "Enter the payment basis days",
       "notInteger": "Amounts must be whole numbers of 0 or more",
       "tooLarge": "The amount is too large",
-      "fixedOverCash": "The part that is the same every month exceeds the gross pay",
+      "fixedOverCash": "The fixed wages exceed the gross pay",
       "retroOverTotal": "The back pay exceeds the gross pay plus in kind",
       "daysOutOfRange": "Payment basis days exceed the days in the pay period",
       "absentOutOfRange": "Days absent exceed the days in the pay period",
@@ -1858,7 +1859,7 @@
     "hint": {
       "list": "\"Missing\" counts employees insured during the pay period who have no record yet (only months whose pay day has passed).",
       "cash": "Gross pay: calculated from the breakdown. It includes the commuting allowance (even the tax-free part) and is after absence deductions. Not the net pay.",
-      "fixed": "Same every month: calculated from the breakdown categories (base pay for monthly-paid people, fixed allowances and commuting allowance, before absence deductions). When it changes from the previous month, the person appears as a revision candidate.",
+      "fixed": "Fixed wages: pay with a set rate or amount, such as base pay, position allowance and commuting allowance (including hourly rate × hours and daily rate × days). Non-fixed wages: pay that depends on the month, such as overtime, attendance allowance and commission. With a breakdown, these are calculated from the categories. A revision candidate appears when fixed wages (before absence deductions) change for monthly-paid people, or when the contract rate or scheduled hours change for hourly or daily-paid people.",
       "inKind": "Remuneration provided in kind (現物給与): company housing, dormitories and meals are converted to yen with the value set by the government for each prefecture, minus what the employee pays (different from the tax valuation). Use \"Calculate\" for meals and housing.",
       "days": "Payment basis days: for monthly pay, the calendar days (30, 31 and so on, minus absences), not the days worked. If absences are deducted from the company's set number of days, use that number minus absences. For daily or hourly pay, the days worked (including paid leave). For monthly-paid people, the suggestion appears under the field when a different number is entered.",
       "blank": "Empty rows are not saved. Clearing a saved row and saving deletes that month's record.",
@@ -2072,7 +2073,7 @@
       "name": "Name",
       "paidMonth": "Pay month",
       "cash": "Gross pay",
-      "fixed": "Of which: same every month",
+      "fixed": "Of which: fixed wages",
       "days": "Payment basis days",
       "inKind": "In kind",
       "retro": "Of which: back pay for a raise",
@@ -2105,7 +2106,7 @@
       "linesMismatch": "The breakdown columns do not add up to the gross pay column (a breakdown column is missing, or the gross pay includes something else)"
     },
     "hint": {
-      "columns": "Columns are read by header name (any order; unknown columns are ignored). Required: employee number, pay month, gross pay, of which: same every month, payment basis days. Columns whose header is a payroll item name (base pay, tax-free commuting allowance, absence deduction, etc.; names and CSV headers in payroll items and categories) are read as the breakdown. With breakdown columns, the gross pay and other totals come from the breakdown, and a gross pay column, if present, is checked against it. The earlier headers (month paid, paid in money, fixed wages, retroactive pay, prorated) are also read. Rows without an employee number are matched by name.",
+      "columns": "Columns are read by header name (any order; unknown columns are ignored). Required: employee number, pay month, gross pay, of which: fixed wages, payment basis days. Columns whose header is a payroll item name (base pay, tax-free commuting allowance, absence deduction, etc.; names and CSV headers in payroll items and categories) are read as the breakdown. With breakdown columns, the gross pay and other totals come from the breakdown, and a gross pay column, if present, is checked against it. The earlier headers (month paid, paid in money, fixed wages, retroactive pay, prorated) are also read. Rows without an employee number are matched by name.",
       "excel": "CSV files saved by Excel (Shift_JIS) can be read as is, including months Excel turned into dates like 2026/10/1 and employee numbers that lost leading zeros.",
       "allOrNothing": "Fix rows with errors here, or import with them left unchecked (only those rows are skipped). Saving is done in batches of 500."
     },
@@ -2539,10 +2540,12 @@
       "childcare": "After childcare leave"
     },
     "source": {
-      "fixed": "Amount paid the same every month changed",
+      "fixed": "Fixed wages changed",
       "retro": "Back pay",
       "manual": "Added manually",
-      "furlough": "Furlough started or ended"
+      "furlough": "Furlough started or ended",
+      "contract": "Contract rate or scheduled hours changed",
+      "inKind": "Benefits in kind (housing, meals, etc.) changed"
     },
     "direction": {
       "up": "up",
@@ -2600,7 +2603,7 @@
       "badge": "Annual average candidate",
       "open": "See the annual-average method (insurer calculation)",
       "col": {
-        "fixed": "Same every month (+ in kind)",
+        "fixed": "Fixed wages (+ in kind)",
         "nonFixed": "Non-fixed wages"
       },
       "three": "3 months from the start month",
@@ -2917,7 +2920,8 @@
       "reason": "Enter what is corrected.",
       "save": "Could not save.",
       "delete": "Could not delete."
-    }
+    },
+    "closedHint": "For closed months ({{n}}), the closed amounts (what was actually deducted) are used as the amounts before correction."
   },
   "careExemption": {
     "title": "Periods without long-term care premiums (介護保険適用除外, exemption)",
@@ -3503,7 +3507,7 @@
       },
       "payroll": {
         "title": "Entering payroll",
-        "body": "On the payroll screen, enter the gross pay, the part that is the same every month and payment basis days from the payslip for each pay month. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). \"Same every month\" is the part of fixed wages paid in the same amount every month. When an hourly or daily rate changes, add it with \"Add a fixed wage change\" on the revision candidates. You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and back pay columns. For one person and one month, you can also use \"Enter a month\" on the employee page. Enter in \"back pay\" (retroactive pay on the forms) only differences from raises decided retroactively. Allowances paid late because of a late application or a mistake go back into the month they should have been paid (that month becomes the start month for a revision). Mark \"Partial month\" for months where a mid-period hire, transfer or new allowance means a full month was not paid (that month is not used as a start month; counting begins the next month). Payment basis days are calendar days for monthly pay, days worked for daily pay, and total hours ÷ daily scheduled hours for hourly pay. For months where a retroactive pay cut was deducted, enter the amount before the deduction. One-off or up-to-three-times-a-year payments (e.g. a sign-on allowance or year-end allowance) do not go into payroll; register them as bonuses (bonus payment report). Monthly allowances go into payroll even if they share a payslip line with such payments."
+        "body": "On the payroll screen, enter the gross pay, fixed wages and payment basis days from the payslip for each pay month. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). Fixed wages are pay with a set rate or amount (including hourly rate × hours); non-fixed wages depend on the month, such as overtime. When an hourly or daily rate or the scheduled hours change in the contract, a revision candidate appears. You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and back pay columns. For one person and one month, you can also use \"Enter a month\" on the employee page. Enter in \"back pay\" (retroactive pay on the forms) only differences from raises decided retroactively. Allowances paid late because of a late application or a mistake go back into the month they should have been paid (that month becomes the start month for a revision). Mark \"Partial month\" for months where a mid-period hire, transfer or new allowance means a full month was not paid (that month is not used as a start month; counting begins the next month). Payment basis days are calendar days for monthly pay, days worked for daily pay, and total hours ÷ daily scheduled hours for hourly pay. For months where a retroactive pay cut was deducted, enter the amount before the deduction. One-off or up-to-three-times-a-year payments (e.g. a sign-on allowance or year-end allowance) do not go into payroll; register them as bonuses (bonus payment report). Monthly allowances go into payroll even if they share a payslip line with such payments."
       },
       "inKind": {
         "title": "Remuneration provided in kind (housing, dormitories, meals)",
@@ -3568,6 +3572,68 @@
       "childcareSpecial": {
         "title": "Childcare period special rule (pension)",
         "body": "If the standard monthly remuneration of someone raising a child under 3 falls below the month before they started raising the child, they can apply so that premiums stay at the lower amount while the future pension uses the earlier amount (Employees' Pension Insurance Act Art. 26). Fathers are eligible too. It appears in the To-do list as \"Childcare period special rule (pension)\".\n\n■ What to submit\nThe childcare period special rule application, submitted by the company to the pension office.\n\n■ Attachments\n- Family register extract showing the relationship (original). Not needed if the company checks it and ticks \"confirmed\", or if both My Numbers are written (review may then take about a month)\n- Residence certificate showing the child's birth date and that they live together (issued within 90 days, original). Not needed if both My Numbers are written\n\n■ Months covered\n- From the month the child was born (or raising started, for adopted children) to the month before the child turns 3\n- Up to two years back from the month before the application\n- Compared with the standard in the month before raising started (if not insured then, the latest month within the prior year; ask about the previous employer)\n\n■ Applying again\nThe rule ends when an exempt childcare or maternity leave starts; apply again after the leave. Also apply again after changing jobs.\n\n■ Children the app finds\nFrom leave records (birth date on maternity leave, child's birth date on childcare leave) and dependents with the child relationship. Children recorded in neither (e.g. a spouse's dependent) are not found, so check with the employee."
+      },
+      "flow": {
+        "title": "Workflow (what to do when)",
+        "body": "What to do in each situation and which screen to use. Click a screen name to open it."
+      }
+    },
+    "flow": {
+      "col": {
+        "scene": "When",
+        "todo": "What to do",
+        "screen": "Screens"
+      },
+      "link": {
+        "settings": "Office settings",
+        "import": "CSV import",
+        "payrollItems": "Payroll items and categories",
+        "employeeNew": "Add an employee",
+        "filings": "Filings",
+        "payrolls": "Payroll",
+        "premiums": "Premiums",
+        "revisions": "Revision candidates",
+        "regular": "Annual determination",
+        "bonusNew": "Add a bonus",
+        "bonuses": "Bonuses",
+        "employees": "Employees",
+        "premiumPeriod": "Employer share by period"
+      },
+      "setup": {
+        "scene": "Getting started",
+        "todo": "In office settings, check the insurer, rates, payroll closing and pay days and the deduction month. Employees, standard remuneration and payroll can be imported by CSV. Check the categories of payslip item names in payroll items and categories. In the first month, compare the employee shares in the premium list with the amounts your payroll software deducted."
+      },
+      "join": {
+        "scene": "When someone joins",
+        "todo": "Add the employee and the employment contract (scheduled hours, wages, expected monthly pay). Enrollment and the standard remuneration at acquisition are shown. File the acquisition notification within 5 days of joining."
+      },
+      "monthly": {
+        "scene": "Every month",
+        "todo": "After paying salaries, enter that pay month (breakdown or gross pay, and payment basis days). Check the employee share to deduct from that pay in the premium list; premiums come from the standard monthly remuneration, not from the pay entered. When the pension office notice arrives, compare it in the premium list and pay by the end of the next month."
+      },
+      "change": {
+        "scene": "Raises and allowance or rate changes",
+        "todo": "Check the revision candidates. When the 3-month average from the month fixed wages changed (for hourly or daily pay, the month the contract rate or scheduled hours changed) moves the standard monthly remuneration by 2 grades or more, it is an irregular revision. File the monthly change notification and reflect the decided amount."
+      },
+      "july": {
+        "scene": "July (annual determination)",
+        "todo": "Decide the standard monthly remuneration from September based on pay in April, May and June. File the annual report between July 1 and 10 and reflect the decision notice when it arrives."
+      },
+      "bonus": {
+        "scene": "Paying a bonus",
+        "todo": "Enter the pay date and bonus amount (gross on the bonus slip) to see the standard bonus and premiums. File the bonus payment report within 5 days of the pay date."
+      },
+      "leave": {
+        "scene": "Maternity and childcare leave",
+        "todo": "Register the leave on the employee to exempt premiums for that period (the employee's request and a filing are needed). After return, check the end-of-leave revision candidates."
+      },
+      "retire": {
+        "scene": "When someone leaves",
+        "todo": "Enter the leaving date to see the loss date (the next day) and how many months to deduct from the last pay. File the loss notification within 5 days."
+      },
+      "yearEnd": {
+        "scene": "Year end and closing",
+        "todo": "Use employer share by period to list the employer share by month and notice line, and pass the CSV to accounting."
       }
     }
   },
@@ -3902,8 +3968,6 @@
       "pickCategory": "Choose a category…",
       "add": "Add a line",
       "remove": "Delete the line",
-      "none": "This month has no breakdown (only the gross pay is entered).",
-      "start": "Enter the breakdown",
       "error": {
         "name": "Enter the item name (up to 30 characters)",
         "category": "Choose a category (it is also registered in payroll items and categories)",
@@ -3912,10 +3976,11 @@
         "empty": "Enter at least one breakdown line",
         "tooMany": "Up to 40 breakdown lines"
       },
-      "makeTemplate": "Use these items as the office template",
-      "templateDone": "Saved as the office template",
-      "replacing": "When you enter amounts, the current gross pay of {{amount}} yen is replaced by the breakdown total.",
-      "splitNote": "Enter lines as they are split on the payslip. Lines in the same category are added together."
+      "makeTemplate": "Use these items as the office payroll items",
+      "templateDone": "Saved as the office payroll items",
+      "splitNote": "Enter lines as they are split on the payslip. Lines in the same category are added together.",
+      "direct": "If the payslip only shows the gross pay, enter it in the fields above (non-fixed wages are calculated). When amounts are entered in the breakdown, the fields above are calculated from it.",
+      "fromLines": "The fields above are calculated from the breakdown (clear all breakdown amounts to enter them directly)."
     },
     "side": {
       "days": "Days and hours",
@@ -4695,7 +4760,7 @@
       "dependents": "Add dependents to registered employees in bulk. One row per dependent, matched by employee number. People already registered with the same name and birth date are skipped; nothing is overwritten.",
       "contract": "Add records to registered employees: employment contracts from the second one onward, and standard monthly remuneration decisions (annual determination, occasional revision, etc.). Employees are matched by employee number. Records for a date (month) that already exists are skipped, never overwritten. Coverage (acquisition and loss dates) is not changed, so check the \"Review coverage\" items in the To-do list after importing.",
       "remuneration": "Add records to registered employees: employment contracts from the second one onward, and standard monthly remuneration decisions (annual determination, occasional revision, etc.). Employees are matched by employee number. Records for a date (month) that already exists are skipped, never overwritten. Coverage (acquisition and loss dates) is not changed, so check the \"Review coverage\" items in the To-do list after importing.",
-      "payrolls": "One row per person per month: gross pay, the part that is the same every month, payment basis days and so on from the payslip. Export a period from \"Template / export\", edit it in Excel and import it as is (same format both ways).",
+      "payrolls": "One row per person per month: gross pay, fixed wages, payment basis days and so on from the payslip. Export a period from \"Template / export\", edit it in Excel and import it as is (same format both ways).",
       "bonuses": "One row per person per payment: paid date and bonus amount. Rows with the same paid date become one payment. Existing payments are merged: people not in the file keep their amounts.",
       "myNumber": "Add My Numbers to registered employees in one go (employee number and My Number columns). Exporting asks for your password again. Both are logged.",
       "certificate": "Add social security agreement certificates (people sent to Japan from abroad) or overseas assignments (people sent abroad from Japan) to registered employees. People are matched by employee number. Rows identical to saved data are skipped.",
@@ -4966,7 +5031,7 @@
       "base": "Base pay",
       "fixedAllowance": "Fixed allowance",
       "commute": "Commuting allowance",
-      "variable": "Variable allowance",
+      "variable": "Non-fixed allowance",
       "deduction": "Absence or lateness deduction",
       "retro": "Back pay for a raise",
       "excluded": "Not remuneration"
@@ -4981,11 +5046,11 @@
       "excluded": "travel expense refunds, congratulatory or condolence payments"
     },
     "treatment": {
-      "base": "Counted in gross pay. Counted as the same every month for monthly and daily-monthly pay, not for hourly or daily pay",
-      "fixedAllowance": "Counted in gross pay and as the same every month",
-      "commute": "Counted in gross pay and as the same every month (to notice moves and fare changes)",
-      "variable": "Counted in gross pay, not as the same every month",
-      "deduction": "Subtracted from gross pay. The same-every-month amount is checked before the deduction",
+      "base": "Counted in gross pay and as fixed wages (including hourly rate × hours; for hourly or daily pay, changes are found from contract rate or hour changes)",
+      "fixedAllowance": "Counted in gross pay and as fixed wages",
+      "commute": "Counted in gross pay and as fixed wages (to notice moves and fare changes)",
+      "variable": "Counted in gross pay as non-fixed wages",
+      "deduction": "Subtracted from gross pay and fixed wages (changes are checked before the deduction)",
       "retro": "Counted in gross pay, left out of the averages for the annual determination and revisions",
       "excluded": "Not counted in gross pay"
     },
@@ -5002,7 +5067,7 @@
     "how": {
       "saved": "When payroll is saved, the item names and categories are copied into that month's breakdown. Changing a category later does not change saved months.",
       "unknown": "A month cannot be saved while it has an item name without a category. Choosing a category while entering the breakdown also registers it here.",
-      "fixed": "\"Same every month\" is used to find changes from the previous month and suggest revision candidates. Premiums themselves are calculated from the standard monthly remuneration, which is based on gross pay."
+      "fixed": "Fixed wages are used to find changes from the previous month and suggest revision candidates (contract changes for hourly or daily pay). Premiums themselves are calculated from the standard monthly remuneration, which is based on gross pay."
     },
     "exampleLabel": "e.g. {{list}}",
     "template": {
@@ -5014,6 +5079,99 @@
       "down": "Move down",
       "saved": "Order saved",
       "remove": "Remove"
+    }
+  },
+  "premiumPeriod": {
+    "title": "Employer share by period",
+    "back": "Premiums",
+    "export": "Export CSV",
+    "fileTitle": "employer-share",
+    "lead": "Lists the employer share for the selected period by month and by notice line, with totals. Useful for accrued expenses at year end and annual personnel costs.",
+    "from": "From",
+    "to": "To",
+    "thisYear": "This fiscal year",
+    "lastYear": "Last fiscal year",
+    "monthLabel": "{{y}}-{{m}}",
+    "badRange": "The start month must come before the end month, and the period can be up to 24 months.",
+    "problems": "{{n}} months include people who cannot be calculated (such as no standard remuneration). Their share is not in the totals. Click a month to check it in the premium list.",
+    "problemBadge": "{{n}} not calculated",
+    "bonus": "Bonus",
+    "total": "Period total",
+    "col": {
+      "month": "Month",
+      "health": "Health insurance (incl. care and child support)",
+      "pension": "Pension",
+      "childContribution": "Child contribution",
+      "employer": "Employer share total",
+      "employee": "Employee share total",
+      "payment": "Payment",
+      "bonus": "Bonus"
+    },
+    "hint": {
+      "calc": "The employer share uses the same calculation as the office total in the premium list (payment rounded down after adding everyone's full amounts, minus the employee shares). Monthly figures match the premium list.",
+      "health": "Health, care and child support are one line (health insurance) on the notice, so they are shown together.",
+      "bonus": "Months with a bonus include both monthly and bonus premiums."
+    },
+    "error": {
+      "load": "Could not load the data needed for the totals."
+    }
+  },
+  "monthClose": {
+    "closed": "Closed",
+    "closedBy": "{{at}} · {{name}} · {{count}} people",
+    "changedAfter": "Changed after closing: {{count}}",
+    "allSettled": "Differences after closing are settled ({{count}})",
+    "cancel": "Cancel closing",
+    "close": "Close month {{month}}",
+    "lead": "Record the amounts you deducted. If you later correct standard remuneration retroactively, you can see the differences.",
+    "block": {
+      "future": "You cannot close a month that has not come yet.",
+      "problems": "Some people cannot be calculated, so this month cannot be closed. Fix the people in the warning above first.",
+      "empty": "No one is insured in this month."
+    },
+    "confirm": "Close the premiums for month {{month}}.\nPeople: {{count}} · Employee share total ¥{{employee}}\nYou can still edit after closing. People whose amounts change will be shown as \"Changed after closing\".",
+    "cancelConfirm": "Cancel the closing of month {{month}}? The settlement records will also be deleted.",
+    "error": {
+      "close": "Could not close the month. Please try again.",
+      "cancel": "Could not cancel the closing. Please try again.",
+      "settle": "Could not save the settlement record. Please try again.",
+      "payMonth": "Enter the pay month for the settlement.",
+      "load": "Could not load the closing records."
+    },
+    "diff": {
+      "title": "Differences from the closed amounts",
+      "lead": "People whose premiums changed after closing (standard remuneration, eligibility, rates, etc.). Settle the difference in a later payroll (deduct or refund in your payroll software).",
+      "open": "Not settled: {{count}} · Employee ¥{{employee}} · Employer ¥{{employer}}",
+      "noOpen": "No one is waiting for settlement.",
+      "payMonth": "Pay month for settlement",
+      "col": {
+        "closed": "Employee share (closed)",
+        "now": "Employee share (now)",
+        "employee": "Employee difference",
+        "employer": "Employer difference",
+        "status": "Settlement"
+      },
+      "unknown": "(Employee not found)",
+      "retired": "Left",
+      "retiredNote": "People who have left cannot be settled through payroll. Contact them and settle separately.",
+      "expired": "Time-barred",
+      "expiredNote": "Premiums for months more than 2 years past the due date can no longer be collected or refunded.",
+      "settled": "Settled in the {{y}}-{{m}} payroll",
+      "unsettle": "Undo",
+      "changedAfterSettle": "Changed after settlement (last: {{y}}-{{m}})",
+      "settle": "Mark as settled",
+      "hint": "Positive amounts are additional deductions; negative amounts are refunds. Employer differences are estimates including fractions of a yen."
+    },
+    "summary": {
+      "lead": "When a retroactive notification is processed, past differences appear as \"settlement up to last month\" on the payment notice. Compare the closed months whose amounts changed after closing.",
+      "none": "No closed month has changed after closing.",
+      "load": "Show differences in closed months",
+      "col": {
+        "month": "Month",
+        "count": "People",
+        "premium": "Premium difference (total)",
+        "contribution": "Contribution difference"
+      }
     }
   }
 }

@@ -56,7 +56,7 @@ export const PAYROLL_HEADERS: Record<CsvLang, Record<PayrollColumn, string>> = {
     name: '氏名',
     paidMonth: '支払月',
     cash: '総支給額',
-    fixed: 'うち毎月決まった額',
+    fixed: 'うち固定的賃金',
     days: '支払基礎日数',
     inKind: '現物',
     retro: 'うち昇給差額',
@@ -70,7 +70,7 @@ export const PAYROLL_HEADERS: Record<CsvLang, Record<PayrollColumn, string>> = {
     name: 'Name',
     paidMonth: 'Pay month',
     cash: 'Gross pay',
-    fixed: 'Of which: same every month',
+    fixed: 'Of which: fixed wages',
     days: 'Payment basis days',
     inKind: 'In kind',
     retro: 'Of which: back pay for a raise',
@@ -87,7 +87,7 @@ export const PAYROLL_HEADERS: Record<CsvLang, Record<PayrollColumn, string>> = {
 export const PAYROLL_OLD_HEADERS: Partial<Record<PayrollColumn, readonly string[]>> = {
   paidMonth: ['支払った月', 'Month paid'],
   cash: ['支払額', 'Paid in money'],
-  fixed: ['固定的賃金', 'Fixed wages'],
+  fixed: ['固定的賃金', 'Fixed wages', 'うち毎月決まった額', 'Of which: same every month'],
   retro: ['遡及支払額', 'Retroactive pay'],
   prorated: ['日割り', 'Prorated'],
 };
@@ -312,7 +312,7 @@ export function lineColumnsOf(
 export interface ReadOptions {
   /** 給与の項目（内訳の列を見分ける。11/24。なければよくある名前だけで見分ける） */
   items?: readonly PayrollItemInput[];
-  /** その人のその月の給与の形（基本給を毎月決まった額に数えるか。分からなければ null ＝ 月給と見る） */
+  /** その人のその月の給与の形（基本給を固定的賃金に数えるか。分からなければ null ＝ 月給と見る） */
   payTypeOf?: (employeeId: string, paidMonth: string) => PayType | null;
   /**
    * 現物の列がないファイルの扱い
@@ -342,7 +342,7 @@ export function readPayrollCsv(
     return result;
   }
   const { index, missing: missingOurs } = mapHeader(rows[0]);
-  // 内訳の列があれば、総支給額・毎月決まった額は内訳から出すので、列がなくてもよい（11/24）
+  // 内訳の列があれば、総支給額・固定的賃金は内訳から出すので、列がなくてもよい（11/24）
   const lineCols = lineColumnsOf(rows[0], new Set(Object.values(index) as number[]), opts.items ?? []);
   const missing = lineCols.length > 0 ? missingOurs.filter((c) => c !== 'cash' && c !== 'fixed') : missingOurs;
   if (missing.length > 0) {

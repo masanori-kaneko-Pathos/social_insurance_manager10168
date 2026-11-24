@@ -1,0 +1,93 @@
+<div class="page-head">
+  <div>
+    <a class="back" [routerLink]="['/o', context.current()?.id, 'premiums']">← {{ 'premiumPeriod.back' | transloco }}</a>
+    <h1>{{ 'premiumPeriod.title' | transloco }}</h1>
+  </div>
+  @if (rows().length > 0) {
+    <div class="head-actions">
+      <button type="button" class="btn" (click)="exportCsv()">{{ 'premiumPeriod.export' | transloco }}</button>
+    </div>
+  }
+</div>
+<p class="lead">{{ 'premiumPeriod.lead' | transloco }}</p>
+
+<div class="card range">
+  <label class="field">
+    <span>{{ 'premiumPeriod.from' | transloco }}</span>
+    <input class="input" type="month" [value]="from()" (change)="setFrom($any($event.target).value)" />
+  </label>
+  <span class="tilde">〜</span>
+  <label class="field">
+    <span>{{ 'premiumPeriod.to' | transloco }}</span>
+    <input class="input" type="month" [value]="to()" (change)="setTo($any($event.target).value)" />
+  </label>
+  <div class="quick">
+    <button type="button" class="btn btn-small" (click)="thisYear()">{{ 'premiumPeriod.thisYear' | transloco }}</button>
+    <button type="button" class="btn btn-small" (click)="lastYear()">{{ 'premiumPeriod.lastYear' | transloco }}</button>
+  </div>
+</div>
+
+@if (loading()) {
+  <p class="muted">{{ 'common.loading' | transloco }}</p>
+} @else if (errorKey(); as key) {
+  <div class="alert alert-danger">{{ key | transloco }}</div>
+} @else if (!months()) {
+  <div class="alert alert-warning">{{ 'premiumPeriod.badRange' | transloco }}</div>
+} @else {
+  @if (problems() > 0) {
+    <div class="alert alert-warning">{{ 'premiumPeriod.problems' | transloco: { n: problems() } }}</div>
+  }
+  <div class="card table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ 'premiumPeriod.col.month' | transloco }}</th>
+          @for (c of categories; track c) {
+            <th class="num">{{ 'premiumPeriod.col.' + c | transloco }}</th>
+          }
+          <th class="num strong">{{ 'premiumPeriod.col.employer' | transloco }}</th>
+          <th class="num sub-col">{{ 'premiumPeriod.col.employee' | transloco }}</th>
+          <th class="num sub-col">{{ 'premiumPeriod.col.payment' | transloco }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of rows(); track r.month) {
+          <tr>
+            <td>
+              <a [routerLink]="['/o', context.current()?.id, 'premiums']" [queryParams]="{ month: r.month }">{{ monthLabel(r.month) }}</a>
+              @if (r.hasBonus) {
+                <span class="badge badge-sub">{{ 'premiumPeriod.bonus' | transloco }}</span>
+              }
+              @if (r.problems > 0) {
+                <span class="badge badge-warn">{{ 'premiumPeriod.problemBadge' | transloco: { n: r.problems } }}</span>
+              }
+            </td>
+            @for (c of categories; track c) {
+              <td class="num">{{ yen(r.employer[c]) }}</td>
+            }
+            <td class="num strong">{{ yen(r.employerTotal) }}</td>
+            <td class="num sub-col">{{ yen(r.employeeTotal) }}</td>
+            <td class="num sub-col">{{ yen(r.paymentTotal) }}</td>
+          </tr>
+        }
+      </tbody>
+      <tfoot>
+        @let s = sum();
+        <tr class="sum-row">
+          <th scope="row">{{ 'premiumPeriod.total' | transloco }}</th>
+          @for (c of categories; track c) {
+            <td class="num">{{ yen(s.employer[c]) }}</td>
+          }
+          <td class="num strong">{{ yen(s.employerTotal) }}</td>
+          <td class="num sub-col">{{ yen(s.employeeTotal) }}</td>
+          <td class="num sub-col">{{ yen(s.paymentTotal) }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  <ul class="hint">
+    <li>{{ 'premiumPeriod.hint.calc' | transloco }}</li>
+    <li>{{ 'premiumPeriod.hint.health' | transloco }}</li>
+    <li>{{ 'premiumPeriod.hint.bonus' | transloco }}</li>
+  </ul>
+}

@@ -15,6 +15,33 @@
   <section class="card topic">
     <h2>{{ 'help.topic.' + t + '.title' | transloco }}</h2>
     <p>{{ 'help.topic.' + t + '.body' | transloco }}</p>
+    @if (t === 'flow') {
+      <!-- 業務の流れ：場面 → すること → 使う画面（11/24） -->
+      <div class="flow-wrap">
+        <table class="flow">
+          <thead>
+            <tr>
+              <th>{{ 'help.flow.col.scene' | transloco }}</th>
+              <th>{{ 'help.flow.col.todo' | transloco }}</th>
+              <th>{{ 'help.flow.col.screen' | transloco }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of flow; track s.key) {
+              <tr>
+                <th scope="row">{{ 'help.flow.' + s.key + '.scene' | transloco }}</th>
+                <td>{{ 'help.flow.' + s.key + '.todo' | transloco }}</td>
+                <td class="links">
+                  @for (l of s.links; track l.label) {
+                    <a [routerLink]="linkOf(l.path)">{{ 'help.flow.link.' + l.label | transloco }}</a>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
   </section>
 } @empty {
   <p class="muted">{{ 'help.empty' | transloco: { q: query() } }}</p>

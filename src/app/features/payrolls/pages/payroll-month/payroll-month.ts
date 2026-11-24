@@ -4,7 +4,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
-import { fixedForChange, Payroll, PayrollLine, PayrollState } from '../../../../core/models/payroll';
+import { Payroll, PayrollLine, PayrollState } from '../../../../core/models/payroll';
 import { PayrollItem, PayrollItemInput } from '../../../../core/models/payroll-item';
 import { EmployeeService } from '../../../employees/employee.service';
 import { ContractService } from '../../../employees/contract.service';
@@ -46,7 +46,7 @@ const MONTH_RE = /^[0-9]{4}-(0[1-9]|1[0-2])$/;
 
 /**
  * 給与の月の画面（11/24 に作り替え）
- * 一覧は表示だけ（社員番号・氏名・部署・雇用形態・総支給額・毎月決まった額・支払基礎日数・状態）。
+ * 一覧は表示だけ（社員番号・氏名・部署・雇用形態・総支給額・固定的賃金・支払基礎日数・状態）。
  * 「内訳」を押すと、その行の下に給与明細の内訳を開いて入れる（app-payroll-entry）。「保存して次の人へ」で1人ずつ保存する。
  * 支払基礎日数の「まとめて入れる」は一覧のまま使えるので、直した行は下の帯の「保存する」でまとめて保存する
  */
@@ -299,14 +299,8 @@ export class PayrollMonth {
     return /^\d+$/.test(t) ? Number(t).toLocaleString('ja-JP') : '—';
   }
 
-  /** 毎月決まった額（内訳があれば欠勤控除を引く前の額。入力中は内訳から） */
+  /** 固定的賃金（払った額。内訳があれば内訳から計算した値が欄に入っている） */
   fixedText(v: ViewRow): string {
-    const drafts = v.lines();
-    if (v.form.dirty && drafts) {
-      const r = readEntry(v.form.getRawValue(), drafts, this.contractOf(v)?.payType ?? null, this.periodDays());
-      if (r.kind === 'ok') return fixedForChange(r.input).toLocaleString('ja-JP');
-    }
-    if (!v.form.dirty && v.row.saved) return fixedForChange(v.row.saved).toLocaleString('ja-JP');
     return this.yenOf(v.form.controls.fixed.value);
   }
 
@@ -356,7 +350,8 @@ export class PayrollMonth {
     }
     void this.loadPrev(v).then(() => {
       const prev = this.prevLinesOf(v);
-      if (!v.row.saved && prev && prev.length > 0 && v.lines() !== null && !hasAmounts(v.lines())) {
+      // 内訳のない月（新しい月・前のデータ）で、まだ金額を入れていなければ、その人の前の月の並びにする
+      if (!v.row.saved?.lines && prev && prev.length > 0 && v.lines() !== null && !hasAmounts(v.lines())) {
         v.lines.set(copyNames(prev));
       }
     });

@@ -72,7 +72,7 @@
       }
       <div class="actions">
         <button type="button" class="btn" (click)="cancel()">{{ 'common.cancel' | transloco }}</button>
-        <button type="button" class="btn btn-primary" (click)="calculate()">{{ 'recalc.calculate' | transloco }}</button>
+        <button type="button" class="btn btn-primary" [disabled]="calculating()" (click)="calculate()">{{ 'recalc.calculate' | transloco }}</button>
       </div>
 
       <!-- ===== 結果 ===== -->
@@ -92,6 +92,10 @@
             <div class="alert alert-warning">
               {{ 'recalc.expiredAlert' | transloco: { n: expiredCount(), yen: yen(r.expiredEmployeeYen) } }}
             </div>
+          }
+          <!-- 月次確定した月は、確定時の額（実際に控除した額）を訂正前にしている（11/24） -->
+          @if (closedCount() > 0) {
+            <p class="hint">{{ 'recalc.closedHint' | transloco: { n: closedCount() } }}</p>
           }
           <div class="table-wrap">
             <table>

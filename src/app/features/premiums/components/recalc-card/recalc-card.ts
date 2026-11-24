@@ -16,6 +16,8 @@ import { RateService } from '../../../rates/rate.service';
 import { formatMilli } from '../../logic/rounding';
 import { periodOf, recalc, RecalcResult } from '../../logic/recalc';
 import { RecalcService } from '../../recalc.service';
+import { MonthCloseService } from '../../month-close.service';
+import type { ClosedAmount } from '../../logic/month-close';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 /** 画面の1行：何月から・何月まで（空 ＝ 今も）・報酬月額（「加入していない」なら null） */
@@ -46,6 +48,7 @@ export class RecalcCard implements OnInit {
   private readonly rates = inject(RateService);
   private readonly remApi = inject(RemunerationService);
   private readonly api = inject(RecalcService);
+  private readonly closeApi = inject(MonthCloseService);
   readonly context = inject(OfficeContext);
 
   readonly employee = input.required<Employee>();
@@ -76,6 +79,9 @@ export class RecalcCard implements OnInit {
   readonly resultPeriods = signal<RecalcPeriod[]>([]);
   readonly saving = signal(false);
   readonly formError = signal<string | null>(null);
+  /** 計算した期間のうち、月次確定した月の数（訂正前に確定時の額を使った月。11/24） */
+  readonly closedCount = signal(0);
+  readonly calculating = signal(false);
 
   readonly yen = (n: number) => n.toLocaleString('ja-JP');
   readonly milli = formatMilli;
@@ -183,10 +189,10 @@ export class RecalcCard implements OnInit {
     return { periods, ...(fix ? { health: enr(this.health()), pension: enr(this.pension()) } : {}) };
   }
 
-  calculate(): void {
+  async calculate(): Promise<void> {
     this.formError.set(null);
     const office = this.context.current();
-    if (!office || !this.tables) return;
+    if (!office || !this.tables || this.calculating()) return;
     if (!YEAR_MONTH_RE.test(this.from()) || !YEAR_MONTH_RE.test(this.to()) || this.from() > this.to()) {
       this.formError.set('recalc.error.range');
       return;
@@ -194,6 +200,22 @@ export class RecalcCard implements OnInit {
     const correction = this.build();
     if (!correction) return;
     const ratesAt = ratesForOffice(office, this.tables);
+    // 月次確定した月は、確定時の額（実際に控除した額）を訂正前にする。期間の確定を1回の問い合わせで読む（11/24）
+    const closed = new Map<string, ClosedAmount | null>();
+    this.calculating.set(true);
+    try {
+      const id = this.employee().id;
+      for (const c of await this.closeApi.range(office.id, this.from(), this.to())) closed.set(c.month, c.people[id] ?? null);
+    } catch (err) {
+      // 読めなくても計算はする（今のデータを訂正前にする）
+      console.error(err);
+    } finally {
+      this.calculating.set(false);
+    }
+    // 確定した月に、この人がいなかった（その月は加入していなかった）ときは、確定時 0 円
+    const closedAt = (m: string): ClosedAmount | null =>
+      closed.has(m) ? (closed.get(m) ?? { e: 0, t: 0, c: 0 }) : null;
+    this.closedCount.set(closed.size);
     this.resultPeriods.set(correction.periods);
     this.result.set(
       recalc({
@@ -205,6 +227,7 @@ export class RecalcCard implements OnInit {
         ratesAt,
         options: premiumOf(office),
         today: this.today,
+        closedAt,
       }),
     );
   }

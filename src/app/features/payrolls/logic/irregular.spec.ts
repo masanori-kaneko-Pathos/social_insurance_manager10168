@@ -1,7 +1,7 @@
 import { emptyPayrollInput, Payroll } from '../../../core/models/payroll';
 import type { WageChange } from '../../../core/models/revision';
 import { GRADES, healthGradeOf, pensionGradeOf } from './grades.fixture';
-import { findStartMonths, IrregularInput, judgeIrregular, StartMonth } from './irregular';
+import { contractStartMonths, findStartMonths, IrregularInput, judgeIrregular, StartMonth } from './irregular';
 import type { Remuneration } from './regular';
 
 function pay(month: string, cash: number, fixed: number, days = 31, retro = 0): [string, Payroll] {
@@ -243,5 +243,39 @@ describe('judgeIrregular：賞与に係る報酬を各月に足す（年4回以�
     const withBonus = judgeIrregular({ ...input(up('2026-04'), payrolls, [rem('2025-09', 220)]), bonusMonthly: 30000 });
     expect(withBonus.average!.average).toBe(base.average!.average + 30000);
     expect(withBonus.months.map((m) => m.amount)).toEqual([288600, 287300, 285400]);
+  });
+});
+
+describe('contractStartMonths：雇用契約の変更から起算月（11/24）', () => {
+  // 月末締め・翌月払い：支払月の計算期間の初日 ＝ 前の月の1日
+  const periodStart = (m: string) => `${shiftYm(m, -1)}-01`;
+  function shiftYm(m: string, d: number): string {
+    const [y, mo] = m.split('-').map(Number);
+    const t = y * 12 + (mo - 1) + d;
+    return `${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, '0')}`;
+  }
+  const c = (from: string, hourlyWage: number, weeklyMinutes = 1200) =>
+    ({ from, payType: 'hourly' as const, hourlyWage, dailyWage: null, weeklyMinutes });
+
+  it('時給が上がった：新しい時給で1か月分そろった最初の支払月が起算月（4/1から → 5月払い）', () => {
+    expect(contractStartMonths([c('2025-04-01', 1100), c('2026-04-01', 1200)], periodStart)).toEqual([
+      { month: '2026-05', direction: 'up', source: 'contract' },
+    ]);
+  });
+  it('時給が同じで契約時間が減った → 下がった（事例集 問1-3）。月給どうしは出さない', () => {
+    expect(contractStartMonths([c('2025-04-01', 1200, 2400), c('2026-04-16', 1200, 1950)], periodStart)).toEqual([
+      { month: '2026-06', direction: 'down', source: 'contract' },
+    ]);
+    const m = (from: string) => ({ from, payType: 'monthly' as const, hourlyWage: null, dailyWage: null, weeklyMinutes: 2400 });
+    expect(contractStartMonths([m('2025-04-01'), m('2026-04-01')], periodStart)).toEqual([]);
+  });
+  it('時給の人の内訳なしの月は額で比べない（時給×時間で動くため）。契約の変更は候補に入る', () => {
+    const m = new Map([pay('2026-03', 150000, 150000), pay('2026-04', 170000, 170000), pay('2026-05', 160000, 160000)]);
+    expect(findStartMonths(m)).not.toEqual([]); // 比べてよければ候補が出る
+    const starts = findStartMonths(m, [], {
+      amountComparable: () => false,
+      contractStarts: [{ month: '2026-05', direction: 'up', source: 'contract' }],
+    });
+    expect(starts).toEqual([{ month: '2026-05', direction: 'up', source: 'contract' }]);
   });
 });

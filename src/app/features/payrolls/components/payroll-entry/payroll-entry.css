@@ -109,7 +109,7 @@ h3 {
   color: var(--color-text-sub);
 }
 
-/* 毎月決まった額に数える分類（給与の項目の画面と同じ色） */
+/* 固定的賃金に数える分類（給与の項目の画面と同じ色） */
 .cat.c-base,
 .cat.c-fixedAllowance,
 .cat.c-commute {
@@ -215,6 +215,13 @@ tr.line-err span + span::before {
   margin-bottom: var(--space-sm);
 }
 
+/* 合計の欄（総支給額・固定的賃金・非固定的賃金・昇給差額） */
+.row4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-sm) var(--space-md);
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -262,4 +269,20 @@ tr.line-err span + span::before {
   justify-content: flex-end;
   gap: var(--space-sm);
   margin-top: var(--space-md);
+}
+
+/* 合計の欄（内訳に金額があるときは、内訳から計算した値を読み取りだけで出す。11/24） */
+.totals {
+  margin-bottom: var(--space-xs);
+}
+
+.input.computed {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-weight: 600;
+  cursor: default;
+}
+
+.input.computed:hover {
+  border-color: var(--color-border-strong);
 }

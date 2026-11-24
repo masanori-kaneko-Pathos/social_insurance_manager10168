@@ -1,0 +1,126 @@
+/* 期間ごとの会社負担の集計（11/24。ほかの一覧と同じ表の書き方） */
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+
+h1 {
+  margin: 0;
+  font-size: var(--font-xl);
+}
+
+.back {
+  display: inline-block;
+  margin-bottom: var(--space-xs);
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.lead {
+  margin: 0 0 var(--space-md);
+  color: var(--color-text-sub);
+  font-size: var(--font-sm);
+}
+
+.muted {
+  color: var(--color-text-sub);
+}
+
+.range {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.range .field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.tilde {
+  padding-bottom: 10px;
+}
+
+.quick {
+  display: flex;
+  gap: var(--space-xs);
+  margin-left: auto;
+}
+
+.table-wrap {
+  padding: 0;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+th,
+td {
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+thead th {
+  font-weight: 400;
+  color: var(--color-text-sub);
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.strong {
+  font-weight: 600;
+}
+
+.sub-col {
+  color: var(--color-text-sub);
+}
+
+.badge {
+  display: inline-block;
+  margin-left: var(--space-xs);
+  padding: 0 6px;
+  font-size: var(--font-xs);
+  border-radius: var(--radius-sm);
+}
+
+.badge-sub {
+  border: 1px solid var(--color-border);
+  color: var(--color-text-sub);
+}
+
+.badge-warn {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
+}
+
+tfoot .sum-row > * {
+  font-weight: 700;
+  border-top: 2px solid var(--color-border-strong);
+  border-bottom: 0;
+}
+
+.hint {
+  margin: var(--space-md) 0 0;
+  padding-left: 1.2em;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}

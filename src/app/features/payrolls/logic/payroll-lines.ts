@@ -1,4 +1,4 @@
-// 給与明細の内訳（行）から、総支給額・毎月決まった額・昇給差額を出す（11/24）
+// 給与明細の内訳（行）から、総支給額・固定的賃金・非固定的賃金・昇給差額を出す（11/24）
 // 定時決定・随時改定・保険料の計算は、ここで出した cash・fixed・retro（今までと同じ値）を読む。fixedFull は変動を見つけるのに使う
 // Angular・Firebase に依存しない純粋な関数
 
@@ -16,37 +16,46 @@ import { toHalfWidth } from '../../../shared/utils/text';
 export interface LineTotals {
   /** 総支給額（報酬になる行の合計 − 控除）。報酬にならない行は入れない */
   cash: number;
-  /** 毎月決まった額のうち、実際に払った分（月給の人の欠勤控除は、ここから引く） */
+  /**
+   * 固定的賃金（実際に払った分。11/24 に法律どおりへ）：基本給（時給×時間・日給×日数も）＋固定的な手当＋通勤手当 − 控除
+   * 単価や額が決まっているものは、時給の人の基本給も固定的賃金（事例集 問1-3・時給単価の変更）
+   */
   fixed: number;
-  /** 毎月決まった額（欠勤控除を引く前。変動を見つけるのに使う） */
+  /**
+   * 変動を見つけるための額（中だけで使う。欠勤控除を引く前）
+   * 月給・日給月給の人は固定的賃金と同じ。時給・日給の人は基本給を除く（働いた時間で額が動くので、額では比べない。
+   * 時給・日給・契約時間の変更は、雇用契約から見つける：contractStartMonths）
+   */
   fixedFull: number;
   /** 昇給差額 */
   retro: number;
+  /** 非固定的賃金（総支給額 − 固定的賃金 − 昇給差額。残業・皆勤・歩合など） */
+  nonFixed: number;
 }
 
-/** 基本給が毎月決まった額になる給与の形（月給・日給月給）。契約が分からないときも月給と見る */
+/** 基本給が固定的賃金になる給与の形（月給・日給月給）。契約が分からないときも月給と見る */
 export function baseIsFixed(payType: PayType | null): boolean {
   return payType === null || payType === 'monthly' || payType === 'dailyMonthly';
 }
 
 /**
  * 内訳から出す
- * - 総支給額 ＝ 基本給＋決まった額の手当＋通勤手当＋月ごとに変わる手当＋昇給差額 − 控除（報酬にならない行は入れない）
- * - 毎月決まった額（引く前）＝ 決まった額の手当＋通勤手当（＋月給・日給月給の人は基本給）
- * - 払った分の毎月決まった額 ＝ 月給・日給月給の人は、引く前の額 − 控除（欠勤で減るのは基本給などの決まった分のため）
- *   時給・日給の人の控除は、月ごとに変わる分から引いたと見る
- *   どちらも、総支給額から昇給差額を除いた額を超えない（月ごとに変わる分がマイナスにならないように）
+ * - 総支給額 ＝ 基本給＋固定的な手当＋通勤手当＋非固定的な手当＋昇給差額 − 控除（報酬にならない行は入れない）
+ * - 固定的賃金 ＝ 基本給＋固定的な手当＋通勤手当 − 控除（欠勤・遅刻早退で減るのは、基本給などの決まった分のため）
+ *   総支給額から昇給差額を除いた額は超えない（非固定的賃金がマイナスにならないように）
+ * - 非固定的賃金 ＝ 総支給額 − 固定的賃金 − 昇給差額
+ * - 変動を見つけるための額 ＝ 控除を引く前の固定的賃金（時給・日給の人は基本給を除く）
  */
 export function totalsOf(lines: readonly PayrollLine[], payType: PayType | null): LineTotals {
   const sum = (c: PayrollItemCategory) => lines.filter((l) => l.category === c).reduce((s, l) => s + l.amount, 0);
   const base = sum('base');
   const deduction = sum('deduction');
   const retro = sum('retro');
-  const fixedFull = sum('fixedAllowance') + sum('commute') + (baseIsFixed(payType) ? base : 0);
-  const cash = base + sum('fixedAllowance') + sum('commute') + sum('variable') + retro - deduction;
-  const paid = baseIsFixed(payType) ? fixedFull - deduction : fixedFull;
-  const fixed = Math.max(0, Math.min(paid, cash - retro));
-  return { cash, fixed, fixedFull, retro };
+  const legal = base + sum('fixedAllowance') + sum('commute');
+  const fixedFull = legal - (baseIsFixed(payType) ? 0 : base);
+  const cash = legal + sum('variable') + retro - deduction;
+  const fixed = Math.max(0, Math.min(legal - deduction, cash - retro));
+  return { cash, fixed, fixedFull, retro, nonFixed: cash - fixed - retro };
 }
 
 // ===== 入力中の行（画面・CSV） =====

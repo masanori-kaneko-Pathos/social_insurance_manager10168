@@ -309,7 +309,11 @@ export class RevisionsPage {
           retro: avg.retro,
           special: !!(ir.health?.revise && ir.health.special) || !!(ir.pension?.revise && ir.pension.special),
           // 一時帰休の始まり・終わりの改定は、備考の理由に「一時帰休」と書く（11/19）
-          reasonNote: ir.start.source === 'furlough' ? (ir.start.direction === 'down' ? '一時帰休による休業手当' : '一時帰休の解消') : null,
+          // 現物給与（社宅・食事）の変化で起算した改定は「現物給与の変更」と書く（11/24）
+          reasonNote:
+            ir.start.source === 'furlough'
+              ? ir.start.direction === 'down' ? '一時帰休による休業手当' : '一時帰休の解消'
+              : ir.start.source === 'inKind' ? '現物給与の変更' : null,
           method: a ? 'annual' : 'normal',
           annualAverage: ir.annual?.candidate ? ir.annual.average : null,
           seasonal: !!a,

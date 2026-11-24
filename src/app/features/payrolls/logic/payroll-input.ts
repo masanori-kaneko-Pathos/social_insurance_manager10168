@@ -130,8 +130,8 @@ export function sameInput(a: PayrollInput, b: PayrollInput): boolean {
 
 /**
  * 内訳つきの1人分を読む（11/24。月の画面の「内訳」）
- * - drafts が null か、金額が1つも入っていない ＝ 内訳なし：今までどおり総支給額・毎月決まった額の文字から読む
- * - 内訳がある：行を読み、総支給額・毎月決まった額・昇給差額は内訳から出す（文字の欄は使わない）。
+ * - drafts が null か、金額が1つも入っていない ＝ 内訳なし：今までどおり総支給額・固定的賃金の文字から読む
+ * - 内訳がある：行を読み、総支給額・固定的賃金・昇給差額は内訳から出す（文字の欄は使わない）。
  *   読めない行・分類が決まっていない行があれば 'lines'（行ごとの誤りは readLines で画面に出す）
  */
 export function readEntry(t: PayrollRowText, drafts: readonly LineDraft[] | null, payType: PayType | null, periodDays: number): RowResult {

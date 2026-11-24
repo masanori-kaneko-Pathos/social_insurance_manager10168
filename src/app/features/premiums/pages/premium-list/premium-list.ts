@@ -76,6 +76,21 @@ import {
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
 import { regularPending } from '../../logic/regular-pending';
+import { MonthCloseService } from '../../month-close.service';
+import { MonthClose } from '../../../../core/models/month-close';
+import {
+  buildPeople,
+  closeBlockers,
+  CloseDiff,
+  ClosePeople,
+  CloseSource,
+  diffsOf,
+  monthDiffSummary,
+  openTotals,
+  peopleTotals,
+  Settlement,
+  settlementOf,
+} from '../../logic/month-close';
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -100,6 +115,7 @@ export class PremiumList {
   private readonly contractApi = inject(ContractService);
   private readonly criteriaApi = inject(CriteriaService);
   private readonly noticeApi = inject(PremiumNoticeService);
+  private readonly closeApi = inject(MonthCloseService);
   private readonly transloco = inject(TranslocoService);
   readonly context = inject(OfficeContext);
 
@@ -198,11 +214,13 @@ export class PremiumList {
   readonly errorKey = signal<string | null>(null);
 
   /** 全員分の行（月・データが変わると自動で計算し直す） */
-  private readonly allRows = computed<ListItem[]>(() => {
+  private readonly allRows = computed<ListItem[]>(() => this.rowsFor(this.month()));
+
+  /** ある月の全員分の行（今見ている月と、月次確定の差額をまとめて見るときに使う） */
+  private rowsFor(month: YearMonth): ListItem[] {
     const tables = this.tables();
     const office = this.context.current();
     if (!tables || !office) return [];
-    const month = this.month();
     const options = this.options();
     // その月の保険者・都道府県で料率を選ぶ（移転や組合健保への切り替えの前の月は、前の料率）
     const ratesFor = (m: YearMonth) => {
@@ -220,7 +238,7 @@ export class PremiumList {
         adjustmentFor: this.adjustmentOf(employee),
       }),
     }));
-  });
+  }
 
   /**
    * 保険料調整制度：3か月前の分の軽減額（会社が多く払った分）。今月の納付額から差し引かれる（11/16）
@@ -474,6 +492,215 @@ export class PremiumList {
       const month = this.month();
       if (officeId) this.loadNotice(officeId, month);
     });
+    // 月を変えたら、その月の確定と精算の記録を読む（確定1件＋精算の記録）
+    effect(() => {
+      const officeId = this.context.current()?.id;
+      const month = this.month();
+      if (officeId) this.loadClose(officeId, month);
+    });
+  }
+
+  // ===== 月次確定（「この月はこの額で控除した」記録。11/24） =====
+  // 確定した後も編集は止めない。確定時と今の計算の差がある人を「確定後に変更あり」として出す
+
+  /** この月の確定（なければ null）。読み込み中は undefined */
+  readonly savedClose = signal<MonthClose | null | undefined>(undefined);
+  readonly settlements = signal<Record<string, Settlement>>({});
+  readonly closeBusy = signal(false);
+  readonly closeError = signal<string | null>(null);
+  /** 差額の表を開いているか */
+  readonly showCloseDiff = signal(false);
+  /** 精算する給与の月（差額の表の上で1つ選び、行の「精算済みにする」で使う） */
+  readonly settleMonth = signal<string>('');
+
+  private async loadClose(officeId: string, month: string): Promise<void> {
+    this.savedClose.set(undefined);
+    this.closeError.set(null);
+    this.showCloseDiff.set(false);
+    try {
+      const c = await this.closeApi.get(officeId, month);
+      const s = c ? await this.closeApi.settlements(officeId, month) : {};
+      if (month !== this.month()) return; // 読んでいる間に月が変わった
+      this.savedClose.set(c);
+      this.settlements.set(s);
+    } catch (err) {
+      console.error(err);
+      this.savedClose.set(null);
+      this.settlements.set({});
+    }
+  }
+
+  /** 行 → 確定の材料 */
+  private sourcesOf(rows: readonly ListItem[]): CloseSource[] {
+    return rows.map((r) => ({
+      id: r.employee.id,
+      state: r.state,
+      employeeYen: r.result?.employeeYen ?? 0,
+      premiumTotalMilli: r.premiumTotalMilli,
+      contributionMilli: r.contributionMilli,
+    }));
+  }
+
+  /** 計算できる人だけの「今の額」（計算できない人は差額に出さない：上の警告で分かる） */
+  private nowPeopleOf(rows: readonly ListItem[]): ClosePeople {
+    return buildPeople(this.sourcesOf(rows).filter((r) => r.state !== 'missing' && r.state !== 'error'));
+  }
+
+  /** 確定できない理由（null なら確定できる） */
+  readonly closeBlock = computed<string | null>(() => {
+    if (this.month() > this.thisMonth) return 'monthClose.block.future';
+    if (closeBlockers(this.sourcesOf(this.allRows())) > 0) return 'monthClose.block.problems';
+    if (this.rows().length === 0) return 'monthClose.block.empty';
+    return null;
+  });
+
+  /** 確定時と今の計算の差がある人（社員番号の順） */
+  readonly closeDiffs = computed<(CloseDiff & { employee: Employee | null })[]>(() => {
+    const c = this.savedClose();
+    if (!c) return [];
+    const rows = this.allRows();
+    const problemIds = new Set(rows.filter((r) => r.state === 'missing' || r.state === 'error').map((r) => r.employee.id));
+    const today = todayLocal();
+    const retiredIds = new Set(this.employees().filter((e) => e.retireDate && e.retireDate < today).map((e) => e.id));
+    const byId = new Map(this.employees().map((e) => [e.id, e]));
+    return diffsOf(c.people, this.nowPeopleOf(rows), this.settlements(), { month: this.month(), today, retiredIds })
+      .filter((d) => !problemIds.has(d.id))
+      .map((d) => ({ ...d, employee: byId.get(d.id) ?? null }))
+      .sort((a, b) =>
+        (a.employee?.employeeNumber ?? '\uffff').localeCompare(b.employee?.employeeNumber ?? '\uffff', 'ja', { numeric: true }),
+      );
+  });
+
+  /** 精算がまだの差額の合計（札と表の上に出す） */
+  readonly closeOpen = computed(() => openTotals(this.closeDiffs()));
+
+  /** 確定した日時（表示用 YYYY-MM-DD HH:mm） */
+  readonly closedAtText = computed(() => {
+    const d = this.savedClose()?.closedAt?.toDate?.();
+    if (!d) return '';
+    const p = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  });
+
+  async closeMonth(): Promise<void> {
+    const officeId = this.context.current()?.id;
+    if (!officeId || !this.context.isAdmin() || this.closeBusy() || this.closeBlock()) return;
+    const people = buildPeople(this.sourcesOf(this.allRows()));
+    const t = peopleTotals(people);
+    const ok = window.confirm(
+      this.transloco.translate('monthClose.confirm', {
+        month: this.monthParts(this.month()).m,
+        count: t.count,
+        employee: this.yen(t.employeeYen),
+      }),
+    );
+    if (!ok) return;
+    this.closeBusy.set(true);
+    this.closeError.set(null);
+    try {
+      await this.closeApi.close(officeId, this.month(), people);
+      await this.loadClose(officeId, this.month());
+    } catch (err) {
+      console.error(err);
+      this.closeError.set(errorKeyOf(err, 'monthClose.error.close'));
+    } finally {
+      this.closeBusy.set(false);
+    }
+  }
+
+  async cancelClose(): Promise<void> {
+    const officeId = this.context.current()?.id;
+    if (!officeId || !this.context.isAdmin() || this.closeBusy()) return;
+    if (!window.confirm(this.transloco.translate('monthClose.cancelConfirm', { month: this.monthParts(this.month()).m }))) return;
+    this.closeBusy.set(true);
+    this.closeError.set(null);
+    try {
+      await this.closeApi.cancel(officeId, this.month());
+      await this.loadClose(officeId, this.month());
+    } catch (err) {
+      console.error(err);
+      this.closeError.set(errorKeyOf(err, 'monthClose.error.cancel'));
+    } finally {
+      this.closeBusy.set(false);
+    }
+  }
+
+  toggleCloseDiff(): void {
+    this.showCloseDiff.update((v) => !v);
+    // 精算する給与の月の初期値：今月分の保険料を控除する給与の月
+    if (!this.settleMonth()) {
+      this.settleMonth.set(deductionPayMonth(this.thisMonth, this.payroll(), this.context.current()?.deductionHistory));
+    }
+  }
+
+  async settle(d: CloseDiff): Promise<void> {
+    const officeId = this.context.current()?.id;
+    const payMonth = this.settleMonth();
+    if (!officeId || !this.context.isAdmin() || this.closeBusy()) return;
+    if (!MONTH.test(payMonth)) {
+      this.closeError.set('monthClose.error.payMonth');
+      return;
+    }
+    this.closeBusy.set(true);
+    this.closeError.set(null);
+    try {
+      await this.closeApi.settle(officeId, this.month(), settlementOf(d, payMonth), !!d.settlement);
+      this.settlements.set(await this.closeApi.settlements(officeId, this.month()));
+    } catch (err) {
+      console.error(err);
+      this.closeError.set(errorKeyOf(err, 'monthClose.error.settle'));
+    } finally {
+      this.closeBusy.set(false);
+    }
+  }
+
+  async unsettle(d: CloseDiff): Promise<void> {
+    const officeId = this.context.current()?.id;
+    if (!officeId || !this.context.isAdmin() || this.closeBusy()) return;
+    this.closeBusy.set(true);
+    try {
+      await this.closeApi.unsettle(officeId, this.month(), d.id);
+      this.settlements.set(await this.closeApi.settlements(officeId, this.month()));
+    } catch (err) {
+      console.error(err);
+      this.closeError.set(errorKeyOf(err, 'monthClose.error.settle'));
+    } finally {
+      this.closeBusy.set(false);
+    }
+  }
+
+  /** 符号つきの円（+1,500 / -1,500 / 0） */
+  signedYen(n: number): string {
+    return (n > 0 ? '+' : '') + this.yen(n);
+  }
+  signedMilli(n: number): string {
+    return (n > 0 ? '+' : '') + formatMilli(n);
+  }
+
+  // ===== 確定した月の差額をまとめて見る（突き合わせの「前月までの精算額」と見比べる。押したときだけ読む） =====
+
+  readonly closeSummary = signal<ReturnType<typeof monthDiffSummary>[] | null>(null);
+  readonly closeSummaryBusy = signal(false);
+
+  async loadCloseSummary(): Promise<void> {
+    const officeId = this.context.current()?.id;
+    if (!officeId || this.closeSummaryBusy()) return;
+    this.closeSummaryBusy.set(true);
+    try {
+      // 時効の2年＋今月までを見られるように、新しい順に25か月
+      const closes = await this.closeApi.latest(officeId, 25);
+      const today = todayLocal();
+      this.closeSummary.set(
+        closes
+          .map((c) => monthDiffSummary(c.month, c.people, this.nowPeopleOf(this.rowsFor(c.month)), today))
+          .filter((x) => x.count > 0),
+      );
+    } catch (err) {
+      console.error(err);
+      this.closeError.set(errorKeyOf(err, 'monthClose.error.load'));
+    } finally {
+      this.closeSummaryBusy.set(false);
+    }
   }
 
   // ===== 毎月の納付額の突き合わせ（年金事務所の告知額 ↔ アプリの合計） =====

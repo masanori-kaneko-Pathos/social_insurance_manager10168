@@ -1,4 +1,4 @@
-import { Component, computed, ElementRef, inject, input, model, output, signal } from '@angular/core';
+import { Component, computed, ElementRef, inject, input, model, OnInit, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -28,7 +28,7 @@ export type PayrollRowForm = FormGroup<{
 /**
  * 給与明細の内訳を入れる（1人・1か月分。11/24）
  * 月の画面では行の下に開く。左に明細の支給の行（項目名・分類・金額）、右に日数・時間・現物
- * 行を変えるたびに、総支給額・毎月決まった額・昇給差額を form に入れる（一覧の表示・合計・保存は form を読む）
+ * 行を変えるたびに、総支給額・固定的賃金・昇給差額を form に入れる（一覧の表示・合計・保存は form を読む）
  */
 @Component({
   selector: 'app-payroll-entry',
@@ -36,7 +36,7 @@ export type PayrollRowForm = FormGroup<{
   templateUrl: './payroll-entry.html',
   styleUrl: './payroll-entry.css',
 })
-export class PayrollEntry {
+export class PayrollEntry implements OnInit {
   private readonly host = inject(ElementRef<HTMLElement>);
 
   readonly form = input.required<PayrollRowForm>();
@@ -97,6 +97,18 @@ export class PayrollEntry {
     return this.showLineErrors() ? (this.read().lineErrors.get(i) ?? []) : [];
   }
 
+  /** 内訳なしのとき：非固定的賃金 ＝ 総支給額 − 固定的賃金 − 昇給差額（読めなければ空） */
+  directNonFixed(): string {
+    const n = (s: string) => {
+      const t = toHalfWidth(s).replace(/[,，\s]/g, '');
+      return t === '' ? 0 : /^\d+$/.test(t) ? Number(t) : NaN;
+    };
+    const c = this.form().controls;
+    if (c.cash.value.trim() === '') return '';
+    const v = n(c.cash.value) - n(c.fixed.value) - n(c.retro.value);
+    return Number.isFinite(v) && v >= 0 ? this.yen(v) : '';
+  }
+
   yen(n: number): string {
     return n.toLocaleString('ja-JP');
   }
@@ -112,12 +124,6 @@ export class PayrollEntry {
   /** 金額が1つでも入っているか（入っていなければ合計は「—」。総支給額の欄も入れ替えない） */
   readonly hasAmounts = computed(() => hasAmounts(this.lines()));
 
-  /** 内訳を入れると入れ替わる、今の総支給額（内訳なしの月。金額を入れる前だけ知らせる） */
-  readonly replacing = computed(() => {
-    if (this.hasAmounts()) return null;
-    const t = this.form().controls.cash.value.trim();
-    return /^\d+$/.test(t) && Number(t) > 0 ? Number(t) : null;
-  });
 
   /** 内訳から出した額を、一覧と保存が読む欄に入れる（金額が入ってから） */
   private syncTotals(): void {
@@ -130,10 +136,9 @@ export class PayrollEntry {
     f.markAsDirty();
   }
 
-  /** 内訳なしの月に、内訳を入れ始める（前の月の項目名 → 事業所のひな形 → アプリの例） */
-  startLines(): void {
-    this.lines.set(startDrafts(this.prevLines(), this.template(), this.items()));
-    this.focusLine(0, 'amount');
+  /** 内訳がない月（前のデータ・総支給額だけの取り込み）を開いたら、行を並べておく（前の月の項目名 → 事業所の給与項目 → アプリの例） */
+  ngOnInit(): void {
+    if (this.lines() === null && this.canEdit()) this.lines.set(startDrafts(this.prevLines(), this.template(), this.items()));
   }
 
   /** 今の行の項目名（空は除く・同じ名前は1つ） */
