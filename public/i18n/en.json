@@ -367,7 +367,8 @@
       "export": "Export CSV ({{n}})",
       "exporting": "Exporting…",
       "exportNote": "Exports in the same columns as the employee import, following your filters and order (contracts as of the reference date; My Number is not included). Importing cannot overwrite people already registered.",
-      "exportError": "Could not export."
+      "exportError": "Could not export.",
+      "exportingShort": "Exporting…"
     },
     "status": {
       "active": "Active",
@@ -4699,5 +4700,78 @@
       "join": "Add to this item",
       "joinLabel": "Item for \"{{name}}\""
     }
+  },
+  "exportCols": {
+    "group": {
+      "person": "Person",
+      "month": "Month",
+      "standard": "Standard remuneration",
+      "employee": "Employee share",
+      "employer": "Employer / total",
+      "other": "Other",
+      "enrollment": "Hire, leaving and coverage",
+      "contract": "Employment contract",
+      "foreign": "Foreign nationals",
+      "leave": "Leave"
+    },
+    "premium": {
+      "employeeNumber": "Employee number",
+      "name": "Name",
+      "healthGrade": "Health grade",
+      "healthStandard": "Health standard",
+      "care": "Care",
+      "pensionGrade": "Pension grade",
+      "pensionStandard": "Pension standard",
+      "healthEmployee": "Employee health etc.",
+      "pensionEmployee": "Employee pension",
+      "employeeTotal": "Employee total",
+      "employer": "Employer (est.)",
+      "total": "Total",
+      "contribution": "Contribution (employer)",
+      "note": "Note",
+      "kana": "Name (kana)",
+      "department": "Department",
+      "month": "Premium month",
+      "payMonth": "Deducted from pay of",
+      "healthPart": "Employee: health insurance",
+      "carePart": "Employee: long-term care",
+      "childSupportPart": "Employee: child and childcare support"
+    },
+    "employee": {
+      "age": "Age (reference date)",
+      "healthStandardNow": "Health standard (reference date)",
+      "pensionStandardNow": "Pension standard (reference date)"
+    }
+  },
+  "exportDialog": {
+    "open": "Choose columns to export…",
+    "title": "Choose columns to export",
+    "template": "Template",
+    "standard": "Standard layout",
+    "overwrite": "Overwrite with current columns",
+    "remove": "Delete template",
+    "available": "Available columns",
+    "addAll": "Add all",
+    "picked": "Columns to export ({{n}})",
+    "clearAll": "Remove all",
+    "empty": "Click a column on the left to add it here.",
+    "up": "Move {{name}} up",
+    "down": "Move {{name}} down",
+    "header": "Heading for {{name}}",
+    "removeColumn": "Remove {{name}}",
+    "headerHint": "Enter a name on the right to use it as the file heading (useful to match another system). Leave it blank to use the name on the left.",
+    "name": "Template name",
+    "namePlaceholder": "Name (e.g. Accounting)",
+    "saveAs": "Save as",
+    "saved": "Saved",
+    "confirmRemove": "Delete the template \"{{name}}\"?",
+    "csv": "Export CSV",
+    "xlsx": "Export Excel",
+    "error": {
+      "load": "Could not load templates.",
+      "save": "Could not save the template. Please try again later."
+    },
+    "scopeFiltered": "Exports the {{n}} filtered people, one row each, in the order shown (no total rows).",
+    "scopeAll": "Exports everyone ({{n}}), one row each, in the order shown (no total rows)."
   }
 }

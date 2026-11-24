@@ -1008,6 +1008,20 @@ service cloud.firestore {
         allow delete: if isAdmin(officeId);
       }
 
+      // ----- 出力のテンプレート（一覧ごとに、選んだ列と見出しに名前を付けて保存。11/24） -----
+      match /exportTemplates/{id} {
+        function validTemplate(d) {
+          return exactKeys(d, ['dataset', 'name', 'columns', 'updatedBy', 'updatedAt'])
+            && d.dataset is string && d.dataset.matches('^[a-zA-Z0-9-]{1,40}$')
+            && str(d.name, 40)
+            && d.columns is list && d.columns.size() <= 100
+            && d.updatedBy == request.auth.uid && d.updatedAt == request.time;
+        }
+        allow read: if isMember(officeId);
+        allow create, update: if isAdmin(officeId) && validTemplate(request.resource.data);
+        allow delete: if isAdmin(officeId);
+      }
+
       // ----- 担当者のダブルチェック（ID ＝ 対象の鍵：filing_様式_期間・notice_月） -----
       // 管理者が「確認を頼む」→ 頼んだ人とは別のメンバー（一般でもよい）が「確認した」。頼んだ本人は確認できない
       match /reviews/{reviewId} {

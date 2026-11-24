@@ -1,7 +1,7 @@
 import { Component, computed, effect, ElementRef, inject, signal, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ContractDoc, EMPLOYMENT_TYPES, EmploymentType } from '../../../../core/models/contract';
 import { Employee } from '../../../../core/models/employee';
 import { CriteriaDoc } from '../../../../core/models/master';
@@ -34,6 +34,10 @@ import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits
 import { Pager } from '../../../../shared/components/pager/pager';
 import { PAGE_SIZE, PAGE_SIZES, PageSize } from '../../../../shared/logic/person-list';
 import { downloadCsv } from '../../../../shared/csv/csv';
+import { ExportDialog } from '../../../../shared/components/export-dialog/export-dialog';
+import { CloseOnOutside } from '../../../../shared/directives/close-on-outside';
+import { EMPLOYEE_DEFAULT_KEYS, employeeExportColumns } from '../../logic/employee-export-columns';
+import { EmployeeExportItem } from '../../logic/employee-export';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { RemunerationService } from '../../remuneration.service';
 import { employeeExportTable } from '../../logic/employee-export';
@@ -56,7 +60,7 @@ const pick = <T extends string>(list: readonly T[], v: string | null, fallback: 
 
 @Component({
   selector: 'app-employee-list',
-  imports: [PersonName, HalfWidthDigits, Pager, RouterLink, TranslocoPipe],
+  imports: [PersonName, CloseOnOutside, ExportDialog, HalfWidthDigits, Pager, RouterLink, TranslocoPipe],
   templateUrl: './employee-list.html',
   styleUrl: './employee-list.css',
   host: {
@@ -352,28 +356,71 @@ export class EmployeeList {
   /** 書き出す人（絞り込みと並び順のとおり。ページで切らない） */
   readonly exportCount = computed(() => this.sections().reduce((n, s) => n + s.items.length, 0));
 
+  /** 書き出しの材料（契約・標準報酬は人ごとに読む。ログイン中は覚えているので、2回目からは増えない） */
+  private async loadExportItems(officeId: string): Promise<EmployeeExportItem[]> {
+    const list = this.sections().flatMap((s) => s.items);
+    const [contracts, rems] = await Promise.all([
+      Promise.all(list.map((e) => this.contracts()?.get(e.id) ?? this.contractsApi.list(officeId, e.id))),
+      Promise.all(list.map((e) => this.remApi.list(officeId, e.id))),
+    ]);
+    return list.map((employee, i) => ({
+      employee,
+      contract: contractAt(contracts[i], this.asOf()),
+      remunerations: rems[i],
+    }));
+  }
+
+  private readonly deptNameOfId = (id: string) => this.departments().find((d) => d.id === id)?.name ?? null;
+
   async exportCsv(): Promise<void> {
     const officeId = this.context.current()?.id;
     if (!officeId || this.exporting() || !this.context.isAdmin()) return;
-    const list = this.sections().flatMap((s) => s.items);
     this.exporting.set(true);
     this.exportErrorKey.set(null);
     try {
-      // 契約・標準報酬は人ごとに読む（ログイン中は覚えているので、2回目からは増えない）
-      const [contracts, rems] = await Promise.all([
-        Promise.all(list.map((e) => this.contracts()?.get(e.id) ?? this.contractsApi.list(officeId, e.id))),
-        Promise.all(list.map((e) => this.remApi.list(officeId, e.id))),
-      ]);
-      const depts = this.departments();
-      const table = employeeExportTable(
-        list.map((employee, i) => ({
-          employee,
-          contract: contractAt(contracts[i], this.asOf()),
-          remunerations: rems[i],
-        })),
-        (id) => depts.find((d) => d.id === id)?.name ?? null,
-      );
+      const table = employeeExportTable(await this.loadExportItems(officeId), this.deptNameOfId);
       downloadCsv(`employees_${this.asOf()}.csv`, table);
+    } catch (err) {
+      console.error(err);
+      this.exportErrorKey.set(errorKeyOf(err, 'employee.list.exportError'));
+    } finally {
+      this.exporting.set(false);
+    }
+  }
+
+  // ===== 項目を選んで出力（11/24） =====
+
+  private readonly transloco = inject(TranslocoService);
+  private readonly exportDialog = viewChild(ExportDialog);
+  readonly exportDefaultKeys = EMPLOYEE_DEFAULT_KEYS;
+  /** 窓に渡す人（開くときに契約・標準報酬を読んで作る） */
+  readonly exportItems = signal<EmployeeExportItem[]>([]);
+  readonly exportCatalog = computed(() =>
+    employeeExportColumns({ t: (k) => this.transloco.translate(k), deptName: this.deptNameOfId, asOf: this.asOf() }),
+  );
+  readonly exportScopeText = computed(() =>
+    this.transloco.translate('exportDialog.scopeFiltered', { n: this.exportCount() }),
+  );
+
+  /** メニューを閉じてから動かす */
+  exportCsvFromMenu(ev: Event): void {
+    (ev.target as HTMLElement).closest('details')?.removeAttribute('open');
+    void this.exportCsv();
+  }
+
+  openExportFromMenu(ev: Event): void {
+    (ev.target as HTMLElement).closest('details')?.removeAttribute('open');
+    void this.openExport();
+  }
+
+  async openExport(): Promise<void> {
+    const officeId = this.context.current()?.id;
+    if (!officeId || this.exporting() || !this.context.isAdmin()) return;
+    this.exporting.set(true);
+    this.exportErrorKey.set(null);
+    try {
+      this.exportItems.set(await this.loadExportItems(officeId));
+      await this.exportDialog()?.open();
     } catch (err) {
       console.error(err);
       this.exportErrorKey.set(errorKeyOf(err, 'employee.list.exportError'));

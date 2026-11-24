@@ -80,6 +80,8 @@
           }}</p>
           <button type="button" role="menuitem" (click)="exportCsv()">{{ 'premiumList.exportCsv' | transloco }}</button>
           <button type="button" role="menuitem" (click)="exportXlsx()">{{ 'premiumList.exportXlsx' | transloco }}</button>
+          <!-- 列を選んで並べ、見出しを書き換えて出す。名前を付けて保存できる（11/24） -->
+          <button type="button" role="menuitem" (click)="openExport($event)">{{ 'exportDialog.open' | transloco }}</button>
           <!-- 給与ソフトに渡す材料（11/16 に「給与ソフトとの分担」の欄から移した） -->
           <button type="button" role="menuitem" class="menu-sep" (click)="exportForSoftware()">
             {{ 'payrollSoft.export' | transloco }}
@@ -87,6 +89,17 @@
           </button>
         </div>
       </details>
+      <app-export-dialog
+        dataset="premiums"
+        [catalog]="exportCatalog()"
+        [rows]="filteredRows()"
+        [defaultKeys]="exportDefaultKeys"
+        [fileStem]="exportStem()"
+        [sheetName]="month()"
+        [scopeText]="exportScopeText()"
+        [officeId]="context.current()?.id ?? null"
+        [canSave]="context.isAdmin()"
+      />
       <!-- 給与ソフトで控除した額を読み込んで、差がある人だけ出す（結果は下に開く） -->
       <label class="btn btn-small" [title]="'payrollSoft.checkHint' | transloco">
         {{ 'payrollSoft.check' | transloco }}

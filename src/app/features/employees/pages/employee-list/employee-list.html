@@ -9,9 +9,31 @@
     </div>
     @if (context.isAdmin()) {
       <span class="head-actions">
-        <button type="button" class="btn" [disabled]="exporting() || loading() || exportCount() === 0" [title]="'employee.list.exportNote' | transloco" (click)="exportCsv()">
-          {{ (exporting() ? 'employee.list.exporting' : 'employee.list.export') | transloco: { n: exportCount() } }}
-        </button>
+        <!-- 出力は1つのボタンにまとめる（保険料一覧と同じ「出力 ▾」。11/24） -->
+        <details class="menu" appCloseOnOutside>
+          <summary class="btn" [class.disabled]="exporting() || loading() || exportCount() === 0">
+            {{ (exporting() ? 'employee.list.exportingShort' : 'premiumList.export') | transloco }} ▾
+          </summary>
+          @if (!exporting() && !loading() && exportCount() > 0) {
+            <div class="menu-list menu-right" role="menu">
+              <p class="menu-note">{{ 'employee.list.exportNote' | transloco }}</p>
+              <button type="button" role="menuitem" (click)="exportCsvFromMenu($event)">
+                {{ 'employee.list.export' | transloco: { n: exportCount() } }}
+              </button>
+              <button type="button" role="menuitem" (click)="openExportFromMenu($event)">{{ 'exportDialog.open' | transloco }}</button>
+            </div>
+          }
+        </details>
+        <app-export-dialog
+          dataset="employees"
+          [catalog]="exportCatalog()"
+          [rows]="exportItems()"
+          [defaultKeys]="exportDefaultKeys"
+          [fileStem]="'employees_' + asOf()"
+          [scopeText]="exportScopeText()"
+          [officeId]="context.current()?.id ?? null"
+          [canSave]="context.isAdmin()"
+        />
         <a class="btn" routerLink="../import" [queryParams]="{ kind: 'employees', from: 'employees' }">{{ 'employee.list.import' | transloco }}</a>
         <a class="btn btn-primary" routerLink="new">{{ 'employee.list.add' | transloco }}</a>
       </span>

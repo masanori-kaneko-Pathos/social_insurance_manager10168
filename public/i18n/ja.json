@@ -367,7 +367,8 @@
       "export": "CSV で出力する（{{n}}人）",
       "exporting": "出力しています…",
       "exportNote": "絞り込み・並び順のとおり、従業員の取り込みと同じ列で書き出します（契約は基準日のもの、マイナンバーは入れません）。登録済みの人を取り込みで上書きすることはできません。",
-      "exportError": "書き出せませんでした。"
+      "exportError": "書き出せませんでした。",
+      "exportingShort": "出力中…"
     },
     "status": {
       "active": "在籍中",
@@ -4699,5 +4700,78 @@
       "join": "この分類に入れる",
       "joinLabel": "「{{name}}」を入れる分類"
     }
+  },
+  "exportCols": {
+    "group": {
+      "person": "人",
+      "month": "月",
+      "standard": "標準報酬",
+      "employee": "本人負担",
+      "employer": "会社負担・全額",
+      "other": "そのほか",
+      "enrollment": "入社・退職・加入",
+      "contract": "雇用契約",
+      "foreign": "外国籍",
+      "leave": "休業"
+    },
+    "premium": {
+      "employeeNumber": "社員番号",
+      "name": "氏名",
+      "healthGrade": "健保 等級",
+      "healthStandard": "健保 標準報酬月額",
+      "care": "介護",
+      "pensionGrade": "厚年 等級",
+      "pensionStandard": "厚年 標準報酬月額",
+      "healthEmployee": "本人負担 健保等",
+      "pensionEmployee": "本人負担 厚年",
+      "employeeTotal": "本人負担 合計",
+      "employer": "会社負担（目安）",
+      "total": "全額",
+      "contribution": "拠出金（会社）",
+      "note": "備考",
+      "kana": "フリガナ",
+      "department": "部署",
+      "month": "何月分",
+      "payMonth": "控除する給与の月",
+      "healthPart": "本人負担 うち健康保険",
+      "carePart": "本人負担 うち介護保険",
+      "childSupportPart": "本人負担 うち子ども・子育て支援金"
+    },
+    "employee": {
+      "age": "年齢（基準日）",
+      "healthStandardNow": "健保 標準報酬月額（基準日）",
+      "pensionStandardNow": "厚年 標準報酬月額（基準日）"
+    }
+  },
+  "exportDialog": {
+    "open": "項目を選んで出力…",
+    "title": "項目を選んで出力",
+    "template": "テンプレート",
+    "standard": "標準の形",
+    "overwrite": "今の選び方で上書き",
+    "remove": "テンプレートを削除",
+    "available": "出せる項目",
+    "addAll": "すべて足す",
+    "picked": "出力する項目（{{n}}）",
+    "clearAll": "すべて外す",
+    "empty": "左の項目を押すと、ここに並びます。",
+    "up": "{{name}} を上へ",
+    "down": "{{name}} を下へ",
+    "header": "{{name}} の見出し",
+    "removeColumn": "{{name}} を外す",
+    "headerHint": "右の欄に入れると、ファイルの見出しをその名前にします（ほかのシステムに取り込むとき、相手の見出しに合わせられます）。空なら左の名前です。",
+    "name": "テンプレートの名前",
+    "namePlaceholder": "名前（例：経理用）",
+    "saveAs": "名前を付けて保存",
+    "saved": "保存しました",
+    "confirmRemove": "テンプレート「{{name}}」を削除しますか？",
+    "csv": "CSV で出力",
+    "xlsx": "Excel で出力",
+    "error": {
+      "load": "テンプレートを読み込めませんでした。",
+      "save": "テンプレートを保存できませんでした。時間をおいてもう一度お試しください。"
+    },
+    "scopeFiltered": "絞り込んだ {{n}}人を、画面の並び順で1人1行に出力します（合計の行は付けません）。",
+    "scopeAll": "全員（{{n}}人）を、画面の並び順で1人1行に出力します（合計の行は付けません）。"
   }
 }

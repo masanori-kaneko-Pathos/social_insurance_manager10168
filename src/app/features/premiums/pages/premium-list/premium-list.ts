@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MonthPicker } from '../../../../shared/components/month-picker/month-picker';
@@ -28,6 +28,8 @@ import { noRates, pickRates, RateTables } from '../../../rates/logic/pick-rates'
 import { withCapRevisions } from '../../../rates/logic/cap-revision';
 import { RateService } from '../../../rates/rate.service';
 import { employeeYenOfPart, healthPartTotals, officeTotals } from '../../logic/premium-core';
+import { PREMIUM_DEFAULT_KEYS, premiumExportColumns } from '../../logic/premium-export-columns';
+import { ExportDialog } from '../../../../shared/components/export-dialog/export-dialog';
 import { buildPremiumRow, PremiumRow } from '../../logic/premium-rows';
 import { calcMonthly } from '../../logic/calc-monthly';
 import { PremiumTotals } from '../../components/premium-totals/premium-totals';
@@ -83,7 +85,7 @@ interface ListItem extends PremiumRow {
 
 @Component({
   selector: 'app-premium-list',
-  imports: [PersonName, CloseOnOutside, ColumnMapper, MonthPicker, Pager, PersonListBar, PremiumBreakdown, ReviewBox, RouterLink, TranslocoPipe, PremiumTotals],
+  imports: [PersonName, CloseOnOutside, ColumnMapper, ExportDialog, MonthPicker, Pager, PersonListBar, PremiumBreakdown, ReviewBox, RouterLink, TranslocoPipe, PremiumTotals],
   templateUrl: './premium-list.html',
   styleUrl: './premium-list.css',
 })
@@ -656,6 +658,36 @@ export class PremiumList {
 
   /** 出力の窓に出す人数（絞り込んでいれば絞り込んだ人、なければ全員） */
   readonly exportCount = computed(() => this.filteredRows().length);
+
+  // ===== 項目を選んで出力（11/24） =====
+
+  private readonly exportDialog = viewChild(ExportDialog);
+  readonly exportDefaultKeys = PREMIUM_DEFAULT_KEYS;
+  /** 出せる項目の目録（月・言語が変わったら作り直す） */
+  readonly exportCatalog = computed(() => {
+    const office = this.context.current();
+    const t = (key: string) => this.transloco.translate(key);
+    return premiumExportColumns({
+      t,
+      deptName: (id) => office?.departments?.find((d) => d.id === id)?.name ?? '',
+      note: (r) => (r.state === 'ok' ? '' : r.state === 'exempt' ? t('premium.exempt') : t(this.missingKey(r as ListItem))),
+      month: this.month(),
+      payMonth: this.payMonth(),
+    });
+  });
+  readonly exportStem = computed(() => {
+    const lang = this.transloco.getActiveLang() === 'en' ? 'en' : 'ja';
+    return premiumFileName(this.context.current()?.name ?? '', this.month(), todayLocal(), lang).replace(/\.csv$/, '');
+  });
+  readonly exportScopeText = computed(() =>
+    this.transloco.translate(this.isFiltered() ? 'exportDialog.scopeFiltered' : 'exportDialog.scopeAll', { n: this.exportCount() }),
+  );
+
+  /** 「出力 ▾」のメニューを閉じてから窓を開く */
+  openExport(ev: Event): void {
+    (ev.target as HTMLElement).closest('details')?.removeAttribute('open');
+    void this.exportDialog()?.open();
+  }
 
   /**
    * 今見ている月の一覧の表（CSV と xlsx で同じ中身。賞与は含まない）

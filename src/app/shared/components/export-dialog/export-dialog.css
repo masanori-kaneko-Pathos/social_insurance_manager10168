@@ -1,0 +1,264 @@
+/* 項目を選んで出力する窓（11/24）。窓の形はほかの窓（取り込みの「直す」）と同じ */
+.export-dialog {
+  width: min(880px, calc(100vw - 32px));
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-popover);
+  overflow: hidden;
+}
+
+.export-dialog::backdrop {
+  background: rgb(62 30 2 / 45%);
+}
+
+.dialog-body {
+  max-height: calc(100vh - 64px);
+  overflow: auto;
+  padding: var(--space-lg);
+}
+
+.dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.dialog-head h2 {
+  margin: 0;
+  font-size: var(--font-lg);
+}
+
+.close-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-sub);
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  background: var(--color-hover);
+}
+
+.sub {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.template-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-sm);
+  margin: var(--space-md) 0;
+}
+
+.template-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 16em;
+}
+
+.template-pick .label {
+  font-size: var(--font-sm);
+  font-weight: 600;
+}
+
+.danger {
+  color: var(--color-danger-text);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: var(--space-md);
+}
+
+@media (max-width: 640px) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+}
+
+.side-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.side-head h3 {
+  margin: 0;
+  font-size: var(--font-sm);
+}
+
+.link-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent-sub);
+  text-underline-offset: 2px;
+}
+
+.link-btn:hover {
+  color: var(--color-primary-hover);
+}
+
+.scroll {
+  height: 22em;
+  overflow: auto;
+  margin: 0;
+  padding: var(--space-xs) var(--space-sm);
+}
+
+.group {
+  margin: var(--space-sm) 0 2px;
+  font-size: var(--font-xs, 12px);
+  font-weight: 600;
+  color: var(--color-text-sub);
+}
+
+.item {
+  display: block;
+  width: 100%;
+  padding: 4px var(--space-sm);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: inherit;
+  font-size: var(--font-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.item:hover:not(:disabled) {
+  background: var(--color-hover);
+}
+
+.item:disabled {
+  color: var(--color-text-sub);
+  opacity: 0.5;
+  cursor: default;
+}
+
+.plus {
+  display: inline-block;
+  width: 1.4em;
+  color: var(--color-text-sub);
+}
+
+.picked {
+  list-style: none;
+}
+
+.picked li {
+  display: grid;
+  grid-template-columns: auto minmax(5em, 1fr) minmax(6em, 1.2fr) auto;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 3px 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-sm);
+}
+
+.picked li.empty {
+  display: block;
+  padding: var(--space-md) 0;
+  color: var(--color-text-sub);
+  border-bottom: none;
+}
+
+.order {
+  display: inline-flex;
+}
+
+.icon-btn {
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-sub);
+  cursor: pointer;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
+.icon-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.name {
+  overflow-wrap: anywhere;
+}
+
+.header-input {
+  width: 100%;
+  height: 30px;
+  font-size: var(--font-sm);
+}
+
+.hint {
+  margin: 0;
+  padding: var(--space-xs) var(--space-md) var(--space-sm);
+  font-size: var(--font-xs, 12px);
+  color: var(--color-text-sub);
+}
+
+.dialog-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+.save-as {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.save-as .input {
+  width: 14em;
+}
+
+.ok {
+  color: var(--color-success-text);
+  font-size: var(--font-sm);
+}
+
+.out {
+  display: flex;
+  gap: var(--space-sm);
+  margin-left: auto;
+}

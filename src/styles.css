@@ -1101,3 +1101,76 @@ table.sticky-head > thead th {
     transition: none;
   }
 }
+
+/* ===== 出力のメニュー（「出力 ▾」。保険料一覧の CSS から全画面の決まりに移した。11/24） ===== */
+details.menu {
+  position: relative;
+  display: inline-block;
+}
+
+details.menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+details.menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.menu-list {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 4px);
+  left: 0;
+  /* 絞り込んだときの説明が改行だらけにならない幅（11/16） */
+  min-width: 18em;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-xs) 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.12);
+}
+
+.menu-list button {
+  padding: var(--space-xs) var(--space-md);
+  text-align: left;
+  background: none;
+  border: 0;
+  font: inherit;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.menu-list button:hover {
+  background: var(--color-hover);
+}
+
+/* 給与ソフト向け CSV（区切り線の下。説明を2行目に。11/16） */
+.menu-list button.menu-sep {
+  margin-top: var(--space-xs);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border);
+}
+
+.menu-list button small {
+  display: block;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+/* 出力の範囲（何人分か）。11/16 */
+.menu-note {
+  margin: 0;
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* 画面の右端に置いたメニューは、右にそろえて開く（はみ出さないように。11/24） */
+.menu-list.menu-right {
+  left: auto;
+  right: 0;
+}

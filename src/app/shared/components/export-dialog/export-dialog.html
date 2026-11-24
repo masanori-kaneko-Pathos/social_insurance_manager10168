@@ -1,0 +1,120 @@
+<dialog
+  #dialog
+  class="export-dialog"
+  aria-labelledby="export-dialog-title"
+  (pointerdown)="onPointerDown($event)"
+  (click)="onClick($event)"
+>
+  <div class="dialog-body">
+    <header class="dialog-head">
+      <h2 id="export-dialog-title">{{ 'exportDialog.title' | transloco }}</h2>
+      <button type="button" class="close-btn" (click)="close()" [attr.aria-label]="'common.close' | transloco">×</button>
+    </header>
+    @if (scopeText()) {
+      <p class="sub">{{ scopeText() }}</p>
+    }
+
+    <!-- テンプレート：標準の形＋事業所で保存したもの -->
+    <div class="template-bar">
+      <label class="template-pick">
+        <span class="label">{{ 'exportDialog.template' | transloco }}</span>
+        <select class="input" (change)="pickTemplate($any($event.target).value)" [attr.aria-label]="'exportDialog.template' | transloco">
+          <option value="" [selected]="templateId() === ''">{{ 'exportDialog.standard' | transloco }}</option>
+          @for (t of templates(); track t.id) {
+            <option [value]="t.id" [selected]="templateId() === t.id">{{ t.name }}</option>
+          }
+        </select>
+      </label>
+      @if (canSave() && current()) {
+        <button type="button" class="btn btn-small" [disabled]="busy() || picks().length === 0" (click)="overwrite()">
+          {{ 'exportDialog.overwrite' | transloco }}
+        </button>
+        <button type="button" class="btn btn-small danger" [disabled]="busy()" (click)="removeTemplate()">
+          {{ 'exportDialog.remove' | transloco }}
+        </button>
+      }
+    </div>
+
+    <div class="columns">
+      <!-- 左：出せる項目 -->
+      <section class="side">
+        <div class="side-head">
+          <h3>{{ 'exportDialog.available' | transloco }}</h3>
+          <button type="button" class="link-btn" (click)="addAll()">{{ 'exportDialog.addAll' | transloco }}</button>
+        </div>
+        <div class="scroll">
+          @for (g of groups(); track g.group) {
+            <p class="group">{{ g.group }}</p>
+            @for (c of g.columns; track c.key) {
+              <button type="button" class="item" [disabled]="picked().has(c.key)" (click)="add(c.key)">
+                <span class="plus" aria-hidden="true">＋</span>{{ c.label }}
+              </button>
+            }
+          }
+        </div>
+      </section>
+
+      <!-- 右：出力する項目（並び＝列の順） -->
+      <section class="side">
+        <div class="side-head">
+          <h3>{{ 'exportDialog.picked' | transloco: { n: picks().length } }}</h3>
+          @if (picks().length > 0) {
+            <button type="button" class="link-btn" (click)="clearAll()">{{ 'exportDialog.clearAll' | transloco }}</button>
+          }
+        </div>
+        <ol class="scroll picked">
+          @for (p of picks(); track p.key; let i = $index, first = $first, last = $last) {
+            <li>
+              <span class="order">
+                <button type="button" class="icon-btn" [disabled]="first" (click)="move(i, -1)" [attr.aria-label]="'exportDialog.up' | transloco: { name: labelOf(p.key) }">↑</button>
+                <button type="button" class="icon-btn" [disabled]="last" (click)="move(i, 1)" [attr.aria-label]="'exportDialog.down' | transloco: { name: labelOf(p.key) }">↓</button>
+              </span>
+              <span class="name">{{ labelOf(p.key) }}</span>
+              <input
+                class="input header-input"
+                [value]="p.header ?? ''"
+                [placeholder]="labelOf(p.key)"
+                maxlength="60"
+                (input)="rename(i, $any($event.target).value)"
+                [attr.aria-label]="'exportDialog.header' | transloco: { name: labelOf(p.key) }"
+              />
+              <button type="button" class="icon-btn" (click)="remove(i)" [attr.aria-label]="'exportDialog.removeColumn' | transloco: { name: labelOf(p.key) }">×</button>
+            </li>
+          } @empty {
+            <li class="empty">{{ 'exportDialog.empty' | transloco }}</li>
+          }
+        </ol>
+        <p class="hint">{{ 'exportDialog.headerHint' | transloco }}</p>
+      </section>
+    </div>
+
+    @if (errorKey(); as k) {
+      <div class="alert alert-danger" role="alert">{{ k | transloco }}</div>
+    }
+
+    <footer class="dialog-foot">
+      @if (canSave()) {
+        <div class="save-as">
+          <input
+            class="input"
+            maxlength="40"
+            [value]="newName()"
+            (input)="newName.set($any($event.target).value)"
+            [placeholder]="'exportDialog.namePlaceholder' | transloco"
+            [attr.aria-label]="'exportDialog.name' | transloco"
+          />
+          <button type="button" class="btn btn-small" [disabled]="busy() || !newName().trim() || picks().length === 0" (click)="saveAs()">
+            {{ 'exportDialog.saveAs' | transloco }}
+          </button>
+          @if (savedKey(); as k) {
+            <span class="ok" role="status">{{ k | transloco }}</span>
+          }
+        </div>
+      }
+      <div class="out">
+        <button type="button" class="btn" [disabled]="picks().length === 0" (click)="exportXlsx()">{{ 'exportDialog.xlsx' | transloco }}</button>
+        <button type="button" class="btn btn-solid" [disabled]="picks().length === 0" (click)="exportCsv()">{{ 'exportDialog.csv' | transloco }}</button>
+      </div>
+    </footer>
+  </div>
+</dialog>
