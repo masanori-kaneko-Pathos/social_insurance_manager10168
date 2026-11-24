@@ -147,6 +147,10 @@ describe('isLastMonthBeforeLeaving：退職前の最後の月（2か月分の控
     expect(isLastMonthBeforeLeaving(e, '2026-08')).toBeFalse();
   });
 
+  it('事業所の間の異動（退職の理由が異動）は対象外（同じ会社で給与が続く。11/24）', () => {
+    expect(isLastMonthBeforeLeaving({ ...leaving('2026-11-16', 'retire'), retireReason: 'transfer' }, '2026-10')).toBeFalse();
+  });
+
   it('死亡・原因が空の古いデータも対象。75歳・任意喪失は対象外（働き続けている）', () => {
     expect(isLastMonthBeforeLeaving(leaving('2026-09-01', 'death'), '2026-08')).toBeTrue();
     expect(isLastMonthBeforeLeaving(leaving('2026-09-01', null), '2026-08')).toBeTrue();

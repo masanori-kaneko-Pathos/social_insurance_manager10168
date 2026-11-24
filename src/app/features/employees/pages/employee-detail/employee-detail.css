@@ -270,3 +270,8 @@
   flex: 0 0 5.5em;
   color: var(--color-text-sub);
 }
+
+/* 「＋登録」の中の区切り（異動は別の種類の操作。11/24） */
+.add-menu .menu button.menu-sep {
+  border-top: 1px solid var(--color-border);
+}

@@ -12,7 +12,7 @@ import { contractAt } from '../../../employees/logic/contract-form-model';
 import { OfficeContext } from '../../../office/office-context.service';
 import { candidateDays, PayrollRowText, readEntry, RowError, sameInput, sumPayrolls, textOf } from '../../logic/payroll-input';
 import { categoryOf, copyNames, hasAmounts, LineDraft, startDrafts, toDrafts } from '../../logic/payroll-lines';
-import { latestPaidMonth, onLeaveDuring, Period, PayrollRow, payrollRows, periodOf } from '../../logic/payroll-rows';
+import { latestPaidMonth, onLeaveDuring, Period, PayrollRow, payrollRowsFor, periodOf } from '../../logic/payroll-rows';
 import { payrollOf, premiumMonthOfPay, premiumMonthsOfPay } from '../../../office/office-settings';
 import { MonthPicker } from '../../../../shared/components/month-picker/month-picker';
 import { shiftMonth, daysInclusive, daysInMonth, todayLocal, toYearMonth } from '../../../../shared/utils/date';
@@ -30,10 +30,12 @@ import { ContractDoc, EMPLOYMENT_TYPES } from '../../../../core/models/contract'
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
+import { hasPayGroups, payGroupAt, payrollAt } from '../../../office/logic/pay-group';
 
 interface ViewRow {
   employee: Employee;
-  row: PayrollRow;
+  /** 1行（period ＝ その人の区分の対象期間。11/24） */
+  row: PayrollRow & { period: Period };
   form: PayrollRowForm;
   /** 給与明細の内訳（null ＝ 内訳なし）。内訳を変えると form の総支給額なども変わる */
   lines: WritableSignal<LineDraft[] | null>;
@@ -117,11 +119,32 @@ export class PayrollMonth {
     return this.savedByMonth() ? (this.savedMonthsById().get(id) ?? EMPTY_MONTHS) : null;
   }
 
-  /** 対象期間に休業が重なる人（「休業」の札。11/20） */
-  onLeave(e: Employee): boolean {
-    const p = this.period();
-    return p ? onLeaveDuring(e, p) : false;
+  /** 対象期間に休業が重なる人（「休業」の札。11/20）。対象期間はその人の区分のもの */
+  onLeave(v: ViewRow): boolean {
+    return onLeaveDuring(v.employee, v.row.period);
   }
+
+  /** その人の対象期間の日数（給与計算の基礎日数の上限） */
+  daysOf(v: ViewRow): number {
+    return daysInclusive(v.row.period.start, v.row.period.end);
+  }
+
+  /** 事業所に給与の支払区分があるか（行に区分の札を出す。11/24） */
+  readonly hasGroups = computed(() => {
+    const o = this.context.current();
+    return !!o && hasPayGroups(o);
+  });
+
+  /** 既定でない区分の人の札（区分の名前と対象期間）。既定の区分の人は null */
+  groupBadge(v: ViewRow): { name: string; start: string; end: string } | null {
+    const o = this.context.current();
+    if (!o) return null;
+    const g = payGroupAt(o, v.employee, this.month());
+    return g ? { name: g.name, start: this.md(v.row.period.start), end: this.md(v.row.period.end) } : null;
+  }
+
+  /** いちばん長い対象期間の日数（まとめて日数を入れる窓の上限） */
+  private readonly maxDays = computed(() => Math.max(this.periodDays(), ...this.views().map((v) => this.daysOf(v))));
 
   readonly periodDays = computed(() => {
     const p = this.period();
@@ -200,7 +223,7 @@ export class PayrollMonth {
 
   /** その期間の終わりに効いている契約 */
   contractOf(v: ViewRow): ContractDoc | null {
-    const end = this.period()?.end;
+    const end = v.row.period.end;
     const list = this.contracts().get(v.employee.id);
     return end && list ? contractAt(list, end) : null;
   }
@@ -273,14 +296,18 @@ export class PayrollMonth {
         .catch((err) => console.error(err));
       this.employees ??= await this.employeesApi.list(office.id);
       const employees = this.employees;
+      // 見出しの対象期間は既定の区分。行ごとの対象期間は、その人の給与の支払区分で出す（11/24）
       const period = periodOf(month, payrollOf(office));
+      const empById = new Map(employees.map((e) => [e.id, e]));
       const saved = await this.payrollApi.month(
         office.id,
         employees.map((e) => e.id),
         month,
       );
       const byId = new Map(employees.map((e) => [e.id, e]));
-      const views = payrollRows(employees, period, saved).map((row) => this.viewOf(byId.get(row.employeeId)!, row));
+      const views = payrollRowsFor(employees, month, (e) => payrollAt(office, empById.get(e.id), month), saved).map((row) =>
+        this.viewOf(byId.get(row.employeeId)!, row),
+      );
       this.period.set(period);
       this.views.set(views);
       this.page.set(1);
@@ -301,7 +328,7 @@ export class PayrollMonth {
     }
   }
 
-  private viewOf(employee: Employee, row: PayrollRow): ViewRow {
+  private viewOf(employee: Employee, row: PayrollRow & { period: Period }): ViewRow {
     const form = this.buildForm(textOf(row.saved));
     if (!this.context.isAdmin()) form.disable();
     const lines = row.saved?.lines ? toDrafts(row.saved.lines) : null;
@@ -459,7 +486,7 @@ export class PayrollMonth {
 
   readonly bulkDaysOk = computed(() => {
     const t = this.bulkDays().normalize('NFKC').trim();
-    return /^\d{1,2}$/.test(t) && Number(t) <= this.periodDays();
+    return /^\d{1,2}$/.test(t) && Number(t) <= this.maxDays();
   });
 
   toggleBulk(): void {
@@ -496,7 +523,7 @@ export class PayrollMonth {
 
   /** 1人分を読む（直していなければ null ＝ 変更なし） */
   private changeOf(v: ViewRow): { change: PayrollChange | null; errors: RowError[] } {
-    const r = readEntry(v.form.getRawValue(), v.lines(), this.contractOf(v)?.payType ?? null, this.periodDays());
+    const r = readEntry(v.form.getRawValue(), v.lines(), this.contractOf(v)?.payType ?? null, this.daysOf(v));
     const id = v.employee.id;
     if (r.kind === 'blank') {
       return { change: v.row.saved ? { employeeId: id, input: null, exists: true, before: v.row.saved } : null, errors: [] };

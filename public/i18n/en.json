@@ -1172,7 +1172,7 @@
     "field": {
       "from": "Effective from",
       "reason": "Reason",
-      "monthlyAmount": "Monthly pay (JPY)",
+      "monthlyAmount": "Monthly remuneration (yen)",
       "health": "Health insurance",
       "pension": "Pension"
     },
@@ -1215,7 +1215,7 @@
       "needAmount": "Enter the monthly pay as a number to choose grades automatically."
     },
     "hint": {
-      "amount": "Yen. Commas are optional."
+      "amount": "The \"monthly remuneration\" on the acquisition notification, or the \"corrected average\" on the base calculation or change notification. Not the standard monthly remuneration on the decision notice (match that with the grades below). Used for the special rule near the highest and lowest grades in revisions."
     },
     "pensionOff": "No employees' pension coverage in this month (age 70 or over, etc.), so no pension grade is chosen. Only health insurance premiums are calculated.",
     "acquireBonus": "This office pays bonuses four or more times a year ({{natures}}). At acquisition, add the average bonus-related remuneration of people in similar work receiving similar bonuses. The amount below is the average of everyone receiving it in this office ({{people}} people, {{n}} yen). To exclude people in different work, adjust the monthly amount by hand after adding (then write the filing remark yourself).",
@@ -1563,7 +1563,7 @@
       "title": "Name",
       "people": "People",
       "payment": "Payment",
-      "amount": "Bonus amount",
+      "amount": "Bonus (in money)",
       "standard": "Standard Bonus Amount (SBA) (標準賞与額)",
       "employee": "Employee",
       "amountTotal": "Total bonus",
@@ -1608,7 +1608,7 @@
       "natureItem": "Item \"{{name}}\" — social insurance: {{treatment}}",
       "natureLoose": "No treatment set for this name yet (decided by count).",
       "toItems": "Set it in bonus items",
-      "amount": "Bonus amount: the gross amount on the bonus slip, not the net amount."
+      "amount": "Bonus (in money): the \"amount paid in money\" column of the bonus payment notification. The amount paid on the bonus statement (gross), excluding payments that are not remuneration, such as condolence money. Not the net pay. Bonuses paid in kind are entered in the \"in kind\" column of the bonus CSV; they appear as \"of which in kind\" and are added to the money amount for the standard bonus amount."
     },
     "error": {
       "load": "Couldn't load bonus data.",
@@ -1685,7 +1685,8 @@
     "plannedMonthsNone": "None registered",
     "plannedMonthsNote": "(registered with the Japan Pension Service)",
     "plannedMonthsEdit": "Change",
-    "monthOf": "{{m}}"
+    "monthOf": "{{m}}",
+    "inKindOf": "Of which in kind: ¥{{n}}"
   },
   "leave": {
     "title": "Leave",
@@ -2152,8 +2153,8 @@
       "hourlyWage": "Hourly wage (yen)",
       "dailyWage": "Daily wage (yen)",
       "scheduledWage": "Scheduled wage (monthly, used to decide enrollment, yen)",
-      "expectedCash": "Expected monthly pay (including commuting allowance and expected overtime, yen)",
-      "expectedInKind": "Expected in kind (housing, meals, etc. Separate from the amount above, yen)",
+      "expectedCash": "Expected monthly remuneration (in money)",
+      "expectedInKind": "Expected monthly remuneration (in kind)",
       "periodEnd": "End of term",
       "renewal": "Renewal",
       "student": "Student",
@@ -5201,5 +5202,102 @@
         "contribution": "Contribution difference"
       }
     }
+  },
+  "transfer": {
+    "open": "Transfer to another office",
+    "title": "Transfer to another office",
+    "lead": "For people whose covered office changes, such as a relocation. On the transfer date, they lose eligibility at this office and acquire it at the new office (both on the transfer date). Premiums for the transfer month are charged only at the new office. You can only choose offices where you are an administrator.",
+    "to": "New office",
+    "pickOffice": "Select",
+    "date": "Transfer date",
+    "dateNote": "The first working day at the new office (loss and acquisition date)",
+    "number": "Employee number at the new office",
+    "amount": "Monthly remuneration at the new office (yen)",
+    "amountNote": "For the acquisition notification. Blank uses the current amount",
+    "check": "Check the details",
+    "summaryTitle": "The transfer will do the following",
+    "sum": {
+      "from": "{{office}} (this office)",
+      "fromBody": "Loss date {{lost}} (leaving date {{retire}}, reason: transfer). Premiums through month {{last}}",
+      "to": "{{office}} (new office)",
+      "toBody": "Acquisition and joining date {{date}}. Premiums from month {{first}}",
+      "remuneration": "Standard monthly remuneration at the new office",
+      "remunerationBody": "Monthly remuneration ¥{{amount}} → health ¥{{health}}, pension ¥{{pension}} (determination at acquisition; correct it at the new office if the decision notice differs)",
+      "copy": "Copied",
+      "copyBody": "Contracts {{contracts}}, dependents {{dependents}} (from the transfer date), leaves and overseas work {{leaves}}, personal details",
+      "bonus": "Annual bonus total",
+      "bonusCarried": "Same insurer, so this year's standard bonus total ¥{{n}} is carried over (toward the ¥5.73M cap)",
+      "bonusNone": "No bonuses this year",
+      "bonusReset": "The insurer changes, so the total starts again",
+      "notCopied": "Not copied",
+      "notCopiedBody": "Payroll records (annual determination is per office), My Number (register again at the new office), My Page (invite again at the new office)",
+      "filings": "Notifications",
+      "filingsBody": "The loss notification here (cause: leaving) and the acquisition and dependent notifications at the new office appear in the to-do list"
+    },
+    "run": "Transfer",
+    "running": "Transferring…",
+    "done": "Transferred",
+    "doneBody": "Transferred to {{office}}. Eligibility at this office ended on the transfer date.",
+    "openNew": "Open at the new office",
+    "noTarget": "No office to choose (you need another office where you are an administrator).",
+    "error": {
+      "date": "Enter the transfer date",
+      "beforeHire": "The transfer date must be after the joining date",
+      "retired": "The person left before the day before the transfer date",
+      "noRemuneration": "There is no current standard remuneration, so enter the monthly remuneration at the new office",
+      "amount": "Enter a valid monthly remuneration"
+    },
+    "failed": {
+      "load": "Could not load the data for the transfer. Please try again.",
+      "write": "Stopped at: {{step}}. The employee at this office has not changed.",
+      "openPartial": "Open the partly created employee at the new office (check it and cancel the registration if not needed)"
+    },
+    "step": {
+      "create": "create the employee at the new office",
+      "lists": "copy leaves",
+      "contracts": "copy contracts",
+      "remuneration": "create standard remuneration",
+      "dependents": "copy dependents",
+      "source": "end eligibility at this office",
+      "unknown": "unknown",
+      "load": "loading"
+    }
+  },
+  "payGroup": {
+    "title": "Pay groups",
+    "lead": "Add a group only if some pay has a different closing or pay day (e.g. monthly staff close at month end and are paid on the 25th of the next month; part-timers close on the 15th and are paid at month end). Anyone not in a group uses the closing and pay days above.",
+    "name": "Group name",
+    "add": "Add group",
+    "assignHint": "Choose each person's group under “Pay group” on the employee page.",
+    "confirmRemove": "Delete the group “{{name}}”? People in it will use the closing and pay days above.",
+    "defaultName": "Office default",
+    "unnamed": "Unnamed group",
+    "currentWarn": "“{{name}}” deducts the current month. If you use current-month deduction, check that a wage-deduction agreement or your work rules allow it.",
+    "deduction": {
+      "next": "Next-month deduction",
+      "current": "Current-month deduction"
+    },
+    "error": {
+      "name": "Enter a group name.",
+      "duplicate": "A group with this name already exists (“Office default” can't be used either).",
+      "closingDay": "Choose a closing day.",
+      "payDay": "Choose a pay day.",
+      "tooMany": "You can have up to 10 groups.",
+      "from": "Choose the pay month it applies from. It must be after the months already entered.",
+      "save": "The pay group couldn't be saved. Please try again."
+    },
+    "cardTitle": "Pay group",
+    "cardHint": "Sets this person's closing day, pay day and which pay the premium is deducted from. The pay period, days in pay calculation and deduction month use this group.",
+    "change": "Change",
+    "from": "Applies from pay month",
+    "group": "Group",
+    "removed": "(deleted group)",
+    "rule": "Closes {{closing}} · paid {{payMonth}} {{payDay}} · {{deduction}}",
+    "fromStart": "From the start",
+    "fromMonth": "From pay in {{m}}/{{y}}",
+    "rowBadge": "{{name}} ({{start}}–{{end}})",
+    "headerNote": " (office default group. For people in other groups, the row shows their own period.)",
+    "otherPay": "Deduct from {{m}} pay",
+    "otherPayNote": "This person's pay group differs from the office default, so this month's premium is deducted from a different pay month than the heading shows."
   }
 }

@@ -1,0 +1,93 @@
+<!-- 別の事業所へ異動する（転勤。「＋登録」から開く。11/24） -->
+@if (open()) {
+  <section class="card transfer">
+    <div class="head">
+      <h2>{{ 'transfer.title' | transloco }}</h2>
+    </div>
+    <p class="hint">{{ 'transfer.lead' | transloco }}</p>
+
+    @if (done(); as d) {
+      <div class="alert alert-success" role="status">
+        {{ 'transfer.doneBody' | transloco: { office: d.officeName } }}
+        <a [routerLink]="['/o', d.officeId, 'employees', d.employeeId]">{{ 'transfer.openNew' | transloco }}</a>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn" (click)="cancel()">{{ 'common.close' | transloco }}</button>
+      </div>
+    } @else if (targets().length === 0) {
+      <p class="field-error">{{ 'transfer.noTarget' | transloco }}</p>
+      <div class="actions">
+        <button type="button" class="btn" (click)="cancel()">{{ 'common.close' | transloco }}</button>
+      </div>
+    } @else {
+      <div class="editor">
+        <div class="grid">
+          <div class="field">
+            <label for="tr-to">{{ 'transfer.to' | transloco }}<span class="req" aria-hidden="true">※</span></label>
+            <select id="tr-to" class="input" [value]="toId()" (change)="set('toId', $any($event.target).value)">
+              <option value="">{{ 'transfer.pickOffice' | transloco }}</option>
+              @for (o of targets(); track o.id) {
+                <option [value]="o.id" [selected]="o.id === toId()">{{ o.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="tr-date">{{ 'transfer.date' | transloco }}<span class="req" aria-hidden="true">※</span></label>
+            <input id="tr-date" type="date" class="input" [value]="date()" (input)="set('date', $any($event.target).value)" />
+            <small class="field-note">{{ 'transfer.dateNote' | transloco }}</small>
+          </div>
+          <div class="field">
+            <label for="tr-no">{{ 'transfer.number' | transloco }}</label>
+            <input id="tr-no" class="input" maxlength="20" [value]="number()" (input)="set('number', $any($event.target).value)" />
+          </div>
+          <div class="field">
+            <label for="tr-amount">{{ 'transfer.amount' | transloco }}</label>
+            <input id="tr-amount" class="input num" inputmode="numeric" [value]="amount()" (input)="set('amount', $any($event.target).value)" />
+            <small class="field-note">{{ 'transfer.amountNote' | transloco }}</small>
+          </div>
+        </div>
+        @for (e of errors(); track e) {
+          <p class="field-error">{{ 'transfer.error.' + e | transloco }}</p>
+        }
+        <div class="actions">
+          <button type="button" class="btn" [disabled]="busy()" (click)="cancel()">{{ 'common.cancel' | transloco }}</button>
+          <button type="button" class="btn btn-primary" [disabled]="busy() || !toId() || !date()" (click)="check()">{{ 'transfer.check' | transloco }}</button>
+        </div>
+      </div>
+
+      <!-- 写す内容（確かめてから異動する） -->
+      @if (plan(); as p) {
+        <div class="summary">
+          <h3>{{ 'transfer.summaryTitle' | transloco }}</h3>
+          <dl>
+            <dt>{{ 'transfer.sum.from' | transloco: { office: context.current()?.name } }}</dt>
+            <dd>{{ 'transfer.sum.fromBody' | transloco: { lost: date(), retire: p.source.retireDate, last: monthParts(lastMonth()).m } }}</dd>
+            <dt>{{ 'transfer.sum.to' | transloco: { office: target()?.name } }}</dt>
+            <dd>{{ 'transfer.sum.toBody' | transloco: { date: date(), first: monthParts(firstMonth()).m } }}</dd>
+            <dt>{{ 'transfer.sum.remuneration' | transloco }}</dt>
+            <dd>{{ 'transfer.sum.remunerationBody' | transloco: { amount: yen(p.remuneration.monthlyAmount), health: yen(p.remuneration.health.standard), pension: yen(p.remuneration.pension.standard) } }}</dd>
+            <dt>{{ 'transfer.sum.copy' | transloco }}</dt>
+            <dd>{{ 'transfer.sum.copyBody' | transloco: { contracts: p.contracts.length, dependents: p.dependents.length, leaves: p.lists.leaves.length + p.lists.careExemptions.length + p.lists.overseas.length } }}</dd>
+            <dt>{{ 'transfer.sum.bonus' | transloco }}</dt>
+            <dd>{{ (p.priorBonusTotals ? 'transfer.sum.bonusCarried' : (source()?.fromInsurer === source()?.toInsurer ? 'transfer.sum.bonusNone' : 'transfer.sum.bonusReset')) | transloco: { n: yen(p.carriedBonus) } }}</dd>
+            <dt>{{ 'transfer.sum.notCopied' | transloco }}</dt>
+            <dd>{{ 'transfer.sum.notCopiedBody' | transloco }}</dd>
+            <dt>{{ 'transfer.sum.filings' | transloco }}</dt>
+            <dd>{{ 'transfer.sum.filingsBody' | transloco }}</dd>
+          </dl>
+          <div class="actions">
+            <button type="button" class="btn btn-solid" [disabled]="busy()" (click)="run()">{{ (busy() ? 'transfer.running' : 'transfer.run') | transloco }}</button>
+          </div>
+        </div>
+      }
+      @if (failure(); as f) {
+        <div class="alert alert-danger" role="alert">
+          {{ 'transfer.failed.' + (f.step === 'load' ? 'load' : 'write') | transloco: { step: ('transfer.step.' + f.step | transloco) } }}
+          @if (f.newId && target(); as t) {
+            <a [routerLink]="['/o', t.id, 'employees', f.newId]">{{ 'transfer.failed.openPartial' | transloco }}</a>
+          }
+        </div>
+      }
+    }
+  </section>
+}

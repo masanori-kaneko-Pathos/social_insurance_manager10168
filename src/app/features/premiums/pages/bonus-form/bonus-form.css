@@ -336,3 +336,9 @@ td.calc {
   font-size: var(--font-xs);
   color: var(--color-text-sub);
 }
+
+/* 現物で払った分（賞与の CSV で入れたもの）は、入力欄の下に（11/24） */
+td .sub.in-kind {
+  display: block;
+  margin-top: 2px;
+}

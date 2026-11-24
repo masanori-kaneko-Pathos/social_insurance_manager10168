@@ -31,6 +31,7 @@ import { DecisionNoticeCard } from '../../../premiums/components/decision-notice
 import { PersonName } from '../../../../shared/components/person-name/person-name';
 import { BonusService } from '../../../premiums/bonus.service';
 import type { OtherMonths } from '../../logic/payroll-lines';
+import { payrollAt } from '../../../office/logic/pay-group';
 
 interface View {
   key: string; // 行の目印（従業員ID・種類・起算月）
@@ -142,7 +143,9 @@ export class RevisionsPage {
       const special: SpecialPerson[] = [];
       const wageRows: WageChangeRow[] = [];
       for (const { e, payrolls, remunerations, contracts, wageChanges } of perPerson) {
-        const pr = personRevisions({ employee: e, payrolls, remunerations, contracts, wageChanges, bonusPayments }, ctx, tables);
+        // 対象期間は、その人の今月払いの給与の支払区分で出す（11/24）
+        const personCtx = { ...ctx, schedule: payrollAt(office, e, toYearMonth(todayLocal())) };
+        const pr = personRevisions({ employee: e, payrolls, remunerations, contracts, wageChanges, bonusPayments }, personCtx, tables);
         const items = pr.items;
         for (const change of wageChanges) wageRows.push({ employee: e, change });
         // 反映するとき、改定しない保険の今の等級に、届出なしの一斉改定の分も入れる（11/16）

@@ -20,6 +20,7 @@ import { employedDuring, latestPaidMonth, periodOf, suggestDays } from '../../lo
 import { payrollOf } from '../../../office/office-settings';
 import { PayrollService } from '../../payroll.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { payrollAt } from '../../../office/logic/pay-group';
 
 /**
  * 従業員の詳細：給与の実績（直近12件）
@@ -73,7 +74,8 @@ export class PayrollCard {
   periodText(p: Payroll): string {
     const office = this.context.current();
     if (!office) return '';
-    const { start, end } = periodOf(p.paidMonth, payrollOf(office));
+    // 対象期間は、その人のその月の給与の支払区分で出す（11/24）
+    const { start, end } = periodOf(p.paidMonth, payrollAt(office, this.employee(), p.paidMonth));
     const md = (d: string) => `${Number(d.slice(5, 7))}/${Number(d.slice(8, 10))}`;
     return `${md(start)}〜${md(end)}`;
   }
@@ -103,7 +105,7 @@ export class PayrollCard {
   readonly editPeriod = computed(() => {
     const m = this.editMonth();
     const office = this.context.current();
-    return m && office ? periodOf(m, payrollOf(office)) : null;
+    return m && office ? periodOf(m, payrollAt(office, this.employee(), m)) : null;
   });
   readonly editPeriodDays = computed(() => {
     const p = this.editPeriod();

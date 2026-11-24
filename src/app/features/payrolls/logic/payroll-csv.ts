@@ -242,6 +242,15 @@ export function makeNameMatcher(employees: readonly CsvEmployee[]): (name: strin
   };
 }
 
+/**
+ * 対象期間の決まり：事業所で1つ、または人と支払月ごと（給与の支払区分。11/24）
+ */
+export type ScheduleSource = PaySchedule | ((employeeId: string, paidMonth: string) => PaySchedule);
+
+export function scheduleFor(s: ScheduleSource, employeeId: string, paidMonth: string): PaySchedule {
+  return typeof s === 'function' ? s(employeeId, paidMonth) : s;
+}
+
 // ===== 取り込み =====
 
 export type ImportErrorCode =
@@ -346,7 +355,7 @@ export interface ReadOptions {
 export function readPayrollCsv(
   rows: readonly (readonly string[])[],
   employees: readonly CsvEmployee[],
-  schedule: PaySchedule,
+  schedule: ScheduleSource,
   opts: ReadOptions = {},
 ): ImportRead {
   const result: ImportRead = {
@@ -421,7 +430,7 @@ export function readPayrollCsv(
 
     let periodDays = 31;
     if (employee && paidMonth) {
-      const p = periodOf(paidMonth, schedule);
+      const p = periodOf(paidMonth, scheduleFor(schedule, employee.id, paidMonth));
       periodDays = daysInclusive(p.start, p.end);
       if (!employedDuring(employee, p)) codes.push('notEmployed');
       const key = `${employee.id}|${paidMonth}`;
@@ -517,14 +526,13 @@ export function payrollExportRows<E extends CsvEmployee>(
   employees: readonly E[],
   payrolls: readonly Payroll[],
   months: readonly string[],
-  schedule: PaySchedule,
+  schedule: ScheduleSource,
 ): PayrollExportRow<E>[] {
   const saved = new Map(payrolls.map((p) => [`${p.employeeId}|${p.paidMonth}`, p]));
   const out: PayrollExportRow<E>[] = [];
   for (const month of months) {
-    const p = periodOf(month, schedule);
     for (const e of employees) {
-      if (!employedDuring(e, p)) continue;
+      if (!employedDuring(e, periodOf(month, scheduleFor(schedule, e.id, month)))) continue;
       out.push({ employee: e, month, saved: saved.get(`${e.id}|${month}`) ?? null });
     }
   }
@@ -558,7 +566,7 @@ export function buildPayrollCsv(
   employees: readonly CsvEmployee[],
   payrolls: readonly Payroll[],
   months: readonly string[],
-  schedule: PaySchedule,
+  schedule: ScheduleSource,
   lang: CsvLang,
   lineNames: readonly string[] = [],
 ): string[][] {

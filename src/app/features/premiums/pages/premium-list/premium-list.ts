@@ -78,6 +78,7 @@ import { PersonName } from '../../../../shared/components/person-name/person-nam
 import { regularPending } from '../../logic/regular-pending';
 import { MonthCloseService } from '../../month-close.service';
 import { MonthClose } from '../../../../core/models/month-close';
+import { deductionHistoryAt, hasPayGroups, payrollAt } from '../../../office/logic/pay-group';
 import {
   buildPeople,
   closeBlockers,
@@ -1080,19 +1081,39 @@ export class PremiumList {
     () => premiumMonthsOfPay(this.payMonth(), this.payroll(), this.context.current()?.deductionHistory).length === 2,
   );
 
+  /** 事業所に給与の支払区分があるか（11/24） */
+  readonly hasGroups = computed(() => {
+    const o = this.context.current();
+    return !!o && hasPayGroups(o);
+  });
+
+  /** その人の、この月分を控除する給与の支払月（給与の支払区分で決まる。11/24） */
+  payMonthOf(e: Employee): YearMonth {
+    const o = this.context.current();
+    if (!o) return this.payMonth();
+    return deductionPayMonth(this.month(), payrollAt(o, e, this.month()), deductionHistoryAt(o, e, this.month()));
+  }
+
+  /** 控除する給与の月が見出しと違う人の札（区分が違う人だけ）。同じなら null */
+  otherPayMonth(e: Employee): string | null {
+    if (!this.hasGroups()) return null;
+    const m = this.payMonthOf(e);
+    return m === this.payMonth() ? null : String(Number(m.slice(5)));
+  }
+
   // ===== 保険料の立替（ボタンを押したときだけ、控除する支払月の給与を読む） =====
 
-  /** 確かめた支払月と、その月の給与（従業員ID → 実績） */
-  private readonly advanceChecked = signal<{ payMonth: string; payrolls: Map<string, Payroll> } | null>(null);
+  /** 確かめた月分と、その人が控除される支払月の給与（従業員ID → 実績） */
+  private readonly advanceChecked = signal<{ month: string; payrolls: Map<string, Payroll> } | null>(null);
   readonly advanceBusy = signal(false);
   /** 今見ている月で確かめ済みか（月を変えたら、もう一度押す） */
-  readonly advanceReady = computed(() => this.advanceChecked()?.payMonth === this.payMonth());
+  readonly advanceReady = computed(() => this.advanceChecked()?.month === this.month());
 
   /** 立替が要りそうな人（従業員ID → 立て替える額の目安） */
   readonly advances = computed(() => {
     const c = this.advanceChecked();
     const out = new Map<string, number>();
-    if (!c || c.payMonth !== this.payMonth()) return out;
+    if (!c || c.month !== this.month()) return out;
     for (const r of this.rows()) {
       if (r.state !== 'ok' || !r.result) continue;
       const p = c.payrolls.get(r.employee.id) ?? null;
@@ -1103,7 +1124,7 @@ export class PremiumList {
   /** 給与の実績がなくて判断できなかった人の数 */
   readonly advanceUnknown = computed(() => {
     const c = this.advanceChecked();
-    if (!c || c.payMonth !== this.payMonth()) return 0;
+    if (!c || c.month !== this.month()) return 0;
     return this.rows().filter((r) => r.state === 'ok' && r.result && advanceState(c.payrolls.get(r.employee.id) ?? null, r.result.employeeYen) === 'unknown').length;
   });
 
@@ -1117,9 +1138,18 @@ export class PremiumList {
     if (!officeId || this.advanceBusy()) return;
     this.advanceBusy.set(true);
     try {
-      const payMonth = this.payMonth();
-      const ids = this.rows().filter((r) => r.state === 'ok').map((r) => r.employee.id);
-      this.advanceChecked.set({ payMonth, payrolls: await this.payrollApi.month(officeId, ids, payMonth) });
+      const month = this.month();
+      // 控除する支払月ごとに読む（給与の支払区分で、人により支払月が違うことがある。11/24）
+      const byPay = new Map<string, string[]>();
+      for (const r of this.rows()) {
+        if (r.state !== 'ok') continue;
+        const pm = this.payMonthOf(r.employee);
+        byPay.set(pm, [...(byPay.get(pm) ?? []), r.employee.id]);
+      }
+      const maps = await Promise.all([...byPay].map(([pm, ids]) => this.payrollApi.month(officeId, ids, pm)));
+      const payrolls = new Map<string, Payroll>();
+      for (const m of maps) for (const [id, p] of m) payrolls.set(id, p);
+      this.advanceChecked.set({ month, payrolls });
     } catch (err) {
       console.error(err);
     } finally {

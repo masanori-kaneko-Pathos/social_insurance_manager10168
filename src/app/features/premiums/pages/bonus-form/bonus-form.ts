@@ -193,6 +193,19 @@ export class BonusForm {
     return { ratesFor: ratesForOffice(office, tables), insurerOf: insurerKeyOf(office), options: this.options() };
   });
 
+  /**
+   * 保存済みの現物の額（賞与の CSV の「現物」の列で入れたもの。この画面では入れない。11/24）
+   * 入力中の支給にも持たせる（落とすと、この画面の標準賞与額・保険料が保存済みの計算より低く出ていた）
+   */
+  readonly savedInKind = computed<Record<string, number>>(
+    () => this.payments().find((p) => p.id === this.bonusId)?.inKindAmounts ?? {},
+  );
+
+  /** その人の現物の額（なければ 0） */
+  inKindOf(id: string): number {
+    return this.savedInKind()[id] ?? 0;
+  }
+
   /** 保存済みの支給に、入力中の内容を差し替えたもの（計算はいつもこれで行う） */
   private readonly draftPayments = computed(() =>
     withDraft(
@@ -204,6 +217,7 @@ export class BonusForm {
             id: this.bonusId ?? NEW_ID,
             paidDate: this.paidDate(),
             amounts: this.amounts(),
+            inKindAmounts: this.savedInKind(),
             nature: this.nature().trim() || null,
             countAs: this.countAs(),
           },

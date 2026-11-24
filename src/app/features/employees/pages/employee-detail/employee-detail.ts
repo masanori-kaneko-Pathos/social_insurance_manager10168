@@ -37,6 +37,8 @@ import { adjustmentForEmployee } from '../../../premiums/logic/adjustment-office
 import { RateService } from '../../../rates/rate.service';
 import { CareExemptionCard } from '../../components/care-exemption-card/care-exemption-card';
 import { OverseasCard } from '../../components/overseas-card/overseas-card';
+import { TransferCard } from '../../components/transfer-card/transfer-card';
+import { PayGroupCard } from '../../components/pay-group-card/pay-group-card';
 import { ContractCard } from '../../components/contract-card/contract-card';
 import { DependentCard } from '../../components/dependent-card/dependent-card';
 import { HistoryCard } from '../../components/history-card/history-card';
@@ -61,7 +63,7 @@ import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 type Mode = 'fiscal' | 'calendar' | 'last12';
 /** 「＋登録」のメニューから足すカード（中身がないときは出さない） */
-type AddKind = 'leave' | 'care' | 'overseas' | 'dependent';
+type AddKind = 'leave' | 'care' | 'overseas' | 'dependent' | 'transfer';
 
 /**
  * 従業員のページ（GitHub 風のタブ）
@@ -81,6 +83,8 @@ type AddKind = 'leave' | 'care' | 'overseas' | 'dependent';
     LeaveCard,
     CareExemptionCard,
     OverseasCard,
+    TransferCard,
+    PayGroupCard,
     MyPageCard,
     MyNumberCard,
     FamilyMyNumbers,
@@ -142,6 +146,7 @@ export class EmployeeDetail {
   private readonly leaveCard = viewChild(LeaveCard);
   private readonly careCard = viewChild(CareExemptionCard);
   private readonly overseasCard = viewChild(OverseasCard);
+  private readonly transferCard = viewChild(TransferCard);
   private readonly dependentCard = viewChild(DependentCard);
 
   readonly modes: Mode[] = ['fiscal', 'calendar', 'last12'];
@@ -364,6 +369,11 @@ export class EmployeeDetail {
     });
     // カードが画面に出てから追加の欄を開く
     setTimeout(() => {
+      // 異動はカードを開くだけ（追加の欄ではない。11/24）
+      if (kind === 'transfer') {
+        this.transferCard()?.start();
+        return;
+      }
       const card =
         kind === 'leave'
           ? this.leaveCard()

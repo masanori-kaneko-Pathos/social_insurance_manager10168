@@ -32,6 +32,7 @@ import { buildRegularView, canReflectRegular, regularReflectItem, RegularReflect
 import { DecisionNoticeCard } from '../../../premiums/components/decision-notice-card/decision-notice-card';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
 import type { OtherMonths } from '../../logic/payroll-lines';
+import { payrollAt } from '../../../office/logic/pay-group';
 type View = RegularView;
 type ReflectItem = RegularReflectItem;
 
@@ -215,7 +216,8 @@ export class RegularPage {
             decision: decisions.get(employee.id) ?? null,
             bonusPayments,
             grades: this.grades!,
-            revisionCtx,
+            // 対象期間は、その人の6月払いの給与の支払区分で出す（11/24）
+            revisionCtx: { ...revisionCtx, schedule: payrollAt(office, employee, `${year}-06`) },
           }),
         ),
       );

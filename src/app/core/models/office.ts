@@ -27,6 +27,16 @@ export interface PayrollSettings {
   deduction: 'current' | 'next'; // 保険料の控除：当月分を当月の給与から／前月分を当月の給与から
 }
 
+/**
+ * 給与の支払区分（11/24）。月給者とパートなど、締め日・支払日・支払月・控除の時期が違う人を同じ事業所で扱う
+ * 事業所の payroll は「既定の区分」（区分を割り当てていない人）。区分は2つ目から payGroups に足す
+ */
+export interface PayGroup {
+  id: string; // 区分の目印（英数字。従業員の割り当てが指す）
+  name: string; // 例：パート・アルバイト
+  payroll: PayrollSettings;
+}
+
 /** 保険料の計算方法（method：本人負担の集め方、healthRounding：健保・介護・支援金の端数処理） */
 export type PremiumSettings = PremiumOptions;
 
@@ -94,6 +104,8 @@ export interface OfficeDoc {
    * 控除の時期を一度も変えていない事業所にはない → すべての月が payroll.deduction。最後の行は payroll.deduction と同じ
    */
   deductionHistory?: DeductionPeriod[] | null;
+  /** 給与の支払区分（既定のほかの区分。11/24 に足した。前の文書にはない ＝ 既定の区分だけ） */
+  payGroups?: PayGroup[] | null;
   memberUids: string[];
   memberRoles: Record<string, OfficeRole>;
   /** 代表（管理者の中の1人。作った人から始まり、交代できる）。古い事業所にはない → 名簿の最初の人 */

@@ -509,3 +509,68 @@ h3 {
 .deduction-from .input {
   max-width: 12em;
 }
+
+/* ===== 給与の支払区分（11/24） ===== */
+.pay-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: var(--space-sm) 0;
+}
+
+.pg-head,
+.pg-row {
+  display: grid;
+  /* 見出しと行で列の幅をそろえる（入力欄の幅で列が広がらないよう、最小を 0 にする） */
+  grid-template-columns: minmax(0, 1.2fr) 6.5em minmax(0, 1.5fr) 10em 3em;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.pg-row > *,
+.pg-row .row > * {
+  min-width: 0;
+}
+
+.pg-head span {
+  white-space: nowrap;
+}
+
+.pg-head {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.pg-row .link-btn,
+.add-pg {
+  padding: 0;
+  font: inherit;
+  font-size: var(--font-sm);
+  color: var(--color-primary);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.add-pg {
+  margin: var(--space-xs) 0 var(--space-sm);
+}
+
+.warn-text {
+  color: var(--color-warning-text);
+}
+
+@media (max-width: 760px) {
+  .pg-head {
+    display: none;
+  }
+
+  .pg-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pg-row .link-btn {
+    justify-self: start;
+  }
+}

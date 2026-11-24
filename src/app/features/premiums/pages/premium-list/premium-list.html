@@ -657,6 +657,10 @@
                 @if (r.employee.multipleOffices) {
                   <span class="badge badge-warn" [title]="'premiumList.multipleOfficesNote' | transloco">{{ 'premiumList.multipleOffices' | transloco }}</span>
                 }
+                <!-- 給与の支払区分が違い、控除する給与の月が見出しと違う人（11/24） -->
+                @if (otherPayMonth(r.employee); as pm) {
+                  <span class="badge badge-care" [title]="'payGroup.otherPayNote' | transloco">{{ 'payGroup.otherPay' | transloco: { m: pm } }}</span>
+                }
                 @if (advances().get(r.employee.id); as amt) {
                   <span class="badge badge-warn" [title]="'premiumList.advance.note' | transloco">{{ 'premiumList.advance.badge' | transloco: { amount: yen(amt) } }}</span>
                 }

@@ -305,6 +305,16 @@ export interface EmployeeDoc {
    * 同じ年度・同じ保険者で転職した人が、保険者に累計の申出をして知らされた額。年度の上限573万円の累計に足す
    */
   priorBonusTotals?: Record<string, number> | null;
+  /**
+   * 給与の支払区分の割り当て（古い順。11/24）。from は「何月払いの給与から」（'0000-01' ＝ 最初から）
+   * groupId が null ＝ 既定の区分。なし・空 ＝ ずっと既定の区分
+   */
+  payGroups?: PayGroupAssignment[] | null;
+}
+
+export interface PayGroupAssignment {
+  from: string;
+  groupId: string | null;
 }
 
 export interface Employee extends EmployeeDoc {

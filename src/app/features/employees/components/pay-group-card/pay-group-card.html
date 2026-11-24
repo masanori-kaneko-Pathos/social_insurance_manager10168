@@ -1,0 +1,62 @@
+<!-- 給与の支払区分（事業所に区分があるときだけ。11/24） -->
+@if (show()) {
+  <section class="card">
+    <div class="head">
+      <h2>{{ 'payGroup.cardTitle' | transloco }}</h2>
+      @if (context.isAdmin() && !editing()) {
+        <button type="button" class="btn btn-small" (click)="start()">{{ 'payGroup.change' | transloco }}</button>
+      }
+    </div>
+    <p>
+      <strong>{{ currentName() }}</strong>
+      <span class="hint-inline">（{{ ruleText(currentPayroll()) }}）</span>
+    </p>
+    <p class="hint">{{ 'payGroup.cardHint' | transloco }}</p>
+    @if (editing()) {
+      <div class="editor">
+        <div class="grid">
+          <div class="field">
+            <label for="pg-from">{{ 'payGroup.from' | transloco }}<span class="req" aria-hidden="true">※</span></label>
+            <input id="pg-from" type="month" class="input" [value]="from()" (input)="from.set($any($event.target).value)" />
+          </div>
+          <div class="field">
+            <label for="pg-group">{{ 'payGroup.group' | transloco }}</label>
+            <select id="pg-group" class="input" (change)="groupId.set($any($event.target).value)">
+              <option value="" [selected]="groupId() === ''">{{ 'payGroup.defaultName' | transloco }}</option>
+              @for (g of groups(); track g.id) {
+                <option [value]="g.id" [selected]="groupId() === g.id">{{ g.name }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        @if (errorKey(); as k) {
+          <p class="field-error" role="alert">{{ k | transloco }}</p>
+        }
+        <div class="actions">
+          <button type="button" class="btn" [disabled]="saving()" (click)="editing.set(false)">{{ 'common.cancel' | transloco }}</button>
+          <button type="button" class="btn btn-solid" [disabled]="saving()" (click)="save()">{{ 'common.save' | transloco }}</button>
+        </div>
+      </div>
+    }
+    @if (history().length > 0) {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ 'payGroup.from' | transloco }}</th>
+              <th>{{ 'payGroup.group' | transloco }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (a of history(); track a.from) {
+              <tr>
+                <td class="mono">{{ monthLabel(a.from) }}</td>
+                <td>{{ nameOf(a.groupId) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}

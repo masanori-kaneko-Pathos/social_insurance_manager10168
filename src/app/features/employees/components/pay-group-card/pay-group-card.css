@@ -1,0 +1,4 @@
+.hint-inline {
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}

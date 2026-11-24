@@ -31,7 +31,7 @@ import {
   payrollLabels,
   PAYROLL_TABLE_SPEC,
   payrollFileName,
-  readPayrollCsv, PAYROLL_FIX_FIELDS } from '../../logic/payroll-csv';
+  readPayrollCsv, PAYROLL_FIX_FIELDS, scheduleFor } from '../../logic/payroll-csv';
 import { monthsBetween, shiftMonth, todayLocal } from '../../../../shared/utils/date';
 import { latestPaidMonth } from '../../logic/payroll-rows';
 import { payrollOf, premiumMonthOfPay } from '../../../office/office-settings';
@@ -44,7 +44,7 @@ import { contractAt } from '../../../employees/logic/contract-form-model';
 import { ContractDoc } from '../../../../core/models/contract';
 import { PayrollItem } from '../../../../core/models/payroll-item';
 import { categoryOf } from '../../logic/payroll-lines';
-import { periodOf } from '../../logic/payroll-rows';
+import { PaySchedule, periodOf } from '../../logic/payroll-rows';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
@@ -54,6 +54,7 @@ import { ImportSteps } from '../../../../shared/components/import-steps/import-s
 import { PersonName } from '../../../../shared/components/person-name/person-name';
 import { Pager } from '../../../../shared/components/pager/pager';
 import { PAGE_SIZE, PageSize, pageOf } from '../../../../shared/logic/person-list';
+import { payrollAt } from '../../../office/logic/pay-group';
 /** 書き出せる期間の上限（月数） */
 const MAX_MONTHS = 24;
 /** 確認画面に出すエラーの行数 */
@@ -261,7 +262,7 @@ export class PayrollImport {
     const lang = this.lang();
     // 内訳の列（ひな形の順 → 保存済みの内訳に出てくる順）も付ける。そのまま取り込めば内訳ごと戻る（11/24）
     const saved = [...this.saved.values()];
-    const rows = buildPayrollCsv(this.employees, saved, months, payrollOf(office), lang, exportLineNames(saved, this.template));
+    const rows = buildPayrollCsv(this.employees, saved, months, this.scheduleOf(office), lang, exportLineNames(saved, this.template));
     downloadCsv(safeFileName(payrollFileName(office.name, this.from, this.to, todayLocal(), lang)), rows);
   }
 
@@ -281,7 +282,7 @@ export class PayrollImport {
     const months = await this.exportMonths(office.id);
     if (!months) return;
     const lang = this.lang();
-    const items = payrollExportRows(this.employees, [...this.saved.values()], months, payrollOf(office));
+    const items = payrollExportRows(this.employees, [...this.saved.values()], months, this.scheduleOf(office));
     this.exportCatalog.set(
       payrollExportColumns({
         lang,
@@ -430,11 +431,12 @@ export class PayrollImport {
         const lists = await Promise.all(this.employees.map((e) => this.contractsApi.list(office.id, e.id).catch(() => [])));
         this.contracts = new Map(this.employees.map((e, i) => [e.id, lists[i]]));
       }
-      const schedule = payrollOf(office);
+      // 対象期間は、人と支払月ごとの給与の支払区分で出す（11/24）
+      const schedule = this.scheduleOf(office);
       const read = readPayrollCsv(table, this.employees, schedule, {
         inKindMissing: this.inKindMissing(),
         items: this.payrollItems(),
-        payTypeOf: (id, month) => contractAt(this.contracts?.get(id) ?? [], periodOf(month, schedule).end)?.payType ?? null,
+        payTypeOf: (id, month) => contractAt(this.contracts?.get(id) ?? [], periodOf(month, scheduleFor(schedule, id, month)).end)?.payType ?? null,
       });
       // 「新規・上書き・変わらない」を数えるために、ファイルにある月の保存済みの実績だけ読む
       try {
@@ -509,5 +511,11 @@ export class PayrollImport {
   /** '2026-11' → 11月 */
   monthLabel(ym: string): number {
     return Number(ym.slice(5, 7));
+  }
+
+  /** その人のその支払月の給与の支払区分（締め日・支払月）。11/24 */
+  private scheduleOf(office: Parameters<typeof payrollAt>[0]): (employeeId: string, paidMonth: string) => PaySchedule {
+    const byId = new Map(this.employees.map((e) => [e.id, e]));
+    return (id, month) => payrollAt(office, byId.get(id), month);
   }
 }

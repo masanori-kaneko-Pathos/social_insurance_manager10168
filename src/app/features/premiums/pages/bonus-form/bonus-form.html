@@ -282,6 +282,10 @@
                 @if (badAmounts().has(r.employee.id)) {
                   <span class="field-error">{{ 'bonus.error.amount' | transloco }}</span>
                 }
+                <!-- 現物で払った分（賞与の CSV で入れたもの）。標準賞与額は通貨＋現物から出す（11/24） -->
+                @if (inKindOf(r.employee.id) > 0) {
+                  <span class="sub in-kind">{{ 'bonus.inKindOf' | transloco: { n: yen(inKindOf(r.employee.id)) } }}</span>
+                }
               </td>
 
               @switch (r.state) {

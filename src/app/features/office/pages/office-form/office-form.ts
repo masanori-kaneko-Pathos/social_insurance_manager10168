@@ -8,7 +8,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { map } from 'rxjs';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { UserProfileService } from '../../../../core/auth/user-profile.service';
@@ -22,6 +22,7 @@ import {
   Office,
   OfficeInput,
   PayrollSettings,
+  PayGroup,
   Department,
 } from '../../../../core/models/office';
 import { AGREEMENT_ROUNDINGS, AgreementRounding, CollectionMethod, HealthRounding } from '../../../../core/models/premium';
@@ -88,6 +89,7 @@ import {
 import { adjustmentOfficeStatus } from '../../../premiums/logic/adjustment-office';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
+import { MAX_PAY_GROUPS, newPayGroupId, payGroupErrors } from '../../logic/pay-group';
 /** 法人番号を入れたら法人名も必須 */
 function corporateNameRequired(g: AbstractControl): ValidationErrors | null {
   const num = (g.get('corporateNumber')?.value ?? '').trim();
@@ -148,6 +150,7 @@ export class OfficeForm {
   private readonly employees = inject(EmployeeService);
   private readonly contracts = inject(ContractService);
   private readonly rates = inject(RateService);
+  private readonly transloco = inject(TranslocoService);
   readonly context = inject(OfficeContext);
 
   readonly prefectures = PREFECTURES;
@@ -527,6 +530,38 @@ export class OfficeForm {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  // ===== 給与の支払区分（既定のほかの区分。編集のときだけ。「保存する」で一緒に保存する。11/24） =====
+  readonly payGroups = signal<PayGroup[]>([]);
+  readonly payGroupErrs = computed(() => payGroupErrors(this.payGroups(), this.transloco.translate('payGroup.defaultName')));
+  readonly maxPayGroups = MAX_PAY_GROUPS;
+
+  addPayGroup(): void {
+    const v = this.value();
+    this.payGroups.update((list) => [
+      ...list,
+      {
+        id: newPayGroupId(list),
+        name: '',
+        // 初期値は既定の区分の決まり（違う所だけ変えてもらう）
+        payroll: { closingDay: v.closingDay, payDay: v.payDay, payMonth: v.payMonth, deduction: v.deduction },
+      },
+    ]);
+    this.form.markAsDirty();
+  }
+
+  setPayGroup(i: number, patch: Partial<Omit<PayGroup, 'payroll'>> & { payroll?: Partial<PayGroup['payroll']> }): void {
+    this.payGroups.update((list) =>
+      list.map((g, k) => (k === i ? { ...g, ...patch, payroll: { ...g.payroll, ...(patch.payroll ?? {}) } } : g)),
+    );
+    this.form.markAsDirty();
+  }
+
+  removePayGroup(i: number): void {
+    if (!window.confirm(this.transloco.translate('payGroup.confirmRemove', { name: this.payGroups()[i]?.name ?? '' }))) return;
+    this.payGroups.update((list) => list.filter((_, k) => k !== i));
+    this.form.markAsDirty();
+  }
+
   /** 部署（フォームと一緒に保存する。11/13 に事業所のフォームの一部にした） */
   readonly departments = signal<Department[]>([]);
   /** 読み込んだときの部署（変わったときだけ書く） */
@@ -631,6 +666,7 @@ export class OfficeForm {
   private fillFrom(o: Office): void {
     this.departments.set(o.departments ?? []);
     this.savedDepartments = o.departments ?? [];
+    this.payGroups.set((o.payGroups ?? []).map((g) => ({ ...g, payroll: { ...g.payroll } })));
     const payroll = payrollOf(o);
     const premium = premiumOf(o);
     this.form.setValue({
@@ -928,7 +964,8 @@ export class OfficeForm {
       this.deductionFromInvalid() ||
       (this.insurerChanged() && !MONTH.test(changeFrom.value)) ||
       this.readFirstRates() === false ||
-      this.ratesBlocked()
+      this.ratesBlocked() ||
+      this.payGroupErrs().size > 0
     ) {
       this.form.markAllAsTouched();
       // 料率のファイルにエラーの行が残っているときは、その部品まで動かす
@@ -988,6 +1025,8 @@ export class OfficeForm {
           insurerHistory: history,
           // 保険料調整制度は編集のときだけ書く（作るときの項目の決まりを変えないため）
           premiumAdjustment: v.adjustmentOn && MONTH.test(v.adjustmentSince) ? { since: v.adjustmentSince } : null,
+          // 給与の支払区分（編集のときだけ書く。名前の前後の空白は落とす。11/24）
+          payGroups: this.payGroups().map((g) => ({ ...g, name: g.name.trim() })),
           // 控除の時期を変えたら「何月分から」を履歴に足す（変えていなければ書かない＝今の履歴のまま。11/20）
           ...(this.deductionChanged()
             ? {

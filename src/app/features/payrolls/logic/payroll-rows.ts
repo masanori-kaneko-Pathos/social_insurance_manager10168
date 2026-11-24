@@ -153,6 +153,30 @@ export function payrollRows(
     });
 }
 
+/**
+ * 給与の支払区分が人ごとに違うときの、その支払月の1行（11/24）
+ * 区分（締め日・支払月）が同じ人ごとに対象期間を出し、今までの payrollRows で行を作る。並びは元の従業員の順
+ */
+export function payrollRowsFor(
+  employees: readonly PayrollEmployee[],
+  paidMonth: string,
+  scheduleOf: (e: PayrollEmployee) => PaySchedule,
+  saved: ReadonlyMap<string, Payroll>,
+): (PayrollRow & { period: Period })[] {
+  const byKey = new Map<string, { period: Period; list: PayrollEmployee[] }>();
+  for (const e of employees) {
+    const s = scheduleOf(e);
+    const key = `${s.closingDay}_${s.payMonth}`;
+    if (!byKey.has(key)) byKey.set(key, { period: periodOf(paidMonth, s), list: [] });
+    byKey.get(key)!.list.push(e);
+  }
+  const rows = new Map<string, PayrollRow & { period: Period }>();
+  for (const { period, list } of byKey.values()) {
+    for (const r of payrollRows(list, period, saved)) rows.set(r.employeeId, { ...r, period });
+  }
+  return employees.flatMap((e) => (rows.has(e.id) ? [rows.get(e.id)!] : []));
+}
+
 /** 入れ忘れ：対象期間に加入していて、実績がない人の ID */
 export function missingPayrolls(
   employees: readonly PayrollEmployee[],

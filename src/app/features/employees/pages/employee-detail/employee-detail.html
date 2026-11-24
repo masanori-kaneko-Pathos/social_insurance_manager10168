@@ -27,6 +27,10 @@
               <button type="button" (click)="add('care', addMenu)">{{ 'careExemption.add' | transloco }}</button>
               <button type="button" (click)="add('overseas', addMenu)">{{ 'overseas.add' | transloco }}</button>
               <button type="button" (click)="add('dependent', addMenu)">{{ 'dependent.add' | transloco }}</button>
+              <!-- 別の事業所へ異動する（転勤。異動先の事業所に同じ人を作り、ここでは喪失させる。11/24） -->
+              @if (!e.retireDate) {
+                <button type="button" class="menu-sep" (click)="add('transfer', addMenu)">{{ 'transfer.open' | transloco }}</button>
+              }
             </div>
           </details>
           <a class="btn" [routerLink]="['edit']">{{ 'common.edit' | transloco }}</a>
@@ -187,7 +191,9 @@
 
       @case ('employment') {
         <!-- ===== 雇用・契約 ===== -->
+        <app-transfer-card [employee]="e" (changed)="reloadEmployee()" />
         <app-contract-card [employee]="e" (changed)="reloadEmployee()" />
+        <app-pay-group-card [employee]="e" (changed)="reloadEmployee()" />
         @if (showLeave(e)) {
           <app-leave-card [employee]="e" (changed)="reloadEmployee()" />
         }

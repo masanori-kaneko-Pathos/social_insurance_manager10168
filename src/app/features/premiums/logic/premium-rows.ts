@@ -162,7 +162,7 @@ export function buildPremiumRow(input: RowInput): PremiumRow {
 }
 
 /** 喪失の原因（社員の文書にはあるが、加入の判定の型にはないので、ここで足して読む） */
-type WithLossReason = { health: { lossReason?: string | null }; pension: { lossReason?: string | null } };
+type WithLossReason = { health: { lossReason?: string | null }; pension: { lossReason?: string | null }; retireReason?: string | null };
 
 /**
  * 使用されなくなった（退職・死亡）ために、この月が保険料のかかる最後の月か（11/19）
@@ -178,6 +178,8 @@ export function isLastMonthBeforeLeaving(
   const cur = coverageForMonth(employee, month);
   const next = coverageForMonth(employee, shiftMonth(month, 1));
   if (!(cur.health || cur.pension) || next.health || next.pension) return false;
+  // 事業所の間の異動（転勤）は、同じ会社で給与が続くので2か月分の控除にはならない（11/24）
+  if (employee.retireReason === 'transfer') return false;
   const leaving = (r: string | null | undefined) => r == null || r === 'retire' || r === 'death';
   const reasons: (string | null | undefined)[] = [];
   if (cur.health) reasons.push(employee.health.lossReason);

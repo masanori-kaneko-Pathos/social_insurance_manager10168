@@ -17,7 +17,7 @@
       @if (period(); as p) {
         <small class="period-sub">{{
           'payroll.monthLead' | transloco: { start: md(p.start), end: md(p.end), days: periodDays() }
-        }}</small>
+        }}@if (hasGroups()) {{{ 'payGroup.headerNote' | transloco }}}</small>
       }
     </app-month-picker>
     <a
@@ -156,7 +156,11 @@
                   <span class="badge badge-sub">{{ 'payroll.tag.notInsured' | transloco }}</span>
                 }
                 <!-- 対象期間に休業（産休・育休など）が重なる人（0円・0日でも入れ忘れではないと分かるように。11/20） -->
-                @if (onLeave(v.employee)) {
+                <!-- 既定でない給与の支払区分の人：区分の名前と、その人の対象期間（11/24） -->
+                @if (hasGroups() && groupBadge(v); as gb) {
+                  <span class="badge badge-sub">{{ 'payGroup.rowBadge' | transloco: gb }}</span>
+                }
+                @if (onLeave(v)) {
                   <span class="badge badge-sub">{{ 'payroll.tag.onLeave' | transloco }}</span>
                 }
                 @if (v.row.partial) {
