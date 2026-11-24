@@ -1783,7 +1783,7 @@
   },
   "payroll": {
     "listTitle": "Payroll",
-    "listLead": "For each pay month, enter the payslip payments (gross pay, fixed wages) and payment basis days. They are used for the annual determination and revisions.",
+    "listLead": "For each pay month, enter the payslip payments (amount paid in money, fixed wages) and payment basis days. They are used for the annual determination and revisions.",
     "inputLatest": "Enter {{month}} payroll",
     "prevYear": "← Previous 12 months",
     "nextYear": "Next 12 months →",
@@ -1812,14 +1812,14 @@
       "period": "Pay period",
       "saved": "Entered / employed",
       "employee": "Employee",
-      "cash": "Gross pay",
+      "cash": "Amount paid in money",
       "fixed": "Of which: fixed wages",
-      "days": "Basis days (支払基礎日数)",
-      "inKind": "In kind (現物)",
-      "retro": "Of which: back pay for a raise",
+      "days": "Days in pay calculation",
+      "inKind": "Amount paid in kind",
+      "retro": "Of which: retroactive pay",
       "absentDays": "Days absent",
       "hours": "Hours worked",
-      "prorated": "Partial month",
+      "prorated": "Pro-rated month",
       "state": "Status",
       "total": "Total",
       "monthTotal": "Total pay",
@@ -1843,14 +1843,14 @@
     },
     "rowError": {
       "unreadable": "Some fields cannot be read as numbers",
-      "cashRequired": "Enter the gross pay",
+      "cashRequired": "Enter the amount paid in money",
       "fixedRequired": "Enter the fixed wages (0 if none)",
-      "daysRequired": "Enter the payment basis days",
+      "daysRequired": "Enter the days in pay calculation",
       "notInteger": "Amounts must be whole numbers of 0 or more",
       "tooLarge": "The amount is too large",
-      "fixedOverCash": "The fixed wages exceed the gross pay",
-      "retroOverTotal": "The back pay exceeds the gross pay plus in kind",
-      "daysOutOfRange": "Payment basis days exceed the days in the pay period",
+      "fixedOverCash": "The fixed wages exceed the amount paid in money",
+      "retroOverTotal": "The retroactive pay exceeds the amount paid in money plus in kind",
+      "daysOutOfRange": "The days in pay calculation exceed the days in the period",
       "absentOutOfRange": "Days absent exceed the days in the pay period",
       "minutesOutOfRange": "Hours worked are too long",
       "badState": "Select the status again",
@@ -1858,15 +1858,15 @@
     },
     "hint": {
       "list": "\"Missing\" counts employees insured during the pay period who have no record yet (only months whose pay day has passed).",
-      "cash": "Gross pay: calculated from the breakdown. It includes the commuting allowance (even the tax-free part) and is after absence deductions. Not the net pay.",
+      "cash": "Amount paid in money: the \"amount paid in money\" column of the notification of change in monthly remuneration and the base calculation notification. It includes the commuting allowance (even the tax-free part) and is after absence deductions. Do not include payments that are not remuneration, such as actual travel expenses or condolence money. Not the net pay.",
       "fixed": "Fixed wages: pay with a set rate or amount, such as base pay, position allowance and commuting allowance (including hourly rate × hours and daily rate × days). Non-fixed wages: pay that depends on the month, such as overtime, attendance allowance and commission. With a breakdown, these are calculated from the categories. A revision candidate appears when fixed wages (before absence deductions) change for monthly-paid people, or when the contract rate or scheduled hours change for hourly or daily-paid people.",
       "inKind": "Remuneration provided in kind (現物給与): company housing, dormitories and meals are converted to yen with the value set by the government for each prefecture, minus what the employee pays (different from the tax valuation). Use \"Calculate\" for meals and housing.",
       "days": "Payment basis days: for monthly pay, the calendar days (30, 31 and so on, minus absences), not the days worked. If absences are deducted from the company's set number of days, use that number minus absences. For daily or hourly pay, the days worked (including paid leave). For monthly-paid people, the suggestion appears under the field when a different number is entered.",
       "blank": "Empty rows are not saved. Clearing a saved row and saving deletes that month's record.",
       "hours": "Hours worked: enter as \"160:30\" (160 h 30 min) or \"160.5\".",
-      "inKindMerged": "In months marked \"Not itemized\", in-kind remuneration is included in the gross pay (the imported file had no in-kind column). Totals and premiums are still correct, but changes in in-kind remuneration (such as moving into company housing) cannot be detected, so enter the in-kind amount with \"Enter separately\" when you know it.",
-      "retro": "Of which: back pay for a raise: the difference for earlier months paid together this month. It is left out of the averages.",
-      "prorated": "Partial month: a month in which the new amount was not paid for a full month, such as the month of joining or of a new allowance. Revisions are counted from the next month.",
+      "inKindMerged": "In months marked \"Not itemized\", in-kind remuneration is included in the amount paid in money (the imported file had no in-kind column). Totals and premiums are still correct, but changes in in-kind remuneration (such as moving into company housing) cannot be detected, so enter the in-kind amount with \"Enter separately\" when you know it.",
+      "retro": "Of which: retroactive pay: a raise decided retroactively, with the difference for earlier months paid this month (the \"retroactive pay\" column). This month becomes the start month for a revision, and the amount is left out of the average (corrected average). Settle forgotten or miscalculated pay with \"Original month\" in the breakdown instead.",
+      "prorated": "Pro-rated month: a month in which a new allowance or rate started in the middle of the pay period, so the new amount was not paid for a full month. Revisions are counted from the next month. The month of joining is excluded automatically from the acquisition date, so no mark is needed.",
       "paidMonth": "Pay month: the month of the pay date, not the month the pay is for."
     },
     "error": {
@@ -1879,7 +1879,7 @@
     "sortOldest": "Oldest first",
     "sortNewest": "Newest first",
     "inKindMerged": "Not itemized",
-    "inKindMergedTitle": "The payroll software included in-kind remuneration in the gross pay, so there is no separate figure. The total is still calculated correctly.",
+    "inKindMergedTitle": "The payroll software included in-kind remuneration in the amount paid in money, so there is no separate figure. The total is still calculated correctly.",
     "splitInKind": "Enter separately",
     "monthPick": "Paid {{y}}-{{m}}",
     "workedDays": "Enter days worked",
@@ -1900,10 +1900,10 @@
     },
     "listRange": "{{fromM}}/{{fromY}} – {{toM}}/{{toY}}",
     "sum": {
-      "label": "Total ({{n}} filtered, {{entered}} with gross pay entered)",
+      "label": "Total ({{n}} filtered, {{entered}} with amount paid in money entered)",
       "all": "Total pay (everyone)",
       "unit": " yen",
-      "allSub": "Gross pay + in kind · entered {{entered}} / {{n}}"
+      "allSub": "Amount paid in money + in kind · entered {{entered}} / {{n}}"
     },
     "premiumNote": "Premiums are calculated from the standard monthly remuneration, not from the pay amounts entered here.",
     "openHint": "Press \"Breakdown\" to enter the payslip breakdown.",
@@ -1912,6 +1912,13 @@
       "saved": "Entered",
       "edited": "Changed",
       "unclassified": "Category not set"
+    },
+    "otherMonth": {
+      "moved": "Allocated {{n}}",
+      "movedTitle": "Forgotten or miscalculated pay settled later, allocated to its original month. It differs from the payroll screen (amounts actually paid) by this amount.",
+      "unplaced": "Unallocated settlements: {{n}}",
+      "unplacedTitle": "There is no payroll record for the original month ({{months}}), so the amount is counted in the month it was paid. Enter that month to allocate it.",
+      "noTarget": "There is no payroll record for {{y}}-{{m}}, so this cannot be allocated (it is counted in this month). Enter that month to allocate it."
     }
   },
   "regular": {
@@ -2062,7 +2069,7 @@
       "button": "Import ({{c}} new, {{u}} overwrite)",
       "noInKind": "This file has no in-kind column. How should in-kind remuneration be handled?",
       "inKindZero": "There is none (import as 0 yen)",
-      "inKindMerged": "The payroll software includes it in the gross pay (import as \"Not itemized\")"
+      "inKindMerged": "The payroll software includes it in the amount paid in money (import as \"Not itemized\")"
     },
     "encoding": {
       "utf-8": "UTF-8",
@@ -2072,14 +2079,14 @@
       "employeeNumber": "Employee number",
       "name": "Name",
       "paidMonth": "Pay month",
-      "cash": "Gross pay",
+      "cash": "Amount paid in money",
       "fixed": "Of which: fixed wages",
-      "days": "Payment basis days",
-      "inKind": "In kind",
-      "retro": "Of which: back pay for a raise",
+      "days": "Days in pay calculation",
+      "inKind": "Amount paid in kind",
+      "retro": "Of which: retroactive pay",
       "absentDays": "Days absent",
       "hours": "Hours worked",
-      "prorated": "Partial month",
+      "prorated": "Pro-rated month",
       "state": "Status"
     },
     "count": {
@@ -2099,14 +2106,15 @@
       "badMonth": "Cannot read the pay month. Enter it as 2026-10.",
       "notEmployed": "Not employed during this pay period",
       "duplicate": "The same employee and month appear in an earlier row",
-      "badProrated": "Enter 1 or leave Partial month blank",
+      "badProrated": "Enter 1 or leave Pro-rated month blank",
       "badState": "Status must be Normal, Leave of absence or Temporary layoff",
       "unknownName": "No employee has this name (entering the employee number is more reliable)",
       "ambiguousName": "More than one employee has this name. Enter the employee number",
-      "linesMismatch": "The breakdown columns do not add up to the gross pay column (a breakdown column is missing, or the gross pay includes something else)"
+      "linesMismatch": "The breakdown columns do not add up to the amount paid in money column (a breakdown column is missing, or the amount paid in money includes something else)",
+      "badForMonth": "The original month in a column header ([YYYY-MM]) must be before the pay month"
     },
     "hint": {
-      "columns": "Columns are read by header name (any order; unknown columns are ignored). Required: employee number, pay month, gross pay, of which: fixed wages, payment basis days. Columns whose header is a payroll item name (base pay, tax-free commuting allowance, absence deduction, etc.; names and CSV headers in payroll items and categories) are read as the breakdown. With breakdown columns, the gross pay and other totals come from the breakdown, and a gross pay column, if present, is checked against it. The earlier headers (month paid, paid in money, fixed wages, retroactive pay, prorated) are also read. Rows without an employee number are matched by name.",
+      "columns": "Columns are read by header name (any order; unknown columns are ignored). Required: employee number, pay month, amount paid in money, of which: fixed wages, days in pay calculation. Columns whose header is a payroll item name (base pay, tax-free commuting allowance, absence deduction, etc.; names and CSV headers in payroll items and categories) are read as the breakdown. With breakdown columns, the amount paid in money and other totals come from the breakdown, and a amount paid in money column, if present, is checked against it. The earlier headers (month paid, paid in money, fixed wages, retroactive pay, prorated) are also read. Rows without an employee number are matched by name. For a column that settles forgotten or miscalculated pay, add the original month after the header, like \"Family allowance[2026-04]\" (it is counted as remuneration for that month).",
       "excel": "CSV files saved by Excel (Shift_JIS) can be read as is, including months Excel turned into dates like 2026/10/1 and employee numbers that lost leading zeros.",
       "allOrNothing": "Fix rows with errors here, or import with them left unchecked (only those rows are skipped). Saving is done in batches of 500."
     },
@@ -3507,7 +3515,7 @@
       },
       "payroll": {
         "title": "Entering payroll",
-        "body": "On the payroll screen, enter the gross pay, fixed wages and payment basis days from the payslip for each pay month. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). Fixed wages are pay with a set rate or amount (including hourly rate × hours); non-fixed wages depend on the month, such as overtime. When an hourly or daily rate or the scheduled hours change in the contract, a revision candidate appears. You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and back pay columns. For one person and one month, you can also use \"Enter a month\" on the employee page. Enter in \"back pay\" (retroactive pay on the forms) only differences from raises decided retroactively. Allowances paid late because of a late application or a mistake go back into the month they should have been paid (that month becomes the start month for a revision). Mark \"Partial month\" for months where a mid-period hire, transfer or new allowance means a full month was not paid (that month is not used as a start month; counting begins the next month). Payment basis days are calendar days for monthly pay, days worked for daily pay, and total hours ÷ daily scheduled hours for hourly pay. For months where a retroactive pay cut was deducted, enter the amount before the deduction. One-off or up-to-three-times-a-year payments (e.g. a sign-on allowance or year-end allowance) do not go into payroll; register them as bonuses (bonus payment report). Monthly allowances go into payroll even if they share a payslip line with such payments."
+        "body": "On the payroll screen, enter the amount paid in money, fixed wages and payment basis days from the payslip for each pay month. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). Fixed wages are pay with a set rate or amount (including hourly rate × hours); non-fixed wages depend on the month, such as overtime. When an hourly or daily rate or the scheduled hours change in the contract, a revision candidate appears. You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and retroactive pay columns. For one person and one month, you can also use \"Enter a month\" on the employee page. Enter in \"retroactive pay\" (retroactive pay on the forms) only differences from raises decided retroactively. Allowances paid late because of a late application or a mistake go back into the month they should have been paid (that month becomes the start month for a revision). Mark \"Pro-rated month\" for months where a mid-period hire, transfer or new allowance means a full month was not paid (that month is not used as a start month; counting begins the next month). Payment basis days are calendar days for monthly pay, days worked for daily pay, and total hours ÷ daily scheduled hours for hourly pay. For months where a retroactive pay cut was deducted, enter the amount before the deduction. One-off or up-to-three-times-a-year payments (e.g. a sign-on allowance or year-end allowance) do not go into payroll; register them as bonuses (bonus payment report). Monthly allowances go into payroll even if they share a payslip line with such payments."
       },
       "inKind": {
         "title": "Remuneration provided in kind (housing, dormitories, meals)",
@@ -3609,7 +3617,7 @@
       },
       "monthly": {
         "scene": "Every month",
-        "todo": "After paying salaries, enter that pay month (breakdown or gross pay, and payment basis days). Check the employee share to deduct from that pay in the premium list; premiums come from the standard monthly remuneration, not from the pay entered. When the pension office notice arrives, compare it in the premium list and pay by the end of the next month."
+        "todo": "After paying salaries, enter that pay month (breakdown or amount paid in money, and payment basis days). Check the employee share to deduct from that pay in the premium list; premiums come from the standard monthly remuneration, not from the pay entered. When the pension office notice arrives, compare it in the premium list and pay by the end of the next month."
       },
       "change": {
         "scene": "Raises and allowance or rate changes",
@@ -3958,7 +3966,7 @@
     "new": "No record for this month yet",
     "editing": "Already entered (saving overwrites it)",
     "notEmployed": "This employee was not employed during this pay period. Check the month.",
-    "more": "In kind, back pay, absences, hours, status",
+    "more": "In kind, retroactive pay, absences, hours, status",
     "inKindHint": "To calculate housing or meal amounts, use \"Calculate\" on the month page.",
     "lines": {
       "title": "Payment breakdown",
@@ -3972,24 +3980,44 @@
         "name": "Enter the item name (up to 30 characters)",
         "category": "Choose a category (it is also registered in payroll items and categories)",
         "amount": "Enter the amount as a whole number of 0 or more",
-        "negative": "Deductions exceed payments, so the gross pay is negative",
+        "negative": "Deductions exceed payments, so the amount paid in money is negative",
         "empty": "Enter at least one breakdown line",
         "tooMany": "Up to 40 breakdown lines"
       },
       "makeTemplate": "Use these items as the office payroll items",
       "templateDone": "Saved as the office payroll items",
       "splitNote": "Enter lines as they are split on the payslip. Lines in the same category are added together.",
-      "direct": "If the payslip only shows the gross pay, enter it in the fields above (non-fixed wages are calculated). When amounts are entered in the breakdown, the fields above are calculated from it.",
-      "fromLines": "The fields above are calculated from the breakdown (clear all breakdown amounts to enter them directly)."
+      "direct": "If the payslip only shows totals, enter them in the fields above (non-fixed wages are calculated). When amounts are entered in the breakdown, the fields above are calculated from it.",
+      "fromLines": "The fields above are calculated from the breakdown (clear all breakdown amounts to enter them directly).",
+      "forMonth": "Original month",
+      "forThis": "This month",
+      "forOption": "Paid {{y}}-{{m}}",
+      "forMonthNote": "For a line that settles pay forgotten or miscalculated in an earlier month, choose that month in \"Original month\" (it is counted as remuneration for that month). For a raise decided retroactively, use the \"Retroactive pay\" category. It can only be allocated when that month has a payroll record.",
+      "forOptionShort": "Paid in month {{m}}"
     },
     "side": {
       "days": "Days and hours",
       "inKind": "In kind (housing, meals, etc.)",
-      "prorated": "A partial month, such as the month of joining"
+      "prorated": "Pro-rated month"
     },
     "close": "Close",
     "saveNext": "Save and go to the next person",
-    "saveOnly": "Save"
+    "saveOnly": "Save",
+    "note": {
+      "cash": "Excludes non-remuneration payments",
+      "fixed": "Includes commuting · after absence deductions",
+      "nonFixed": "Overtime, commission, etc. (automatic)",
+      "retro": "Difference for a retroactive raise",
+      "days": "Monthly: calendar days − absences / hourly or daily: days worked",
+      "inKind": "Price table amount − employee payment",
+      "prorated": "The pay amount changed in the middle of the pay period"
+    },
+    "readback": {
+      "total": "Total (money + in kind): ¥{{total}}",
+      "merged": "Total: ¥{{total}} (in-kind remuneration is included in the amount paid in money)",
+      "otherMonth": "Of which, allocated to original months: ¥{{amount}}",
+      "note": "The annual determination, revisions and notifications use this total as monthly remuneration."
+    }
   },
   "filing": {
     "title": "Filing lists",
@@ -5032,8 +5060,8 @@
       "fixedAllowance": "Fixed allowance",
       "commute": "Commuting allowance",
       "variable": "Non-fixed allowance",
-      "deduction": "Absence or lateness deduction",
-      "retro": "Back pay for a raise",
+      "deduction": "Absence deduction",
+      "retro": "Retroactive pay",
       "excluded": "Not remuneration"
     },
     "example": {
@@ -5046,13 +5074,13 @@
       "excluded": "travel expense refunds, congratulatory or condolence payments"
     },
     "treatment": {
-      "base": "Counted in gross pay and as fixed wages (including hourly rate × hours; for hourly or daily pay, changes are found from contract rate or hour changes)",
-      "fixedAllowance": "Counted in gross pay and as fixed wages",
-      "commute": "Counted in gross pay and as fixed wages (to notice moves and fare changes)",
-      "variable": "Counted in gross pay as non-fixed wages",
-      "deduction": "Subtracted from gross pay and fixed wages (changes are checked before the deduction)",
-      "retro": "Counted in gross pay, left out of the averages for the annual determination and revisions",
-      "excluded": "Not counted in gross pay"
+      "base": "Counted in amount paid in money and as fixed wages (including hourly rate × hours; for hourly or daily pay, changes are found from contract rate or hour changes)",
+      "fixedAllowance": "Counted in amount paid in money and as fixed wages",
+      "commute": "Counted in amount paid in money and as fixed wages (to notice moves and fare changes)",
+      "variable": "Counted in amount paid in money as non-fixed wages",
+      "deduction": "Subtracted from amount paid in money and fixed wages (changes are checked before the deduction)",
+      "retro": "Counted in amount paid in money, left out of the averages for the annual determination and revisions",
+      "excluded": "Not counted in amount paid in money"
     },
     "error": {
       "load": "Could not load the payroll items.",
@@ -5067,7 +5095,7 @@
     "how": {
       "saved": "When payroll is saved, the item names and categories are copied into that month's breakdown. Changing a category later does not change saved months.",
       "unknown": "A month cannot be saved while it has an item name without a category. Choosing a category while entering the breakdown also registers it here.",
-      "fixed": "Fixed wages are used to find changes from the previous month and suggest revision candidates (contract changes for hourly or daily pay). Premiums themselves are calculated from the standard monthly remuneration, which is based on gross pay."
+      "fixed": "Fixed wages are used to find changes from the previous month and suggest revision candidates (contract changes for hourly or daily pay). Premiums themselves are calculated from the standard monthly remuneration, which is based on amount paid in money."
     },
     "exampleLabel": "e.g. {{list}}",
     "template": {

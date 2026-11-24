@@ -22,6 +22,11 @@
       <span class="months mono">
         {{ 'revision.span' | transloco: { start: startOf(v), revised: v.item.result.revisedFrom } }}
       </span>
+      @if (v.otherMonths.unplaced.length > 0) {
+        <span class="badge badge-warn" [title]="'payroll.otherMonth.unplacedTitle' | transloco: { months: unplacedMonths(v.otherMonths) }">{{
+          'payroll.otherMonth.unplaced' | transloco: { n: v.otherMonths.unplaced.length }
+        }}</span>
+      }
       @if (v.item.type === 'irregular') {
         <span class="sub">{{ 'revision.source.' + v.item.result.start.source | transloco }}・{{ 'revision.direction.' + v.item.result.start.direction | transloco }}</span>
         @if (v.item.result.start.source === 'fixed' && v.item.result.start.direction === 'unclear') {
@@ -58,6 +63,10 @@
                 {{ yen(m.amount) }}
                 @if (p.inKind === null) {
                   <span class="sub" [title]="'revision.inKindMergedTitle' | transloco">{{ 'revision.inKindMerged' | transloco }}</span>
+                }
+                <!-- 払い忘れの精算を本来の月へ割り振った額（11/24） -->
+                @if (v.otherMonths.moved.get(m.month); as mv) {
+                  <span class="sub moved" [title]="'payroll.otherMonth.movedTitle' | transloco">{{ 'payroll.otherMonth.moved' | transloco: { n: signedYen(mv) } }}</span>
                 }
               </td>
               <td class="num mono">{{ p.retro ? yen(p.retro) : '—' }}</td>

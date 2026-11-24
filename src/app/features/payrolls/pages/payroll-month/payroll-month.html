@@ -106,9 +106,9 @@
           <th><app-sort-header key="kana" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.name' | transloco }}</app-sort-header></th>
           <th><app-sort-header key="dept" [(options)]="listOptions" [(page)]="page">{{ 'employee.field.department' | transloco }}</app-sort-header></th>
           <th><app-sort-header key="employment" [(options)]="listOptions" [(page)]="page">{{ 'employee.list.employment' | transloco }}</app-sort-header></th>
-          <th class="num">{{ 'payroll.col.cash' | transloco }}</th>
+          <th class="num wrap">{{ 'payroll.col.cash' | transloco }}</th>
           <th class="num">{{ 'payroll.col.fixedShort' | transloco }}</th>
-          <th class="num days-th">
+          <th class="num days-th wrap">
             @if (context.isAdmin()) {
               <!-- 見出しを押すと、絞り込んだ人にまとめて日数を入れる窓（11/13）。入れた行は下の帯の「保存する」で保存 -->
               <div class="bulk-wrap" #bulkWrap>
@@ -197,6 +197,8 @@
                 <app-payroll-entry
                   [form]="v.form"
                   [(lines)]="v.lines"
+                  [paidMonth]="month()"
+                  [savedMonths]="savedMonthsOf(v.employee.id)"
                   [items]="items()"
                   [payType]="contractOf(v)?.payType ?? null"
                   [candidate]="candidate(v)"

@@ -19,6 +19,7 @@ import {
 } from '../../premiums/logic/bonus-nature';
 import { decideRegular, GradeRows, MonthUse, RegularInput, RegularResult, remunerationAt } from './regular';
 import { dayRulesOf, pendingSummerRevision, RevisionContext, revisionItems } from './revision-rows';
+import { allocateOtherMonths, OtherMonths } from './payroll-lines';
 
 export interface RegularView {
   employee: Employee;
@@ -36,6 +37,8 @@ export interface RegularView {
   bonusAuto: BonusRemuneration;
   /** 7/1前1年に受けた賞与の回数（性質を問わず。報酬に当たる性質がないのに4回以上なら、性質の確認を促す） */
   bonusCount: number;
+  /** 払い忘れの精算を本来の月へ割り振った結果（月の額の印と、割り振れなかった分の知らせ。11/24） */
+  otherMonths: OtherMonths;
 }
 
 export interface RegularReflectItem {
@@ -69,7 +72,10 @@ export interface RegularViewSource {
 
 /** 1人分の材料と判定（画面の1行） */
 export function buildRegularView(s: RegularViewSource): RegularView {
-  const { year, employee, payrolls, remunerations: rems, contracts, bonusPayments, revisionCtx } = s;
+  const { year, employee, remunerations: rems, contracts, bonusPayments, revisionCtx } = s;
+  // 払い忘れの精算（本来の月がある内訳の行）は、本来の月の報酬として計算する（11/24）
+  const allocated = allocateOtherMonths(s.payrolls);
+  const payrolls = allocated.payrolls;
   const input: RegularInput = {
     year,
     employee,
@@ -89,6 +95,7 @@ export function buildRegularView(s: RegularViewSource): RegularView {
     input,
     bonusAuto,
     bonusCount: bonusCountOf(employee.id, year, bonusPayments),
+    otherMonths: { moved: allocated.moved, unplaced: allocated.unplaced },
     result: decideRegular({ ...input, bonusMonthly }),
     decision: s.decision,
     septemberExists: rems.some((r) => r.from === `${year}-09`),

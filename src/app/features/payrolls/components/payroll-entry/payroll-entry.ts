@@ -7,7 +7,8 @@ import { PAYROLL_STATES, PayrollLine, PayrollState } from '../../../../core/mode
 import { PayrollItemCategory, PayrollItemInput, PAYROLL_ITEM_CATEGORIES } from '../../../../core/models/payroll-item';
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { toHalfWidth } from '../../../../shared/utils/text';
-import { categoryOf, hasAmounts, itemKey, itemNames, LineDraft, readAmount, readLines, startDrafts, totalsOf } from '../../logic/payroll-lines';
+import { categoryOf, FOR_MONTH_CATEGORIES, hasAmounts, itemKey, itemNames, LineDraft, readAmount, readLines, startDrafts, totalsOf } from '../../logic/payroll-lines';
+import { shiftMonth } from '../../../../shared/utils/date';
 import type { RowError } from '../../logic/payroll-input';
 
 /** 1人分の入力の文字（月の表の行と同じ形。cash・fixed・retro は内訳があれば内訳から入る） */
@@ -49,6 +50,20 @@ export class PayrollEntry implements OnInit {
   /** 前の月の内訳（項目名を写す。なければ出さない） */
   readonly prevLines = input<readonly PayrollLine[] | null>(null);
   readonly canEdit = input(true);
+  /** この給与の支払月（内訳の行の「本来の月」の選択肢を作る。11/24） */
+  readonly paidMonth = input<string | null>(null);
+  /** この人の給与の実績が入っている支払月（本来の月に実績がないと割り振れないので知らせる。null ＝ 分からない） */
+  readonly savedMonths = input<ReadonlySet<string> | null>(null);
+
+  /** 本来の月を選んだのに、その月の実績がない行か */
+  missingTarget(d: LineDraft): boolean {
+    const s = this.savedMonths();
+    return !!d.forMonth && !!s && !s.has(d.forMonth);
+  }
+
+  monthParts(ym: string): { y: string; m: string } {
+    return { y: ym.slice(0, 4), m: String(Number(ym.slice(5))) };
+  }
   /** 保存を押したあとの誤り（押す前は行の誤りを出さない） */
   readonly errors = input<readonly RowError[]>([]);
   /** 次の人がいるか（いなければ「保存する」） */
@@ -83,7 +98,7 @@ export class PayrollEntry implements OnInit {
     const ok: PayrollLine[] = [];
     for (const d of this.lines() ?? []) {
       const amount = readAmount(d.amount, d.category);
-      if (d.name.trim() && d.category && amount !== null) ok.push({ name: d.name.trim(), category: d.category, amount });
+      if (d.name.trim() && d.category && amount !== null) ok.push({ name: d.name.trim(), category: d.category, amount, forMonth: d.forMonth ?? null });
     }
     return totalsOf(ok, this.payType());
   });
@@ -111,6 +126,45 @@ export class PayrollEntry implements OnInit {
 
   yen(n: number): string {
     return n.toLocaleString('ja-JP');
+  }
+
+  // ===== 本来の月（払い忘れ・計算誤りの精算。11/24） =====
+
+  /** 選べる月：この支払月より前の12か月（新しい順） */
+  readonly forMonthOptions = computed(() => {
+    const m = this.paidMonth();
+    if (!m) return [];
+    return Array.from({ length: 12 }, (_, i) => {
+      const v = shiftMonth(m, -(i + 1));
+      // 同じ年なら「4月払い」、年をまたいだら「2025年12月払い」（欄を狭く保つ）
+      return { value: v, y: v.slice(0, 4), m: String(Number(v.slice(5))), sameYear: v.slice(0, 4) === m.slice(0, 4) };
+    });
+  });
+
+  /** 本来の月を選べる行か（遡及支払額・報酬にならない行は選べない） */
+  canPickMonth(d: LineDraft): boolean {
+    return !!d.category && FOR_MONTH_CATEGORIES.includes(d.category) && this.forMonthOptions().length > 0;
+  }
+
+  setForMonth(i: number, value: string): void {
+    const next = [...(this.lines() ?? [])];
+    next[i] = { ...next[i], forMonth: value || null };
+    this.set(next);
+  }
+
+  /** 読み取りの合計（通貨＋現物）。定時決定・随時改定・届出が報酬月額の材料にする額 */
+  readback(): { total: string; merged: boolean; otherMonth: number } | null {
+    const n = (s: string) => {
+      const t = toHalfWidth(s ?? '').replace(/[,，\s]/g, '');
+      return t === '' ? 0 : /^\d+$/.test(t) ? Number(t) : NaN;
+    };
+    const c = this.form().controls;
+    const cash = this.hasAmounts() ? this.totals().cash : n(c.cash.value);
+    if (!this.hasAmounts() && c.cash.value.trim() === '') return null;
+    const merged = !!c.inKindMerged.value;
+    const total = cash + (merged ? 0 : n(c.inKind.value));
+    if (!Number.isFinite(total)) return null;
+    return { total: this.yen(total), merged, otherMonth: this.hasAmounts() ? this.totals().otherMonth : 0 };
   }
 
   // ===== 行の編集 =====

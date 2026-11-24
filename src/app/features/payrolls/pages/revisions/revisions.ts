@@ -30,6 +30,7 @@ import { personRevisions, revisionAfter, revisionRemuneration } from '../../logi
 import { DecisionNoticeCard } from '../../../premiums/components/decision-notice-card/decision-notice-card';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
 import { BonusService } from '../../../premiums/bonus.service';
+import type { OtherMonths } from '../../logic/payroll-lines';
 
 interface View {
   key: string; // 行の目印（従業員ID・種類・起算月）
@@ -37,6 +38,8 @@ interface View {
   item: RevisionItem;
   group: RevisionGroup;
   remunerations: RemunerationDoc[];
+  /** 払い忘れの精算を本来の月へ割り振った結果（11/24） */
+  otherMonths: OtherMonths;
 }
 
 /**
@@ -158,6 +161,7 @@ export class RevisionsPage {
             item,
             group: groupOf(item),
             remunerations: withCap,
+            otherMonths: pr.otherMonths,
           });
         }
       }
@@ -358,5 +362,15 @@ export class RevisionsPage {
   /** あと何か月分の実績が要るか（waiting のとき） */
   missingOf(v: View): number {
     return v.item.result.months.filter((m) => !m.payroll).length;
+  }
+
+  /** 符号つきの円（割り振りの印。+10,000 / -10,000） */
+  signedYen(n: number): string {
+    return (n > 0 ? '+' : '') + n.toLocaleString('ja-JP');
+  }
+
+  /** 割り振れなかった本来の月（札の説明） */
+  unplacedMonths(o: OtherMonths): string {
+    return [...new Set(o.unplaced.map((u) => u.forMonth))].sort().join('・');
   }
 }

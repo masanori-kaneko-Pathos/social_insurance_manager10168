@@ -15,6 +15,7 @@ import { withCapRevisions } from '../../rates/logic/cap-revision';
 import { AnnualJudgement } from './irregular';
 import { InsuranceJudgement, standardAt } from './revision-base';
 import { dayRulesOf, RevisionContext, RevisionItem, revisionItems } from './revision-rows';
+import { allocateOtherMonths, OtherMonths } from './payroll-lines';
 
 export interface PersonRevisionSource {
   employee: Employee;
@@ -33,12 +34,16 @@ export interface PersonRevisions {
   /** 届出なしの一斉改定の分も入れた標準報酬の履歴（反映するとき、改定しない保険の今の等級に使う。11/16） */
   remunerations: RemunerationDoc[];
   minDaysAt: (paidMonth: string) => number;
+  /** 払い忘れの精算を本来の月へ割り振った結果（11/24） */
+  otherMonths: OtherMonths;
 }
 
 /** 1人分の随時改定・休業終了時改定の候補 */
 export function personRevisions(s: PersonRevisionSource, ctx: RevisionContext, tables: GradeTableDoc[]): PersonRevisions {
   const e = s.employee;
-  const payrolls = new Map(s.payrolls.map((p): [string, Payroll] => [p.paidMonth, p]));
+  // 払い忘れの精算（本来の月がある内訳の行）は、本来の月の報酬として計算する（起算月も本来の月。11/24）
+  const allocated = allocateOtherMonths(new Map(s.payrolls.map((p): [string, Payroll] => [p.paidMonth, p])));
+  const payrolls = allocated.payrolls;
   const bonusMonthlyFor = (y: number) => bonusRemunerationOf(e.id, y, s.bonusPayments, enrolledFromOf(e)).monthly;
   const items = revisionItems(
     { employee: e, contracts: s.contracts, payrolls, remunerations: s.remunerations, wageChanges: s.wageChanges, bonusMonthlyFor },
@@ -49,6 +54,7 @@ export function personRevisions(s: PersonRevisionSource, ctx: RevisionContext, t
     items,
     remunerations: withCapRevisions(s.remunerations, tables),
     minDaysAt: dayRulesOf({ employee: e, contracts: s.contracts }, ctx).minDaysAt,
+    otherMonths: { moved: allocated.moved, unplaced: allocated.unplaced },
   };
 }
 

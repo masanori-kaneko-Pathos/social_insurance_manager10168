@@ -33,6 +33,7 @@ import { isOver70Employee } from '../../../employees/logic/coverage';
 import { acquireBonusRemunerationOf, bonusRemunerationOf, enrolledFromOf, irregularBonusYearOf, isNotCovered, isRemunerationBonus, recipientsOf } from '../../../premiums/logic/bonus-nature';
 import { acquiredDateOf, acquireRow, addedAcquireBonus, bonusRow, FILING_COLUMNS, FILING_KINDS, filingFileName, FilingKind, FilingRow, irregularRemarks, lossesIn, lossRow, mergeSameMonth, regularRemarks, revisionRow, specialRemarks, specialRow, toCells } from '../../logic/filing-rows';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { allocateOtherMonths } from '../../../payrolls/logic/payroll-lines';
 
 /**
  * 届書の一覧：様式と期間を選んで「表示」→ 表で確かめて CSV に書き出す
@@ -232,11 +233,13 @@ export class FilingsPage {
     ]);
     return targets.map((e, i) => {
       const d = decisions.get(e.id)!;
-      const payrolls = new Map<string, Payroll>();
+      const loaded = new Map<string, Payroll>();
       months.forEach((m, k) => {
         const p = byMonth[k].get(e.id);
-        if (p) payrolls.set(m, p);
+        if (p) loaded.set(m, p);
       });
+      // 払い忘れの精算は、本来の月に割り振って書く（記入例。11/24）
+      const payrolls = allocateOtherMonths(loaded).payrolls;
       const prev = standardAt(rems[i], `${year}-08`);
       // 昇給・降給の月（4〜6月）。一時帰休の始まり・終わりは昇給・降給ではないので除く（11/19）
       const raise = findStartMonths(payrolls).find(
@@ -327,16 +330,20 @@ export class FilingsPage {
         .filter((d) => byId.has(d.employeeId))
         .map(async (d) => {
           const e = byId.get(d.employeeId)!;
-          const months = [0, 1, 2].map((i) => shiftMonth(d.startMonth, i));
+          // 3か月目の払い忘れを翌月に精算した分も割り振れるよう、4か月目まで読む（11/24）
+          const months = [0, 1, 2, 3].map((i) => shiftMonth(d.startMonth, i));
           const [maps, rems] = await Promise.all([
             Promise.all(months.map((m) => this.payrollApi.month(officeId, [e.id], m))),
             this.remunerationsApi.list(officeId, e.id),
           ]);
-          const payrolls = new Map<string, Payroll>();
+          const loaded = new Map<string, Payroll>();
           months.forEach((m, k) => {
             const p = maps[k].get(e.id);
-            if (p) payrolls.set(m, p);
+            if (p) loaded.set(m, p);
           });
+          // 払い忘れの精算は、本来の月に割り振って書く（記入例。4か月目は割り振りのためだけに読んだので外す）
+          const payrolls = allocateOtherMonths(loaded).payrolls;
+          payrolls.delete(months[3]);
           const prev = standardAt(rems, shiftMonth(d.revisedFrom, -1));
           return revisionRow('irregular', {
             employee: e,

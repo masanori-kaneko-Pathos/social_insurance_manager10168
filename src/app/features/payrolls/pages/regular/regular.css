@@ -344,3 +344,9 @@ app-decision-notice-card {
   text-decoration: none;
   background: var(--color-highlight);
 }
+
+/* 払い忘れの精算を本来の月へ割り振った額の印（11/24） */
+.sub.moved {
+  color: var(--color-warning-text);
+  cursor: help;
+}

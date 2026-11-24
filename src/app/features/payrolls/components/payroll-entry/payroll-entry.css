@@ -73,11 +73,11 @@ h3 {
 }
 
 .l-cat {
-  width: 11em;
+  width: 9em; /* 「分類を選ぶ…」が入る幅（11/24 夕方に本来の月の欄を足して 11em から詰めた） */
 }
 
 .l-amount {
-  width: 9.5em;
+  width: 8em; /* 7桁と欄の余白 */
 }
 
 .l-del {
@@ -285,4 +285,55 @@ tr.line-err span + span::before {
 
 .input.computed:hover {
   border-color: var(--color-border-strong);
+}
+
+/* ===== 届書の欄の名前にそろえた補足（11/24） ===== */
+/* 入力欄の下の1行：何をどこに入れるか（計算での意味） */
+.field-note {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--font-xs);
+  line-height: 1.4;
+  color: var(--color-text-sub);
+}
+
+.prorated-note {
+  margin: 2px 0 0 calc(13px + 6px);
+}
+
+/* 計算に使う数値（通貨＋現物）を読み取りだけで見せる */
+.readback {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px var(--space-sm);
+  align-items: baseline;
+  margin: var(--space-sm) 0;
+  padding: 6px 10px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+}
+
+.readback .muted {
+  font-size: var(--font-xs);
+}
+
+/* 本来の月：ふだんは目立たせない（「この月の分」）。選んだ行だけ色を付ける */
+.l-for {
+  width: 7.5em;
+}
+
+.for-pick {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.for-pick.set {
+  color: var(--color-text);
+  font-weight: 600;
+  border-color: var(--color-primary);
+}
+
+/* 本来の月の実績がない行の知らせ（エラーではなく注意。11/24） */
+.lines tr.line-warn td {
+  color: var(--color-warning-text);
 }

@@ -40,6 +40,8 @@ export class PayrollCard {
   private readonly toast = inject(ToastService);
   /** この人の全部（新しい順）。入力の窓で、選んだ月の保存済みを探すのに使う */
   private readonly all = signal<Payroll[]>([]);
+  /** 実績が入っている支払月（内訳の「本来の月」に実績があるかを知らせる。11/24） */
+  readonly savedMonths = computed(() => new Set(this.all().map((p) => p.paidMonth)));
   readonly items = computed(() => this.all().slice(0, 12));
   /** 並び：新しい順（初期値）か古い順。画面の中だけ（保存しない） */
   readonly newestFirst = signal(true);

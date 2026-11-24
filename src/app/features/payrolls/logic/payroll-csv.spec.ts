@@ -1,7 +1,7 @@
 import { emptyPayrollInput, Payroll } from '../../../core/models/payroll';
 import { parseCsv, toCsv } from '../../../shared/csv/csv';
 import { guessMapping, missingRequired, toOurTable } from '../../../shared/import/column-map';
-import { buildPayrollCsv, exportLineNames, classifyImport, isInKindMerged, CsvEmployee, makeMatcher, PAYROLL_IMPORT_FIELDS, PAYROLL_TABLE_SPEC, mapHeader, parseFlag, parseMonth, parseState, payrollFileName, readPayrollCsv } from './payroll-csv';
+import { buildPayrollCsv, exportLineNames, lineHeaderOf, splitLineHeader, classifyImport, isInKindMerged, CsvEmployee, makeMatcher, PAYROLL_IMPORT_FIELDS, PAYROLL_TABLE_SPEC, mapHeader, parseFlag, parseMonth, parseState, payrollFileName, readPayrollCsv } from './payroll-csv';
 import { monthsBetween } from '../../../shared/utils/date';
 import { PaySchedule } from './payroll-rows';
 
@@ -244,8 +244,8 @@ describe('書き出し → 取り込み（往復）', () => {
   it('書き出しの形：期間に在籍していた人だけ、未入力は空欄', () => {
     const rows = buildPayrollCsv(EMPS, saved, monthsBetween('2026-09', '2026-10'), S, 'ja');
     expect(rows[0]).toEqual([
-      '社員番号', '氏名', '支払月', '総支給額', 'うち固定的賃金', '支払基礎日数',
-      '現物', 'うち昇給差額', '欠勤日数', '実労働時間', '1か月分そろわない月', '状態',
+      '社員番号', '氏名', '支払月', '通貨によるものの額', 'うち固定的賃金', '給与計算の基礎日数',
+      '現物によるものの額', 'うち遡及支払額', '欠勤日数', '実労働時間', '日割りの月', '状態',
     ]);
     // 9月払い：一郎（入力済み）・二郎（空）・四郎（8月分に在籍）／10月払い：一郎・二郎
     expect(rows.slice(1).map((r) => `${r[0]}|${r[2]}`)).toEqual([
@@ -279,6 +279,19 @@ describe('payrollFileName', () => {
   });
 });
 
+describe('前の見出し（評価用の CSV・前に書き出したファイル）も読める（11/24 夕方に届書の欄の名前へ）', () => {
+  it('支払額・固定的賃金・支払基礎日数・現物・遡及支払額・日割り／総支給額・うち昇給差額・1か月分そろわない月', () => {
+    for (const h of [
+      ['社員番号', '支払った月', '支払額', '固定的賃金', '支払基礎日数', '現物', '遡及支払額', '日割り'], // 評価用（1117-200）
+      ['社員番号', '支払月', '総支給額', 'うち固定的賃金', '支払基礎日数', '現物', 'うち昇給差額', '1か月分そろわない月'],
+    ]) {
+      const m = mapHeader(h);
+      expect(m.missing).toEqual([]);
+      expect(['cash', 'fixed', 'days', 'inKind', 'retro', 'prorated'].every((c) => (m.index as Record<string, number | undefined>)[c] !== undefined)).toBeTrue();
+    }
+  });
+});
+
 describe('現物の「内訳なし」', () => {
   it('現物の欄に「内訳なし」と書いた行は null で読む', () => {
     const r = readPayrollCsv(parseCsv(`${HEADER},現物\n12,テスト 一郎,2026-10,330000,300000,30,内訳なし`), EMPS, S);
@@ -305,7 +318,7 @@ describe('現物の「内訳なし」', () => {
       paidMonth: '2026-10',
     };
     const rows = buildPayrollCsv([A], [p], ['2026-10'], S, 'ja');
-    expect(rows[1][rows[0].indexOf('現物')]).toBe('内訳なし');
+    expect(rows[1][rows[0].indexOf('現物によるものの額')]).toBe('内訳なし');
     expect(readPayrollCsv(rows, [A], S).items[0].input.inKind).toBeNull();
   });
   it('isInKindMerged：全角・英語も受け付ける', () => {
@@ -372,5 +385,59 @@ describe('内訳の列（11/24）', () => {
       { ...PAYROLL_TABLE_SPEC, passThrough: (h) => h === '基本給' },
     );
     expect(t[0].slice(-1)).toEqual(['基本給']);
+  });
+});
+
+describe('本来の月の列（見出しの [YYYY-MM]。払い忘れ・計算誤りの精算。11/24）', () => {
+  it('splitLineHeader・lineHeaderOf：半角・全角の括弧を読み、書き出しは半角', () => {
+    expect(splitLineHeader('家族手当[2026-04]')).toEqual({ name: '家族手当', forMonth: '2026-04' });
+    expect(splitLineHeader('家族手当 ［2026-04］')).toEqual({ name: '家族手当', forMonth: '2026-04' });
+    expect(splitLineHeader('家族手当')).toEqual({ name: '家族手当', forMonth: null });
+    expect(lineHeaderOf('家族手当', '2026-04')).toBe('家族手当[2026-04]');
+    expect(lineHeaderOf('家族手当', null)).toBe('家族手当');
+  });
+
+  const H = '社員番号,氏名,支払月,通貨によるものの額,うち固定的賃金,給与計算の基礎日数,基本給,家族手当,家族手当[2026-09]';
+
+  it('取り込み：本来の月の列は、その月の行として読む（この月の固定的賃金には入れない）', () => {
+    const r = readPayrollCsv(parseCsv(`${H}\n0012,テスト一 太郎,2026-10,,,30,200000,10000,10000`), EMPS, S);
+    const it = r.items[0];
+    expect(r.errors).toEqual([]);
+    expect(it.input.cash).toBe(220000);
+    expect(it.input.fixed).toBe(210000);
+    expect(it.input.lines).toEqual([
+      { name: '基本給', category: 'base', amount: 200000 },
+      { name: '家族手当', category: 'fixedAllowance', amount: 10000 },
+      { name: '家族手当', category: 'fixedAllowance', amount: 10000, forMonth: '2026-09' },
+    ]);
+  });
+
+  it('取り込み：本来の月が支払月と同じか後ならエラー', () => {
+    const h = H.replace('[2026-09]', '[2026-10]');
+    const r = readPayrollCsv(parseCsv(`${h}\n0012,テスト一 太郎,2026-10,,,30,200000,10000,10000`), EMPS, S);
+    expect(r.errors[0].codes).toContain('badForMonth');
+  });
+
+  it('書き出し → 取り込み（往復）：本来の月の行は [YYYY-MM] の列に出て、読み直すと戻る', () => {
+    const p: Payroll = {
+      ...emptyPayrollInput(),
+      cash: 220000,
+      fixed: 210000,
+      days: 30,
+      lines: [
+        { name: '基本給', category: 'base', amount: 200000 },
+        { name: '家族手当', category: 'fixedAllowance', amount: 10000 },
+        { name: '家族手当', category: 'fixedAllowance', amount: 10000, forMonth: '2026-09' },
+      ],
+      fixedFull: 210000,
+      officeId: 'o',
+      employeeId: 'A',
+      paidMonth: '2026-10',
+    };
+    const names = exportLineNames([p], null);
+    expect(names).toEqual(['基本給', '家族手当', '家族手当[2026-09]']);
+    const rows = buildPayrollCsv([A], [p], ['2026-10'], S, 'ja', names);
+    expect(rows[1].slice(-3)).toEqual(['200000', '10000', '10000']);
+    expect(readPayrollCsv(rows, [A], S).items[0].input.lines).toEqual(p.lines);
   });
 });

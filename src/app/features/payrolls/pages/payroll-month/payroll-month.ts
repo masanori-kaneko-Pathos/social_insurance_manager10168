@@ -50,6 +50,9 @@ const MONTH_RE = /^[0-9]{4}-(0[1-9]|1[0-2])$/;
  * 「内訳」を押すと、その行の下に給与明細の内訳を開いて入れる（app-payroll-entry）。「保存して次の人へ」で1人ずつ保存する。
  * 支払基礎日数の「まとめて入れる」は一覧のまま使えるので、直した行は下の帯の「保存する」でまとめて保存する
  */
+/** 入力済みの月がない人（同じ空の Set を使い回す） */
+const EMPTY_MONTHS: ReadonlySet<string> = new Set();
+
 @Component({
   selector: 'app-payroll-month',
   imports: [PersonName, HalfWidthDigits, InKindCalculator, MonthPicker, Pager, PayrollEntry, PersonListBar, ReactiveFormsModule, RouterLink, SortHeader, TranslocoPipe],
@@ -93,6 +96,26 @@ export class PayrollMonth {
   readonly openId = signal<string | null>(null);
   /** 前の月の内訳（項目名を写す。開いたときに読む。従業員ID → 行。内訳がなければ null） */
   readonly prevLines = signal<ReadonlyMap<string, PayrollLine[] | null>>(new Map());
+  /** 前の12か月の「入力済みの人」（月の索引。内訳の「本来の月」に実績があるかを知らせる。11/24） */
+  private readonly savedByMonth = signal<ReadonlyMap<string, Set<string>> | null>(null);
+  /** 従業員ID → 実績が入っている支払月（前の12か月） */
+  readonly savedMonthsById = computed(() => {
+    const byMonth = this.savedByMonth();
+    const out = new Map<string, Set<string>>();
+    if (!byMonth) return out;
+    for (const [m, ids] of byMonth) {
+      for (const id of ids) {
+        if (!out.has(id)) out.set(id, new Set());
+        out.get(id)!.add(m);
+      }
+    }
+    return out;
+  });
+
+  /** その人の入力済みの月（索引をまだ読めていなければ null ＝ 知らせない） */
+  savedMonthsOf(id: string): ReadonlySet<string> | null {
+    return this.savedByMonth() ? (this.savedMonthsById().get(id) ?? EMPTY_MONTHS) : null;
+  }
 
   /** 対象期間に休業が重なる人（「休業」の札。11/20） */
   onLeave(e: Employee): boolean {
@@ -231,6 +254,7 @@ export class PayrollMonth {
     this.rowErrors.set(new Map());
     this.openId.set(null);
     this.prevLines.set(new Map());
+    this.savedByMonth.set(null);
     if (!MONTH_RE.test(month)) {
       this.errorKey.set('payroll.error.badMonth');
       this.loading.set(false);
@@ -239,6 +263,14 @@ export class PayrollMonth {
     this.month.set(month);
     this.inKindFor.set(null);
     try {
+      // 前の12か月の索引は、表を出すのを待たずに読む（本来の月の知らせにだけ使う）
+      const prev12 = Array.from({ length: 12 }, (_, i) => shiftMonth(month, -(i + 1)));
+      this.payrollApi
+        .savedIdsByMonth(office.id, prev12, this.context.isAdmin())
+        .then((m) => {
+          if (this.month() === month) this.savedByMonth.set(m);
+        })
+        .catch((err) => console.error(err));
       this.employees ??= await this.employeesApi.list(office.id);
       const employees = this.employees;
       const period = periodOf(month, payrollOf(office));

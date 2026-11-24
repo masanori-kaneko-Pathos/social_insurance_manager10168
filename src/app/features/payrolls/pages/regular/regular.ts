@@ -31,6 +31,7 @@ import { monthsBetween } from '../../../../shared/utils/date';
 import { buildRegularView, canReflectRegular, regularReflectItem, RegularReflectItem, regularTargets, RegularView } from '../../logic/regular-views';
 import { DecisionNoticeCard } from '../../../premiums/components/decision-notice-card/decision-notice-card';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
+import type { OtherMonths } from '../../logic/payroll-lines';
 type View = RegularView;
 type ReflectItem = RegularReflectItem;
 
@@ -382,4 +383,14 @@ export class RegularPage {
   readonly monthNum = (ym: string) => Number(ym.slice(5, 7));
   readonly monthLabel = (m: string) => `${Number(m.slice(5, 7))}`;
   readonly diffLabel = (d: number | null) => (d == null ? '—' : d > 0 ? `+${d}` : String(d));
+
+  /** 符号つきの円（割り振りの印。+10,000 / -10,000） */
+  signedYen(n: number): string {
+    return (n > 0 ? '+' : '') + n.toLocaleString('ja-JP');
+  }
+
+  /** 割り振れなかった本来の月（札の説明） */
+  unplacedMonths(o: OtherMonths): string {
+    return [...new Set(o.unplaced.map((u) => u.forMonth))].sort().join('・');
+  }
 }

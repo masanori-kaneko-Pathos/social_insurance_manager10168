@@ -84,7 +84,15 @@
             @let r = v.result;
             <tr>
               <td class="emp-no">{{ v.employee.employeeNumber ?? '' }}</td>
-              <td><app-person-name [person]="v.employee" [link]="['/o', context.current()?.id, 'employees', v.employee.id]" /></td>
+              <td>
+                <app-person-name [person]="v.employee" [link]="['/o', context.current()?.id, 'employees', v.employee.id]" />
+                <!-- 本来の月の実績がなくて、払い忘れの精算を割り振れなかった（11/24） -->
+                @if (v.otherMonths.unplaced.length > 0) {
+                  <span class="badge badge-warn" [title]="'payroll.otherMonth.unplacedTitle' | transloco: { months: unplacedMonths(v.otherMonths) }">{{
+                    'payroll.otherMonth.unplaced' | transloco: { n: v.otherMonths.unplaced.length }
+                  }}</span>
+                }
+              </td>
               @for (m of r.months; track m.month) {
                 <td class="num" [class.skipped]="!m.used">
                   @if (m.payroll) {
@@ -93,6 +101,10 @@
                     <!-- 遡及の額は一段下に（横に並べると月の欄が広がる。11/18） -->
                     @if (m.payroll.retro > 0) {
                       <div class="sub">{{ 'regular.retro' | transloco: { n: yen(m.payroll.retro) } }}</div>
+                    }
+                    <!-- 払い忘れの精算を本来の月へ割り振った額（給与の実績の画面の額とは、この分だけ違う。11/24） -->
+                    @if (v.otherMonths.moved.get(m.month); as mv) {
+                      <div class="sub moved" [title]="'payroll.otherMonth.movedTitle' | transloco">{{ 'payroll.otherMonth.moved' | transloco: { n: signedYen(mv) } }}</div>
                     }
                   } @else if (m.skip === 'beforeAcquisition') {
                     <div class="sub">—</div>

@@ -17,6 +17,12 @@ export interface PayrollLine {
   name: string;
   category: PayrollItemCategory;
   amount: number;
+  /**
+   * 本来払う月（支払月 'YYYY-MM'。11/24）。払い忘れ・計算誤りを後の月に精算したとき、その行は本来の月の報酬として計算する
+   * （日本年金機構の月額変更届の記入例：遅れて支給した分を本来支給する月に割り振る。起算月も本来の月）
+   * 省略・null ＝ この月の分。遡って決まった昇給の差額は、本来の月ではなく分類「遡及支払額」（払った月が起算月）
+   */
+  forMonth?: string | null;
 }
 
 /** 画面で入力する項目 */

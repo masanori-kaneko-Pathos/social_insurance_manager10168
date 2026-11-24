@@ -33,6 +33,8 @@
       <app-payroll-entry
         [form]="form"
         [(lines)]="lines"
+        [paidMonth]="editMonth()"
+        [savedMonths]="savedMonths()"
         [items]="payrollItems()"
         [payType]="payType()"
         [candidate]="candidate()"

@@ -7,7 +7,7 @@ import { toHalfWidth } from '../../../shared/utils/text';
 import { PayrollRowText, readEntry, RowError, sameInput } from './payroll-input';
 import type { PayType } from '../../../core/models/contract';
 import type { PayrollItemCategory, PayrollItemInput } from '../../../core/models/payroll-item';
-import { categoryOf, itemKey, LineDraft } from './payroll-lines';
+import { categoryOf, FOR_MONTH_CATEGORIES, itemKey, LineDraft } from './payroll-lines';
 import { formatHours } from '../../../shared/utils/number';
 import { employedDuring, PayrollEmployee, PaySchedule, periodOf } from './payroll-rows';
 import { daysInclusive } from '../../../shared/utils/date';
@@ -55,41 +55,44 @@ export const PAYROLL_HEADERS: Record<CsvLang, Record<PayrollColumn, string>> = {
     employeeNumber: '社員番号',
     name: '氏名',
     paidMonth: '支払月',
-    cash: '総支給額',
+    cash: '通貨によるものの額',
     fixed: 'うち固定的賃金',
-    days: '支払基礎日数',
-    inKind: '現物',
-    retro: 'うち昇給差額',
+    days: '給与計算の基礎日数',
+    inKind: '現物によるものの額',
+    retro: 'うち遡及支払額',
     absentDays: '欠勤日数',
     hours: '実労働時間',
-    prorated: '1か月分そろわない月',
+    prorated: '日割りの月',
     state: '状態',
   },
   en: {
     employeeNumber: 'Employee number',
     name: 'Name',
     paidMonth: 'Pay month',
-    cash: 'Gross pay',
+    cash: 'Amount paid in money',
     fixed: 'Of which: fixed wages',
-    days: 'Payment basis days',
-    inKind: 'In kind',
-    retro: 'Of which: back pay for a raise',
+    days: 'Days in pay calculation',
+    inKind: 'Amount paid in kind',
+    retro: 'Of which: retroactive pay',
     absentDays: 'Days absent',
     hours: 'Hours worked',
-    prorated: 'Partial month',
+    prorated: 'Pro-rated month',
     state: 'Status',
   },
 };
 
 /**
- * 前の見出し（11/24 に明細の言葉へ変えた）。前に書き出したファイル・ひな形も、そのまま読めるようにする
+ * 前の見出し。前に書き出したファイル・ひな形・評価用の CSV も、そのまま読めるようにする
+ * 11/24 夕方に、月額変更届・算定基礎届の欄の名前（通貨によるものの額・現物によるものの額・遡及支払額・給与計算の基礎日数）へそろえた
  */
 export const PAYROLL_OLD_HEADERS: Partial<Record<PayrollColumn, readonly string[]>> = {
   paidMonth: ['支払った月', 'Month paid'],
-  cash: ['支払額', 'Paid in money'],
+  cash: ['総支給額', 'Gross pay', '支払額', 'Paid in money'],
   fixed: ['固定的賃金', 'Fixed wages', 'うち毎月決まった額', 'Of which: same every month'],
-  retro: ['遡及支払額', 'Retroactive pay'],
-  prorated: ['日割り', 'Prorated'],
+  days: ['支払基礎日数', 'Payment basis days'],
+  inKind: ['現物', 'In kind'],
+  retro: ['うち昇給差額', 'Of which: back pay for a raise', '遡及支払額', 'Retroactive pay'],
+  prorated: ['1か月分そろわない月', 'Partial month', '日割り', 'Prorated'],
 };
 
 /** その列として、そのまま読む見出し（今の日本語・英語＋前の見出し） */
@@ -254,7 +257,9 @@ export type ImportErrorCode =
   | 'badProrated'
   | 'badState'
   // 内訳の列の合計が、総支給額の列と合わない（列が抜けている・総支給額に別のものが入っている。11/24）
-  | 'linesMismatch';
+  | 'linesMismatch'
+  // 本来の月の列（見出しの [YYYY-MM]）に、支払月と同じか後の月の金額がある（11/24）
+  | 'badForMonth';
 
 export interface ImportItem {
   line: number; // ファイルの行番号（見出しが1行目）
@@ -288,6 +293,22 @@ interface LineColumn {
   index: number;
   name: string;
   category: PayrollItemCategory;
+  /** 本来の月（見出しの後ろの [YYYY-MM]。払い忘れ・計算誤りの精算。なければ null） */
+  forMonth: string | null;
+}
+
+/** 本来の月の列の見出し：「家族手当[2026-04]」（全角の［］も読む。11/24） */
+const FOR_MONTH_HEADER = /^(.*?)\s*[\[［]\s*(\d{4})-(0[1-9]|1[0-2])\s*[\]］]$/;
+
+/** 見出し → 項目名と本来の月 */
+export function splitLineHeader(h: string): { name: string; forMonth: string | null } {
+  const m = FOR_MONTH_HEADER.exec(h.trim());
+  return m ? { name: m[1].trim(), forMonth: `${m[2]}-${m[3]}` } : { name: h.trim(), forMonth: null };
+}
+
+/** 項目名と本来の月 → 見出し */
+export function lineHeaderOf(name: string, forMonth: string | null | undefined): string {
+  return forMonth ? `${name}[${forMonth}]` : name;
 }
 
 /**
@@ -302,9 +323,9 @@ export function lineColumnsOf(
   const out: LineColumn[] = [];
   header.forEach((h, index) => {
     if (used.has(index)) return;
-    const name = h.trim();
+    const { name, forMonth } = splitLineHeader(h);
     const category = name ? categoryOf(name, items) : null;
-    if (category) out.push({ index, name, category });
+    if (category) out.push({ index, name, category, forMonth: forMonth && FOR_MONTH_CATEGORIES.includes(category) ? forMonth : null });
   });
   return out;
 }
@@ -423,7 +444,11 @@ export function readPayrollCsv(
     };
     // 内訳の列がある：その列から内訳を読み、総支給額などは内訳から出す。金額が1つもなければ今までどおり
     const drafts: LineDraft[] | null =
-      lineCols.length > 0 ? lineCols.map((c) => ({ name: c.name, category: c.category, amount: row[c.index] ?? '' })) : null;
+      lineCols.length > 0 ? lineCols.map((c) => ({ name: c.name, category: c.category, amount: row[c.index] ?? '', forMonth: c.forMonth })) : null;
+    // 本来の月は、支払月より前の月だけ（同じ月・後の月の精算はない）
+    if (paidMonth && lineCols.some((c) => c.forMonth && c.forMonth >= paidMonth && (row[c.index] ?? '').trim() !== '')) {
+      codes.push('badForMonth');
+    }
     const payType = employee && paidMonth && opts.payTypeOf ? opts.payTypeOf(employee.id, paidMonth) : null;
     const r = readEntry(text, drafts, payType, periodDays);
     // 総支給額の列も書いてあれば、内訳の合計と合うかを見る（列の抜け・別のものの混入に気づくため）
@@ -557,13 +582,14 @@ export function exportLineNames(payrolls: readonly Payroll[], template: readonly
   const used = payrolls.some((p) => p.lines && p.lines.length > 0);
   if (!used && !template) return [];
   for (const n of template ?? []) add(n);
-  for (const p of payrolls) for (const l of p.lines ?? []) add(l.name);
+  for (const p of payrolls) for (const l of p.lines ?? []) add(lineHeaderOf(l.name, l.forMonth));
   return out;
 }
 
-/** その行のその項目の金額（同じ名前の行は足す。なければ空） */
-function lineAmount(s: Payroll | null, name: string): string {
-  const hit = (s?.lines ?? []).filter((l) => itemKey(l.name) === itemKey(name));
+/** その行のその項目の金額（同じ名前・同じ本来の月の行は足す。なければ空） */
+function lineAmount(s: Payroll | null, header: string): string {
+  const { name, forMonth } = splitLineHeader(header);
+  const hit = (s?.lines ?? []).filter((l) => itemKey(l.name) === itemKey(name) && (l.forMonth ?? null) === forMonth);
   return hit.length > 0 ? String(hit.reduce((a, l) => a + l.amount, 0)) : '';
 }
 
@@ -623,6 +649,7 @@ export const PAYROLL_TABLE_SPEC: OurTableSpec<PayrollColumn, PayrollColumn> = {
 /** エラーのコード → 画面で直す欄（11/16。取り込み画面の「その場で直す」） */
 export const PAYROLL_FIX: Readonly<Record<string, readonly PayrollColumn[]>> = {
   linesMismatch: ['cash'],
+  badForMonth: ['paidMonth'],
   noEmployeeNumber: ['employeeNumber', 'name'],
   unknownEmployee: ['employeeNumber'],
   ambiguousEmployee: ['employeeNumber'],

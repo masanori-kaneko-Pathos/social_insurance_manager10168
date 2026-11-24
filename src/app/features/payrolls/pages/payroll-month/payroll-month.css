@@ -241,7 +241,7 @@ table.fixed-cols.all {
 }
 
 col.c-money {
-  width: 7.5em; /* 金額の入力欄（.w-money）と欄の余白 */
+  width: 10em; /* 見出し「通貨によるものの額」が1行に入る幅（ダークの字でも。11/24 夕方に 7.5em から広げた） */
 }
 
 /* 見出しが明細の言葉になって長くなった欄（見出しは折り返さないので、1行に入る幅。11/24） */
@@ -627,4 +627,15 @@ tr.detail > td {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+/* 届書の欄の名前にそろえて長くなった見出し（通貨によるものの額・給与計算の基礎日数）は2行に折り返す（11/24） */
+thead th.wrap {
+  white-space: normal;
+  line-height: 1.3;
+}
+
+thead th.wrap .bulk-btn {
+  white-space: normal;
+  text-align: right;
 }
