@@ -1306,7 +1306,7 @@
       "sum": "Total (monthly + bonus)"
     },
     "bonusProblems": "{{count}} employee(s) could not be calculated for bonuses (not included in totals).",
-    "bonusHint": "Bonus premiums are paid together with the monthly premiums for the month the bonus was paid. Each is rounded down to the yen and then added, so the total may differ from the notice by 1 yen.",
+    "bonusHint": "Bonus premiums are paid together with the monthly premiums for the month the bonus was paid. The payment is the monthly and bonus amounts added together and then rounded down to the yen (the Monthly and Bonus rows show the amounts before rounding).",
     "toBonuses": "Go to bonuses",
     "error": {
       "load": "Could not load premiums."
@@ -3904,7 +3904,6 @@
     "status": {
       "notEntered": "Notice amounts not entered",
       "match": "Match",
-      "rounding": "Rounding difference",
       "diff": "Difference"
     },
     "col": {
@@ -3920,7 +3919,6 @@
       "retroAdjust": "Retroactive corrections for previous months",
       "gradeChange": "Timing of standard remuneration revisions",
       "excluded": "Some employees could not be calculated in the app",
-      "rounding": "Rounding (monthly and bonus amounts are each rounded down, so 1–2 yen may differ)",
       "other": "Other (write a note)"
     },
     "excludedNow": "{{count}} now",

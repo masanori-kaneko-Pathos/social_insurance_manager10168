@@ -95,7 +95,9 @@ export function withTotals(
 
 /**
  * 事業所の合計（日本年金機構の考え方）
- * - 納付額：全員の全額を合計して、1円未満を切り捨て
+ * - 納付額：全員の全額を合計して、1円未満を切り捨て（被保険者ごとには端数処理しない）
+ *   賞与のある月は、月額と賞与の結果を一緒に渡す。月額と賞与を足してから1回だけ切り捨てる
+ *   （日本年金機構「保険料の計算方法」1：標準報酬月額と標準賞与額に料率を掛けた額を合計し、その1円未満を切り捨て。11/24）
  * - 会社負担：納付額 − 全員の本人負担の合計（1人ごとには決まらない）
  * 健保・介護・支援金は「健康保険料」として1つにまとめる。
  */
@@ -117,7 +119,7 @@ export function officeTotals(results: PremiumResult[]): OfficeTotal[] {
 
   return [...sums.entries()].map(([category, s]) => {
     const totalYen = floorYen(s.total);
-    return { category, totalYen, employeeYen: s.employee, employerYen: totalYen - s.employee };
+    return { category, totalYen, totalMilli: s.total, employeeYen: s.employee, employerYen: totalYen - s.employee };
   });
 }
 

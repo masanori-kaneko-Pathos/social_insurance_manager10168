@@ -92,6 +92,7 @@ export interface BonusPremiumResult extends PremiumResult {
 export interface OfficeTotal {
   category: 'health' | 'pension' | 'childContribution';
   totalYen: number; // 納付額 ＝ 全員の全額の合計（1円未満切り捨て）
+  totalMilli?: Milli; // 切り捨てる前の全額の合計（月額と賞与を足してから切り捨てるため。11/24）
   employeeYen: number; // 本人負担の合計
   employerYen: number; // 会社負担 ＝ 納付額 − 本人負担の合計
 }

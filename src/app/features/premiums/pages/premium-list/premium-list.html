@@ -185,9 +185,9 @@
               <tr [class.grand-total]="row.key === 'sum'">
                 <th scope="row">{{ 'premiumList.bonusRows.' + row.key | transloco }}</th>
                 @for (c of bonusCols; track c.category) {
-                  <td class="num">{{ yen(totalOf(row.totals, c.category)) }}</td>
+                  <td class="num">{{ row.key === 'sum' ? yen(totalOf(row.totals, c.category)) : exactOf(row.totals, c.category) }}</td>
                 }
-                <td class="num strong">{{ yen(sumOf(row.totals)) }}</td>
+                <td class="num strong">{{ row.key === 'sum' ? yen(sumOf(row.totals)) : exactSumOf(row.totals) }}</td>
               </tr>
             }
           </tbody>
@@ -254,7 +254,7 @@
       </table>
       </div>
 
-      @if (nc.status === 'diff' || nc.status === 'rounding' || noticeReasons().size > 0) {
+      @if (nc.status === 'diff' || noticeReasons().size > 0) {
         <fieldset class="reasons">
           <legend>{{ 'premiumNotice.reasonsTitle' | transloco }}</legend>
           @for (r of diffReasons; track r) {

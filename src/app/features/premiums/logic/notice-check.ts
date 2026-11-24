@@ -4,8 +4,8 @@
 // 根拠：日本年金機構「厚生年金保険料等の納付」
 // - 納付期限は、納付対象月の翌月末日（末日が休日なら、翌日以降の最初の営業日）。告知書は毎月20日ごろ届く
 // - 事業所の保険料（納付額）は、全員の全額を足してから1円未満を切り捨てる。会社負担 ＝ 納付額 − 本人負担の合計
-// アプリの事業所の合計も同じ計算なので、月額だけなら告知額と1円もずれない。ずれたら本当の理由がある
-// ただし賞与のある月は、月額と賞与をそれぞれ切り捨てて足すので、1〜2円ずれることがある（端数）
+// アプリの事業所の合計も同じ計算（賞与のある月は月額と賞与を足してから切り捨て。11/24）なので、
+// 告知額と1円もずれない。ずれたら本当の理由がある
 
 import type { OfficeTotal } from '../../../core/models/premium';
 import { addDays, DateStr, daysInMonth, shiftMonth, YearMonth } from '../../../shared/utils/date';
@@ -24,7 +24,6 @@ export const DIFF_REASONS = [
   'retroAdjust', // 前の月までのさかのぼりの訂正（告知額に調整が入っている）
   'gradeChange', // 標準報酬（定時決定・随時改定）の反映の時期の違い
   'excluded', // アプリで計算できない人がいる（合計から抜けている）
-  'rounding', // 端数（賞与のある月の1〜2円）
   'other',
 ] as const;
 export type DiffReason = (typeof DIFF_REASONS)[number];
@@ -37,7 +36,7 @@ export interface NoticeLine {
   diff: number | null;
 }
 
-export type NoticeStatus = 'notEntered' | 'match' | 'rounding' | 'diff';
+export type NoticeStatus = 'notEntered' | 'match' | 'diff';
 
 export interface NoticeCheck {
   lines: NoticeLine[];
@@ -76,10 +75,9 @@ export function noticeArrivalOf(month: YearMonth): DateStr {
 }
 
 /**
- * アプリの合計（月額＋その月の賞与）と告知額を比べる
- * hasBonus：その月に賞与がある（端数で1〜2円ずれうる）
+ * アプリの合計（月額＋その月の賞与）と告知額を比べる。1円でも違えば diff
  */
-export function checkNotice(appTotals: readonly OfficeTotal[], notice: NoticeAmounts, hasBonus: boolean): NoticeCheck {
+export function checkNotice(appTotals: readonly OfficeTotal[], notice: NoticeAmounts): NoticeCheck {
   const appOf = (c: NoticeCategory) => appTotals.find((t) => t.category === c)?.totalYen ?? 0;
   const lines = NOTICE_CATEGORIES.map((category) => {
     const app = appOf(category);
@@ -92,9 +90,7 @@ export function checkNotice(appTotals: readonly OfficeTotal[], notice: NoticeAmo
   const diffTotal = noticeTotal == null ? null : noticeTotal - appTotal;
   let status: NoticeStatus = 'notEntered';
   if (entered) {
-    if (lines.every((l) => l.diff === 0)) status = 'match';
-    else if (hasBonus && lines.every((l) => Math.abs(l.diff!) <= 2)) status = 'rounding';
-    else status = 'diff';
+    status = lines.every((l) => l.diff === 0) ? 'match' : 'diff';
   }
   return { lines, appTotal, noticeTotal, diffTotal, status };
 }

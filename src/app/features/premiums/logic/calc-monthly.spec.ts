@@ -304,6 +304,50 @@ describe('officeTotals：事業所の合計（日本年金機構の考え方）'
   });
 });
 
+describe('officeTotals：日本年金機構「保険料の計算方法」の表（厚年 16.766%・6人）', () => {
+  // 年金機構の説明の表：告知額 122,056円（合計 122,056.48 を切り捨て）・本人負担 61,027円・事業主 61,029円（11/24）
+  const pensionOnly = (month: string): RatesForMonth => ({
+    month,
+    health: null,
+    care: null,
+    childSupport: null,
+    pension: { employee: 83830, employer: 83830, from: '2012-09', source: 'national' },
+    childContribution: null,
+  });
+  const one = (standard: number) =>
+    calcMonthly({
+      month: '2013-04',
+      employee: {
+        birthDate: '1980-05-15',
+        health: { enrolled: false, acquiredDate: null, lostDate: null },
+        pension: { enrolled: true, acquiredDate: '2010-04-01', lostDate: null },
+      },
+      remunerations: [rem('2010-04', [1, 58000], [1, standard])],
+      rates: pensionOnly('2013-04'),
+    });
+
+  it('6人の合計を1回だけ切り捨てる（被保険者ごとには端数処理しない）', () => {
+    const list = [110000, 134000, 150000, 118000, 118000, 98000].map(one);
+    expect(list.map((r) => r.employeeYen)).toEqual([9221, 11233, 12574, 9892, 9892, 8215]);
+    const pension = officeTotals(list).find((t) => t.category === 'pension')!;
+    expect(pension.totalMilli).toBe(122056480);
+    expect(pension.totalYen).toBe(122056);
+    expect(pension.employeeYen).toBe(61027);
+    expect(pension.employerYen).toBe(61029);
+  });
+
+  it('賞与のある月：月額と賞与を足してから切り捨てる（別々に切り捨てて足すと1円少ない）', () => {
+    const monthly = one(110000); // 18,442.60
+    const bonus = one(134000); // 賞与の結果のかわり（標準賞与額 134,000 → 22,466.44）
+    const separate =
+      officeTotals([monthly]).find((t) => t.category === 'pension')!.totalYen +
+      officeTotals([bonus]).find((t) => t.category === 'pension')!.totalYen;
+    const together = officeTotals([monthly, bonus]).find((t) => t.category === 'pension')!.totalYen;
+    expect(separate).toBe(40908);
+    expect(together).toBe(40909);
+  });
+});
+
 describe('healthPartTotals：健康保険料の内訳（全額）', () => {
   it('東京22級（30万円）・2026-11：健保 29,550円・支援金 690円（30歳なので介護は0円）', () => {
     const r = calcMonthly({

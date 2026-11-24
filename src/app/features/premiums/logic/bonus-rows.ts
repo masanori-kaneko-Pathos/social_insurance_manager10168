@@ -5,7 +5,6 @@
  */
 import {
   BonusPremiumResult,
-  OfficeTotal,
   PremiumOptions,
   PremiumPart,
 } from '../../../core/models/premium';
@@ -205,22 +204,6 @@ export function collectBonusResults(
     }
   }
   return { results, problemCount };
-}
-
-/** 事業所の合計を足し合わせる（月額 ＋ 賞与。どちらも端数処理した後の額を足す） */
-export function addTotals(a: OfficeTotal[], b: OfficeTotal[]): OfficeTotal[] {
-  const byCat = new Map(b.map((t) => [t.category, t]));
-  return a.map((t) => {
-    const o = byCat.get(t.category);
-    return o
-      ? {
-          category: t.category,
-          totalYen: t.totalYen + o.totalYen,
-          employeeYen: t.employeeYen + o.employeeYen,
-          employerYen: t.employerYen + o.employerYen,
-        }
-      : t;
-  });
 }
 
 /**

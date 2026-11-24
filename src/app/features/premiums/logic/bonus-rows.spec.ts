@@ -2,10 +2,8 @@
  * 手計算の練習をするなら、このファイルを開く前に
  * 「テスト一郎に 2026-12-10 に 500,000円の賞与」の本人負担を計算してみる。
  */
-import { OfficeTotal } from '../../../core/models/premium';
 import { PickedRate, RatesForMonth } from '../../../core/models/rates';
 import {
-  addTotals,
   BonusContext,
   BonusPaymentLike,
   buildBonusRow,
@@ -155,15 +153,6 @@ describe('withDraft / collectBonusResults / addTotals', () => {
     expect(c2.problemCount).toBe(1);
   });
 
-  it('addTotals：種類ごとに足す', () => {
-    const a: OfficeTotal[] = [
-      { category: 'health', totalYen: 100, employeeYen: 50, employerYen: 50 },
-    ];
-    const b: OfficeTotal[] = [{ category: 'health', totalYen: 11, employeeYen: 5, employerYen: 6 }];
-    expect(addTotals(a, b)).toEqual([
-      { category: 'health', totalYen: 111, employeeYen: 55, employerYen: 56 },
-    ]);
-  });
 });
 
 describe('産休・育休中の賞与', () => {

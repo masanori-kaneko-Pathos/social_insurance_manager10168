@@ -46,7 +46,7 @@ import { formatMilli } from '../../logic/rounding';
 import { BonusPayment } from '../../../../core/models/bonus';
 import type { BonusPremiumResult } from '../../../../core/models/premium';
 import { BonusService } from '../../bonus.service';
-import { addTotals, bonusResultsByEmployee, collectBonusResults } from '../../logic/bonus-rows';
+import { bonusResultsByEmployee, collectBonusResults } from '../../logic/bonus-rows';
 import { downloadCsv, safeFileName } from '../../../../shared/csv/csv';
 import { downloadXlsx } from '../../../../shared/xlsx/download-xlsx';
 import { Payroll } from '../../../../core/models/payroll';
@@ -393,7 +393,8 @@ export class PremiumList {
   /**
    * その月に払った賞与があるときだけ「月額・賞与・合計」を出す（ない月は null）
    * 1人の本人負担は月額と賞与を別々に端数処理して足す（日本年金機構の説明）。
-   * 納付額も月額・賞与それぞれで切り捨てて足すので、告知書と1円違うことがある
+   * 納付額は月額と賞与を足してから1円未満を切り捨てる（日本年金機構「保険料の計算方法」1。11/24）。
+   * 月額・賞与の行は切り捨てる前の額（銭まで）を出し、合計の行だけを円にする
    */
   readonly bonusSummary = computed(() => {
     const tables = this.tables();
@@ -408,11 +409,12 @@ export class PremiumList {
       (d) => d.startsWith(month),
     );
     const bonus = officeTotals(c.results);
+    const ok = this.rows().flatMap((r) => (r.state === 'ok' && r.result ? [r.result] : []));
     return {
       rows: [
         { key: 'monthly', totals: this.totals() },
         { key: 'bonus', totals: bonus },
-        { key: 'sum', totals: addTotals(this.totals(), bonus) },
+        { key: 'sum', totals: officeTotals([...ok, ...c.results]) },
       ],
       problemCount: c.problemCount,
     };
@@ -451,6 +453,15 @@ export class PremiumList {
 
   sumOf(list: OfficeTotal[]): number {
     return list.reduce((s, t) => s + t.totalYen, 0);
+  }
+
+  /** 切り捨てる前の額（銭まで。月額・賞与の行。11/24） */
+  exactOf(list: OfficeTotal[], category: OfficeTotal['category']): string {
+    return formatMilli(list.find((t) => t.category === category)?.totalMilli ?? 0);
+  }
+
+  exactSumOf(list: OfficeTotal[]): string {
+    return formatMilli(list.reduce((s, t) => s + (t.totalMilli ?? 0), 0));
   }
 
   constructor() {
@@ -526,7 +537,7 @@ export class PremiumList {
     return { health: n(t.health), pension: n(t.pension), childContribution: n(t.childContribution) };
   });
 
-  readonly noticeCheck = computed(() => checkNotice(this.appTotals(), this.noticeAmounts(), !!this.bonusSummary()));
+  readonly noticeCheck = computed(() => checkNotice(this.appTotals(), this.noticeAmounts()));
   readonly dueDate = computed(() => dueDateOf(this.month()));
   readonly arrival = computed(() => noticeArrivalOf(this.month()));
 

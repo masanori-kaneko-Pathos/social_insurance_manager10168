@@ -25,19 +25,18 @@ describe('dueDateOf：納付期限（日本年金機構の令和8年度下期の
 
 describe('checkNotice：告知額との突き合わせ', () => {
   it('入れていなければ notEntered。全部同じなら match', () => {
-    expect(checkNotice(T(100, 200, 3), { health: null, pension: 200, childContribution: 3 }, false).status).toBe('notEntered');
-    const c = checkNotice(T(100, 200, 3), { health: 100, pension: 200, childContribution: 3 }, false);
+    expect(checkNotice(T(100, 200, 3), { health: null, pension: 200, childContribution: 3 }).status).toBe('notEntered');
+    const c = checkNotice(T(100, 200, 3), { health: 100, pension: 200, childContribution: 3 });
     expect(c.status).toBe('match');
     expect(c.diffTotal).toBe(0);
   });
   it('差は「告知額 − アプリ」。月額だけなら1円でも diff', () => {
-    const c = checkNotice(T(100, 200, 3), { health: 101, pension: 200, childContribution: 3 }, false);
+    const c = checkNotice(T(100, 200, 3), { health: 101, pension: 200, childContribution: 3 });
     expect(c.status).toBe('diff');
     expect(c.lines[0].diff).toBe(1);
     expect(c.diffTotal).toBe(1);
   });
-  it('賞与のある月の1〜2円は端数（rounding）。3円からは diff', () => {
-    expect(checkNotice(T(100, 200, 3), { health: 101, pension: 198, childContribution: 3 }, true).status).toBe('rounding');
-    expect(checkNotice(T(100, 200, 3), { health: 103, pension: 200, childContribution: 3 }, true).status).toBe('diff');
+  it('賞与のある月も、1円でも違えば diff（月額と賞与を足してから切り捨てるので端数ではずれない。11/24）', () => {
+    expect(checkNotice(T(100, 200, 3), { health: 101, pension: 199, childContribution: 3 }).status).toBe('diff');
   });
 });
