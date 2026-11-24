@@ -4,39 +4,18 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
 import { Payroll } from '../../../../core/models/payroll';
-import { RegularDecision, RegularMethod } from '../../../../core/models/revision';
-import {
-  RemunerationDoc,
-  RemunerationInput,
-  StandardRemuneration,
-} from '../../../../core/models/remuneration';
+import { RegularMethod } from '../../../../core/models/revision';
 import { ContractService } from '../../../employees/contract.service';
 import { EmployeeService } from '../../../employees/employee.service';
 import { CriteriaService } from '../../../office/criteria.service';
 import { RemunerationService } from '../../../employees/remuneration.service';
 import { OfficeContext } from '../../../office/office-context.service';
-import { gradeOf, pickGradeTable } from '../../../rates/logic/grade';
+import { pickGradeTable } from '../../../rates/logic/grade';
 import { RateService } from '../../../rates/rate.service';
 import { payrollOf } from '../../../office/office-settings';
-import {
-  decideRegular,
-  GradeRows,
-  MonthUse,
-  RegularInput,
-  RegularResult,
-  remunerationAt,
-} from '../../logic/regular';
+import { decideRegular, GradeRows } from '../../logic/regular';
 import { BonusService } from '../../../premiums/bonus.service';
-import { bonusTotalOf } from '../../../premiums/logic/bonus-nature';
-import {
-  BonusRemuneration,
-  bonusRemunerationOf,
-  enrolledFromOf,
-  NaturePaymentLike,
-  monthlyOf,
-  windowOf,
-} from '../../../premiums/logic/bonus-nature';
-import { dayRulesOf, pendingSummerRevision, revisionItems } from '../../logic/revision-rows';
+import { monthlyOf, windowOf } from '../../../premiums/logic/bonus-nature';
 import { PayrollService } from '../../payroll.service';
 import { RegularService } from '../../regular.service';
 
@@ -49,31 +28,11 @@ import { ContractDoc } from '../../../../core/models/contract';
 import { contractAt } from '../../../employees/logic/contract-form-model';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { monthsBetween } from '../../../../shared/utils/date';
+import { buildRegularView, canReflectRegular, regularReflectItem, RegularReflectItem, regularTargets, RegularView } from '../../logic/regular-views';
 import { DecisionNoticeCard } from '../../../premiums/components/decision-notice-card/decision-notice-card';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
-interface View {
-  employee: Employee;
-  result: RegularResult;
-  /** 保存済みの定時決定の記録 */
-  decision: RegularDecision | null;
-  /** 9月分の標準報酬がもうある（反映済み、または手で入れた） */
-  septemberExists: boolean;
-  remunerations: RemunerationDoc[];
-  /** 7〜9月改定の随時改定（休業終了時改定を含む）がまだ反映されていない（11/16）。candidate なら定時決定の反映を止める */
-  pending: { revisedFrom: string; status: 'candidate' | 'waiting' } | null;
-  /** 判定の材料（賞与に係る報酬の額を直したら、これで判定し直す。11/19） */
-  input: RegularInput;
-  /** 年4回以上の賞与（7/1前1年の実績から自動で出した額。11/19） */
-  bonusAuto: BonusRemuneration;
-  /** 7/1前1年に受けた賞与の回数（性質を問わず。報酬に当たる性質がないのに4回以上なら、性質の確認を促す） */
-  bonusCount: number;
-}
-
-interface ReflectItem {
-  decision: RegularDecision;
-  remuneration: RemunerationInput;
-  decisionExists: boolean;
-}
+type View = RegularView;
+type ReflectItem = RegularReflectItem;
 
 interface Checks {
   seasonal: boolean;
@@ -219,9 +178,7 @@ export class RegularPage {
       this.grades = { health: health.grades, pension: pension.grades };
 
       // 4/1〜7/1 に在籍していた人だけ（ずっと前に辞めた人は出さない）
-      const employees = all.filter(
-        (e) => e.hireDate <= `${year}-07-01` && (e.retireDate == null || e.retireDate >= `${year}-04-01`),
-      );
+      const employees = regularTargets(all, year);
       const ids = employees.map((e) => e.id);
       // 契約は、随時改定の支払基礎日数の基準（短時間は11日）を決めるため。ログイン中は覚えている（11/16）
       const [payrolls, remunerations, decisions, contracts, bonusPayments] = await Promise.all([
@@ -247,42 +204,19 @@ export class RegularPage {
         fromMonth: `${year}-01`,
       };
       this.views.set(
-        employees.map((employee, i) => {
-          const rems = remunerations[i];
-          const own = byEmployee.get(employee.id) ?? new Map<string, Payroll>();
-          const input: RegularInput = {
+        employees.map((employee, i) =>
+          buildRegularView({
             year,
             employee,
-            payrolls: own,
-            remunerations: rems,
+            payrolls: byEmployee.get(employee.id) ?? new Map<string, Payroll>(),
+            remunerations: remunerations[i],
+            contracts: contracts[i],
+            decision: decisions.get(employee.id) ?? null,
+            bonusPayments,
             grades: this.grades!,
-            schedule,
-            // 短時間労働者は11日、パートは17日 → 15日（R47。11/16）
-            ...dayRulesOf({ employee, contracts: contracts[i] }, revisionCtx),
-          };
-          const decision = decisions.get(employee.id) ?? null;
-          const bonusAuto = bonusRemunerationOf(employee.id, year, bonusPayments, enrolledFromOf(employee));
-          // 反映済みなら保存した額、まだなら7/1前1年の実績から出した額
-          const bonusMonthly = decision?.bonusMonthly ?? bonusAuto.monthly;
-          const bonusMonthlyFor = (y: number) => bonusRemunerationOf(employee.id, y, bonusPayments, enrolledFromOf(employee)).monthly;
-          return {
-            employee,
-            input,
-            bonusAuto,
-            bonusCount: bonusCountOf(employee.id, year, bonusPayments),
-            result: decideRegular({ ...input, bonusMonthly }),
-            decision,
-            septemberExists: rems.some((r) => r.from === `${year}-09`),
-            remunerations: rems,
-            pending: pendingSummerRevision(
-              revisionItems(
-                { employee, contracts: contracts[i], payrolls: own, remunerations: rems, bonusMonthlyFor },
-                revisionCtx,
-              ),
-              year,
-            ),
-          };
-        }),
+            revisionCtx,
+          }),
+        ),
       );
     } catch (err) {
       console.error(err);
@@ -293,13 +227,7 @@ export class RegularPage {
   }
 
   canReflect(v: View): boolean {
-    const r = v.result;
-    return (
-      this.context.isAdmin() &&
-      !v.septemberExists &&
-      v.pending?.status !== 'candidate' &&
-      (r.status === 'decided' || (r.status === 'keep' && r.current != null))
-    );
+    return this.context.isAdmin() && canReflectRegular(v);
   }
 
   // ===== 賞与に係る報酬の欄（年4回以上の賞与。11/19） =====
@@ -376,54 +304,7 @@ export class RegularPage {
   // ===== 反映 =====
 
   private build(v: View, method: RegularMethod): ReflectItem {
-    const y = this.year();
-    const r = v.result;
-    const office = this.context.current()!;
-    const sum = (ms: MonthUse[]) => ms.filter((m) => m.used).reduce((s, m) => s + m.amount, 0);
-
-    let amount: number;
-    let health: StandardRemuneration;
-    let pension: StandardRemuneration;
-    if (method === 'keep') {
-      const cur = remunerationAt(v.remunerations, `${y}-08`)!;
-      amount = cur.monthlyAmount;
-      health = cur.health;
-      pension = cur.pension;
-    } else {
-      const src = method === 'annual' ? r.annual! : { average: r.average!, next: r.next! };
-      amount = src.average;
-      health = src.next.health;
-      // 厚年の資格がない人（70歳以上被用者など）も、標準報酬相当額として厚年の等級を持っておく
-      pension = src.next.pension ?? gradeOf(this.grades!.pension, amount);
-    }
-
-    const used = method === 'annual' ? r.annual!.months : r.months;
-    const decision: RegularDecision = {
-      officeId: office.id,
-      employeeId: v.employee.id,
-      year: String(y),
-      method,
-      usedMonths: method === 'keep' ? [] : used.filter((m) => m.used).map((m) => m.month),
-      total: method === 'keep' ? 0 : sum(r.months),
-      average: r.rawAverage ?? 0,
-      corrected: r.hasRetro ? r.average : null,
-      annualAverage: r.annual?.average ?? null,
-      monthlyAmount: amount,
-      seasonal: method === 'annual',
-      consent: method === 'annual',
-      health,
-      pension,
-      // 各月の報酬に足した賞与に係る報酬（届の各月の額にも足す。11/19）
-      ...(method !== 'keep' && r.bonusMonthly > 0 ? { bonusMonthly: r.bonusMonthly } : {}),
-    };
-    const remuneration: RemunerationInput = {
-      from: `${y}-09`,
-      reason: 'regular',
-      monthlyAmount: amount,
-      health,
-      pension,
-    };
-    return { decision, remuneration, decisionExists: !!v.decision };
+    return regularReflectItem(v, method, this.year(), this.context.current()!.id, this.grades!.pension);
   }
 
   private async write(items: ReflectItem[]): Promise<void> {
@@ -501,16 +382,4 @@ export class RegularPage {
   readonly monthNum = (ym: string) => Number(ym.slice(5, 7));
   readonly monthLabel = (m: string) => `${Number(m.slice(5, 7))}`;
   readonly diffLabel = (d: number | null) => (d == null ? '—' : d > 0 ? `+${d}` : String(d));
-}
-
-/** 7/1前1年に受けた賞与の回数（性質を問わず。分割の続き・その年限りは数えない。11/19） */
-function bonusCountOf(employeeId: string, year: number, payments: readonly NaturePaymentLike[]): number {
-  const w = windowOf(year);
-  return payments.filter(
-    (p) =>
-      bonusTotalOf(p, employeeId) > 0 &&
-      (p.countAs ?? 'normal') === 'normal' &&
-      p.paidDate >= w.from &&
-      p.paidDate <= w.to,
-  ).length;
 }

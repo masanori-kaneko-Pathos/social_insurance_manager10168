@@ -3,10 +3,9 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
-import { Payroll } from '../../../../core/models/payroll';
 import { RemunerationDoc, RemunerationInput, StandardRemuneration } from '../../../../core/models/remuneration';
 import { IrregularDecision, LeaveEndDecision } from '../../../../core/models/revision';
-import { todayLocal, toYearMonth, shiftMonth } from '../../../../shared/utils/date';
+import { todayLocal, toYearMonth } from '../../../../shared/utils/date';
 import { ContractService } from '../../../employees/contract.service';
 import { EmployeeService } from '../../../employees/employee.service';
 import { RemunerationService } from '../../../employees/remuneration.service';
@@ -14,27 +13,23 @@ import { CriteriaService } from '../../../office/criteria.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import { payrollOf } from '../../../office/office-settings';
 import { RateService } from '../../../rates/rate.service';
-import { AnnualJudgement, IrregularAnnual } from '../../logic/irregular';
-import { InsuranceJudgement, standardAt } from '../../logic/revision-base';
+import { IrregularAnnual } from '../../logic/irregular';
 import {
-  dayRulesOf,
   groupOf,
   RevisionGroup,
   RevisionItem,
   revisionFromMonth,
-  revisionItems,
 } from '../../logic/revision-rows';
 import { PayrollService } from '../../payroll.service';
 import { RevisionService } from '../../revision.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
-import { withCapRevisions } from '../../../rates/logic/cap-revision';
 import { GradeTableDoc } from '../../../../core/models/rates';
 import { SpecialPerson, SpecialRevisionCard } from '../../components/special-revision-card/special-revision-card';
 import { WageChangeCard, WageChangeRow } from '../../components/wage-change-card/wage-change-card';
+import { personRevisions, revisionAfter, revisionRemuneration } from '../../logic/revision-reflect';
 import { DecisionNoticeCard } from '../../../premiums/components/decision-notice-card/decision-notice-card';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
 import { BonusService } from '../../../premiums/bonus.service';
-import { bonusRemunerationOf, enrolledFromOf } from '../../../premiums/logic/bonus-nature';
 
 interface View {
   key: string; // 行の目印（従業員ID・種類・起算月）
@@ -144,20 +139,16 @@ export class RevisionsPage {
       const special: SpecialPerson[] = [];
       const wageRows: WageChangeRow[] = [];
       for (const { e, payrolls, remunerations, contracts, wageChanges } of perPerson) {
-        const byMonth = new Map(payrolls.map((p: Payroll): [string, Payroll] => [p.paidMonth, p]));
-        const bonusMonthlyFor = (y: number) => bonusRemunerationOf(e.id, y, bonusPayments, enrolledFromOf(e)).monthly;
-        const items = revisionItems(
-          { employee: e, contracts, payrolls: byMonth, remunerations, wageChanges, bonusMonthlyFor },
-          ctx,
-        );
+        const pr = personRevisions({ employee: e, payrolls, remunerations, contracts, wageChanges, bonusPayments }, ctx, tables);
+        const items = pr.items;
         for (const change of wageChanges) wageRows.push({ employee: e, change });
         // 反映するとき、改定しない保険の今の等級に、届出なしの一斉改定の分も入れる（11/16）
-        const withCap = withCapRevisions(remunerations, tables);
+        const withCap = pr.remunerations;
         special.push({
           employee: e,
-          payrolls: byMonth,
+          payrolls: pr.payrolls,
           remunerations: withCap,
-          minDaysAt: dayRulesOf({ employee: e, contracts }, ctx).minDaysAt,
+          minDaysAt: pr.minDaysAt,
         });
         for (const item of items) {
           const start = item.type === 'leaveEnd' ? item.result.startMonth : item.result.start.month;
@@ -248,16 +239,7 @@ export class RevisionsPage {
 
   /** 改定後の標準報酬（改定しない保険は今のまま。厚年の資格がない人は今の値を持っておく） */
   private after(v: View, annual: boolean): { health: StandardRemuneration; pension: StandardRemuneration } {
-    const r = v.item.result;
-    const cur = standardAt(v.remunerations, shiftMonth(r.revisedFrom, -1))!;
-    if (annual && v.item.type === 'irregular' && v.item.result.annual) {
-      const a = v.item.result.annual;
-      const pickA = (j: AnnualJudgement | null, fallback: StandardRemuneration) => (j && j.revise ? j.b : fallback);
-      return { health: pickA(a.health, cur.health), pension: pickA(a.pension, cur.pension) };
-    }
-    const pick = (j: InsuranceJudgement | null, fallback: StandardRemuneration) =>
-      j && j.revise ? j.after : fallback;
-    return { health: pick(r.health, cur.health), pension: pick(r.pension, cur.pension) };
+    return revisionAfter(v.item, v.remunerations, annual);
   }
 
   // ===== 年間平均（随時改定の保険者算定） =====
@@ -296,15 +278,8 @@ export class RevisionsPage {
     const r = v.item.result;
     const avg = r.average!;
     const a = annual ? this.annualOf(v)! : null;
-    const { health, pension } = this.after(v, annual);
-    const monthlyAmount = a ? a.average : avg.corrected;
-    const remuneration: RemunerationInput = {
-      from: r.revisedFrom,
-      reason: v.item.type === 'irregular' ? 'irregular' : 'leaveEnd',
-      monthlyAmount,
-      health,
-      pension,
-    };
+    const remuneration: RemunerationInput = revisionRemuneration(v.item, v.remunerations, annual);
+    const { health, pension, monthlyAmount } = remuneration;
     const common = {
       officeId: office.id,
       employeeId: v.employee.id,
