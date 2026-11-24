@@ -623,3 +623,41 @@ h1 {
   min-width: 100%;
   box-sizing: border-box;
 }
+
+/* ===== 同じ日の届をまとめた行の名簿（11/20）=====
+   開いた行の「.detail td > *」（幅の計算から外す決まり）は、名簿の表とその中の欄には効かせない */
+.detail td > .members,
+.detail .members td > * {
+  width: auto;
+  min-width: 0;
+}
+
+.members {
+  width: auto;
+  margin: var(--space-sm) 0;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+}
+
+.members td {
+  padding: 4px var(--space-sm) 4px 0;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.members tr:last-child td {
+  border-bottom: 0;
+}
+
+.members .cw-check {
+  width: 2em;
+}
+
+.members .emp-no {
+  padding-right: var(--space-md);
+}
+
+.member-note {
+  padding-left: var(--space-md);
+  color: var(--color-text-sub);
+}

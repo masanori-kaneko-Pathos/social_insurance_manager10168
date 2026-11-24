@@ -61,6 +61,8 @@ import {
   actualHoursTodo,
   acquireAmountTodo,
   childcareSpecialTodo,
+  dependentReportTodos,
+  DependentSpan,
   childStartsOf,
   actualHoursThreshold,
   bonusCumulativeTodos,
@@ -199,6 +201,8 @@ export class Dashboard {
 
   /** 養育特例の材料：3歳未満の子がいるかもしれない人の、子の養育開始日と厚生年金の標準報酬月額の履歴（11/19） */
   private readonly childcare = signal<ReadonlyMap<string, { starts: string[]; history: { from: string; pension: number }[] }>>(new Map());
+  /** 健康保険・厚生年金に入っている人の扶養家族の「扶養になった日・外れた日」（被扶養者届の To-do。11/20） */
+  private readonly dependentSpans = signal<ReadonlyMap<string, DependentSpan[]>>(new Map());
 
   /** 賞与の支給（不支給報告書・累計申出書の To-do に使う。11/19） */
   private readonly bonusPayments = signal<BonusPayment[]>([]);
@@ -291,6 +295,10 @@ export class Dashboard {
       ...bonusNoneTodos(o.bonusMonths ?? [], this.bonusPayments(), this.today).map(extraItem),
       ...bonusReportTodos(this.bonusPayments(), this.today).map(extraItem),
       ...this.employees().flatMap((e) => enrollmentReportTodos(e, this.today)).map(extraItem),
+      // 被扶養者（異動）届：扶養家族の増減（マイページの申請の宿題が残っている人は、そちらに任せる。11/20）
+      ...this.employees()
+        .flatMap((e) => dependentReportTodos(e, this.dependentSpans().get(e.id) ?? [], this.today, this.dependentTaskOwners()))
+        .map(extraItem),
       ...this.employees()
         .filter((e) => e.priorBonusTotals)
         .flatMap((e) => bonusCumulativeTodos(e, this.bonusPayments(), this.today))
@@ -302,6 +310,11 @@ export class Dashboard {
     ];
     return groupBoard(items, activeDismissals(this.dismissalDocs(), this.today));
   });
+
+  /** マイページの申請から来た被扶養者届の宿題が残っている人 */
+  private readonly dependentTaskOwners = computed(
+    () => new Set(this.tasks().flatMap((t) => (t.kind === 'dependentChange' && t.employeeId ? [t.employeeId] : []))),
+  );
 
   readonly total = computed(() => openCount(this.groups()));
 
@@ -494,8 +507,13 @@ export class Dashboard {
    */
   private async loadChildcare(officeId: string, active: readonly Employee[]): Promise<void> {
     try {
+      // 扶養家族は、健康保険か厚生年金に入っている人の分を読む（被扶養者届の To-do にも使う。11/20）
+      const insured = active.filter((e) => e.health.enrolled || e.pension.enrolled);
+      const all = await Promise.all(insured.map((e) => this.dependentsApi.list(officeId, e.id).catch(() => [])));
+      this.dependentSpans.set(new Map(insured.map((e, i) => [e.id, all[i].map((x) => ({ from: x.from, to: x.to ?? null }))])));
+      const byId = new Map(insured.map((e, i) => [e.id, all[i]]));
       const enrolled = active.filter((e) => e.pension.enrolled);
-      const deps = await Promise.all(enrolled.map((e) => this.dependentsApi.list(officeId, e.id).catch(() => [])));
+      const deps = enrolled.map((e) => byId.get(e.id) ?? []);
       const since = shiftMonth(this.thisMonth, -60);
       const targets = enrolled
         .map((e, i) => ({ e, starts: childStartsOf(e.leaves ?? [], deps[i]).filter((d) => d.slice(0, 7) >= since) }))
@@ -529,6 +547,7 @@ export class Dashboard {
       this.bonusPayments.set([]);
       this.recentPayrolls.set(new Map());
       this.childcare.set(new Map());
+      this.dependentSpans.set(new Map());
       void this.loadChildcare(officeId, active);
       // 直近2か月の給与の実績（実労働時間を入れた人だけが To-do の対象。1回の問い合わせ）
       const latest = this.payMonth();
@@ -645,6 +664,41 @@ export class Dashboard {
 
   async dismiss(it: BoardItem): Promise<void> {
     await this.runOnDismissals(it, (officeId) => this.api.dismiss(officeId, it.key));
+  }
+
+  // ===== 同じ日の届をまとめた行（11/20） =====
+
+  /** 名簿でチェックを外した人（行ごとの鍵ではなく、1人ずつの鍵。初めは全員にチェック） */
+  readonly unchecked = signal<ReadonlySet<string>>(new Set());
+
+  isChecked(m: BoardItem): boolean {
+    return !this.unchecked().has(m.key);
+  }
+
+  toggleMember(m: BoardItem): void {
+    this.unchecked.update((set) => {
+      const next = new Set(set);
+      if (next.has(m.key)) next.delete(m.key);
+      else next.add(m.key);
+      return next;
+    });
+  }
+
+  checkedMembers(it: BoardItem): BoardItem[] {
+    return (it.members ?? []).filter((m) => this.isChecked(m));
+  }
+
+  /** 名簿で選んだ人を、まとめて「確認した」にする */
+  async dismissMembers(it: BoardItem): Promise<void> {
+    const keys = this.checkedMembers(it).map((m) => m.key);
+    if (keys.length === 0) return;
+    await this.runOnDismissals(it, (officeId) => this.api.dismissMany(officeId, keys));
+  }
+
+  /** その日に扶養に入っている家族の人数（資格取得届の名簿に「扶養 ◯人」と出す。一緒に被扶養者届を出す人が分かる） */
+  dependentsOn(employeeId: string | null, date: string | null): number {
+    if (!employeeId || !date) return 0;
+    return (this.dependentSpans().get(employeeId) ?? []).filter((x) => x.from <= date && (!x.to || x.to > date)).length;
   }
 
   async undismiss(it: BoardItem): Promise<void> {

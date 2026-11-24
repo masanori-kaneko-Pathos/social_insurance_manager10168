@@ -32,6 +32,8 @@ export interface BoardItem {
   extra?: ExtraTodo | null;
   /** 届出の宿題（変わった瞬間の出来事のメモ。filingTasks） */
   task?: FilingTask | null;
+  /** 同じ日の同じ届をまとめた行の中身（1人ずつの行。「確認した」は1人ずつの鍵で残す。11/20） */
+  members?: BoardItem[] | null;
 }
 
 export interface BoardGroup {
@@ -76,6 +78,7 @@ export const BOARD_ORDER: readonly BoardKind[] = [
   'bonusReport',
   'acquireReport',
   'lossReport',
+  'dependentReport',
   'bonusCumulative',
   'childcareSpecial',
   'birthDate',
@@ -120,6 +123,7 @@ export const SECTION_OF: Record<BoardKind, Section> = {
   bonusReport: 'now',
   acquireReport: 'now',
   lossReport: 'now',
+  dependentReport: 'now',
   bonusCumulative: 'soon',
   childcareSpecial: 'soon',
   birthDate: 'now',
@@ -148,6 +152,7 @@ export const DISMISSABLE: ReadonlySet<BoardKind> = new Set<BoardKind>([
   'bonusReport', // 賞与支払届を出したら消す
   'acquireReport', // 資格取得届を出したら消す
   'lossReport', // 資格喪失届を出したら消す
+  'dependentReport', // 被扶養者（異動）届を出したら消す
   'bonusCumulative', // 本人に案内した（申出書を出した）ら消す
   'childcareSpecial', // 申出書を出した（本人が出さないと決めた）ら消す
   'retireGuide', // 本人に案内したら消す
@@ -260,7 +265,58 @@ export function groupBoard(items: readonly BoardItem[], dismissed: ReadonlySet<s
     const off = DISMISSABLE.has(it.kind) && dismissed.has(it.key);
     (off ? g.dismissed : g.items).push(it);
   }
-  return BOARD_ORDER.map((k) => map.get(k)).filter((g): g is BoardGroup => !!g);
+  return BOARD_ORDER.map((k) => map.get(k))
+    .filter((g): g is BoardGroup => !!g)
+    .map((g) => (MERGEABLE.has(g.kind) ? { ...g, items: mergeSameDay(g.items) } : g));
+}
+
+// ===== 同じ日の届をまとめる（11/20） =====
+
+/**
+ * 同じ日に2人以上いれば1行にまとめる種類（春の一斉入社・3月末の一斉退職で、同じ届が人数分並ばないように）
+ * 届は1人ずつ出すこともできるので、名簿で選んだ人だけ「確認した」にできる
+ */
+export const MERGEABLE: ReadonlySet<BoardKind> = new Set<BoardKind>(['acquireReport', 'lossReport', 'dependentReport']);
+
+/** まとめた行の鍵（確認済みには使わない。開いた行・押している最中の目印だけ） */
+export function mergedKey(kind: BoardKind, date: DateStr): string {
+  return `merged:${kind}:${date}`;
+}
+
+/**
+ * 未対応の行を、同じ日ごとに1行にまとめる（1人だけの日はそのまま）
+ * - まとめた行は、その日の最初の人の位置に置く（並びは表の側で期限の順に並べ直す）
+ * - 確認済みの行はまとめない（確認済みの一覧では1人ずつ戻せるように）
+ */
+export function mergeSameDay(items: readonly BoardItem[]): BoardItem[] {
+  const byDate = new Map<string, BoardItem[]>();
+  for (const it of items) {
+    if (!it.date || !it.employeeId) continue;
+    byDate.set(it.date, [...(byDate.get(it.date) ?? []), it]);
+  }
+  const out: BoardItem[] = [];
+  const done = new Set<string>();
+  for (const it of items) {
+    const same = it.date && it.employeeId ? (byDate.get(it.date) ?? []) : [];
+    if (same.length < 2) {
+      out.push(it);
+      continue;
+    }
+    if (done.has(it.date!)) continue;
+    done.add(it.date!);
+    out.push({
+      key: mergedKey(it.kind, it.date!),
+      kind: it.kind,
+      employeeId: null,
+      date: it.date,
+      todo: null,
+      age: null,
+      office: null,
+      extra: { kind: it.extra?.kind ?? (it.kind as ExtraKind), employeeId: null, date: it.date, params: { date: it.date!, count: same.length } },
+      members: same,
+    });
+  }
+  return out;
 }
 
 /** まとまりで出す分（開いていなければ GROUP_LIMIT 件まで）と、隠れている件数 */

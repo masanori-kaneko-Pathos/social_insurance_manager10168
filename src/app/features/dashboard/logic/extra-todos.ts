@@ -34,6 +34,9 @@
 // - acquireReport・lossReport：資格を取った・なくした（登録済みの人）→ 資格取得届・資格喪失届（その日から5日以内。
 //   健保法施行規則24条・29条、厚年法施行規則15条・22条。11/20）。その日から60日のあいだ出す（出したら「確認した」で消す）
 //   加入していない人の「加入の判断」（acquire）・「喪失の判断」（lose）とは別。こちらは届を出したかの確認
+// - dependentReport：扶養家族が増えた・減った（事業所が画面か CSV で登録した）→ 被扶養者（異動）届（その日から5日以内。
+//   健保法施行規則38条）。資格取得と同時の扶養も、取得届と一緒に出す。その日から60日のあいだ出す（11/20）
+//   マイページの申請から来た届出の宿題（dependentChange）が残っている人は、そちらに任せて出さない
 // - bonusCumulative：前の事業所の分と合わせて、健保の標準賞与額の年度の累計が上限（573万円）を超えた（11/19）
 //   → 本人が保険者に「健康保険標準賞与額累計申出書」を出す（同じ保険者で転職した人。出さないと上限が効かない）
 // - childcareSpecial：3歳未満の子を養育していて、厚生年金の標準報酬月額が子の生まれた月の前月より下がった（11/19）
@@ -76,7 +79,8 @@ export type ExtraKind =
   | 'bonusCumulative'
   | 'actualHours'
   | 'acquireAmount'
-  | 'childcareSpecial';
+  | 'childcareSpecial'
+  | 'dependentReport';
 
 export interface ExtraTodo {
   kind: ExtraKind;
@@ -708,4 +712,49 @@ export function childStartsOf(
   }
   for (const d of dependents) if (d.relationship === 'child' && d.birthDate) out.add(d.birthDate);
   return [...out];
+}
+
+// ===== 被扶養者（異動）届（11/20） =====
+
+export interface DependentReportPerson {
+  id: string;
+  health: { enrolled: boolean; acquiredDate: DateStr | null; lostDate: DateStr | null };
+}
+
+/** 扶養家族の「扶養になった日」「外れた日」 */
+export interface DependentSpan {
+  from: DateStr;
+  to: DateStr | null;
+}
+
+/**
+ * 被扶養者（異動）届の To-do（1人の1日につき1件。増えた人数・減った人数を文に入れる）
+ * - 健康保険に入っている間の日だけ（被扶養者は健康保険の制度。取得日と同じ日は出す＝取得届と一緒に出す）
+ * - 今日から60日前〜今日の日だけ（資格取得届と同じ。出したら「確認した」で消す）
+ * - skip：マイページの申請から来た届出の宿題が残っている人（二重に出さない）
+ */
+export function dependentReportTodos(
+  p: DependentReportPerson,
+  dependents: readonly DependentSpan[],
+  today: DateStr,
+  skip: ReadonlySet<string> = new Set(),
+): ExtraTodo[] {
+  if (skip.has(p.id) || !p.health.enrolled || !p.health.acquiredDate) return [];
+  const acquired = p.health.acquiredDate;
+  const lost = p.health.lostDate;
+  const since = addDays(today, -ENROLLMENT_REPORT_DAYS);
+  const covered = (d: DateStr) => d >= since && d <= today && d >= acquired && (!lost || d < lost);
+  const byDate = new Map<DateStr, { start: number; end: number }>();
+  const add = (d: DateStr, k: 'start' | 'end') => {
+    const c = byDate.get(d) ?? { start: 0, end: 0 };
+    c[k]++;
+    byDate.set(d, c);
+  };
+  for (const d of dependents) {
+    if (d.from && covered(d.from)) add(d.from, 'start');
+    if (d.to && covered(d.to)) add(d.to, 'end');
+  }
+  return [...byDate.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, c]) => ({ kind: 'dependentReport' as const, employeeId: p.id, date, params: { date, start: c.start, end: c.end } }));
 }

@@ -166,7 +166,8 @@
         "birthDate": "Date of birth correction",
         "actualHours": "Actual working hours",
         "acquireAmount": "Remuneration at acquisition",
-        "childcareSpecial": "Childcare period special rule (pension)"
+        "childcareSpecial": "Childcare period special rule (pension)",
+        "dependentReport": "Dependent change notification"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. An Application to Enroll in EPI / EHI (資格取得届) is needed.",
@@ -232,7 +233,8 @@
         "birthDate": "The date of birth was corrected on {{date}}. If the acquisition notification was already filed, promptly submit a \"Date of birth correction notification\". Age thresholds (long-term care at 40/65, 70, 75) may change, so check premiums and filings too.",
         "actualHours": "Actual working hours in the pay for {{first}} and {{second}} were {{h1}} and {{h2}} hours a week, at or above the threshold ({{limit}} hours) for two months in a row. Even if contracted hours are below it, if this continues or is expected to, coverage starts on {{date}} (the first day of the third month). Review the contract or file an acquisition notification. If it was temporary, hide it with \"Checked\".",
         "acquireAmount": "The fixed wage paid in {{month}} ({{fixed}} yen) is higher than the monthly remuneration on the acquisition notification ({{reported}} yen). Allowances such as commuting or housing that started late still belong in the acquisition amount: correct the expected pay in the contract and file a correction (put catch-up payments back in the months they belong to). If this is a raise decided after acquisition, hide it with \"Checked\".",
-        "childcareSpecial": "Raising a child under 3 since {{child}}; the pension standard monthly remuneration from {{month}} ({{now}} yen) is below the month before ({{base}}: {{pre}} yen). If the employee applies, premiums stay the same but the future pension uses the earlier amount. Tell the employee and mark as checked once the application is submitted."
+        "childcareSpecial": "Raising a child under 3 since {{child}}; the pension standard monthly remuneration from {{month}} ({{now}} yen) is below the month before ({{base}}: {{pre}} yen). If the employee applies, premiums stay the same but the future pension uses the earlier amount. Tell the employee and mark as checked once the application is submitted.",
+        "dependentReport": "Dependents changed on {{date}}. Submit the Dependent (Change) Notification within 5 days to the pension office (or to the health insurance society). For a spouse, the National Pension Category 3 notification uses the same form. Dependents added on the date of acquisition are submitted together with the acquisition notification. Mark as done once submitted."
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -299,7 +301,12 @@
       "toLoss": "Enter the loss-of-coverage date",
       "toOfficer": "Answer the officer items",
       "toBonuses": "Go to bonuses",
-      "toHelp": "Application and attachments (Help)"
+      "toHelp": "Application and attachments (Help)",
+      "mergedPeople": "{{count}} people",
+      "dismissMembers": "Mark as done ({{count}})",
+      "memberCheck": "Mark this person as done",
+      "withDependents": "{{count}} dependents",
+      "dependentCounts": "{{start}} dependent(s) added, {{end}} removed."
     }
   },
   "nav": {

@@ -50,6 +50,21 @@ export class TodoService {
     });
   }
 
+  /**
+   * 何人分かをまとめて「確認した」にする（同じ日の資格取得届などのまとめ行。11/20）
+   * 鍵は1人ずつ（あとで1人だけ戻せるように）。1回の書き込みは400件ずつ（Firestore の上限は500件）
+   */
+  async dismissMany(officeId: string, keys: readonly string[]): Promise<void> {
+    const uid = this.uid();
+    for (let i = 0; i < keys.length; i += 400) {
+      const batch = writeBatch(db);
+      for (const key of keys.slice(i, i + 400)) {
+        batch.set(doc(this.dismissals(officeId), key), { key, until: null, dismissedBy: uid, createdAt: serverTimestamp() });
+      }
+      await batch.commit();
+    }
+  }
+
   async undismiss(officeId: string, key: string): Promise<void> {
     await deleteDoc(doc(this.dismissals(officeId), key));
   }

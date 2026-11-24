@@ -216,6 +216,9 @@
                           layout="inline"
                         />
                       </span>
+                    } @else if (it.members) {
+                      <!-- 同じ日の届をまとめた行：人ではなく人数を出す（名簿は行を開くと出る。11/20） -->
+                      <span class="who-count">{{ 'dashboard.todo.mergedPeople' | transloco: { count: it.members.length } }}</span>
                     } @else if (it.kind === 'bonusReport') {
                       <!-- 賞与支払届は支払日ごとに1枚（支給を受けた全員を載せる）なので、人ではなく人数を出す（11/20） -->
                       <span class="who-count">{{ 'dashboard.todo.bonusPeople' | transloco: { count: it.extra?.params?.['count'] } }}</span>
@@ -279,7 +282,17 @@
                         </button>
                       }
                       <!-- 「確認」の窓がある To-do は、窓の中で片づける（「確認」と「確認した」を並べない。11/20） -->
-                      @if (canDismiss(it) && (!requestOf(it) || it.kind === 'upcoming')) {
+                      @if (canDismiss(it) && it.members) {
+                        <!-- まとめた行：名簿でチェックした人をまとめて「確認した」に（初めは全員。11/20） -->
+                        <button
+                          type="button"
+                          class="btn btn-small"
+                          [disabled]="busyKey() === it.key || checkedMembers(it).length === 0"
+                          (click)="dismissMembers(it)"
+                        >
+                          {{ 'dashboard.todo.dismissMembers' | transloco: { count: checkedMembers(it).length } }}
+                        </button>
+                      } @else if (canDismiss(it) && (!requestOf(it) || it.kind === 'upcoming')) {
                         <button
                           type="button"
                           class="btn btn-small"
@@ -464,6 +477,12 @@
                           @case ('lossReport') {
                             {{ 'dashboard.todo.text.lossReport' | transloco: it.extra!.params }}
                           }
+                          @case ('dependentReport') {
+                            @if (!it.members) {
+                              {{ 'dashboard.todo.dependentCounts' | transloco: it.extra!.params }}
+                            }
+                            {{ 'dashboard.todo.text.dependentReport' | transloco: it.extra!.params }}
+                          }
                           @case ('childcareSpecial') {
                             {{ 'dashboard.todo.text.childcareSpecial' | transloco: it.extra!.params }}
                           }
@@ -498,6 +517,41 @@
                           }
                         }
                       </p>
+                      @if (it.members; as members) {
+                        <!-- まとめた行の名簿：チェックした人を「確認した」にする（届は1人ずつ出すこともあるので、外せる。11/20） -->
+                        <table class="members">
+                          <tbody>
+                            @for (m of members; track m.key) {
+                              @let me = employeeOf(m);
+                              <tr>
+                                <td class="cw-check">
+                                  <input
+                                    type="checkbox"
+                                    [checked]="isChecked(m)"
+                                    [disabled]="!isAdmin()"
+                                    [attr.aria-label]="'dashboard.todo.memberCheck' | transloco"
+                                    (change)="toggleMember(m)"
+                                  />
+                                </td>
+                                <td class="emp-no">{{ me?.employeeNumber ?? '—' }}</td>
+                                <td>
+                                  @if (me) {
+                                    <app-person-name [person]="me" [link]="['/o', office()?.id, 'employees', me.id]" layout="inline" />
+                                  }
+                                </td>
+                                <td class="member-note">
+                                  @if (it.kind === 'acquireReport' && dependentsOn(m.employeeId, m.date) > 0) {
+                                    <span class="field-chip">{{ 'dashboard.todo.withDependents' | transloco: { count: dependentsOn(m.employeeId, m.date) } }}</span>
+                                  }
+                                  @if (it.kind === 'dependentReport') {
+                                    {{ 'dashboard.todo.dependentCounts' | transloco: m.extra!.params }}
+                                  }
+                                </td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      }
                       @if (it.kind === 'lose' && employeeOf(it)?.retireReason === 'death') {
                         <p class="why">{{ 'dashboard.todo.text.loseDeath' | transloco }}</p>
                       }
@@ -657,6 +711,15 @@
                               [queryParams]="{ kind: 'loss', from: it.date?.slice(0, 7) }"
                               >{{ 'dashboard.todo.toLossFiling' | transloco }} →</a
                             >
+                          }
+                          @case ('dependentReport') {
+                            @if (it.employeeId) {
+                              <a
+                                [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
+                                [queryParams]="{ tab: 'person' }"
+                                >{{ 'dashboard.todo.toDependents' | transloco }} →</a
+                              >
+                            }
                           }
                           @case ('childcareSpecial') {
                             <!-- 詳しい説明（申出書・添付書類・対象の月）は使い方に置き、To-do は短く（11/19） -->
