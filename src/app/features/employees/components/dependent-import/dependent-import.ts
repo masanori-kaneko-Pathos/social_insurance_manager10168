@@ -4,7 +4,12 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { ColumnMapper } from '../../../../shared/components/column-mapper/column-mapper';
 import { CsvEncoding, downloadCsv } from '../../../../shared/csv/csv';
 import { isOurFormat } from '../../../../shared/import/column-map';
-import { IMPORT_ACCEPT, ImportFileError, readTables, SheetTable } from '../../../../shared/import/parse';
+import {
+  IMPORT_ACCEPT,
+  ImportFileError,
+  readTables,
+  SheetTable,
+} from '../../../../shared/import/parse';
 import { todayLocal } from '../../../../shared/utils/date';
 import { OfficeContext } from '../../../office/office-context.service';
 import { DependentService } from '../../dependent.service';
@@ -23,7 +28,11 @@ import {
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { applyRowValues } from '../../../../shared/import/row-fix';
 import { ImportPicker } from '../../../../shared/components/import-picker/import-picker';
-import { ImportFix, ImportIssue, ImportIssues } from '../../../../shared/components/import-issues/import-issues';
+import {
+  ImportFix,
+  ImportIssue,
+  ImportIssues,
+} from '../../../../shared/components/import-issues/import-issues';
 import { TranslocoService } from '@jsverse/transloco';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { DEPENDENT_FIX_FIELDS } from '../../logic/import-fix-fields';
@@ -49,7 +58,16 @@ const PARALLEL = 8;
  */
 @Component({
   selector: 'app-dependent-import',
-  imports: [PersonName, IssueRow, ImportSteps, ImportPicker, ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
+  imports: [
+    PersonName,
+    IssueRow,
+    ImportSteps,
+    ImportPicker,
+    ColumnMapper,
+    ImportIssues,
+    RouterLink,
+    TranslocoPipe,
+  ],
   templateUrl: './dependent-import.html',
   styleUrl: '../../pages/employee-import/employee-import.css',
 })
@@ -62,7 +80,11 @@ export class DependentImport {
   readonly spec = DEPENDENT_TABLE_SPEC;
   readonly headers = DEPENDENT_CSV_HEADERS;
 
-  readonly loaded = signal<{ fileName: string; encoding: CsvEncoding | null; tables: SheetTable[] } | null>(null);
+  readonly loaded = signal<{
+    fileName: string;
+    encoding: CsvEncoding | null;
+    tables: SheetTable[];
+  } | null>(null);
   readonly mapping = signal(false);
   readonly preview = signal<Preview | null>(null);
   readonly errorKey = signal<string | null>(null);
@@ -70,15 +92,21 @@ export class DependentImport {
   readonly progress = signal<{ done: number; total: number } | null>(null);
   readonly doneCount = signal<number | null>(null);
   /** 読んだのにまだ取り込んでいなければ、画面を離れる前に確かめる（11/17） */
-  private readonly unsaved = watchUnsaved(() => (this.loaded() !== null || this.preview() !== null) && this.doneCount() === null);
+  private readonly unsaved = watchUnsaved(
+    () => (this.loaded() !== null || this.preview() !== null) && this.doneCount() === null,
+  );
 
-  readonly errorRows = computed(() => this.preview()?.rows.filter((r) => r.errors.length > 0) ?? []);
+  readonly errorRows = computed(
+    () => this.preview()?.rows.filter((r) => r.errors.length > 0) ?? [],
+  );
   // ===== 行ごとのチェック（11/17）：外した行は取り込まない =====
   private readonly fixRef = viewChild(ImportIssues);
   private kept(line: number): boolean {
     return !(this.fixRef()?.excluded().has(line) ?? false);
   }
-  readonly addRows = computed(() => (this.preview()?.rows.filter((r) => r.input) ?? []).filter((r) => this.kept(r.line)));
+  readonly addRows = computed(() =>
+    (this.preview()?.rows.filter((r) => r.input) ?? []).filter((r) => this.kept(r.line)),
+  );
   readonly skipRows = computed(() => this.preview()?.rows.filter((r) => r.skip) ?? []);
   readonly warnCount = computed(() => this.addRows().filter((r) => r.warnings.length > 0).length);
   readonly canImport = computed(
@@ -105,8 +133,14 @@ export class DependentImport {
         return `${this.fieldLabel(t.field)}${t.field ? '：' : ''}${this.transloco.translate(t.key)}`;
       });
       const suggestions: NonNullable<ImportIssue['suggestions']> = [];
-      if (r.errors.includes('employeeNotFound')) messages.push(this.transloco.translate('importFix.unknownEmployee'));
-      return { line: r.line, messages, headers: dependentFixColumns(r.errors).map((c) => this.headers[c]), suggestions };
+      if (r.errors.includes('employeeNotFound'))
+        messages.push(this.transloco.translate('importFix.unknownEmployee'));
+      return {
+        line: r.line,
+        messages,
+        headers: dependentFixColumns(r.errors).map((c) => this.headers[c]),
+        suggestions,
+      };
     });
   });
 
@@ -130,14 +164,20 @@ export class DependentImport {
       const { tables, encoding } = await readTables(file);
       this.loaded.set({ fileName: file.name, encoding, tables });
       const [first] = tables;
-      if (tables.length === 1 && !first.pdf && isOurFormat(first.rows[0], DEPENDENT_IMPORT_FIELDS)) {
+      if (
+        tables.length === 1 &&
+        !first.pdf &&
+        isOurFormat(first.rows[0], DEPENDENT_IMPORT_FIELDS)
+      ) {
         await this.showPreview(first.rows);
       } else {
         this.mapping.set(true);
       }
     } catch (err) {
       console.error(err);
-      this.errorKey.set(err instanceof ImportFileError ? `importMap.error.${err.code}` : 'employeeCsv.error.read');
+      this.errorKey.set(
+        err instanceof ImportFileError ? `importMap.error.${err.code}` : 'employeeCsv.error.read',
+      );
     }
   }
 
@@ -183,10 +223,27 @@ export class DependentImport {
       const ids = [...new Set(first.map((r) => r.employee?.id).filter((x): x is string => !!x))];
       const lists = await Promise.all(ids.map((id) => this.dependentsApi.list(office.id, id)));
       const existing = new Map(
-        ids.map((id, i) => [id, new Set(lists[i].map((d) => personKey(d.lastName, d.firstName, d.birthDate)))]),
+        ids.map((id, i) => [
+          id,
+          new Set(lists[i].map((d) => personKey(d.lastName, d.firstName, d.birthDate))),
+        ]),
       );
-      const rows = planDependentImport(table, targets, existing, today);
-      this.preview.set({ fileName: file.fileName, encoding: file.encoding, rows, table: table.map((r) => [...r]) });
+      // 登録済みの配偶者の期間（期間が重なる配偶者が2人 → 注意を出すため）
+      const spouses = new Map(
+        ids.map((id, i) => [
+          id,
+          lists[i]
+            .filter((d) => d.relationship === 'spouse')
+            .map((d) => ({ from: d.from, to: d.to })),
+        ]),
+      );
+      const rows = planDependentImport(table, targets, existing, today, spouses);
+      this.preview.set({
+        fileName: file.fileName,
+        encoding: file.encoding,
+        rows,
+        table: table.map((r) => [...r]),
+      });
     } catch (err) {
       console.error(err);
       this.errorKey.set(errorKeyOf(err, 'employeeCsv.error.read'));
@@ -205,7 +262,9 @@ export class DependentImport {
     try {
       for (let i = 0; i < items.length; i += PARALLEL) {
         await Promise.all(
-          items.slice(i, i + PARALLEL).map((r) => this.dependentsApi.create(office.id, r.employee!.id, r.input!)),
+          items
+            .slice(i, i + PARALLEL)
+            .map((r) => this.dependentsApi.create(office.id, r.employee!.id, r.input!)),
         );
         done = Math.min(total, i + PARALLEL);
         this.progress.set({ done, total });
@@ -228,7 +287,8 @@ export class DependentImport {
     if (code.startsWith('field.')) {
       const [, field, err] = code.split('.');
       // 続柄が「その他」なのに補足がない：何を入れればいいかまで言う（11/17）
-      if (field === 'relationshipNote' && err === 'required') return { key: 'dependentCsv.error.relationshipNote', field: null };
+      if (field === 'relationshipNote' && err === 'required')
+        return { key: 'dependentCsv.error.relationshipNote', field: null };
       return { key: `dependentCsv.fieldError.${err}`, field };
     }
     return { key: `dependentCsv.error.${code}`, field: null };

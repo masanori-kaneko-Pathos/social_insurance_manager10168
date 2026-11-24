@@ -67,4 +67,21 @@ describe('続柄の「その他」（11/17）', () => {
   it('いとこ（扶養に入れない続柄）は、ほかの読めない言葉と同じく relationship のエラー', () => {
     expect(read({ relationship: 'いとこ' }).errors).toContain('relationship');
   });
+  it('期間が重なる配偶者が2人 → 両方に spouseTwice。重ならない再婚・子どもには出さない', () => {
+    const wife2 = { ...BASE, relationship: '妻', firstName: '幸子', firstNameKana: 'サチコ', birthDate: '1991-02-02', annualIncome: '0' };
+    const [a, b] = run([row({ ...BASE, relationship: '妻', annualIncome: '0' }), row(wife2)]);
+    expect(a.warnings).toContain('spouseTwice');
+    expect(b.warnings).toContain('spouseTwice');
+
+    const [c] = run([row({ ...BASE, relationship: '長男', firstName: '一郎', firstNameKana: 'イチロウ', birthDate: '2018-05-05', from: '2018-05-05', annualIncome: '0' })]);
+    expect(c.warnings).not.toContain('spouseTwice');
+
+    // 登録済みの配偶者が 2022-03-31 に外れている → 2022-04-01 からの再婚は重ならない
+    const ended = new Map([['e1', [{ from: '2020-04-01', to: '2022-03-31' }]]]);
+    const later = planDependentImport([HEAD, row({ ...wife2, from: '2022-04-01' })], EMP, new Map(), '2026-11-13', ended);
+    expect(later[0].warnings).not.toContain('spouseTwice');
+    const still = new Map([['e1', [{ from: '2020-04-01', to: null }]]]);
+    const both = planDependentImport([HEAD, row({ ...wife2, from: '2022-04-01' })], EMP, new Map(), '2026-11-13', still);
+    expect(both[0].warnings).toContain('spouseTwice');
+  });
 });

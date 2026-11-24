@@ -91,24 +91,16 @@ export class ContractFields implements OnInit {
     return !!v && isShortPeriod(v.from ?? '', v.periodEnd || null);
   });
 
-  /** 直前に所定内賃金から写した見込みの報酬月額（手で直したかの判定に使う） */
-  private lastAutoCash = '';
-
   ngOnInit(): void {
     const form = this.form();
     const v = form.getRawValue();
     this.value.set(v);
-    this.lastAutoCash = v.expectedCash === v.scheduledWage ? v.scheduledWage : '';
     this.showMore.set(v.student !== 'none' || v.minimumWageReduction || v.dispatch !== 'none' || v.note !== '');
     form.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.value.set(form.getRawValue()));
-    // 見込みの報酬月額は、空なら所定内賃金を写す（残業の見込み・通勤手当は担当者が足す）
-    form.controls.scheduledWage.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((s) => {
-      const cash = form.controls.expectedCash;
-      if (!cash.value || cash.value === this.lastAutoCash) cash.setValue(s);
-      this.lastAutoCash = s;
-    });
+    // 見込みの報酬月額は、所定内賃金から写さない（11/24）
+    // 所定内賃金は加入の判定用で通勤手当・残業代を含まないため、写すと保険料のもとが低く出る。担当者が入れる
   }
 
   /** 欄のエラーの文言（「保存」を押す前は出さない） */

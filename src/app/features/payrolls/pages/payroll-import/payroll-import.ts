@@ -24,6 +24,7 @@ import {
   makeNameMatcher,
   PAYROLL_FIX,
   PAYROLL_HEADERS,
+  payrollHeadersOf,
   PAYROLL_IMPORT_FIELDS,
   payrollLabels,
   PAYROLL_TABLE_SPEC,
@@ -283,10 +284,7 @@ export class PayrollImport {
       this.loaded.set({ fileName: file.name, encoding, tables });
       const [first] = tables;
       // うちの書き出しのままなら、今までどおり確認画面へ（見出しは日本語・英語のどちらでも）。PDF はいつも列を合わせる
-      const ours = isOurFormat(first.rows[0], PAYROLL_IMPORT_FIELDS, (f) => [
-        PAYROLL_HEADERS.ja[f.key],
-        PAYROLL_HEADERS.en[f.key],
-      ]);
+      const ours = isOurFormat(first.rows[0], PAYROLL_IMPORT_FIELDS, (f) => payrollHeadersOf(f.key));
       if (tables.length === 1 && !first.pdf && ours) this.showPreview(first.rows);
       else this.mapping.set(true);
     } catch (err) {

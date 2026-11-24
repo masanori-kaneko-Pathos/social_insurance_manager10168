@@ -243,7 +243,7 @@ export function readContractCells(
     hourlyWage: get('hourlyWage'),
     dailyWage: get('dailyWage'),
     scheduledWage: get('scheduledWage'),
-    // 見込みの報酬月額は、空なら所定内賃金を写す（画面と同じ）
+    // 見込みの報酬月額は、空なら所定内賃金を写す（行を止めないため。写したことは確認の画面で知らせる：expectedCopied。11/24）
     expectedCash: get('expectedCash') || get('scheduledWage'),
     expectedInKind: get('expectedInKind') || '0',
     periodEnd: periodEnd || '',
@@ -553,6 +553,19 @@ export interface ImportContext {
   existingPeople?: ReadonlyMap<string, SamePersonKey>;
   /** 事業所の部署（部署の列を、名前で結ぶ） */
   departments?: readonly { id: string; name: string }[];
+  /** 今日（'YYYY-MM-DD'）。資格取得時決定の標準報酬が、まだ使われている人だけに expectedCopied を出すため。ないときはいつも出す */
+  today?: string;
+}
+
+/**
+ * 資格取得時決定の標準報酬が、今日も使われているか（11/24）
+ * 1〜5月の取得はその年の9月分、6〜12月の取得は翌年の9月分から定時決定に変わる
+ */
+function acquisitionStillUsed(from: string, today: string | undefined): boolean {
+  if (!today) return true;
+  const year = Number(from.slice(0, 4));
+  const regular = Number(from.slice(5, 7)) <= 5 ? `${year}-09` : `${year + 1}-09`;
+  return today.slice(0, 7) < regular;
 }
 
 export type ImportWarning =
@@ -561,6 +574,7 @@ export type ImportWarning =
   | 'override' // 加入を列で上書きした
   | 'oldTable' // 標準報酬の開始月に等級表がなく、いちばん古い表で出した
   | 'unknownDepartment' // 部署の名前が事業所の部署にない（部署なしで登録する）
+  | 'expectedCopied' // 見込みの報酬月額が空で、所定内賃金を写して標準報酬を出した（通勤手当などが入っていない。11/24）
   | 'sameNameBirth'; // 社員番号は違うが、氏名・生年月日が同じ人が登録済みかファイルの前の行にいる（二重登録かも。止めない。11/17）
 
 export interface ImportItem {
@@ -672,6 +686,16 @@ export function planImport(rows: EmployeeCsvRow[], ctx: ImportContext): ImportPl
     if (health || pension) {
       const from = p.remunerationFrom ?? toYearMonth(e.hireDate);
       const amount = p.monthlyAmount ?? p.contract.expectedCash + p.contract.expectedInKind;
+      // 所定内賃金は通勤手当・残業代を除いた額なので、写したままだと標準報酬が低く出ることがある
+      // 定時決定に変わったあとの人は、今の保険料に効かないので知らせない
+      if (
+        p.monthlyAmount == null &&
+        !(r.values.expectedCash ?? '').trim() &&
+        (r.values.scheduledWage ?? '').trim() &&
+        acquisitionStillUsed(from, ctx.today)
+      ) {
+        warnings.push('expectedCopied');
+      }
       const oldest = (kind: 'health' | 'pension') =>
         ctx.gradeTables.filter((t) => t.kind === kind).sort((a, b) => a.from.localeCompare(b.from))[0] ?? null;
       const table = (kind: 'health' | 'pension') => pickGradeTable(ctx.gradeTables, kind, from) ?? oldest(kind);
@@ -763,7 +787,7 @@ export function employeeCsvTemplate(): string[][] {
     row({
       employeeNumber: 'E002', lastName: '佐藤', firstName: '花子', lastNameKana: 'サトウ', firstNameKana: 'ハナコ',
       birthDate: '1995-08-01', sex: '女', hireDate: '2026-10-01', employmentType: 'パート', payType: '時給',
-      weeklyHours: '20:00', monthlyDays: '12', hourlyWage: '1200', scheduledWage: '104000', student: 'いいえ',
+      weeklyHours: '20:00', monthlyDays: '12', hourlyWage: '1200', scheduledWage: '104000', expectedCash: '110000', student: 'いいえ',
     }),
   ];
 }

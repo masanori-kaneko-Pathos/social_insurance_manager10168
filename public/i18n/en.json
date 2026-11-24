@@ -1607,7 +1607,8 @@
       "list": "Payment is the total of health insurance, pension and child and childcare contributions.",
       "natureItem": "Item \"{{name}}\" — social insurance: {{treatment}}",
       "natureLoose": "No treatment set for this name yet (decided by count).",
-      "toItems": "Set it in bonus items"
+      "toItems": "Set it in bonus items",
+      "amount": "Bonus amount: the gross amount on the bonus slip, not the net amount."
     },
     "error": {
       "load": "Couldn't load bonus data.",
@@ -1782,7 +1783,7 @@
   },
   "payroll": {
     "listTitle": "Payroll",
-    "listLead": "Enter the payroll results (total pay, fixed wages, payment basis days) for each month paid. They are used for the annual SMR determination and SMR revisions.",
+    "listLead": "For each pay month, enter the gross pay, the part that is the same every month and the payment basis days from the payslip. They are used for the annual determination and revisions.",
     "inputLatest": "Enter {{month}} payroll",
     "prevYear": "← Previous 12 months",
     "nextYear": "Next 12 months →",
@@ -1807,18 +1808,18 @@
     "toRegular": "Annual SMR determination {{year}}",
     "csv": "Import / export CSV",
     "col": {
-      "paidMonth": "Month paid",
+      "paidMonth": "Pay month",
       "period": "Pay period",
       "saved": "Entered / employed",
       "employee": "Employee",
-      "cash": "Paid in money",
-      "fixed": "Of which monthly fixed payment (固定的賃金)",
+      "cash": "Gross pay",
+      "fixed": "Of which: same every month",
       "days": "Basis days (支払基礎日数)",
       "inKind": "In kind (現物)",
-      "retro": "Retroactive pay",
+      "retro": "Of which: back pay for a raise",
       "absentDays": "Days absent",
       "hours": "Hours worked",
-      "prorated": "Prorated",
+      "prorated": "Partial month",
       "state": "Status",
       "total": "Total",
       "monthTotal": "Total pay"
@@ -1839,13 +1840,13 @@
     },
     "rowError": {
       "unreadable": "Some fields cannot be read as numbers",
-      "cashRequired": "Enter the amount paid in money",
-      "fixedRequired": "Enter the fixed wages (0 if none)",
+      "cashRequired": "Enter the gross pay",
+      "fixedRequired": "Enter the part that is the same every month (0 if none)",
       "daysRequired": "Enter the payment basis days",
       "notInteger": "Amounts must be whole numbers of 0 or more",
       "tooLarge": "The amount is too large",
-      "fixedOverCash": "Fixed wages exceed the amount paid in money",
-      "retroOverTotal": "Retroactive pay exceeds the amount paid in money plus in kind",
+      "fixedOverCash": "The part that is the same every month exceeds the gross pay",
+      "retroOverTotal": "The back pay exceeds the gross pay plus in kind",
       "daysOutOfRange": "Payment basis days exceed the days in the pay period",
       "absentOutOfRange": "Days absent exceed the days in the pay period",
       "minutesOutOfRange": "Hours worked are too long",
@@ -1853,13 +1854,16 @@
     },
     "hint": {
       "list": "\"Missing\" counts employees insured during the pay period who have no record yet (only months whose pay day has passed).",
-      "cash": "Paid in money (the \"通貨\" column of the forms): everything counted as remuneration for social insurance (base pay, allowances, overtime, commuting allowance; the \"social insurance amount\" in payroll software). Divide 3- or 6-month commuter passes by month, and exclude travel expenses, congratulatory or condolence payments and retirement allowances.",
-      "fixed": "Monthly fixed payment (MFP, 固定的賃金): pay whose amount or rate is set in advance, such as base pay, position allowance and commuting allowance. Overtime is not included.",
+      "cash": "Gross pay: the total of the payments on the payslip, including the commuting allowance (even the tax-free part). Not the net pay. If the payslip has no gross pay line, use net pay plus total deductions. Divide 3- or 6-month commuter passes by month, and leave out travel expense refunds and congratulatory or condolence payments.",
+      "fixed": "Of which: same every month: the total of pay that is the same amount every month, such as base pay, commuter pass allowance, position allowance and fixed overtime allowance. Leave out overtime paid by hours worked, and pay calculated as hourly rate × hours or daily rate × days (when such a rate changes, use \"Add a fixed wage change\" on the revision candidates). When this amount changes from the previous month, the person appears as a revision candidate.",
       "inKind": "Remuneration provided in kind (現物給与): company housing, dormitories and meals are converted to yen with the value set by the government for each prefecture, minus what the employee pays (different from the tax valuation). Use \"Calculate\" for meals and housing.",
       "days": "Work days subject to remuneration payment (支払基礎日数): calendar days of the period for monthly salary; \"company-set days − days absent\" for monthly salary with absence deductions; days worked (including paid leave) for daily or hourly pay.",
       "blank": "Empty rows are not saved. Clearing a saved row and saving deletes that month's record.",
       "hours": "Hours worked: enter as \"160:30\" (160 h 30 min) or \"160.5\".",
-      "inKindMerged": "In months marked \"Not itemized\", in-kind remuneration is included in the pay amount (the imported file had no in-kind column). Totals and premiums are still correct, but changes in in-kind remuneration (a change in fixed wages, such as moving into company housing) cannot be detected, so enter the in-kind amount with \"Enter separately\" when you know it."
+      "inKindMerged": "In months marked \"Not itemized\", in-kind remuneration is included in the gross pay (the imported file had no in-kind column). Totals and premiums are still correct, but changes in in-kind remuneration (such as moving into company housing) cannot be detected, so enter the in-kind amount with \"Enter separately\" when you know it.",
+      "retro": "Of which: back pay for a raise: the difference for earlier months paid together this month. It is left out of the averages.",
+      "prorated": "Partial month: a month in which the new amount was not paid for a full month, such as the month of joining or of a new allowance. Revisions are counted from the next month.",
+      "paidMonth": "Pay month: the month of the pay date, not the month the pay is for."
     },
     "error": {
       "load": "Could not load payroll.",
@@ -1871,7 +1875,7 @@
     "sortOldest": "Oldest first",
     "sortNewest": "Newest first",
     "inKindMerged": "Not itemized",
-    "inKindMergedTitle": "The payroll software included in-kind remuneration in the pay amount, so there is no separate figure. The total is still calculated correctly.",
+    "inKindMergedTitle": "The payroll software included in-kind remuneration in the gross pay, so there is no separate figure. The total is still calculated correctly.",
     "splitInKind": "Enter separately",
     "monthPick": "Paid {{y}}-{{m}}",
     "workedDays": "Enter days worked",
@@ -1892,10 +1896,10 @@
     },
     "listRange": "{{fromM}}/{{fromY}} – {{toM}}/{{toY}}",
     "sum": {
-      "label": "Total ({{n}} filtered, {{entered}} with pay entered)",
+      "label": "Total ({{n}} filtered, {{entered}} with gross pay entered)",
       "all": "Total pay (everyone)",
       "unit": " yen",
-      "allSub": "Cash + in kind · entered {{entered}} / {{n}}"
+      "allSub": "Gross pay + in kind · entered {{entered}} / {{n}}"
     }
   },
   "regular": {
@@ -1922,7 +1926,7 @@
       "result": "Result"
     },
     "days": "{{d}} days",
-    "retro": "retro {{n}}",
+    "retro": "back pay {{n}}",
     "noRecord": "Not entered",
     "skip": {
       "beforeAcquisition": "* before joining",
@@ -1932,7 +1936,7 @@
       "furloughResolved": "* layoff ended"
     },
     "corrected": "Corrected average",
-    "correctedNote": "(excluding retro pay)",
+    "correctedNote": "(excluding back pay)",
     "grade": "G{{h}} / G{{p}}",
     "change": {
       "up": "Up",
@@ -1971,7 +1975,7 @@
       "irregular": "Has an SMR revision (after a pay change or a special revision) in July–September"
     },
     "hint": {
-      "rule": "Uses the average pay (paid in money + in kind) paid in April, May and June. Months with fewer than 17 payment basis days, the month of joining mid-period and months of leave of absence are excluded. If all three are excluded, the previous amount stays.",
+      "rule": "Uses the average pay (gross pay + in kind) paid in April, May and June. Months with fewer than 17 payment basis days, the month of joining mid-period and months of leave of absence are excluded. If all three are excluded, the previous amount stays.",
       "days": "Payment basis days: 11 for short-time workers; part-timers use 15 when no month reaches 17 (the category is judged monthly from the contract).",
       "reflect": "Applying saves the standard remuneration from September (reason: annual SMR determination) and a record of how it was decided. Existing September entries are not overwritten.",
       "notice": "If the official notice differs, correct it in Standard monthly remuneration on the employee page."
@@ -2046,7 +2050,7 @@
       "button": "Import ({{c}} new, {{u}} overwrite)",
       "noInKind": "This file has no in-kind column. How should in-kind remuneration be handled?",
       "inKindZero": "There is none (import as 0 yen)",
-      "inKindMerged": "The payroll software includes it in the pay amount (import as \"Not itemized\")"
+      "inKindMerged": "The payroll software includes it in the gross pay (import as \"Not itemized\")"
     },
     "encoding": {
       "utf-8": "UTF-8",
@@ -2055,15 +2059,15 @@
     "col": {
       "employeeNumber": "Employee number",
       "name": "Name",
-      "paidMonth": "Month paid",
-      "cash": "Paid in money",
-      "fixed": "Fixed wages",
+      "paidMonth": "Pay month",
+      "cash": "Gross pay",
+      "fixed": "Of which: same every month",
       "days": "Payment basis days",
       "inKind": "In kind",
-      "retro": "Retroactive pay",
+      "retro": "Of which: back pay for a raise",
       "absentDays": "Days absent",
       "hours": "Hours worked",
-      "prorated": "Prorated",
+      "prorated": "Partial month",
       "state": "Status"
     },
     "count": {
@@ -2080,16 +2084,16 @@
       "noEmployeeNumber": "Both employee number and name are empty",
       "unknownEmployee": "No employee has this number",
       "ambiguousEmployee": "More than one employee matches this number",
-      "badMonth": "Cannot read the month paid. Enter it as 2026-10.",
+      "badMonth": "Cannot read the pay month. Enter it as 2026-10.",
       "notEmployed": "Not employed during this pay period",
       "duplicate": "The same employee and month appear in an earlier row",
-      "badProrated": "Enter 1 or leave Prorated blank",
+      "badProrated": "Enter 1 or leave Partial month blank",
       "badState": "Status must be Normal, Leave of absence or Temporary layoff",
       "unknownName": "No employee has this name (entering the employee number is more reliable)",
       "ambiguousName": "More than one employee has this name. Enter the employee number"
     },
     "hint": {
-      "columns": "Columns are read by header name (any order; unknown columns are ignored). Required: employee number, month paid, paid in money, fixed wages, payment basis days. Rows without an employee number are matched by name.",
+      "columns": "Columns are read by header name (any order; unknown columns are ignored). Required: employee number, pay month, gross pay, of which: same every month, payment basis days. The earlier headers (month paid, paid in money, fixed wages, retroactive pay, prorated) are also read. Rows without an employee number are matched by name.",
       "excel": "CSV files saved by Excel (Shift_JIS) can be read as is, including months Excel turned into dates like 2026/10/1 and employee numbers that lost leading zeros.",
       "allOrNothing": "Fix rows with errors here, or import with them left unchecked (only those rows are skipped). Saving is done in batches of 500."
     },
@@ -2126,9 +2130,9 @@
       "monthlyDays": "Scheduled days per month",
       "hourlyWage": "Hourly wage (yen)",
       "dailyWage": "Daily wage (yen)",
-      "scheduledWage": "Scheduled wage (monthly, yen)",
-      "expectedCash": "Expected monthly pay: cash (yen)",
-      "expectedInKind": "Expected monthly pay: in kind (yen)",
+      "scheduledWage": "Scheduled wage (monthly, used to decide enrollment, yen)",
+      "expectedCash": "Expected monthly pay (including commuting allowance and expected overtime, yen)",
+      "expectedInKind": "Expected in kind (housing, meals, etc. Separate from the amount above, yen)",
       "periodEnd": "End of term",
       "renewal": "Renewal",
       "student": "Student",
@@ -2205,7 +2209,7 @@
         "cycle": "For schedules that vary by week. The cycle total is averaged per week."
       },
       "scheduledWage": "Scheduled wage: base pay and allowances. Excludes one-off pay, bonuses, overtime/holiday/night premiums, attendance, commuting and family allowances.",
-      "expected": "Expected monthly pay: the amount on the acquisition notification. Add expected overtime and allowances set by the rules, such as commuting and housing, including ones paid from the next month after an application (if blank, the scheduled wage is copied). For hourly or daily pay, use the average of people doing similar work in the previous month (Health Insurance Act Art. 42). Bonus-related remuneration for bonuses paid four or more times a year is added by the app when the notification is made.",
+      "expected": "Expected monthly pay: the basis for premiums, written as the monthly pay on the acquisition notification. It is the scheduled wage plus commuting allowance, expected overtime and allowances paid as a rule, such as housing (including ones paid from the next month after an application). For hourly or daily pay, use the average of people doing similar work in the previous month. Pay related to bonuses paid four or more times a year is added by the app when the notification is made.",
       "periodEnd": "Leave blank for no fixed term.",
       "student": "Daytime students are not covered as short-time workers. Night, correspondence and part-time-course students, students on leave, and students with a certificate of expected graduation who will keep working here after graduating are covered.",
       "special": {
@@ -2227,7 +2231,7 @@
       "days": "Enter a number from 0 to 31.",
       "wage": "Enter the amount in digits.",
       "scheduledWage": "Enter the amount in digits.",
-      "expectedCash": "Enter the amount in digits.",
+      "expectedCash": "Enter the expected monthly pay in digits (the scheduled wage plus commuting allowance and expected overtime).",
       "expectedInKind": "Enter the amount in digits (0 if none).",
       "periodBeforeFrom": "The end date is before the start date.",
       "load": "Could not load contracts.",
@@ -2523,8 +2527,8 @@
       "childcare": "After childcare leave"
     },
     "source": {
-      "fixed": "Fixed wage changed",
-      "retro": "Retroactive pay",
+      "fixed": "Amount paid the same every month changed",
+      "retro": "Back pay",
       "manual": "Added manually",
       "furlough": "Furlough started or ended"
     },
@@ -2534,15 +2538,15 @@
       "unclear": "direction to confirm"
     },
     "col": {
-      "month": "Paid month",
+      "month": "Pay month",
       "days": "Base days",
       "amount": "Remuneration",
-      "retro": "Retroactive pay"
+      "retro": "Of which: back pay"
     },
     "minDays": "min {{n}}",
     "noRecord": "No record yet",
     "average": "Average {{n}} yen",
-    "corrected": "Corrected average (without retroactive pay) {{n}} yen",
+    "corrected": "Corrected average (without back pay) {{n}} yen",
     "ins": {
       "health": "Health insurance",
       "pension": "Pension"
@@ -2584,7 +2588,7 @@
       "badge": "Annual average candidate",
       "open": "See the annual-average method (insurer calculation)",
       "col": {
-        "fixed": "Fixed wages (+ in kind)",
+        "fixed": "Same every month (+ in kind)",
         "nonFixed": "Non-fixed wages"
       },
       "three": "3 months from the start month",
@@ -2604,7 +2608,7 @@
       "hint": "Write \"年間平均\" in the remarks of the monthly change notification and attach the statement (form example 1) and the consent form (form example 2). For employees who do not consent, use the normal \"Apply\"."
     },
     "inKindMerged": "(in-kind not itemized)",
-    "inKindMergedTitle": "In this month, in-kind remuneration is included in the pay amount with no separate figure. Check the payslip in your payroll software to see whether a change in in-kind remuneration (such as moving into company housing) should trigger a revision.",
+    "inKindMergedTitle": "In this month, in-kind remuneration is included in the gross pay with no separate figure. Check the payslip in your payroll software to see whether a change in in-kind remuneration (such as moving into company housing) should trigger a revision.",
     "unclearShort": "Overtime etc. dropped to zero: if abolished, both directions count",
     "unclearNote": "Overtime and similar pay dropped to zero in the month the fixed wage rose. If the allowance was abolished (e.g. promotion to manager), a revision applies whether the average rose or fell; if it was zero by chance, a revision in the opposite direction does not apply."
   },
@@ -2643,7 +2647,8 @@
       "override": "Enrollment overridden",
       "oldTable": "Before grade tables (oldest table used)",
       "unknownDepartment": "Department not found in office settings (registered without a department)",
-      "sameNameBirth": "Same name and date of birth as {{number}}. Check for a duplicate"
+      "sameNameBirth": "Same name and date of birth as {{number}}. Check for a duplicate",
+      "expectedCopied": "Expected monthly pay was blank, so the scheduled wage was copied (commuting allowance and expected overtime are not included)"
     },
     "planError": {
       "duplicateInFile": "Line {{line}}: employee number {{number}} appears more than once.",
@@ -2761,7 +2766,8 @@
     },
     "warning": {
       "gradeDiffers": "Differs from the grades calculated from the monthly remuneration (health grade {{health}}, pension grade {{pension}}). The written grades will be registered",
-      "oldTable": "Before the earliest grade table (calculated with the oldest table)"
+      "oldTable": "Before the earliest grade table (calculated with the oldest table)",
+      "regularAfterIrregular": "There is an irregular revision from July to September of the same year. A regular determination is normally not made that year. Please check"
     },
     "import": "Import {{n}} records",
     "progress": "Importing… {{done}} / {{total}}",
@@ -2829,7 +2835,7 @@
     "summary": {
       "private": "Address, contact, commute and bank account",
       "remuneration": "Health grade {health} / pension grade {pension} (monthly remuneration ¥{amount})",
-      "payroll": "Paid in money ¥{cash}"
+      "payroll": "Gross pay ¥{cash}"
     },
     "compare": {
       "title": "Compare with the values on a date",
@@ -3485,7 +3491,7 @@
       },
       "payroll": {
         "title": "Entering payroll",
-        "body": "On the payroll screen, enter the amount paid in money, fixed wages and payment basis days for each month paid. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and retroactive pay columns. For one person and one month, you can also use \"Enter a month\" on the employee page. Enter in \"retroactive pay\" only differences from raises decided retroactively. Allowances paid late because of a late application or a mistake go back into the month they should have been paid (that month becomes the start month for a revision). Mark \"prorated\" for months where a mid-period hire, transfer or new allowance means a full month was not paid (that month is not used as a start month; counting begins the next month). Payment basis days are calendar days for monthly pay, days worked for daily pay, and total hours ÷ daily scheduled hours for hourly pay. For months where a retroactive pay cut was deducted, enter the amount before the deduction. One-off or up-to-three-times-a-year payments (e.g. a sign-on allowance or year-end allowance) do not go into payroll; register them as bonuses (bonus payment report). Monthly allowances go into payroll even if they share a payslip line with such payments."
+        "body": "On the payroll screen, enter the gross pay, the part that is the same every month and payment basis days from the payslip for each pay month. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). \"Same every month\" is the part of fixed wages paid in the same amount every month. When an hourly or daily rate changes, add it with \"Add a fixed wage change\" on the revision candidates. You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and back pay columns. For one person and one month, you can also use \"Enter a month\" on the employee page. Enter in \"back pay\" (retroactive pay on the forms) only differences from raises decided retroactively. Allowances paid late because of a late application or a mistake go back into the month they should have been paid (that month becomes the start month for a revision). Mark \"Partial month\" for months where a mid-period hire, transfer or new allowance means a full month was not paid (that month is not used as a start month; counting begins the next month). Payment basis days are calendar days for monthly pay, days worked for daily pay, and total hours ÷ daily scheduled hours for hourly pay. For months where a retroactive pay cut was deducted, enter the amount before the deduction. One-off or up-to-three-times-a-year payments (e.g. a sign-on allowance or year-end allowance) do not go into payroll; register them as bonuses (bonus payment report). Monthly allowances go into payroll even if they share a payslip line with such payments."
       },
       "inKind": {
         "title": "Remuneration provided in kind (housing, dormitories, meals)",
@@ -3874,7 +3880,7 @@
     "new": "No record for this month yet",
     "editing": "Already entered (saving overwrites it)",
     "notEmployed": "This employee was not employed during this pay period. Check the month.",
-    "more": "In kind, retroactive pay, absences, hours, status",
+    "more": "In kind, back pay, absences, hours, status",
     "inKindHint": "To calculate housing or meal amounts, use \"Calculate\" on the month page."
   },
   "filing": {
@@ -4361,7 +4367,8 @@
       "noIncome": "Income blank (entered as 0 yen)",
       "overLimit": "Income may exceed the dependent limit",
       "beforeHire": "Became dependent before the hire date",
-      "age75": "Age 75 or over (cannot be a dependent)"
+      "age75": "Age 75 or over (cannot be a dependent)",
+      "spouseTwice": "Two spouses with overlapping dependent periods"
     },
     "error": {
       "employeeNotFound": "The employee number is not correct",
@@ -4423,7 +4430,7 @@
         "down": "First month of reduced pay (= filing month)",
         "up": "First month of increased pay"
       },
-      "amount": "Pay that month (money + in kind)",
+      "amount": "Pay that month (gross pay + in kind)",
       "days": "Payment basis days",
       "filedOn": "Filing date"
     },
@@ -4477,7 +4484,7 @@
       "save": "Could not apply the special revision."
     },
     "consent": "Obtained the employee's written consent (statement and consent form)",
-    "retro": "(excluding retroactive pay of {{n}} yen)"
+    "retro": "(excluding back pay of {{n}} yen)"
   },
   "wageChange": {
     "title": "Changes in fixed wages (added or removed by hand)",
@@ -4645,7 +4652,7 @@
       "dependents": "Add dependents to registered employees in bulk. One row per dependent, matched by employee number. People already registered with the same name and birth date are skipped; nothing is overwritten.",
       "contract": "Add records to registered employees: employment contracts from the second one onward, and standard monthly remuneration decisions (annual determination, occasional revision, etc.). Employees are matched by employee number. Records for a date (month) that already exists are skipped, never overwritten. Coverage (acquisition and loss dates) is not changed, so check the \"Review coverage\" items in the To-do list after importing.",
       "remuneration": "Add records to registered employees: employment contracts from the second one onward, and standard monthly remuneration decisions (annual determination, occasional revision, etc.). Employees are matched by employee number. Records for a date (month) that already exists are skipped, never overwritten. Coverage (acquisition and loss dates) is not changed, so check the \"Review coverage\" items in the To-do list after importing.",
-      "payrolls": "One row per person per month: amount paid, fixed wages, payment base days and so on. Export a period from \"Template / export\", edit it in Excel and import it as is (same format both ways).",
+      "payrolls": "One row per person per month: gross pay, the part that is the same every month, payment basis days and so on from the payslip. Export a period from \"Template / export\", edit it in Excel and import it as is (same format both ways).",
       "bonuses": "One row per person per payment: paid date and bonus amount. Rows with the same paid date become one payment. Existing payments are merged: people not in the file keep their amounts.",
       "myNumber": "Add My Numbers to registered employees in one go (employee number and My Number columns). Exporting asks for your password again. Both are logged.",
       "certificate": "Add social security agreement certificates (people sent to Japan from abroad) or overseas assignments (people sent abroad from Japan) to registered employees. People are matched by employee number. Rows identical to saved data are skipped.",
@@ -4822,7 +4829,7 @@
     "payroll": {
       "kana": "Kana",
       "department": "Department",
-      "payTotal": "Total pay (money + in kind)"
+      "payTotal": "Total pay (gross pay + in kind)"
     },
     "bonus": {
       "number": "Employee No.",

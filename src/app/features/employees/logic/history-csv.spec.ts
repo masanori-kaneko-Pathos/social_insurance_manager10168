@@ -146,6 +146,24 @@ describe('planHistoryImport：取り込みの計画', () => {
     });
     expect(plan.items[0].warnings).toContain('oldTable');
   });
+
+  it('同じ年の7〜9月に随時改定がある → 9月からの定時決定に注意。別の年・6月の随時には出さない', () => {
+    const t = [
+      ['社員番号', '標準報酬の開始月', '決定の理由', '報酬月額'],
+      ['E001', '2026-07', '随時', '305000'],
+      ['E001', '2026-09', '定時', '305000'],
+      ['E001', '2027-06', '随時', '305000'],
+      ['E001', '2027-09', '定時', '305000'],
+      ['E001', '2028-09', '定時', '305000'],
+    ];
+    const plan = planHistoryImport(readHistoryCsv('remuneration', t).rows, {
+      employees: PEOPLE,
+      existing: new Map(),
+      gradeTables: TABLES,
+    });
+    const marked = plan.items.filter((x) => x.warnings.includes('regularAfterIrregular')).map((x) => x.id);
+    expect(marked).toEqual(['2026-09']);
+  });
 });
 
 describe('employeeIdsIn：登録済みの記録を読む人', () => {

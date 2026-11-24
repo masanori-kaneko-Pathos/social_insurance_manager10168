@@ -115,7 +115,7 @@
         <col class="cw-dept" />
         <col class="cw-type" />
         <col class="c-money" />
-        <col class="c-money" />
+        <col class="c-fixed" />
         <col class="cw-days" />
         @if (showAll()) {
           <col class="c-inkind" />
@@ -123,7 +123,7 @@
           <col class="c-money" />
           <col class="cw-short" />
           <col class="cw-days" />
-          <col class="cw-short" />
+          <col class="c-partial" />
           <col class="c-state" />
         }
         <col />
@@ -332,11 +332,15 @@
 
 
   <ul class="hint">
+    <!-- 給与明細を上から見ながら入れる順（11/24） -->
+    <li>{{ 'payroll.hint.paidMonth' | transloco }}</li>
     <li>{{ 'payroll.hint.cash' | transloco }}</li>
     <li>{{ 'payroll.hint.fixed' | transloco }}</li>
+    <li>{{ 'payroll.hint.days' | transloco }}</li>
     <li>{{ 'payroll.hint.inKind' | transloco }}</li>
     <li>{{ 'payroll.hint.inKindMerged' | transloco }}</li>
-    <li>{{ 'payroll.hint.days' | transloco }}</li>
+    <li>{{ 'payroll.hint.retro' | transloco }}</li>
+    <li>{{ 'payroll.hint.prorated' | transloco }}</li>
     <li>{{ 'payroll.hint.hours' | transloco }}</li>
     <li>{{ 'payroll.hint.blank' | transloco }}</li>
   </ul>

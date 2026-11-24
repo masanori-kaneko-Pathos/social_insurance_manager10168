@@ -33,7 +33,7 @@ describe('給与の目録（項目を選んで出力。11/24）', () => {
     const rows = payrollExportRows(employees, payrolls, months, schedule);
     const table = exportTable(rows, catalog, picksOf(['employeeNumber', 'paidMonth', 'kana', 'department', 'payTotal']));
     expect(table).toEqual([
-      ['社員番号', '支払った月', 'exportCols.payroll.kana', 'exportCols.payroll.department', 'exportCols.payroll.payTotal'],
+      ['社員番号', '支払月', 'exportCols.payroll.kana', 'exportCols.payroll.department', 'exportCols.payroll.payTotal'],
       ['0001', '2026-09', 'ヤマダ エー', '総務部', '312000'],
       ['0002', '2026-09', '', '', '300000'],
       ['0001', '2026-10', 'ヤマダ エー', '総務部', '300000'],

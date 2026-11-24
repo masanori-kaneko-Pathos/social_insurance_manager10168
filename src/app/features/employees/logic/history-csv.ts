@@ -219,7 +219,8 @@ export interface HistoryContext {
 
 export type HistoryWarning =
   | 'gradeDiffers' // 書いてある等級と、報酬月額から出した等級が違う（書いてある方を使う）
-  | 'oldTable'; // その月の等級表がなく、いちばん古い表で出した
+  | 'oldTable' // その月の等級表がなく、いちばん古い表で出した
+  | 'regularAfterIrregular'; // 7〜9月に随時改定がある年の、9月からの定時決定（11/24）
 
 export interface HistoryItem {
   line: number;
@@ -339,7 +340,27 @@ export function planHistoryImport(rows: readonly HistoryCsvRow[], ctx: HistoryCo
       computed: { health: calcH.grade, pension: calcP.grade },
     });
   }
+  markRegularAfterIrregular(plan.items);
   return plan;
+}
+
+/**
+ * 7〜9月から随時改定される人は、その年の定時決定（9月から）の対象にならない（11/24）
+ * 同じ人・同じ年に両方ある → 定時決定の行に注意を出す。過去の届として出してしまっていることもあるので、取り込みは止めない
+ * 見るのはファイルの中の行どうし
+ */
+function markRegularAfterIrregular(items: HistoryItem[]): void {
+  const irregular = new Set(
+    items
+      .filter((x) => x.remuneration?.reason === 'irregular' && /-(07|08|09)$/.test(x.remuneration.from))
+      .map((x) => `${x.employeeId}/${x.remuneration!.from.slice(0, 4)}`),
+  );
+  for (const x of items) {
+    const r = x.remuneration;
+    if (r?.reason === 'regular' && r.from.endsWith('-09') && irregular.has(`${x.employeeId}/${r.from.slice(0, 4)}`)) {
+      x.warnings.push('regularAfterIrregular');
+    }
+  }
 }
 
 /** ファイルに出てくる人（登録済みの記録を読む人だけに絞るため） */

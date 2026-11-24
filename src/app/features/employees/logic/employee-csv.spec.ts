@@ -52,7 +52,7 @@ describe('readEmployeeCsv', () => {
     const part = r.rows[1].parsed!;
     expect(part.contract.payType).toBe('hourly');
     expect(part.contract.weeklyMinutes).toBe(1200);
-    expect(part.contract.expectedCash).toBe(104000); // 空なら所定内賃金を写す
+    expect(part.contract.expectedCash).toBe(110000); // ひな形は通勤手当を足した額（所定内賃金 104,000円とは別）
     expect(part.contract.from).toBe('2026-10-01'); // 契約は入社日から
   });
   it('必須の列がなければ、どの列がないかを返す', () => {
@@ -131,6 +131,18 @@ describe('planImport：契約から加入と標準報酬を出す', () => {
     const miss = plan([{ ...BASE, department: '開発部' }], ctx).items[0];
     expect(miss.employee.org?.departmentId ?? null).toBeNull();
     expect(miss.warnings).toContain('unknownDepartment');
+  });
+
+  it('見込みの報酬月額が空なら所定内賃金を写して止めず、写したことを知らせる（11/24）', () => {
+    const copied = plan([{ ...BASE, expectedCash: '' }]).items[0];
+    expect(copied.contract.expectedCash).toBe(copied.contract.scheduledWage);
+    expect(copied.warnings).toContain('expectedCopied');
+    expect(plan([BASE]).items[0].warnings).not.toContain('expectedCopied');
+    // 定時決定に変わったあと（2026-04 取得 → 2026-09 から定時）は知らせない
+    const later = plan([{ ...BASE, expectedCash: '' }], { ...CTX, today: '2026-11-24' }).items[0];
+    expect(later.warnings).not.toContain('expectedCopied');
+    const before = plan([{ ...BASE, expectedCash: '' }], { ...CTX, today: '2026-08-31' }).items[0];
+    expect(before.warnings).toContain('expectedCopied');
   });
 
   it('正社員は加入。資格取得日は入社日、標準報酬は見込みの報酬月額から', () => {

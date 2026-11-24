@@ -51,32 +51,48 @@ export const PAYROLL_HEADERS: Record<CsvLang, Record<PayrollColumn, string>> = {
   ja: {
     employeeNumber: '社員番号',
     name: '氏名',
-    paidMonth: '支払った月',
-    cash: '支払額',
-    fixed: '固定的賃金',
+    paidMonth: '支払月',
+    cash: '総支給額',
+    fixed: 'うち毎月決まった額',
     days: '支払基礎日数',
     inKind: '現物',
-    retro: '遡及支払額',
+    retro: 'うち昇給差額',
     absentDays: '欠勤日数',
     hours: '実労働時間',
-    prorated: '日割り',
+    prorated: '1か月分そろわない月',
     state: '状態',
   },
   en: {
     employeeNumber: 'Employee number',
     name: 'Name',
-    paidMonth: 'Month paid',
-    cash: 'Paid in money',
-    fixed: 'Fixed wages',
+    paidMonth: 'Pay month',
+    cash: 'Gross pay',
+    fixed: 'Of which: same every month',
     days: 'Payment basis days',
     inKind: 'In kind',
-    retro: 'Retroactive pay',
+    retro: 'Of which: back pay for a raise',
     absentDays: 'Days absent',
     hours: 'Hours worked',
-    prorated: 'Prorated',
+    prorated: 'Partial month',
     state: 'Status',
   },
 };
+
+/**
+ * 前の見出し（11/24 に明細の言葉へ変えた）。前に書き出したファイル・ひな形も、そのまま読めるようにする
+ */
+export const PAYROLL_OLD_HEADERS: Partial<Record<PayrollColumn, readonly string[]>> = {
+  paidMonth: ['支払った月', 'Month paid'],
+  cash: ['支払額', 'Paid in money'],
+  fixed: ['固定的賃金', 'Fixed wages'],
+  retro: ['遡及支払額', 'Retroactive pay'],
+  prorated: ['日割り', 'Prorated'],
+};
+
+/** その列として、そのまま読む見出し（今の日本語・英語＋前の見出し） */
+export function payrollHeadersOf(col: PayrollColumn): string[] {
+  return [PAYROLL_HEADERS.ja[col], PAYROLL_HEADERS.en[col], ...(PAYROLL_OLD_HEADERS[col] ?? [])];
+}
 
 /** 現物の欄の「内訳なし」（支払額に含まれていて分けた額がない）。書き出しはこの言葉、読むときは下の言い方も受け付ける */
 export const IN_KIND_MERGED_LABEL: Record<CsvLang, string> = { ja: '内訳なし', en: 'Included in pay' };
@@ -106,9 +122,7 @@ export function mapHeader(header: readonly string[]): {
   missing: PayrollColumn[];
 } {
   const lookup = new Map<string, PayrollColumn>();
-  for (const lang of ['ja', 'en'] as const) {
-    for (const col of PAYROLL_COLUMNS) lookup.set(headerKey(PAYROLL_HEADERS[lang][col]), col);
-  }
+  for (const col of PAYROLL_COLUMNS) for (const h of payrollHeadersOf(col)) lookup.set(headerKey(h), col);
   const index: Partial<Record<PayrollColumn, number>> = {};
   header.forEach((h, i) => {
     const col = lookup.get(headerKey(h));
@@ -501,12 +515,13 @@ export function payrollFileName(
 const WORDS: Record<PayrollColumn, readonly string[]> = {
   employeeNumber: ['従業員番号', '従業員コード', '社員コード', '社員No', '職員番号'],
   name: ['従業員名', '社員名', '姓名'],
-  paidMonth: ['支給年月', '支給月', '支払年月', '支払月', '支給日', '支払日', '給与支給日', '対象年月'],
-  cash: ['総支給額', '総支給金額', '支給合計', '社保対象額', '社会保険対象額', '社会保険の報酬', '報酬額'],
-  fixed: ['固定給', '固定的賃金計', '固定的賃金の合計'],
+  // 「対象年月」（○月分）は、翌月払いだと支払月とずれるので結ばない（11/24）
+  paidMonth: ['支給年月', '支給月', '支払年月', '支給日', '支払日', '給与支給日'],
+  cash: ['総支給金額', '支給合計', '支給額合計', '社保対象額', '社会保険対象額', '社会保険の報酬', '報酬額'],
+  fixed: ['固定給', '固定的賃金計', '固定的賃金の合計', '毎月決まった額'],
   days: ['基礎日数', '出勤日数', '支払日数'],
   inKind: ['現物給与', '現物支給額', '現物給与額'],
-  retro: ['遡及額', '遡及分'],
+  retro: ['遡及額', '遡及分', '昇給差額', '差額支給'],
   absentDays: ['欠勤'],
   hours: ['労働時間', '総労働時間', '勤務時間'],
   prorated: [],
@@ -521,7 +536,7 @@ const KINDS: Partial<Record<PayrollColumn, ValueKind>> = {
 export const PAYROLL_IMPORT_FIELDS: readonly ImportField<PayrollColumn>[] = PAYROLL_COLUMNS.map((key) => ({
   key,
   header: PAYROLL_HEADERS.ja[key],
-  words: [PAYROLL_HEADERS.en[key], ...WORDS[key]],
+  words: [PAYROLL_HEADERS.en[key], ...(PAYROLL_OLD_HEADERS[key] ?? []), ...WORDS[key]],
   kind: KINDS[key],
   required: PAYROLL_REQUIRED.includes(key),
   // 社員番号の列がないファイルでも、氏名の列があれば氏名で照合する（うちの表には空の社員番号の列が出る）
@@ -562,7 +577,7 @@ export const PAYROLL_FIX: Readonly<Record<string, readonly PayrollColumn[]>> = {
 /** その列として受け付ける見出し（日本語・英語） */
 export function payrollLabels(column: string): string[] {
   const c = column as PayrollColumn;
-  return PAYROLL_HEADERS.ja[c] ? [PAYROLL_HEADERS.ja[c], PAYROLL_HEADERS.en[c]] : [column];
+  return PAYROLL_HEADERS.ja[c] ? payrollHeadersOf(c) : [column];
 }
 
 // ===== 取り込みのエラーを窓で直すときの欄の種類（11/17。日本語・英語の見出しの両方） =====
@@ -579,5 +594,8 @@ export const PAYROLL_FIX_FIELDS: Record<string, FixField> = (() => {
     prorated: YES_NO,
     state: select((Object.keys(STATE_LABELS.ja) as PayrollState[]).map((k) => ({ value: STATE_LABELS.ja[k], label: STATE_LABELS.ja[k] }))),
   };
-  return { ...byHeader(PAYROLL_HEADERS.ja, fields), ...byHeader(PAYROLL_HEADERS.en, fields) };
+  const old = Object.fromEntries(
+    Object.entries(PAYROLL_OLD_HEADERS).flatMap(([c, hs]) => (fields[c as PayrollColumn] ? hs!.map((h) => [h, fields[c as PayrollColumn]!]) : [])),
+  ) as Record<string, FixField>;
+  return { ...byHeader(PAYROLL_HEADERS.ja, fields), ...byHeader(PAYROLL_HEADERS.en, fields), ...old };
 })();

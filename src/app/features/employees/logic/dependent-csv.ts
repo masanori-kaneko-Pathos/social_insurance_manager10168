@@ -192,7 +192,13 @@ export type DependentRowError =
   | 'date'
   | `field.${DependentField}.${string}`;
 
-export type DependentRowWarning = 'noIncome' | 'overLimit' | 'beforeHire' | 'age75';
+export type DependentRowWarning = 'noIncome' | 'overLimit' | 'beforeHire' | 'age75' | 'spouseTwice';
+
+/** 配偶者の扶養の期間（重なりを見る。to は空なら今も続いている） */
+export interface SpousePeriod {
+  from: string;
+  to: string | null;
+}
 
 export interface DependentImportRow {
   line: number;
@@ -221,6 +227,7 @@ export function planDependentImport(
   targets: readonly DependentTarget[],
   existing: ReadonlyMap<string, ReadonlySet<string>>,
   today: string,
+  existingSpouses: ReadonlyMap<string, readonly SpousePeriod[]> = new Map(),
 ): DependentImportRow[] {
   const [head = [], ...rows] = table;
   const col = (c: DependentColumn) => head.indexOf(DEPENDENT_CSV_HEADERS[c]);
@@ -333,7 +340,29 @@ export function planDependentImport(
 
     out.push({ line: i + 2, employee, name, relationship, input: skip ? null : input, errors, warnings, skip });
   });
+  markSpouseTwice(out, existingSpouses);
   return out;
+}
+
+/** 期間が重なるか（to は空なら今も続いている。to の日はもう扶養でない） */
+function overlaps(a: SpousePeriod, b: SpousePeriod): boolean {
+  return (!a.to || b.from < a.to) && (!b.to || a.from < b.to);
+}
+
+/**
+ * 同じ従業員に、扶養の期間が重なる配偶者が2人以上 → spouseTwice（11/24）
+ * 登録済みの配偶者とファイルの配偶者を合わせて見る。離婚・死別のあとの再婚（期間が重ならない）は出さない
+ */
+function markSpouseTwice(rows: DependentImportRow[], existingSpouses: ReadonlyMap<string, readonly SpousePeriod[]>): void {
+  const inFile = rows.filter((r) => r.employee && r.input && r.input.relationship === 'spouse');
+  for (const r of inFile) {
+    const me: SpousePeriod = { from: r.input!.from, to: r.input!.to };
+    const others = [
+      ...(existingSpouses.get(r.employee!.id) ?? []),
+      ...inFile.filter((o) => o !== r && o.employee!.id === r.employee!.id).map((o) => ({ from: o.input!.from, to: o.input!.to })),
+    ];
+    if (others.some((o) => overlaps(me, o))) r.warnings.push('spouseTwice');
+  }
 }
 
 /** エラーのコード → 画面で直す欄（11/16。取り込み画面の「その場で直す」） */

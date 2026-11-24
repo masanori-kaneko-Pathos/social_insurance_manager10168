@@ -436,6 +436,7 @@ export class EmployeeImport {
       const read = readEmployeeCsv(table);
       const existingNumbers = existing.map((e) => e.employeeNumber ?? '').filter(Boolean);
       const plan = planImport(read.rows, {
+        today: todayLocal(),
         office: {
           standardHours: office.standardHours ?? null,
           specificApplication: office.specificApplication,
