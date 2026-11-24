@@ -46,7 +46,7 @@ export const PARALLEL_FIXTURE = ${JSON.stringify(
     master: json('seed/master-rates.json'),
     gradeTables: json('seed/master-grades.json'),
     criteria: json('seed/master-criteria.json'),
-    expected: { monthly, bonus, office, totals },
+    expected: { monthly, bonus, office, totals, variants: exp.variants ?? null, kumiai: exp.kumiai ?? null },
   },
   null,
   0,

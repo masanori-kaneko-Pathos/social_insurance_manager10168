@@ -12,7 +12,7 @@ import { ContractDoc } from '../core/models/contract';
 import { Employee, employeeExtras } from '../core/models/employee';
 import { CriteriaDoc } from '../core/models/master';
 import { OfficeTotal, PremiumResult } from '../core/models/premium';
-import { GradeTableDoc, MasterRateDoc } from '../core/models/rates';
+import { GradeTableDoc, KumiaiRateInput, MasterRateDoc } from '../core/models/rates';
 import { RemunerationDoc, RemunerationInput } from '../core/models/remuneration';
 import { Payroll } from '../core/models/payroll';
 import { readEmployeeCsv, planImport } from '../features/employees/logic/employee-csv';
@@ -41,6 +41,8 @@ export type RunOffice = Parameters<typeof payrollOf>[0] & {
 export interface ParallelRunInput {
   office: RunOffice;
   master: MasterRateDoc[];
+  /** 組合健保の料率（事業所の料率の窓で入れるもの。協会けんぽだけなら省く） */
+  kumiai?: KumiaiRateInput[];
   gradeTables: GradeTableDoc[];
   criteria: CriteriaDoc[];
   csv: { employees: string; remunerationHistory?: string; payrolls: string; bonuses?: string };
@@ -88,9 +90,11 @@ export interface ParallelRunResult {
 
 const table = (text: string) => parseCsv(text.replace(/^﻿/, ''));
 
+/** 健保等（健保・介護・支援金）か厚年の本人負担。「それぞれ端数処理」では健保等が3つの単位に分かれるので足す */
 const yenOf = (r: PremiumResult | null | undefined, part: 'health' | 'pension'): number | null => {
-  const g = r?.groups.find((x) => x.parts.includes(part));
-  return g ? g.employeeYen : null;
+  const parts = part === 'health' ? ['health', 'care', 'childSupport'] : ['pension'];
+  const gs = (r?.groups ?? []).filter((g) => g.parts.some((x) => parts.includes(x)));
+  return gs.length === 0 ? null : gs.reduce((s, g) => s + g.employeeYen, 0);
 };
 
 export function runParallel(input: ParallelRunInput): ParallelRunResult {
@@ -98,7 +102,7 @@ export function runParallel(input: ParallelRunInput): ParallelRunResult {
   const problems: string[] = [];
   const schedule = payrollOf(office);
   const options = premiumOf(office);
-  const rateTables = { master: input.master, kumiai: [] };
+  const rateTables = { master: input.master, kumiai: input.kumiai ?? [] };
 
   // ===== 1. 従業員（画面：従業員の取り込み） =====
   const read = readEmployeeCsv(table(input.csv.employees));

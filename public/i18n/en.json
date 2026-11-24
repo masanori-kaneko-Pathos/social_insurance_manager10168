@@ -879,7 +879,7 @@
       "changeFrom": "Premiums from this month use the new insurer and prefecture.",
       "switchToKumiai": "Until kumiai rates are registered, health premiums from the switch month show as 'No rate registered'.",
       "method": "This applies to the whole office. Employees whose pay cannot cover their share can be checked with \"Check advances\" in the premium list.",
-      "healthRounding": "There is no official guidance, so both are available. The method once published by the ministry is 'together'.",
+      "healthRounding": "Choose \"Round separately\" only if your pay rules set rounding for each insurance separately (a special agreement).",
       "nameEn": "Enter the English name if there is one.",
       "groupName": "Offices with the same label are listed together in the office menu. Example: Kanto sites, Head office and plant",
       "agreementRounding": "Usually \"No agreement\". If the company and employees have a special agreement, the employee share is rounded that way (the same for the Japan Health Insurance Association, health insurance societies and pension). The company's payment stays the total rounded down to the yen.",
