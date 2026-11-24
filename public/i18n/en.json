@@ -167,7 +167,8 @@
         "actualHours": "Actual working hours",
         "acquireAmount": "Remuneration at acquisition",
         "childcareSpecial": "Childcare period special rule (pension)",
-        "dependentReport": "Dependent change notification"
+        "dependentReport": "Dependent change notification",
+        "registerGaps": "Employee data: empty items"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. An Application to Enroll in EPI / EHI (資格取得届) is needed.",
@@ -190,7 +191,7 @@
         "myNumberCheck": "The employee submitted a My Number. Show all digits, check them against the ID documents, then register or return it.",
         "myNumberDispose": "Two years have passed since losing coverage ({{date}}). The retention period for health insurance and pension documents (two years from completion) has ended, so dispose of the My Number. If you count completion from the date of the pension service's notice, wait two years from that date and dismiss this with “Checked”.",
         "contractEnd": "The employment contract ends on {{date}}. If it is renewed, register the next contract; if not, enter the retirement date (this leads to the loss-of-coverage To-do). If it renews automatically on the same terms, check and then dismiss with \"Checked\".",
-        "contractEndNotice": "Because the contract has been renewed 3 or more times or the employee has worked for more than 1 year, advance notice must be given by {{noticeBy}} if it will not be renewed (MHLW standards on fixed-term contracts, Article 2).",
+        "contractEndNotice": "Because the contract has been renewed 3 or more times or the employee has worked for more than 1 year, give advance notice by {{noticeBy}} if it will not be renewed.",
         "contractEndShort": "This is a contract of 2 months or less. Once it is expected to continue beyond 2 months through renewal, the employee becomes subject to social insurance from that point.",
         "officeNameAddress": "The office name/address was changed on {{date}}. File the \"Change (correction) of name/address of the covered office\" within 5 days of the change (if the office moved outside the jurisdiction, file with the pension office for the previous address).",
         "officeRelation": "Office information was changed on {{date}}. File the \"Change (correction) of office-related information\" within 5 days of the change (for a change of employer etc., also write the previous information).",
@@ -234,7 +235,8 @@
         "actualHours": "Actual working hours in the pay for {{first}} and {{second}} were {{h1}} and {{h2}} hours a week, at or above the threshold ({{limit}} hours) for two months in a row. Even if contracted hours are below it, if this continues or is expected to, coverage starts on {{date}} (the first day of the third month). Review the contract or file an acquisition notification. If it was temporary, hide it with \"Checked\".",
         "acquireAmount": "The fixed wage paid in {{month}} ({{fixed}} yen) is higher than the monthly remuneration on the acquisition notification ({{reported}} yen). Allowances such as commuting or housing that started late still belong in the acquisition amount: correct the expected pay in the contract and file a correction (put catch-up payments back in the months they belong to). If this is a raise decided after acquisition, hide it with \"Checked\".",
         "childcareSpecial": "Raising a child under 3 since {{child}}; the pension standard monthly remuneration from {{month}} ({{now}} yen) is below the month before ({{base}}: {{pre}} yen). If the employee applies, premiums stay the same but the future pension uses the earlier amount. Tell the employee and mark as checked once the application is submitted.",
-        "dependentReport": "Dependents changed on {{date}}. Submit the Dependent (Change) Notification within 5 days to the pension office (or to the health insurance society). For a spouse, the National Pension Category 3 notification uses the same form. Dependents added on the date of acquisition are submitted together with the acquisition notification. Mark as done once submitted."
+        "dependentReport": "Dependents changed on {{date}}. Submit the Dependent (Change) Notification within 5 days to the pension office (or to the health insurance society). For a spouse, the National Pension Category 3 notification uses the same form. Dependents added on the date of acquisition are submitted together with the acquisition notification. Mark as done once submitted.",
+        "registerGaps": "Empty items in employee data: {{n}} people"
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -404,7 +406,8 @@
       "foreign": "Foreign national information",
       "more": "Employee information",
       "emergency": "Emergency contacts",
-      "org": "Department, position and officer"
+      "org": "Department, position and officer",
+      "history": "History"
     },
     "field": {
       "employeeNumber": "Employee number",
@@ -479,7 +482,9 @@
       "addressFactDate": "Date the address changed",
       "department": "Department",
       "position": "Position",
-      "officerType": "Officer"
+      "officerType": "Officer",
+      "retireDetail": "Details of the reason",
+      "jobType": "Type of work"
     },
     "insurance": {
       "health": "Enrolled in health insurance",
@@ -517,7 +522,9 @@
       },
       "address": "The address on notifications is the one in the resident register. If the person lives somewhere else, also enter the place of residence below.",
       "overseas": "On notifications, write the country and city, e.g. \"Living in London, UK\".",
-      "addressFactDate": "If an address change notification is needed, it appears in the To-do list. It is needed for people whose My Number is not linked to their basic pension number, people living overseas, short-stay foreign nationals, people with health insurance only, and people registering a place of residence."
+      "addressFactDate": "If an address change notification is needed, it appears in the To-do list. It is needed for people whose My Number is not linked to their basic pension number, people living overseas, short-stay foreign nationals, people with health insurance only, and people registering a place of residence.",
+      "retireDetail": "Enter the reason for a dismissal or the cause of death. For other reasons, such as resignation, retirement age or the end of a contract, enter them here too.",
+      "history": "One entry per line, starting with the year and month. Besides transfers and promotions, you can enter previous jobs (up to {{history}} lines, {{text}} characters each)."
     },
     "validation": {
       "required": "This field is required.",
@@ -543,7 +550,13 @@
       "accountNumber": "Enter a 7-digit account number.",
       "holderKana": "Enter the account holder in full-width katakana (spaces, parentheses, periods and hyphens are allowed).",
       "birthTooYoung": "The person would be under 15 on the hire date. Check the date of birth and hire date.",
-      "bankIncomplete": "When entering a bank account, fill in the bank, branch, type, number and holder."
+      "bankIncomplete": "When entering a bank account, fill in the bank, branch, type, number and holder.",
+      "retireDetail": {
+        "dismissal": "Enter the reason for the dismissal.",
+        "death": "Enter the cause of death."
+      },
+      "historyTooMany": "Up to {{history}} lines.",
+      "historyTooLong": "Each line can be up to {{text}} characters."
     },
     "error": {
       "save": "Couldn't save. Try again later.",
@@ -590,7 +603,8 @@
       "resign": "Resigned",
       "death": "Death",
       "transfer": "Transfer",
-      "other": "Other"
+      "other": "Other",
+      "dismissal": "Dismissal"
     },
     "lossReason": {
       "retire": "Leaving etc. (including leaving coverage after a contract change)",
@@ -677,7 +691,8 @@
         "foreign": "Foreign"
       },
       "hint": "Multiple choices in one filter match any of them; different filters must all match. Category and employment type load contracts when used.",
-      "status": "Status"
+      "status": "Status",
+      "registerGaps": "People with empty items"
     },
     "agreement": {
       "info": "Agreement with {{name}} (effective {{from}}): exempt in Japan — {{covers}}.",
@@ -794,7 +809,8 @@
         "unclear": "Unclear (toward coverage {{toward}}, away {{away}}, not yet {{unanswered}}). Check the actual situation.",
         "noPay": "An officer without remuneration cannot be insured."
       },
-      "officerNote": "Corporate officers are insured if they receive remuneration from the corporation for their work. For part-time officers, the 6 items above have no priority and the situation is judged as a whole (the pension office decides). Sole proprietors made officers who pay \"membership fees\" exceeding their remuneration are, in principle, not covered (MHLW notice, March 18, 2026)."
+      "officerNote": "Corporate officers are insured if they receive remuneration from the corporation for their work. For part-time officers, the 6 items above have no priority and the situation is judged as a whole (the pension office decides). Sole proprietors made officers who pay \"membership fees\" exceeding their remuneration are, in principle, not covered (MHLW notice, March 18, 2026).",
+      "alsoEmployee": "Also an employee (e.g. a director who heads Sales)"
     },
     "delete": {
       "title": "Cancel this registration",
@@ -817,6 +833,53 @@
         "signIn": "Please sign in again.",
         "unknown": "Could not cancel. Please try again later."
       }
+    },
+    "placeholder": {
+      "jobType": "e.g. Sales, accounting, assembly line",
+      "history": "e.g. 2018-04 Joined ABC Co. (previous job)\n2020-04 Joined, General Affairs\n2024-04 Moved to Sales"
+    },
+    "register": {
+      "title": "Work and history",
+      "onRegister": "Included in the employee data list",
+      "officerWorker": "Included (officer who is also an employee)",
+      "officerOnly": "Not included (officer)",
+      "gapsTitle": "Empty items in employee data",
+      "gap": {
+        "sex": "Sex",
+        "address": "Address",
+        "history": "History",
+        "jobType": "Type of work",
+        "retireReason": "Reason for leaving",
+        "retireDetail": "Details of the reason"
+      },
+      "gapShort": {
+        "sex": "Sex",
+        "address": "Address",
+        "history": "History",
+        "jobType": "Type of work",
+        "retireReason": "Reason for leaving",
+        "retireDetail": "Reason details"
+      },
+      "exportXlsx": "Employee data list (Excel)",
+      "exportCsv": "Employee data list (CSV)",
+      "exportNote": "Name, address, hire date, type of work, history, reason for leaving and more. Everyone except officers, including people who left within the last 5 years (filters are not applied)",
+      "officerWorkerNote": "Officer who is also an employee",
+      "col": {
+        "kana": "Kana",
+        "name": "Name",
+        "sex": "Sex",
+        "birthDate": "Date of birth",
+        "postalCode": "Postal code",
+        "address": "Address",
+        "hireDate": "Date hired",
+        "jobType": "Type of work",
+        "history": "History",
+        "leaveDate": "Date of dismissal, leaving or death",
+        "reason": "Reason",
+        "note": "Notes"
+      },
+      "dataName": "Employee data",
+      "exportName": "Employee data list"
     }
   },
   "office": {
@@ -885,8 +948,8 @@
       "groupName": "Offices with the same label are listed together in the office menu. Example: Kanto sites, Head office and plant",
       "agreementRounding": "Usually \"No agreement\". If the company and employees have a special agreement, the employee share is rounded that way (the same for the Japan Health Insurance Association, health insurance societies and pension). The company's payment stays the total rounded down to the yen.",
       "kumiaiRatesNext": "You can enter the rates below (or later in the rates window).",
-      "deduction": "By law, only the previous month's premium may be deducted from pay (Health Insurance Act Art. 167, Employees' Pension Insurance Act Art. 84; both the previous and current month only when the employee leaves). To deduct the current month's premium, conclude a wage-deduction labor-management agreement (Labor Standards Act Art. 24).",
-      "deductionCurrentWarn": "By law, the principle is to deduct the previous month's premium from this month's pay (next-month deduction; Health Insurance Act Art. 167, Employees' Pension Insurance Act Art. 84). If you deduct the same month's premium, confirm that a wage deduction agreement (Labor Standards Act Art. 24) or your work rules / pay regulations provide for it."
+      "deduction": "As a rule, only the previous month's premium may be deducted from pay (both the previous and current month only when the employee leaves). To deduct the current month's premium, conclude a wage-deduction labor-management agreement.",
+      "deductionCurrentWarn": "The rule is to deduct the previous month's premium from this month's pay (next-month deduction). If you deduct the same month's premium, confirm that a wage deduction agreement or your work rules / pay regulations provide for it."
     },
     "postal": {
       "search": "Find address",
@@ -1327,9 +1390,9 @@
     "multipleOffices": "2+ offices",
     "multipleOfficesNote": "\"2+ offices\" employees work at two or more offices. Their premiums are split by each office's pay, so the amounts here are estimates. Check the notice from the pension office.",
     "lastMonth": "Last month",
-    "lastMonthNote": "This is the last month's premium because the employee is leaving (or has died). Premiums are deducted from the next month's pay. If there is no pay next month, deduct last month's and this month's premiums (two months) from the final pay (Health Insurance Act Art. 167(1), Employees' Pension Insurance Act Art. 84(1)).",
+    "lastMonthNote": "This is the last month's premium because the employee is leaving (or has died). Premiums are deducted from the next month's pay. If there is no pay next month, deduct last month's and this month's premiums (two months) from the final pay.",
     "exemptPending": "Not applied yet",
-    "exemptPendingNote": "This month qualifies for the maternity/childcare leave exemption, but the employer has not applied yet, so premiums are charged. Click \"Mark as filed\" under Leave on the employee page to apply the exemption (Health Insurance Act Arts. 159, 159-3; Employees' Pension Insurance Act Arts. 81-2, 81-2-2).",
+    "exemptPendingNote": "This month qualifies for the maternity/childcare leave exemption, but the employer has not applied yet, so premiums are charged. Click \"Mark as filed\" under Leave on the employee page to apply the exemption.",
     "advance": {
       "check": "Check advances",
       "result": "Employees whose pay in month {{payMonth}} cannot cover their share: {{count}}",
@@ -1510,7 +1573,7 @@
     "hasProblems": "Some can't be calculated",
     "capped": "Capped",
     "exemptPending": "Not applied yet",
-    "exemptPendingNote": "This bonus qualifies for the maternity/childcare leave exemption, but the employer has not applied yet, so premiums are charged. Click \"Mark as filed\" under Leave on the employee page to apply the exemption (Health Insurance Act Arts. 159, 159-3).",
+    "exemptPendingNote": "This bonus qualifies for the maternity/childcare leave exemption, but the employer has not applied yet, so premiums are charged. Click \"Mark as filed\" under Leave on the employee page to apply the exemption.",
     "cappedNote": "Calculated on health JPY {{health}} / pension JPY {{pension}}",
     "totalsTitle": "Premiums for this bonus (payment)",
     "grandTotal": "Total payment",
@@ -2601,7 +2664,10 @@
       "leaveKind": "Cannot read the leave type. Use \"Fix\" to pick from the list.",
       "endBeforeStart": "End date is before the start date.",
       "pensionNumber": "Enter the basic pension number as 10 digits (hyphen optional).",
-      "myNumber": "Enter a 12-digit My Number whose last digit (check digit) matches."
+      "myNumber": "Enter a 12-digit My Number whose last digit (check digit) matches.",
+      "postalCode": "Enter a 7-digit postal code (with or without a hyphen).",
+      "tooLong": "Too long.",
+      "historyTooMany": "Up to 30 history lines."
     },
     "import": "Import {{n}}",
     "progress": "Importing… {{done}}/{{total}}",
@@ -2638,6 +2704,14 @@
       "column": "Item",
       "saved": "Registered value",
       "file": "Value in the file"
+    },
+    "register": {
+      "newGaps": "{{n}} people have empty items ({{text}}). Fill them in later by editing, or import a file with those columns again.",
+      "fill": "For the {{n}} people already registered, only empty items are filled from this file ({{text}}). Items already entered are not overwritten.",
+      "fillButton": "Fill empty items ({{n}})",
+      "filled": "Filled the empty items of {{n}} registered people.",
+      "after": "People with empty items: {{n}} ({{text}})",
+      "toList": "See them in the list"
     }
   },
   "historyCsv": {
@@ -4503,7 +4577,7 @@
   },
   "decisionNotice": {
     "title": "Notify employees of decisions (My Page)",
-    "lead": "When the pension office (or health insurance society) notifies you of confirmed coverage start or end, or of decisions on standard monthly remuneration or standard bonus, check and promptly pass them on to the employee (Health Insurance Act Art. 49, Employees' Pension Insurance Act Art. 29; penalties apply). Keep the notices for two years.",
+    "lead": "When the pension office (or health insurance society) notifies you of confirmed coverage start or end, or of decisions on standard monthly remuneration or standard bonus, check and promptly pass them on to the employee. Keep the notices for two years.",
     "month": "From month",
     "empty": "No one has a standard remuneration starting in {{month}}.",
     "all": "Select all",
@@ -4714,7 +4788,8 @@
       "foreign": "Foreign nationals",
       "leave": "Leave",
       "bonus": "Bonus",
-      "pay": "Pay"
+      "pay": "Pay",
+      "register": "Work and history"
     },
     "premium": {
       "employeeNumber": "Employee number",

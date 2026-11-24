@@ -7,20 +7,23 @@
 // - 契約は基準日に効いているもの、休業は新しい2件、報酬月額は資格取得時決定の記録（なければ空）
 
 import type { Contract } from '../../../core/models/contract';
-import type { Employee, Leave } from '../../../core/models/employee';
+import type { Employee, EmployeePrivate, Leave } from '../../../core/models/employee';
 import type { RemunerationDoc } from '../../../core/models/remuneration';
 import { EMPLOYEE_COLUMNS, EMPLOYEE_CSV_HEADERS, EmployeeColumn } from './employee-csv';
+import { historyText } from './labor-register';
 
 export interface EmployeeExportItem {
   employee: Employee;
   /** 基準日に効いている契約（なければ null） */
   contract: Contract | null;
   remunerations: readonly Pick<RemunerationDoc, 'from' | 'reason' | 'monthlyAmount'>[];
+  /** 鍵付きの文書（住所・労働者名簿の履歴など。読めなければ null → 空欄。11/24） */
+  private?: Pick<EmployeePrivate, 'contact' | 'register'> | null;
 }
 
 // 取り込みで読める言葉（employee-csv.ts の辞書の最初の言い方）
 const SEX = { male: '男', female: '女' } as const;
-const RETIRE = { resign: '退職', death: '死亡', transfer: '転勤', other: 'その他' } as const;
+const RETIRE = { resign: '退職', dismissal: '解雇', death: '死亡', transfer: '転勤', other: 'その他' } as const;
 const EMPLOYMENT = { regular: '正社員', contract: '契約社員', part: 'パート', arbeit: 'アルバイト', shokutaku: '嘱託', other: 'その他' } as const;
 const PAY = { monthly: '月給', dailyMonthly: '日給月給', daily: '日給', hourly: '時給' } as const;
 const RENEWAL = { none: 'しない', possible: 'する場合がある', expected: 'する' } as const;
@@ -67,12 +70,15 @@ export function employeeExportRow(x: EmployeeExportItem, deptName: (id: string) 
     firstNameKana: e.firstNameKana,
     birthDate: e.birthDate,
     sex: e.sex ? SEX[e.sex] : '',
+    postalCode: x.private?.contact.postalCode ?? '',
+    address: x.private?.contact.address ?? '',
     basicPensionNumber: e.basicPensionNumber ?? '',
     insuredNumber: e.insuredNumber ?? '',
     myNumber: '', // 書き出さない
     hireDate: e.hireDate,
     retireDate: e.retireDate ?? '',
     retireReason: e.retireDate && e.retireReason ? RETIRE[e.retireReason] : '',
+    retireDetail: e.retireDate ? (x.private?.register.retireDetail ?? '') : '',
     healthEnrolled: yn(e.health.enrolled),
     pensionEnrolled: yn(e.pension.enrolled),
     monthlyAmount: acquisition ? String(acquisition.monthlyAmount) : '',
@@ -110,6 +116,8 @@ export function employeeExportRow(x: EmployeeExportItem, deptName: (id: string) 
     leave2Birth: l2Birth,
     leave2Filed: l2Filed,
     department: e.org?.departmentId ? (deptName(e.org.departmentId) ?? '') : '',
+    jobType: e.org?.jobType ?? '',
+    history: historyText(x.private?.register.history ?? []),
     note: c?.note ?? '',
   };
   return EMPLOYEE_COLUMNS.map((k) => v[k]);

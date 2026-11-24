@@ -372,3 +372,18 @@ th.leaves-col {
   color: var(--color-warning-text);
   font-weight: 600;
 }
+
+/* 労働者名簿の記入漏れ・空欄を埋める知らせ（11/24） */
+.register-note {
+  margin: var(--space-sm) 0;
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-sm);
+  border-left: 3px solid var(--color-border-strong);
+}
+
+.register-note.warn {
+  color: var(--color-warning-text);
+  background: var(--color-warning-bg);
+  border-left-color: var(--color-warning-border);
+  border-radius: var(--radius-sm);
+}

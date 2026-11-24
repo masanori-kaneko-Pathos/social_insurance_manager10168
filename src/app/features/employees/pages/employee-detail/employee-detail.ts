@@ -56,6 +56,7 @@ import {
 } from '../../logic/employee-overview';
 import { exemptMonth, filedLeaves } from '../../logic/leave';
 import { RemunerationService } from '../../remuneration.service';
+import { registerGaps, registerLarge } from '../../logic/labor-register';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 type Mode = 'fiscal' | 'calendar' | 'last12';
@@ -263,6 +264,14 @@ export class EmployeeDetail {
     });
   });
 
+  // ===== 労働者名簿の記入漏れ（管理者だけ。業務の種類は常時30人以上の事業所だけ。11/24） =====
+  private readonly registerLargeFlag = signal(false);
+  readonly registerGaps = computed(() => {
+    const e = this.employee();
+    if (!e || !this.context.isAdmin()) return [];
+    return registerGaps(e, this.today, this.registerLargeFlag());
+  });
+
   constructor() {
     void this.load();
   }
@@ -274,6 +283,11 @@ export class EmployeeDetail {
       const e = await this.employeesApi.getFull(officeId, this.employeeId);
       if (e) this.employee.set(e);
       else this.errorKey.set('employee.error.notFound');
+      // 常時30人以上か（一覧は覚えているので、ふつうは読みに行かない）
+      void this.employeesApi
+        .list(officeId)
+        .then((list) => this.registerLargeFlag.set(registerLarge(list, this.today)))
+        .catch((err) => console.error(err));
     } catch (err) {
       console.error(err);
       this.errorKey.set(errorKeyOf(err, 'employee.error.load'));

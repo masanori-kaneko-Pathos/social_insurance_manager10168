@@ -44,6 +44,7 @@ import { ContractService } from '../../contract.service';
 import { contractAt } from '../../logic/contract-form-model';
 import { PersonDiff, samePersonDiffs } from '../../logic/employee-csv';
 import type { Employee } from '../../../../core/models/employee';
+import { countGaps, RegisterFill, registerFill, registerGaps, registerLarge } from '../../logic/labor-register';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { EMPLOYEE_FIX_FIELDS } from '../../logic/import-fix-fields';
 import { IssueCol, IssueRow } from '../../../../shared/components/import-issues/issue-row';
@@ -266,14 +267,64 @@ export class EmployeeImport {
   readonly samePeople = signal<{ line: number; employeeNumber: string; name: string; diffs: PersonDiff[] }[]>([]);
   readonly changedPeople = computed(() => this.samePeople().filter((x) => x.diffs.length > 0));
 
+  // ===== 労働者名簿（11/24） =====
+  /** 登録済みの同じ人のうち、名簿の空欄をファイルで埋める人 */
+  readonly registerFills = signal<{ employeeId: string; line: number; fill: RegisterFill }[]>([]);
+  /** 埋める項目ごとの人数 */
+  readonly fillCounts = computed(() => countGaps(this.registerFills().map((f) => f.fill.fields)));
+  /** 取り込む人のうち、名簿の項目が空の人（取り込む前に知らせる） */
+  readonly newGaps = computed(() => {
+    const p = this.preview();
+    if (!p) return null;
+    const today = todayLocal();
+    const items = this.importItems().map((it) => it.employee);
+    const large = registerLarge([...this.existingForGaps(), ...items], today);
+    return countGaps(items.map((e) => registerGaps(e, today, large)));
+  });
+  private readonly existingForGaps = signal<Employee[]>([]);
+  /** 取り込んだあとの、事業所全体の名簿の記入漏れ */
+  readonly gapsAfter = signal<ReturnType<typeof countGaps> | null>(null);
+  readonly filledCount = signal(0);
+  /** 何の漏れが何人か → 「履歴 12・住所 12」 */
+  gapText(by: Partial<Record<string, number>>): string {
+    return Object.entries(by)
+      .map(([k, n]) => `${this.transloco.translate('employee.register.gapShort.' + k)} ${n}`)
+      .join('・');
+  }
+
+  private async countGapsAfter(officeId: string): Promise<void> {
+    try {
+      const [list, privates] = await Promise.all([this.employeesApi.list(officeId), this.employeesApi.listPrivates(officeId)]);
+      const today = todayLocal();
+      const large = registerLarge(list, today);
+      this.gapsAfter.set(
+        countGaps(list.map((e) => { const p = privates.get(e.id); return p ? registerGaps({ ...e, ...p }, today, large) : []; })),
+      );
+    } catch (err) {
+      console.error(err); // 数えられなくても取り込みは済んでいる
+    }
+  }
+
   private async loadSamePeople(plan: ImportPlan, existing: readonly Employee[]): Promise<void> {
     const office = this.context.current();
     if (!office || plan.skipped.length === 0) {
       this.samePeople.set([]);
+      this.registerFills.set([]);
       return;
     }
     const byNo = new Map(existing.map((e) => [e.employeeNumber ?? '', e]));
     const today = todayLocal();
+    // 労働者名簿の空欄を埋める候補（上書きしない。11/24）
+    const privates = await this.employeesApi.listPrivates(office.id);
+    const fills: { employeeId: string; line: number; fill: RegisterFill }[] = [];
+    for (const s of plan.skipped) {
+      const saved = byNo.get(s.employeeNumber);
+      const priv = saved ? privates.get(saved.id) : undefined;
+      if (!saved || !priv) continue;
+      const fill = registerFill({ ...saved, contact: priv.contact, register: priv.register }, s.employee);
+      if (fill) fills.push({ employeeId: saved.id, line: s.line, fill });
+    }
+    this.registerFills.set(fills);
     const rows = await Promise.all(
       plan.skipped.map(async (s) => {
         const saved = byNo.get(s.employeeNumber);
@@ -309,7 +360,7 @@ export class EmployeeImport {
       p.read.missingColumns.length === 0 &&
       (this.rowErrors().length === 0 || this.skipErrors()) &&
       (p.plan.errors.length === 0 || this.skipErrors()) &&
-      this.importItems().length > 0
+      (this.importItems().length > 0 || this.registerFills().length > 0)
     );
   });
   readonly reasonParams = reasonParams;
@@ -366,6 +417,9 @@ export class EmployeeImport {
     this.preview.set(null);
     this.doneCount.set(null);
     this.errorKey.set(null);
+    this.registerFills.set([]);
+    this.gapsAfter.set(null);
+    this.filledCount.set(0);
   }
 
   /** うちの見出しの表 → 読み取り・取り込みの計画（今までの確認画面） */
@@ -396,6 +450,7 @@ export class EmployeeImport {
         ),
         departments: office.departments ?? [],
       });
+      this.existingForGaps.set(existing);
       this.preview.set({ fileName: file.fileName, encoding: file.encoding, read, plan, table, existingNumbers });
       await this.loadSamePeople(plan, existing);
     } catch (err) {
@@ -428,6 +483,9 @@ export class EmployeeImport {
           if (it.myNumber) withNumber.push({ employeeId, number: it.myNumber });
         },
       );
+      // 登録済みの同じ人：労働者名簿の空欄だけを埋める（変更履歴つき。11/24）
+      const fills = this.registerFills();
+      for (const f of fills) await this.employeesApi.update(office.id, f.employeeId, f.fill.patch);
       // マイナンバー：従業員を作ったあと、関数でまとめて暗号化して保管（失敗しても従業員は登録済み）
       if (withNumber.length > 0) {
         try {
@@ -439,7 +497,9 @@ export class EmployeeImport {
       }
       this.reset();
       this.doneCount.set(n);
+      this.filledCount.set(fills.length);
       this.myNumberFailed.set(numberFailed);
+      await this.countGapsAfter(office.id);
     } catch (err) {
       console.error(err);
       const done = this.progress()?.done ?? 0;

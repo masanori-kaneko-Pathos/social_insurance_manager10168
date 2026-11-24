@@ -23,6 +23,8 @@ function groupOf(k: EmployeeColumn): string {
   if (k.startsWith('leave')) return 'leave';
   if (['nationality', 'romanLastName', 'romanFirstName', 'romanMiddleName'].includes(k)) return 'foreign';
   if (['department', 'note'].includes(k)) return 'other';
+  // 労働者名簿の項目（11/24）
+  if (['jobType', 'history', 'retireDetail'].includes(k)) return 'register';
   const i = EMPLOYEE_COLUMNS.indexOf(k);
   if (i < EMPLOYEE_COLUMNS.indexOf('hireDate')) return 'person';
   if (i < EMPLOYEE_COLUMNS.indexOf('employmentType')) return 'enrollment';

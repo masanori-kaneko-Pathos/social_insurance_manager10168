@@ -492,10 +492,12 @@
                   }}</span>
                 }
                 @if (r.result?.exemptPending) {
+                  <!-- 根拠：健康保険法159条・159条の3、厚生年金保険法81条の2・81条の2の2（申出をした休業だけ免除） -->
                   <span class="badge badge-warn" [title]="'premiumList.exemptPendingNote' | transloco">{{ 'premiumList.exemptPending' | transloco }}</span>
                 }
                 <!-- 翌月控除の事業所だけ（当月控除なら毎月その月の分を引くので、2か月分にならない。11/19） -->
                 @if (r.lastMonth && deductionNow() === 'next') {
+                  <!-- 根拠：健康保険法167条1項・厚生年金保険法84条1項（退職するときは前月分と当月分を控除できる） -->
                   <span class="badge badge-change" [title]="'premiumList.lastMonthNote' | transloco">{{ 'premiumList.lastMonth' | transloco }}</span>
                 }
                 <!-- 厚生年金の同月得喪：同じ月にほかで厚生年金・国民年金に入ると、厚生年金保険料はあとで返ってくる（11/19） -->

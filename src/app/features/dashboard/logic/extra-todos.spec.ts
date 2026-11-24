@@ -1,3 +1,4 @@
+import { registerGapsTodo } from './extra-todos';
 import { childcareSpecialEnd, childcareSpecialTodo, childStartsOf } from './extra-todos';
 import { acquireAmountTodo, actualHoursThreshold, actualHoursTodo, adjustmentDeadlineTodo, insurerChangeTodos, ratesMissingTodo, bonusNoneTodos, bonusCumulativeTodos, bonusReportTodos, enrollmentReportTodos, CumulativePerson } from './extra-todos';
 import { cardReturnTodo, contractEndTodo, isShortTerm, myNumberTodos, noticeRequired, retireGuideTodo, voluntaryEligible } from './extra-todos';
@@ -439,5 +440,14 @@ describe('養育期間標準報酬月額特例（厚生年金保険法26条。11
         ],
       ).sort(),
     ).toEqual(['2024-09-01', '2025-05-20', '2026-02-02']);
+  });
+});
+
+describe('労働者名簿の記入漏れ：To-do は事業所で1件（11/24）', () => {
+  it('漏れのある人がいれば1件（何の漏れが何人かを添える）、いなければなし', () => {
+    expect(registerGapsTodo({ people: 12, by: { history: 12, address: 3 } })).toEqual({
+      kind: 'registerGaps', employeeId: null, date: null, params: { n: 12, history: 12, address: 3 },
+    });
+    expect(registerGapsTodo({ people: 0, by: {} })).toBeNull();
   });
 });

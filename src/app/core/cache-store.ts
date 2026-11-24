@@ -53,14 +53,18 @@ export const cacheKey = {
   employees: (officeId: string) => `employees/${officeId}`,
   contracts: (officeId: string, employeeId: string) => `contracts/${officeId}/${employeeId}`,
   remunerations: (officeId: string, employeeId: string) => `remunerations/${officeId}/${employeeId}`,
+  /** 全員の鍵付きの文書（労働者名簿の記入漏れを数えるため。管理者だけ。11/24） */
+  privates: (officeId: string) => `privates/${officeId}`,
 };
 
 /**
  * 変更履歴の target（'employee'・'contracts/2026-04-01' など）から、忘れるものを決める
- * 連絡先など鍵付きの文書（details/*）・扶養家族などは一覧に入っていないので、忘れなくてよい
+ * 扶養家族などは一覧に入っていないので、忘れなくてよい
+ * 鍵付きの文書（details/*）は、労働者名簿の記入漏れを数えるために全員分を覚えるので忘れる（11/24）
  */
 export function forgetForWrite(officeId: string, employeeId: string, target: string): void {
   if (target === 'employee') forget(cacheKey.employees(officeId));
   else if (target.startsWith('contracts/')) forget(cacheKey.contracts(officeId, employeeId));
   else if (target.startsWith('remunerations/')) forget(cacheKey.remunerations(officeId, employeeId));
+  else if (target.startsWith('details/')) forget(cacheKey.privates(officeId));
 }

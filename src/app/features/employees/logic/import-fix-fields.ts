@@ -71,6 +71,7 @@ export const EMPLOYEE_FIX_FIELDS = byHeader(EMPLOYEE_CSV_HEADERS, {
   retireDate: DATE,
   retireReason: choices('employee.retireReason', [
     ['退職', 'resign'],
+    ['解雇', 'dismissal'],
     ['死亡', 'death'],
     ['転勤', 'transfer'],
     ['その他', 'other'],

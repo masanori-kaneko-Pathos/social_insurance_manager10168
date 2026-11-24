@@ -8,7 +8,7 @@
 // 読み取りは画面と同じ部品（fromEmployeeForm・fromContractForm）を通す。画面で入れても CSV で入れても同じ結果になる
 
 import type { ContractInput } from '../../../core/models/contract';
-import type { Leave, LeaveKind, EmployeeFormInput, RetireReason, Sex } from '../../../core/models/employee';
+import type { Leave, LeaveKind, EmployeeFormInput, Sex } from '../../../core/models/employee';
 import { emptyLeave } from '../../../core/models/employee';
 import type { GradeTableDoc } from '../../../core/models/rates';
 import type { RemunerationInput } from '../../../core/models/remuneration';
@@ -29,6 +29,14 @@ import { classify, Classification, ClassifyCriteria, ClassifyOffice, isInsured }
 import { contractErrors, ContractFormValue, emptyContractForm, fromContractForm } from './contract-form-model';
 import { defaultEnrollmentDates } from './coverage';
 import { emptyEmployeeForm, emptyForeignForm, fromEmployeeForm, PATTERNS } from './employee-form-model';
+import {
+  historyProblem,
+  historyText,
+  parseHistory,
+  readRetireText,
+  REGISTER_DETAIL_MAX,
+  REGISTER_JOB_TYPE_MAX,
+} from './labor-register';
 
 // ===== 列 =====
 
@@ -40,12 +48,15 @@ export const EMPLOYEE_CSV_HEADERS = {
   firstNameKana: 'メイ',
   birthDate: '生年月日',
   sex: '性別',
+  postalCode: '郵便番号', // 住所は労働者名簿の項目（11/24）
+  address: '住所',
   basicPensionNumber: '基礎年金番号',
   insuredNumber: '被保険者整理番号',
   myNumber: 'マイナンバー',
   hireDate: '入社日',
   retireDate: '退職日',
   retireReason: '退職の理由',
+  retireDetail: '退職の事由の内容', // 解雇の理由・死亡の原因（労働者名簿。11/24）
   healthEnrolled: '健保の加入',
   pensionEnrolled: '厚年の加入',
   monthlyAmount: '資格取得時の報酬月額',
@@ -83,6 +94,8 @@ export const EMPLOYEE_CSV_HEADERS = {
   leave2Birth: '休業2_出産日・子の生年月日',
   leave2Filed: '休業2_申出日',
   department: '部署', // 事業所の設定の部署の名前（11/13）
+  jobType: '従事する業務の種類', // 労働者名簿（11/24）
+  history: '履歴', // 労働者名簿。1つのセルに改行で並べる（11/24）
   note: 'メモ',
 } as const;
 
@@ -110,7 +123,6 @@ const SEX: Dict<Sex> = {
   男: 'male', 男性: 'male', male: 'male', m: 'male', '1': 'male',
   女: 'female', 女性: 'female', female: 'female', f: 'female', '2': 'female',
 };
-const RETIRE: Dict<RetireReason> = { 退職: 'resign', resign: 'resign', 死亡: 'death', death: 'death', 転勤: 'transfer', transfer: 'transfer', その他: 'other', other: 'other' };
 const EMPLOYMENT: Dict<ContractInput['employmentType']> = {
   正社員: 'regular', 正規社員: 'regular', 正規雇用: 'regular', regular: 'regular',
   契約社員: 'contract', 契約: 'contract', contract: 'contract',
@@ -393,8 +405,17 @@ function readRow(line: number, v: Partial<Record<EmployeeColumn, string>>): Empl
 
   const sex = pick(SEX, get('sex'));
   if (sex === undefined) err('sex', 'choice');
-  const retireReason = pick(RETIRE, get('retireReason'));
-  if (retireReason === undefined) err('retireReason', 'choice');
+  // 退職の理由：選択肢の言葉でも、名簿の「事由」の文（懲戒解雇（…）・自己都合 など）でも読む（11/24）
+  const retire = readRetireText(get('retireReason'));
+  const retireDetail = get('retireDetail') || retire?.detail || '';
+  if (retireDetail.length > REGISTER_DETAIL_MAX) err('retireDetail', 'tooLong');
+  // 労働者名簿：住所・業務の種類・履歴（11/24）
+  if (get('postalCode') && !PATTERNS.postalCode.test(toHalfWidth(get('postalCode')))) err('postalCode', 'postalCode');
+  if (get('address').length > 200) err('address', 'tooLong');
+  if (get('jobType').length > REGISTER_JOB_TYPE_MAX) err('jobType', 'tooLong');
+  const history = parseHistory(v.history ?? '');
+  const historyErr = historyProblem(history);
+  if (historyErr) err('history', historyErr === 'tooMany' ? 'historyTooMany' : 'tooLong');
 
   const kanaOk = (s: string) => s === '' || PATTERNS.kana.test(s);
   if (!kanaOk(get('lastNameKana'))) err('lastNameKana', 'kana');
@@ -449,7 +470,11 @@ function readRow(line: number, v: Partial<Record<EmployeeColumn, string>>): Empl
   form.insuredNumber = get('insuredNumber');
   form.hireDate = hireDate!;
   form.retireDate = retireDate ?? '';
-  form.retireReason = retireDate ? (retireReason ?? 'resign') : '';
+  form.retireReason = retireDate ? (retire?.reason ?? 'resign') : '';
+  form.retireDetail = retireDate ? retireDetail : '';
+  form.history = historyText(history);
+  form.contact = { ...form.contact, postalCode: get('postalCode'), address: get('address') };
+  form.org = { ...form.org, jobType: get('jobType') };
   form.optInDate = optInDate ?? '';
   form.optOutDate = optOutDate ?? '';
   if (foreign) {
@@ -637,7 +662,7 @@ export function planImport(rows: EmployeeCsvRow[], ctx: ImportContext): ImportPl
     let org = e.org;
     if (deptName) {
       const d = (ctx.departments ?? []).find((x) => deptKey(x.name) === deptKey(deptName));
-      if (d) org = { departmentId: d.id, position: org?.position ?? null, officer: org?.officer ?? null };
+      if (d) org = { ...org, departmentId: d.id, position: org?.position ?? null, officer: org?.officer ?? null };
       else warnings.push('unknownDepartment');
     }
     const employee: EmployeeFormInput = { ...e, org, health: enrollment(health), pension: enrollment(pension) };
@@ -763,9 +788,15 @@ export const EMPLOYEE_WORDS: Partial<Record<EmployeeImportKey, readonly string[]
   basicPensionNumber: ['basic pension number'],
   myNumber: ['個人番号', 'マイナンバー（個人番号）', '個人番号（マイナンバー）', 'my number', 'individual number'],
   insuredNumber: ['健康保険の被保険者整理番号', '健康保険被保険者整理番号', '厚生年金保険の被保険者整理番号'],
-  hireDate: ['入社年月日', '雇用開始日', '採用日', '入社年月', 'hire date'],
-  retireDate: ['退職年月日', '退社日', '離職日', '退職年月'],
-  retireReason: ['退職理由', '退職事由'],
+  // 労働者名簿（様式第19号）の見出しも（名簿の Excel から登録する会社が多いため。11/24）
+  hireDate: ['入社年月日', '雇用開始日', '採用日', '入社年月', '雇入年月日', '雇入れ年月日', '雇入の年月日', 'hire date'],
+  retireDate: ['退職年月日', '退社日', '離職日', '退職年月', '退職又は死亡の年月日', '解雇・退職または死亡の年月日', '解雇･退職または死亡年月日', '退職の年月日'],
+  retireReason: ['退職理由', '退職事由', '事由', '退職の事由', '退職又は死亡の事由', '解雇・退職または死亡の事由'],
+  retireDetail: ['事由の内容', '退職事由の詳細', '解雇の理由', '死亡の原因', '退職の理由の詳細'],
+  postalCode: ['〒', '郵便番号（現住所）', '住所の郵便番号', 'postal code', 'zip code'],
+  address: ['現住所', '住所（住民票）', '住民票の住所', 'address'],
+  jobType: ['業務の種類', '従事する業務', '業務内容', '職種', '担当業務'],
+  history: ['職歴', '経歴', '社内履歴', '異動歴'],
   healthEnrolled: ['健康保険に加入しているか', '健康保険の加入', '健康保険加入', '健保加入'],
   pensionEnrolled: ['厚生年金保険に加入しているか', '厚生年金保険の加入', '厚生年金加入', '厚年加入'],
   monthlyAmount: ['報酬月額', '標準報酬月額', '健康保険標準報酬月額', '健康保険の標準報酬月額'],

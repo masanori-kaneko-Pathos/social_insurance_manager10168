@@ -21,6 +21,12 @@
                 {{ 'employee.list.export' | transloco: { n: exportCount() } }}
               </button>
               <button type="button" role="menuitem" (click)="openExportFromMenu($event)">{{ 'exportDialog.open' | transloco }}</button>
+              <!-- 従業員データ一覧（労働者名簿の法定項目をそろえた一覧。法定の様式そのものではないので、画面では「労働者名簿」と呼ばない。11/24） -->
+              <button type="button" role="menuitem" class="menu-sep" (click)="exportRegister($event, 'xlsx')">
+                {{ 'employee.register.exportXlsx' | transloco }}
+                <small>{{ 'employee.register.exportNote' | transloco }}</small>
+              </button>
+              <button type="button" role="menuitem" (click)="exportRegister($event, 'csv')">{{ 'employee.register.exportCsv' | transloco }}</button>
             </div>
           }
         </details>
@@ -147,6 +153,17 @@
               <label class="opt"><input type="checkbox" [checked]="isOn('nationality', o)" (change)="toggleOption('nationality', o)" />{{ 'employee.filter.nat.' + o | transloco }}</label>
             }
           </fieldset>
+
+          @if (context.isAdmin()) {
+            <!-- 従業員データの空の項目（住所・履歴は鍵付きの文書なので管理者だけ。11/24） -->
+            <fieldset>
+              <legend>
+                {{ 'employee.register.dataName' | transloco }}
+                @if (privatesLoading()) { <span class="muted">{{ 'common.loading' | transloco }}</span> }
+              </legend>
+              <label class="opt"><input type="checkbox" [checked]="f.registerGaps" (change)="setRegisterGaps($any($event.target).checked)" />{{ 'employee.filter.registerGaps' | transloco }}</label>
+            </fieldset>
+          }
 
           <p class="hint">{{ 'employee.filter.hint' | transloco }}</p>
         </div>

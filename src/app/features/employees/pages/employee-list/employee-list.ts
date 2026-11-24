@@ -25,15 +25,19 @@ import {
   matchesFilter,
   NATIONALITY_OPTIONS,
   needsContracts,
+  needsPrivates,
   SEX_OPTIONS,
   toggle,
 } from '../../logic/employee-filter';
 import { deptSortKey, groupByName, matchesName, NameSection, RomanBy } from '../../logic/name-index';
+import { registerGaps, registerLarge, registerTable } from '../../logic/labor-register';
+import { emptyPrivate, type EmployeePrivate } from '../../../../core/models/employee';
+import { downloadXlsx } from '../../../../shared/xlsx/download-xlsx';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { Pager } from '../../../../shared/components/pager/pager';
 import { PAGE_SIZE, PAGE_SIZES, PageSize } from '../../../../shared/logic/person-list';
-import { downloadCsv } from '../../../../shared/csv/csv';
+import { downloadCsv, safeFileName } from '../../../../shared/csv/csv';
 import { ExportDialog } from '../../../../shared/components/export-dialog/export-dialog';
 import { CloseOnOutside } from '../../../../shared/directives/close-on-outside';
 import { EMPLOYEE_DEFAULT_KEYS, employeeExportColumns } from '../../logic/employee-export-columns';
@@ -150,6 +154,35 @@ export class EmployeeList {
 
   // ===== 区分（選んだときだけ契約を読む） =====
   private readonly contracts = signal<Map<string, ContractDoc[]> | null>(null);
+
+  // ===== 労働者名簿の記入漏れ（絞り込みで使うときだけ、全員の鍵付きの文書を読む。11/24） =====
+  private readonly privates = signal<Map<string, EmployeePrivate> | null>(null);
+  readonly privatesLoading = signal(false);
+  /** 人 → 記入漏れの数（基準日で数える。読んでいなければ null） */
+  private readonly gapCounts = computed(() => {
+    const privates = this.privates();
+    if (!privates) return null;
+    const today = this.asOf();
+    const large = registerLarge(this.employees(), today);
+    return new Map(
+      this.employees().map((e) => {
+        const p = privates.get(e.id);
+        return [e.id, p ? registerGaps({ ...e, ...p }, today, large).length : 0];
+      }),
+    );
+  });
+
+  private async loadPrivates(officeId: string): Promise<void> {
+    if (this.privatesLoading()) return;
+    this.privatesLoading.set(true);
+    try {
+      this.privates.set(await this.employeesApi.listPrivates(officeId));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      this.privatesLoading.set(false);
+    }
+  }
   private readonly criteria = signal<CriteriaDoc[]>([]);
   readonly categoryLoading = signal(false);
 
@@ -196,6 +229,7 @@ export class EmployeeList {
         // 契約を読み終わるまでは undefined（絞らない）
         category: classes?.get(e.id)?.category,
         employment: contracts ? (contractAt(contracts.get(e.id) ?? [], this.asOf())?.employmentType ?? null) : undefined,
+        registerGaps: this.gapCounts()?.get(e.id),
       };
       return matchesFilter(e, f, ctx) && matchesName(e, q);
     });
@@ -307,6 +341,13 @@ export class EmployeeList {
         if (todo.length > 0) void this.loadPageContracts(officeId, todo);
       });
     });
+    // 労働者名簿の記入漏れで絞り込むときだけ、鍵付きの文書を読む（管理者だけ。11/24）
+    effect(() => {
+      const officeId = this.context.current()?.id;
+      if (officeId && needsPrivates(this.filter()) && this.context.isAdmin() && !this.privates() && !this.loading()) {
+        untracked(() => void this.loadPrivates(officeId));
+      }
+    });
     // 区分・雇用形態で絞り込むときだけ、契約を読む
     effect(() => {
       const officeId = this.context.current()?.id;
@@ -321,6 +362,7 @@ export class EmployeeList {
   private async load(officeId: string): Promise<void> {
     this.loading.set(true);
     this.contracts.set(null);
+    this.privates.set(null);
     this.pageContracts.set(new Map());
     try {
       this.employees.set(await this.employeesApi.list(officeId));
@@ -359,14 +401,17 @@ export class EmployeeList {
   /** 書き出しの材料（契約・標準報酬は人ごとに読む。ログイン中は覚えているので、2回目からは増えない） */
   private async loadExportItems(officeId: string): Promise<EmployeeExportItem[]> {
     const list = this.sections().flatMap((s) => s.items);
-    const [contracts, rems] = await Promise.all([
+    const [contracts, rems, privates] = await Promise.all([
       Promise.all(list.map((e) => this.contracts()?.get(e.id) ?? this.contractsApi.list(officeId, e.id))),
       Promise.all(list.map((e) => this.remApi.list(officeId, e.id))),
+      // 住所・労働者名簿の履歴など（11/24）
+      this.employeesApi.listPrivates(officeId),
     ]);
     return list.map((employee, i) => ({
       employee,
       contract: contractAt(contracts[i], this.asOf()),
       remunerations: rems[i],
+      private: privates.get(employee.id) ?? null,
     }));
   }
 
@@ -406,6 +451,41 @@ export class EmployeeList {
   exportCsvFromMenu(ev: Event): void {
     (ev.target as HTMLElement).closest('details')?.removeAttribute('open');
     void this.exportCsv();
+  }
+
+  /**
+   * 労働者名簿（様式第19号の項目。事業所の全員から名簿に載る人：労働者でない役員を除き、退職から5年以内の人を含む。11/24）
+   * 一覧の絞り込みには関係なく、名簿として全員分を出す
+   */
+  async exportRegister(ev: Event, kind: 'csv' | 'xlsx'): Promise<void> {
+    (ev.target as HTMLElement).closest('details')?.removeAttribute('open');
+    const office = this.context.current();
+    if (!office || this.exporting() || !this.context.isAdmin()) return;
+    this.exporting.set(true);
+    this.exportErrorKey.set(null);
+    try {
+      const [list, privates] = await Promise.all([this.employeesApi.list(office.id), this.employeesApi.listPrivates(office.id)]);
+      const t = (k: string) => this.transloco.translate(k);
+      const table = registerTable(
+        list.map((e) => ({ ...e, ...(privates.get(e.id) ?? emptyPrivate()) })),
+        this.asOf(),
+        {
+          header: (k) => t(`employee.register.col.${k}`),
+          sex: (x) => t(`employee.sex.${x}`),
+          reason: (r) => t(`employee.retireReason.${r}`),
+          officerWorker: t('employee.register.officerWorkerNote'),
+          overseas: (c, city) => `${c} ${city ?? ''}`.trim(),
+        },
+      );
+      const stem = safeFileName(`${t('employee.register.exportName')}_${office.name}_${this.asOf()}`);
+      if (kind === 'csv') downloadCsv(`${stem}.csv`, table);
+      else await downloadXlsx(`${stem}.xlsx`, t('employee.register.exportName'), table);
+    } catch (err) {
+      console.error(err);
+      this.exportErrorKey.set(errorKeyOf(err, 'employee.list.exportError'));
+    } finally {
+      this.exporting.set(false);
+    }
   }
 
   openExportFromMenu(ev: Event): void {
@@ -467,6 +547,10 @@ export class EmployeeList {
 
   setDate(field: 'hireFrom' | 'hireTo', value: string): void {
     this.setFilter({ [field]: value || null });
+  }
+
+  setRegisterGaps(on: boolean): void {
+    this.setFilter({ registerGaps: on });
   }
 
   setAge(field: 'ageMin' | 'ageMax', value: string): void {

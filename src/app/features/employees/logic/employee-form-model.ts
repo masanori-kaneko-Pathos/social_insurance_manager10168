@@ -26,6 +26,7 @@ import {
 } from '../../../core/models/employee';
 import { CollectionMethod } from '../../../core/models/premium';
 import { toHalfWidth } from '../../../shared/utils/text';
+import { historyText, parseHistory } from './labor-register';
 
 // ===== 画面の値 =====
 
@@ -82,6 +83,10 @@ export interface EmployeeFormValue {
   hireDate: string;
   retireDate: string;
   retireReason: RetireReason | '';
+  /** 退職・死亡の事由の詳しい内容（解雇の理由・死亡の原因。労働者名簿。11/24） */
+  retireDetail: string;
+  /** 履歴（1行に1件。先頭に年月。労働者名簿。11/24） */
+  history: string;
   health: EnrollmentForm;
   pension: EnrollmentForm;
   acquisitionType: AcquisitionType;
@@ -139,6 +144,10 @@ export type YesNo = '' | 'yes' | 'no';
 export interface OrgForm {
   departmentId: string;
   position: string;
+  /** 従事する業務の種類（労働者名簿。11/24） */
+  jobType: string;
+  /** 使用人を兼ねる役員（労働者名簿に載せる。11/24） */
+  alsoEmployee: boolean;
   officerType: OfficerType | '';
   /** 非常勤の役員の6項目（''＝まだ答えていない） */
   checks: Record<OfficerCheck, YesNo>;
@@ -148,6 +157,8 @@ export function emptyOrgForm(): OrgForm {
   return {
     departmentId: '',
     position: '',
+    jobType: '',
+    alsoEmployee: false,
     officerType: '',
     checks: { attendance: '', fewOtherJobs: '', boardMeetings: '', supervision: '', beyondAdvice: '', fairPay: '' },
   };
@@ -158,8 +169,10 @@ export function orgFormOf(o: EmployeeOrg | null): OrgForm {
   if (!o) return f;
   f.departmentId = o.departmentId ?? '';
   f.position = o.position ?? '';
+  f.jobType = o.jobType ?? '';
   if (o.officer) {
     f.officerType = o.officer.type;
+    f.alsoEmployee = o.officer.alsoEmployee === true;
     for (const k of OFFICER_CHECKS) {
       const v = o.officer.checks[k];
       f.checks[k] = v === true ? 'yes' : v === false ? 'no' : '';
@@ -172,15 +185,20 @@ export function orgFormOf(o: EmployeeOrg | null): OrgForm {
 export function orgOf(f: OrgForm): EmployeeOrg | null {
   const departmentId = f.departmentId.trim() || null;
   const position = f.position.trim() || null;
+  const jobType = (f.jobType ?? '').trim() || null;
   const officer = f.officerType
     ? {
         type: f.officerType,
         checks: Object.fromEntries(
           OFFICER_CHECKS.map((k) => [k, f.officerType === 'partTime' ? (f.checks[k] === 'yes' ? true : f.checks[k] === 'no' ? false : null) : null]),
         ) as Record<OfficerCheck, boolean | null>,
+        // 使用人兼務は印があるときだけ書く（前の文書と同じ形のまま）
+        ...(f.alsoEmployee ? { alsoEmployee: true } : {}),
       }
     : null;
-  return departmentId || position || officer ? { departmentId, position, officer } : null;
+  // 業務の種類は入っているときだけ書く（前の文書と同じ形のまま。11/24）
+  if (!departmentId && !position && !officer && !jobType) return null;
+  return { departmentId, position, officer, ...(jobType ? { jobType } : {}) };
 }
 
 // ===== 小さな道具 =====
@@ -315,6 +333,8 @@ export function emptyEmployeeForm(): EmployeeFormValue {
     hireDate: '',
     retireDate: '',
     retireReason: '',
+    retireDetail: '',
+    history: '',
     health: emptyEnrollmentForm(),
     pension: emptyEnrollmentForm(),
     acquisitionType: 'standard',
@@ -376,6 +396,8 @@ export function toEmployeeForm(e: EmployeeFull): EmployeeFormValue {
     hireDate: e.hireDate,
     retireDate: e.retireDate ?? '',
     retireReason: e.retireReason ?? '',
+    retireDetail: e.register?.retireDetail ?? '',
+    history: historyText(e.register?.history ?? []),
     health: enrollmentForm(e.health),
     pension: enrollmentForm(e.pension),
     acquisitionType: e.acquisitionType,
@@ -561,6 +583,11 @@ export function fromEmployeeForm(v: EmployeeFormValue): EmployeeFormInput {
     collectionMethod: orNull(v.collectionMethod),
     org: orgOf(v.org ?? emptyOrgForm()),
     foreign,
+    // 労働者名簿（鍵付きの文書へ。退職日がなければ事由の内容も消す。11/24）
+    register: {
+      history: parseHistory(v.history ?? ''),
+      retireDetail: v.retireDate.trim() ? toNull(v.retireDetail ?? '') : null,
+    },
   };
 }
 

@@ -258,6 +258,7 @@
               <td>
                 <app-person-name [person]="r.employee" [link]="['/o', context.current()?.id, 'employees', r.employee.id]" />
                 @if (r.result?.exemptPending) {
+                  <!-- 根拠：健康保険法159条・159条の3（申出をした休業だけ免除） -->
                   <span class="badge badge-cap" [title]="'bonus.exemptPendingNote' | transloco">{{ 'bonus.exemptPending' | transloco }}</span>
                 }
               </td>

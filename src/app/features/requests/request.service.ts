@@ -12,7 +12,7 @@ import {
 } from 'firebase/firestore';
 import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { auth, db } from '../../core/firebase';
-import { EmployeePrivate, emptyPrivate, legacyPrivate } from '../../core/models/employee';
+import { EmployeePrivate, EmployeePrivateDoc, emptyPrivate, emptyRegister, legacyPrivate } from '../../core/models/employee';
 import {
   EmployeeRequest,
   InboxNotification,
@@ -139,8 +139,9 @@ export class RequestService {
     const privRef = doc(empRef, 'details', 'private');
     const [empSnap, privSnap] = await Promise.all([countedGetDoc(empRef), countedGetDoc(privRef)]);
     if (!empSnap.exists()) throw new Error('employee not found');
-    const before: EmployeePrivate = privSnap.exists()
-      ? (privSnap.data() as EmployeePrivate)
+    const stored = privSnap.exists() ? (privSnap.data() as EmployeePrivateDoc) : null;
+    const before: EmployeePrivate = stored
+      ? { contact: stored.contact, commute: stored.commute, bankAccount: stored.bankAccount, register: stored.register ?? emptyRegister() }
       : (legacyPrivate(empSnap.data()) ?? emptyPrivate());
     const { patch } = planApply(before, r.questions, r.answers);
 
@@ -148,6 +149,7 @@ export class RequestService {
       contact: patch.contact ?? before.contact,
       commute: patch.commute ?? before.commute,
       bankAccount: patch.bankAccount ?? before.bankAccount,
+      register: before.register, // 労働者名簿の項目は依頼では変えない（11/24）
     };
     // 住所が変わる申請なら、届出の宿題も同じ batch で残す（変わった日 ＝ 承認した日）
     const tasks: FilingTaskInput[] =

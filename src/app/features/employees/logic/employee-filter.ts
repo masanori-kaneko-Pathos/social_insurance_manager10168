@@ -30,6 +30,8 @@ export interface EmployeeFilter {
   ageMax: number | null;
   sex: SexOption[];
   nationality: NationalityOption[];
+  /** 労働者名簿の記入漏れがある人だけ（11/24） */
+  registerGaps: boolean;
 }
 
 export function emptyFilter(): EmployeeFilter {
@@ -43,6 +45,7 @@ export function emptyFilter(): EmployeeFilter {
     ageMax: null,
     sex: [],
     nationality: [],
+    registerGaps: false,
   };
 }
 
@@ -56,7 +59,13 @@ export function activeCount(f: EmployeeFilter): number {
     f.ageMin !== null || f.ageMax !== null,
     f.sex.length > 0,
     f.nationality.length > 0,
+    f.registerGaps,
   ].filter(Boolean).length;
+}
+
+/** 鍵付きの文書（住所・履歴）を読まないと判定できない条件を使っているか（11/24） */
+export function needsPrivates(f: EmployeeFilter): boolean {
+  return f.registerGaps;
 }
 
 /** 契約を読まないと判定できない条件を使っているか */
@@ -88,6 +97,7 @@ export function filterFromQuery(get: (key: string) => string | null): EmployeeFi
     ageMax: age(get('ageMax')),
     sex: list(get('sex'), SEX_OPTIONS),
     nationality: list(get('nat'), NATIONALITY_OPTIONS),
+    registerGaps: get('register') === 'gaps',
   };
 }
 
@@ -104,6 +114,7 @@ export function filterToQuery(f: EmployeeFilter): Record<string, string | null> 
     ageMax: f.ageMax === null ? null : String(f.ageMax),
     sex: join(f.sex),
     nat: join(f.nationality),
+    register: f.registerGaps ? 'gaps' : null,
   };
 }
 
@@ -122,6 +133,8 @@ export interface FilterContext {
   category?: Category;
   /** 今日の契約の雇用形態（契約がなければ null、読んでいなければ undefined） */
   employment?: EmploymentType | null;
+  /** 労働者名簿の記入漏れの数（鍵付きの文書を読んでいなければ undefined） */
+  registerGaps?: number;
 }
 
 type FilterTarget = Pick<Employee, 'birthDate' | 'hireDate' | 'health' | 'pension' | 'sex' | 'foreign'>;
@@ -148,5 +161,7 @@ export function matchesFilter(e: FilterTarget, f: EmployeeFilter, ctx: FilterCon
   }
   if (f.sex.length > 0 && !f.sex.includes(e.sex ?? 'unset')) return false;
   if (f.nationality.length > 0 && !f.nationality.includes(e.foreign ? 'foreign' : 'japan')) return false;
+  // 読み終わるまでは絞らない（契約と同じ）
+  if (f.registerGaps && ctx.registerGaps !== undefined && ctx.registerGaps === 0) return false;
   return true;
 }

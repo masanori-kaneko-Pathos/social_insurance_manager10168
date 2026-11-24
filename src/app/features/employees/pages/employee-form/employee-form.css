@@ -382,3 +382,23 @@ app-employee-delete-card {
   display: block;
   max-width: 760px;
 }
+
+/* 履歴（労働者名簿。1行に1件。11/24） */
+.history-input {
+  width: 100%;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+/* 使用人を兼ねる役員の印（役員の種類の下。11/24） */
+.check.also-employee {
+  margin-top: var(--space-sm);
+  font-weight: 400;
+}
+
+/* 文の欄（.input は1行の高さ。依頼の画面の textarea と同じ） */
+textarea.input {
+  height: auto;
+  min-height: 72px;
+  padding: var(--space-xs) var(--space-sm);
+}

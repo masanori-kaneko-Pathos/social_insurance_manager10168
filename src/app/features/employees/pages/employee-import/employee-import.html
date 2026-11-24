@@ -52,7 +52,12 @@
     }
     @if (doneCount() !== null) {
       <div class="alert alert-success">
-        {{ 'employeeCsv.done' | transloco: { n: doneCount() } }}
+        @if (doneCount()! > 0 || filledCount() === 0) {
+          {{ 'employeeCsv.done' | transloco: { n: doneCount() } }}
+        }
+        @if (filledCount() > 0) {
+          {{ 'employeeCsv.register.filled' | transloco: { n: filledCount() } }}
+        }
         <a [routerLink]="['/o', context.current()?.id, 'employees']">{{
           'employeeCsv.toList' | transloco
         }}</a>
@@ -63,6 +68,17 @@
           <button type="button" class="link" (click)="goPayrolls()">{{ 'employeeCsv.nextPayrolls' | transloco }} ›</button>
         </span>
       </div>
+    }
+    <!-- 取り込んだあとの、労働者名簿の記入漏れ（事業所全体。11/24） -->
+    @if (gapsAfter(); as g) {
+      @if (g.people > 0) {
+        <div class="alert alert-warning">
+          {{ 'employeeCsv.register.after' | transloco: { n: g.people, text: gapText(g.by) } }}
+          <a [routerLink]="['/o', context.current()?.id, 'employees']" [queryParams]="{ register: 'gaps', status: 'all' }">{{
+            'employeeCsv.register.toList' | transloco
+          }}</a>
+        </div>
+      }
     }
     @if (myNumberFailed() > 0) {
       <div class="alert alert-danger">{{ 'myNumber.error.importFailed' | transloco: { n: myNumberFailed() } }}</div>
@@ -165,6 +181,20 @@
           }
         </details>
       }
+      <!-- 登録済みの同じ人：労働者名簿の空欄だけを、このファイルで埋める（上書きしない。11/24） -->
+      @if (registerFills().length > 0) {
+        <p class="register-note">
+          {{ 'employeeCsv.register.fill' | transloco: { n: registerFills().length, text: gapText(fillCounts().by) } }}
+        </p>
+        @if (pv.plan.items.length === 0) {
+          <div class="actions">
+            <button type="button" class="btn" (click)="clear()" [disabled]="saving()">{{ 'common.cancel' | transloco }}</button>
+            <button type="button" class="btn btn-primary" (click)="importCsv()" [disabled]="!canImport()">
+              {{ 'employeeCsv.register.fillButton' | transloco: { n: registerFills().length } }}
+            </button>
+          </div>
+        }
+      }
 
       @if (pv.plan.items.length > 0 || fix.issues().length > 0) {
         <h3>
@@ -175,6 +205,12 @@
         </h3>
         @if (myNumberCount() > 0) {
           <p class="sub">{{ 'myNumber.importNote' | transloco: { n: myNumberCount() } }}</p>
+        }
+        <!-- 取り込む人の、労働者名簿の記入漏れ（止めない。取り込む前に知らせる。11/24） -->
+        @if (newGaps(); as g) {
+          @if (g.people > 0) {
+            <p class="register-note warn">{{ 'employeeCsv.register.newGaps' | transloco: { n: g.people, text: gapText(g.by) } }}</p>
+          }
         }
         <!-- 取り込むボタンは表の上にも（人数が多くても、下まで行かずに押せる。11/13） -->
         <div class="actions top">

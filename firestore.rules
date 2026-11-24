@@ -370,7 +370,7 @@ service cloud.firestore {
           && isDate(d.birthDate) && isDate(d.hireDate) && optDate(d.retireDate)
           && d.birthDate < d.hireDate
           && (d.retireDate == null || d.hireDate <= d.retireDate)
-          && (d.retireReason == null || d.retireReason in ['resign', 'death', 'transfer', 'other'])
+          && (d.retireReason == null || d.retireReason in ['resign', 'dismissal', 'death', 'transfer', 'other'])
           // 加入：保険料に直接効くので、変わったときは形まで確かめる
           && (unchanged(d, old, 'health') || validEnrollment(d.health))
           && (unchanged(d, old, 'pension') || validEnrollment(d.pension))
@@ -389,10 +389,13 @@ service cloud.firestore {
               || (d.priorBonusTotals is map && d.priorBonusTotals.size() <= 10))
           && (d.userUid == null || d.userUid is string)
           // 部署・役職・役員（任意。11/12 より前の文書にはない）
+          // 業務の種類（労働者名簿。11/24 に足した任意の項目）・使用人兼務の役員の印
           && (!('org' in d) || d.org == null || unchanged(d, old, 'org')
               || (d.org is map && optStr(d.org.departmentId, 40) && optStr(d.org.position, 50)
+                  && (!('jobType' in d.org) || optStr(d.org.jobType, 100))
                   && (d.org.officer == null
-                      || (d.org.officer is map && d.org.officer.type in ['representative', 'fullTime', 'partTime']))));
+                      || (d.org.officer is map && d.org.officer.type in ['representative', 'fullTime', 'partTime']
+                          && (!('alsoEmployee' in d.org.officer) || d.org.officer.alsoEmployee is bool)))));
       }
 
       match /employees/{employeeId} {
@@ -414,8 +417,14 @@ service cloud.firestore {
         // ----- 鍵付きの文書（連絡先・通勤・口座）。読めるのは管理者と本人だけ（一般ユーザーには見せない） -----
         match /details/{docId} {
           function validPrivate(d) {
-            return exactKeys(d, ['contact', 'commute', 'bankAccount', 'updatedAt'])
+            // 労働者名簿の項目（register：履歴・事由の内容）は 11/24 に足した。前の文書にはない
+            return d.keys().hasAll(['contact', 'commute', 'bankAccount', 'updatedAt'])
+              && d.keys().hasOnly(['contact', 'commute', 'bankAccount', 'register', 'updatedAt'])
               && d.contact is map && d.commute is map && d.bankAccount is map
+              && (!('register' in d)
+                  || (d.register is map && exactKeys(d.register, ['history', 'retireDetail'])
+                      && d.register.history is list && d.register.history.size() <= 30
+                      && optStr(d.register.retireDetail, 200)))
               && (d.contact.postalCode == null || d.contact.postalCode.matches('^[0-9]{7}$'))
               // 居所の郵便番号・海外の国（任意。11/12 より前の文書にはない）
               && (!('livingPostalCode' in d.contact) || d.contact.livingPostalCode == null

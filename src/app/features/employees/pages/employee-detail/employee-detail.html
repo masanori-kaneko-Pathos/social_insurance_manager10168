@@ -168,6 +168,21 @@
             </ul>
           </section>
         }
+
+        <!-- 労働者名簿の記入漏れ（管理者だけ。労基則53条。11/24） -->
+        @if (registerGaps().length > 0) {
+          <section class="card">
+            <h2>{{ 'employee.register.gapsTitle' | transloco }}</h2>
+            <ul class="missing">
+              @for (g of registerGaps(); track g) {
+                <li>
+                  {{ 'employee.register.gap.' + g | transloco }}
+                  <a [routerLink]="['edit']">{{ 'common.edit' | transloco }} →</a>
+                </li>
+              }
+            </ul>
+          </section>
+        }
       }
 
       @case ('employment') {
@@ -430,6 +445,45 @@
             }
           </dl>
         </section>
+
+        <!-- 労働者名簿（業務の種類・履歴・事由の内容。履歴と事由は鍵付きの文書なので管理者だけ。11/24） -->
+        @if (context.isAdmin()) {
+          <section class="card">
+            <h2>{{ 'employee.register.title' | transloco }}</h2>
+            <dl class="info">
+              <div>
+                <dt>{{ 'employee.field.jobType' | transloco }}</dt>
+                <dd>{{ e.org?.jobType || '—' }}</dd>
+              </div>
+              @if (e.org?.officer; as o) {
+                <div>
+                  <dt>{{ 'employee.register.onRegister' | transloco }}</dt>
+                  <dd>{{ (o.alsoEmployee ? 'employee.register.officerWorker' : 'employee.register.officerOnly') | transloco }}</dd>
+                </div>
+              }
+              @if (e.retireDate) {
+                <div class="wide">
+                  <dt>{{ 'employee.field.retireDetail' | transloco }}</dt>
+                  <dd>{{ e.register.retireDetail || '—' }}</dd>
+                </div>
+              }
+              <div class="wide">
+                <dt>{{ 'employee.section.history' | transloco }}</dt>
+                <dd>
+                  @if (e.register.history.length > 0) {
+                    <ul class="history">
+                      @for (h of e.register.history; track $index) {
+                        <li><span class="mono">{{ h.month ?? '' }}</span>{{ h.text }}</li>
+                      }
+                    </ul>
+                  } @else {
+                    —
+                  }
+                </dd>
+              </div>
+            </dl>
+          </section>
+        }
 
         <!-- 扶養家族 -->
         <app-dependent-card [employee]="e" (changed)="reloadEmployee()" />

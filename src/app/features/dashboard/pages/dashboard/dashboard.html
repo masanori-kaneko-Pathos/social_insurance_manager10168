@@ -392,6 +392,10 @@
                               {{ 'dashboard.todo.text.retireNoVoluntary' | transloco }}
                             }
                           }
+                          @case ('registerGaps') {
+                            {{ 'dashboard.todo.text.registerGaps' | transloco: it.extra!.params }}
+                            {{ registerGapText(it.extra!.params) }}
+                          }
                           @case ('cardReturn') {
                             {{ 'dashboard.todo.text.cardReturn' | transloco: it.extra!.params }}
                           }
@@ -409,6 +413,7 @@
                           }
                           @case ('contractEnd') {
                             {{ 'dashboard.todo.text.contractEnd' | transloco: it.extra!.params }}
+                            <!-- 根拠：厚生労働省の告示「有期労働契約の締結、更新、雇止め等に関する基準」第2条（雇止めの予告） -->
                             @if (it.extra!.params['notice'] === 'yes') {
                               {{
                                 'dashboard.todo.text.contractEndNotice'
@@ -596,6 +601,13 @@
                               [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
                               [queryParams]="{ tab: 'employment' }"
                               >{{ 'dashboard.todo.toContract' | transloco }} →</a
+                            >
+                          }
+                          @case ('registerGaps') {
+                            <a
+                              [routerLink]="['/o', office()?.id, 'employees']"
+                              [queryParams]="{ register: 'gaps', status: 'all' }"
+                              >{{ 'employeeCsv.register.toList' | transloco }} →</a
                             >
                           }
                           @case ('officerCheck') {

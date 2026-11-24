@@ -7,6 +7,7 @@ import {
   filterToQuery,
   matchesFilter,
   needsContracts,
+  needsPrivates,
   toggle,
   CATEGORY_OPTIONS,
 } from './employee-filter';
@@ -82,5 +83,23 @@ describe('matchesFilter', () => {
     expect(matchesFilter(emp(), x, { ...CTX, category: 'regular', employment: 'part' })).toBeFalse();
     expect(matchesFilter(emp(), x, { ...CTX, category: 'shortTime', employment: 'part' })).toBeTrue();
     expect(matchesFilter(emp(), x, { ...CTX, category: 'shortTime', employment: null })).toBeFalse();
+  });
+});
+
+describe('労働者名簿の記入漏れで絞る（11/24）', () => {
+  const target = { birthDate: '1990-01-01', hireDate: '2020-04-01', health: { enrolled: true }, pension: { enrolled: true }, sex: null, foreign: null } as never;
+  const ctx = { today: '2026-11-24', month: '2026-11' };
+  it('URL の register=gaps と行き来できる。条件の数に入る', () => {
+    const f2 = filterFromQuery((k) => (k === 'register' ? 'gaps' : null));
+    expect(f2.registerGaps).toBeTrue();
+    expect(filterToQuery(f2)['register']).toBe('gaps');
+    expect(activeCount(f2)).toBe(1);
+    expect(needsPrivates(f2)).toBeTrue();
+  });
+  it('漏れのない人を外す。鍵付きの文書を読み終わるまでは絞らない', () => {
+    const on = f({ registerGaps: true });
+    expect(matchesFilter(target, on, { ...ctx, registerGaps: 0 })).toBeFalse();
+    expect(matchesFilter(target, on, { ...ctx, registerGaps: 2 })).toBeTrue();
+    expect(matchesFilter(target, on, ctx)).toBeTrue();
   });
 });

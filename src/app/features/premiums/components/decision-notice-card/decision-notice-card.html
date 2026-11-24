@@ -4,6 +4,7 @@
     <span class="mark" aria-hidden="true">▷</span>{{ 'decisionNotice.title' | transloco }}
   </button>
   @if (open()) {
+    <!-- 根拠：健康保険法49条・厚生年金保険法29条（事業主は通知を受けたら速やかに被保険者へ知らせる。怠ると罰則） -->
     <p class="hint">{{ 'decisionNotice.lead' | transloco }}</p>
 
     <!-- 何を知らせるか（年金機構の通知書の欄。11/19） -->

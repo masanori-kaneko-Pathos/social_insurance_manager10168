@@ -58,6 +58,7 @@ import { isNotCovered, recipientsOf } from '../../premiums/logic/bonus-nature';
 import { CoverageInput, healthLostDate } from '../../employees/logic/coverage';
 
 export type ExtraKind =
+  | 'registerGaps'
   | 'residence'
   | 'workPermit'
   | 'lumpSum'
@@ -394,7 +395,7 @@ export const VOLUNTARY_DAYS = 20;
 export interface RetirePerson {
   id: string;
   retireDate: DateStr | null;
-  retireReason: 'resign' | 'death' | 'transfer' | 'other' | null;
+  retireReason: 'resign' | 'dismissal' | 'death' | 'transfer' | 'other' | null;
   health: { enrolled: boolean; acquiredDate: DateStr | null };
 }
 
@@ -757,4 +758,12 @@ export function dependentReportTodos(
   return [...byDate.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, c]) => ({ kind: 'dependentReport' as const, employeeId: p.id, date, params: { date, start: c.start, end: c.end } }));
+}
+
+// ===== 労働者名簿の記入漏れ（事業所で1件にまとめる。人ごとに並べると届出の To-do が埋もれるため。11/24） =====
+
+/** people：記入漏れのある人の数、by：何の漏れが何人か（labor-register の countGaps） */
+export function registerGapsTodo(count: { people: number; by: Partial<Record<string, number>> }): ExtraTodo | null {
+  if (count.people === 0) return null;
+  return { kind: 'registerGaps', employeeId: null, date: null, params: { n: count.people, ...count.by } as Record<string, number> };
 }

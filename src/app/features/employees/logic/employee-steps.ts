@@ -39,6 +39,9 @@ export const STEP_CONTROLS: Record<Exclude<EmployeeStep, 'confirm'>, readonly st
     'hireDate',
     'retireDate',
     'retireReason',
+    'retireDetail', // 労働者名簿（11/24）
+    'history',
+    'org',
     'health',
     'pension',
     'insuredNumber',
@@ -75,6 +78,9 @@ export const STEP_ERRORS: Record<Exclude<EmployeeStep, 'confirm'>, readonly stri
   employment: [
     'birthTooYoung',
     'retireBeforeHire',
+    'retireDetailRequired', // 労働者名簿（11/24）
+    'historyTooMany',
+    'historyTooLong',
     'healthAcquiredRequired',
     'healthLostBeforeAcquired',
     'pensionAcquiredRequired',

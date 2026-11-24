@@ -86,6 +86,7 @@ export const BOARD_ORDER: readonly BoardKind[] = [
   'addressKumiai',
   'noContract',
   'officerCheck',
+  'registerGaps',
   'office',
 ];
 
@@ -130,6 +131,7 @@ export const SECTION_OF: Record<BoardKind, Section> = {
   myNumberDispose: 'soon',
   noContract: 'missing',
   officerCheck: 'missing',
+  registerGaps: 'missing',
   office: 'missing',
 };
 

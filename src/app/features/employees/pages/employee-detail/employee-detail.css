@@ -253,3 +253,20 @@
   color: var(--color-warning-text);
   font-size: var(--font-sm);
 }
+
+/* 労働者名簿の履歴（年月をそろえて並べる。11/24） */
+.history {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history li {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.history .mono {
+  flex: 0 0 5.5em;
+  color: var(--color-text-sub);
+}

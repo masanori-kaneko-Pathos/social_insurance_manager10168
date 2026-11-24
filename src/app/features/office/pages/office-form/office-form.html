@@ -759,6 +759,7 @@
           <!-- 法律の原則は前月分の控除。当月控除は労使協定で選ぶ例外（健保法167条・厚年法84条、労基法24条。11/19） -->
           @if (deductionTo() === 'current') {
             <!-- 当月控除を選んだら、原則（前月分の控除）と確認先を警告で知らせる。灰色の説明は同じ内容なので出さない（新規・編集とも。11/20） -->
+            <!-- 根拠：健康保険法167条・厚生年金保険法84条（前月分の控除）、労働基準法24条（賃金控除の労使協定） -->
             <div class="alert alert-warning" role="alert">{{ 'office.hint.deductionCurrentWarn' | transloco }}</div>
           } @else {
             <span class="hint">{{ 'office.hint.deduction' | transloco }}</span>

@@ -1,6 +1,6 @@
 import { Component, computed, HostListener, effect, ElementRef, inject, signal, untracked, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ContractDoc } from '../../../../core/models/contract';
 import { Employee } from '../../../../core/models/employee';
 import { CriteriaDoc } from '../../../../core/models/master';
@@ -9,6 +9,8 @@ import { shiftMonth, todayLocal, toYearMonth } from '../../../../shared/utils/da
 import { ContractService } from '../../../employees/contract.service';
 import { contractAt } from '../../../employees/logic/contract-form-model';
 import { EmployeeService } from '../../../employees/employee.service';
+import { countGaps, registerGaps, registerLarge } from '../../../employees/logic/labor-register';
+import type { EmployeePrivate } from '../../../../core/models/employee';
 import { classify, reasonParams } from '../../../employees/logic/classify';
 import { CriteriaService } from '../../../office/criteria.service';
 import { payrollOf } from '../../../office/office-settings';
@@ -55,6 +57,7 @@ import {
   RATES_NOTICE_FROM,
   RATES_NOTICE_TO,
   ratesMissingTodo,
+  registerGapsTodo,
   bonusNoneTodos,
   bonusReportTodos,
   enrollmentReportTodos,
@@ -138,6 +141,7 @@ function acquireReported(contracts: ContractDoc[], e: Employee): number | null {
 export class Dashboard {
   private readonly context = inject(OfficeContext);
   private readonly employeesApi = inject(EmployeeService);
+  private readonly transloco = inject(TranslocoService);
   private readonly payrollApi = inject(PayrollService);
   private readonly contractsApi = inject(ContractService);
   private readonly criteriaApi = inject(CriteriaService);
@@ -290,6 +294,7 @@ export class Dashboard {
       ...myNumberTodos(this.employees(), this.myNumberIndex(), this.today, this.familyIndex()).map(extraItem),
       ...(specific ? [extraItem(specific)] : []),
       ...(ratesMissing ? [extraItem(ratesMissing)] : []),
+      ...(this.registerTodo() ? [extraItem(this.registerTodo()!)] : []),
       ...(adjustment ? [extraItem(adjustment)] : []),
       ...insurerChangeTodos(o, this.today).map(extraItem),
       ...bonusNoneTodos(o.bonusMonths ?? [], this.bonusPayments(), this.today).map(extraItem),
@@ -527,6 +532,26 @@ export class Dashboard {
     }
   }
 
+  // ===== 労働者名簿の記入漏れ（管理者だけ。全員の鍵付きの文書を読む。ログインの間は覚えている。11/24） =====
+  private readonly privates = signal<Map<string, EmployeePrivate> | null>(null);
+  private readonly registerTodo = computed(() => {
+    const privates = this.privates();
+    if (!privates) return null;
+    const list = this.employees();
+    const large = registerLarge(list, this.today);
+    return registerGapsTodo(
+      countGaps(list.map((e) => { const p = privates.get(e.id); return p ? registerGaps({ ...e, ...p }, this.today, large) : []; })),
+    );
+  });
+
+  /** 何の漏れが何人か → 「（履歴 12・住所 12）」 */
+  registerGapText(params: Record<string, string | number>): string {
+    const parts = Object.entries(params)
+      .filter(([k]) => k !== 'n')
+      .map(([k, n]) => `${this.transloco.translate('employee.register.gapShort.' + k)} ${n}`);
+    return parts.length ? `（${parts.join('・')}）` : '';
+  }
+
   /** 材料をまとめて読む（契約は在籍している人の分だけ） */
   private async load(officeId: string): Promise<void> {
     this.loading.set(true);
@@ -570,6 +595,11 @@ export class Dashboard {
       this.loading.set(false);
     }
     if (this.context.isAdmin()) {
+      this.privates.set(null);
+      this.employeesApi
+        .listPrivates(officeId)
+        .then((m) => this.privates.set(m))
+        .catch((err) => console.error(err));
       // マイナンバーの状態（チェック待ち・廃棄の時期）。1回の読み取りで全員分
       this.myNumbersApi
         .indexAll(officeId)

@@ -15,8 +15,10 @@ import {
   EmployeeFull,
   EmployeeInput,
   EmployeePrivate,
+  EmployeePrivateDoc,
   employeeExtras,
   emptyPrivate,
+  emptyRegister,
   Leave,
   legacyPrivate,
   splitPrivate,
@@ -109,14 +111,28 @@ export class EmployeeService {
     try {
       const snap = await countedGetDoc(this.privateRef(officeId, employeeId));
       if (snap.exists()) {
-        const d = snap.data() as EmployeePrivate;
-        return { contact: d.contact, commute: d.commute, bankAccount: d.bankAccount };
+        const d = snap.data() as EmployeePrivateDoc;
+        // 労働者名簿の項目（11/24）は前の文書にはない → 空
+        return { contact: d.contact, commute: d.commute, bankAccount: d.bankAccount, register: d.register ?? emptyRegister() };
       }
     } catch (err) {
       console.warn('鍵付きの文書を読めませんでした（一般ユーザーなど）', err);
       return emptyPrivate();
     }
     return (legacyFrom && legacyPrivate(legacyFrom)) || emptyPrivate();
+  }
+
+  /**
+   * 全員の鍵付きの文書（管理者だけ。労働者名簿の記入漏れ・出力に使う。11/24）
+   * 文書に officeId がないので、まとめての問い合わせはできず、人数分を並べて読む。ログインの間は覚えておく
+   * （書き込むと変更履歴の target 'details/private' で忘れる → data-cache の forgetForWrite）
+   */
+  async listPrivates(officeId: string): Promise<Map<string, EmployeePrivate>> {
+    return cached(cacheKey.privates(officeId), async () => {
+      const list = await this.list(officeId);
+      const all = await Promise.all(list.map((e) => this.getPrivate(officeId, e.id, e)));
+      return new Map(list.map((e, i) => [e.id, all[i]]));
+    });
   }
 
   /** 従業員の文書＋鍵付きの文書（詳細・編集・マイページ・依頼の確認）。読み込みは2回 */
@@ -153,18 +169,17 @@ export class EmployeeService {
   ): Promise<void> {
     const ref = this.privateRef(officeId, employeeId);
     const snap = await countedGetDoc(ref);
-    const before = snap.exists()
-      ? (snap.data() as EmployeePrivate)
+    const stored = snap.exists() ? (snap.data() as EmployeePrivateDoc) : null;
+    const before: EmployeePrivate = stored
+      ? { contact: stored.contact, commute: stored.commute, bankAccount: stored.bankAccount, register: stored.register ?? emptyRegister() }
       : (legacyPrivate((await this.get(officeId, employeeId)) ?? {}) ?? emptyPrivate());
     const after: EmployeePrivate = {
       contact: patch.contact ?? before.contact,
       commute: patch.commute ?? before.commute,
       bankAccount: patch.bankAccount ?? before.bankAccount,
+      register: patch.register ?? before.register,
     };
-    const changes = changesOf(
-      { contact: before.contact, commute: before.commute, bankAccount: before.bankAccount },
-      { ...after },
-    );
+    const changes = changesOf({ ...before }, { ...after });
     if (snap.exists() && changes.length === 0) return; // 何も変わっていない
     // 住所が変わったら、届出の宿題も同じ batch で残す
     const tasks = await this.addressTasksFor(officeId, employeeId, before.contact, after.contact, addressFactDate);

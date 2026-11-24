@@ -13,8 +13,9 @@ export type Sex = 'male' | 'female';
 export const SEXES: readonly Sex[] = ['male', 'female'];
 
 /** 退職の理由（70歳以上被用者不該当届・喪失届の原因の材料） */
-export type RetireReason = 'resign' | 'death' | 'transfer' | 'other';
-export const RETIRE_REASONS: readonly RetireReason[] = ['resign', 'death', 'transfer', 'other'];
+// 解雇は労働者名簿の事由に「その理由を含む」ため分ける（労基則53条1項5号。11/24）。資格喪失届の原因は退職と同じ「退職等」
+export type RetireReason = 'resign' | 'dismissal' | 'death' | 'transfer' | 'other';
+export const RETIRE_REASONS: readonly RetireReason[] = ['resign', 'dismissal', 'death', 'transfer', 'other'];
 
 /** 資格喪失の原因（資格喪失届：退職等・死亡・75歳到達・障害認定・社会保障協定・特定減額特例対象者の任意喪失） */
 export type LossReason = 'retire' | 'death' | 'age75' | 'disability' | 'agreement' | 'optOut';
@@ -237,6 +238,8 @@ export type OfficerCheck = (typeof OFFICER_CHECKS)[number];
 export interface OfficerInfo {
   type: OfficerType;
   checks: Record<OfficerCheck, boolean | null>;
+  /** 使用人を兼ねる（取締役営業部長など。労働者でもあるので労働者名簿に載せる。11/24。前の文書にはない） */
+  alsoEmployee?: boolean;
 }
 
 export interface EmployeeOrg {
@@ -244,6 +247,8 @@ export interface EmployeeOrg {
   departmentId: string | null;
   /** 役職（部長・主任 など。自由な文字） */
   position: string | null;
+  /** 従事する業務の種類（労働者名簿。常時30人未満の事業では書かなくてよい。労基則53条。11/24。前の文書にはない） */
+  jobType?: string | null;
   /** 役員なら（役員でなければ null） */
   officer: OfficerInfo | null;
 }
@@ -312,16 +317,35 @@ export type EmployeeInput = Omit<EmployeeDoc, 'createdAt' | 'updatedAt'>;
 // 連絡先・通勤・口座。読めるのは管理者と本人だけ（一般ユーザーには見せない）。
 // 一覧・To-do・保険料では使わないので、従業員の文書から分けても読み込みは増えない（詳細・編集・マイページで1回ずつ）
 
-export const PRIVATE_KEYS = ['contact', 'commute', 'bankAccount'] as const;
+export const PRIVATE_KEYS = ['contact', 'commute', 'bankAccount', 'register'] as const;
+
+/** 履歴の1行（労働者名簿。社内の異動・昇進が原則、入社前の経歴も書いてよい） */
+export interface RegisterLine {
+  /** 'YYYY-MM'（わからなければ null） */
+  month: string | null;
+  text: string;
+}
+
+/**
+ * 労働者名簿の項目のうち、一般ユーザーに見せないもの（11/24）
+ * 様式第19号の「退職又は死亡」の事由は1つの欄：解雇ならその理由、死亡ならその原因を書く（労基則53条1項5号・6号）
+ */
+export interface RegisterDoc {
+  history: RegisterLine[];
+  /** 事由の詳しい内容（解雇の理由・死亡の原因・自己都合 など） */
+  retireDetail: string | null;
+}
 
 export interface EmployeePrivateDoc {
   contact: ContactDoc;
   commute: CommuteDoc;
   bankAccount: BankAccountDoc;
+  /** 11/24 に足した。前の文書にはない（空とみなす） */
+  register?: RegisterDoc;
   updatedAt: Timestamp;
 }
 
-export type EmployeePrivate = Omit<EmployeePrivateDoc, 'updatedAt'>;
+export type EmployeePrivate = Omit<EmployeePrivateDoc, 'updatedAt' | 'register'> & { register: RegisterDoc };
 
 /** 従業員の文書＋鍵付きの文書（詳細・編集・マイページ・依頼の確認で使う） */
 export type EmployeeFull = Employee & EmployeePrivate;
@@ -361,8 +385,12 @@ export function emptyCommute(): CommuteDoc {
   return { method: null, route: null };
 }
 
+export function emptyRegister(): RegisterDoc {
+  return { history: [], retireDetail: null };
+}
+
 export function emptyPrivate(): EmployeePrivate {
-  return { contact: emptyContact(), commute: emptyCommute(), bankAccount: emptyBankAccount() };
+  return { contact: emptyContact(), commute: emptyCommute(), bankAccount: emptyBankAccount(), register: emptyRegister() };
 }
 
 /** 鍵付きの文書の項目と、それ以外に分ける（渡された項目だけ） */
@@ -387,6 +415,7 @@ export function legacyPrivate(e: object): EmployeePrivate | null {
     contact: o.contact ?? empty.contact,
     commute: o.commute ?? empty.commute,
     bankAccount: o.bankAccount ?? empty.bankAccount,
+    register: empty.register,
   };
 }
 

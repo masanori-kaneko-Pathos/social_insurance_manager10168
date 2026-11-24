@@ -451,6 +451,24 @@
                 <span class="hint">{{ 'employee.hint.retireReason.' + form.controls.retireReason.value | transloco }}</span>
               }
             </div>
+            <!-- 事由の詳しい内容（労働者名簿：解雇はその理由、死亡はその原因が要る。11/24） -->
+            <div class="field wide">
+              <label for="retireDetail">
+                {{ 'employee.field.retireDetail' | transloco }}
+                @if (needsDetail()) {
+                  <span class="req" aria-hidden="true">※</span>
+                } @else {
+                  <span class="optional">{{ 'common.optional' | transloco }}</span>
+                }
+              </label>
+              <textarea id="retireDetail" class="input" rows="2" formControlName="retireDetail" maxlength="200"
+                        [class.is-invalid]="groupError('retireDetailRequired', 'retireDetail')"></textarea>
+              @if (groupError('retireDetailRequired', 'retireDetail')) {
+                <span class="field-error">{{ 'employee.validation.retireDetail.' + form.controls.retireReason.value | transloco }}</span>
+              } @else {
+                <span class="hint">{{ 'employee.hint.retireDetail' | transloco }}</span>
+              }
+            </div>
           }
         </div>
       </section>
@@ -475,6 +493,12 @@
             <label for="position">{{ 'employee.field.position' | transloco }}</label>
             <input id="position" class="input" formControlName="position" maxlength="50" />
           </div>
+          <!-- 従事する業務の種類（労働者名簿。常時30人未満の事業では書かなくてよい。11/24） -->
+          <div class="field">
+            <label for="jobType">{{ 'employee.field.jobType' | transloco }}</label>
+            <input id="jobType" class="input" formControlName="jobType" maxlength="100"
+                   [attr.placeholder]="'employee.placeholder.jobType' | transloco" />
+          </div>
           <div class="field">
             <label for="officerType">{{ 'employee.field.officerType' | transloco }}</label>
             <select id="officerType" class="input" formControlName="officerType">
@@ -485,6 +509,13 @@
             </select>
           </div>
         </div>
+        @if (form.controls.org.controls.officerType.value) {
+          <!-- 使用人を兼ねる役員（取締役営業部長など）は労働者でもあるので、労働者名簿に載せる（11/24） -->
+          <label class="check also-employee">
+            <input type="checkbox" formControlName="alsoEmployee" />
+            {{ 'employee.org.alsoEmployee' | transloco }}
+          </label>
+        }
         @if (form.controls.org.controls.officerType.value === 'partTime') {
           <!-- 非常勤の役員：6項目（日本年金機構の判断材料）。多くが加入の方向なら加入 -->
           <fieldset class="officer-checks" formGroupName="checks">
@@ -506,6 +537,21 @@
             {{ 'employee.org.candidate.' + j.candidate | transloco: { toward: j.toward, away: j.away, unanswered: j.unanswered } }}
           </p>
           <p class="hint">{{ 'employee.org.officerNote' | transloco }}</p>
+        }
+      </section>
+
+      <!-- 履歴（労働者名簿。1行に1件、先頭に年月。CSV の「履歴」の列と同じ書き方。11/24） -->
+      <section id="sec-history" class="card">
+        <h2>{{ 'employee.section.history' | transloco }}</h2>
+        <p class="hint section-hint">{{ 'employee.hint.history' | transloco: registerLimits }}</p>
+        <textarea id="history" class="input history-input" rows="5" formControlName="history"
+                  [attr.aria-label]="'employee.section.history' | transloco"
+                  [attr.placeholder]="'employee.placeholder.history' | transloco"
+                  [class.is-invalid]="groupError('historyTooMany', 'history') || groupError('historyTooLong', 'history')"></textarea>
+        @if (groupError('historyTooMany', 'history')) {
+          <span class="field-error">{{ 'employee.validation.historyTooMany' | transloco: registerLimits }}</span>
+        } @else if (groupError('historyTooLong', 'history')) {
+          <span class="field-error">{{ 'employee.validation.historyTooLong' | transloco: registerLimits }}</span>
         }
       </section>
 

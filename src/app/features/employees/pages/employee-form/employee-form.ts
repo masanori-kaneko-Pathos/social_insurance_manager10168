@@ -67,6 +67,15 @@ import { ContactDoc } from '../../../../core/models/employee';
 import { addressChanges } from '../../logic/address-filing';
 import { OFFICER_CHECKS, OFFICER_TYPES } from '../../../../core/models/employee';
 import { orgOf } from '../../logic/employee-form-model';
+import {
+  historyProblem,
+  needsRetireDetail,
+  parseHistory,
+  REGISTER_DETAIL_MAX,
+  REGISTER_HISTORY_MAX,
+  REGISTER_JOB_TYPE_MAX,
+  REGISTER_TEXT_MAX,
+} from '../../logic/labor-register';
 import { judgeOfficer, OfficerJudgement } from '../../logic/officer';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
@@ -94,6 +103,10 @@ function wholeForm(g: AbstractControl): ValidationErrors | null {
   // 入社日に15歳未満は雇えない（労働基準法56条。年少者の例外は、このアプリでは扱わない）
   else if (v.birthDate && v.hireDate && v.hireDate < addYears(v.birthDate, 15)) errors['birthTooYoung'] = true;
   if (v.retireDate && v.hireDate && v.retireDate < v.hireDate) errors['retireBeforeHire'] = true;
+  // 労働者名簿：解雇ならその理由、死亡ならその原因（労基則53条1項5号・6号。11/24）
+  if (v.retireDate && needsRetireDetail(v.retireReason || null) && !v.retireDetail?.trim()) errors['retireDetailRequired'] = true;
+  const historyErr = historyProblem(parseHistory(v.history ?? ''));
+  if (historyErr) errors[historyErr === 'tooMany' ? 'historyTooMany' : 'historyTooLong'] = true;
   for (const k of ['health', 'pension'] as const) {
     const e = v[k];
     if (e.enrolled && !e.acquiredDate) errors[`${k}AcquiredRequired`] = true;
@@ -274,6 +287,8 @@ export class EmployeeForm {
         hireDate: [v.hireDate, [Validators.required]],
         retireDate: [v.retireDate],
         retireReason: [v.retireReason],
+        retireDetail: [v.retireDetail, [Validators.maxLength(REGISTER_DETAIL_MAX)]],
+        history: [v.history],
         health: this.enrollmentGroup(v.health),
         pension: this.enrollmentGroup(v.pension),
         acquisitionType: [v.acquisitionType],
@@ -320,6 +335,8 @@ export class EmployeeForm {
         org: this.fb.group({
           departmentId: [v.org.departmentId],
           position: [v.org.position, [Validators.maxLength(50)]],
+          jobType: [v.org.jobType, [Validators.maxLength(REGISTER_JOB_TYPE_MAX)]],
+          alsoEmployee: [v.org.alsoEmployee],
           officerType: [v.org.officerType],
           checks: this.fb.group({
             attendance: [v.org.checks.attendance],
@@ -498,6 +515,13 @@ export class EmployeeForm {
   readonly departments = computed(() => this.context.current()?.departments ?? []);
   readonly officerTypes = OFFICER_TYPES;
   readonly officerChecks = OFFICER_CHECKS;
+
+  // ===== 労働者名簿（11/24） =====
+  readonly registerLimits = { history: REGISTER_HISTORY_MAX, text: REGISTER_TEXT_MAX };
+  /** 事由の詳しい内容が要るか（解雇の理由・死亡の原因） */
+  needsDetail(): boolean {
+    return needsRetireDetail(this.form.controls.retireReason.value || null);
+  }
 
   /** 役員の加入の候補（非常勤は6項目から。報酬はここではわからないので null） */
   officerJudgement(): OfficerJudgement | null {
