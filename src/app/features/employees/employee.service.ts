@@ -166,7 +166,7 @@ export class EmployeeService {
     employeeId: string,
     patch: Partial<EmployeePrivate>,
     addressFactDate?: string,
-  ): Promise<void> {
+  ): Promise<FilingTaskInput[]> {
     const ref = this.privateRef(officeId, employeeId);
     const snap = await countedGetDoc(ref);
     const stored = snap.exists() ? (snap.data() as EmployeePrivateDoc) : null;
@@ -180,7 +180,7 @@ export class EmployeeService {
       register: patch.register ?? before.register,
     };
     const changes = changesOf({ ...before }, { ...after });
-    if (snap.exists() && changes.length === 0) return; // 何も変わっていない
+    if (snap.exists() && changes.length === 0) return []; // 何も変わっていない
     // 住所が変わったら、届出の宿題も同じ batch で残す
     const tasks = await this.addressTasksFor(officeId, employeeId, before.contact, after.contact, addressFactDate);
     const batch = writeBatch(db);
@@ -188,6 +188,7 @@ export class EmployeeService {
     this.history.addTo(batch, officeId, employeeId, 'details/private', changes);
     for (const t of tasks) this.tasks.addTo(batch, officeId, t);
     await batch.commit();
+    return tasks;
   }
 
   // ===== 登録・編集 =====
@@ -227,19 +228,21 @@ export class EmployeeService {
     addressFactDate?: string,
     /** 保存と一緒に残す届出の宿題（生年月日の訂正など。11/19） */
     extraTasks: FilingTaskInput[] = [],
-  ): Promise<void> {
+  ): Promise<FilingTaskInput[]> {
     const { main, priv } = splitPrivate(input as Partial<EmployeeFormInput>);
     // 書き込みと変更履歴は同じ batch（HistoryService）
     if (Object.keys(main).length > 0) {
       const ref = doc(this.col(officeId), employeeId);
       await this.history.write(officeId, employeeId, 'employee', ref, 'update', { ...main });
     }
-    if (Object.keys(priv).length > 0) await this.writePrivate(officeId, employeeId, priv, addressFactDate);
+    const written = Object.keys(priv).length > 0 ? await this.writePrivate(officeId, employeeId, priv, addressFactDate) : [];
     if (extraTasks.length > 0) {
       const batch = writeBatch(db);
       for (const t of extraTasks) this.tasks.addTo(batch, officeId, t);
       await batch.commit();
     }
+    /** 残した届出の宿題（住所が変わったとき＋渡されたもの）。CSV の反映のあとに件数を出すため（11/25） */
+    return [...written, ...extraTasks];
   }
 
   /** 産休・育休だけを書き換える（ほかの項目には触らない） */

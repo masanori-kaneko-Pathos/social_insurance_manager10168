@@ -47,7 +47,7 @@ const CONTRACT = {
   ]),
   minimumWageReduction: YES_NO,
   specialEmployment: choices('contract.specialEmployment', [
-    ['ふつう', 'none'],
+    ['該当しない', 'none'],
     ['日雇い', 'daily'],
     ['季節的業務', 'seasonal'],
     ['臨時的事業', 'temporaryBusiness'],

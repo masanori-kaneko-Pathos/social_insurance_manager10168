@@ -52,11 +52,11 @@
     }
     @if (doneCount() !== null) {
       <div class="alert alert-success">
-        @if (doneCount()! > 0 || filledCount() === 0) {
+        @if (doneCount()! > 0 || changedCount() === 0) {
           {{ 'employeeCsv.done' | transloco: { n: doneCount() } }}
         }
-        @if (filledCount() > 0) {
-          {{ 'employeeCsv.register.filled' | transloco: { n: filledCount() } }}
+        @if (changedCount() > 0) {
+          {{ 'employeeCsv.same.done' | transloco: { n: changedCount() } }}
         }
         <a [routerLink]="['/o', context.current()?.id, 'employees']">{{
           'employeeCsv.toList' | transloco
@@ -68,6 +68,16 @@
           <button type="button" class="link" (click)="goPayrolls()">{{ 'employeeCsv.nextPayrolls' | transloco }} ›</button>
         </span>
       </div>
+      <!-- CSVによる変更点を反映したあとの、関連する届出（住所変更届・氏名変更届・休業の申出書。11/25） -->
+      @if (followUpsDone().length > 0) {
+        <div class="alert alert-warning">
+          {{ 'employeeCsv.same.followUpsDone' | transloco }}
+          @for (f of followUpsDone(); track f.key; let last = $last) {
+            {{ 'employeeCsv.same.followUp.' + f.key | transloco }} {{ 'employeeCsv.same.count' | transloco: { n: f.n } }}{{ last ? '' : '・' }}
+          }
+          <a [routerLink]="['/o', context.current()?.id]">{{ 'employeeCsv.same.toTodo' | transloco }}</a>
+        </div>
+      }
     }
     <!-- 取り込んだあとの、労働者名簿の記入漏れ（事業所全体。11/24） -->
     @if (gapsAfter(); as g) {
@@ -139,61 +149,73 @@
         (fixed)="onFix($event)"
       />
 
-      <!-- 登録済みの同じ人（社員番号・氏名・生年月日が同じ）：取り込まない。違う所があれば知らせる（11/17） -->
-      @if (samePeople().length > 0) {
-        <details class="same-people">
-          <summary>
-            {{ 'employeeCsv.same.title' | transloco: { n: samePeople().length } }}
-            @if (changedPeople().length > 0) {
-              <span class="badge badge-warn">{{ 'employeeCsv.same.changed' | transloco: { n: changedPeople().length } }}</span>
-            }
-          </summary>
+      <!-- 登録済みの同じ人（社員番号・氏名・生年月日が同じ）：新しくは登録しない。CSVによる変更点を行ごとに選ぶ（11/17・11/25） -->
+      @if (changedPeople().length > 0) {
+        <section class="same-people">
+          <h3>
+            {{ 'employeeCsv.same.title' | transloco }}
+            <span class="badge badge-warn">{{ 'employeeCsv.same.changed' | transloco: { n: changedPeople().length } }}</span>
+          </h3>
           <p class="sub">{{ 'employeeCsv.same.lead' | transloco }}</p>
-          @if (changedPeople().length > 0) {
-            <div class="table-wrap scroll">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>{{ 'employeeCsv.col.line' | transloco }}</th>
-                    <th>{{ 'employeeCsv.col.number' | transloco }}</th>
-                    <th>{{ 'employeeCsv.col.name' | transloco }}</th>
-                    <th>{{ 'employeeCsv.same.column' | transloco }}</th>
-                    <th>{{ 'employeeCsv.same.saved' | transloco }}</th>
-                    <th>{{ 'employeeCsv.same.file' | transloco }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (x of changedPeople(); track x.line) {
-                    @for (d of x.diffs; track d.column; let first = $first) {
-                      <tr>
-                        <td class="num">{{ first ? x.line : '' }}</td>
-                        <td class="emp-no">{{ first ? x.employeeNumber : '' }}</td>
-                        <td>{{ first ? x.name : '' }}</td>
-                        <td>{{ columnLabel(d.column) }}</td>
-                        <td>{{ d.saved || '—' }}</td>
-                        <td>{{ d.file || '—' }}</td>
-                      </tr>
-                    }
+          <div class="table-wrap scroll">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>{{ 'employeeCsv.col.line' | transloco }}</th>
+                  <th>{{ 'employeeCsv.col.number' | transloco }}</th>
+                  <th>{{ 'employeeCsv.col.name' | transloco }}</th>
+                  <th>{{ 'employeeCsv.same.column' | transloco }}</th>
+                  <th>{{ 'employeeCsv.same.saved' | transloco }}</th>
+                  <th>{{ 'employeeCsv.same.file' | transloco }}</th>
+                  <th>{{ 'employeeCsv.same.apply' | transloco }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (x of changedPeople(); track x.line) {
+                  @for (d of x.diffs; track d.key; let first = $first) {
+                    <tr>
+                      <td class="num">{{ first ? x.line : '' }}</td>
+                      <td class="emp-no">{{ first ? x.employeeNumber : '' }}</td>
+                      <td>{{ first ? x.name : '' }}</td>
+                      <td>{{ changeLabel(d.item) }}</td>
+                      <td class="same-value">{{ d.saved || '—' }}</td>
+                      <td class="same-value">{{ d.file || '—' }}</td>
+                      <td class="same-apply">
+                        @if (d.selectable) {
+                          <select class="input" [value]="isApplied(x, d) ? 'apply' : 'keep'" (change)="setApplied(x, d, $any($event.target).value)">
+                            <option value="apply">{{ 'employeeCsv.same.do.apply' | transloco }}</option>
+                            <option value="keep">{{ 'employeeCsv.same.do.keep' | transloco }}</option>
+                          </select>
+                          @if (d.followUp && isApplied(x, d)) {
+                            <small class="field-note">{{ 'employeeCsv.same.related' | transloco }}{{ 'employeeCsv.same.followUp.' + d.followUp | transloco }}</small>
+                          }
+                        } @else if (d.unknownDepartment) {
+                          <small class="field-note">{{ 'employeeCsv.same.unknownDepartment' | transloco }}</small>
+                        } @else if (x.employeeId) {
+                          @let link = changeLink(x.employeeId, d.item);
+                          <a [routerLink]="link.path" [queryParams]="link.tab ? { tab: link.tab } : {}">{{
+                            (link.tab ? 'employee.tab.' + link.tab : 'common.edit') | transloco
+                          }} →</a>
+                        }
+                      </td>
+                    </tr>
                   }
-                </tbody>
-              </table>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (pv.plan.items.length === 0 && changeCount() > 0) {
+            <div class="actions">
+              <button type="button" class="btn" (click)="clear()" [disabled]="saving()">{{ 'common.cancel' | transloco }}</button>
+              <button type="button" class="btn btn-primary" (click)="importCsv()" [disabled]="!canImport()">
+                {{ 'employeeCsv.same.button' | transloco: { n: changeCount() } }}
+              </button>
             </div>
           }
-        </details>
+        </section>
       }
-      <!-- 登録済みの同じ人：労働者名簿の空欄だけを、このファイルで埋める（上書きしない。11/24） -->
-      @if (registerFills().length > 0) {
-        <p class="register-note">
-          {{ 'employeeCsv.register.fill' | transloco: { n: registerFills().length, text: gapText(fillCounts().by) } }}
-        </p>
-        @if (pv.plan.items.length === 0) {
-          <div class="actions">
-            <button type="button" class="btn" (click)="clear()" [disabled]="saving()">{{ 'common.cancel' | transloco }}</button>
-            <button type="button" class="btn btn-primary" (click)="importCsv()" [disabled]="!canImport()">
-              {{ 'employeeCsv.register.fillButton' | transloco: { n: registerFills().length } }}
-            </button>
-          </div>
-        }
+      @if (samePeople().length > changedPeople().length) {
+        <p class="sub">{{ 'employeeCsv.same.unchanged' | transloco: { n: samePeople().length - changedPeople().length } }}</p>
       }
 
       @if (pv.plan.items.length > 0 || fix.issues().length > 0) {

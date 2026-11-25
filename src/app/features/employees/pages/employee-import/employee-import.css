@@ -238,14 +238,33 @@ progress {
   width: 9em;
 }
 
-/* 登録済みの同じ人（11/17） */
+/* 登録済みの同じ人：CSVによる変更点（11/17・11/25） */
 .same-people {
   margin: var(--space-sm) 0 var(--space-md);
 }
 
-.same-people summary {
-  cursor: pointer;
-  font-weight: 600;
+.same-people h3 .badge {
+  margin-left: var(--space-xs);
+  vertical-align: middle;
+}
+
+/* 値は長くても折り返す（履歴・住所） */
+.same-people .same-value {
+  white-space: pre-line;
+  max-width: 18em;
+}
+
+.same-people .same-apply {
+  min-width: 9.5em;
+}
+
+.same-people .same-apply select {
+  width: auto;
+}
+
+.same-people .same-apply .field-note {
+  display: block;
+  margin-top: 2px;
 }
 
 /* 行ごとのチェック（外した行は取り込まない。11/17） */

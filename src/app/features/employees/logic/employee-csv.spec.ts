@@ -1,4 +1,4 @@
-import { isSamePerson, samePersonDiffs } from './employee-csv';
+import { isSamePerson } from './employee-csv';
 import type { GradeTableDoc } from '../../../core/models/rates';
 import { HEALTH_ROWS, PENSION_ROWS } from '../../payrolls/logic/grades.fixture';
 import {
@@ -121,6 +121,20 @@ describe('readEmployeeCsv', () => {
   });
 });
 
+describe('適用除外になる雇い方（11/25 に見出しと「ふつう」を変えた）', () => {
+  it('「該当しない」も、前の「ふつう」も読める', () => {
+    for (const w of ['該当しない', 'ふつう']) {
+      const r = readEmployeeCsv(table({ ...BASE, specialEmployment: w }));
+      expect(r.rows[0].parsed!.contract.specialEmployment).toBe('none');
+    }
+  });
+  it('前の見出し「雇い方」のファイルも、そのまま取り込める', () => {
+    const t = table({ ...BASE, specialEmployment: '日雇い' });
+    t[0] = t[0].map((h) => (h === '適用除外になる雇い方' ? '雇い方' : h));
+    expect(readEmployeeCsv(t).rows[0].parsed!.contract.specialEmployment).toBe('daily');
+  });
+});
+
 describe('planImport：契約から加入と標準報酬を出す', () => {
   const plan = (rows: Record<string, string>[], ctx = CTX) => planImport(readEmployeeCsv(table(...rows)).rows, ctx);
 
@@ -211,16 +225,5 @@ describe('登録済みの同じ人（11/17）', () => {
     expect(isSamePerson(a, { lastName: '山田 ', firstName: '花子', birthDate: '1990-01-01' })).toBeTrue();
     expect(isSamePerson(a, { ...a, birthDate: '1990-01-02' })).toBeFalse();
     expect(isSamePerson(a, { ...a, firstName: '太郎' })).toBeFalse();
-  });
-  it('samePersonDiffs：違う項目だけ（契約は今の契約と比べる）', () => {
-    const file = {
-      employee: { lastNameKana: 'ヤマダ', firstNameKana: 'ハナコ', sex: 'female', hireDate: '2020-04-01', retireDate: null, basicPensionNumber: null },
-      contract: { employmentType: 'regular', payType: 'monthly', weeklyMinutes: 2400, monthlyDays: 21, scheduledWage: 300000, hourlyWage: null, periodEnd: null },
-    } as any;
-    const saved = { employee: { ...file.employee, hireDate: '2020-04-02' }, contract: { ...file.contract, scheduledWage: 280000 } } as any;
-    expect(samePersonDiffs(file, saved)).toEqual([
-      { column: 'hireDate', saved: '2020-04-02', file: '2020-04-01' },
-      { column: 'scheduledWage', saved: '280000', file: '300000' },
-    ]);
   });
 });

@@ -796,15 +796,33 @@ export class EmployeeForm {
           !!input.birthDate &&
           before.birthDate !== input.birthDate &&
           (!!before.health.acquiredDate || !!before.pension.acquiredDate);
+        // 氏名・フリガナを変えたら、被保険者氏名変更（訂正）届の宿題（要るかもしれない人だけ。CSV の変更と同じ部品。11/25）
+        const nameKey = (x: Pick<Employee, 'lastName' | 'firstName' | 'lastNameKana' | 'firstNameKana'>) =>
+          [x.lastName, x.firstName, x.lastNameKana, x.firstNameKana].map((v) => (v ?? '').trim()).join('|');
+        const nameChanged = !!before && nameKey(before) !== nameKey(input);
+        const extra = [
+          ...(birthFixed ? [{ kind: 'birthDate' as const, employeeId: this.employeeId, factDate: todayLocal(), fields: ['birthDate'] }] : []),
+          ...(nameChanged ? await this.employees.nameTasksFor(officeId, { ...before!, health: input.health, pension: input.pension, foreign: input.foreign }, todayLocal()) : []),
+        ];
         await this.employees.update(
           officeId,
           this.employeeId,
           input,
           this.addressChanged() ? this.addressFactDate() || undefined : undefined,
-          birthFixed ? [{ kind: 'birthDate', employeeId: this.employeeId, factDate: todayLocal(), fields: ['birthDate'] }] : [],
+          extra,
         );
         this.loadedContact = input.contact;
-        if (before && input.birthDate) this.loadedEmployee.set({ ...before, birthDate: input.birthDate }); // 2回目の保存で宿題が重ならないように
+        // 2回目の保存で宿題が重ならないように
+        if (before && input.birthDate) {
+          this.loadedEmployee.set({
+            ...before,
+            birthDate: input.birthDate,
+            lastName: input.lastName,
+            firstName: input.firstName,
+            lastNameKana: input.lastNameKana,
+            firstNameKana: input.firstNameKana,
+          });
+        }
         this.addressChanged.set(false);
         id = this.employeeId;
       } else {

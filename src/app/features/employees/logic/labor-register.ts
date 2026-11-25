@@ -159,62 +159,7 @@ export function countGaps(list: readonly RegisterGap[][]): { people: number; by:
   return { people, by };
 }
 
-// ===== 取り込み：登録済みの同じ人の、名簿の空欄だけを埋める（上書きしない。11/24） =====
-
-export interface RegisterFillSource {
-  sex: 'male' | 'female' | null;
-  retireDate: string | null;
-  retireReason: RetireReason | null;
-  org?: EmployeeOrg | null;
-  contact: ContactDoc;
-  register: RegisterDoc;
-}
-
-export interface RegisterFill {
-  /** 従業員の文書・鍵付きの文書に重ねる項目（まとまりは丸ごと。中は今の値に空欄だけ足したもの） */
-  patch: Partial<Pick<RegisterFillSource, 'sex' | 'retireReason' | 'org' | 'contact' | 'register'>>;
-  /** 埋めた項目（記入漏れと同じ名前） */
-  fields: RegisterGap[];
-}
-
-/**
- * saved：登録済みの値、file：ファイルの値。埋めるものがなければ null
- * - 住所は、郵便番号も住所も空の人だけ（住所変更届の宿題を作らないため。変わったのではなく、初めて入れる）
- * - 退職の理由・事由の内容は、登録済みの人が退職しているときだけ（退職日は取り込みで変えない）
- */
-export function registerFill(saved: RegisterFillSource, file: RegisterFillSource): RegisterFill | null {
-  const patch: RegisterFill['patch'] = {};
-  const fields: RegisterGap[] = [];
-  if (!saved.sex && file.sex) {
-    patch.sex = file.sex;
-    fields.push('sex');
-  }
-  if (!saved.contact.address?.trim() && !saved.contact.postalCode && file.contact.address?.trim()) {
-    patch.contact = { ...saved.contact, postalCode: file.contact.postalCode, address: file.contact.address };
-    fields.push('address');
-  }
-  if (!saved.org?.jobType?.trim() && file.org?.jobType?.trim()) {
-    patch.org = { ...(saved.org ?? { departmentId: null, position: null, officer: null }), jobType: file.org.jobType };
-    fields.push('jobType');
-  }
-  const register: RegisterDoc = { ...saved.register };
-  if (saved.register.history.length === 0 && file.register.history.length > 0) {
-    register.history = file.register.history;
-    fields.push('history');
-  }
-  if (saved.retireDate) {
-    if (!saved.retireReason && file.retireReason) {
-      patch.retireReason = file.retireReason;
-      fields.push('retireReason');
-    }
-    if (!saved.register.retireDetail?.trim() && file.register.retireDetail?.trim()) {
-      register.retireDetail = file.register.retireDetail;
-      fields.push('retireDetail');
-    }
-  }
-  if (fields.includes('history') || fields.includes('retireDetail')) patch.register = register;
-  return fields.length > 0 ? { patch, fields } : null;
-}
+// 取り込みで登録済みの人の項目を変更するのは same-person-import.ts（CSVによる変更点。11/25）
 
 // ===== 名簿の出力（様式第19号の欄の順。1人1行の一覧の形。様式は「項目がそろえば形は自由」） =====
 

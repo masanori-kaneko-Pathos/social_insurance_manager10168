@@ -2180,7 +2180,7 @@
       "minimumWageReduction": "Has a minimum wage reduction permit",
       "dispatch": "Dispatch / contracting",
       "note": "Note",
-      "specialEmployment": "Type of employment",
+      "specialEmployment": "Employment type excluded from coverage",
       "renewalPrecedent": "Others on similar contracts at this office have been renewed",
       "noExtensionAgreed": "Both parties agreed in writing (email OK) not to extend beyond the first period"
     },
@@ -2280,7 +2280,7 @@
       "delete": "Could not delete."
     },
     "specialEmployment": {
-      "none": "Ordinary",
+      "none": "Not applicable",
       "daily": "Day laborer",
       "seasonal": "Seasonal work",
       "temporaryBusiness": "Temporary business"
@@ -2512,7 +2512,7 @@
       "ng": "Does not meet"
     },
     "limitReason": {
-      "base": "standard",
+      "base": "general rule",
       "young": "age 19–22 rule",
       "senior": "60 or older",
       "disabled": "disability"
@@ -2746,18 +2746,37 @@
       }
     },
     "same": {
-      "title": "Already registered, same person (same employee number, name and birth date): {{n}} row(s). Not imported",
-      "changed": "{{n}} with differences from the file",
-      "lead": "Importing never overwrites. To keep when a change took effect, enter contract changes with the contract history import or \"Change contract terms\" on the employee page, and other changes by editing the employee.",
+      "title": "Changes from the CSV",
+      "changed": "Changed: {{n}}",
+      "lead": "People already registered (same employee number, name and birth date) are not registered again; only the items you choose are changed. Change contracts, enrollment, monthly remuneration, hire date and retirement date on the employee page so the date of the change is kept.",
+      "unchanged": "Already registered with no changes: {{n}}",
       "column": "Item",
       "saved": "Registered value",
-      "file": "Value in the file"
+      "file": "Value in the CSV",
+      "apply": "Apply",
+      "do": {
+        "apply": "Change",
+        "keep": "Keep"
+      },
+      "leave": "Leave",
+      "foreign": "Nationality and roman name",
+      "unknownDepartment": "Department not in the office settings",
+      "related": "Related filing: ",
+      "followUp": {
+        "address": "Change of address",
+        "addressKumiai": "Address notice (health insurance society)",
+        "name": "Change (correction) of name",
+        "maternity": "Maternity leave application",
+        "childcare": "Childcare leave application"
+      },
+      "count": "{{n}}",
+      "button": "Change ({{n}})",
+      "done": "Changed ({{n}} people).",
+      "followUpsDone": "Related filings: ",
+      "toTodo": "See To-do"
     },
     "register": {
       "newGaps": "{{n}} people have empty items ({{text}}). Fill them in later by editing, or import a file with those columns again.",
-      "fill": "For the {{n}} people already registered, only empty items are filled from this file ({{text}}). Items already entered are not overwritten.",
-      "fillButton": "Fill empty items ({{n}})",
-      "filled": "Filled the empty items of {{n}} registered people.",
       "after": "People with empty items: {{n}} ({{text}})",
       "toList": "See them in the list"
     }

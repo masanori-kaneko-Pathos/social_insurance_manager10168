@@ -42,9 +42,19 @@ import { ImportFix, ImportIssue, ImportIssues } from '../../../../shared/compone
 import { applyRowValues } from '../../../../shared/import/row-fix';
 import { ContractService } from '../../contract.service';
 import { contractAt } from '../../logic/contract-form-model';
-import { PersonDiff, samePersonDiffs } from '../../logic/employee-csv';
-import type { Employee } from '../../../../core/models/employee';
-import { countGaps, RegisterFill, registerFill, registerGaps, registerLarge } from '../../logic/labor-register';
+import type { ContactDoc, Employee, RegisterDoc } from '../../../../core/models/employee';
+import { countGaps, registerGaps, registerLarge } from '../../logic/labor-register';
+import { RemunerationService } from '../../remuneration.service';
+import { employeeExportRow } from '../../logic/employee-export';
+import {
+  ChangeItem,
+  changeTab,
+  PersonChange,
+  samePersonChanges,
+  SamePersonFile,
+  samePersonUpdate,
+} from '../../logic/same-person-import';
+import type { FilingTaskInput } from '../../../../core/models/filing-task';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { EMPLOYEE_FIX_FIELDS } from '../../logic/import-fix-fields';
 import { IssueCol, IssueRow } from '../../../../shared/components/import-issues/issue-row';
@@ -204,6 +214,7 @@ export class EmployeeImport {
   // ===== エラーの直し方（11/17）：共通の部品（app-import-issues）。「直す」の窓で1行ずつ直して、すぐ確かめ直す =====
   private readonly transloco = inject(TranslocoService);
   private readonly contractsApi = inject(ContractService);
+  private readonly remunerationsApi = inject(RemunerationService);
   /** エラーのない行だけ取り込む（エラーの行は、あとで直して取り込み直す） */
   readonly skipErrors = signal(true); // 問題の行は、行のチェックが外れて取り込まない（11/17）
   // ===== 行ごとのチェック（11/17）：外した行は取り込まない =====
@@ -263,15 +274,31 @@ export class EmployeeImport {
     await this.showPreview(applyRowValues(p.table, fix.line, fix.values));
   }
 
-  /** 登録済みの同じ人：ファイルと違う所（取り込まない。知らせるだけ） */
-  readonly samePeople = signal<{ line: number; employeeNumber: string; name: string; diffs: PersonDiff[] }[]>([]);
+  /** 登録済みの同じ人：CSVによる変更点（行ごとに「変更する／変更しない」を選ぶ。11/25） */
+  readonly samePeople = signal<SamePersonRow[]>([]);
   readonly changedPeople = computed(() => this.samePeople().filter((x) => x.diffs.length > 0));
+  /** 選んだ値（「行番号|行のキー」→ 変更する）。選んでいない行は初期値 */
+  readonly choices = signal<Record<string, boolean>>({});
+  isApplied(x: SamePersonRow, d: PersonChange): boolean {
+    return d.selectable && (this.choices()[`${x.line}|${d.key}`] ?? d.apply);
+  }
+  setApplied(x: SamePersonRow, d: PersonChange, value: string): void {
+    this.choices.update((c) => ({ ...c, [`${x.line}|${d.key}`]: value === 'apply' }));
+  }
+  /** 「変更する」を選んだ行から、人ごとの保存するもの */
+  readonly personUpdates = computed(() =>
+    this.samePeople().flatMap((x) => {
+      if (!x.employeeId || !x.saved) return [];
+      const update = samePersonUpdate(x.saved, x.file, x.diffs.filter((d) => this.isApplied(x, d)));
+      return update ? [{ employeeId: x.employeeId, saved: x.saved, update }] : [];
+    }),
+  );
+  /** 変更する行の数 */
+  readonly changeCount = computed(() => this.personUpdates().reduce((n, u) => n + u.update.count, 0));
+  /** 変更した人数と、関連する届出（保存のあとに出す） */
+  readonly changedCount = signal(0);
+  readonly followUpsDone = signal<{ key: string; n: number }[]>([]);
 
-  // ===== 労働者名簿（11/24） =====
-  /** 登録済みの同じ人のうち、名簿の空欄をファイルで埋める人 */
-  readonly registerFills = signal<{ employeeId: string; line: number; fill: RegisterFill }[]>([]);
-  /** 埋める項目ごとの人数 */
-  readonly fillCounts = computed(() => countGaps(this.registerFills().map((f) => f.fill.fields)));
   /** 取り込む人のうち、名簿の項目が空の人（取り込む前に知らせる） */
   readonly newGaps = computed(() => {
     const p = this.preview();
@@ -284,7 +311,6 @@ export class EmployeeImport {
   private readonly existingForGaps = signal<Employee[]>([]);
   /** 取り込んだあとの、事業所全体の名簿の記入漏れ */
   readonly gapsAfter = signal<ReturnType<typeof countGaps> | null>(null);
-  readonly filledCount = signal(0);
   /** 何の漏れが何人か → 「履歴 12・住所 12」 */
   gapText(by: Partial<Record<string, number>>): string {
     return Object.entries(by)
@@ -309,35 +335,60 @@ export class EmployeeImport {
     const office = this.context.current();
     if (!office || plan.skipped.length === 0) {
       this.samePeople.set([]);
-      this.registerFills.set([]);
+      this.choices.set({});
       return;
     }
     const byNo = new Map(existing.map((e) => [e.employeeNumber ?? '', e]));
     const today = todayLocal();
-    // 労働者名簿の空欄を埋める候補（上書きしない。11/24）
+    const deptName = (id: string) => office.departments?.find((d) => d.id === id)?.name ?? null;
     const privates = await this.employeesApi.listPrivates(office.id);
-    const fills: { employeeId: string; line: number; fill: RegisterFill }[] = [];
-    for (const s of plan.skipped) {
-      const saved = byNo.get(s.employeeNumber);
-      const priv = saved ? privates.get(saved.id) : undefined;
-      if (!saved || !priv) continue;
-      const fill = registerFill({ ...saved, contact: priv.contact, register: priv.register }, s.employee);
-      if (fill) fills.push({ employeeId: saved.id, line: s.line, fill });
-    }
-    this.registerFills.set(fills);
     const rows = await Promise.all(
       plan.skipped.map(async (s) => {
         const saved = byNo.get(s.employeeNumber);
-        const contracts = saved ? await this.contractsApi.list(office.id, saved.id) : [];
-        const contract = contractAt(contracts, today);
-        return {
-          line: s.line,
-          employeeNumber: s.employeeNumber,
-          name: `${s.employee.lastName} ${s.employee.firstName}`.trim(),
-          diffs: saved ? samePersonDiffs(s, { employee: saved, contract }) : [],
+        const priv = saved ? privates.get(saved.id) : undefined;
+        const name = `${s.employee.lastName} ${s.employee.firstName}`.trim();
+        const file: SamePersonFile = { employee: s.employee, leaves: s.leaves };
+        if (!saved || !priv) return { line: s.line, employeeId: null, employeeNumber: s.employeeNumber, name, saved: null, file, diffs: [] };
+        const [contracts, remunerations] = await Promise.all([
+          this.contractsApi.list(office.id, saved.id),
+          // 報酬月額の列があるときだけ読む（資格取得時決定の記録と比べる）
+          s.monthlyAmount != null ? this.remunerationsApi.list(office.id, saved.id) : Promise.resolve([]),
+        ]);
+        // ファイルの行も、書き出しと同じ書き方にしてから比べる（「男」「男性」「1」などの言い方の違いを消すため）
+        const fileEmployee: Employee = {
+          ...saved,
+          ...s.employee,
+          health: { ...saved.health, enrolled: s.healthOverride ?? saved.health.enrolled },
+          pension: { ...saved.pension, enrolled: s.pensionOverride ?? saved.pension.enrolled },
+          leaves: [],
         };
+        const fileRow = employeeExportRow(
+          {
+            employee: fileEmployee,
+            contract: s.contract,
+            remunerations: s.monthlyAmount != null ? [{ from: '', reason: 'acquisition', monthlyAmount: s.monthlyAmount }] : [],
+            private: { contact: s.employee.contact, register: s.employee.register },
+          },
+          deptName,
+        );
+        const savedRow = employeeExportRow(
+          { employee: saved, contract: contractAt(contracts, today), remunerations, private: priv },
+          deptName,
+        );
+        const diffs = samePersonChanges({
+          values: s.values,
+          fileRow,
+          savedRow,
+          fileLeaves: s.leaves,
+          savedLeaves: saved.leaves ?? [],
+          savedRetired: !!saved.retireDate,
+          departmentUnknown: s.departmentUnknown,
+        });
+        const full = { ...saved, ...priv, leaves: saved.leaves ?? [] };
+        return { line: s.line, employeeId: saved.id, employeeNumber: s.employeeNumber, name, saved: full, file, diffs };
       }),
     );
+    this.choices.set({});
     this.samePeople.set(rows);
   }
   /** 空いている番号の例（登録済み・ファイルの中・画面で直した番号のどれとも重ならない） */
@@ -360,7 +411,7 @@ export class EmployeeImport {
       p.read.missingColumns.length === 0 &&
       (this.rowErrors().length === 0 || this.skipErrors()) &&
       (p.plan.errors.length === 0 || this.skipErrors()) &&
-      (this.importItems().length > 0 || this.registerFills().length > 0)
+      (this.importItems().length > 0 || this.changeCount() > 0)
     );
   });
   readonly reasonParams = reasonParams;
@@ -417,9 +468,11 @@ export class EmployeeImport {
     this.preview.set(null);
     this.doneCount.set(null);
     this.errorKey.set(null);
-    this.registerFills.set([]);
+    this.samePeople.set([]);
+    this.choices.set({});
     this.gapsAfter.set(null);
-    this.filledCount.set(0);
+    this.changedCount.set(0);
+    this.followUpsDone.set([]);
   }
 
   /** うちの見出しの表 → 読み取り・取り込みの計画（今までの確認画面） */
@@ -484,9 +537,21 @@ export class EmployeeImport {
           if (it.myNumber) withNumber.push({ employeeId, number: it.myNumber });
         },
       );
-      // 登録済みの同じ人：労働者名簿の空欄だけを埋める（変更履歴つき。11/24）
-      const fills = this.registerFills();
-      for (const f of fills) await this.employeesApi.update(office.id, f.employeeId, f.fill.patch);
+      // 登録済みの同じ人：「変更する」を選んだ行だけ（変更履歴つき。11/25）
+      // 住所は保存の部品が住所変更届の宿題を残す。氏名（カナ）は氏名変更届の宿題をここで作って一緒に渡す
+      const updates = this.personUpdates();
+      const tasks: FilingTaskInput[] = [];
+      let leaveFollowUps: string[] = [];
+      for (const u of updates) {
+        const extra = u.update.followUps.includes('name')
+          ? await this.employeesApi.nameTasksFor(office.id, { ...u.saved, id: u.employeeId }, todayLocal())
+          : [];
+        if (Object.keys(u.update.patch).length > 0 || extra.length > 0) {
+          tasks.push(...(await this.employeesApi.update(office.id, u.employeeId, u.update.patch, undefined, extra)));
+        }
+        if (u.update.leaves) await this.employeesApi.updateLeaves(office.id, u.employeeId, u.update.leaves);
+        leaveFollowUps = [...leaveFollowUps, ...u.update.followUps.filter((f) => f === 'maternity' || f === 'childcare')];
+      }
       // マイナンバー：従業員を作ったあと、関数でまとめて暗号化して保管（失敗しても従業員は登録済み）
       if (withNumber.length > 0) {
         try {
@@ -498,7 +563,8 @@ export class EmployeeImport {
       }
       this.reset();
       this.doneCount.set(n);
-      this.filledCount.set(fills.length);
+      this.changedCount.set(updates.length);
+      this.followUpsDone.set(countKeys([...tasks.map((t) => t.kind), ...leaveFollowUps]));
       this.myNumberFailed.set(numberFailed);
       await this.countGapsAfter(office.id);
     } catch (err) {
@@ -609,4 +675,35 @@ export class EmployeeImport {
   columnLabel(c: keyof typeof EMPLOYEE_CSV_HEADERS | null): string {
     return c ? EMPLOYEE_CSV_HEADERS[c] : '';
   }
+  /** 表の「項目」（休業は1件ずつ、外国籍の情報は1行にまとめるので、列の名前ではない） */
+  changeLabel(item: ChangeItem): string {
+    return item === 'leave' || item === 'foreign' ? this.transloco.translate('employeeCsv.same.' + item) : this.columnLabel(item);
+  }
+  /** 変えない項目を直す場所（従業員の画面のタブ、または編集画面） */
+  changeLink(employeeId: string, item: ChangeItem): { path: unknown[]; tab: string | null } {
+    const tab = changeTab(item);
+    const office = this.context.current()?.id;
+    return tab
+      ? { path: ['/o', office, 'employees', employeeId], tab }
+      : { path: ['/o', office, 'employees', employeeId, 'edit'], tab: null };
+  }
+}
+
+/** CSVによる変更点の1人分 */
+interface SamePersonRow {
+  line: number;
+  employeeId: string | null;
+  employeeNumber: string;
+  name: string;
+  /** 登録済みの値（読めなかったら null） */
+  saved: (Employee & { contact: ContactDoc; register: RegisterDoc }) | null;
+  file: SamePersonFile;
+  diffs: PersonChange[];
+}
+
+/** 同じものを数える（出てきた順） */
+function countKeys(keys: readonly string[]): { key: string; n: number }[] {
+  const m = new Map<string, number>();
+  for (const k of keys) m.set(k, (m.get(k) ?? 0) + 1);
+  return [...m].map(([key, n]) => ({ key, n }));
 }

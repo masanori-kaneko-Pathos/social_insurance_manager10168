@@ -76,7 +76,7 @@ export const EMPLOYEE_CSV_HEADERS = {
   renewal: '更新の見込み',
   student: '学生',
   minimumWageReduction: '最低賃金の減額特例',
-  specialEmployment: '雇い方',
+  specialEmployment: '適用除外になる雇い方', // 11/25 に「雇い方」から変えた（前の見出しも読む）
   renewalPrecedent: '更新の実績',
   noExtensionAgreed: '超えて使わない合意',
   nationality: '国籍',
@@ -145,7 +145,8 @@ const STUDENT: Dict<ContractInput['student']> = {
   夜間: 'other', 通信: 'other', 定時制: 'other', 休学中: 'other', '夜間・通信・定時制・休学中': 'other', other: 'other',
 };
 const SPECIAL: Dict<ContractInput['specialEmployment']> = {
-  ふつう: 'none', none: 'none', 日雇い: 'daily', 日々雇い入れ: 'daily', daily: 'daily',
+  // 「ふつう」は 11/25 より前の書き方（前のファイルも読めるように残す）
+  該当しない: 'none', ふつう: 'none', none: 'none', 日雇い: 'daily', 日々雇い入れ: 'daily', daily: 'daily',
   季節的業務: 'seasonal', seasonal: 'seasonal', 臨時的事業: 'temporaryBusiness', temporaryBusiness: 'temporaryBusiness',
 };
 const LEAVE: Dict<LeaveKind> = {
@@ -306,10 +307,13 @@ export interface EmployeeCsvRead {
 }
 
 /** 見出し（日本語か列の名前）→ 列 */
+/** 前の見出し（見出しの名前を変えたもの。前に書き出したファイルも、そのまま取り込めるように） */
+const LEGACY_HEADERS: Readonly<Record<string, EmployeeColumn>> = { 雇い方: 'specialEmployment' };
+
 function columnOf(header: string): EmployeeColumn | null {
   const h = header.replace(/^﻿/, '').trim();
   for (const c of EMPLOYEE_COLUMNS) if (c === h || EMPLOYEE_CSV_HEADERS[c] === h) return c;
-  return null;
+  return LEGACY_HEADERS[h] ?? null;
 }
 
 export function pick<T extends string>(dict: Dict<T>, s: string): T | null | undefined {
@@ -595,8 +599,41 @@ export interface ImportPlan {
   items: ImportItem[];
   /** 社員番号の重複（ファイルの中・登録済みの別の人）。取り込まない */
   errors: { line: number; code: 'duplicateInFile' | 'alreadyExists'; employeeNumber: string }[];
-  /** 登録済みの同じ人（社員番号・氏名・生年月日が同じ）。取り込まない（上書きもしない。11/17） */
-  skipped: { line: number; employeeNumber: string; employee: EmployeeFormInput; contract: ContractInput }[];
+  /**
+   * 登録済みの同じ人（社員番号・氏名・生年月日が同じ）。新しくは登録しない（11/17）
+   * 部署と空の項目だけを、このファイルで直す。計算に効く項目は上書きせず、違うところを知らせる（11/25）
+   */
+  skipped: SkippedPerson[];
+}
+
+export interface SkippedPerson {
+  line: number;
+  employeeNumber: string;
+  /** 部署は事業所の部署に結んだもの（見つからなければ部署なし） */
+  employee: EmployeeFormInput;
+  contract: ContractInput;
+  leaves: Leave[];
+  /** ファイルの行の値（空の列は「ファイルに書いていない」として比べない） */
+  values: Partial<Record<EmployeeColumn, string>>;
+  healthOverride: boolean | null;
+  pensionOverride: boolean | null;
+  monthlyAmount: number | null;
+  /** 部署の列に名前があるのに、事業所の設定に同じ名前の部署がない */
+  departmentUnknown: boolean;
+}
+
+/** 部署の名前 → 事業所の部署の id（全角半角・空白は区別しない。名前が空なら null、見つからなければ 'unknown'） */
+export function departmentIdOf(name: string | undefined, departments: readonly { id: string; name: string }[] | undefined): string | null | 'unknown' {
+  const key = (x: string) => x.normalize('NFKC').replace(/\s+/g, '');
+  const n = (name ?? '').trim();
+  if (!n) return null;
+  return (departments ?? []).find((d) => key(d.name) === key(n))?.id ?? 'unknown';
+}
+
+/** 部署を結んだ従業員（見つからない・空のときは今の org のまま） */
+function withDepartment(e: EmployeeFormInput, id: string | null | 'unknown'): EmployeeFormInput {
+  if (!id || id === 'unknown') return e;
+  return { ...e, org: { ...e.org, departmentId: id, position: e.org?.position ?? null, officer: e.org?.officer ?? null } };
 }
 
 /** 同じ人かを見分ける項目 */
@@ -630,7 +667,19 @@ export function planImport(rows: EmployeeCsvRow[], ctx: ImportContext): ImportPl
       const known = ctx.existingPeople?.get(num);
       const e = p.employee;
       if (known && isSamePerson(known, { lastName: e.lastName, firstName: e.firstName, birthDate: e.birthDate })) {
-        skipped.push({ line: r.line, employeeNumber: num, employee: e, contract: p.contract });
+        const dept = departmentIdOf(r.values.department, ctx.departments);
+        skipped.push({
+          line: r.line,
+          employeeNumber: num,
+          employee: withDepartment(e, dept),
+          contract: p.contract,
+          leaves: p.leaves,
+          values: r.values,
+          healthOverride: p.healthOverride,
+          pensionOverride: p.pensionOverride,
+          monthlyAmount: p.monthlyAmount,
+          departmentUnknown: dept === 'unknown',
+        });
       } else {
         errors.push({ line: r.line, code: 'alreadyExists', employeeNumber: num });
       }
@@ -671,15 +720,9 @@ export function planImport(rows: EmployeeCsvRow[], ctx: ImportContext): ImportPl
       lossReason: on && dates.lostDate ? ('retire' as const) : null,
     });
     // 部署：名前で事業所の部署に結ぶ（全角半角・前後の空白は区別しない）。見つからなければ部署なしで登録して知らせる
-    const deptKey = (s: string) => s.normalize('NFKC').replace(/\s+/g, '');
-    const deptName = (r.values.department ?? '').trim();
-    let org = e.org;
-    if (deptName) {
-      const d = (ctx.departments ?? []).find((x) => deptKey(x.name) === deptKey(deptName));
-      if (d) org = { ...org, departmentId: d.id, position: org?.position ?? null, officer: org?.officer ?? null };
-      else warnings.push('unknownDepartment');
-    }
-    const employee: EmployeeFormInput = { ...e, org, health: enrollment(health), pension: enrollment(pension) };
+    const dept = departmentIdOf(r.values.department, ctx.departments);
+    if (dept === 'unknown') warnings.push('unknownDepartment');
+    const employee: EmployeeFormInput = { ...withDepartment(e, dept), health: enrollment(health), pension: enrollment(pension) };
 
     // 標準報酬（資格取得時決定）：加入する人だけ
     let remuneration: RemunerationInput | null = null;
@@ -726,49 +769,6 @@ export function planImport(rows: EmployeeCsvRow[], ctx: ImportContext): ImportPl
     });
   }
   return { items, errors, skipped };
-}
-
-// ===== 登録済みの同じ人：ファイルと違う所（上書きはしないので、知らせるだけ。11/17） =====
-
-export interface PersonDiff {
-  column: EmployeeColumn;
-  saved: string;
-  file: string;
-}
-
-/** 比べる項目（契約は今日の契約と比べる） */
-export function samePersonDiffs(
-  file: { employee: EmployeeFormInput; contract: ContractInput },
-  saved: {
-    employee: Pick<EmployeeFormInput, 'lastNameKana' | 'firstNameKana' | 'sex' | 'hireDate' | 'retireDate' | 'basicPensionNumber'>;
-    contract: ContractInput | null;
-  },
-): PersonDiff[] {
-  const out: PersonDiff[] = [];
-  const add = (column: EmployeeColumn, a: unknown, b: unknown) => {
-    const s = (v: unknown) => (v === null || v === undefined ? '' : String(v));
-    if (s(a) !== s(b)) out.push({ column, saved: s(a), file: s(b) });
-  };
-  const f = file.employee;
-  const e = saved.employee;
-  add('lastNameKana', e.lastNameKana, f.lastNameKana);
-  add('firstNameKana', e.firstNameKana, f.firstNameKana);
-  add('sex', e.sex, f.sex);
-  add('hireDate', e.hireDate, f.hireDate);
-  add('retireDate', e.retireDate, f.retireDate);
-  add('basicPensionNumber', e.basicPensionNumber, f.basicPensionNumber);
-  const c = saved.contract;
-  const k = file.contract;
-  if (c) {
-    add('employmentType', c.employmentType, k.employmentType);
-    add('payType', c.payType, k.payType);
-    if (c.weeklyMinutes !== k.weeklyMinutes) out.push({ column: 'weeklyHours', saved: formatHours(c.weeklyMinutes), file: formatHours(k.weeklyMinutes) });
-    add('monthlyDays', c.monthlyDays, k.monthlyDays);
-    add('scheduledWage', c.scheduledWage, k.scheduledWage);
-    add('hourlyWage', c.hourlyWage, k.hourlyWage);
-    add('periodEnd', c.periodEnd, k.periodEnd);
-  }
-  return out;
 }
 
 // ===== ひな形 =====
@@ -825,6 +825,7 @@ export const EMPLOYEE_WORDS: Partial<Record<EmployeeImportKey, readonly string[]
   pensionEnrolled: ['厚生年金保険に加入しているか', '厚生年金保険の加入', '厚生年金加入', '厚年加入'],
   monthlyAmount: ['報酬月額', '標準報酬月額', '健康保険標準報酬月額', '健康保険の標準報酬月額'],
   employmentType: ['雇用区分', '社員区分', 'employment type'],
+  specialEmployment: ['雇い方', '適用除外の雇い方', '雇用の種類（適用除外）'],
   payType: ['給与方式', '給与支給形態', '給与形態', '賃金形態', '支給形態', 'pay type'],
   weeklyHours: ['週所定労働時間', '週の労働時間', '所定労働時間（週）'],
   monthlyDays: ['月所定労働日数', '一ヶ月の平均所定労働日数', '1か月の平均所定労働日数', '月平均所定労働日数', '月の労働日数'],

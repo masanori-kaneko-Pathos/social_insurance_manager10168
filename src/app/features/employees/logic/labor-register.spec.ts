@@ -8,9 +8,7 @@ import {
   parseHistory,
   readHistoryLine,
   readRetireText,
-  RegisterFillSource,
   RegisterPerson,
-  registerFill,
   registerGaps,
   registerLarge,
   registerTable,
@@ -176,38 +174,3 @@ describe('労働者名簿：出力の表', () => {
   });
 });
 
-describe('労働者名簿：取り込みで空欄だけ埋める', () => {
-  const src = (over: Partial<RegisterFillSource> = {}): RegisterFillSource => ({
-    sex: null, retireDate: null, retireReason: null, org: null,
-    contact: { postalCode: null, address: null, phone: null, email: null },
-    register: emptyRegister(),
-    ...over,
-  });
-  const file = src({
-    sex: 'female',
-    contact: { postalCode: '1000001', address: '東京都千代田区1-1', phone: null, email: null },
-    org: { departmentId: null, position: null, officer: null, jobType: '経理' },
-    register: { history: [{ month: '2020-04', text: '入社' }], retireDetail: '自己都合' },
-    retireReason: 'resign',
-  });
-
-  it('空の所だけ。入っている値は上書きしない', () => {
-    const f = registerFill(src({ sex: 'male', org: { departmentId: 'd1', position: '主任', officer: null } }), file)!;
-    expect(f.fields).toEqual(['address', 'jobType', 'history']);
-    expect(f.patch.sex).toBeUndefined();
-    expect(f.patch.org).toEqual({ departmentId: 'd1', position: '主任', officer: null, jobType: '経理' });
-    expect(f.patch.register).toEqual({ history: [{ month: '2020-04', text: '入社' }], retireDetail: null });
-  });
-  it('郵便番号だけ入っている人の住所は埋めない（住所変更届の宿題を作らない）', () => {
-    const f = registerFill(src({ sex: 'male', contact: { postalCode: '1500001', address: null, phone: null, email: null } }), file)!;
-    expect(f.fields).not.toContain('address');
-  });
-  it('退職の理由・事由の内容は、登録済みの人が退職しているときだけ', () => {
-    expect(registerFill(src({ sex: 'male', retireDate: '2026-09-30' }), file)!.fields).toEqual([
-      'address', 'jobType', 'history', 'retireReason', 'retireDetail',
-    ]);
-  });
-  it('埋めるものがなければ null', () => {
-    expect(registerFill(file, file)).toBeNull();
-  });
-});

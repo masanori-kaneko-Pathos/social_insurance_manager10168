@@ -28,7 +28,7 @@ const EMPLOYMENT = { regular: '正社員', contract: '契約社員', part: 'パ�
 const PAY = { monthly: '月給', dailyMonthly: '日給月給', daily: '日給', hourly: '時給' } as const;
 const RENEWAL = { none: 'しない', possible: 'する場合がある', expected: 'する' } as const;
 const STUDENT = { none: 'いいえ', daytime: '昼間', other: '夜間・通信・定時制・休学中' } as const;
-const SPECIAL = { none: 'ふつう', daily: '日雇い', seasonal: '季節的業務', temporaryBusiness: '臨時的事業' } as const;
+const SPECIAL = { none: '該当しない', daily: '日雇い', seasonal: '季節的業務', temporaryBusiness: '臨時的事業' } as const;
 const LEAVE = { maternity: '産休', childcare: '育休', paternity: '出生時育休', care: '介護休業', suspension: '休職' } as const;
 
 const yn = (b: boolean) => (b ? 'はい' : 'いいえ');
@@ -48,6 +48,11 @@ function leaveCells(l: Leave | undefined): [string, string, string, string, stri
   // 申出日：日付／申出済み・日付不明は空／申出がまだは「未申出」（取り込むと同じ状態に戻る。11/19）
   const filed = l.filed ? (l.filed.filedOn ?? '') : '未申出';
   return [LEAVE[l.kind], l.start, l.end ?? l.plannedEnd ?? '', birth ?? '', filed];
+}
+
+/** 休業の1件を1つの文字に（取り込みの「このファイルで変わること」の表で使う。11/25） */
+export function leaveText(l: Pick<Leave, 'kind' | 'start' | 'end' | 'plannedEnd'>): string {
+  return `${LEAVE[l.kind]} ${l.start}〜${l.end ?? l.plannedEnd ?? ''}`;
 }
 
 /** 1人分の行（列は EMPLOYEE_COLUMNS の順） */
