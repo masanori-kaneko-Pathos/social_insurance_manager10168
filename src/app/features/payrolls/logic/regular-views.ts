@@ -17,7 +17,8 @@ import {
   NaturePaymentLike,
   windowOf,
 } from '../../premiums/logic/bonus-nature';
-import { decideRegular, GradeRows, MonthUse, RegularInput, RegularResult, remunerationAt } from './regular';
+import { decideRegular, GradeRows, MonthUse, over70Basis, RegularInput, RegularResult, remunerationAt } from './regular';
+import { ageReachDate } from '../../employees/logic/coverage';
 import { dayRulesOf, pendingSummerRevision, RevisionContext, revisionItems } from './revision-rows';
 import { allocateOtherMonths, OtherMonths } from './payroll-lines';
 
@@ -142,7 +143,12 @@ export function regularReflectItem(
     amount = src.average;
     health = src.next.health;
     // 厚年の資格がない人（70歳以上被用者など）も、標準報酬相当額として厚年の等級を持っておく
-    pension = src.next.pension ?? gradeOf(pensionGrades, amount);
+    // 70歳以上被用者の相当額は、70歳到達日以後の計算期間の月だけで出す（ガイドブック ケース⑥。11/25）
+    const over70 =
+      !src.next.pension && method === 'normal' && v.employee.birthDate
+        ? over70Basis(r.months, v.input.schedule, ageReachDate(v.employee.birthDate, 70))
+        : null;
+    pension = src.next.pension ?? gradeOf(pensionGrades, over70?.average ?? amount);
   }
 
   const used = method === 'annual' ? r.annual!.months : r.months;

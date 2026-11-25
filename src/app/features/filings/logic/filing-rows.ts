@@ -292,13 +292,18 @@ export function regularRemarks(x: {
   bonusMonthly?: number | null;
   /** 賞与に係る報酬の支給を払った月（備考に書く） */
   bonusMonths?: readonly number[];
+  /** 70歳以上被用者の算定基礎月（70歳到達日以後の計算期間の月。備考に書く。11/25） */
+  over70Months?: readonly number[];
 }): string[] {
   const e = x.employee;
   const y = x.year;
   const acquired = acquiredDateOf(e);
   const months = ['04', '05', '06'].map((m) => x.payrolls.get(`${y}-${m}`));
   return [
-    over70(e.birthDate, `${y}-07-01`) && '1．70歳以上被用者算定',
+    over70(e.birthDate, `${y}-07-01`) &&
+      (x.over70Months && x.over70Months.length > 0
+        ? `1．70歳以上被用者算定（算定基礎月：${x.over70Months.map((m) => `${m}月`).join('・')}）`
+        : '1．70歳以上被用者算定'),
     e.multipleOffices && '2．二以上勤務',
     !!acquired && acquired > `${y}-04-01` && acquired <= `${y}-06-30` && '4．途中入社',
     // 一時帰休は「5」ではなく「9．その他」に書く（ガイドブック。11/19）

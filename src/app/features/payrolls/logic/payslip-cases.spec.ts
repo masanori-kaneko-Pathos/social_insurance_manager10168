@@ -15,12 +15,14 @@ import { emptyPayrollInput, Payroll } from '../../../core/models/payroll';
 import type { PayrollItemInput } from '../../../core/models/payroll-item';
 import type { WageChange } from '../../../core/models/revision';
 import { GRADES, healthGradeOf, pensionGradeOf } from './grades.fixture';
-import { inKindAmount } from './in-kind';
+import { housingValue, inKindAmount } from './in-kind';
 import { findStartMonths, judgeIrregular } from './irregular';
 import { readEntry, textOf } from './payroll-input';
 import { allocateOtherMonths, categoryOf } from './payroll-lines';
-import { decideRegular, Remuneration } from './regular';
+import { decideRegular, over70Basis, Remuneration } from './regular';
 import { standardBonusOf } from '../../premiums/logic/calc-bonus';
+import { resolveItems } from '../../premiums/logic/bonus-items';
+import { bonusRemunerationOf, isRemunerationBonus, NaturePaymentLike } from '../../premiums/logic/bonus-nature';
 import type { PayrollEmployee, PaySchedule } from './payroll-rows';
 
 /**
@@ -262,8 +264,7 @@ describe('事例8：借り上げ社宅の現物給与（定時決定）', () => 
 
 describe('事例9：初回の給与の支度金（一時金）と、毎月の新生活補助', () => {
   const fx: Line[] = [['基本給', 190000], ['A手当', 20000], ['通勤手当', 25000]];
-  // 4月は入社月。資料の正解（300千円）は5・6月の平均なので、4月21日払いの給与は計算期間の途中からの入社（4月を除く）と読んだ
-  // 締め日は資料に書いていない。ここでは15日締め・当月21日払いとした（要確認：原本 p.17）
+  // 4月入社で4月21日払い（当月払い）なので、4月は1か月分そろっていない月（15日締め・当月21日払いとした）
   const april = slip('2025-04', [...fx, ['新生活補助', 30000]], { gross: 365000 - 100000 });
   const pays = [
     april,
@@ -284,5 +285,288 @@ describe('事例9：初回の給与の支度金（一時金）と、毎月の新
     });
     expect(r.months.map((m) => (m.used ? m.amount : m.skip))).toEqual(['partialAcquisition', 303649, 301622]);
     expect(r.next!.health.standard).toBe(300000);
+  });
+});
+
+// ===== 賞与と賞与に係る報酬（事例10・11。原本 p.19・p.21 の表から。11/25） =====
+
+/** 業績手当の支給（支払日は資料にないので、その月の20日とした） */
+const perf = (month: string, amounts: Record<string, number>): NaturePaymentLike => ({
+  id: month,
+  paidDate: `${month}-20`,
+  amounts,
+  nature: '業績手当',
+});
+
+describe('事例10：業績手当（6・12・3月）の規程を、R7.7.1 から年4回に改訂した', () => {
+  // 賞与の項目「業績手当」：2025年の定時決定から「年4回以上の賞与」、規程の回数 4
+  const item = [{ name: '業績手当', labels: [], plannedCount: 4, treatments: [{ fromYear: 0, treatment: 'count' as const }, { fromYear: 2025, treatment: 'remuneration' as const }] }];
+  const pays = resolveItems(
+    [perf('2024-12', { e: 75000 }), perf('2025-03', { e: 75000 }), perf('2025-06', { e: 30000 }), perf('2025-07', { e: 60000 })],
+    item,
+    '賞与',
+  );
+  const fx: Line[] = [['基本給', 190000], ['通勤手当', 25000]];
+  const months = new Map([
+    slip('2025-04', [...fx, ['時間外手当', 37124]]),
+    slip('2025-05', [...fx, ['時間外手当', 25665]]),
+    slip('2025-06', [...fx, ['時間外手当', 9849]]),
+  ]);
+  const decide = (bonusMonthly: number) =>
+    decideRegular({ year: 2025, employee: emp('2020-04-01'), payrolls: months, remunerations: [rem('2024-09', 240)], grades: GRADES, schedule: NEXT_MONTH_PAY, bonusMonthly });
+
+  it('R6.12・R7.3・R7.6 の 75・75・30千円と、R7.7 の 60千円は賞与（R7.7 は賞与支払届を出す。○）', () => {
+    expect(pays.map((p) => isRemunerationBonus('e', p, pays))).toEqual([false, false, false, false]);
+    expect(pays.map((p) => standardBonusOf(p.amounts['e']) / 1000)).toEqual([75, 75, 30, 60]);
+  });
+  it('R7 の定時決定：賞与に係る報酬 ＝ 実績3回 180,000円 × 4回 ÷ 3回 ÷ 12 ＝ 20,000円（○ 2万円）', () => {
+    expect(bonusRemunerationOf('e', 2025, pays, '2020-04-01').monthly).toBe(20000);
+  });
+  it('2万円を各月に足して 260千円（○）。足さないと 240千円のまま', () => {
+    expect(decide(20000).next!.health.standard).toBe(260000);
+    expect(decide(0).next!.health.standard).toBe(240000);
+  });
+});
+
+describe('事例11：3か月ごとの業績手当（営業実績が届かない期は 0円）', () => {
+  // 原本 p.21 の表。R6.4〜R6.5・R5 以前の支給は表にない
+  const pays = [
+    perf('2024-06', { B: 60000, C: 60000 }),
+    perf('2024-09', { A: 60000 }),
+    perf('2024-12', { A: 60000, B: 60000, C: 60000 }),
+    perf('2025-03', { A: 60000, B: 60000 }),
+    perf('2025-06', { A: 60000, B: 60000, C: 60000 }),
+    perf('2025-09', { A: 60000, B: 60000 }),
+  ];
+  const r79 = pays.find((p) => p.id === '2025-09')!;
+  it('R7.7.1 前の1年：A は4回 → R7.9 からの支給は「賞与に係る報酬」。B は3回・C は2回 → 「賞与」（○）', () => {
+    expect(isRemunerationBonus('A', r79, pays)).toBeTrue();
+    expect(isRemunerationBonus('B', r79, pays)).toBeFalse();
+    expect(['A', 'B', 'C'].map((w) => bonusRemunerationOf(w, 2025, pays).annual)).toEqual([240000, 0, 0]);
+  });
+  it('A の R7 の定時決定に足す額：240,000円 ÷ 12 ＝ 20,000円（220 → 240千円の材料）', () => {
+    expect(bonusRemunerationOf('A', 2025, pays).monthly).toBe(20000);
+  });
+  it('R6 の判定（R5.9・R5.12・R6.3 に全員へ払ったと仮定）：R6.6 に払った B・C は4回で反映、A は3回で反映しない（○）', () => {
+    const withR5 = [perf('2023-09', { A: 60000, B: 60000, C: 60000 }), perf('2023-12', { A: 60000, B: 60000, C: 60000 }), perf('2024-03', { A: 60000, B: 60000, C: 60000 }), ...pays];
+    expect(['A', 'B', 'C'].map((w) => bonusRemunerationOf(w, 2024, withR5).monthly)).toEqual([0, 20000, 20000]);
+  });
+});
+
+describe('住宅の現物給与 Q7：月の途中（4/11）に入居（東京）', () => {
+  const tokyo = (housing: number) => ({ housing, meal: { month: 0, day: 0, breakfast: 0, lunch: 0, dinner: 0 } }) as never;
+  const april = { days: 20, daysInMonth: 30 };
+  it('R8.9.30 まで：2,830円 × 居住室 16畳 × 20/30 ＝ 30,186円', () => {
+    expect(housingValue(tokyo(2830), { size: 16, proration: april, employeePays: 0 })).toBe(30186);
+  });
+  it('R8.10.1 から：1,330円 × 総面積 40㎡ × 20/30 ＝ 35,466円', () => {
+    expect(housingValue(tokyo(1330), { size: 40, proration: april, employeePays: 0 })).toBe(35466);
+  });
+});
+
+// ===== 算定基礎届の記入・提出ガイドブック（令和8年度）の記入例（11/25） =====
+// 出典 B：https://www.nenkin.go.jp/service/kounen/hokenryo/hoshu/20121017.files/santei.guide.book.pdf
+// 賃金台帳の行をそのまま明細の行として入れ、令和8年の定時決定にかける
+
+const rowsOf = (lines: Line[], days: number, x: { inKind?: number } = {}) => ({ lines, days, ...x });
+type Month = ReturnType<typeof rowsOf>;
+function regular8(
+  months: Record<'04' | '05' | '06', Month | null>,
+  o: {
+    current: number;
+    schedule: PaySchedule;
+    acquired?: string;
+    minDaysAt?: (m: string) => number;
+    partAt?: (m: string) => boolean;
+    pension?: boolean;
+  },
+) {
+  const payrolls = new Map(
+    (['04', '05', '06'] as const)
+      .filter((m) => months[m])
+      .map((m) => slip(`2026-${m}`, months[m]!.lines, { days: months[m]!.days, inKind: months[m]!.inKind })),
+  );
+  const acquired = o.acquired ?? '2020-04-01';
+  const e = emp(acquired);
+  if (o.pension === false) e.pension = { enrolled: true, acquiredDate: acquired, lostDate: '2026-04-09' };
+  return decideRegular({
+    year: 2026,
+    employee: e,
+    payrolls,
+    remunerations: [rem('2025-09', o.current)],
+    grades: GRADES,
+    schedule: o.schedule,
+    minDaysAt: o.minDaysAt,
+    partAt: o.partAt,
+  });
+}
+const used = (r: ReturnType<typeof regular8>) => r.months.map((m) => (m.used ? m.amount : m.skip));
+const k = (r: ReturnType<typeof regular8>) => [r.average, r.next!.health.standard / 1000, r.next!.pension ? r.next!.pension.standard / 1000 : null];
+const D20_25: PaySchedule = { closingDay: 20, payDay: 25, payMonth: 'current' };
+
+describe('ガイドブック ケース①：一般的な例（3か月とも17日以上）', () => {
+  it('671,000円 → 健保 680千円・厚年 650千円（上限）', () => {
+    const m = rowsOf([['基本給', 610000], ['家族手当', 20000], ['住宅手当', 30000], ['通勤手当', 11000]], 31);
+    const r = regular8({ '04': m, '05': { ...m, days: 30 }, '06': m }, { current: 680, schedule: D20_25 });
+    expect(k(r)).toEqual([671000, 680, 650]);
+  });
+});
+
+describe('ガイドブック ケース②：17日未満の月がある（昼食は現物）', () => {
+  it('5月（10日）を除き、4・6月で 267,500円 → 260千円', () => {
+    const r = regular8(
+      {
+        '04': rowsOf([['基本給', 242000], ['住宅手当', 5000], ['通勤手当', 8000], ['残業手当', 12000]], 31, { inKind: 4000 }),
+        '05': rowsOf([['基本給', 110000], ['住宅手当', 5000], ['通勤手当', 8000]], 10, { inKind: 1000 }),
+        '06': rowsOf([['基本給', 242000], ['住宅手当', 5000], ['通勤手当', 8000], ['残業手当', 5000]], 31, { inKind: 4000 }),
+      },
+      { current: 240, schedule: D20_25 },
+    );
+    expect(used(r)).toEqual([271000, 'shortDays', 264000]);
+    expect(k(r)).toEqual([267500, 260, 260]);
+  });
+});
+
+describe('ガイドブック ケース③：短時間就労者（パート。4分の3以上）', () => {
+  const part = { current: 118, schedule: D20_25, partAt: () => true };
+  const b = (v: number, d: number) => rowsOf([['基本給', v]], d);
+  it('17日以上の月（6月）だけ → 130,300円', () => {
+    const r = regular8({ '04': b(108600, 14), '05': b(115800, 16), '06': b(130300, 18) }, part);
+    expect(used(r)).toEqual(['shortDays', 'shortDays', 130300]);
+    expect(r.average).toBe(130300);
+  });
+  it('3か月とも17日未満 → 15日以上の5・6月 → 100,750円', () => {
+    const r = regular8({ '04': b(78000, 12), '05': b(97500, 15), '06': b(104000, 16) }, { ...part, current: 104 });
+    expect(used(r)).toEqual(['shortDays', 97500, 104000]);
+    expect(r.average).toBe(100750);
+  });
+});
+
+describe('ガイドブック ケース④：短時間労働者（特定適用事業所。11日以上）', () => {
+  const b = (v: number, d: number) => rowsOf([['基本給', v]], d);
+  const short = { current: 118, schedule: D20_25, minDaysAt: () => 11 };
+  it('3か月とも11日以上 → 115,800円', () => {
+    expect(regular8({ '04': b(108600, 11), '05': b(115800, 12), '06': b(123000, 13) }, short).average).toBe(115800);
+  });
+  it('11日未満の月（4月）を除く → 112,200円', () => {
+    expect(regular8({ '04': b(101400, 10), '05': b(108600, 11), '06': b(115800, 12) }, short).average).toBe(112200);
+  });
+  it('4・5月 短時間、6月 一般（17日）→ 月ごとの区分の日数で、3か月とも使う → 125,400円', () => {
+    const r = regular8({ '04': b(108600, 11), '05': b(115800, 12), '06': b(151800, 17) }, { ...short, minDaysAt: (m) => (m === '2026-06' ? 17 : 11) });
+    expect(r.average).toBe(125400);
+  });
+  it('5/1 に一般 → 短時間（日給・25日締め当月末払い）：4月は一般で16日なので除く → 112,200円', () => {
+    const r = regular8(
+      { '04': b(144600, 16), '05': b(108600, 11), '06': b(115800, 12) },
+      { current: 104, schedule: { closingDay: 25, payDay: 31, payMonth: 'current' }, minDaysAt: (m) => (m === '2026-04' ? 17 : 11) },
+    );
+    expect(used(r)).toEqual(['shortDays', 108600, 115800]);
+    expect(r.average).toBe(112200);
+  });
+});
+
+describe('ガイドブック ケース⑤：計算期間の途中から入社（4/1 入社・20日締め翌月10日払い）', () => {
+  it('5月払い（4/1〜4/20）は除き、6月払い（4/21〜5/20）だけ → 200,000円 → 200千円', () => {
+    const r = regular8(
+      { '04': null, '05': rowsOf([['基本給', 148000]], 20), '06': rowsOf([['基本給', 200000]], 30) },
+      { current: 200, schedule: { closingDay: 20, payDay: 10, payMonth: 'next' }, acquired: '2026-04-01' },
+    );
+    expect(used(r)).toEqual(['beforeAcquisition', 'partialAcquisition', 200000]);
+    expect(k(r)).toEqual([200000, 200, 200]);
+  });
+});
+
+describe('ガイドブック ケース⑥：算定の期間の途中で70歳（4/9 到達・月末締め翌月15日払い）', () => {
+  it('健康保険は3か月の平均 297,730円 → 300千円。厚年の資格はないので出さない', () => {
+    const b = (v: number, d: number) => rowsOf([['基本給', v]], d);
+    const r = regular8(
+      { '04': b(326500, 31), '05': b(284550, 30), '06': b(282140, 31) },
+      { current: 320, schedule: { closingDay: 31, payDay: 15, payMonth: 'next' }, pension: false },
+    );
+    expect(k(r)).toEqual([297730, 300, null]);
+  });
+  it('70歳以上被用者の相当額は、70歳到達日（4/9）以後の計算期間の月（6月払い 5/1〜5/31）だけ → 282,140円 → 280千円', () => {
+    const b = (v: number, d: number) => rowsOf([['基本給', v]], d);
+    const r = regular8(
+      { '04': b(326500, 31), '05': b(284550, 30), '06': b(282140, 31) },
+      { current: 320, schedule: { closingDay: 31, payDay: 15, payMonth: 'next' }, pension: false },
+    );
+    const o = over70Basis(r.months, { closingDay: 31, payDay: 15, payMonth: 'next' }, '2026-04-09')!;
+    expect(o).toEqual({ months: ['2026-06'], average: 282140 });
+    expect(GRADES.pension.filter((g) => g.min <= o.average).at(-1)!.standard).toBe(280000);
+  });
+});
+
+describe('ガイドブック：昇給差額が支給されたとき（随時改定。月末締め翌月15日払い）', () => {
+  // 4月分から 200,000 → 230,000円。4月分の差額 30,000円を5月15日に払った
+  const pays = [
+    slip('2026-04', [['基本給', 200000], ['残業手当', 10600]], { gross: 210600 }),
+    slip('2026-05', [['基本給', 230000], ['昇給差額', 30000], ['残業手当', 23600]], { gross: 283600, days: 30 }),
+    slip('2026-06', [['基本給', 230000], ['残業手当', 27300]], { gross: 257300 }),
+    slip('2026-07', [['基本給', 230000], ['残業手当', 25400]], { gross: 255400, days: 30 }),
+  ];
+  it('5月が起算月。修正平均 255,433円 → 8月から 260千円（従前 220千円から2等級）', () => {
+    const map = new Map(pays);
+    const r = findStartMonths(map).map((start) =>
+      judgeIrregular({ start, payrolls: map, remunerations: [rem('2025-09', 220)], gradesAt: () => GRADES, minDaysAt: () => 17, pensionAt: () => true }),
+    );
+    expect(r.map((x) => `${x.start.month}:${x.status}`)).toEqual(['2026-05:candidate']);
+    expect(r[0].revisedFrom).toBe('2026-08');
+    expect(r[0].health!.after!.standard).toBe(260000);
+    expect(r[0].average).toEqual({ total: 796300, retro: 30000, average: 265433, corrected: 255433 });
+  });
+});
+
+// ===== 定時決定及び随時改定の事務取扱いに関する事例集（11/25） =====
+// 出典 C：https://www.nenkin.go.jp/service/kounen/hokenryo/hoshu/20121017.files/jireisyu.pdf
+
+describe('事例集 一時帰休（定時決定）問7：9月以降において受けるべき報酬（7月に解消）', () => {
+  const p = (m: string, cash: number, furlough = false): [string, Payroll] =>
+    [m, { ...emptyPayrollInput(), officeId: 'o', employeeId: 'e', paidMonth: m, cash, fixed: cash, days: 31, state: furlough ? 'furlough' : 'normal' }];
+  const run = (pays: [string, Payroll][], rems: Remuneration[]) =>
+    decideRegular({ year: 2026, employee: emp('2020-04-01'), payrolls: new Map(pays), remunerations: rems, grades: GRADES, schedule: NEXT_MONTH_PAY });
+  const july = p('2026-07', 300000);
+  it('例1：4・5月が通常、6月が休業手当 → 4・5月の平均', () => {
+    const r = run([p('2026-04', 300000), p('2026-05', 320000), p('2026-06', 180000, true), july], [rem('2025-09', 300)]);
+    expect([r.average, r.next!.health.standard]).toEqual([310000, 320000]);
+  });
+  it('例2：4月が通常、5・6月が休業手当 → 4月の報酬', () => {
+    const r = run([p('2026-04', 300000), p('2026-05', 180000, true), p('2026-06', 180000, true), july], [rem('2025-09', 300)]);
+    expect(r.average).toBe(300000);
+  });
+  it('例3：4〜6月とも休業手当 → 休業手当で下げた改定（2026年4月分から 180千円）を飛ばし、その前の 300千円で決定', () => {
+    // 2026年1月から一時帰休。1〜3月の休業手当で、4月分から 180千円に随時改定していた
+    const pays = [p('2026-01', 180000, true), p('2026-02', 180000, true), p('2026-03', 180000, true),
+      p('2026-04', 180000, true), p('2026-05', 180000, true), p('2026-06', 180000, true), july];
+    const r = run(pays, [rem('2025-09', 300), { ...rem('2026-04', 180), reason: 'irregular' }]);
+    expect([r.status, r.next!.health.standard, r.change, r.restoredFrom]).toEqual(['decided', 300000, 'up', '2025-09']);
+  });
+  it('例3で、一時帰休の改定がない人は、今のまま（従前のまま）', () => {
+    const pays = [p('2026-04', 180000, true), p('2026-05', 180000, true), p('2026-06', 180000, true), july];
+    const r = run(pays, [rem('2025-09', 300)]);
+    expect([r.status, r.next!.health.standard, r.restoredFrom]).toEqual(['keep', 300000, null]);
+  });
+});
+
+describe('事例集 随時改定 問7：固定的賃金の変動の翌月に締め日を変えた（月末締め → 15日締め、翌月15日払い）', () => {
+  const b = (m: string, base: number, days: number, more: Line[] = []) => slip(m, [['基本給', base], ...more], { days });
+  const judge = (pays: [string, Payroll][]) => {
+    const map = new Map(pays);
+    return findStartMonths(map, [], { minDaysAt: () => 17 }).map((start) => {
+      const r = judgeIrregular({ start, payrolls: map, remunerations: [rem('2025-09', 300)], gradesAt: () => GRADES, minDaysAt: () => 17, pensionAt: () => true });
+      return `${start.month}:${start.direction}:${r.status}`;
+    });
+  };
+  it('9月の起算は10月（9/1〜9/15 の15日）が17日未満で対象外。11月を起算月にもしない', () => {
+    const pays = [b('2026-08', 300000, 31), b('2026-09', 360000, 31), b('2026-10', 180000, 15), b('2026-11', 360000, 30), b('2026-12', 360000, 30), b('2027-01', 360000, 31)];
+    expect(judge(pays)).toEqual(['2026-09:up:shortDays', '2026-10:down:shortDays']);
+  });
+  it('短い月の次の月に本当に昇給していれば、その月は起算月', () => {
+    const pays = [b('2026-09', 360000, 31), b('2026-10', 180000, 15), b('2026-11', 380000, 30), b('2026-12', 380000, 30), b('2027-01', 380000, 31)];
+    expect(judge(pays)).toContain('2026-11:up:candidate');
+  });
+  it('昇給した月に欠勤が多くて17日未満でも、次の月を起算月にずらさない（欠勤控除は引く前の額で比べる）', () => {
+    const pays = [b('2026-04', 300000, 31), b('2026-05', 360000, 16, [['欠勤控除', 150000]]), b('2026-06', 360000, 30), b('2026-07', 360000, 31)];
+    expect(judge(pays)).toEqual(['2026-05:up:shortDays']);
   });
 });

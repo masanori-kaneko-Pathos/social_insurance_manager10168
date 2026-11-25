@@ -83,3 +83,7 @@ legend {
 .muted {
   color: var(--color-text-sub);
 }
+/* 変わったものの説明（横幅いっぱいの1行。11/25） */
+.kind-hint {
+  margin: 0;
+}

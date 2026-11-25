@@ -93,6 +93,11 @@ export interface RegularResult {
   annual: AnnualCandidate | null;
   /** 各月の報酬に足した賞与に係る報酬（年4回以上の賞与の 年額÷12。なければ 0。11/19） */
   bonusMonthly: number;
+  /**
+   * 4〜6月とも休業手当で、7/1までに一時帰休が解消したとき、決定に使った標準報酬の適用月（11/25）
+   * 休業手当による随時改定を飛ばした、その前の標準報酬（事務取扱いの事例集 一時帰休（定時決定）問7）。ふだんは null
+   */
+  restoredFrom: string | null;
 }
 
 // ===== 小さな道具 =====
@@ -275,6 +280,7 @@ export function decideRegular(x: RegularInput): RegularResult {
     change: null,
     annual: null,
     bonusMonthly: x.bonusMonthly ?? 0,
+    restoredFrom: null,
   };
 
   // --- 対象者か ---
@@ -312,19 +318,27 @@ export function decideRegular(x: RegularInput): RegularResult {
     return { ...withMonths, status: 'incomplete' };
   }
   if (usedCount === 0) {
+    // 4〜6月とも休業手当で7/1までに解消：休業手当を含まずに決定・改定された直近の標準報酬で決める（一時帰休（定時決定）問7。11/25）
+    const restored = months.some((m) => m.skip === 'furloughResolved') ? withoutFurloughAt(x.remunerations, x.payrolls, `${y}-08`) : null;
+    if (restored && cur && restored !== cur) {
+      const next: Standards = { health: restored.health, pension: pension ? restored.pension : null };
+      return {
+        ...withMonths,
+        status: 'decided',
+        rawAverage: restored.monthlyAmount,
+        average: restored.monthlyAmount,
+        next,
+        change: changeOf(current, next),
+        restoredFrom: restored.from,
+      };
+    }
     return { ...withMonths, status: 'keep', next: current, change: current ? 'same' : null };
   }
 
   const rawAverage = averageOf(months, false);
   const average = averageOf(months, true);
   const next = standardsOf(x.grades, average, pension);
-  const change = !current
-    ? null
-    : next.health.grade > current.health.grade
-      ? 'up'
-      : next.health.grade < current.health.grade
-        ? 'down'
-        : 'same';
+  const change = changeOf(current, next);
 
   // --- 年間平均（前年7月〜当年6月） ---
   const annualMonths = useMonths(
@@ -372,6 +386,42 @@ export function decideRegular(x: RegularInput): RegularResult {
     change,
     annual,
   };
+}
+
+function changeOf(current: Standards | null, next: Standards): RegularResult['change'] {
+  if (!current) return null;
+  return next.health.grade > current.health.grade ? 'up' : next.health.grade < current.health.grade ? 'down' : 'same';
+}
+
+/**
+ * 休業手当による随時改定か：改定のもとになった3か月（適用月の前の3か月）に、一時帰休の月がある（11/25）
+ * 給与の実績が読み込まれていない月は、一時帰休でないとみなす
+ */
+function byFurlough(r: Remuneration, payrolls: ReadonlyMap<string, Payroll>): boolean {
+  return r.reason === 'irregular' && [1, 2, 3].some((i) => payrolls.get(shiftMonth(r.from, -i))?.state === 'furlough');
+}
+
+/** その月分に使う標準報酬のうち、休業手当による随時改定を飛ばした直近のもの（なければ null） */
+export function withoutFurloughAt(list: readonly Remuneration[], payrolls: ReadonlyMap<string, Payroll>, month: string): Remuneration | null {
+  const sorted = list.filter((r) => r.from <= month).sort((a, b) => b.from.localeCompare(a.from));
+  return sorted.find((r) => !byFurlough(r, payrolls)) ?? null;
+}
+
+/**
+ * 70歳以上被用者の標準報酬月額相当額に使う月と平均（11/25）
+ * 平均に使った月のうち、給与の計算期間の初日が70歳到達日以後の月だけ（到達日より前の日の給与を含む月は除く）
+ * 算定基礎届の記入・提出ガイドブック ケース⑥：4/9 到達・月末締めなら、6月払い（5/1〜5/31）だけ。遡及支払額は除く
+ * 使える月がなければ null（健康保険と同じ平均を使う）
+ */
+export function over70Basis(
+  months: readonly MonthUse[],
+  schedule: PaySchedule,
+  reachDate: string,
+): { months: string[]; average: number } | null {
+  const use = months.filter((m) => m.used && periodOf(m.month, schedule).start >= reachDate);
+  if (use.length === 0) return null;
+  const sum = use.reduce((s, m) => s + m.amount - m.payroll!.retro, 0);
+  return { months: use.map((m) => m.month), average: Math.floor(sum / use.length) };
 }
 
 /** 定時決定の年：6月の支払日を過ぎていれば今年、まだなら去年 */

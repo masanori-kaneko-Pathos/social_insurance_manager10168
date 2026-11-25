@@ -1956,6 +1956,7 @@
       "furloughResolved": "* layoff ended"
     },
     "corrected": "Corrected average",
+    "restored": "Pre-furlough amount (from {{y}}-{{m}})",
     "correctedNote": "(excluding back pay)",
     "grade": "G{{h}} / G{{p}}",
     "change": {
@@ -4647,20 +4648,22 @@
     },
     "field": {
       "employee": "Employee",
-      "month": "Start month (the first pay month that fully reflects the change)",
+      "month": "Start month",
       "kind": "What changed",
       "direction": "Direction",
       "note": "Note (optional)"
     },
     "hint": {
-      "month": "If the change took effect mid-month, count from the next pay month (the month of the change is partly prorated)."
+      "month": "If the change took effect mid-month, count from the next pay month (the month of the change is partly prorated).",
+      "allowanceNew": "The month the allowance was introduced is the start month, even if the first payment is 0. If it is not paid within 3 months, do not add it.",
+      "unitPrice": "If the rate changes every month, add it every month. Do not add it for changes in days worked only."
     },
     "kind": {
       "raise": "Raise",
       "cut": "Pay cut",
       "allowanceNew": "New allowance",
       "allowanceEnd": "Allowance ended",
-      "unitPrice": "Unit rate change (hourly, daily, overtime rate, per-day or per-km commuting rate, etc.)",
+      "unitPrice": "Rate change (hourly, overtime, commuting)",
       "contractHours": "Change in contract hours",
       "inKind": "Change in benefits in kind",
       "other": "Other"

@@ -83,6 +83,10 @@
             </select>
             @if (errorOf('kind'); as k) { <span class="field-error">{{ k | transloco }}</span> }
           </div>
+          <!-- 手当の新設・単価の変更は、足すかどうかの決まりを横幅いっぱいの1行で（狭い欄の中だと折り返しがばらつく。事務取扱いの事例集 随時改定 問7-2・問13。11/25） -->
+          @if (form().kind === 'allowanceNew' || form().kind === 'unitPrice') {
+            <p class="hint wide kind-hint">{{ 'wageChange.hint.' + form().kind | transloco }}</p>
+          }
           <fieldset class="field">
             <legend>{{ 'wageChange.field.direction' | transloco }}</legend>
             <div class="radios">

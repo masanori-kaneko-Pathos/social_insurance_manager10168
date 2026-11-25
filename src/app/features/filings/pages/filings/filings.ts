@@ -20,7 +20,8 @@ import { CriteriaService } from '../../../office/criteria.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import { payrollOf } from '../../../office/office-settings';
 import { findStartMonths } from '../../../payrolls/logic/irregular';
-import { latestPaidMonth } from '../../../payrolls/logic/payroll-rows';
+import { latestPaidMonth, periodOf } from '../../../payrolls/logic/payroll-rows';
+import { payrollAt } from '../../../office/logic/pay-group';
 import { regularYearOf } from '../../../payrolls/logic/regular';
 import { standardAt } from '../../../payrolls/logic/revision-base';
 import { PayrollService } from '../../../payrolls/payroll.service';
@@ -29,7 +30,7 @@ import { RevisionService } from '../../../payrolls/revision.service';
 import { BonusService } from '../../../premiums/bonus.service';
 import { DecisionNoticeCard } from '../../../premiums/components/decision-notice-card/decision-notice-card';
 import { eligibleOn } from '../../../premiums/logic/bonus-rows';
-import { isOver70Employee } from '../../../employees/logic/coverage';
+import { ageReachDate, isOver70Employee } from '../../../employees/logic/coverage';
 import { acquireBonusRemunerationOf, bonusRemunerationOf, enrolledFromOf, irregularBonusYearOf, isNotCovered, isRemunerationBonus, recipientsOf } from '../../../premiums/logic/bonus-nature';
 import { acquiredDateOf, acquireRow, addedAcquireBonus, bonusRow, FILING_COLUMNS, FILING_KINDS, filingFileName, FilingKind, FilingRow, irregularRemarks, lossesIn, lossRow, mergeSameMonth, regularRemarks, revisionRow, specialRemarks, specialRow, toCells } from '../../logic/filing-rows';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
@@ -272,6 +273,10 @@ export class FilingsPage {
           payrolls,
           bonusMonthly: d.bonusMonthly,
           bonusMonths: (d.bonusMonthly ?? 0) > 0 ? bonusRemunerationOf(e.id, year, bonusPayments).months : [],
+          // 70歳以上被用者の算定基礎月：平均に使った月のうち、計算期間の初日が70歳到達日以後の月（11/25）
+          over70Months: d.usedMonths
+            .filter((m) => periodOf(m, payrollAt(this.context.current()!, e, m)).start >= ageReachDate(e.birthDate, 70))
+            .map((m) => Number(m.slice(5, 7))),
         }),
         bonusMonthly: d.bonusMonthly ?? 0,
       });

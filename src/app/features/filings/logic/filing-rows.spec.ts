@@ -151,6 +151,12 @@ describe('月額変更届・算定基礎届', () => {
       '6．その他（年間平均）',
     ]);
   });
+  it('備考：70歳以上被用者算定に算定基礎月を書く（ガイドブック ケース⑥。11/25）', () => {
+    const p = new Map([pay('2026-04', 100), pay('2026-05', 100), pay('2026-06', 100)]);
+    const e = emp({ birthDate: '1956-04-10' });
+    expect(regularRemarks({ employee: e, year: 2026, annual: false, payrolls: p, over70Months: [6] })).toEqual(['1．70歳以上被用者算定（算定基礎月：6月）']);
+    expect(regularRemarks({ employee: e, year: 2026, annual: false, payrolls: p })).toEqual(['1．70歳以上被用者算定']);
+  });
   it('賞与に係る報酬（年4回以上の賞与）：各月の通貨と合計に足し、備考の「その他」に払った月と ÷12 の額（ガイドブック ケース⑦。11/19）', () => {
     const r = revisionRow('regular', {
       employee: emp({ birthDate: '1985-05-01' }),

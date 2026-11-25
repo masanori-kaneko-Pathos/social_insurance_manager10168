@@ -129,6 +129,10 @@
                   @if (r.bonusMonthly > 0) {
                     <div class="sub">{{ 'regular.bonus.included' | transloco: { n: yen(r.bonusMonthly) } }}</div>
                   }
+                  <!-- 4〜6月とも休業手当で解消：休業手当を含まない直近の標準報酬で決めた（11/25） -->
+                  @if (r.restoredFrom; as from) {
+                    <div class="sub">{{ 'regular.restored' | transloco: { y: from.slice(0, 4), m: monthNum(from) } }}</div>
+                  }
                 } @else {
                   —
                 }

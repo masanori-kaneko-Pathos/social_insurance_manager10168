@@ -115,6 +115,12 @@ export function findStartMonths(
     amountComparable?: (paidMonth: string) => boolean;
     /** 雇用契約の変更から出した起算月（contractStartMonths） */
     contractStarts?: readonly StartMonth[];
+    /**
+     * その支払月の支払基礎日数の基準（11/25）。基準に届かない月（締め日の変更で期間が短い月など）の次の月は、
+     * その月の額と、その前の月の額のどちらかと同じなら変動にしない（事務取扱いの事例集 随時改定 問7：
+     * 締め日を変えた月の次の月を起算月にはしない）。省くと見ない
+     */
+    minDaysAt?: (paidMonth: string) => number;
   } = {},
 ): StartMonth[] {
   const found = new Map<string, StartMonth>();
@@ -122,6 +128,8 @@ export function findStartMonths(
   // 比べる相手は、前の月の実績。ただし固定的賃金が0円の月（休業中など）は飛ばして、最後に払った月と比べる
   // （育休明けに「0円 → 19万円で上がった」と読まないため。休業前の27万円 → 19万円なら「下がった」）
   let last: Payroll | null = null;
+  // 日数が基準に届かない月が続く前の、最後に払った月（問7。11/25）
+  let beforeShort: Payroll | null = null;
   // 現物給与の比べる相手（前の月の現物の額。内訳なしの月・休職・一時帰休の月は飛ばす。11/24）
   let lastKind: number | null = null;
   const furlough = (m: string) => payrolls.get(m)?.state === 'furlough';
@@ -167,7 +175,9 @@ export function findStartMonths(
       continue;
     }
     // 比べるのは欠勤控除を引く前の額（内訳がある月。欠勤の月を変動と見ないため。11/24）
-    const fixedChanged = fixedForChange(p) > 0 && !!last && !!prev && fixedForChange(p) !== fixedForChange(last);
+    // 日数が基準に届かない月の次の月：その前の月と同じ額に戻っただけなら変動ではない（問7。11/25）
+    const backToBefore = !!beforeShort && fixedForChange(p) === fixedForChange(beforeShort);
+    const fixedChanged = fixedForChange(p) > 0 && !!last && !!prev && fixedForChange(p) !== fixedForChange(last) && !backToBefore;
     if (fixedChanged && !kindChanged) {
       found.set(at, { month: at, direction: directionOf(last!, p, last === prev), source: 'fixed' });
     } else if (kindChanged) {
@@ -181,7 +191,12 @@ export function findStartMonths(
     } else if (p.retro > 0) {
       found.set(at, { month: at, direction: 'up', source: 'retro' });
     }
-    if (fixedForChange(p) > 0) last = p;
+    if (fixedForChange(p) > 0) {
+      const short = !!opts.minDaysAt && p.days < opts.minDaysAt(m);
+      if (!short) beforeShort = null;
+      else if (!beforeShort) beforeShort = last;
+      last = p;
+    }
   }
   // 契約の変更は、額の変化より先に採る（向きが契約ではっきりしているため）
   for (const c of opts.contractStarts ?? []) found.set(c.month, c);
