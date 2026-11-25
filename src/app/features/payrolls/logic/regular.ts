@@ -408,6 +408,26 @@ export function withoutFurloughAt(list: readonly Remuneration[], payrolls: Reado
 }
 
 /**
+ * 算定基礎届の ⑭総計・⑮平均額・⑯修正平均額（11/25）
+ * ふつうは、平均に使った月の総計と平均。遡及支払額があれば修正平均（遡及を除く）
+ * 7/1までに一時帰休が解消した人は、ガイドブック ケース⑧の記入例どおり、⑭⑮は休業手当の月も含めた3か月で書き、
+ * ⑯修正平均に休業手当の月を除いた平均を書く（4〜6月とも休業手当なら ⑯ は空）
+ */
+export function regularFormAmounts(r: Pick<RegularResult, 'months' | 'usedCount' | 'rawAverage' | 'average' | 'hasRetro'>): {
+  total: number;
+  average: number;
+  corrected: number | null;
+} {
+  const used = r.months.filter((m) => m.used);
+  if (r.months.some((m) => m.skip === 'furloughResolved')) {
+    const all = r.months.filter((m) => m.used || m.skip === 'furloughResolved');
+    const total = all.reduce((s, m) => s + m.amount, 0);
+    return { total, average: Math.floor(total / all.length), corrected: r.usedCount > 0 ? r.average : null };
+  }
+  return { total: used.reduce((s, m) => s + m.amount, 0), average: r.rawAverage ?? 0, corrected: r.hasRetro ? r.average : null };
+}
+
+/**
  * 70歳以上被用者の標準報酬月額相当額に使う月と平均（11/25）
  * 平均に使った月のうち、給与の計算期間の初日が70歳到達日以後の月だけ（到達日より前の日の給与を含む月は除く）
  * 算定基礎届の記入・提出ガイドブック ケース⑥：4/9 到達・月末締めなら、6月払い（5/1〜5/31）だけ。遡及支払額は除く

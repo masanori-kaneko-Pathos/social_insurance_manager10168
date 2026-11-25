@@ -118,3 +118,19 @@ describe('pendingSummerRevision：定時決定の前に、7〜9月改定の随�
       .toEqual({ revisedFrom: '2026-08', status: 'waiting' });
   });
 });
+
+describe('revisionItems：産休・育休にかかる月は起算月にしない（事務取扱いの事例集 随時改定 問14。11/25）', () => {
+  it('産休の間だけ通勤手当（5万円）を払わなくても、随時改定の候補を出さない', () => {
+    const p = partTimer();
+    p.contracts = [{ ...p.contracts[0], weeklyMinutes: 2400, monthlyDays: 20 }];
+    // 月末締め・翌月25日払い：2027年2〜4月払い ＝ 1〜3月の期間（産休 1/1〜3/31）
+    p.payrolls = new Map([
+      pay('2026-11', 350000, 350000, 30), pay('2026-12', 350000, 350000, 31), pay('2027-01', 350000, 350000, 31),
+      pay('2027-02', 300000, 300000, 31), pay('2027-03', 300000, 300000, 28), pay('2027-04', 300000, 300000, 31),
+      pay('2027-05', 350000, 350000, 30), pay('2027-06', 350000, 350000, 31),
+    ]);
+    p.remunerations = [rem('2026-10', 360)];
+    p.employee = { ...p.employee, leaves: [{ kind: 'maternity', start: '2027-01-01', plannedEnd: '2027-03-31', end: null } as never] };
+    expect(revisionItems(p, CTX).filter((i) => i.type === 'irregular')).toEqual([]);
+  });
+});

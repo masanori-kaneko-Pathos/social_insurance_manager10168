@@ -121,6 +121,11 @@ export function findStartMonths(
      * 締め日を変えた月の次の月を起算月にはしない）。省くと見ない
      */
     minDaysAt?: (paidMonth: string) => number;
+    /**
+     * その支払月の計算期間が、産休・育休などの休業にかかっているか（11/25）。かかっている月は休職の月と同じく
+     * 起算月にも比べる相手にもしない（休業中に通勤手当を払わないのは、賃金体系の変更ではない。事務取扱いの事例集 随時改定 問14）
+     */
+    leaveAt?: (paidMonth: string) => boolean;
   } = {},
 ): StartMonth[] {
   const found = new Map<string, StartMonth>();
@@ -141,7 +146,7 @@ export function findStartMonths(
     // （日本年金機構「標準報酬月額の定時決定及び随時改定の事務取扱いに関する事例集」5(2) 問1・2・5・6。11/19）
     // 休職（休職給）の月は起算月にしない。休職中に固定的賃金が変わったら、戻った月を起算月にする（事例集 4 問8。11/19）
     // → 休職の月は「最後に払った月」にも入れず、戻った月を休職の前の月と比べる
-    if (p.state === 'suspended') continue;
+    if (p.state === 'suspended' || opts.leaveAt?.(m)) continue;
     if (furlough(m)) {
       if (!furlough(shiftMonth(m, -1)) && [1, 2, 3].every((i) => furlough(shiftMonth(m, i)))) {
         found.set(m, { month: m, direction: 'down', source: 'furlough' });

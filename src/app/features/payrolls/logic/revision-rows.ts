@@ -20,6 +20,7 @@ import {
   ClassifyOffice,
 } from '../../employees/logic/classify';
 import { contractAt } from '../../employees/logic/contract-form-model';
+import { endOf } from '../../employees/logic/leave';
 import { coverageForMonth } from '../../employees/logic/coverage';
 import { pickGradeTable } from '../../rates/logic/grade';
 import { withCapRevisions } from '../../rates/logic/cap-revision';
@@ -137,7 +138,12 @@ export function revisionItems(p: RevisionPerson, ctx: RevisionContext): Revision
     const c = contractAt(withPay, periodOf(m, ctx.schedule).end);
     return !c || (c.payType !== 'hourly' && c.payType !== 'daily');
   };
-  for (const start of findStartMonths(p.payrolls, p.wageChanges ?? [], { amountComparable, contractStarts, minDaysAt })) {
+  // 産休・育休にかかる月（計算期間と休業の期間が重なる月）は、起算月にも比べる相手にもしない（問14。11/25）
+  const leaveAt = (m: string) => {
+    const per = periodOf(m, ctx.schedule);
+    return (e.leaves ?? []).some((l) => l.start <= per.end && (endOf(l) ?? '9999-12-31') >= per.start);
+  };
+  for (const start of findStartMonths(p.payrolls, p.wageChanges ?? [], { amountComparable, contractStarts, minDaysAt, leaveAt })) {
     if (start.month < ctx.fromMonth) continue;
     const revisedFrom = shiftMonth(start.month, 3);
     const r = judgeIrregular({

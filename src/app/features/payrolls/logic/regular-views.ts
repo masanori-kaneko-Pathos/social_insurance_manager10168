@@ -17,7 +17,7 @@ import {
   NaturePaymentLike,
   windowOf,
 } from '../../premiums/logic/bonus-nature';
-import { decideRegular, GradeRows, MonthUse, over70Basis, RegularInput, RegularResult, remunerationAt } from './regular';
+import { decideRegular, GradeRows, MonthUse, over70Basis, RegularInput, regularFormAmounts, RegularResult, remunerationAt } from './regular';
 import { ageReachDate } from '../../employees/logic/coverage';
 import { dayRulesOf, pendingSummerRevision, RevisionContext, revisionItems } from './revision-rows';
 import { allocateOtherMonths, OtherMonths } from './payroll-lines';
@@ -158,9 +158,8 @@ export function regularReflectItem(
     year: String(y),
     method,
     usedMonths: method === 'keep' ? [] : used.filter((m) => m.used).map((m) => m.month),
-    total: method === 'keep' ? 0 : sum(r.months),
-    average: r.rawAverage ?? 0,
-    corrected: r.hasRetro ? r.average : null,
+    // ⑭⑮⑯：一時帰休が解消した人は休業手当の月も含めた3か月で書き、⑯に除いた平均（ガイドブック ケース⑧。11/25）
+    ...(method === 'normal' ? regularFormAmounts(r) : { total: method === 'keep' ? 0 : sum(r.months), average: r.rawAverage ?? 0, corrected: r.hasRetro ? r.average : null }),
     annualAverage: r.annual?.average ?? null,
     monthlyAmount: amount,
     seasonal: method === 'annual',

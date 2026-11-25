@@ -19,7 +19,7 @@ import { housingValue, inKindAmount } from './in-kind';
 import { findStartMonths, judgeIrregular } from './irregular';
 import { readEntry, textOf } from './payroll-input';
 import { allocateOtherMonths, categoryOf } from './payroll-lines';
-import { decideRegular, over70Basis, Remuneration } from './regular';
+import { decideRegular, over70Basis, regularFormAmounts, Remuneration } from './regular';
 import { standardBonusOf } from '../../premiums/logic/calc-bonus';
 import { resolveItems } from '../../premiums/logic/bonus-items';
 import { bonusRemunerationOf, isRemunerationBonus, NaturePaymentLike } from '../../premiums/logic/bonus-nature';
@@ -568,5 +568,42 @@ describe('事例集 随時改定 問7：固定的賃金の変動の翌月に締�
   it('昇給した月に欠勤が多くて17日未満でも、次の月を起算月にずらさない（欠勤控除は引く前の額で比べる）', () => {
     const pays = [b('2026-04', 300000, 31), b('2026-05', 360000, 16, [['欠勤控除', 150000]]), b('2026-06', 360000, 30), b('2026-07', 360000, 31)];
     expect(judge(pays)).toEqual(['2026-05:up:shortDays']);
+  });
+});
+
+describe('事例集 随時改定 問14：産休の間、基本給は払うが通勤手当は払わない（月末締め当月25日払い）', () => {
+  const work = (m: string) => slip(m, [['基本給', 300000], ['通勤手当', 50000]]);
+  const leave = (m: string) => slip(m, [['基本給', 300000]]);
+  const pays = [work('2026-01'), work('2026-02'), work('2026-03'), leave('2026-04'), leave('2026-05'), leave('2026-06'), leave('2026-07'), work('2026-08'), work('2026-09')];
+  // 産休 2026-04-01〜2026-07-31
+  const inLeave = (m: string) => m >= '2026-04' && m <= '2026-07';
+  it('休業の月を見なければ、通勤手当がなくなった4月を「下がった」起算月にしてしまう（直す前）', () => {
+    expect(starts(pays)).toEqual(['2026-04:down:fixed', '2026-08:up:fixed']);
+  });
+  it('休業にかかる月は起算月にも比べる相手にもしない → 起算月なし（○ 賃金体系の変更ではない）', () => {
+    expect(findStartMonths(new Map(pays), [], { leaveAt: inLeave })).toEqual([]);
+  });
+});
+
+describe('ガイドブック ケース⑧：一時帰休による休業手当（20日締め当月25日払い）', () => {
+  const p = (m: string, base: number, ot: number, days: number, furlough: boolean): [string, Payroll] => {
+    const [, x] = slip(m, [['基本給', base], ['残業手当', ot]], { days });
+    return [m, { ...x, state: furlough ? 'furlough' : 'normal' }];
+  };
+  const run = (pays: [string, Payroll][]) =>
+    decideRegular({ year: 2026, employee: emp('2020-04-01'), payrolls: new Map(pays), remunerations: [rem('2025-09', 280)], grades: GRADES, schedule: D20_25 });
+  it('7/1 に解消していない：6月の休業手当も含めて3か月 → 総計 732,600・平均 244,200円', () => {
+    const r = run([p('2026-04', 272000, 10600, 31, false), p('2026-05', 272000, 5900, 30, false), p('2026-06', 169000, 3100, 31, true), p('2026-07', 169000, 0, 30, true)]);
+    expect(regularFormAmounts(r)).toEqual({ total: 732600, average: 244200, corrected: null });
+    expect(r.next!.health.standard).toBe(240000);
+  });
+  it('7/1 に解消：⑭⑮は3か月（709,900・236,633円）、⑯修正平均は4月を除いた 274,550円 → 280千円', () => {
+    const r = run([p('2026-04', 160800, 0, 31, true), p('2026-05', 268000, 4000, 30, false), p('2026-06', 268000, 9100, 31, false)]);
+    expect(regularFormAmounts(r)).toEqual({ total: 709900, average: 236633, corrected: 274550 });
+    expect(r.next!.health.standard).toBe(280000);
+  });
+  it('4〜6月とも休業手当で解消：⑭⑮は3か月、⑯は空（決定は一時帰休前の標準報酬）', () => {
+    const r = run([p('2026-04', 160000, 0, 31, true), p('2026-05', 160000, 0, 30, true), p('2026-06', 160000, 0, 31, true), p('2026-07', 272000, 0, 30, false)]);
+    expect(regularFormAmounts(r)).toEqual({ total: 480000, average: 160000, corrected: null });
   });
 });
