@@ -67,7 +67,7 @@ import { errorKeyOf } from '../../../../shared/utils/error-key';
 
 type Mode = 'fiscal' | 'calendar' | 'last12';
 /** 「＋登録」のメニューから足すカード（中身がないときは出さない） */
-type AddKind = 'leave' | 'care' | 'overseas' | 'dependent' | 'transfer';
+type AddKind = 'payroll' | 'leave' | 'care' | 'overseas' | 'dependent' | 'transfer';
 
 /**
  * 従業員のページ（GitHub 風のタブ）
@@ -153,6 +153,7 @@ export class EmployeeDetail {
   private readonly overseasCard = viewChild(OverseasCard);
   private readonly transferCard = viewChild(TransferCard);
   private readonly dependentCard = viewChild(DependentCard);
+  private readonly payrollCard = viewChild(PayrollCard);
 
   readonly modes: Mode[] = ['fiscal', 'calendar', 'last12'];
   readonly kinds = ['health', 'care', 'pension'] as const;
@@ -313,8 +314,8 @@ export class EmployeeDetail {
     // 従業員を読み終えてから、休業のカードの追加の欄を開く。開いたら URL から add を消す（戻る・再読み込みで開き直さない）
     effect(() => {
       const kind = this.params().get('add');
-      if (kind !== 'leave' || !this.employee() || !this.context.isAdmin()) return;
-      untracked(() => void this.openAdd('leave', true));
+      if ((kind !== 'leave' && kind !== 'payroll') || !this.employee() || !this.context.isAdmin()) return;
+      untracked(() => void this.openAdd(kind, true));
     });
   }
 
@@ -403,15 +404,21 @@ export class EmployeeDetail {
   /** 追加の欄を開く（fromLink：ほかの画面のリンクから来たとき。URL の add を消す） */
   private async openAdd(kind: AddKind, fromLink = false): Promise<void> {
     this.adding.set(kind);
-    // 扶養家族は本人の情報のタブ、ほかは雇用・契約のタブ（11/17 に扶養家族も足した）
+    // 給与は給与と標準報酬のタブ（11/25）、扶養家族は本人の情報のタブ、ほかは雇用・契約のタブ（11/17 に扶養家族も足した）
+    const tab = kind === 'payroll' ? 'pay' : kind === 'dependent' ? 'person' : 'employment';
     await this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { tab: kind === 'dependent' ? 'person' : 'employment', ...(fromLink ? { add: null } : {}) },
+      queryParams: { tab, ...(fromLink ? { add: null } : {}) },
       queryParamsHandling: 'merge',
       replaceUrl: fromLink,
     });
     // カードが画面に出てから追加の欄を開く
     setTimeout(() => {
+      // 給与：支払日を過ぎた最新の月の入力を開く（11/25）
+      if (kind === 'payroll') {
+        this.payrollCard()?.open();
+        return;
+      }
       // 異動はカードを開くだけ（追加の欄ではない。11/24）
       if (kind === 'transfer') {
         this.transferCard()?.start();

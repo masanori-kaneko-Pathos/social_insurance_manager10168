@@ -148,6 +148,12 @@ export class PayrollEntry implements OnInit {
     });
   });
 
+  /** 払った月そのもの（本来の月の選択肢の先頭。「この月」ではなく数字で出す。11/25） */
+  readonly thisMonthOption = computed(() => {
+    const m = this.paidMonth();
+    return m ? { y: m.slice(0, 4), m: String(Number(m.slice(5))) } : null;
+  });
+
   /** 本来の月を選べる行か（遡及支払額・報酬にならない行は選べない） */
   canPickMonth(d: LineDraft): boolean {
     return !!d.category && FOR_MONTH_CATEGORIES.includes(d.category) && this.forMonthOptions().length > 0;

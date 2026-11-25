@@ -4001,7 +4001,7 @@
     "nextYear": "Next year"
   },
   "payrollEntry": {
-    "open": "Enter a month",
+    "open": "Enter pay",
     "new": "No record for this month yet",
     "editing": "Already entered (saving overwrites it)",
     "notEmployed": "This employee was not employed during this pay period. Check the month.",
@@ -4028,7 +4028,6 @@
       "direct": "Enter the payment lines of the payslip and the fields above are calculated (do not enter tax or social insurance deductions).",
       "fromLines": "The fields above are calculated from the lines.",
       "forMonth": "Original month",
-      "forThis": "This month",
       "forOption": "Paid {{y}}-{{m}}",
       "forMonthNote": "For settled forgotten pay, choose the month it was due in \"Original month\"; for a retroactive raise, use the \"Retroactive pay\" category.",
       "forOptionShort": "Paid in month {{m}}"
@@ -4058,7 +4057,8 @@
       "merged": "Total: ¥{{total}} (in-kind remuneration is included in the amount paid in money)",
       "otherMonth": "Of which, allocated to original months: ¥{{amount}}",
       "note": "This is used as the monthly remuneration."
-    }
+    },
+    "add": "Enter pay"
   },
   "filing": {
     "title": "Filing lists",

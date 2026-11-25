@@ -134,7 +134,7 @@
                     [disabled]="!canEdit()"
                     (change)="setForMonth(i, $any($event.target).value)"
                   >
-                    <option value="" [selected]="!d.forMonth">{{ 'payrollEntry.lines.forThis' | transloco }}</option>
+                    <option value="" [selected]="!d.forMonth">{{ 'payrollEntry.lines.forOptionShort' | transloco: thisMonthOption() ?? undefined }}</option>
                     @for (o of forMonthOptions(); track o.value) {
                       <option [value]="o.value" [selected]="d.forMonth === o.value">{{ (o.sameYear ? 'payrollEntry.lines.forOptionShort' : 'payrollEntry.lines.forOption') | transloco: o }}</option>
                     }

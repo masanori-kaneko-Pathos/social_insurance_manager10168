@@ -23,7 +23,9 @@
           <details #addMenu class="add-menu">
             <summary class="btn">＋ {{ 'employee.detail.add' | transloco }}</summary>
             <div class="menu">
-              <button type="button" (click)="add('leave', addMenu)">{{ 'leave.add' | transloco }}</button>
+              <!-- 給与の実績（1か月分）。いちばんよく使うので先頭に（11/25） -->
+              <button type="button" (click)="add('payroll', addMenu)">{{ 'payrollEntry.add' | transloco }}</button>
+              <button type="button" class="menu-sep" (click)="add('leave', addMenu)">{{ 'leave.add' | transloco }}</button>
               <button type="button" (click)="add('care', addMenu)">{{ 'careExemption.add' | transloco }}</button>
               <button type="button" (click)="add('overseas', addMenu)">{{ 'overseas.add' | transloco }}</button>
               <button type="button" (click)="add('dependent', addMenu)">{{ 'dependent.add' | transloco }}</button>
@@ -376,11 +378,11 @@
       }
 
       @case ('pay') {
-        <!-- ===== 給与と標準報酬 ===== -->
+        <!-- ===== 給与と標準報酬 =====（タブの名前の順。よく入れる給与を上に。11/25） -->
+        <app-payroll-card [employee]="e" />
         <section class="card">
           <app-remuneration-card [employee]="e" (changed)="loadOverview()" />
         </section>
-        <app-payroll-card [employee]="e" />
       }
 
       @case ('person') {
