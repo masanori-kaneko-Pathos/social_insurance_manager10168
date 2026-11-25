@@ -3516,7 +3516,7 @@
       },
       "payroll": {
         "title": "Entering payroll",
-        "body": "On the payroll screen, enter the amount paid in money, fixed wages and payment basis days from the payslip for each pay month. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). Fixed wages are pay with a set rate or amount (including hourly rate × hours); non-fixed wages depend on the month, such as overtime. When an hourly or daily rate or the scheduled hours change in the contract, a revision candidate appears. You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and retroactive pay columns. For one person and one month, you can also use \"Enter a month\" on the employee page. Enter in \"retroactive pay\" (retroactive pay on the forms) only differences from raises decided retroactively. Allowances paid late because of a late application or a mistake go back into the month they should have been paid (that month becomes the start month for a revision). Mark \"Pro-rated month\" for months where a mid-period hire, transfer or new allowance means a full month was not paid (that month is not used as a start month; counting begins the next month). Payment basis days are calendar days for monthly pay, days worked for daily pay, and total hours ÷ daily scheduled hours for hourly pay. For months where a retroactive pay cut was deducted, enter the amount before the deduction. One-off or up-to-three-times-a-year payments (e.g. a sign-on allowance or year-end allowance) do not go into payroll; register them as bonuses (bonus payment report). Monthly allowances go into payroll even if they share a payslip line with such payments."
+        "body": "On the payroll screen, enter the amount paid in money, fixed wages and payment basis days from the payslip for each pay month. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). Fixed wages are pay with a set rate or amount (including hourly rate × hours); non-fixed wages depend on the month, such as overtime. Classify a commuting allowance in \"Payroll items and categories\" as fixed wages if it is a commuter pass or a fixed monthly amount, and as non-fixed wages if it is a per-day amount × days worked. A change in days worked does not start a revision, but a change in the per-day or per-km rate (fare, fuel) is a change in fixed wages: add a unit rate change on the revision candidates screen (audit case 4). When an hourly or daily rate or the scheduled hours change in the contract, a revision candidate appears. You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and retroactive pay columns. For one person and one month, you can also use \"Enter a month\" on the employee page. Enter in \"retroactive pay\" (retroactive pay on the forms) only differences from raises decided retroactively. Allowances paid late because of a late application or a mistake go back into the month they should have been paid (that month becomes the start month for a revision). Mark \"Pro-rated month\" for months where a mid-period hire, transfer or new allowance means a full month was not paid (that month is not used as a start month; counting begins the next month). Payment basis days are calendar days for monthly pay, days worked for daily pay, and total hours ÷ daily scheduled hours for hourly pay. For months where a retroactive pay cut was deducted, enter the amount before the deduction. One-off or up-to-three-times-a-year payments (e.g. a sign-on allowance or year-end allowance) do not go into payroll; register them as bonuses (bonus payment report). Monthly allowances go into payroll even if they share a payslip line with such payments."
       },
       "inKind": {
         "title": "Remuneration provided in kind (housing, dormitories, meals)",
@@ -3987,7 +3987,7 @@
       },
       "makeTemplate": "Use these items as the office payroll items",
       "templateDone": "Saved as the office payroll items",
-      "direct": "Enter payslip lines and the fields above are calculated (if the payslip only shows totals, enter them above).",
+      "direct": "Enter the payment lines of the payslip and the fields above are calculated (do not enter tax or social insurance deductions).",
       "fromLines": "The fields above are calculated from the lines.",
       "forMonth": "Original month",
       "forThis": "This month",
@@ -4004,7 +4004,7 @@
     "saveNext": "Save and go to the next person",
     "saveOnly": "Save",
     "note": {
-      "cash": "Remuneration only",
+      "cash": "Gross pay on the payslip (not net pay)",
       "fixed": "Incl. commuting, after deductions",
       "nonFixed": "Overtime, commission, etc.",
       "retro": "Retroactive raise",
@@ -4660,7 +4660,7 @@
       "cut": "Pay cut",
       "allowanceNew": "New allowance",
       "allowanceEnd": "Allowance ended",
-      "unitPrice": "Unit rate change (hourly, daily, overtime rate, etc.)",
+      "unitPrice": "Unit rate change (hourly, daily, overtime rate, per-day or per-km commuting rate, etc.)",
       "contractHours": "Change in contract hours",
       "inKind": "Change in benefits in kind",
       "other": "Other"
@@ -5067,8 +5067,8 @@
     "example": {
       "base": "base pay, monthly salary, hourly wage, director pay",
       "fixedAllowance": "position, job, housing, family, qualification, fixed overtime allowance",
-      "commute": "commuter pass, daily transport allowance",
-      "variable": "overtime, holiday, late-night, attendance, commission, overtime beyond the fixed amount",
+      "commute": "commuter pass, fixed monthly transport allowance",
+      "variable": "overtime, holiday, late-night, attendance, commission, overtime beyond the fixed amount, per-day transport allowance × days worked",
       "deduction": "absence deduction, lateness deduction",
       "retro": "retroactive raise difference",
       "excluded": "travel expense refunds, congratulatory or condolence payments"
@@ -5076,8 +5076,8 @@
     "treatment": {
       "base": "Counted in amount paid in money and as fixed wages (including hourly rate × hours; for hourly or daily pay, changes are found from contract rate or hour changes)",
       "fixedAllowance": "Counted in amount paid in money and as fixed wages",
-      "commute": "Counted in amount paid in money and as fixed wages (to notice moves and fare changes)",
-      "variable": "Counted in amount paid in money as non-fixed wages",
+      "commute": "Counted in amount paid in money and as fixed wages (a fare change or move that changes the amount shows a revision candidate)",
+      "variable": "Counted in amount paid in money as non-fixed wages (when a per-day or per-km rate changes, add a unit rate change on the revision candidates screen)",
       "deduction": "Subtracted from amount paid in money and fixed wages (changes are checked before the deduction)",
       "retro": "Counted in amount paid in money, left out of the averages for the annual determination and revisions",
       "excluded": "Not counted in amount paid in money"
