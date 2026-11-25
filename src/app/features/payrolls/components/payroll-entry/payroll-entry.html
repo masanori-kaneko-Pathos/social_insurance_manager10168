@@ -195,7 +195,13 @@
     <div class="row2">
       <div class="field">
         <label>{{ 'payroll.col.days' | transloco }}</label>
-        <input class="input num" formControlName="days" inputmode="numeric" [attr.placeholder]="candidate()" />
+        <!-- 候補の日数は、枠を押したときの候補の一覧で出す（placeholder は入っているように見えるので使わない。11/25） -->
+        <input class="input num" formControlName="days" inputmode="numeric" [attr.list]="candidate() !== null ? daysListId : null" />
+        @if (candidate(); as c) {
+          <datalist [id]="daysListId">
+            <option [value]="c">{{ 'payroll.candidateTitle' | transloco }}</option>
+          </datalist>
+        }
         <small class="field-note">{{ 'payrollEntry.note.days' | transloco }}</small>
         @if (canEdit() && daysOff(); as c) {
           <button type="button" class="days-fix" [title]="'payroll.candidateTitle' | transloco" (click)="fillCandidate()">

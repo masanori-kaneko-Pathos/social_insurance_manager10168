@@ -1,7 +1,7 @@
 import { emptyPayrollInput, Payroll } from '../../../core/models/payroll';
 import { parseCsv, toCsv } from '../../../shared/csv/csv';
 import { guessMapping, missingRequired, toOurTable } from '../../../shared/import/column-map';
-import { buildPayrollCsv, exportLineNames, lineHeaderOf, splitLineHeader, classifyImport, isInKindMerged, CsvEmployee, makeMatcher, PAYROLL_IMPORT_FIELDS, PAYROLL_TABLE_SPEC, mapHeader, parseFlag, parseMonth, parseState, payrollFileName, readPayrollCsv } from './payroll-csv';
+import { buildPayrollCsv, isOurPayrollFormat, exportLineNames, lineHeaderOf, splitLineHeader, classifyImport, isInKindMerged, CsvEmployee, makeMatcher, PAYROLL_IMPORT_FIELDS, PAYROLL_TABLE_SPEC, mapHeader, parseFlag, parseMonth, parseState, payrollFileName, readPayrollCsv } from './payroll-csv';
 import { monthsBetween } from '../../../shared/utils/date';
 import { PaySchedule } from './payroll-rows';
 
@@ -439,5 +439,21 @@ describe('本来の月の列（見出しの [YYYY-MM]。払い忘れ・計算誤
     const rows = buildPayrollCsv([A], [p], ['2026-10'], S, 'ja', names);
     expect(rows[1].slice(-3)).toEqual(['200000', '10000', '10000']);
     expect(readPayrollCsv(rows, [A], S).items[0].input.lines).toEqual(p.lines);
+  });
+});
+
+describe('isOurPayrollFormat：列を合わせる画面を出さずに進めるか（11/25）', () => {
+  it('内訳の列（基本給・通勤手当など）があれば、通貨によるものの額・うち固定的賃金の列はなくてよい', () => {
+    expect(isOurPayrollFormat(['社員番号', '氏名', '支払月', '給与計算の基礎日数', '実労働時間', '基本給', '役職手当', '通勤手当', '時間外手当'], [])).toBeTrue();
+  });
+  it('内訳の列も、通貨によるものの額の列もなければ、列を合わせる画面へ', () => {
+    expect(isOurPayrollFormat(['社員番号', '支払月', '給与計算の基礎日数', '総支給'], [])).toBeFalse();
+  });
+  it('今までのうちの見出し（通貨によるものの額・うち固定的賃金）はそのまま', () => {
+    expect(isOurPayrollFormat(['社員番号', '支払月', '通貨によるものの額', 'うち固定的賃金', '給与計算の基礎日数'], [])).toBeTrue();
+  });
+  it('事業所で登録した項目名（交通費（日額））も内訳の列として見分ける', () => {
+    const items = [{ name: '交通費（日額）', labels: [], category: 'variable' as const }];
+    expect(isOurPayrollFormat(['社員番号', '支払月', '給与計算の基礎日数', '交通費（日額）'], items)).toBeTrue();
   });
 });

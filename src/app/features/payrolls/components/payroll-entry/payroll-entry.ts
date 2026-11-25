@@ -26,6 +26,9 @@ export type PayrollRowForm = FormGroup<{
   state: FormControl<PayrollState>;
 }>;
 
+/** 日数の候補の一覧（datalist）の id に付ける番号 */
+let entrySeq = 0;
+
 /**
  * 給与明細の内訳を入れる（1人・1か月分。11/24）
  * 月の画面では行の下に開く。左に明細の支給の行（項目名・分類・金額）、右に日数・時間・現物
@@ -47,6 +50,8 @@ export class PayrollEntry implements OnInit {
   readonly payType = input<PayType | null>(null);
   /** 支払基礎日数の候補（月給の人だけ） */
   readonly candidate = input<number | null>(null);
+  /** 日数の候補の一覧（datalist）の id。同じ画面に部品が2つあってもぶつからないように */
+  readonly daysListId = `days-candidate-${++entrySeq}`;
   /** 前の月の内訳（項目名を写す。なければ出さない） */
   readonly prevLines = input<readonly PayrollLine[] | null>(null);
   readonly canEdit = input(true);

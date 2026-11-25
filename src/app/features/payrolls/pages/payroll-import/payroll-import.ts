@@ -9,7 +9,6 @@ import { Employee } from '../../../../core/models/employee';
 import { Payroll } from '../../../../core/models/payroll';
 import { ColumnMapper } from '../../../../shared/components/column-mapper/column-mapper';
 import { CsvEncoding, downloadCsv, safeFileName } from '../../../../shared/csv/csv';
-import { isOurFormat } from '../../../../shared/import/column-map';
 import { IMPORT_ACCEPT, ImportFileError, readTables, SheetTable } from '../../../../shared/import/parse';
 import { EmployeeService } from '../../../employees/employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
@@ -17,6 +16,7 @@ import {
   buildPayrollCsv,
   exportLineNames,
   lineColumnsOf,
+  isOurPayrollFormat,
   PAYROLL_COLUMNS,
   payrollExportRows,
   classifyImport,
@@ -26,8 +26,6 @@ import {
   makeNameMatcher,
   PAYROLL_FIX,
   PAYROLL_HEADERS,
-  payrollHeadersOf,
-  PAYROLL_IMPORT_FIELDS,
   payrollLabels,
   PAYROLL_TABLE_SPEC,
   payrollFileName,
@@ -316,7 +314,8 @@ export class PayrollImport {
       this.loaded.set({ fileName: file.name, encoding, tables });
       const [first] = tables;
       // うちの書き出しのままなら、今までどおり確認画面へ（見出しは日本語・英語のどちらでも）。PDF はいつも列を合わせる
-      const ours = isOurFormat(first.rows[0], PAYROLL_IMPORT_FIELDS, (f) => payrollHeadersOf(f.key));
+      // 内訳の列（基本給・通勤手当など）があるファイルは、通貨によるものの額・うち固定的賃金の列がなくてもうちの形（11/25）
+      const ours = isOurPayrollFormat(first.rows[0], this.payrollItems());
       if (tables.length === 1 && !first.pdf && ours) this.showPreview(first.rows);
       else this.mapping.set(true);
     } catch (err) {

@@ -648,6 +648,17 @@ export const PAYROLL_IMPORT_FIELDS: readonly ImportField<PayrollColumn>[] = PAYR
   orFrom: key === 'employeeNumber' ? (['name'] as const) : undefined,
 }));
 
+/**
+ * うちの見出しのままのファイルか（列を合わせる画面を出さずに、そのまま確認の画面へ進めるか。11/25）
+ * 内訳の列（基本給・通勤手当など給与の項目名）があれば、通貨によるものの額・うち固定的賃金の列はなくてよい（readPayrollCsv と同じ決まり）
+ */
+export function isOurPayrollFormat(header: readonly string[], items: readonly PayrollItemInput[]): boolean {
+  const { index, missing } = mapHeader(header);
+  const lines = lineColumnsOf(header, new Set(Object.values(index) as number[]), items);
+  const need = lines.length > 0 ? missing.filter((c) => c !== 'cash' && c !== 'fixed') : missing;
+  return need.length === 0;
+}
+
 export const PAYROLL_TABLE_SPEC: OurTableSpec<PayrollColumn, PayrollColumn> = {
   fields: PAYROLL_IMPORT_FIELDS,
   out: PAYROLL_COLUMNS,
