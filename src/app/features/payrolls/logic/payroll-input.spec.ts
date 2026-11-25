@@ -94,14 +94,21 @@ describe('textOf と readRow は行き来できる', () => {
   });
 });
 
-describe('candidateDays', () => {
-  it('欠勤を引く', () => {
-    expect(candidateDays(31, '2')).toBe(29);
+describe('candidateDays（算定基礎届の記入・提出ガイドブック (4) 支払基礎日数とは。11/25）', () => {
+  it('月給：出勤日数に関係なく暦日数（欠勤を入れても引かない）', () => {
+    expect(candidateDays(31, '2', 'monthly')).toBe(31);
   });
-  it('欠勤が空欄・読めない・多すぎるときは引かない', () => {
-    expect(candidateDays(31, '')).toBe(31);
-    expect(candidateDays(31, 'x')).toBe(31);
-    expect(candidateDays(20, '25')).toBe(20);
+  it('日給月給：欠勤がある月は、事業所が定めた日数（所定労働日数）から欠勤日数を引く', () => {
+    expect(candidateDays(31, '6', 'dailyMonthly', 22)).toBe(16); // 17日未満なので平均から除かれる
+    expect(candidateDays(31, '2', 'dailyMonthly', 22)).toBe(20);
+  });
+  it('日給月給：欠勤がない月は暦日数', () => {
+    expect(candidateDays(31, '', 'dailyMonthly', 22)).toBe(31);
+    expect(candidateDays(31, '0', 'dailyMonthly', 22)).toBe(31);
+  });
+  it('欠勤が読めない・多すぎるときは引かない', () => {
+    expect(candidateDays(31, 'x', 'dailyMonthly', 22)).toBe(31);
+    expect(candidateDays(31, '25', 'dailyMonthly', 22)).toBe(22);
   });
 });
 

@@ -121,12 +121,13 @@ export class PayrollCard {
     const p = this.editPeriod();
     return p ? (contractAt(this.contracts(), p.end)?.payType ?? null) : null;
   });
-  /** 日数の候補（月給・日給月給の人だけ。在籍していた暦日数 − 欠勤日数） */
+  /** 日数の候補（月給：暦日数／日給月給：欠勤があれば所定労働日数 − 欠勤日数。日給・時給は出さない。11/25） */
   candidate(): number | null {
     const p = this.editPeriod();
     const t = this.payType();
     if (!p || (t !== 'monthly' && t !== 'dailyMonthly')) return null;
-    return candidateDays(suggestDays(this.employee(), p), this.form.controls.absentDays.value);
+    const scheduled = contractAt(this.contracts(), p.end)?.monthlyDays ?? null;
+    return candidateDays(suggestDays(this.employee(), p), this.form.controls.absentDays.value, t, scheduled);
   }
   /** 前の月の内訳（項目名を写す） */
   private prevLinesOf(month: string) {

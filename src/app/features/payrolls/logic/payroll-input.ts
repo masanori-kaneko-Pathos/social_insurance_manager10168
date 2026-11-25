@@ -147,12 +147,17 @@ export function readEntry(t: PayrollRowText, drafts: readonly LineDraft[] | null
 }
 
 /**
- * 日数の候補：在籍していた暦日数 − 欠勤日数（欠勤を入れたときだけ引く）
- * ※ 日給月給の「事業所が定めた日数」・日給・時給の出勤日数は、雇用契約（給与の形）ができたら分ける
+ * 日数（給与計算の基礎日数）の候補（11/25 に算定基礎届の記入・提出ガイドブック「(4) 支払基礎日数とは」どおりに直した）
+ * - 月給：出勤日数に関係なく、在籍していた暦日数（欠勤を入れても引かない）
+ * - 日給月給（欠勤日数分だけ給料を引く）：欠勤がある月は「事業所が定めた日数（契約の月の所定労働日数）− 欠勤日数」、
+ *   欠勤がない月は暦日数
+ * - 日給・時給は候補を出さない（実際の出勤日数。有給休暇を含む）。呼ぶ側で除く
  */
-export function candidateDays(suggested: number, absentText: string): number {
+export function candidateDays(suggested: number, absentText: string, payType: PayType | null = 'monthly', scheduledDays: number | null = null): number {
   const absent = parseNat(absentText);
-  return absent != null && absent <= suggested ? suggested - absent : suggested;
+  if (payType !== 'dailyMonthly' || absent == null || absent <= 0) return suggested;
+  const base = scheduledDays ?? suggested;
+  return absent <= base ? base - absent : base;
 }
 
 /** 「合計」の列：支払額＋現物（入力中の文字から）。支払額が空・読めない、現物が読めないなら null */

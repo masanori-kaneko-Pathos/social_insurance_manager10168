@@ -1215,7 +1215,7 @@
       "needAmount": "Enter the monthly pay as a number to choose grades automatically."
     },
     "hint": {
-      "amount": "The \"monthly remuneration\" on the acquisition notification, or the \"corrected average\" on the base calculation or change notification. Not the standard monthly remuneration on the decision notice (match that with the grades below). Used for the special rule near the highest and lowest grades in revisions."
+      "amount": "The \"monthly remuneration\" on the acquisition notification, or the \"average\" on the base calculation or change notification (the \"corrected average\" if there is retroactive pay). Not the standard monthly remuneration on the decision notice (match that with the grades below). Used for the special rule near the highest and lowest grades in revisions."
     },
     "pensionOff": "No employees' pension coverage in this month (age 70 or over, etc.), so no pension grade is chosen. Only health insurance premiums are calculated.",
     "acquireBonus": "This office pays bonuses four or more times a year ({{natures}}). At acquisition, add the average bonus-related remuneration of people in similar work receiving similar bonuses. The amount below is the average of everyone receiving it in this office ({{people}} people, {{n}} yen). To exclude people in different work, adjust the monthly amount by hand after adding (then write the filing remark yourself).",
@@ -1797,9 +1797,9 @@
     "readonly": "View only. Only administrators can enter records.",
     "showAll": "Show more input fields",
     "showBasic": "Show fewer input fields",
-    "fillEmptyDays": "Fill empty days for salaried employees",
+    "fillEmptyDays": "Fill empty days for monthly and daily-monthly paid employees",
     "candidate": "Use {{days}}",
-    "candidateTitle": "Calendar days employed minus days absent (for monthly salary)",
+    "candidateTitle": "Calendar days employed for monthly pay; for daily-monthly pay with absences, scheduled days minus absences",
     "save": "Save",
     "saving": "Saving…",
     "savedCount": "Saved ({{count}} employees)",
@@ -1862,12 +1862,13 @@
       "cash": "Amount paid in money: the \"amount paid in money\" column of the notification of change in monthly remuneration and the base calculation notification. It includes the commuting allowance (even the tax-free part) and is after absence deductions. Do not include payments that are not remuneration, such as actual travel expenses or condolence money. Not the net pay.",
       "fixed": "Fixed wages: pay with a set rate or amount, such as base pay, position allowance and commuting allowance (including hourly rate × hours and daily rate × days). Non-fixed wages: pay that depends on the month, such as overtime, attendance allowance and commission. With a breakdown, these are calculated from the categories. A revision candidate appears when fixed wages (before absence deductions) change for monthly-paid people, or when the contract rate or scheduled hours change for hourly or daily-paid people.",
       "inKind": "Remuneration provided in kind (現物給与): company housing, dormitories and meals are converted to yen with the value set by the government for each prefecture, minus what the employee pays (different from the tax valuation). Use \"Calculate\" for meals and housing.",
-      "days": "Payment basis days: for monthly pay, the calendar days (30, 31 and so on, minus absences), not the days worked. If absences are deducted from the company's set number of days, use that number minus absences. For daily or hourly pay, the days worked (including paid leave). For monthly-paid people, the suggestion appears under the field when a different number is entered.",
+      "days": "Days for pay calculation (payment basis days): for monthly pay, the calendar days (30, 31 and so on) regardless of days worked. For daily-monthly pay where absences are deducted, only in months with absences, the company's set number of days minus absences. For daily or hourly pay, the days actually worked (including paid leave). The suggestion appears under the field when a different number is entered.",
       "blank": "Empty rows are not saved. Clearing a saved row and saving deletes that month's record.",
       "hours": "Hours worked: enter as \"160:30\" (160 h 30 min) or \"160.5\".",
       "inKindMerged": "In months marked \"Not itemized\", in-kind remuneration is included in the amount paid in money (the imported file had no in-kind column). Totals and premiums are still correct, but changes in in-kind remuneration (such as moving into company housing) cannot be detected, so enter the in-kind amount with \"Enter separately\" when you know it.",
       "retro": "Of which: retroactive pay: a raise decided retroactively, with the difference for earlier months paid this month (the \"retroactive pay\" column). This month becomes the start month for a revision, and the amount is left out of the average (corrected average). Settle forgotten or miscalculated pay with \"Original month\" in the breakdown instead.",
-      "prorated": "Pro-rated month: a month in which a new allowance or rate started in the middle of the pay period, so the new amount was not paid for a full month. Revisions are counted from the next month. The month of joining is excluded automatically from the acquisition date, so no mark is needed.",
+      "prorated": "Pro-rated month: a month in which a raise, new allowance or rate started in the middle of the pay period, so the new amount was not paid for a full month. Revisions are counted from the next month. The month of joining is excluded automatically from the acquisition date, so no mark is needed.",
+      "state": "State: \"Suspended\" is a month with leave-of-absence pay; \"Furlough\" is a month when the company had people stay off and paid a furlough allowance. Register maternity and childcare leave as leave on the employee, not here.",
       "paidMonth": "Pay month: the month of the pay date, not the month the pay is for."
     },
     "error": {
@@ -1884,15 +1885,15 @@
     "splitInKind": "Enter separately",
     "monthPick": "Paid {{y}}-{{m}}",
     "workedDays": "Enter days worked",
-    "workedDaysTitle": "For hourly or daily pay, base days are the days actually worked, including paid leave.",
+    "workedDaysTitle": "For hourly or daily pay, the days for pay calculation are the days actually worked, including paid leave.",
     "toMonthList": "Months",
     "bulk": {
       "title": "Fill in for the {{n}} people shown",
       "emptyOnly": "Only where empty",
       "daysUnit": "days",
       "apply": "Fill in",
-      "candidate": "Enter the suggested days for monthly-paid people",
-      "note": "The suggestion is the calendar days employed minus days absent. Hourly and daily-paid people are skipped. The days are saved with \"Save\"."
+      "candidate": "Enter the suggested days for monthly and daily-monthly paid people",
+      "note": "The suggestion is the calendar days employed for monthly pay, or scheduled days minus absences for daily-monthly pay in months with absences. Hourly and daily-paid people are skipped. The days are saved with \"Save\"."
     },
     "next": {
       "premiums": "See the premiums deducted from the {{paid}} pay (for month {{month}})",
@@ -3517,7 +3518,7 @@
       },
       "payroll": {
         "title": "Entering payroll",
-        "body": "On the payroll screen, enter the amount paid in money, fixed wages and payment basis days from the payslip for each pay month. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). Fixed wages are pay with a set rate or amount (including hourly rate × hours); non-fixed wages depend on the month, such as overtime. Classify a commuting allowance in \"Payroll items and categories\" as fixed wages if it is a commuter pass or a fixed monthly amount, and as non-fixed wages if it is a per-day amount × days worked. A change in days worked does not start a revision, but a change in the per-day or per-km rate (fare, fuel) is a change in fixed wages: add a unit rate change on the revision candidates screen (audit case 4). When an hourly or daily rate or the scheduled hours change in the contract, a revision candidate appears. You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and retroactive pay columns. For one person and one month, you can also use \"Enter a month\" on the employee page. Enter in \"retroactive pay\" (retroactive pay on the forms) only differences from raises decided retroactively. Allowances paid late because of a late application or a mistake go back into the month they should have been paid (that month becomes the start month for a revision). Mark \"Pro-rated month\" for months where a mid-period hire, transfer or new allowance means a full month was not paid (that month is not used as a start month; counting begins the next month). Payment basis days are calendar days for monthly pay, days worked for daily pay, and total hours ÷ daily scheduled hours for hourly pay. For months where a retroactive pay cut was deducted, enter the amount before the deduction. One-off or up-to-three-times-a-year payments (e.g. a sign-on allowance or year-end allowance) do not go into payroll; register them as bonuses (bonus payment report). Monthly allowances go into payroll even if they share a payslip line with such payments."
+        "body": "On the payroll screen, enter the amount paid in money, fixed wages and payment basis days from the payslip for each pay month. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). Fixed wages are pay with a set rate or amount (including hourly rate × hours); non-fixed wages depend on the month, such as overtime. Classify a commuting allowance in \"Payroll items and categories\" as fixed wages if it is a commuter pass or a fixed monthly amount, and as non-fixed wages if it is a per-day amount × days worked. A change in days worked does not start a revision, but a change in the per-day or per-km rate (fare, fuel) is a change in fixed wages: add a unit rate change on the revision candidates screen (audit case 4). When an hourly or daily rate or the scheduled hours change in the contract, a revision candidate appears. You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and retroactive pay columns. For one person and one month, you can also use \"Enter a month\" on the employee page. Enter in \"retroactive pay\" (retroactive pay on the forms) only differences from raises decided retroactively. Allowances paid late because of a late application or a mistake go back into the month they should have been paid (that month becomes the start month for a revision). Mark \"Pro-rated month\" for months where a mid-period hire, transfer or new allowance means a full month was not paid (that month is not used as a start month; counting begins the next month). Days for pay calculation (payment basis days) are calendar days for monthly pay regardless of days worked; for daily-monthly pay where absences are deducted, the company's set number of days minus absences, only in months with absences; and the days actually worked (including paid leave) for daily or hourly pay (filing guidebook). For months where a retroactive pay cut was deducted, enter the amount before the deduction. One-off or up-to-three-times-a-year payments (e.g. a sign-on allowance or year-end allowance) do not go into payroll; register them as bonuses (bonus payment report). Monthly allowances go into payroll even if they share a payslip line with such payments."
       },
       "inKind": {
         "title": "Remuneration provided in kind (housing, dormitories, meals)",
@@ -4006,12 +4007,13 @@
     "saveOnly": "Save",
     "note": {
       "cash": "Gross pay on the payslip (not net pay)",
-      "fixed": "Incl. commuting, after deductions",
+      "fixed": "Incl. commuting, minus absence deductions",
       "nonFixed": "Overtime, commission, etc.",
       "retro": "Retroactive raise",
-      "days": "Monthly: days − absences / hourly: days worked",
+      "days": "Monthly: calendar days / hourly, daily: days worked",
       "inKind": "Price table amount − employee payment",
-      "prorated": "The pay amount changed in the middle of the pay period"
+      "prorated": "A raise or new allowance started mid-period",
+      "state": "Leave-of-absence pay only; maternity → leave"
     },
     "readback": {
       "total": "Total (money + in kind): ¥{{total}}",

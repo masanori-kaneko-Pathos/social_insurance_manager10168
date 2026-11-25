@@ -459,14 +459,16 @@ export class PayrollMonth {
   }
 
   /**
-   * 支払基礎日数の候補（11/12：給与の形で分ける）
-   * - 月給・日給月給：在籍していた暦日数 − 欠勤日数
-   * - 時給・日給：候補は出さない（実際に働いた日数 ＋ 有給の日数を入れる）。契約が分からないときも出さない
+   * 給与計算の基礎日数の候補（11/12：給与の形で分ける。11/25：ガイドブック (4) どおりに）
+   * - 月給：在籍していた暦日数（欠勤を入れても引かない）
+   * - 日給月給：欠勤がある月は「契約の月の所定労働日数 − 欠勤日数」、ない月は暦日数
+   * - 時給・日給：候補は出さない（実際の出勤日数。有給休暇を含む）。契約が分からないときも出さない
    */
   candidate(v: ViewRow): number | null {
-    const pay = this.contractOf(v)?.payType;
+    const c = this.contractOf(v);
+    const pay = c?.payType;
     if (pay !== 'monthly' && pay !== 'dailyMonthly') return null;
-    return candidateDays(v.row.suggestedDays, v.form.controls.absentDays.value);
+    return candidateDays(v.row.suggestedDays, v.form.controls.absentDays.value, pay, c?.monthlyDays ?? null);
   }
 
   fillCandidate(v: ViewRow): void {
