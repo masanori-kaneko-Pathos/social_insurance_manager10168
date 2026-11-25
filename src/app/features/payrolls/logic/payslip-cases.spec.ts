@@ -17,6 +17,7 @@ import type { WageChange } from '../../../core/models/revision';
 import { GRADES, healthGradeOf, pensionGradeOf } from './grades.fixture';
 import { housingValue, inKindAmount } from './in-kind';
 import { findStartMonths, judgeIrregular } from './irregular';
+import { judgeLeaveEnd } from './leave-end';
 import { readEntry, textOf } from './payroll-input';
 import { allocateOtherMonths, categoryOf } from './payroll-lines';
 import { decideRegular, over70Basis, regularFormAmounts, Remuneration } from './regular';
@@ -605,5 +606,31 @@ describe('ガイドブック ケース⑧：一時帰休による休業手当（
   it('4〜6月とも休業手当で解消：⑭⑮は3か月、⑯は空（決定は一時帰休前の標準報酬）', () => {
     const r = run([p('2026-04', 160000, 0, 31, true), p('2026-05', 160000, 0, 30, true), p('2026-06', 160000, 0, 31, true), p('2026-07', 272000, 0, 30, false)]);
     expect(regularFormAmounts(r)).toEqual({ total: 480000, average: 160000, corrected: null });
+  });
+});
+
+// 出典 F：日本年金機構「育児休業等終了時報酬月額変更届」記入例（令和8年1月13日提出の例）
+describe('育児休業等終了時報酬月額変更届の記入例（月末締め・翌月10日払い、育休は令和7年10月31日に終了）', () => {
+  const p = (m: string, cash: number, days: number): [string, Payroll] =>
+    [m, { ...emptyPayrollInput(), officeId: 'o', employeeId: 'e', paidMonth: m, cash, fixed: cash, days }];
+  const leave = { kind: 'childcare' as const, start: '2025-01-15', plannedEnd: '2025-10-31', end: null, birthDate: null, childBirthDate: '2024-11-10' };
+  const r = judgeLeaveEnd({
+    leave,
+    allLeaves: [leave],
+    payrolls: new Map([p('2025-11', 0, 0), p('2025-12', 275000, 30), p('2026-01', 252100, 31)]),
+    remunerations: [rem('2025-09', 280)],
+    gradesAt: () => GRADES,
+    minDaysAt: () => 17,
+    partAt: () => false,
+    pensionAt: () => true,
+  })!;
+  it('終了日の翌日（11/1）の月から3か月（11・12・1月払い）、4か月目の令和8年2月から改定', () => {
+    expect([r.startMonth, r.revisedFrom]).toEqual(['2025-11', '2026-02']);
+  });
+  it('11月（0日）は17日未満なので除く → 総計 527,100円・平均 263,550円', () => {
+    expect([r.average!.total, r.average!.average]).toEqual([527100, 263550]);
+  });
+  it('従前 280千円 → 260千円（1等級差でも改定）', () => {
+    expect([r.status, r.health!.after!.standard]).toEqual(['candidate', 260000]);
   });
 });

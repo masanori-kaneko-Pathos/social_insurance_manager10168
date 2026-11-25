@@ -15,7 +15,8 @@ import type { EmployeePrivate } from '../../../../core/models/employee';
 import { classify, reasonParams } from '../../../employees/logic/classify';
 import { CriteriaService } from '../../../office/criteria.service';
 import { payrollOf } from '../../../office/office-settings';
-import { latestPaidMonth } from '../../../payrolls/logic/payroll-rows';
+import { latestPaidMonth, periodOf } from '../../../payrolls/logic/payroll-rows';
+import { payrollAt } from '../../../office/logic/pay-group';
 import { PayrollService } from '../../../payrolls/payroll.service';
 import { adjustmentOfficeStatus } from '../../../premiums/logic/adjustment-office';
 import { RateService } from '../../../rates/rate.service';
@@ -267,6 +268,8 @@ export class Dashboard {
             ),
           ),
           this.recentPayrolls().get(e.id) ?? [],
+          // 働いた月で数える：その給与の計算期間の終わりの月（月末締め翌月払いなら前の月。11/25）
+          (m) => periodOf(m, payrollAt(o, e, m)).end.slice(0, 7),
         ),
         // 資格取得届の報酬月額（契約の見込み）より、入社後の固定的賃金が多い（手当の入れ漏れ。事例2。11/19）
         acquireAmountTodo(e, acquireReported(contracts.get(e.id) ?? [], e), this.recentPayrolls().get(e.id) ?? []),

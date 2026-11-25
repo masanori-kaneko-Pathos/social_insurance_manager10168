@@ -587,20 +587,24 @@ export function weeklyOfMonthly(minutes: number): number {
 
 /**
  * 所定は基準未満でも、実際の労働時間が連続する2か月とも基準以上なら To-do（加入していない人だけ）
- * 引き続き同じ状態が続いている（見込まれる）なら、3か月目の初日に資格取得（日本年金機構「調査指摘・改善指導事例集」事例1）
- * 続くかどうかは人が判断する（「確認した」で消せる）。月は給与を払った月で見る
+ * 引き続き同じ状態が続いている（見込まれる）なら、「実際の労働時間が週20時間以上となった月の3月目の初日」に資格取得
+ * （日本年金機構「調査指摘・改善指導事例集」事例1）。続くかどうかは人が判断する（「確認した」で消せる）
+ * 月は働いた月で数える（11/25）。workMonthOf：支払月 → その給与の計算期間の月（翌月払いなら前の月）。省くと支払月のまま
  */
 export function actualHoursTodo(
   p: { id: string; health: { enrolled: boolean }; pension: { enrolled: boolean } },
   threshold: number | null,
   months: readonly { paidMonth: string; workMinutes: number | null }[],
+  workMonthOf: (paidMonth: string) => string = (m) => m,
 ): ExtraTodo | null {
   if (threshold === null || p.health.enrolled || p.pension.enrolled) return null;
   const sorted = [...months].sort((a, b) => a.paidMonth.localeCompare(b.paidMonth)).slice(-2);
-  if (sorted.length < 2 || shiftMonth(sorted[0].paidMonth, 1) !== sorted[1].paidMonth) return null;
+  if (sorted.length < 2) return null;
+  const [w1, w2] = sorted.map((m) => workMonthOf(m.paidMonth));
+  if (shiftMonth(w1, 1) !== w2) return null;
   const weekly = sorted.map((m) => (m.workMinutes === null ? null : weeklyOfMonthly(m.workMinutes)));
   if (weekly.some((w) => w === null || w < threshold)) return null;
-  const date = `${shiftMonth(sorted[1].paidMonth, 1)}-01`;
+  const date = `${shiftMonth(w2, 1)}-01`;
   const h = (m: number) => Math.round((m / 60) * 10) / 10;
   return {
     kind: 'actualHours',

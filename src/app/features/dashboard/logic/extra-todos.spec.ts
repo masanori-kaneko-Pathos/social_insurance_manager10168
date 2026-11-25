@@ -1,3 +1,4 @@
+import { shiftMonth } from '../../../shared/utils/date';
 import { registerGapsTodo } from './extra-todos';
 import { childcareSpecialEnd, childcareSpecialTodo, childStartsOf } from './extra-todos';
 import { acquireAmountTodo, actualHoursThreshold, actualHoursTodo, adjustmentDeadlineTodo, insurerChangeTodos, ratesMissingTodo, bonusNoneTodos, bonusCumulativeTodos, bonusReportTodos, enrollmentReportTodos, CumulativePerson } from './extra-todos';
@@ -361,6 +362,12 @@ describe('実際の労働時間（調査指摘事例集 事例1。11/19）', () 
     const t = actualHoursTodo(p, 20 * 60, [{ paidMonth: '2026-09', workMinutes: 90 * 60 }, { paidMonth: '2026-10', workMinutes: 92 * 60 }]);
     expect(t?.date).toBe('2026-11-01');
     expect(t?.params['h1']).toBe(20.8);
+  });
+  it('月末締め翌月払い：4・5月に働いた分（5・6月払い）が2か月とも基準以上 → 6月1日（働いた月の3月目の初日。原本 p.2）', () => {
+    const work = (m: string) => shiftMonth(m, -1);
+    const t = actualHoursTodo(p, 20 * 60, [{ paidMonth: '2026-05', workMinutes: 90 * 60 }, { paidMonth: '2026-06', workMinutes: 92 * 60 }], work);
+    expect(t?.date).toBe('2026-06-01');
+    expect([t?.params['first'], t?.params['second']]).toEqual(['2026-05', '2026-06']);
   });
   it('1か月でも基準未満・実労働時間がない・月が続いていない・加入済みなら出さない', () => {
     expect(actualHoursTodo(p, 20 * 60, [{ paidMonth: '2026-09', workMinutes: 80 * 60 }, { paidMonth: '2026-10', workMinutes: 92 * 60 }])).toBeNull();
