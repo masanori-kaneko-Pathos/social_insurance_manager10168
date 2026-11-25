@@ -92,6 +92,23 @@ describe('在籍・加入と、日数の候補', () => {
   it('テスト六郎（6/10〜6/25）：7月払いの日数の候補は16日', () => {
     expect(suggestDays(F, periodOf('2026-07', MONTH_END_NEXT))).toBe(16);
   });
+  describe('休業が月の途中で始まる・終わる月は、休業の日を除く（支払い対象となった日数。11/25）', () => {
+    const leave = (start: string, end: string | null, plannedEnd: string | null = null) => ({ start, end, plannedEnd });
+    it('6/10 から産休（6/1〜6/9 の日割り）：7月払いは9日', () => {
+      expect(suggestDays({ ...A, leaves: [leave('2026-06-10', null, '2026-09-14')] }, periodOf('2026-07', MONTH_END_NEXT))).toBe(9);
+    });
+    it('産休 → 続けて育休（重なっても1回だけ数える）。9/21 に復帰：10月払いは9/21〜9/30 の10日', () => {
+      const e = { ...A, leaves: [leave('2026-06-10', '2026-09-14'), leave('2026-09-15', '2026-09-20')] };
+      expect(suggestDays(e, periodOf('2026-10', MONTH_END_NEXT))).toBe(10);
+    });
+    it('期間を丸ごと休業している月は除かない（休職給を払った月。0日にしない）', () => {
+      expect(suggestDays({ ...A, leaves: [leave('2026-05-01', '2026-08-31')] }, periodOf('2026-07', MONTH_END_NEXT))).toBe(30);
+    });
+    it('入社の月の休業も、在籍した日の中だけで数える', () => {
+      const e = { ...F, leaves: [leave('2026-06-20', null, null)] };
+      expect(suggestDays(e, periodOf('2026-07', MONTH_END_NEXT))).toBe(10); // 6/10〜6/19
+    });
+  });
   it('テスト一郎：11月払い（10月分）は31日', () => {
     expect(suggestDays(A, periodOf('2026-11', MONTH_END_NEXT))).toBe(31);
   });

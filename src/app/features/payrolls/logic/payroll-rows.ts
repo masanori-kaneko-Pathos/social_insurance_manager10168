@@ -1,7 +1,7 @@
 // 給与の実績の純粋な関数（Angular・Firebase に依存しない）
 // - 支払った月 → 給与の対象期間（締日から出す）
 // - 表に出す人（対象期間に在籍していた人）・入れ忘れの人（対象期間に加入していた人）
-// - 支払基礎日数の候補（今は月給として暦日数。給与の形は雇用契約ができたら足す）
+// - 支払基礎日数の候補（月給として、支払い対象になった日の暦日数。入社・退職・休業の月は日割り）
 // - 入力チェック
 //
 
@@ -34,6 +34,8 @@ export interface PayrollEmployee {
   retireDate: string | null;
   health: Enrollment;
   pension: Enrollment;
+  /** 休業（産休・育休・介護休業・休職）。月の途中で始まる・終わる月の支払基礎日数の候補に使う（11/25） */
+  leaves?: readonly { start: string; end: string | null; plannedEnd: string | null }[];
 }
 
 export interface Period {
@@ -110,14 +112,46 @@ export function onLeaveDuring(
 // ===== 支払基礎日数の候補 =====
 
 /**
- * 月給（欠勤控除なし）としての候補：対象期間のうち在籍していた日の暦日数
- * 日給月給・日給・時給は、雇用契約（給与の形）を足すときに分ける
+ * 月給（欠勤控除なし）としての候補：対象期間のうち、給料の支払い対象になった日の暦日数
+ * - 入社・退職の月は在籍した日
+ * - 休業が月の途中で始まる・終わる月は、休業の日を除く（6/1〜6/9 の日割りで 6/10 から産休 → 9日。11/25）
+ *   ガイドブック「支払基礎日数とは、その報酬の支払い対象となった日数」「月給制は出勤日数に関係なく暦日数」
+ * - 期間を丸ごと休業している月は除かない（その月に給与があるのは休職給などを払った月。0日にしない）
+ * 日給月給の欠勤控除は candidateDays、日給・時給は出勤日数（呼ぶ側で分ける）
  */
 export function suggestDays(e: PayrollEmployee, p: Period): number {
   if (!employedDuring(e, p)) return 0;
   const start = e.hireDate > p.start ? e.hireDate : p.start;
   const end = e.retireDate != null && e.retireDate < p.end ? e.retireDate : p.end;
-  return daysInclusive(start, end);
+  const days = daysInclusive(start, end);
+  const off = leaveDaysWithin(e.leaves ?? [], start, end);
+  return off > 0 && off < days ? days - off : days;
+}
+
+/** start〜end のうち休業の日数（重なる休業は1回だけ数える。終わりが決まっていない休業は end まで） */
+export function leaveDaysWithin(
+  leaves: readonly { start: string; end: string | null; plannedEnd: string | null }[],
+  start: string,
+  end: string,
+): number {
+  const spans = leaves
+    .map((l) => ({ s: l.start > start ? l.start : start, e: (l.end ?? l.plannedEnd ?? end) < end ? (l.end ?? l.plannedEnd)! : end }))
+    .filter((x) => x.s <= x.e)
+    .sort((a, b) => a.s.localeCompare(b.s));
+  let total = 0;
+  let curS: string | null = null;
+  let curE = '';
+  for (const x of spans) {
+    if (curS !== null && x.s <= addDays(curE, 1)) {
+      if (x.e > curE) curE = x.e;
+      continue;
+    }
+    if (curS !== null) total += daysInclusive(curS, curE);
+    curS = x.s;
+    curE = x.e;
+  }
+  if (curS !== null) total += daysInclusive(curS, curE);
+  return total;
 }
 
 // ===== 表の行と入れ忘れ =====
