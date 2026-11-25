@@ -336,6 +336,8 @@ export interface DerivedSpec<K extends string> {
   formula: (cells: readonly string[]) => Partial<Record<K, DerivedFormula>>;
   /** 式の下に出す注意（翻訳キー） */
   noteKey?: string;
+  /** 式がない項目の、計算のしかたの説明（翻訳キー。給与計算の基礎日数は人ごとの給与の形で決まる。11/25） */
+  explain?: Partial<Record<K, string>>;
 }
 
 export interface DerivedFormula {

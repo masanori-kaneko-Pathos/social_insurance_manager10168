@@ -49,7 +49,7 @@
           <!-- select の [value] は option より先に効いて外れることがあるので、option の側で選ぶ -->
           <!-- 計算で埋まる項目は、結ばなければ「内訳の列から計算」（11/25） -->
           <option value="" [selected]="sourceValue(f.key) === ''">{{
-            (derived()?.keys?.includes(f.key) ? 'importMap.source.derived' : 'importMap.source.none') | transloco
+            (derived()?.keys?.includes(f.key) ? (explainOf(f.key) ? 'importMap.source.derivedPayType' : 'importMap.source.derived') : 'importMap.source.none') | transloco
           }}</option>
           <option value="fixed" [selected]="sourceValue(f.key) === 'fixed'">{{ 'importMap.source.fixed' | transloco }}</option>
           @for (h of headers(); track $index) {
@@ -93,11 +93,15 @@
       }
     </tr>
     <!-- 内訳の列から計算する項目：式は行の下に横いっぱいで（折り返さずに読めるように。11/25） -->
-    @if (isDerived(f.key) && formulaText(f.key)) {
+    @if (isDerived(f.key) && (formulaText(f.key) || explainOf(f.key))) {
       <tr class="formula-row">
         <td></td>
         <td [attr.colspan]="1 + samples().length">
-          <p class="formula">{{ 'importMap.formula' | transloco: { n: 1 } }}{{ formulaText(f.key) }}</p>
+          @if (formulaText(f.key)) {
+            <p class="formula">{{ 'importMap.formula' | transloco: { n: 1 } }}{{ formulaText(f.key) }}</p>
+          } @else {
+            <p class="formula">{{ explainOf(f.key)! | transloco }}</p>
+          }
         </td>
       </tr>
     }

@@ -2142,7 +2142,8 @@
       "read": "Could not read the file. Make sure it is a CSV file.",
       "save": "Could not save (nothing was saved). Please try again later."
     },
-    "derivedNote": "Item column categories are set in Pay items and categories. Headers without a category appear under unused columns and are not counted."
+    "derivedNote": "Item column categories are set in Pay items and categories. Headers without a category appear under unused columns and are not counted.",
+    "daysDerived": "Monthly pay: calendar days of the period (days employed in the month of hire or leaving). Daily-monthly: scheduled days minus absences (calendar days if none). Hourly and daily: the days worked column. Days worked is not used for monthly pay."
   },
   "contract": {
     "title": "Employment contract",
@@ -3698,7 +3699,8 @@
     "source": {
       "none": "Don't use",
       "fixed": "Same value for everyone",
-      "derived": "Calculated from item columns"
+      "derived": "Calculated from item columns",
+      "derivedPayType": "Calculated from pay type"
     },
     "more": "Other fields ({{n}})",
     "unused": "Unused columns:",

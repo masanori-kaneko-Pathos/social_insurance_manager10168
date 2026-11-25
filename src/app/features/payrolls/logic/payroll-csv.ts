@@ -4,12 +4,12 @@
 import { Payroll, PayrollInput, PayrollState } from '../../../core/models/payroll';
 import { isBlankRow } from '../../../shared/csv/csv';
 import { toHalfWidth } from '../../../shared/utils/text';
-import { PayrollRowText, readEntry, RowError, sameInput } from './payroll-input';
+import { candidateDays, PayrollRowText, readEntry, RowError, sameInput } from './payroll-input';
 import type { PayType } from '../../../core/models/contract';
 import type { PayrollItemCategory, PayrollItemInput } from '../../../core/models/payroll-item';
 import { categoryOf, FOR_MONTH_CATEGORIES, itemKey, LineDraft, readAmount, totalsOf } from './payroll-lines';
 import { formatHours } from '../../../shared/utils/number';
-import { employedDuring, PayrollEmployee, PaySchedule, periodOf } from './payroll-rows';
+import { employedDuring, PayrollEmployee, PaySchedule, periodOf, suggestDays } from './payroll-rows';
 import { daysInclusive } from '../../../shared/utils/date';
 import { DerivedSpec, ImportField, OurTableSpec, ValueKind } from '../../../shared/import/column-map';
 import { byHeader, FixField, MONTH, NUMBER, select, YES_NO } from '../../../shared/import/fix-fields';
@@ -28,7 +28,9 @@ export type PayrollColumn =
   | 'absentDays'
   | 'hours'
   | 'prorated'
-  | 'state';
+  | 'state'
+  // 出勤日数：読むだけの列（書き出さない）。時給・日給の人の給与計算の基礎日数にする（11/25）
+  | 'attendedDays';
 
 /** 書き出す順番 */
 export const PAYROLL_COLUMNS: readonly PayrollColumn[] = [
@@ -46,7 +48,16 @@ export const PAYROLL_COLUMNS: readonly PayrollColumn[] = [
   'state',
 ];
 
+/** 読む列（書き出す列＋出勤日数） */
+export const PAYROLL_READ_COLUMNS: readonly PayrollColumn[] = [...PAYROLL_COLUMNS, 'attendedDays'];
+
 export const PAYROLL_REQUIRED: readonly PayrollColumn[] = ['employeeNumber', 'paidMonth', 'cash', 'fixed', 'days'];
+/**
+ * 列がなくても読める必須の項目（11/25）
+ * 給与計算の基礎日数は、空なら給与の形から出す（月給：対象期間の暦日。入社・退職の月は在籍した日／
+ * 日給月給：所定労働日数 − 欠勤日数（欠勤がなければ暦日）／時給・日給：出勤日数）。明細の「出勤日数」は時給・日給の人にだけ使う
+ */
+const READ_DERIVED: readonly PayrollColumn[] = ['days'];
 
 export type CsvLang = 'ja' | 'en';
 
@@ -64,6 +75,7 @@ export const PAYROLL_HEADERS: Record<CsvLang, Record<PayrollColumn, string>> = {
     hours: '実労働時間',
     prorated: '日割りの月',
     state: '状態',
+    attendedDays: '出勤日数',
   },
   en: {
     employeeNumber: 'Employee number',
@@ -78,6 +90,7 @@ export const PAYROLL_HEADERS: Record<CsvLang, Record<PayrollColumn, string>> = {
     hours: 'Hours worked',
     prorated: 'Pro-rated month',
     state: 'Status',
+    attendedDays: 'Days worked',
   },
 };
 
@@ -128,13 +141,13 @@ export function mapHeader(header: readonly string[]): {
   missing: PayrollColumn[];
 } {
   const lookup = new Map<string, PayrollColumn>();
-  for (const col of PAYROLL_COLUMNS) for (const h of payrollHeadersOf(col)) lookup.set(headerKey(h), col);
+  for (const col of PAYROLL_READ_COLUMNS) for (const h of payrollHeadersOf(col)) lookup.set(headerKey(h), col);
   const index: Partial<Record<PayrollColumn, number>> = {};
   header.forEach((h, i) => {
     const col = lookup.get(headerKey(h));
     if (col && index[col] === undefined) index[col] = i;
   });
-  return { index, missing: PAYROLL_REQUIRED.filter((c) => index[c] === undefined) };
+  return { index, missing: PAYROLL_REQUIRED.filter((c) => index[c] === undefined && !READ_DERIVED.includes(c)) };
 }
 
 // ===== 値の読み分け（Excel で変わってしまう形も読む） =====
@@ -344,6 +357,8 @@ export interface ReadOptions {
   items?: readonly PayrollItemInput[];
   /** その人のその月の給与の形（基本給を固定的賃金に数えるか。分からなければ null ＝ 月給と見る） */
   payTypeOf?: (employeeId: string, paidMonth: string) => PayType | null;
+  /** その人のその月の契約の月の所定労働日数（日給月給の人の、欠勤がある月の基礎日数。分からなければ null） */
+  scheduledDaysOf?: (employeeId: string, paidMonth: string) => number | null;
   /**
    * 現物の列がないファイルの扱い
    * - zero：現物はない（0）
@@ -429,9 +444,12 @@ export function readPayrollCsv(
     if (state === undefined) codes.push('badState');
 
     let periodDays = 31;
+    /** 在籍した日（入社・退職の月は日割り。月給の人の基礎日数の候補） */
+    let employedDays: number | null = null;
     if (employee && paidMonth) {
       const p = periodOf(paidMonth, scheduleFor(schedule, employee.id, paidMonth));
       periodDays = daysInclusive(p.start, p.end);
+      employedDays = suggestDays(employee, p);
       if (!employedDuring(employee, p)) codes.push('notEmployed');
       const key = `${employee.id}|${paidMonth}`;
       if (seen.has(key)) codes.push('duplicate');
@@ -459,6 +477,15 @@ export function readPayrollCsv(
       codes.push('badForMonth');
     }
     const payType = employee && paidMonth && opts.payTypeOf ? opts.payTypeOf(employee.id, paidMonth) : null;
+    // 給与計算の基礎日数が空：給与の形から出す（手入力の画面の候補と同じ決まり。11/25）
+    // 金額が1つもない行（書き出した未入力の月）は、未記入のまま読み飛ばせるように出さない
+    const hasAmount =
+      [text.cash, text.fixed, text.inKind, text.retro].some((v) => v.trim() !== '') ||
+      (drafts ?? []).some((d) => d.amount.trim() !== '');
+    if (text.days.trim() === '' && hasAmount && employee && paidMonth) {
+      text.days = derivedDays(payType, employedDays ?? periodDays, text.absentDays, cell(row, 'attendedDays'),
+        opts.scheduledDaysOf?.(employee.id, paidMonth) ?? null);
+    }
     const r = readEntry(text, drafts, payType, periodDays);
     // 総支給額の列も書いてあれば、内訳の合計と合うかを見る（列の抜け・別のものの混入に気づくため）
     if (r.kind === 'ok' && r.input.lines && text.cash.trim() !== '') {
@@ -492,6 +519,18 @@ export function readPayrollCsv(
     });
   });
   return result;
+}
+
+/**
+ * 給与計算の基礎日数を給与の形から出す（列が空のとき。11/25）
+ * - 月給：対象期間の暦日（入社・退職の月は在籍した日）
+ * - 日給月給：欠勤があれば所定労働日数 − 欠勤日数、なければ暦日（candidateDays と同じ）
+ * - 時給・日給：出勤日数の列（なければ空 ＝「入っていません」のエラー）
+ * 給与の形が分からない人は月給と見る
+ */
+export function derivedDays(payType: PayType | null, employedDays: number, absentText: string, attendedText: string, scheduledDays: number | null): string {
+  if (payType === 'hourly' || payType === 'daily') return attendedText.trim();
+  return String(candidateDays(employedDays, absentText, payType ?? 'monthly', scheduledDays));
 }
 
 /** 保存済みと比べて、新規・上書き・変わらないに分ける */
@@ -555,6 +594,7 @@ export function payrollCells(r: PayrollExportRow, lang: CsvLang): Record<Payroll
     hours: s?.workMinutes != null ? formatHours(s.workMinutes) : '',
     prorated: s?.prorated ? '1' : '',
     state: s ? STATE_LABELS[lang][s.state] : '',
+    attendedDays: '',
   };
 }
 
@@ -624,21 +664,23 @@ const WORDS: Record<PayrollColumn, readonly string[]> = {
   paidMonth: ['支給年月', '支給月', '支払年月', '支給日', '支払日', '給与支給日'],
   cash: ['総支給金額', '支給合計', '支給額合計', '社保対象額', '社会保険対象額', '社会保険の報酬', '報酬額'],
   fixed: ['固定給', '固定的賃金計', '固定的賃金の合計', '毎月決まった額'],
-  days: ['基礎日数', '出勤日数', '支払日数'],
+  // 「出勤日数」は給与計算の基礎日数に結ばない（月給の人の基礎日数は暦日で、意味が違う。11/25）
+  days: ['基礎日数', '支払基礎日数', '支払日数'],
   inKind: ['現物給与', '現物支給額', '現物給与額'],
   retro: ['遡及額', '遡及分', '昇給差額', '差額支給'],
   absentDays: ['欠勤'],
   hours: ['労働時間', '総労働時間', '勤務時間'],
   prorated: [],
   state: [],
+  attendedDays: ['出勤日', '勤務日数', '労働日数', '出勤日数計', 'days worked'],
 };
 
 const KINDS: Partial<Record<PayrollColumn, ValueKind>> = {
   paidMonth: 'month', cash: 'number', fixed: 'number', inKind: 'number', retro: 'number',
-  days: 'days', absentDays: 'days',
+  days: 'days', absentDays: 'days', attendedDays: 'days',
 };
 
-export const PAYROLL_IMPORT_FIELDS: readonly ImportField<PayrollColumn>[] = PAYROLL_COLUMNS.map((key) => ({
+export const PAYROLL_IMPORT_FIELDS: readonly ImportField<PayrollColumn>[] = PAYROLL_READ_COLUMNS.map((key) => ({
   key,
   header: PAYROLL_HEADERS.ja[key],
   words: [PAYROLL_HEADERS.en[key], ...(PAYROLL_OLD_HEADERS[key] ?? []), ...WORDS[key]],
@@ -663,11 +705,14 @@ export function isOurPayrollFormat(header: readonly string[], items: readonly Pa
  * 列を合わせる画面：明細の内訳の列（給与の項目名に当たる見出し）があれば、通貨によるものの額・うち固定的賃金は内訳から計算する（11/25）
  * 計算は読み取り（totalsOf）と同じ
  */
-export function payrollDerived(headers: readonly string[], items: readonly PayrollItemInput[]): DerivedSpec<PayrollColumn> | null {
+export function payrollDerived(headers: readonly string[], items: readonly PayrollItemInput[]): DerivedSpec<PayrollColumn> {
   const cols = lineColumnsOf(headers, new Set(), items).filter((c) => c.category !== 'excluded');
-  if (cols.length === 0) return null;
+  // 給与計算の基礎日数は、列がなくてもいつも給与の形から出せる（derivedDays）
+  const explain = { days: 'payrollCsv.daysDerived' };
+  if (cols.length === 0) return { keys: ['days'], explain, formula: () => ({}) };
   return {
-    keys: ['cash', 'fixed'],
+    keys: ['cash', 'fixed', 'days'],
+    explain,
     noteKey: 'payrollCsv.derivedNote',
     formula: (cells) => {
       const lines = cols.flatMap((c) => {
@@ -687,7 +732,7 @@ export function payrollDerived(headers: readonly string[], items: readonly Payro
 
 export const PAYROLL_TABLE_SPEC: OurTableSpec<PayrollColumn, PayrollColumn> = {
   fields: PAYROLL_IMPORT_FIELDS,
-  out: PAYROLL_COLUMNS,
+  out: PAYROLL_READ_COLUMNS,
   outHeader: (c) => PAYROLL_HEADERS.ja[c],
 };
 

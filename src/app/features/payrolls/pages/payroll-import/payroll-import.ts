@@ -17,6 +17,7 @@ import {
   exportLineNames,
   lineColumnsOf,
   isOurPayrollFormat,
+  mapHeader,
   payrollDerived,
   PAYROLL_COLUMNS,
   payrollExportRows,
@@ -428,8 +429,13 @@ export class PayrollImport {
     const file = this.loaded();
     if (!office || !file) return;
     try {
-      // 内訳の列があるファイル：給与の形を見るため、契約を読む（1回だけ）
-      if (table.length > 0 && lineColumnsOf(table[0], new Set(), this.payrollItems()).length > 0 && !this.contracts) {
+      // 内訳の列があるファイル・給与計算の基礎日数を給与の形から出すファイル：給与の形を見るため、契約を読む（1回だけ。11/25）
+      const needsContracts =
+        table.length > 0 &&
+        (lineColumnsOf(table[0], new Set(), this.payrollItems()).length > 0 ||
+          mapHeader(table[0]).index.days === undefined ||
+          table.slice(1).some((r) => (r[mapHeader(table[0]).index.days!] ?? '').trim() === ''));
+      if (needsContracts && !this.contracts) {
         const lists = await Promise.all(this.employees.map((e) => this.contractsApi.list(office.id, e.id).catch(() => [])));
         this.contracts = new Map(this.employees.map((e, i) => [e.id, lists[i]]));
       }
@@ -439,6 +445,8 @@ export class PayrollImport {
         inKindMissing: this.inKindMissing(),
         items: this.payrollItems(),
         payTypeOf: (id, month) => contractAt(this.contracts?.get(id) ?? [], periodOf(month, scheduleFor(schedule, id, month)).end)?.payType ?? null,
+        scheduledDaysOf: (id, month) =>
+          contractAt(this.contracts?.get(id) ?? [], periodOf(month, scheduleFor(schedule, id, month)).end)?.monthlyDays ?? null,
       });
       // 「新規・上書き・変わらない」を数えるために、ファイルにある月の保存済みの実績だけ読む
       try {

@@ -124,6 +124,10 @@ export class ColumnMapper {
       .slice(0, SAMPLE_ROWS)
       .map((r) => d.formula(r));
   });
+  /** 式がない項目の説明（翻訳キー） */
+  explainOf(key: string): string | null {
+    return this.derived()?.explain?.[key] ?? null;
+  }
   formulaOf(key: string, i = 0): DerivedFormula | null {
     return this.formulas()[i]?.[key] ?? null;
   }

@@ -47,7 +47,7 @@ describe('mapHeader', () => {
     }
   });
   it('必須の列がない', () => {
-    expect(mapHeader(['社員番号', '支払額']).missing).toEqual(['paidMonth', 'fixed', 'days']);
+    expect(mapHeader(['社員番号', '支払額']).missing).toEqual(['paidMonth', 'fixed']);
   });
 });
 
@@ -181,10 +181,12 @@ describe('readPayrollCsv', () => {
     it('社員番号の列がないファイルも、氏名の列で照合できる（列を合わせる画面）', () => {
       const table = [['氏名', '支給日', '総支給額', '固定給', '出勤日数'], ['番号 なし子', '2026/10/25', '200,000', '200000', '30']];
       const m = guessMapping(table[0], PAYROLL_IMPORT_FIELDS);
-      expect(missingRequired(PAYROLL_IMPORT_FIELDS, m)).toEqual([]);
+      // 出勤日数は給与計算の基礎日数に結ばない（11/25）。基礎日数は給与の形から出す（月給なら暦日）
+      expect(missingRequired(PAYROLL_IMPORT_FIELDS, m)).toEqual(['days']);
+      expect(missingRequired(PAYROLL_IMPORT_FIELDS, m, payrollDerived(table[0], []).keys)).toEqual([]);
       const r = readPayrollCsv(toOurTable(table, m, PAYROLL_TABLE_SPEC), [...EMPS, ...NAMED], S);
       expect(r.errors).toEqual([]);
-      expect(r.items.map((x) => [x.employeeId, x.paidMonth, x.input.cash])).toEqual([['N1', '2026-10', 200000]]);
+      expect(r.items.map((x) => [x.employeeId, x.paidMonth, x.input.cash, x.input.days])).toEqual([['N1', '2026-10', 200000, 30]]);
     });
 
     it('書き出したファイル（番号のない人は氏名だけ）をそのまま取り込める', () => {
@@ -207,8 +209,8 @@ describe('readPayrollCsv', () => {
     it('通貨によるものの額・うち固定的賃金は、結ばなくても必須が足りる。式は内訳から', () => {
       const m = guessMapping(table[0], PAYROLL_IMPORT_FIELDS);
       const d = payrollDerived(table[0], [])!;
-      expect(d.keys).toEqual(['cash', 'fixed']);
-      expect(missingRequired(PAYROLL_IMPORT_FIELDS, m)).toEqual(['cash', 'fixed']);
+      expect(d.keys).toEqual(['cash', 'fixed', 'days']);
+      expect(missingRequired(PAYROLL_IMPORT_FIELDS, m)).toEqual(['cash', 'fixed', 'days']);
       expect(missingRequired(PAYROLL_IMPORT_FIELDS, m, d.keys)).toEqual([]);
       const f = d.formula(table[1]);
       expect(f.cash).toEqual({
@@ -232,8 +234,30 @@ describe('readPayrollCsv', () => {
       expect([x.cash, x.fixed]).toEqual([300000, 280000]);
       expect(x.lines?.map((l) => l.name)).toEqual(['基本給', '役職手当', '通勤手当', '時間外手当', '欠勤控除']);
     });
-    it('内訳の列がなければ計算しない', () => {
-      expect(payrollDerived(['社員番号', '支給日', '総支給額'], [])).toBeNull();
+    it('内訳の列がなければ、計算で埋まるのは給与計算の基礎日数だけ', () => {
+      expect(payrollDerived(['社員番号', '支給日', '総支給額'], []).keys).toEqual(['days']);
+    });
+  });
+
+  describe('給与計算の基礎日数が空のとき、給与の形から出す（明細の出勤日数を月給の人に使わない。11/25）', () => {
+    const H = '社員番号,支払月,通貨によるものの額,うち固定的賃金,欠勤日数,出勤日数';
+    const readP = (body: string, pay: 'monthly' | 'dailyMonthly' | 'hourly', scheduled: number | null = null) =>
+      readPayrollCsv(parseCsv(`${H}\n${body}`), EMPS, S, { payTypeOf: () => pay, scheduledDaysOf: () => scheduled });
+    it('月給：対象期間の暦日（出勤日数の列は使わない）', () => {
+      expect(readP('0012,2026-04,300000,300000,,21', 'monthly').items[0].input.days).toBe(31); // 4月払い＝3月分
+    });
+    it('日給月給：欠勤があれば所定 − 欠勤、なければ暦日', () => {
+      expect(readP('0012,2026-04,300000,300000,2,19', 'dailyMonthly', 21).items[0].input.days).toBe(19);
+      expect(readP('0012,2026-04,300000,300000,,21', 'dailyMonthly', 21).items[0].input.days).toBe(31);
+    });
+    it('時給：出勤日数の列。なければ「入っていません」', () => {
+      expect(readP('0012,2026-04,110000,6000,,17', 'hourly').items[0].input.days).toBe(17);
+      expect(readP('0012,2026-04,110000,6000,,', 'hourly').errors[0].codes).toContain('daysRequired');
+    });
+    it('入社の月は在籍した日（日割り）', () => {
+      const late = emp('L', 'L1', 'テスト遅', '2026-03-18');
+      const r = readPayrollCsv(parseCsv(`${H}\nL1,2026-04,140000,140000,,10`), [late], S, { payTypeOf: () => 'monthly' });
+      expect(r.items[0].input.days).toBe(14);
     });
   });
 
@@ -243,7 +267,8 @@ describe('readPayrollCsv', () => {
 
   it('必須の列がなければ何も読まない', () => {
     const r = readPayrollCsv(parseCsv('社員番号,支払額\n0012,1'), EMPS, S);
-    expect(r.missingColumns).toEqual(['paidMonth', 'fixed', 'days']);
+    // 給与計算の基礎日数は、列がなくても給与の形から出せるので、足りない列には入れない（11/25）
+    expect(r.missingColumns).toEqual(['paidMonth', 'fixed']);
     expect(r.items).toEqual([]);
   });
 });
