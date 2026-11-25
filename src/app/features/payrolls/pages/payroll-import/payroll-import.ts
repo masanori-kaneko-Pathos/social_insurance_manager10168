@@ -17,6 +17,7 @@ import {
   exportLineNames,
   lineColumnsOf,
   isOurPayrollFormat,
+  payrollDerived,
   PAYROLL_COLUMNS,
   payrollExportRows,
   classifyImport,
@@ -132,6 +133,8 @@ export class PayrollImport {
   readonly tableSpec = computed(() => ({
     ...PAYROLL_TABLE_SPEC,
     passThrough: (h: string) => categoryOf(h.trim(), this.payrollItems()) !== null,
+    // 明細の内訳の列があれば、通貨によるものの額・うち固定的賃金は選ばずに内訳から計算して見せる（11/25）
+    derived: (headers: readonly string[]) => payrollDerived(headers, this.payrollItems()),
   }));
   /** 給与の項目と、内訳のひな形（内訳の列を見分ける・書き出す。11/24） */
   readonly payrollItems = signal<PayrollItem[]>([]);

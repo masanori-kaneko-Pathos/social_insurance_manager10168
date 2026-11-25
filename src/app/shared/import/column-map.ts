@@ -92,13 +92,14 @@ export function isOurFormat<K extends string>(
 const bound = (s: Source | undefined) =>
   !!s && ('col' in s ? true : s.fixed.trim() !== '');
 
-/** 結ばれていない必須の項目 */
+/** 結ばれていない必須の項目（derived：ファイルのほかの列から計算で埋まる項目。結ばなくても足りる。11/25） */
 export function missingRequired<K extends string>(
   fields: readonly ImportField<K>[],
   mapping: Mapping<K>,
+  derived: readonly K[] = [],
 ): K[] {
   return fields
-    .filter((f) => f.required)
+    .filter((f) => f.required && !derived.includes(f.key))
     .filter((f) => !bound(mapping[f.key]) && !(f.orFrom?.length && f.orFrom.every((k) => bound(mapping[k]))))
     .map((f) => f.key);
 }
@@ -321,6 +322,26 @@ export interface OurTableSpec<K extends string, O extends K> {
    * 給与の内訳（基本給・通勤手当など、給与の項目に当たる見出しの列）を、読み取りまで残すため
    */
   passThrough?: (header: string) => boolean;
+  /**
+   * ファイルのほかの列から計算で埋まる項目（11/25）。返した項目は、結ばなくても必須が足り、選ぶ欄に計算の式を見せる
+   * 給与：明細の内訳の列（基本給・通勤手当など）があれば、通貨によるものの額・うち固定的賃金は内訳から出す
+   */
+  derived?: (headers: readonly string[]) => DerivedSpec<K> | null;
+}
+
+/** 計算で埋まる項目と、例の行の式 */
+export interface DerivedSpec<K extends string> {
+  keys: readonly K[];
+  /** 1行の式（項目 → 足す列と合計）。セルはファイルの行のまま */
+  formula: (cells: readonly string[]) => Partial<Record<K, DerivedFormula>>;
+  /** 式の下に出す注意（翻訳キー） */
+  noteKey?: string;
+}
+
+export interface DerivedFormula {
+  /** 足す列（控除はマイナスの額） */
+  terms: { name: string; amount: number }[];
+  total: number;
 }
 
 /** 1行を言い直す（finish まで） */

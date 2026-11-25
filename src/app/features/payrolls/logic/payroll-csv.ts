@@ -7,11 +7,11 @@ import { toHalfWidth } from '../../../shared/utils/text';
 import { PayrollRowText, readEntry, RowError, sameInput } from './payroll-input';
 import type { PayType } from '../../../core/models/contract';
 import type { PayrollItemCategory, PayrollItemInput } from '../../../core/models/payroll-item';
-import { categoryOf, FOR_MONTH_CATEGORIES, itemKey, LineDraft } from './payroll-lines';
+import { categoryOf, FOR_MONTH_CATEGORIES, itemKey, LineDraft, readAmount, totalsOf } from './payroll-lines';
 import { formatHours } from '../../../shared/utils/number';
 import { employedDuring, PayrollEmployee, PaySchedule, periodOf } from './payroll-rows';
 import { daysInclusive } from '../../../shared/utils/date';
-import { ImportField, OurTableSpec, ValueKind } from '../../../shared/import/column-map';
+import { DerivedSpec, ImportField, OurTableSpec, ValueKind } from '../../../shared/import/column-map';
 import { byHeader, FixField, MONTH, NUMBER, select, YES_NO } from '../../../shared/import/fix-fields';
 
 // ===== 列 =====
@@ -657,6 +657,32 @@ export function isOurPayrollFormat(header: readonly string[], items: readonly Pa
   const lines = lineColumnsOf(header, new Set(Object.values(index) as number[]), items);
   const need = lines.length > 0 ? missing.filter((c) => c !== 'cash' && c !== 'fixed') : missing;
   return need.length === 0;
+}
+
+/**
+ * 列を合わせる画面：明細の内訳の列（給与の項目名に当たる見出し）があれば、通貨によるものの額・うち固定的賃金は内訳から計算する（11/25）
+ * 計算は読み取り（totalsOf）と同じ
+ */
+export function payrollDerived(headers: readonly string[], items: readonly PayrollItemInput[]): DerivedSpec<PayrollColumn> | null {
+  const cols = lineColumnsOf(headers, new Set(), items).filter((c) => c.category !== 'excluded');
+  if (cols.length === 0) return null;
+  return {
+    keys: ['cash', 'fixed'],
+    noteKey: 'payrollCsv.derivedNote',
+    formula: (cells) => {
+      const lines = cols.flatMap((c) => {
+        const amount = readAmount(cells[c.index] ?? '', c.category);
+        return amount ? [{ name: c.name, category: c.category, amount, forMonth: c.forMonth }] : [];
+      });
+      const t = totalsOf(lines, null);
+      const signed = (l: (typeof lines)[number]) => ({ name: l.name, amount: l.category === 'deduction' ? -l.amount : l.amount });
+      const FIXED: readonly PayrollItemCategory[] = ['base', 'fixedAllowance', 'commute', 'deduction'];
+      return {
+        cash: { terms: lines.map(signed), total: t.cash },
+        fixed: { terms: lines.filter((l) => FIXED.includes(l.category) && !l.forMonth).map(signed), total: t.fixed },
+      };
+    },
+  };
 }
 
 export const PAYROLL_TABLE_SPEC: OurTableSpec<PayrollColumn, PayrollColumn> = {

@@ -1,7 +1,8 @@
 import { emptyPayrollInput, Payroll } from '../../../core/models/payroll';
 import { parseCsv, toCsv } from '../../../shared/csv/csv';
-import { guessMapping, missingRequired, toOurTable } from '../../../shared/import/column-map';
-import { buildPayrollCsv, isOurPayrollFormat, exportLineNames, lineHeaderOf, splitLineHeader, classifyImport, isInKindMerged, CsvEmployee, makeMatcher, PAYROLL_IMPORT_FIELDS, PAYROLL_TABLE_SPEC, mapHeader, parseFlag, parseMonth, parseState, payrollFileName, readPayrollCsv } from './payroll-csv';
+import { guessMapping, missingRequired, OurTableSpec, toOurTable } from '../../../shared/import/column-map';
+import { categoryOf } from './payroll-lines';
+import { buildPayrollCsv, isOurPayrollFormat, payrollDerived, exportLineNames, lineHeaderOf, splitLineHeader, classifyImport, isInKindMerged, CsvEmployee, makeMatcher, PAYROLL_IMPORT_FIELDS, PAYROLL_TABLE_SPEC, mapHeader, parseFlag, parseMonth, parseState, payrollFileName, readPayrollCsv } from './payroll-csv';
 import { monthsBetween } from '../../../shared/utils/date';
 import { PaySchedule } from './payroll-rows';
 
@@ -190,6 +191,49 @@ describe('readPayrollCsv', () => {
       const r = readN(',番号 なし子,2026-10,,,');
       expect(r.errors).toEqual([]);
       expect(r.unfilledLines).toBe(1);
+    });
+  });
+
+  describe('給与明細の形（内訳の列だけで、総支給額・固定的賃金の列がない）を列を合わせて取り込む（11/25）', () => {
+    const table = [
+      ['社員コード', '氏名', '支給日', '出勤日数', '基本給', '役職手当', '通勤手当', '時間外手当', '欠勤控除', '健康保険料', '差引支給額'],
+      ['0012', 'テスト一 太郎', '2026/10/25', '20', '250,000', '20,000', '15,000', '20,000', '5,000', '15,000', '290,000'],
+    ];
+    const spec: OurTableSpec<any, any> = {
+      ...PAYROLL_TABLE_SPEC,
+      passThrough: (h: string) => categoryOf(h.trim(), []) !== null,
+      derived: (h: readonly string[]) => payrollDerived(h, []),
+    };
+    it('通貨によるものの額・うち固定的賃金は、結ばなくても必須が足りる。式は内訳から', () => {
+      const m = guessMapping(table[0], PAYROLL_IMPORT_FIELDS);
+      const d = payrollDerived(table[0], [])!;
+      expect(d.keys).toEqual(['cash', 'fixed']);
+      expect(missingRequired(PAYROLL_IMPORT_FIELDS, m)).toEqual(['cash', 'fixed']);
+      expect(missingRequired(PAYROLL_IMPORT_FIELDS, m, d.keys)).toEqual([]);
+      const f = d.formula(table[1]);
+      expect(f.cash).toEqual({
+        terms: [
+          { name: '基本給', amount: 250000 },
+          { name: '役職手当', amount: 20000 },
+          { name: '通勤手当', amount: 15000 },
+          { name: '時間外手当', amount: 20000 },
+          { name: '欠勤控除', amount: -5000 },
+        ],
+        total: 300000,
+      });
+      expect(f.fixed?.total).toBe(280000);
+      expect(f.fixed?.terms.map((t) => t.name)).toEqual(['基本給', '役職手当', '通勤手当', '欠勤控除']);
+    });
+    it('内訳の列はそのまま渡り、読み取りで内訳つきの給与になる（健康保険料・差引支給額は使わない）', () => {
+      const m = guessMapping(table[0], PAYROLL_IMPORT_FIELDS);
+      const r = readPayrollCsv(toOurTable(table, m, spec), EMPS, S);
+      expect(r.errors).toEqual([]);
+      const x = r.items[0].input;
+      expect([x.cash, x.fixed]).toEqual([300000, 280000]);
+      expect(x.lines?.map((l) => l.name)).toEqual(['基本給', '役職手当', '通勤手当', '時間外手当', '欠勤控除']);
+    });
+    it('内訳の列がなければ計算しない', () => {
+      expect(payrollDerived(['社員番号', '支給日', '総支給額'], [])).toBeNull();
     });
   });
 

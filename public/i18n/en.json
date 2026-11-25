@@ -2141,7 +2141,8 @@
       "tooLong": "Select 24 months or fewer.",
       "read": "Could not read the file. Make sure it is a CSV file.",
       "save": "Could not save (nothing was saved). Please try again later."
-    }
+    },
+    "derivedNote": "Item column categories are set in Pay items and categories. Headers without a category appear under unused columns and are not counted."
   },
   "contract": {
     "title": "Employment contract",
@@ -3696,7 +3697,8 @@
     },
     "source": {
       "none": "Don't use",
-      "fixed": "Same value for everyone"
+      "fixed": "Same value for everyone",
+      "derived": "Calculated from item columns"
     },
     "more": "Other fields ({{n}})",
     "unused": "Unused columns:",
@@ -3714,7 +3716,9 @@
     "plusAdd": "+ Add a column",
     "plusRemove": "Stop adding {{col}}",
     "restored": "Using the assignment last used in this office (matched by column headings). When you continue, the current assignment is remembered for next time.",
-    "useAuto": "Use automatic matching"
+    "useAuto": "Use automatic matching",
+    "formula": "Example {{n}}: ",
+    "passed": "Item columns imported: "
   },
   "members": {
     "title": "Members",

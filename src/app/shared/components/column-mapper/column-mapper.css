@@ -125,3 +125,20 @@ h3 {
   align-items: center;
   gap: var(--space-sm);
 }
+
+/* 内訳の列から計算する項目の式（11/25） */
+/* 式の行は、上の行とひと続きに見せる（上の行の下線を消す） */
+tr:has(+ .formula-row) > * {
+  border-bottom: none;
+}
+
+.formula-row td {
+  padding-top: 0;
+}
+
+.formula {
+  margin: 0;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+  line-height: 1.5;
+}

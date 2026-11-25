@@ -47,7 +47,10 @@
           [attr.aria-label]="f.header"
         >
           <!-- select の [value] は option より先に効いて外れることがあるので、option の側で選ぶ -->
-          <option value="" [selected]="sourceValue(f.key) === ''">{{ 'importMap.source.none' | transloco }}</option>
+          <!-- 計算で埋まる項目は、結ばなければ「内訳の列から計算」（11/25） -->
+          <option value="" [selected]="sourceValue(f.key) === ''">{{
+            (derived()?.keys?.includes(f.key) ? 'importMap.source.derived' : 'importMap.source.none') | transloco
+          }}</option>
           <option value="fixed" [selected]="sourceValue(f.key) === 'fixed'">{{ 'importMap.source.fixed' | transloco }}</option>
           @for (h of headers(); track $index) {
             <option [value]="'c:' + $index" [selected]="sourceValue(f.key) === 'c:' + $index">{{ columnName($index) }}</option>
@@ -89,6 +92,15 @@
         <td class="example">{{ example(f.key, $index) }}</td>
       }
     </tr>
+    <!-- 内訳の列から計算する項目：式は行の下に横いっぱいで（折り返さずに読めるように。11/25） -->
+    @if (isDerived(f.key) && formulaText(f.key)) {
+      <tr class="formula-row">
+        <td></td>
+        <td [attr.colspan]="1 + samples().length">
+          <p class="formula">{{ 'importMap.formula' | transloco: { n: 1 } }}{{ formulaText(f.key) }}</p>
+        </td>
+      </tr>
+    }
   </ng-template>
 
   <div class="table-wrap">
@@ -125,6 +137,18 @@
     </details>
   }
 
+  @if (passed().length > 0) {
+    <!-- 内訳として取り込む列（給与の項目名に当たる見出し。11/25） -->
+    <p class="sub unused">
+      {{ 'importMap.passed' | transloco }}
+      @for (i of passed(); track i) {
+        <span class="tag">{{ columnName(i) }}</span>
+      }
+    </p>
+  }
+  @if (derived()?.noteKey; as k) {
+    <p class="sub note">{{ k | transloco }}</p>
+  }
   @if (unused().length > 0) {
     <p class="sub unused">
       {{ 'importMap.unused' | transloco }}

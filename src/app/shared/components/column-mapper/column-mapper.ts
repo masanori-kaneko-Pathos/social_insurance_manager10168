@@ -4,6 +4,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import {
   canSum,
   convertRow,
+  DerivedFormula,
   fromSavedMapping,
   guessMapping,
   ImportField,
@@ -106,10 +107,46 @@ export class ColumnMapper {
       .slice(0, SAMPLE_ROWS)
       .map((r) => convertRow(r, this.mapping(), this.spec())),
   );
-  readonly missing = computed(() => missingRequired(this.fields(), this.mapping()));
+  /** 計算で埋まる項目（給与の明細の内訳の列から。11/25） */
+  readonly derived = computed(() => this.spec().derived?.(this.headers()) ?? null);
+  private readonly derivedKeys = computed<readonly string[]>(() => this.derived()?.keys ?? []);
+  /** 結ばずに、計算で埋めている項目か */
+  isDerived(key: string): boolean {
+    return this.derivedKeys().includes(key) && this.sourceValue(key) === '';
+  }
+  /** 例の行ごとの式（ファイルの行のまま渡す） */
+  private readonly formulas = computed(() => {
+    const d = this.derived();
+    if (!d) return [];
+    return this.table()
+      .slice(1)
+      .filter((r) => r.some((c) => c.trim() !== ''))
+      .slice(0, SAMPLE_ROWS)
+      .map((r) => d.formula(r));
+  });
+  formulaOf(key: string, i = 0): DerivedFormula | null {
+    return this.formulas()[i]?.[key] ?? null;
+  }
+  /** 式の文字：基本給 250,000 ＋ 役職手当 20,000 − 欠勤控除 5,000 ＝ 265,000 */
+  formulaText(key: string): string {
+    const f = this.formulaOf(key);
+    if (!f) return '';
+    const yen = (n: number) => Math.abs(n).toLocaleString('ja-JP');
+    const terms = f.terms
+      .map((t, i) => `${i === 0 ? (t.amount < 0 ? '− ' : '') : t.amount < 0 ? ' − ' : ' ＋ '}${t.name} ${yen(t.amount)}`)
+      .join('');
+    return `${terms} ＝ ${f.total.toLocaleString('ja-JP')}`;
+  }
+
+  readonly missing = computed(() => missingRequired(this.fields(), this.mapping(), this.derivedKeys()));
+  /** そのまま後ろに付けて渡す列（給与の内訳の列。「使わない列」には出さない） */
+  readonly passed = computed(() => {
+    const pass = this.spec().passThrough;
+    return pass ? this.headers().map((h, i) => (pass(h) ? i : -1)).filter((i) => i >= 0) : [];
+  });
   /** 列を足せる項目があるか（あれば上に説明を出す。11/24） */
   readonly hasSummable = computed(() => this.fields().some((f) => canSum(f)));
-  readonly unused = computed(() => unusedColumns(this.headers(), this.mapping()));
+  readonly unused = computed(() => unusedColumns(this.headers(), this.mapping()).filter((i) => !this.passed().includes(i)));
 
   // ===== 表示 =====
 
@@ -157,6 +194,7 @@ export class ColumnMapper {
   }
 
   example(key: string, i: number): string {
+    if (this.isDerived(key)) return this.formulaOf(key, i)?.total.toLocaleString('ja-JP') ?? '';
     return this.samples()[i]?.[key] ?? '';
   }
 
