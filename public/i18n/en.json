@@ -728,9 +728,26 @@
       "person": "Personal info",
       "history": "History"
     },
+    "summary": {
+      "title": "Social insurance",
+      "notEnrolled": "Not enrolled",
+      "standardValue": "Grade {{grade}} ¥{{yen}}",
+      "over70": "(equivalent for employees aged 70+)",
+      "healthStandard": "Health insurance standard monthly remuneration",
+      "pensionStandard": "Pension standard monthly remuneration",
+      "healthAcquired": "Health insurance acquisition date",
+      "pensionAcquired": "Pension acquisition date",
+      "healthLost": "Health insurance loss date",
+      "pensionLost": "Pension loss date",
+      "monthlyAmount": "Monthly remuneration",
+      "from": "Applies from",
+      "premiumTitle": "Premiums for {{month}}",
+      "noPremium": "Cannot calculate (no standard monthly remuneration or rates).",
+      "historyHint": "See \"Pay and standard remuneration\" for the history and pay; monthly enrollment and premiums are in the table below."
+    },
     "overview": {
       "grade": "Standard Monthly Remuneration (SMR)",
-      "gradeValue": "Health grade {{health}}, pension grade {{pension}} ({{standard}} yen)",
+      "gradeValue": "Health grade {{health}} ¥{{healthYen}} / pension grade {{pension}} ¥{{pensionYen}}",
       "premium": "Employee share for {{month}}",
       "yen": " yen",
       "todos": "To-dos for this employee",

@@ -728,9 +728,26 @@
       "person": "本人の情報",
       "history": "履歴"
     },
+    "summary": {
+      "title": "社会保険",
+      "notEnrolled": "加入していません",
+      "standardValue": "{{grade}}級 {{yen}}円",
+      "over70": "（70歳以上被用者の相当額）",
+      "healthStandard": "健康保険の標準報酬月額",
+      "pensionStandard": "厚生年金保険の標準報酬月額",
+      "healthAcquired": "健康保険の資格取得年月日",
+      "pensionAcquired": "厚生年金保険の資格取得年月日",
+      "healthLost": "健康保険の資格喪失年月日",
+      "pensionLost": "厚生年金保険の資格喪失年月日",
+      "monthlyAmount": "報酬月額",
+      "from": "適用開始月",
+      "premiumTitle": "{{month}}分の保険料",
+      "noPremium": "計算できません（標準報酬月額か料率がありません）。",
+      "historyHint": "標準報酬月額の履歴と給与は「給与と標準報酬」、月ごとの加入と保険料は下の表で見られます。"
+    },
     "overview": {
       "grade": "標準報酬月額",
-      "gradeValue": "健保 {{health}}級・厚年 {{pension}}級（{{standard}}円）",
+      "gradeValue": "健保 {{health}}級 {{healthYen}}円・厚年 {{pension}}級 {{pensionYen}}円",
       "premium": "{{month}} 分の本人負担",
       "yen": "円",
       "todos": "この人の To-do",

@@ -58,6 +58,7 @@
 </div>
 
 <!-- 計算式（等級・料率・端数処理） -->
+@if (formula()) {
 <div class="formula-side">
   <p class="formula-title">{{ (result().kind === 'bonus' ? 'premium.slip.formulaTitleBonus' : 'premium.slip.formulaTitle') | transloco }}</p>
 @for (g of result().groups; track $index) {
@@ -95,4 +96,5 @@
   </div>
 }
 </div>
+}
 </div>

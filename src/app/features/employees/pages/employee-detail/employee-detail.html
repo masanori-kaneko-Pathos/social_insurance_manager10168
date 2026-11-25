@@ -102,7 +102,7 @@
               <dt>{{ 'employee.overview.grade' | transloco }}</dt>
               <dd class="mono">
                 @if (remunerationNow(); as r) {
-                  {{ 'employee.overview.gradeValue' | transloco: { health: r.health.grade, pension: r.pension.grade, standard: yen(r.health.standard) } }}
+                  {{ 'employee.overview.gradeValue' | transloco: { health: r.health.grade, healthYen: yen(r.health.standard), pension: r.pension.grade, pensionYen: yen(r.pension.standard) } }}
                 } @else {
                   —
                 }
@@ -207,6 +207,100 @@
 
       @case ('insurance') {
         <!-- ===== 加入と保険料 ===== -->
+        <!-- 社会保険のまとめ：届の欄の順に、健保と厚年を左右に並べる（番号 → 資格 → 標準報酬 → 今月の保険料。11/25） -->
+        <section class="card insurance-summary">
+          <h2>{{ 'employee.summary.title' | transloco }}</h2>
+          <!-- 2列にそろえる：左に健康保険・右に厚生年金保険（共通のものは左右に1つずつ）。届の欄の順 -->
+          <dl class="info cols-2">
+            <div>
+              <dt>{{ 'employee.field.insuredNumber' | transloco }}</dt>
+              <dd class="mono">{{ e.insuredNumber ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'employee.field.basicPensionNumber' | transloco }}</dt>
+              <dd class="mono">{{ pensionNumber(e) }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'employee.field.acquisitionType' | transloco }}</dt>
+              <dd>{{ 'employee.acquisitionType.' + e.acquisitionType | transloco }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'employee.field.collectionMethod' | transloco }}</dt>
+              <dd>
+                @if (e.collectionMethod) {
+                  {{ 'employee.collectionMethod.' + e.collectionMethod | transloco }}
+                } @else {
+                  {{ 'employee.collectionMethod.office' | transloco: { method: ('employee.collectionMethod.' + officeMethod() | transloco) } }}
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>{{ 'employee.summary.monthlyAmount' | transloco }}</dt>
+              <dd class="mono">{{ remunerationNow() ? yen(remunerationNow()!.monthlyAmount) + ('employee.overview.yen' | transloco) : '—' }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'employee.summary.from' | transloco }}</dt>
+              <dd>
+                @if (remunerationNow(); as r) {
+                  {{ warekiMonth(r.from) }}（{{ 'remuneration.reason.' + r.reason | transloco }}）
+                } @else {
+                  —
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>{{ 'employee.summary.healthStandard' | transloco }}</dt>
+              <dd class="mono">
+                @if (remunerationNow(); as r) {
+                  {{ 'employee.summary.standardValue' | transloco: { grade: r.health.grade, yen: yen(r.health.standard) } }}
+                } @else {
+                  —
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>{{ 'employee.summary.pensionStandard' | transloco }}</dt>
+              <dd class="mono">
+                @if (remunerationNow(); as r) {
+                  {{ 'employee.summary.standardValue' | transloco: { grade: r.pension.grade, yen: yen(r.pension.standard) } }}
+                  @if (over70Now(e)) {
+                    <span class="sub">{{ 'employee.summary.over70' | transloco }}</span>
+                  }
+                } @else {
+                  —
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>{{ 'employee.summary.healthAcquired' | transloco }}</dt>
+              <dd>{{ e.health.enrolled ? wareki(e.health.acquiredDate) : ('employee.summary.notEnrolled' | transloco) }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'employee.summary.pensionAcquired' | transloco }}</dt>
+              <dd>{{ e.pension.enrolled ? wareki(e.pension.acquiredDate) : ('employee.summary.notEnrolled' | transloco) }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'employee.summary.healthLost' | transloco }}</dt>
+              <dd>{{ lostOf(e, 'health') ? wareki(lostOf(e, 'health')) : '—' }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'employee.summary.pensionLost' | transloco }}</dt>
+              <dd>{{ lostOf(e, 'pension') ? wareki(lostOf(e, 'pension')) : '—' }}</dd>
+            </div>
+          </dl>
+          <h3>{{ 'employee.summary.premiumTitle' | transloco: { month: warekiMonth(thisMonth) } }}</h3>
+          @if (premiumResultNow(); as pr) {
+            @if (pr.exempt) {
+              <p>{{ 'premium.exempt' | transloco }}</p>
+            } @else {
+              <app-premium-breakdown [result]="pr" [formula]="false" />
+            }
+          } @else {
+            <p class="muted">{{ 'employee.summary.noPremium' | transloco }}</p>
+          }
+          <p class="hint">{{ 'employee.summary.historyHint' | transloco }}</p>
+        </section>
+
         <section class="card">
           <div class="coverage-head">
             <h2>{{ 'employee.detail.coverageTitle' | transloco }}</h2>
@@ -308,31 +402,6 @@
                 <dd>{{ e.retireReason ? ('employee.retireReason.' + e.retireReason | transloco) : '—' }}</dd>
               </div>
             }
-            <div>
-              <dt>{{ 'employee.field.insuredNumber' | transloco }}</dt>
-              <dd class="mono">{{ e.insuredNumber ?? '—' }}</dd>
-            </div>
-            <div>
-              <dt>{{ 'employee.field.basicPensionNumber' | transloco }}</dt>
-              <dd class="mono">{{ pensionNumber(e) }}</dd>
-            </div>
-            <div>
-              <dt>{{ 'employee.field.acquisitionType' | transloco }}</dt>
-              <dd>{{ 'employee.acquisitionType.' + e.acquisitionType | transloco }}</dd>
-            </div>
-            <div>
-              <dt>{{ 'employee.field.collectionMethod' | transloco }}</dt>
-              <dd>
-                @if (e.collectionMethod) {
-                  {{ 'employee.collectionMethod.' + e.collectionMethod | transloco }}
-                } @else {
-                  {{
-                    'employee.collectionMethod.office'
-                      | transloco: { method: ('employee.collectionMethod.' + officeMethod() | transloco) }
-                  }}
-                }
-              </dd>
-            </div>
             <!-- 連絡先・通勤・口座（鍵付きの文書。管理者と本人だけが見られる） -->
             @if (context.isAdmin()) {
               <div class="wide">

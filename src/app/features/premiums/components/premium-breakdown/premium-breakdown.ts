@@ -19,6 +19,8 @@ import { formatMilli } from '../../logic/rounding';
 })
 export class PremiumBreakdown {
   readonly result = input.required<PremiumResult>();
+  /** 計算式（右側）も出すか。従業員の社会保険のまとめでは明細だけ（計算式は下の保険料のカードで見られる。11/25） */
+  readonly formula = input(true);
   readonly slip = computed(() => premiumSlip(this.result()));
   /** 合算して端数処理した単位を、保険ごとに差し引きで分けているか（明細の下に説明を出す。11/24） */
   readonly hasParts = computed(() => this.result().groups.some((g) => !!g.partsYen));

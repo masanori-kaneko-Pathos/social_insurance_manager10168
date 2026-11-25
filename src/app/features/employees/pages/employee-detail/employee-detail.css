@@ -275,3 +275,31 @@
 .add-menu .menu button.menu-sep {
   border-top: 1px solid var(--color-border);
 }
+
+/* 社会保険のまとめ（11/25）：2列にそろえ、欄ごとに点線で区切る（左に健康保険・右に厚生年金保険） */
+.info.cols-2 {
+  grid-template-columns: 1fr 1fr;
+  column-gap: var(--space-xl);
+  row-gap: 0;
+}
+.info.cols-2 > div {
+  padding: var(--space-sm) 0;
+  border-bottom: 1px dashed var(--color-border);
+}
+.info.cols-2 dd {
+  min-height: 1.5em;
+}
+.info.cols-2 .sub {
+  display: block;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+@media (max-width: 720px) {
+  .info.cols-2 {
+    grid-template-columns: 1fr;
+  }
+}
+.insurance-summary h3 {
+  margin: var(--space-lg) 0 var(--space-sm);
+  font-size: var(--font-sm);
+}

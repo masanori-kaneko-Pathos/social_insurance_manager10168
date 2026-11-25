@@ -31,6 +31,10 @@ import { BonusCard } from '../../../premiums/components/bonus-card/bonus-card';
 import { PremiumCard } from '../../../premiums/components/premium-card/premium-card';
 import { RecalcCard } from '../../../premiums/components/recalc-card/recalc-card';
 import { calcMonthly } from '../../../premiums/logic/calc-monthly';
+import { PremiumBreakdown } from '../../../premiums/components/premium-breakdown/premium-breakdown';
+import type { PremiumResult } from '../../../../core/models/premium';
+import { toWareki, toWarekiMonth } from '../../../filings/logic/wareki';
+import { healthLostDate, isOver70Employee, pensionLostDate } from '../../logic/coverage';
 import { noRates, pickRates, RateTables } from '../../../rates/logic/pick-rates';
 import { withCapRevisions } from '../../../rates/logic/cap-revision';
 import { adjustmentForEmployee } from '../../../premiums/logic/adjustment-office';
@@ -91,6 +95,7 @@ type AddKind = 'leave' | 'care' | 'overseas' | 'dependent' | 'transfer';
     PayrollCard,
     HistoryCard,
     RecalcCard,
+    PremiumBreakdown,
   ],
   templateUrl: './employee-detail.html',
   styleUrl: './employee-detail.css',
@@ -205,8 +210,8 @@ export class EmployeeDetail {
     return rows ? remunerationAt(rows, this.thisMonth) : null;
   });
 
-  /** 今月分の本人負担（計算できないときは null。免除の月は 'exempt'） */
-  readonly premiumNow = computed<number | 'exempt' | null>(() => {
+  /** 今月分の保険料の計算結果（計算できないときは null。社会保険のまとめの明細と、概要の本人負担に使う。11/25） */
+  readonly premiumResultNow = computed<PremiumResult | null>(() => {
     const e = this.employee();
     const office = this.context.current();
     const tables = this.tables();
@@ -225,13 +230,38 @@ export class EmployeeDetail {
           ? adjustmentForEmployee({ ...office, since, standardHours: office.standardHours ?? null }, e, contracts, criteria, rems)(month)
           : null;
       const r = calcMonthly({ month, employee: e, remunerations: rems, rates, options: premiumOf(office), adjustment });
-      if (r.exempt) return 'exempt';
-      return r.missing.length > 0 ? null : r.employeeYen;
+      return r.exempt || r.missing.length === 0 ? r : null;
     } catch (err) {
       console.error(err);
       return null;
     }
   });
+
+  /** 今月分の本人負担（計算できないときは null。免除の月は 'exempt'） */
+  readonly premiumNow = computed<number | 'exempt' | null>(() => {
+    const r = this.premiumResultNow();
+    if (!r) return null;
+    return r.exempt ? 'exempt' : r.employeeYen;
+  });
+
+  // ===== 社会保険のまとめ（加入と保険料のタブの一番上。届の欄の順に、健保と厚年を左右に並べる。11/25） =====
+  readonly wareki = toWareki;
+  readonly warekiMonth = toWarekiMonth;
+  /** 今日、70歳以上被用者か（厚年の標準報酬月額は「相当額」として出す） */
+  over70Now(e: EmployeeFull): boolean {
+    return isOver70Employee(e, this.today);
+  }
+  /**
+   * 喪失年月日（年齢による喪失も含む：厚年は70歳到達日、健保は75歳の誕生日）
+   * 今日より後の年齢による喪失（まだ先の70歳・75歳）は出さない。入っている喪失日（退職など）はそのまま出す
+   */
+  lostOf(e: EmployeeFull, kind: 'health' | 'pension'): string | null {
+    const x = kind === 'health' ? e.health : e.pension;
+    if (!x.enrolled) return null;
+    const d = kind === 'health' ? healthLostDate(e) : pensionLostDate(e);
+    if (!d) return null;
+    return d === x.lostDate || d <= this.today ? d : null;
+  }
 
   /** この人の To-do（To-do リストと同じ計算を1人分。片づけるのは To-do リストで） */
   readonly todos = computed(() => {
