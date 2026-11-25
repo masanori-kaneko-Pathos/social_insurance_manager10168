@@ -4049,7 +4049,8 @@
       "days": "Monthly: calendar days / hourly, daily: days worked",
       "inKind": "Price table amount − employee payment",
       "prorated": "A raise or new allowance started mid-period",
-      "state": "Leave-of-absence pay only; maternity → leave",
+      "state": "Leave-of-absence pay only. Maternity and childcare:",
+      "toLeave": "register as leave",
       "hours": "Scheduled + overtime within legal limits"
     },
     "readback": {

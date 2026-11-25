@@ -225,7 +225,13 @@
             <option [value]="s">{{ 'payroll.state.' + s | transloco }}</option>
           }
         </select>
-        <small class="field-note">{{ 'payrollEntry.note.state' | transloco }}</small>
+        <!-- 産休・育休は給与の状態ではなく休業で登録する。従業員のページの休業の追加を開く（11/25。文の続きなので矢印なし・すき間なし） -->
+        <small class="field-note"
+          >{{ 'payrollEntry.note.state' | transloco
+          }}@if (leaveLink(); as link) {<a [routerLink]="link" [queryParams]="{ tab: 'employment', add: 'leave' }">{{
+              'payrollEntry.note.toLeave' | transloco
+            }}</a>} @else {{{ 'payrollEntry.note.toLeave' | transloco }}}</small
+        >
       </div>
     </div>
 

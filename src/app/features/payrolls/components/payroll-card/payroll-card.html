@@ -41,6 +41,7 @@
         [prevLines]="prevLines()"
         [template]="template()"
         [itemsLink]="['/o', context.current()?.id, 'payrolls', 'items']"
+        [leaveLink]="context.isAdmin() ? ['/o', context.current()?.id, 'employees', employee().id] : null"
         [errors]="errors()"
         [hasNext]="false"
         [inKindCalc]="false"

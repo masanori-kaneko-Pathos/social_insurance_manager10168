@@ -337,3 +337,9 @@ tr.line-err span + span::before {
 .lines tr.line-warn td {
   color: var(--color-warning-text);
 }
+
+/* 注記の中のリンク（文の続きなので矢印なし。下線でリンクと分かるように。11/25） */
+.field-note a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

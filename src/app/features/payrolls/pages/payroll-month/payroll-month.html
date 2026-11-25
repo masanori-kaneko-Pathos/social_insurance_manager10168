@@ -210,6 +210,7 @@
                   [template]="template()"
                   [itemsLink]="['/o', context.current()?.id, 'payrolls', 'items']"
                   [canEdit]="context.isAdmin()"
+                  [leaveLink]="context.isAdmin() ? ['/o', context.current()?.id, 'employees', v.employee.id] : null"
                   [errors]="rowErrors().get(v.employee.id) ?? []"
                   [hasNext]="!!nextOf(v)"
                   [saving]="saving()"

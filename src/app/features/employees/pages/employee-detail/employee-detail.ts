@@ -1,6 +1,6 @@
 import { MyNumberCard } from '../../../my-number/components/my-number-card/my-number-card';
 import { FamilyMyNumbers } from '../../../my-number/components/family-my-numbers/family-my-numbers';
-import { Component, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -309,6 +309,13 @@ export class EmployeeDetail {
 
   constructor() {
     void this.load();
+    // ほかの画面から「休業を登録」で来たとき（?add=leave。給与の入力の「状態」の注記から。11/25）
+    // 従業員を読み終えてから、休業のカードの追加の欄を開く。開いたら URL から add を消す（戻る・再読み込みで開き直さない）
+    effect(() => {
+      const kind = this.params().get('add');
+      if (kind !== 'leave' || !this.employee() || !this.context.isAdmin()) return;
+      untracked(() => void this.openAdd('leave', true));
+    });
   }
 
   private async load(): Promise<void> {
@@ -390,12 +397,18 @@ export class EmployeeDetail {
   /** 「＋登録」：雇用・契約のタブを開いて、そのカードの追加の欄を開く */
   async add(kind: AddKind, menu: HTMLDetailsElement): Promise<void> {
     menu.open = false;
+    await this.openAdd(kind);
+  }
+
+  /** 追加の欄を開く（fromLink：ほかの画面のリンクから来たとき。URL の add を消す） */
+  private async openAdd(kind: AddKind, fromLink = false): Promise<void> {
     this.adding.set(kind);
     // 扶養家族は本人の情報のタブ、ほかは雇用・契約のタブ（11/17 に扶養家族も足した）
     await this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { tab: kind === 'dependent' ? 'person' : 'employment' },
+      queryParams: { tab: kind === 'dependent' ? 'person' : 'employment', ...(fromLink ? { add: null } : {}) },
       queryParamsHandling: 'merge',
+      replaceUrl: fromLink,
     });
     // カードが画面に出てから追加の欄を開く
     setTimeout(() => {
