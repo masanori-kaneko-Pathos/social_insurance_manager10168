@@ -1,7 +1,7 @@
 <app-me-header [officeName]="me.office()?.name ?? null" />
 
 <main class="me-main">
-  <a class="back" routerLink="/me">← {{ 'me.title' | transloco }}</a>
+  <app-back-link fallback="/me" fallbackName="back.me" />
 
   @if (loading()) {
     <p class="muted">{{ 'common.loading' | transloco }}</p>

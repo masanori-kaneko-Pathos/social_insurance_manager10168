@@ -16,6 +16,7 @@ import { MeHeader } from '../../components/me-header/me-header';
 import { MeContext } from '../../me-context.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
+import { BackLink } from '../../../../shared/components/back-link/back-link';
 
 /**
  * 項目のまとまり（選ぶ画面で見出しをつける）
@@ -30,7 +31,7 @@ const GROUPS: { key: string; fields: RequestField[]; whole?: boolean }[] = [
 /** マイページ：自分から変更を申請する（変える項目を選んで、新しい値を入れる） */
 @Component({
   selector: 'app-my-change',
-  imports: [AnswerForm, MeHeader, RouterLink, TranslocoPipe],
+  imports: [BackLink, AnswerForm, MeHeader, RouterLink, TranslocoPipe],
   templateUrl: './my-change.html',
   styleUrl: '../me.css',
 })

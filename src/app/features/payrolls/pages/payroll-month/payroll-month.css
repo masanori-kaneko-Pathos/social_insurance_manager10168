@@ -2,13 +2,6 @@
   --font-table: 13px; /* 入力の表の字（11/24） */
 }
 
-.back {
-  display: inline-block;
-  margin-bottom: var(--space-sm);
-  font-size: var(--font-sm);
-  color: var(--color-text-sub);
-}
-
 .page-head {
   display: flex;
   flex-wrap: wrap;

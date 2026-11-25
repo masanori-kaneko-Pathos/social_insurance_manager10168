@@ -143,12 +143,6 @@ td.wrap {
 }
 
 /* ===== 賞与の項目（11/19） ===== */
-.back {
-  display: inline-block;
-  margin-bottom: var(--space-xs);
-  font-size: var(--font-sm);
-}
-
 .lead {
   margin: 0 0 var(--space-md);
   color: var(--color-text-sub);

@@ -1,5 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { EmployeeRequest } from '../../../../core/models/office-records';
 import { AnswerForm } from '../../../requests/components/answer-form/answer-form';
@@ -16,11 +16,12 @@ import { MeHeader } from '../../components/me-header/me-header';
 import { MeContext } from '../../me-context.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
+import { BackLink } from '../../../../shared/components/back-link/back-link';
 
 /** マイページ：依頼に答える（まだ・差し戻し）／出したものを見る */
 @Component({
   selector: 'app-my-request',
-  imports: [AnswerForm, AnswerView, MeHeader, RouterLink, TranslocoPipe],
+  imports: [BackLink, AnswerForm, AnswerView, MeHeader, TranslocoPipe],
   templateUrl: './my-request.html',
   styleUrl: '../me.css',
 })

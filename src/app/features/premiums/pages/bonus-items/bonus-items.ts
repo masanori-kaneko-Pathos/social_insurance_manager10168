@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { BONUS_TREATMENTS, BonusItem, BonusTreatment } from '../../../../core/models/bonus-item';
 import { BonusPayment } from '../../../../core/models/bonus';
@@ -19,6 +19,7 @@ import {
   withTreatment,
 } from '../../logic/bonus-items';
 import { DEFAULT_NATURE } from '../../logic/bonus-nature';
+import { BackLink } from '../../../../shared/components/back-link/back-link';
 
 /** 編集中の内容（null の id は新しい項目） */
 interface Draft {
@@ -56,7 +57,7 @@ interface ItemRow {
  */
 @Component({
   selector: 'app-bonus-items',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [BackLink, TranslocoPipe],
   templateUrl: './bonus-items.html',
   styleUrl: './bonus-items.css',
 })

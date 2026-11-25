@@ -1,6 +1,4 @@
-<a class="back" [routerLink]="['/o', context.current()?.id, 'payrolls']">
-  ← {{ 'payroll.listTitle' | transloco }}
-</a>
+<app-back-link [fallback]="['/o', context.current()?.id, 'payrolls']" fallbackName="back.payrolls" />
 
 <h1>{{ 'revision.title' | transloco }}</h1>
 <p class="lead">{{ 'revision.lead' | transloco: { from: fromMonth } }}</p>

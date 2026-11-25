@@ -7,13 +7,13 @@
   </nav>
 <div class="page">
   @if (isEdit) {
-    <a class="back" [routerLink]="['/o', office()?.id]">← {{ 'common.back' | transloco }}</a>
+    <app-back-link [fallback]="['/o', office()?.id]" fallbackName="back.home" />
     <h1 id="sec-top">{{ 'office.form.titleEdit' | transloco }}</h1>
     <p class="lead">
       {{ (readOnly ? 'office.form.readOnly' : 'office.form.leadEdit') | transloco }}
     </p>
   } @else {
-    <a class="back" routerLink="/">← {{ 'common.back' | transloco }}</a>
+    <app-back-link fallback="/" fallbackName="back.home" />
     <div class="title-row">
       <h1 id="sec-top">{{ 'office.form.titleNew' | transloco }}</h1>
       <!-- 既存の事業所をコピー（押したときだけ選ぶ欄を出す） -->

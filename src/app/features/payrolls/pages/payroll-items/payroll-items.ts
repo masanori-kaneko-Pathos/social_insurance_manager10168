@@ -1,11 +1,11 @@
 import { Component, computed, effect, ElementRef, inject, signal, untracked, viewChild } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { DEFAULT_TEMPLATE_NAMES, PAYROLL_ITEM_CATEGORIES, PayrollItem, PayrollItemCategory } from '../../../../core/models/payroll-item';
 import { categoryOf, itemKey } from '../../logic/payroll-lines';
 import { OfficeContext } from '../../../office/office-context.service';
 import { PayrollItemService } from '../../payroll-item.service';
 import { itemRows, parseItemLabels, PayrollItemError, PayrollItemRow, validatePayrollItem } from '../../logic/payroll-items';
+import { BackLink } from '../../../../shared/components/back-link/back-link';
 
 /** 編集中の内容（id が null なら新しい項目。初期値の分類を決め直すときも新しい項目になる） */
 interface Draft {
@@ -25,7 +25,7 @@ interface Draft {
  */
 @Component({
   selector: 'app-payroll-items',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [BackLink, TranslocoPipe],
   templateUrl: './payroll-items.html',
   styleUrl: './payroll-items.css',
 })

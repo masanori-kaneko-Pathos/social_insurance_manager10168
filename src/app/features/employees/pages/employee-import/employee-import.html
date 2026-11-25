@@ -1,7 +1,5 @@
 <!-- ファイルの取り込み（11/17）：区分を選ぶ → ファイルを選ぶ → 取り込む。保存したあともこのページに残る -->
-@if (back; as b) {
-  <a class="back" [routerLink]="['/o', context.current()?.id].concat(b.path)">← {{ b.label | transloco }}</a>
-}
+<app-back-link [fallback]="back ? ['/o', context.current()?.id].concat(back.path) : null" [fallbackName]="back ? back.label : ''" />
 
 <h1>{{ 'importPage.title' | transloco }}</h1>
 

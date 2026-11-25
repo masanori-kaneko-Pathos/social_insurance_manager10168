@@ -33,6 +33,7 @@ import { DecisionNoticeCard } from '../../../premiums/components/decision-notice
 import { PersonName } from '../../../../shared/components/person-name/person-name';
 import type { OtherMonths } from '../../logic/payroll-lines';
 import { payrollAt } from '../../../office/logic/pay-group';
+import { BackLink } from '../../../../shared/components/back-link/back-link';
 type View = RegularView;
 type ReflectItem = RegularReflectItem;
 
@@ -43,7 +44,7 @@ interface Checks {
 
 @Component({
   selector: 'app-regular',
-  imports: [PersonName, DecisionNoticeCard, HalfWidthDigits, Pager, PersonListBar, RouterLink, SortHeader, TranslocoPipe],
+  imports: [BackLink, PersonName, DecisionNoticeCard, HalfWidthDigits, Pager, PersonListBar, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './regular.html',
   styleUrl: './regular.css',
 })

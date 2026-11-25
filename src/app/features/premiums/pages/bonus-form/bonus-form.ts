@@ -56,6 +56,7 @@ import { contractAt } from '../../../employees/logic/contract-form-model';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
+import { BackLink } from '../../../../shared/components/back-link/back-link';
 const DATE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 /** 新規の支給を計算の中で区別するための仮の ID */
 const NEW_ID = '__new__';
@@ -75,7 +76,7 @@ interface DateNote {
 
 @Component({
   selector: 'app-bonus-form',
-  imports: [PersonName, CloseOnOutside, ColumnMapper, EnterNext, ExportDialog, HalfWidthDigits, Pager, PersonListBar, PremiumBreakdown, PremiumTotals, RouterLink, SortHeader, TranslocoPipe],
+  imports: [BackLink, PersonName, CloseOnOutside, ColumnMapper, EnterNext, ExportDialog, HalfWidthDigits, Pager, PersonListBar, PremiumBreakdown, PremiumTotals, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './bonus-form.html',
   styleUrl: './bonus-form.css',
 })

@@ -44,12 +44,6 @@ h3 {
   text-decoration: none;
 }
 
-.back {
-  display: inline-block;
-  margin-bottom: var(--space-sm);
-  font-size: var(--font-sm);
-}
-
 .muted {
   margin: 0;
   color: var(--color-text-sub);

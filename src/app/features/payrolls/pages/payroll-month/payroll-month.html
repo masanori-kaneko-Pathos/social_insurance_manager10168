@@ -1,6 +1,4 @@
-<a class="back" [routerLink]="['/o', context.current()?.id, 'payrolls']">
-  ← {{ 'payroll.toMonthList' | transloco }}
-</a>
+<app-back-link [fallback]="['/o', context.current()?.id, 'payrolls']" fallbackName="back.payrolls" />
 
 <!-- 保険料一覧と同じ形：見出しの横に「‹ 年月 › 今月」、年月の下に小さく対象期間（11/13） -->
 <div class="page-head">

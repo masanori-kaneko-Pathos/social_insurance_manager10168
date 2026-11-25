@@ -1,4 +1,4 @@
-<a class="back" [routerLink]="['/o', context.current()?.id, 'requests']">← {{ 'request.listTitle' | transloco }}</a>
+<app-back-link [fallback]="['/o', context.current()?.id, 'requests']" fallbackName="back.requests" />
 
 @if (loading()) {
   <p class="muted">{{ 'common.loading' | transloco }}</p>

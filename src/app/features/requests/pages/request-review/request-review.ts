@@ -9,6 +9,7 @@ import { AnswerView } from '../../components/answer-view/answer-view';
 import { currentValue, planApply, REQUEST_FIELDS } from '../../logic/request-model';
 import { RequestService } from '../../request.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { BackLink } from '../../../../shared/components/back-link/back-link';
 
 /**
  * 依頼・申請の確認：今の値と答えを並べ、承認（従業員の情報に書き込む）か差し戻し（理由つき）
@@ -16,7 +17,7 @@ import { errorKeyOf } from '../../../../shared/utils/error-key';
  */
 @Component({
   selector: 'app-request-review',
-  imports: [AnswerView, RouterLink, TranslocoPipe],
+  imports: [BackLink, AnswerView, RouterLink, TranslocoPipe],
   templateUrl: './request-review.html',
   styleUrl: '../requests.css',
 })

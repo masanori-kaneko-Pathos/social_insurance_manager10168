@@ -4,12 +4,6 @@
   padding: var(--space-xl) var(--space-lg);
 }
 
-.back {
-  font-size: var(--font-sm);
-  color: var(--color-text-sub);
-  text-decoration: none;
-}
-
 h1 {
   margin: var(--space-sm) 0 var(--space-xs);
   font-size: var(--font-xl);

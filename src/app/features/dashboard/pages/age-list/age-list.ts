@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
 import { shiftMonth, todayLocal, toYearMonth, YearMonth } from '../../../../shared/utils/date';
@@ -17,6 +17,7 @@ import {
 } from '../../../employees/logic/age-events';
 import { OfficeContext } from '../../../office/office-context.service';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
+import { BackLink } from '../../../../shared/components/back-link/back-link';
 
 /** 「以内」の範囲：今月から何か月先まで（0 は今月だけ） */
 const WITHIN = [0, 1, 6, 12] as const;
@@ -39,7 +40,7 @@ interface AgeGroup {
  */
 @Component({
   selector: 'app-age-list',
-  imports: [PersonName, RouterLink, TranslocoPipe],
+  imports: [BackLink, PersonName, TranslocoPipe],
   templateUrl: './age-list.html',
   styleUrl: './age-list.css',
 })

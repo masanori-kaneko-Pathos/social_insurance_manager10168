@@ -31,6 +31,7 @@ import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
 import { hasPayGroups, payGroupAt, payrollAt } from '../../../office/logic/pay-group';
+import { BackLink } from '../../../../shared/components/back-link/back-link';
 
 interface ViewRow {
   employee: Employee;
@@ -57,7 +58,7 @@ const EMPTY_MONTHS: ReadonlySet<string> = new Set();
 
 @Component({
   selector: 'app-payroll-month',
-  imports: [PersonName, HalfWidthDigits, InKindCalculator, MonthPicker, Pager, PayrollEntry, PersonListBar, ReactiveFormsModule, RouterLink, SortHeader, TranslocoPipe],
+  imports: [BackLink, PersonName, HalfWidthDigits, InKindCalculator, MonthPicker, Pager, PayrollEntry, PersonListBar, ReactiveFormsModule, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './payroll-month.html',
   styleUrl: './payroll-month.css',
   host: {

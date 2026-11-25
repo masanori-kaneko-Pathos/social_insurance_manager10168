@@ -1,6 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Employee } from '../../../../core/models/employee';
 import { RemunerationDoc, RemunerationInput, StandardRemuneration } from '../../../../core/models/remuneration';
@@ -32,6 +31,7 @@ import { PersonName } from '../../../../shared/components/person-name/person-nam
 import { BonusService } from '../../../premiums/bonus.service';
 import type { OtherMonths } from '../../logic/payroll-lines';
 import { payrollAt } from '../../../office/logic/pay-group';
+import { BackLink } from '../../../../shared/components/back-link/back-link';
 
 interface View {
   key: string; // 行の目印（従業員ID・種類・起算月）
@@ -50,7 +50,7 @@ interface View {
  */
 @Component({
   selector: 'app-revisions',
-  imports: [PersonName, DecisionNoticeCard, NgTemplateOutlet, RouterLink, TranslocoPipe, SpecialRevisionCard, WageChangeCard],
+  imports: [BackLink, PersonName, DecisionNoticeCard, NgTemplateOutlet, TranslocoPipe, SpecialRevisionCard, WageChangeCard],
   templateUrl: './revisions.html',
   styleUrl: './revisions.css',
 })

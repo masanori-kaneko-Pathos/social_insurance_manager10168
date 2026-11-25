@@ -1,6 +1,6 @@
 <div class="page-head">
   <div>
-    <a class="back" [routerLink]="['/o', context.current()?.id, 'premiums']">← {{ 'premiumPeriod.back' | transloco }}</a>
+    <app-back-link [fallback]="['/o', context.current()?.id, 'premiums']" fallbackName="back.premiums" />
     <h1>{{ 'premiumPeriod.title' | transloco }}</h1>
   </div>
   @if (rows().length > 0) {

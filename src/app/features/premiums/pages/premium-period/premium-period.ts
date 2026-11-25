@@ -30,6 +30,7 @@ import {
   TOTAL_CATEGORIES,
   TotalCategory,
 } from '../../logic/period-totals';
+import { BackLink } from '../../../../shared/components/back-link/back-link';
 
 /**
  * 期間ごとの会社負担の集計（11/24）
@@ -38,7 +39,7 @@ import {
  */
 @Component({
   selector: 'app-premium-period',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [BackLink, RouterLink, TranslocoPipe],
   templateUrl: './premium-period.html',
   styleUrl: './premium-period.css',
 })

@@ -10,13 +10,7 @@
   }
 }
 
-.back {
-    font-size: var(--font-sm);
-    color: var(--color-text-sub);
-    text-decoration: none;
-  }
-  
-  .page-head {
+.page-head {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;

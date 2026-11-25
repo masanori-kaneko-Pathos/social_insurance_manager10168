@@ -13,13 +13,6 @@ h1 {
   font-size: var(--font-xl);
 }
 
-.back {
-  display: inline-block;
-  margin-bottom: var(--space-xs);
-  font-size: var(--font-sm);
-  color: var(--color-text-sub);
-}
-
 .lead {
   margin: 0 0 var(--space-md);
   color: var(--color-text-sub);

@@ -79,6 +79,7 @@ import {
 import { judgeOfficer, OfficerJudgement } from '../../logic/officer';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
+import { BackLink } from '../../../../shared/components/back-link/back-link';
 const NOT_BLANK = Validators.pattern(/\S/);
 
 /** 全角を半角にしてから形式を見る（空欄は通す） */
@@ -166,7 +167,7 @@ const PATTERN_KEYS: Record<string, string> = {
 
 @Component({
   selector: 'app-employee-form',
-  imports: [EnterNext, ContractFields, EmployeeDeleteCard, HalfWidthDigits, ReactiveFormsModule, RouterLink, TranslocoPipe],
+  imports: [BackLink, EnterNext, ContractFields, EmployeeDeleteCard, HalfWidthDigits, ReactiveFormsModule, RouterLink, TranslocoPipe],
   templateUrl: './employee-form.html',
   styleUrl: './employee-form.css',
 })

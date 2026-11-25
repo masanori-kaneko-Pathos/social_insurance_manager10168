@@ -90,6 +90,7 @@ import { adjustmentOfficeStatus } from '../../../premiums/logic/adjustment-offic
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { MAX_PAY_GROUPS, newPayGroupId, payGroupErrors } from '../../logic/pay-group';
+import { BackLink } from '../../../../shared/components/back-link/back-link';
 /** 法人番号を入れたら法人名も必須 */
 function corporateNameRequired(g: AbstractControl): ValidationErrors | null {
   const num = (g.get('corporateNumber')?.value ?? '').trim();
@@ -131,7 +132,7 @@ const emptyToNull = (v: string) => (v.trim() ? v.trim() : null);
 
 @Component({
   selector: 'app-office-form',
-  imports: [DepartmentCard, EnterNext, HalfWidthDigits, PasswordGate, ReactiveFormsModule, RouterLink, TranslocoPipe, RateDialog, RateFileImport],
+  imports: [BackLink, DepartmentCard, EnterNext, HalfWidthDigits, PasswordGate, ReactiveFormsModule, RouterLink, TranslocoPipe, RateDialog, RateFileImport],
   templateUrl: './office-form.html',
   styleUrl: './office-form.css',
 })

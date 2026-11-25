@@ -3,12 +3,6 @@
   display: block;
 }
 
-.back {
-  display: inline-block;
-  margin-bottom: var(--space-sm);
-  font-size: var(--font-sm);
-}
-
 .page-head {
   display: flex;
   align-items: center;

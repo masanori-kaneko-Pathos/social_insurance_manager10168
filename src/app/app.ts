@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { ThemeService } from './core/theme/theme.service';
 import { RouterOutlet } from '@angular/router';
 import { ReadMeter } from './shared/components/read-meter/read-meter';
+import { NavHistoryService } from './shared/services/nav-history.service';
 
 @Component({
   selector: 'app-root',
@@ -13,4 +14,6 @@ export class App {
   protected readonly title = signal('socialinsurance10168');
   /** ライト／ダークを最初に当てる（選んだものはブラウザに覚えさせる） */
   private readonly theme = inject(ThemeService);
+  /** アプリの中で見た画面を、最初の画面から覚える（「‹ 前の画面」のリンク。11/25） */
+  private readonly navHistory = inject(NavHistoryService);
 }

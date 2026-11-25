@@ -64,6 +64,8 @@ import { exemptMonth, filedLeaves } from '../../logic/leave';
 import { RemunerationService } from '../../remuneration.service';
 import { registerGaps, registerLarge } from '../../logic/labor-register';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { NavHistoryService } from '../../../../shared/services/nav-history.service';
+import { BackLink } from '../../../../shared/components/back-link/back-link';
 
 type Mode = 'fiscal' | 'calendar' | 'last12';
 /** 「＋登録」のメニューから足すカード（中身がないときは出さない） */
@@ -76,7 +78,7 @@ type AddKind = 'payroll' | 'leave' | 'care' | 'overseas' | 'dependent' | 'transf
  */
 @Component({
   selector: 'app-employee-detail',
-  imports: [
+  imports: [BackLink, 
     RouterLink,
     TranslocoPipe,
     RemunerationCard,
@@ -154,6 +156,7 @@ export class EmployeeDetail {
   private readonly transferCard = viewChild(TransferCard);
   private readonly dependentCard = viewChild(DependentCard);
   private readonly payrollCard = viewChild(PayrollCard);
+  private readonly navHistory = inject(NavHistoryService);
 
   readonly modes: Mode[] = ['fiscal', 'calendar', 'last12'];
   readonly kinds = ['health', 'care', 'pension'] as const;
@@ -324,8 +327,11 @@ export class EmployeeDetail {
     try {
       if (!officeId || !this.employeeId) return;
       const e = await this.employeesApi.getFull(officeId, this.employeeId);
-      if (e) this.employee.set(e);
-      else this.errorKey.set('employee.error.notFound');
+      if (e) {
+        this.employee.set(e);
+        // ほかの画面の「‹ 前の画面」に、このページを氏名で出す（11/25）
+        this.navHistory.nameCurrent(`${e.lastName} ${e.firstName}`.trim());
+      } else this.errorKey.set('employee.error.notFound');
       // 常時30人以上か（一覧は覚えているので、ふつうは読みに行かない）
       void this.employeesApi
         .list(officeId)

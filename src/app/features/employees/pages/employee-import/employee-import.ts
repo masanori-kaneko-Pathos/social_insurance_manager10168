@@ -60,6 +60,7 @@ import { EMPLOYEE_FIX_FIELDS } from '../../logic/import-fix-fields';
 import { IssueCol, IssueRow } from '../../../../shared/components/import-issues/issue-row';
 import { ImportSteps } from '../../../../shared/components/import-steps/import-steps';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
+import { BackLink } from '../../../../shared/components/back-link/back-link';
 
 /**
  * 何を取り込むか（ファイルの取り込みのページの区分。11/17 に給与の実績・マイナンバーも入れた）
@@ -114,7 +115,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-employee-import',
-  imports: [PersonName, IssueRow, ImportSteps, ImportPicker, PayrollImport, BonusImport, AbroadImport, ColumnMapper, DependentImport, HistoryImport, ImportIssues, PasswordGate, RouterLink, TranslocoPipe],
+  imports: [BackLink, PersonName, IssueRow, ImportSteps, ImportPicker, PayrollImport, BonusImport, AbroadImport, ColumnMapper, DependentImport, HistoryImport, ImportIssues, PasswordGate, RouterLink, TranslocoPipe],
   templateUrl: './employee-import.html',
   styleUrl: './employee-import.css',
 })

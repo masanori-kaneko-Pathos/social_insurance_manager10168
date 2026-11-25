@@ -1,6 +1,4 @@
-<a class="back" [routerLink]="['/o', context.current()?.id, 'bonuses']">
-  ‹ {{ 'bonus.back' | transloco }}
-</a>
+<app-back-link [fallback]="['/o', context.current()?.id, 'bonuses']" fallbackName="back.bonuses" />
 
 <h1>
   @if (readOnly) {

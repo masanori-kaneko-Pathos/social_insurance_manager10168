@@ -567,7 +567,6 @@
       "stepInvalid": "Please fix the highlighted fields in this step."
     },
     "detail": {
-      "back": "Employees",
       "age": "age {{age}}",
       "coverageTitle": "Monthly coverage",
       "mode": {
@@ -1564,7 +1563,6 @@
     "listTitle": "Bonuses",
     "add": "Add bonus",
     "empty": "No bonuses registered yet.",
-    "back": "Bonuses",
     "titleNew": "Add bonus",
     "titleEdit": "Edit bonus",
     "titleView": "Bonus",
@@ -1903,7 +1901,6 @@
     "monthPick": "Paid {{y}}-{{m}}",
     "workedDays": "Enter days worked",
     "workedDaysTitle": "For hourly or daily pay, the days for pay calculation are the days actually worked, including paid leave.",
-    "toMonthList": "Months",
     "bulk": {
       "title": "Fill in for the {{n}} people shown",
       "emptyOnly": "Only where empty",
@@ -4890,7 +4887,6 @@
   },
   "bonusItem": {
     "title": "Bonus items",
-    "back": "Bonuses",
     "add": "Add item",
     "lead": "Set how bonus payments are grouped for the four-times-a-year count and how social insurance treats them. Unregistered names are counted by name.",
     "saved": "Saved \"{{name}}\".",
@@ -5067,7 +5063,6 @@
   },
   "payrollItem": {
     "title": "Payroll items and categories",
-    "back": "Payroll",
     "add": "Add an item",
     "addTitle": "Add an item",
     "editTitle": "Edit the item",
@@ -5154,7 +5149,6 @@
   },
   "premiumPeriod": {
     "title": "Employer share by period",
-    "back": "Premiums",
     "export": "Export CSV",
     "fileTitle": "employer-share",
     "lead": "Lists the employer share for the selected period by month and by notice line, with totals. Useful for accrued expenses at year end and annual personnel costs.",
@@ -5341,5 +5335,38 @@
     "headerNote": " (office default group. For people in other groups, the row shows their own period.)",
     "otherPay": "Deduct from {{m}} pay",
     "otherPayNote": "This person's pay group differs from the office default, so this month's premium is deducted from a different pay month than the heading shows."
+  },
+  "back": {
+    "home": "Home",
+    "ages": "Age milestones",
+    "employees": "Employees",
+    "employee": "Employee page",
+    "employeeNew": "New employee",
+    "employeeEdit": "Edit employee",
+    "import": "Import files",
+    "premiumPeriod": "Employer cost by period",
+    "premiums": "Premiums",
+    "bonuses": "Bonuses",
+    "bonusItems": "Bonus types",
+    "bonusNew": "New bonus",
+    "bonus": "Bonus",
+    "payrolls": "Payroll",
+    "payrollItems": "Pay items and categories",
+    "payrollMonth": "Pay for {{y}}-{{m}}",
+    "calendar": "Annual schedule",
+    "filings": "Filings",
+    "regular": "{{year}} annual determination",
+    "revisions": "Revision candidates",
+    "requests": "Requests",
+    "requestNew": "New request",
+    "request": "Request",
+    "help": "Help",
+    "account": "Account settings",
+    "members": "Administrators",
+    "settings": "Office settings",
+    "officeNew": "New office",
+    "me": "My page",
+    "meRequest": "Request",
+    "meChange": "Change request"
   }
 }
