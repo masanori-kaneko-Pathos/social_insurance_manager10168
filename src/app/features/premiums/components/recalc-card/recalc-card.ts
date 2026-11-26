@@ -19,6 +19,7 @@ import { RecalcService } from '../../recalc.service';
 import { MonthCloseService } from '../../month-close.service';
 import type { ClosedAmount } from '../../logic/month-close';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { SpecialInsuredService } from '../../../employees/special-insured.service';
 
 /** 画面の1行：何月から・何月まで（空 ＝ 今も）・報酬月額（「加入していない」なら null） */
 interface PeriodRow {
@@ -52,6 +53,9 @@ export class RecalcCard implements OnInit {
   readonly context = inject(OfficeContext);
 
   readonly employee = input.required<Employee>();
+  /** 月 → 特定被保険者か（組合健保。制度を使っていなければ null。11/26） */
+  private special: ((month: string) => boolean) | null = null;
+  private readonly specialApi = inject(SpecialInsuredService);
 
   readonly today = todayLocal();
   readonly thisMonth = toYearMonth(this.today);
@@ -105,6 +109,8 @@ export class RecalcCard implements OnInit {
       this.gradeTables = grades;
       // 等級の上限が上がった月は、届出なしの一斉改定の行を足す（訂正前・訂正後の両方に効く。11/16）
       this.remunerations = withCapRevisions(rems, grades);
+      // 特定被保険者（組合健保。制度を採用している期間があるときだけ扶養家族を読む。11/26）
+      this.special = (await this.specialApi.forEmployees(office.id, office, [this.employee()])).get(this.employee().id) ?? null;
       this.saved.set(saved);
     } catch (err) {
       console.error(err);
@@ -228,6 +234,7 @@ export class RecalcCard implements OnInit {
         options: premiumOf(office),
         today: this.today,
         closedAt,
+        specialInsuredAt: this.special ?? undefined,
       }),
     );
   }

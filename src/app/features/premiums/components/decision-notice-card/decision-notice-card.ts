@@ -26,6 +26,7 @@ import {
   qualificationTextJa,
 } from '../../logic/decision-notice';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
+import { SpecialInsuredService } from '../../../employees/special-insured.service';
 
 /** どの決定を知らせるか（年金機構の通知書の様式の欄。11/19） */
 export type NoticeKind = 'monthly' | 'bonus' | 'qualification';
@@ -65,6 +66,7 @@ const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 })
 export class DecisionNoticeCard implements OnInit {
   private readonly employeesApi = inject(EmployeeService);
+  private readonly specialApi = inject(SpecialInsuredService);
   private readonly remunerationApi = inject(RemunerationService);
   private readonly bonusApi = inject(BonusService);
   private readonly rates = inject(RateService);
@@ -193,7 +195,14 @@ export class DecisionNoticeCard implements OnInit {
       this.rates.tablesFor(office.id, everKumiai(office)),
       this.api.sentLinks(office.id, noticeLinkRange('bonus', month)),
     ]);
-    const ctx = { ratesFor: ratesForOffice(office, tables), insurerOf: insurerKeyOf(office), options: premiumOf(office) };
+    // 特定被保険者（組合健保。制度を採用している期間があるときだけ扶養家族を読む。11/26）
+    const special = await this.specialApi.forEmployees(office.id, office, employees);
+    const ctx = {
+      ratesFor: ratesForOffice(office, tables),
+      insurerOf: insurerKeyOf(office),
+      options: premiumOf(office),
+      specialInsuredOf: (id: string) => special.get(id),
+    };
     const byId = new Map(employees.map((e) => [e.id, e]));
     const rows: Row[] = [];
     for (const p of payments.filter((x) => x.paidDate.startsWith(month))) {

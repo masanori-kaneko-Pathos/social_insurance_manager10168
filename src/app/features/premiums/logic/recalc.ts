@@ -39,6 +39,8 @@ export interface RecalcInput {
   today: DateStr;
   /** 月次確定した月の、この人の確定時の額（確定していない月・確定時にいなかった月は null。省くと今のデータを訂正前にする） */
   closedAt?: (month: YearMonth) => ClosedAmount | null;
+  /** 月 → 特定被保険者として介護保険料をかけるか（組合健保。訂正前・訂正後とも。省くとかけない。11/26） */
+  specialInsuredAt?: (month: YearMonth) => boolean;
 }
 
 export interface RecalcResult {
@@ -86,7 +88,8 @@ export function recalc(x: RecalcInput): RecalcResult {
 
   for (const month of monthsBetween(x.from, x.to)) {
     const rates = x.ratesAt(month);
-    const calcBefore = calcMonthly({ month, employee: x.employee, remunerations: x.remunerations, rates, options: x.options });
+    const specialInsured = x.specialInsuredAt?.(month) ?? false;
+    const calcBefore = calcMonthly({ month, employee: x.employee, remunerations: x.remunerations, rates, options: x.options, specialInsured });
     // 確定した月は、確定時の額（実際に控除した額）が訂正前
     const closed = x.closedAt?.(month) ?? null;
     const before = closed
@@ -106,7 +109,7 @@ export function recalc(x: RecalcInput): RecalcResult {
     const h = std('health');
     const pn = std('pension');
     const rems: RemunerationLike[] = h && pn ? [{ from: month, health: h, pension: pn }] : [];
-    const after = calcMonthly({ month, employee, remunerations: rems, rates, options: x.options });
+    const after = calcMonthly({ month, employee, remunerations: rems, rates, options: x.options, specialInsured });
 
     const expired = isExpired(month, x.today);
     const dEmp = after.employeeYen - before.employeeYen;
