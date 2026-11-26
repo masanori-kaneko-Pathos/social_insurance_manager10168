@@ -1,0 +1,44 @@
+# セキュリティルール（firestore.rules）の自動テスト（11/26）
+# push・プルリクエストのたびに、GitHub のサーバーで Firestore のエミュレーターを起動して tests/rules.test.mjs を流す
+# エミュレーターは Java のプログラムなので、ここで Java を入れる（手元の PC には要らない）
+# demo- で始まるプロジェクトで動かすので、本番のプロジェクト・データには触らない
+
+name: rules-test
+
+on:
+  push:
+    paths:
+      - 'firestore.rules'
+      - 'tests/rules.test.mjs'
+      - '.github/workflows/rules.yml'
+      - 'package.json'
+      - 'package-lock.json'
+  pull_request:
+    paths:
+      - 'firestore.rules'
+      - 'tests/rules.test.mjs'
+  workflow_dispatch:
+
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # package-lock.json に @firebase/rules-unit-testing がまだなければ、npm install で入れる
+      - name: Install
+        run: npm ci || npm install
+
+      - name: Run rules tests on the emulator
+        run: npx -y firebase-tools@14 emulators:exec --project demo-shaho-rules --only firestore "node tests/rules.test.mjs"
