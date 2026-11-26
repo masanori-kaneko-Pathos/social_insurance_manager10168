@@ -5573,8 +5573,8 @@
   "premiumGuide": {
     "step": {
       "employee": "本人負担",
-      "soft": "照合・確認済み",
-      "total": "納める額",
+      "soft": "照合",
+      "total": "納付額",
       "notice": "告知額"
     },
     "note": {
@@ -5592,9 +5592,9 @@
       "noticeChecked": "別の人が確認 {{date}} {{name}}",
       "noticeWaiting": "確認待ち（依頼：{{name}}）",
       "noticeAsk": "別の人の確認がまだ",
-      "employeeTodo": "表を確かめる",
-      "softTodo": "照合して確認済みにする（照合は任意）",
-      "totalTodo": "①を確認済みにすると決まります"
+      "employeeTodo": "計算に誤りがないか確かめる",
+      "softTodo": "照合して確認済みにする",
+      "totalTodo": "②で確認済みにすると決まります"
     },
     "title": {
       "employee": "① 給与から控除する本人負担",

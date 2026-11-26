@@ -5573,8 +5573,8 @@
   "premiumGuide": {
     "step": {
       "employee": "Employee share",
-      "soft": "Check & mark",
-      "total": "Amount to pay",
+      "soft": "Check",
+      "total": "Payment",
       "notice": "Notice amount"
     },
     "note": {
@@ -5592,9 +5592,9 @@
       "noticeChecked": "Double-checked {{date}} by {{name}}",
       "noticeWaiting": "Waiting for check (asked by {{name}})",
       "noticeAsk": "Not yet double-checked",
-      "employeeTodo": "Check the table",
-      "softTodo": "Check and mark as checked (checking is optional)",
-      "totalTodo": "Fixed when you mark ① as checked"
+      "employeeTodo": "Check the calculation for errors",
+      "softTodo": "Check and mark as checked",
+      "totalTodo": "Fixed when you mark it in ②"
     },
     "title": {
       "employee": "1. Employee share deducted from pay",
