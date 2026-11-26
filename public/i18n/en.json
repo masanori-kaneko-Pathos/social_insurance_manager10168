@@ -350,7 +350,7 @@
       "romanBy": "Roman-letter order",
       "romanBy_last": "A–Z: surname",
       "romanBy_first": "A–Z: given name",
-      "import": "Import CSV",
+      "import": "Import from a file",
       "categoryShort": {
         "regular": "Regular",
         "shortTime": "Short-time",
@@ -904,6 +904,16 @@
     "dateNote": {
       "acquiredNotHire": "The acquisition date differs from the hire date. If the employee met the coverage conditions after joining (for example, their scheduled hours increased), you can leave it as it is.",
       "lostNotRetireNext": "The loss date is not the day after the retirement date. If coverage ended earlier because of age or another reason, you can leave it as it is."
+    },
+    "entry": {
+      "one": {
+        "title": "Register one by one",
+        "note": "Enter from the hiring documents. For one or two new hires."
+      },
+      "file": {
+        "title": "Import from a file",
+        "note": "Employee list from payroll software or a spreadsheet (CSV, Excel, PDF). For first setup or group hiring."
+      }
     }
   },
   "office": {
@@ -1683,7 +1693,7 @@
     "amountTotal": "Total bonus {{n}} yen",
     "cappedHealth": "Health etc. calculated on JPY {{n}} (yearly cap)",
     "cappedPension": "Pension etc. calculated on JPY {{n}} (monthly cap)",
-    "csv": "Import CSV",
+    "csv": "Import from a file",
     "export": {
       "button": "Export as CSV",
       "savedFirst": "Save before exporting",
@@ -1721,7 +1731,17 @@
     "plannedMonthsNote": "(registered with the Japan Pension Service)",
     "plannedMonthsEdit": "Change",
     "monthOf": "{{m}}",
-    "inKindOf": "Of which in kind: ¥{{n}}"
+    "inKindOf": "Of which in kind: ¥{{n}}",
+    "entry": {
+      "one": {
+        "title": "Register one payment",
+        "note": "Enter from the bonus statement, one payment at a time."
+      },
+      "file": {
+        "title": "Import from a file",
+        "note": "Bonus list from payroll software or a spreadsheet (CSV, Excel, PDF). For several payments at once."
+      }
+    }
   },
   "leave": {
     "title": "Leave",
@@ -5678,5 +5698,8 @@
   },
   "importPartial": {
     "message": "The import stopped partway ({{done}} of {{total}} saved). The table has been reloaded so saved rows are left out; press Import again to import only the rest."
+  },
+  "entryChoice": {
+    "label": "How to register"
   }
 }

@@ -18,6 +18,7 @@ import { BonusRow, buildBonusRow, collectBonusResults } from '../../logic/bonus-
 import { officeTotals } from '../../logic/premium-core';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { SortHeader } from '../../../../shared/components/sort-header/sort-header';
+import { EntryChoice, EntryChoiceItem } from '../../../../shared/components/entry-choice/entry-choice';
 import {
   defaultListOptions,
   filterAndSort,
@@ -63,7 +64,7 @@ interface ListRow {
     '(document:click)': 'onDocumentClick($event)',
     '(document:keydown.escape)': 'filterOpen.set(false)',
   },
-  imports: [DecisionNoticeCard, PersonName, RouterLink, SortHeader, TranslocoPipe],
+  imports: [DecisionNoticeCard, EntryChoice, PersonName, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './bonus-list.html',
   styleUrl: './bonus-list.css',
 })
@@ -72,6 +73,21 @@ export class BonusList {
   private readonly bonusApi = inject(BonusService);
   private readonly rates = inject(RateService);
   readonly context = inject(OfficeContext);
+
+  /** 登録の入り口：1件ずつ／ファイルから（11/26） */
+  readonly entryItems = computed<EntryChoiceItem[]>(() => {
+    const id = this.context.current()?.id;
+    return [
+      { icon: 'plus', titleKey: 'bonus.entry.one.title', noteKey: 'bonus.entry.one.note', link: ['/o', id, 'bonuses', 'new'] },
+      {
+        icon: 'download',
+        titleKey: 'bonus.entry.file.title',
+        noteKey: 'bonus.entry.file.note',
+        link: ['/o', id, 'import'],
+        queryParams: { kind: 'bonuses', from: 'bonuses' },
+      },
+    ];
+  });
   private readonly transloco = inject(TranslocoService);
 
   /** 支払予定月の表示（「7月・12月」。11/20） */

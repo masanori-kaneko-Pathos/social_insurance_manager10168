@@ -36,6 +36,7 @@ import { downloadXlsx } from '../../../../shared/xlsx/download-xlsx';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { Pager } from '../../../../shared/components/pager/pager';
+import { EntryChoice, EntryChoiceItem } from '../../../../shared/components/entry-choice/entry-choice';
 import { PAGE_SIZE, PAGE_SIZES, PageSize } from '../../../../shared/logic/person-list';
 import { downloadCsv, safeFileName } from '../../../../shared/csv/csv';
 import { ExportDialog } from '../../../../shared/components/export-dialog/export-dialog';
@@ -64,7 +65,7 @@ const pick = <T extends string>(list: readonly T[], v: string | null, fallback: 
 
 @Component({
   selector: 'app-employee-list',
-  imports: [PersonName, CloseOnOutside, ExportDialog, HalfWidthDigits, Pager, RouterLink, TranslocoPipe],
+  imports: [PersonName, CloseOnOutside, ExportDialog, EntryChoice, HalfWidthDigits, Pager, RouterLink, TranslocoPipe],
   templateUrl: './employee-list.html',
   styleUrl: './employee-list.css',
   host: {
@@ -80,6 +81,21 @@ export class EmployeeList {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   readonly context = inject(OfficeContext);
+
+  /** 登録の入り口：1件ずつ／ファイルから（11/26） */
+  readonly entryItems = computed<EntryChoiceItem[]>(() => {
+    const id = this.context.current()?.id;
+    return [
+      { icon: 'plus', titleKey: 'employee.entry.one.title', noteKey: 'employee.entry.one.note', link: ['/o', id, 'employees', 'new'] },
+      {
+        icon: 'download',
+        titleKey: 'employee.entry.file.title',
+        noteKey: 'employee.entry.file.note',
+        link: ['/o', id, 'import'],
+        queryParams: { kind: 'employees', from: 'employees' },
+      },
+    ];
+  });
 
   readonly today = todayLocal();
   readonly thisMonth = toYearMonth(this.today);

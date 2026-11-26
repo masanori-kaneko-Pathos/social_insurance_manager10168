@@ -16,6 +16,7 @@ import { incomingParts, SpreadPart } from '../../logic/spread';
 import { latestPaidMonth, onLeaveDuring, Period, PayrollRow, payrollRowsFor, periodOf } from '../../logic/payroll-rows';
 import { payrollOf, premiumMonthOfPay, premiumMonthsOfPay } from '../../../office/office-settings';
 import { MonthPicker } from '../../../../shared/components/month-picker/month-picker';
+import { Icon } from '../../../../shared/components/icon/icon';
 import { shiftMonth, daysInclusive, daysInMonth, todayLocal, toYearMonth } from '../../../../shared/utils/date';
 import { PayrollChange, PayrollService } from '../../payroll.service';
 import { PayrollItemService } from '../../payroll-item.service';
@@ -65,7 +66,7 @@ const NO_PARTS: readonly SpreadPart[] = [];
 
 @Component({
   selector: 'app-payroll-month',
-  imports: [PersonName, HalfWidthDigits, InKindCalculator, MonthPicker, Pager, PayrollEntry, PersonListBar, ReactiveFormsModule, RouterLink, SortHeader, TranslocoPipe],
+  imports: [PersonName, HalfWidthDigits, Icon, InKindCalculator, MonthPicker, Pager, PayrollEntry, PersonListBar, ReactiveFormsModule, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './payroll-month.html',
   styleUrl: './payroll-month.css',
   host: {

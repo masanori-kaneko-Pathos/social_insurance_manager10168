@@ -5,21 +5,13 @@
     <a class="btn" [routerLink]="['/o', context.current()?.id, 'bonuses', 'items']">
       {{ 'bonusItem.title' | transloco }}
     </a>
-    @if (context.isAdmin()) {
-      <!-- 何回分もまとめて：ファイルの取り込みのページ（11/17） -->
-      <a
-        class="btn"
-        [routerLink]="['/o', context.current()?.id, 'import']"
-        [queryParams]="{ kind: 'bonuses', from: 'bonuses' }"
-      >
-        {{ 'bonus.csv' | transloco }}
-      </a>
-      <a class="btn btn-primary" [routerLink]="['/o', context.current()?.id, 'bonuses', 'new']">
-        {{ 'bonus.add' | transloco }}
-      </a>
-    }
   </div>
 </div>
+
+<!-- 登録の入り口（1回分ずつ／ファイルから何回分も）。従業員の一覧と同じ部品・同じ場所（11/26） -->
+@if (context.isAdmin()) {
+  <app-entry-choice [items]="entryItems()" />
+}
 
 <!-- 賞与の支払予定月（事業所として日本年金機構に届けている月）。変えると To-do に事業所関係変更届が出る（11/20） -->
 @if (context.current(); as office) {

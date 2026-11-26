@@ -82,7 +82,7 @@
     <!-- 入れ方は2つ：明細を見ながら1人ずつ（主役）／給与ソフトのファイルから取り込む（11/26。表の上のリンクから移した） -->
     @if (context.isAdmin()) {
       <div class="progress-actions">
-        <a class="btn" [routerLink]="['/o', context.current()?.id, 'import']" [queryParams]="{ kind: 'payrolls', from: 'payrolls' }">{{
+        <a class="btn" [routerLink]="['/o', context.current()?.id, 'import']" [queryParams]="{ kind: 'payrolls', from: 'payrolls' }"><app-icon name="download" />{{
           'payroll.progress.fromFile' | transloco
         }}</a>
         @if (pg.saved < pg.total) {

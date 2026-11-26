@@ -40,11 +40,13 @@
           [officeId]="context.current()?.id ?? null"
           [canSave]="context.isAdmin()"
         />
-        <a class="btn" routerLink="../import" [queryParams]="{ kind: 'employees', from: 'employees' }">{{ 'employee.list.import' | transloco }}</a>
-        <a class="btn btn-primary" routerLink="new">{{ 'employee.list.add' | transloco }}</a>
       </span>
     }
   </div>
+  <!-- 登録の入り口（1人ずつ／ファイルから）。人数に関係なく、いつもここに同じ形で置く（11/26） -->
+  @if (context.isAdmin()) {
+    <app-entry-choice [items]="entryItems()" />
+  }
   @if (exportErrorKey(); as e) {
     <div class="alert alert-danger">{{ e | transloco }}</div>
   }
@@ -193,12 +195,6 @@
     <section class="card empty">
       <h2>{{ 'employee.list.emptyTitle' | transloco }}</h2>
       <p>{{ 'employee.list.emptyBody' | transloco }}</p>
-      @if (context.isAdmin()) {
-        <span class="head-actions">
-          <a class="btn btn-primary" routerLink="new">{{ 'employee.list.add' | transloco }}</a>
-          <a class="btn" routerLink="../import" [queryParams]="{ kind: 'employees', from: 'employees' }">{{ 'employee.list.import' | transloco }}</a>
-        </span>
-      }
     </section>
   } @else if (filtered().length === 0) {
     <p class="muted">{{ 'employee.list.noMatch' | transloco }}</p>
