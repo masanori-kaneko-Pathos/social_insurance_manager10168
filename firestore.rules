@@ -258,6 +258,10 @@ service cloud.firestore {
         && str(d.address, 200)
         && ((d.healthInsurer.type == 'kyokai' && d.healthInsurer.kumiaiName == null)
             || (d.healthInsurer.type == 'kumiai' && str(d.healthInsurer.kumiaiName, 100)))
+        // 組合の保険者番号（任意。11/26 より前の文書にはない）：8桁で 06 から。検証番号はアプリで確かめる
+        && (!('insurerNumber' in d.healthInsurer) || d.healthInsurer.insurerNumber == null
+            || (d.healthInsurer.type == 'kumiai' && d.healthInsurer.insurerNumber is string
+                && d.healthInsurer.insurerNumber.matches('^06(0[1-9]|[1-3][0-9]|4[0-7])[0-9]{4}$')))
         && optStr(d.officeSymbol, 20)
         && optStr(d.officeNumber, 10)
         && (d.industry == null || (d.industry is string && d.industry.matches('^[A-T]$')))

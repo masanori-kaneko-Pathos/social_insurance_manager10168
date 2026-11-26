@@ -13,6 +13,8 @@
   <ng-content select="[pick]" />
 </div>
 <p class="hint">{{ (acceptPdf() ? 'rateImport.hintPdf' : 'rateImport.hint') | transloco }}</p>
+<!-- 同じ組合のほかの事業所から写す（親が app-kumiai-share-pick を差し込む。11/26） -->
+<ng-content select="[share]" />
 
 @if (errorKey(); as key) {
   <div class="alert alert-danger" role="alert">{{ key | transloco }}</div>
@@ -35,6 +37,9 @@
   } @else {
     <p class="count">
       {{ countText() }}
+      @if (outside() > 0) {
+        <span class="note">{{ 'rateImport.share.outside' | transloco: { n: outside() } }}</span>
+      }
       @if (noteKey(); as k) {
         <span class="note">{{ k | transloco }}</span>
       }

@@ -7,6 +7,11 @@ export type HealthInsurerType = 'kyokai' | 'kumiai';
 export interface HealthInsurer {
   type: HealthInsurerType;
   kumiaiName: string | null;
+  /**
+   * 組合の保険者番号（8桁。06 から始まる。11/26）。協会けんぽの行・11/26 より前の文書にはない
+   * 同じ組合かどうかは、両方に番号があれば番号で、なければ名前で見分ける
+   */
+  insurerNumber?: string | null;
 }
 
 /**

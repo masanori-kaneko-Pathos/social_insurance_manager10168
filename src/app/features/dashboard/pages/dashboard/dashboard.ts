@@ -224,6 +224,8 @@ export class Dashboard {
     if (this.criteria()?.length === 0) list.push('noCriteria');
     // 事業所整理記号は、適用されると年金機構から付く → 空なら新規適用届がまだかもしれない（事実発生から5日以内）
     if (o && !o.officeSymbol) list.push('newApplication');
+    // 組合の保険者番号（11/26 に足した欄。それより前に登録した組合の事業所は空のまま）
+    if (o && o.healthInsurer.type === 'kumiai' && !o.healthInsurer.insurerNumber) list.push('noInsurerNumber');
     return list;
   });
 

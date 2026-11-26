@@ -318,11 +318,36 @@
             id="kumiaiName"
             class="input"
             formControlName="kumiaiName"
+            list="kumiai-names"
             [class.is-invalid]="errorOf('kumiaiName')"
             (keydown.enter)="onKumiaiEnter($event)"
           />
+          <!-- ほかの事業所の組合の名前（押すと候補が出る。11/26） -->
+          <datalist id="kumiai-names">
+            @for (c of kumiaiChoices(); track c.name) {
+              <option [value]="c.name">{{ c.insurerNumber ?? '' }}</option>
+            }
+          </datalist>
           @if (errorOf('kumiaiName'); as e) {
             <span class="field-error">{{ e | transloco }}</span>
+          }
+        </div>
+        <!-- 組合の保険者番号（8桁。同じ組合を見分ける目印。11/26） -->
+        <div class="field">
+          <label for="insurerNumber">{{ 'office.field.insurerNumber' | transloco }}@if (insurerNumberRequired()) {<span class="req" aria-hidden="true">※</span>}</label>
+          <input
+            id="insurerNumber"
+            class="input number-8"
+            formControlName="insurerNumber"
+            inputmode="numeric"
+            maxlength="10"
+            autocomplete="off"
+            [class.is-invalid]="errorOf('insurerNumber')"
+          />
+          @if (errorOf('insurerNumber'); as e) {
+            <span class="field-error">{{ e | transloco }}</span>
+          } @else {
+            <span class="hint">{{ 'office.hint.insurerNumber' | transloco }}</span>
           }
         </div>
         <!-- 組合の最初の料率（新規登録のとき。編集で切り替えるときは「保険者・所在地の履歴」の中に出す。11/17） -->
@@ -337,7 +362,9 @@
               [busy]="submitting()"
               noteKey="rateImport.willSave"
               (pdf)="readRatesPdf($event)"
-            />
+            >
+              <app-kumiai-share-pick share [targets]="shareFrom()" [busy]="submitting()" (picked)="onSharePicked($event)" />
+            </app-rate-file-import>
             @if (pdfError(); as e) {
               <p class="field-error" role="alert">{{ e | transloco }}</p>
             }
@@ -425,7 +452,9 @@
                   [busy]="submitting()"
                   noteKey="rateImport.willSave"
                   (pdf)="readRatesPdf($event)"
-                />
+                >
+                  <app-kumiai-share-pick share [targets]="shareFrom()" [busy]="submitting()" (picked)="onSharePicked($event)" />
+                </app-rate-file-import>
                 @if (pdfError(); as e) {
                   <p class="field-error" role="alert">{{ e | transloco }}</p>
                 }

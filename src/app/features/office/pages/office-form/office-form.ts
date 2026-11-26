@@ -40,6 +40,7 @@ import {
   withDeductionChange,
   premiumOf,
   samePeriod,
+  withInsurerDetails,
   spanOf,
   withInsurerChange,
 } from '../../office-settings';
@@ -47,6 +48,9 @@ import { RateDialog, RateDialogTarget } from '../../../rates/components/rate-dia
 import { RateService } from '../../../rates/rate.service';
 import { formatRateInput, parseSplit } from '../../../rates/logic/rate-format';
 import { RateFileImport } from '../../../rates/components/rate-file-import/rate-file-import';
+import { KumiaiSharePick } from '../../../rates/components/kumiai-share-pick/kumiai-share-pick';
+import { kumiaiChoicesOf, shareTargets } from '../../../rates/logic/kumiai-share';
+import { insurerNumberError, normalizeInsurerNumber } from '../../logic/insurer-number';
 import { findRates, guessFill } from '../../../rates/logic/rate-pdf';
 import { ImportFileError, MAX_FILE_BYTES } from '../../../../shared/import/parse';
 import { EnterNext } from '../../../../shared/directives/enter-next';
@@ -119,6 +123,7 @@ type Field =
   | 'prefecture'
   | 'address'
   | 'kumiaiName'
+  | 'insurerNumber'
   | 'officeSymbol'
   | 'officeNumber'
   | 'employeeCount'
@@ -133,7 +138,7 @@ const emptyToNull = (v: string) => (v.trim() ? v.trim() : null);
 
 @Component({
   selector: 'app-office-form',
-  imports: [BackLink, SettingsTabs, DepartmentCard, EnterNext, HalfWidthDigits, PasswordGate, ReactiveFormsModule, RouterLink, TranslocoPipe, RateDialog, RateFileImport],
+  imports: [BackLink, SettingsTabs, DepartmentCard, EnterNext, HalfWidthDigits, PasswordGate, ReactiveFormsModule, RouterLink, TranslocoPipe, RateDialog, RateFileImport, KumiaiSharePick],
   templateUrl: './office-form.html',
   styleUrl: './office-form.css',
 })
@@ -181,6 +186,7 @@ export class OfficeForm {
       address: ['', [Validators.required, NOT_BLANK, Validators.maxLength(200)]],
       insurerType: ['kyokai' as HealthInsurerType],
       kumiaiName: ['', [Validators.maxLength(100)]],
+      insurerNumber: [''],
       officeSymbol: ['', [Validators.maxLength(20)]],
       officeNumber: ['', [Validators.pattern(/^\d{1,10}$/)]],
       employeeCount: this.fb.control<number | null>(null, [
@@ -309,6 +315,48 @@ export class OfficeForm {
 
   // ----- ファイルから（共通の部品 app-rate-file-import。保存のとき、ファイルの行か、手で入れた分を書く。11/17） -----
   private readonly rateImport = viewChild(RateFileImport);
+
+  // ----- 同じ組合のほかの事業所（組合の名前の候補と、最初の料率を写す。11/26） -----
+  /** 自分が所属しているほかの事業所（新規登録では「既存の事業所をコピー」と同じ一覧） */
+  private readonly otherOffices = computed(() => (this.myOffices().length ? this.myOffices() : this.context.mine()));
+  /** 組合の名前の候補（一字違いで別の組合にならないように。保険者番号が分かれば一緒に入れる） */
+  readonly kumiaiChoices = computed(() => kumiaiChoicesOf(this.otherOffices()));
+  /** 入れた組合（保険者番号があれば番号で、なければ名前で）と同じ組合のほかの事業所 */
+  readonly shareFrom = computed(() => {
+    const v = this.value();
+    return shareTargets(
+      this.otherOffices(),
+      { kumiaiName: v.kumiaiName, insurerNumber: insurerNumberError(v.insurerNumber) ? null : normalizeInsurerNumber(v.insurerNumber) || null },
+      this.office()?.id ?? null,
+    );
+  });
+
+  // ----- 組合の保険者番号（11/26。台帳 R107） -----
+  /** 必須か：新しく組合で登録するとき・組合に切り替える（組合を変える）とき。今ある組合の事業所は空でも保存できる（To-do で知らせる） */
+  readonly insurerNumberRequired = computed(
+    () => this.insurerType() === 'kumiai' && (!this.isEdit || this.insurerChanged()),
+  );
+  /** 保険者番号のエラーの翻訳キー（正しい・空でよいときは null） */
+  readonly insurerNumberProblem = computed<string | null>(() => {
+    if (this.insurerType() !== 'kumiai') return null;
+    const raw = this.value().insurerNumber;
+    const err = insurerNumberError(raw);
+    if (err) return `office.validation.insurerNumber.${err}`;
+    if (!normalizeInsurerNumber(raw) && this.insurerNumberRequired()) return 'office.validation.required';
+    return null;
+  });
+
+  /** 候補から組合の名前を選んだら、分かっている保険者番号も入れる（番号の欄が空のときだけ） */
+  private fillNumberFromChoice(name: string): void {
+    const c = this.form.controls.insurerNumber;
+    if (normalizeInsurerNumber(c.value)) return;
+    const hit = this.kumiaiChoices().find((x) => x.name === name.trim());
+    if (hit?.insurerNumber) c.setValue(hit.insurerNumber);
+  }
+
+  onSharePicked(e: { rates: KumiaiRateInput[]; label: string }): void {
+    this.rateImport()?.loadRates(e.rates, this.transloco.translate('rateImport.share.label', { name: e.label }));
+  }
   /** ファイルを読み込んでいる間は、手で入れる欄をしまう */
   readonly ratesLoaded = computed(() => !!this.rateImport()?.loaded());
   readonly pdfError = signal<string | null>(null);
@@ -621,6 +669,7 @@ export class OfficeForm {
   constructor() {
     // 組合の最初の料率：何月分からを見て支援金の欄を出し分ける。編集で切り替えるときは、切り替える月を初めに入れておく
     this.firstRates.controls.from.valueChanges.subscribe((v) => this.firstRatesFrom.set(v));
+    this.form.controls.kumiaiName.valueChanges.subscribe((v) => this.fillNumberFromChoice(v ?? ''));
     this.form.controls.changeFrom.valueChanges.subscribe((v) => {
       if (this.isEdit) this.firstRatesFrom.set(v);
     });
@@ -684,6 +733,7 @@ export class OfficeForm {
       address: o.address,
       insurerType: o.healthInsurer.type,
       kumiaiName: o.healthInsurer.kumiaiName ?? '',
+      insurerNumber: o.healthInsurer.insurerNumber ?? '',
       officeSymbol: o.officeSymbol ?? '',
       officeNumber: o.officeNumber ?? '',
       employeeCount: o.employeeCount,
@@ -720,7 +770,14 @@ export class OfficeForm {
     const type = v.insurerType ?? 'kyokai';
     return {
       prefecture: v.prefecture ?? '',
-      healthInsurer: { type, kumiaiName: type === 'kumiai' ? (v.kumiaiName ?? '').trim() : null },
+      healthInsurer:
+        type === 'kumiai'
+          ? {
+              type,
+              kumiaiName: (v.kumiaiName ?? '').trim(),
+              insurerNumber: normalizeInsurerNumber(v.insurerNumber) || null,
+            }
+          : { type, kumiaiName: null },
     };
   }
 
@@ -731,6 +788,7 @@ export class OfficeForm {
     if (name === 'corporateName' && this.form.hasError('corporateNameRequired')) {
       return 'office.validation.corporateNameRequired';
     }
+    if (name === 'insurerNumber') return this.insurerNumberProblem();
     if (name === 'kumiaiName' && this.form.hasError('kumiaiNameRequired')) {
       return 'office.validation.required';
     }
@@ -781,6 +839,7 @@ export class OfficeForm {
       ownerName: o.ownerName,
       insurerType: o.healthInsurer.type,
       kumiaiName: o.healthInsurer.kumiaiName ?? '',
+      insurerNumber: o.healthInsurer.insurerNumber ?? '',
       industry: o.industry ?? '',
       closingDay: payroll.closingDay,
       payMonth: payroll.payMonth,
@@ -836,7 +895,7 @@ export class OfficeForm {
     this.value(); // 入れ直すたびに数え直す
     const fields: Field[] = [
       'name', 'corporateName', 'corporateNumber', 'ownerName', 'postalCode', 'prefecture', 'address',
-      'kumiaiName', 'officeSymbol', 'officeNumber', 'employeeCount', 'changeFrom',
+      'kumiaiName', 'insurerNumber', 'officeSymbol', 'officeNumber', 'employeeCount', 'changeFrom',
     ];
     const coverage: (keyof CoverageFormValue)[] = ['hours', 'monthlyDays', 'specificSince', 'insuredCount'];
     return fields.filter((f) => this.errorOf(f)).length + coverage.filter((c) => this.coverageErrorOf(c)).length;
@@ -965,6 +1024,7 @@ export class OfficeForm {
       (this.isEdit && this.adjustmentSinceMissing()) ||
       this.deductionFromInvalid() ||
       (this.insurerChanged() && !MONTH.test(changeFrom.value)) ||
+      this.insurerNumberProblem() !== null ||
       this.readFirstRates() === false ||
       this.ratesBlocked() ||
       this.payGroupErrs().size > 0
@@ -1019,9 +1079,10 @@ export class OfficeForm {
       const office = this.office();
       if (office) {
         // 編集：保険者・都道府県が変わったら「何月分から」を履歴に足す（最新の行は今の値と同じになる）
+        // 保険者が変わらないまま名前・保険者番号を入れ直したら、今の保険者の行も合わせる（11/26）
         const history = this.insurerChanged()
           ? withInsurerChange(insurerHistoryOf(office), { from: changeFrom.value, ...period })
-          : insurerHistoryOf(office);
+          : withInsurerDetails(insurerHistoryOf(office), period.healthInsurer);
         const input: OfficeInput = {
           ...base,
           insurerHistory: history,

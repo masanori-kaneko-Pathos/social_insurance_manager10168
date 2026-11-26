@@ -97,8 +97,30 @@ export function everKumiai(office: OfficeLike): boolean {
   return insurerHistoryOf(office).some((p) => p.healthInsurer.type === 'kumiai');
 }
 
-function sameInsurer(a: HealthInsurer, b: HealthInsurer): boolean {
-  return a.type === b.type && (a.kumiaiName ?? null) === (b.kumiaiName ?? null);
+/**
+ * 同じ保険者か（11/26）：組合は、両方に保険者番号があれば番号で、なければ名前で見分ける
+ * （番号を後から入れても「保険者が変わった」にならないように）
+ */
+export function sameInsurer(a: HealthInsurer, b: HealthInsurer): boolean {
+  if (a.type !== b.type) return false;
+  if (a.type === 'kyokai') return true;
+  if (a.insurerNumber && b.insurerNumber) return a.insurerNumber === b.insurerNumber;
+  return (a.kumiaiName ?? null) === (b.kumiaiName ?? null);
+}
+
+/**
+ * 保険者は変わらないまま、名前・保険者番号を入れ直したとき（11/26）
+ * 今の保険者が続いている行（最新の行から同じ保険者の間）の healthInsurer を新しい値にする
+ * （最新の行 ＝ 今の保険者、はルールでも確かめている）
+ */
+export function withInsurerDetails(history: InsurerPeriod[], insurer: HealthInsurer): InsurerPeriod[] {
+  const list = [...history].sort((a, b) => a.from.localeCompare(b.from));
+  let i = list.length - 1;
+  while (i >= 0 && sameInsurer(list[i].healthInsurer, insurer)) {
+    list[i] = { ...list[i], healthInsurer: insurer };
+    i--;
+  }
+  return list;
 }
 
 export function samePeriod(

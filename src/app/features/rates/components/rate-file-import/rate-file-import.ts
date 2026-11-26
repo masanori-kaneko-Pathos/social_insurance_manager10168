@@ -13,10 +13,12 @@ import {
   rateEditsOf,
   rateErrorColumns,
   rateFixTable,
+  rateCsvTable,
   readRateFile,
   recheckRateCsv,
 } from '../../logic/rate-csv';
 import { formatRate, RateUnit } from '../../logic/rate-format';
+import { inRange } from '../../logic/rate-changes';
 import { IssueRow } from '../../../../shared/components/import-issues/issue-row';
 
 type Kind = 'health' | 'care' | 'childSupport';
@@ -64,6 +66,8 @@ export class RateFileImport {
   readonly blockedShown = signal(false);
 
   readonly loaded = computed(() => this.fileName() !== null);
+  /** ほかの事業所から写したとき、この組合の期間の外で除いた件数 */
+  readonly outside = signal(0);
 
   readonly count = computed(() => {
     const c: Record<RateCsvStatus, number> = { new: 0, update: 0, same: 0, error: 0 };
@@ -149,6 +153,24 @@ export class RateFileImport {
     }
   }
 
+  /**
+   * ほかの事業所の料率を、ファイルを読み込んだときと同じ確認の表に並べる（同じ組合の料率を写す。11/26）
+   * label はファイル名の場所に出す名前（例：「大阪支店の料率」）
+   */
+  loadRates(rates: readonly KumiaiRateInput[], label: string): void {
+    this.clear();
+    // この事業所が組合に入っている期間の月だけ（外の月はエラーの行にせず、件数だけ知らせる）
+    const inside = rates.filter((r) => inRange(r.from, this.range()));
+    this.outside.set(rates.length - inside.length);
+    if (inside.length === 0) {
+      this.errorKey.set('rateImport.share.empty');
+      return;
+    }
+    const result = readRateFile(rateCsvTable(inside, 'percent'), { range: this.range(), existing: this.existing() });
+    this.rows.set(result.rows);
+    this.fileName.set(label);
+  }
+
   /** 窓で直した1行で、確かめ直す */
   onFix(fix: ImportFix): void {
     const edits = new Map([[fix.line, rateEditsOf(fix.values)]]);
@@ -161,6 +183,7 @@ export class RateFileImport {
     this.missing.set([]);
     this.fromTable.set(false);
     this.errorKey.set(null);
+    this.outside.set(0);
     this.skip.set(true);
     this.blockedShown.set(false);
   }

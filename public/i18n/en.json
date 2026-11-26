@@ -243,7 +243,8 @@
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
         "noCriteria": "Coverage criteria (masterCriteria) are not registered.",
-        "newApplication": "No office reference symbol is set. When the office becomes covered by social insurance, file the \"New application\" within 5 days. If it is already done, enter the office reference symbol and office number from the Japan Pension Service in the office settings."
+        "newApplication": "No office reference symbol is set. When the office becomes covered by social insurance, file the \"New application\" within 5 days. If it is already done, enter the office reference symbol and office number from the Japan Pension Service in the office settings.",
+        "noInsurerNumber": "The health insurance society's insurer number is empty. Enter the 8-digit number (starting with 06) from the society's documents under Health insurance in the office settings. It is used to recognize other offices in the same society."
       },
       "toSettings": "Office settings",
       "toRevisions": "See revision candidates",
@@ -948,7 +949,8 @@
       "healthRounding": "Rounding of health, care and child care support",
       "nameEn": "Office name in English",
       "groupName": "Group label",
-      "agreementRounding": "Rounding of the employee share (labor-management agreement)"
+      "agreementRounding": "Rounding of the employee share (labor-management agreement)",
+      "insurerNumber": "Insurer number (8 digits)"
     },
     "insurer": {
       "kyokai": "Japan Health Insurance Association (Kyokai Kenpo)",
@@ -968,7 +970,8 @@
       "agreementRounding": "Usually \"No agreement\". If the company and employees have a special agreement, the employee share is rounded that way (the same for the Japan Health Insurance Association, health insurance societies and pension). The company's payment stays the total rounded down to the yen.",
       "kumiaiRatesNext": "You can enter the rates below (or later in the rates window).",
       "deduction": "As a rule, only the previous month's premium may be deducted from pay (both the previous and current month only when the employee leaves). To deduct the current month's premium, conclude a wage-deduction labor-management agreement.",
-      "deductionCurrentWarn": "The rule is to deduct the previous month's premium from this month's pay (next-month deduction). If you deduct the same month's premium, confirm that a wage deduction agreement or your work rules / pay regulations provide for it."
+      "deductionCurrentWarn": "The rule is to deduct the previous month's premium from this month's pay (next-month deduction). If you deduct the same month's premium, confirm that a wage deduction agreement or your work rules / pay regulations provide for it.",
+      "insurerNumber": "The 8-digit number on documents from the health insurance society (starts with 06). Used to recognize other offices in the same society."
     },
     "postal": {
       "search": "Find address",
@@ -992,7 +995,13 @@
       "postalCode": "Enter 7 digits (hyphen optional).",
       "digits": "Enter numbers only.",
       "count": "Enter 0 or more.",
-      "changeFrom": "Select the month the change applies from"
+      "changeFrom": "Select the month the change applies from",
+      "insurerNumber": {
+        "format": "Enter 8 half-width digits.",
+        "notKumiai": "A health insurance society's insurer number starts with 06 (numbers starting with 01 belong to Kyokai Kenpo).",
+        "prefecture": "Digits 3–4 (prefecture number) must be 01–47. Check the number on the document.",
+        "checkDigit": "The number is not valid (the last check digit does not match). Check the number on the document."
+      }
     },
     "history": {
       "from": "Period",
@@ -4911,6 +4920,25 @@
       "update": "{{n}} updated",
       "same": "{{n}} unchanged",
       "error": "{{n}} errors"
+    },
+    "share": {
+      "lead": "Other offices have rates for the same society:",
+      "copy": "Copy from {{name}}",
+      "reading": "Loading…",
+      "readError": "Could not load the rates. Please try again later.",
+      "label": "Rates of {{name}}",
+      "empty": "There are no rates to copy for the period this office belongs to the society.",
+      "outside": "{{n}} outside this office's period with the society were left out",
+      "also": "Also save to other offices in the same society",
+      "count": {
+        "new": "{{n}} new",
+        "update": "{{n}} overwritten",
+        "same": "{{n}} unchanged",
+        "outside": "{{n}} outside the period"
+      },
+      "loadError": "Could not load the rates of the other offices.",
+      "saveError": "Saved to this office, but could not save to the other offices. Please try again later.",
+      "done": "Also saved to {{names}}."
     }
   },
   "importPage": {

@@ -13,10 +13,11 @@ import {
   viewChild,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { NgTemplateOutlet } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ImportFileError, MAX_FILE_BYTES } from '../../../../shared/import/parse';
 import { findRates, guessFill, RateCandidate } from '../../logic/rate-pdf';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { HealthInsurer } from '../../../../core/models/office';
 import {
   KumiaiRateInput,
@@ -42,6 +43,10 @@ import { RateFileImport } from '../rate-file-import/rate-file-import';
 import { applyRates, impactStart, RateImpact, rateImpact } from '../../logic/rate-impact';
 import { MonthCloseService } from '../../../premiums/month-close.service';
 import { RateImpactNote } from '../rate-impact-note/rate-impact-note';
+import { KumiaiSharePick } from '../kumiai-share-pick/kumiai-share-pick';
+import { SharePlan, sharePlan, ShareTarget, shareTargets } from '../../logic/kumiai-share';
+import { OfficeContext } from '../../../office/office-context.service';
+import { AuthService } from '../../../../core/auth/auth.service';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 /** 窓で扱う期間と保険者（開く側で、保存済みの履歴から作る） */
@@ -70,13 +75,16 @@ const CHILD_SUPPORT_DEFAULT: RateSplit = { employee: 1150, employer: 1150 };
 
 @Component({
   selector: 'app-rate-dialog',
-  imports: [HalfWidthDigits, ReactiveFormsModule, TranslocoPipe, RateFileImport, RateImpactNote],
+  imports: [HalfWidthDigits, ReactiveFormsModule, TranslocoPipe, RateFileImport, RateImpactNote, KumiaiSharePick, NgTemplateOutlet],
   templateUrl: './rate-dialog.html',
   styleUrl: './rate-dialog.css',
 })
 export class RateDialog implements OnInit {
   private readonly rates = inject(RateService);
   private readonly closes = inject(MonthCloseService);
+  private readonly context = inject(OfficeContext);
+  private readonly auth = inject(AuthService);
+  private readonly transloco = inject(TranslocoService);
   private readonly fb = inject(FormBuilder);
 
   readonly target = input.required<RateDialogTarget>();
@@ -201,6 +209,91 @@ export class RateDialog implements OnInit {
     const loaded = this.closedFrom();
     if (!this.closedError() && (loaded === null || loaded > start)) return null;
     return rateImpact(before, applyRates(before, save, remove), this.range(), this.closedMonths());
+  }
+
+  // ===== 同じ組合のほかの事業所（11/26） =====
+  /** 写せる事業所（同じ組合に入っている・入っていたほかの事業所。メンバーなら読める） */
+  readonly shareFrom = computed<ShareTarget[]>(() =>
+    this.isKumiai() ? shareTargets(this.context.mine(), this.target().insurer, this.target().officeId) : [],
+  );
+  /** 一緒に入れられる事業所（自分が管理者の事業所だけ） */
+  readonly shareTo = computed<ShareTarget[]>(() =>
+    this.editable()
+      ? shareTargets(this.context.mine(), this.target().insurer, this.target().officeId, this.auth.user()?.uid ?? '')
+      : [],
+  );
+  /** 「同じ組合のほかの事業所にも入れる」 */
+  readonly shareOn = signal(false);
+  /** ほかの事業所の今の料率（チェックを入れたときに読む） */
+  private readonly shareExisting = signal<Map<string, KumiaiRateInput[]> | null>(null);
+  readonly shareLoading = signal(false);
+  readonly shareError = signal<string | null>(null);
+  readonly shareDone = signal<string | null>(null);
+
+  readonly importShare = computed(() => this.sharePlansFor(this.importSave()));
+  readonly editShare = computed(() => this.sharePlansFor(this.editSave()));
+
+  private sharePlansFor(save: KumiaiRateInput[]): { target: ShareTarget; plan: SharePlan }[] | null {
+    const existing = this.shareExisting();
+    if (!this.shareOn() || !existing || save.length === 0) return null;
+    return this.shareTo().map((target) => ({ target, plan: sharePlan(save, existing.get(target.officeId) ?? [], target.ranges) }));
+  }
+
+  /** 件数の一文（例：新規 2件・上書き 1件。入れる行がなければ「変わらない」） */
+  shareCountText(p: SharePlan): string {
+    const parts = (['new', 'update', 'same', 'outside'] as const)
+      .filter((k) => p.count[k] > 0)
+      .map((k) => this.transloco.translate(`rateImport.share.count.${k}`, { n: p.count[k] }));
+    return parts.join('・');
+  }
+
+  async toggleShare(on: boolean): Promise<void> {
+    this.shareOn.set(on);
+    this.shareDone.set(null);
+    if (on && !this.shareExisting()) await this.loadShareExisting();
+  }
+
+  private async loadShareExisting(): Promise<void> {
+    this.shareLoading.set(true);
+    this.shareError.set(null);
+    try {
+      const pairs = await Promise.all(
+        this.shareTo().map(async (t) => [t.officeId, await this.rates.kumiaiList(t.officeId)] as const),
+      );
+      this.shareExisting.set(new Map(pairs.map(([id, list]) => [id, list.map(({ from, health, care, childSupport }) => ({ from, health, care, childSupport }))])));
+    } catch (err) {
+      console.error(err);
+      this.shareError.set('rateImport.share.loadError');
+      this.shareOn.set(false);
+    } finally {
+      this.shareLoading.set(false);
+    }
+  }
+
+  /** この事業所に保存したあと、チェックがあればほかの事業所にも入れる（この事業所の保存は先に済んでいる） */
+  private async saveShared(plans: { target: ShareTarget; plan: SharePlan }[] | null): Promise<void> {
+    if (!plans) return;
+    const done: string[] = [];
+    try {
+      for (const { target, plan } of plans) {
+        if (plan.items.length === 0) continue;
+        await this.rates.saveKumiaiMany(target.officeId, plan.items);
+        done.push(target.officeName);
+      }
+      if (done.length) this.shareDone.set(done.join('・'));
+    } catch (err) {
+      console.error(err);
+      this.shareError.set('rateImport.share.saveError');
+    } finally {
+      this.shareExisting.set(null);
+      this.shareOn.set(false);
+    }
+  }
+
+  /** ほかの事業所の料率を、確認の表に並べる */
+  onSharePicked(e: { rates: KumiaiRateInput[]; label: string }): void {
+    this.csvDone.set(null);
+    this.rateImport()?.loadRates(e.rates, this.transloco.translate('rateImport.share.label', { name: e.label }));
   }
 
   /** 背景で押し始めたか（窓の中で押して背景で離したときに閉じないため） */
@@ -457,10 +550,12 @@ export class RateDialog implements OnInit {
     this.saving.set(true);
     this.saveError.set(false);
     try {
+      const shared = this.editShare();
       if (mode === NEW) await this.rates.createKumiai(t.officeId, input);
       else await this.rates.updateKumiai(t.officeId, input);
       this.kumiaiAll.set(await this.rates.kumiaiList(t.officeId));
       this.editing.set(null);
+      await this.saveShared(shared);
     } catch (err) {
       console.error(err);
       this.saveError.set(true);
@@ -485,11 +580,13 @@ export class RateDialog implements OnInit {
     this.csvSaving.set(true);
     this.csvError.set(null);
     this.csvDone.set(null);
+    const shared = this.importShare();
     try {
       await this.rates.saveKumiaiMany(this.target().officeId, items);
       this.kumiaiAll.set(await this.rates.kumiaiList(this.target().officeId));
       imp.clear();
       this.csvDone.set(items.length);
+      await this.saveShared(shared);
     } catch (err) {
       console.error(err);
       this.csvError.set('rateDialog.csv.saveError');

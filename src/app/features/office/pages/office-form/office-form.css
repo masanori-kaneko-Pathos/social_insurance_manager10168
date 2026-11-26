@@ -582,3 +582,9 @@ h3 {
     justify-self: start;
   }
 }
+
+/* 組合の保険者番号（8桁）。欄を広げすぎない（11/26） */
+.input.number-8 {
+  max-width: 12em;
+  font-variant-numeric: tabular-nums;
+}

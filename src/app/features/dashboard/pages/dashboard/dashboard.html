@@ -644,6 +644,10 @@
                               <a [routerLink]="['/o', office()?.id, 'settings']"
                                 >{{ 'dashboard.todo.toSettings' | transloco }} →</a
                               >
+                            } @else if (it.office === 'noInsurerNumber') {
+                              <a [routerLink]="['/o', office()?.id, 'settings']" fragment="sec-insurer"
+                                >{{ 'dashboard.todo.toSettings' | transloco }} →</a
+                              >
                             }
                           }
                           @case ('requests') {

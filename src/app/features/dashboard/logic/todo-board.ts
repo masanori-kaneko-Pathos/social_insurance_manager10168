@@ -14,8 +14,11 @@ import { Todo, TodoKind } from './todos';
 
 export type BoardKind = TodoKind | ExtraKind | FilingTaskKind | 'age' | 'requests' | 'office';
 export type Section = 'now' | 'soon' | 'missing';
-/** noStandard・noCriteria：判定の材料が足りない／newApplication：事業所整理記号が空（新規適用届はまだかも） */
-export type OfficeIssue = 'noStandard' | 'noCriteria' | 'newApplication';
+/**
+ * noStandard・noCriteria：判定の材料が足りない／newApplication：事業所整理記号が空（新規適用届はまだかも）
+ * noInsurerNumber：組合健保なのに保険者番号が空（11/26。同じ組合のほかの事業所を見分けられない）
+ */
+export type OfficeIssue = 'noStandard' | 'noCriteria' | 'newApplication' | 'noInsurerNumber';
 
 /** 1件（1人の1つの手続き。依頼と事業所の設定は人に結びつかない） */
 export interface BoardItem {
