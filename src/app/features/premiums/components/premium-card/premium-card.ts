@@ -34,6 +34,7 @@ import { splitContribution } from '../../logic/premium-core';
 import { formatMilli } from '../../logic/rounding';
 import { PremiumBreakdown } from '../premium-breakdown/premium-breakdown';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { SpecialInsuredService } from '../../../employees/special-insured.service';
 
 /** 保険料の計算に要る事業所の設定（事業所の文書そのものか、従業員向けに写したもの） */
 export type OfficeForPremium = Pick<Office, 'id' | 'prefecture' | 'healthInsurer' | 'insurerHistory' | 'premium'> &
@@ -109,6 +110,9 @@ export class PremiumCard implements OnInit {
     if (!ao) return () => null;
     return adjustmentForEmployee(ao, this.employee(), this.contracts(), this.criteria(), this.remunerations());
   });
+  /** 月 → 特定被保険者か（組合健保。制度を使っていなければ null。11/26） */
+  private readonly special = signal<((month: YearMonth) => boolean) | null>(null);
+  private readonly specialApi = inject(SpecialInsuredService);
   readonly loading = signal(true);
   readonly errorKey = signal<string | null>(null);
   readonly openMonth = signal<YearMonth | null>(null);
@@ -126,7 +130,15 @@ export class PremiumCard implements OnInit {
         // その月の保険者・都道府県で料率を選ぶ（移転や組合健保への切り替えの前の月は、前の料率）
         const insurer = insurerFor(office, month);
         const rates = insurer ? pickRates(insurer, tables, month) : noRates(month);
-        const result = calcMonthly({ month, employee, remunerations, rates, options, adjustment: this.adjustmentFor()(month) });
+        const result = calcMonthly({
+          month,
+          employee,
+          remunerations,
+          rates,
+          options,
+          adjustment: this.adjustmentFor()(month),
+          specialInsured: this.special()?.(month) ?? false,
+        });
         return { month, result, error: false };
       } catch (err) {
         console.error(err); // データの間違い（折半できない料率など）。画面は止めずにその月だけ「エラー」にする
@@ -176,6 +188,9 @@ export class PremiumCard implements OnInit {
       this.remunerations.set(withCapRevisions(rems, gradeTables));
       this.contracts.set(contracts);
       this.criteria.set(criteria);
+      // 特定被保険者（組合健保）：制度を採用している期間があるときだけ、この人の扶養家族を読む（11/26）
+      const special = await this.specialApi.forEmployees(office.id, office, [this.employee()]);
+      this.special.set(special.get(this.employee().id) ?? null);
     } catch (err) {
       console.error(err);
       this.errorKey.set(errorKeyOf(err, 'premium.error.load'));

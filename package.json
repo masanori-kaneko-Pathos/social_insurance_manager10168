@@ -2,6 +2,7 @@
   "name": "socialinsurance10168",
   "version": "0.0.0",
   "scripts": {
+    "test:rules": "firebase emulators:exec --project demo-shaho-rules --only firestore \"node tests/rules.test.mjs\"",
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
@@ -41,6 +42,7 @@
     "@angular/build": "^20.3.35",
     "@angular/cli": "^20.3.35",
     "@angular/compiler-cli": "^20.3.0",
+    "@firebase/rules-unit-testing": "^6.0.0",
     "@types/jasmine": "~5.1.0",
     "firebase-admin": "^14.5.0",
     "jasmine-core": "~5.9.0",

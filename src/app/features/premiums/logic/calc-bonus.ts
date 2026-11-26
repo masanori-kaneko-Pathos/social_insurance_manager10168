@@ -62,6 +62,8 @@ export interface BonusInput {
   /** 月 → 保険者の鍵（insurerKeyOf）。なければ保険者は変わらない扱い */
   insurerOf?: (month: string) => string;
   options?: PremiumOptions;
+  /** 月 → 特定被保険者として介護保険料をかけるか（支払った月で判定。省くとかけない。11/26） */
+  specialInsuredAt?: (month: string) => boolean;
 }
 
 /** 標準賞与額（1,000円未満を切り捨て） */
@@ -156,6 +158,7 @@ export function calcBonuses(input: BonusInput): BonusPremiumResult[] {
     const rates = input.ratesFor(month);
     const lines: PremiumLine[] = [];
     const missing: { part: PremiumPart; reason: MissingReason }[] = [];
+    let special = false;
     const add = (part: PremiumPart, base: number, rate: PickedRate | null) => {
       if (!rate) missing.push({ part, reason: 'noRate' });
       else if (rate.employee + rate.employer > 0) lines.push(makeLine(part, base, null, rate));
@@ -164,6 +167,10 @@ export function calcBonuses(input: BonusInput): BonusPremiumResult[] {
     if (healthStatus === 'charged') {
       add('health', healthBase, rates.health);
       if (isCareMonth(employee, month)) add('care', healthBase, rates.care); // 適用除外の月は除く
+      else if (input.specialInsuredAt?.(month)) {
+        add('care', healthBase, rates.care); // 特定被保険者（組合健保）
+        special = true;
+      }
       add('childSupport', healthBase, rates.childSupport);
     }
     if (pensionStatus === 'charged') {
@@ -177,6 +184,7 @@ export function calcBonuses(input: BonusInput): BonusPremiumResult[] {
       groups: makeGroups(lines, options),
       missing,
       ...(exemptPending ? { exemptPending: true } : {}),
+      ...(special ? { specialInsured: true } : {}),
     });
     return {
       ...result,

@@ -350,6 +350,14 @@
             <span class="hint">{{ 'office.hint.insurerNumber' | transloco }}</span>
           }
         </div>
+        <!-- 特定被保険者の制度（組合の規約で定めているときだけ。11/26） -->
+        <div class="field">
+          <label class="check">
+            <input type="checkbox" formControlName="specialInsured" />
+            {{ 'office.field.specialInsured' | transloco }}
+          </label>
+          <span class="hint">{{ 'office.hint.specialInsured' | transloco }}</span>
+        </div>
         <!-- 組合の最初の料率（新規登録のとき。編集で切り替えるときは「保険者・所在地の履歴」の中に出す。11/17） -->
         @if (showFirstRates() && !isEdit) {
           <fieldset class="first-rates" [formGroup]="firstRates">

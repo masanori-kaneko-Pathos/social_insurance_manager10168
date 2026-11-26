@@ -39,6 +39,8 @@ export interface MonthlyInput {
   options?: PremiumOptions;
   /** 保険料調整制度の軽減割合（対象の月だけ。省くと軽減なし。11/16） */
   adjustment?: AdjustmentInput | null;
+  /** この月、特定被保険者として介護保険料をかけるか（組合健保。special-insured.ts。省くとかけない。11/26） */
+  specialInsured?: boolean;
 }
 
 export function calcMonthly(input: MonthlyInput): PremiumResult {
@@ -71,9 +73,11 @@ export function calcMonthly(input: MonthlyInput): PremiumResult {
       lines.push(makeLine(part, std.standard, std.grade, rate, adjustBp));
   };
 
+  // 特定被保険者：本人は介護保険の第2号被保険者でないが、40〜64歳の被扶養者がいる（規約で定めた組合だけ）
+  const special = coverage.health && !coverage.care && !!input.specialInsured;
   if (coverage.health) {
     add('health', rem?.health, rates.health);
-    if (coverage.care) add('care', rem?.health, rates.care);
+    if (coverage.care || special) add('care', rem?.health, rates.care);
     add('childSupport', rem?.health, rates.childSupport);
   }
   if (coverage.pension) {
@@ -87,5 +91,6 @@ export function calcMonthly(input: MonthlyInput): PremiumResult {
     groups: makeGroups(lines, options),
     missing,
     ...(exemptPending ? { exemptPending: true } : {}),
+    ...(special ? { specialInsured: true } : {}),
   });
 }

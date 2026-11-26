@@ -954,7 +954,8 @@
       "nameEn": "Office name in English",
       "groupName": "Group label",
       "agreementRounding": "Rounding of the employee share (labor-management agreement)",
-      "insurerNumber": "Insurer number (8 digits)"
+      "insurerNumber": "Insurer number (8 digits)",
+      "specialInsured": "Collect long-term care premiums from specified insured persons (set in the society's rules)"
     },
     "insurer": {
       "kyokai": "Japan Health Insurance Association (Kyokai Kenpo)",
@@ -975,7 +976,8 @@
       "kumiaiRatesNext": "You can enter the rates below (or later in the rates window).",
       "deduction": "As a rule, only the previous month's premium may be deducted from pay (both the previous and current month only when the employee leaves). To deduct the current month's premium, conclude a wage-deduction labor-management agreement.",
       "deductionCurrentWarn": "The rule is to deduct the previous month's premium from this month's pay (next-month deduction). If you deduct the same month's premium, confirm that a wage deduction agreement or your work rules / pay regulations provide for it.",
-      "insurerNumber": "The 8-digit number on documents from the health insurance society (starts with 06). Used to recognize other offices in the same society."
+      "insurerNumber": "The 8-digit number on documents from the health insurance society (starts with 06). Used to recognize other offices in the same society.",
+      "specialInsured": "Care premiums are charged in months when an employee under 40 or 65 and over has a dependent aged 40 to 64. Whether this applies depends on the society's rules; ask the society if unsure."
     },
     "postal": {
       "search": "Find address",
@@ -1304,7 +1306,8 @@
       "formulaTitle": "Calculation (standard remuneration × rate, rounding)",
       "adjustment": "* The premium adjustment scheme lowers the employee share by {{n}} yen (the employer pays it for now; it is deducted from premiums three months later)",
       "lineAdjustment": "adjustment lowers the employee share by {{n}} yen",
-      "formulaTitleBonus": "Calculation (standard bonus amount × rate, rounding)"
+      "formulaTitleBonus": "Calculation (standard bonus amount × rate, rounding)",
+      "specialInsured": "* Long-term care premiums are charged as a specified insured person (because of a dependent aged 40 to 64, under the society's rules)."
     },
     "agreement": {
       "half": "Agreement: round half up",

@@ -66,6 +66,7 @@ import { registerGaps, registerLarge } from '../../logic/labor-register';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { NavHistoryService } from '../../../../shared/services/nav-history.service';
 import { BackLink } from '../../../../shared/components/back-link/back-link';
+import { SpecialInsuredService } from '../../special-insured.service';
 
 type Mode = 'fiscal' | 'calendar' | 'last12';
 /** 「＋登録」のメニューから足すカード（中身がないときは出さない） */
@@ -148,6 +149,9 @@ export class EmployeeDetail {
   private readonly criteria = signal<CriteriaDoc[] | null>(null);
   private readonly remunerations = signal<RemunerationDoc[] | null>(null);
   private readonly tables = signal<RateTables | null>(null);
+  /** 月 → 特定被保険者か（組合健保。制度を使っていなければ null。11/26） */
+  private readonly special = signal<((month: string) => boolean) | null>(null);
+  private readonly specialApi = inject(SpecialInsuredService);
   /** 「＋登録」で開いたカード */
   readonly adding = signal<AddKind | null>(null);
   private readonly leaveCard = viewChild(LeaveCard);
@@ -233,7 +237,8 @@ export class EmployeeDetail {
         since && contracts && criteria
           ? adjustmentForEmployee({ ...office, since, standardHours: office.standardHours ?? null }, e, contracts, criteria, rems)(month)
           : null;
-      const r = calcMonthly({ month, employee: e, remunerations: rems, rates, options: premiumOf(office), adjustment });
+      const specialInsured = this.special()?.(month) ?? false;
+      const r = calcMonthly({ month, employee: e, remunerations: rems, rates, options: premiumOf(office), adjustment, specialInsured });
       return r.exempt || r.missing.length === 0 ? r : null;
     } catch (err) {
       console.error(err);
@@ -361,6 +366,10 @@ export class EmployeeDetail {
         this.remunerations.set(withCapRevisions(v, g)),
       ),
       settle(this.rates.tablesFor(office.id, everKumiai(office)), (v) => this.tables.set(v)),
+      // 特定被保険者（組合健保。制度を採用している期間があるときだけ扶養家族を読む。11/26）
+      ...(this.employee()
+        ? [settle(this.specialApi.forEmployees(office.id, office, [this.employee()!]), (m) => this.special.set(m.get(id) ?? null))]
+        : []),
     ]);
   }
 

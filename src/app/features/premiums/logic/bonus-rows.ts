@@ -25,6 +25,8 @@ export interface BonusContext {
   ratesFor: (month: YearMonth) => RatesForMonth;
   insurerOf?: (month: YearMonth) => string;
   options: PremiumOptions;
+  /** 従業員ID → 「月 → 特定被保険者か」（組合健保。省くとかけない。11/26） */
+  specialInsuredOf?: (employeeId: string) => ((month: YearMonth) => boolean) | undefined;
 }
 
 const HEALTH_PARTS: PremiumPart[] = ['health', 'care', 'childSupport'];
@@ -91,7 +93,14 @@ function calcFor(
   if (bonuses.length === 0) return { results: [], error: false };
   try {
     return {
-      results: calcBonuses({ employee, bonuses, ratesFor: ctx.ratesFor, insurerOf: ctx.insurerOf, options: ctx.options }),
+      results: calcBonuses({
+        employee,
+        bonuses,
+        ratesFor: ctx.ratesFor,
+        insurerOf: ctx.insurerOf,
+        options: ctx.options,
+        specialInsuredAt: ctx.specialInsuredOf?.(employee.id),
+      }),
       error: false,
     };
   } catch (err) {

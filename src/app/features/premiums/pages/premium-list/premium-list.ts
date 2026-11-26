@@ -102,6 +102,7 @@ import { MonthCloseService } from '../../month-close.service';
 import { MonthClose, SoftCheck } from '../../../../core/models/month-close';
 import { GuideStep, StepGuide } from '../../../../shared/components/step-guide/step-guide';
 import { premiumGuideSteps } from '../../logic/premium-guide';
+import { SpecialInsuredMap, SpecialInsuredService } from '../../../employees/special-insured.service';
 import { deductionHistoryAt, hasPayGroups, payrollAt } from '../../../office/logic/pay-group';
 import {
   buildPeople,
@@ -241,6 +242,10 @@ export class PremiumList {
     return { ...o, since: o.premiumAdjustment.since, standardHours: o.standardHours ?? null };
   });
 
+  /** 特定被保険者（組合健保）：従業員ID → 「月 → 特定被保険者か」。制度を使っていなければ空（11/26） */
+  private readonly special = signal<SpecialInsuredMap>(new Map());
+  private readonly specialApi = inject(SpecialInsuredService);
+
   /** 1人分の「月 → 軽減割合」 */
   private adjustmentOf(employee: Employee): ((m: YearMonth) => AdjustmentInput | null) | undefined {
     const ao = this.adjustmentOffice();
@@ -278,6 +283,7 @@ export class PremiumList {
         ratesFor,
         options,
         adjustmentFor: this.adjustmentOf(employee),
+        specialInsuredFor: this.special().get(employee.id),
       }),
     }));
   }
@@ -309,6 +315,7 @@ export class PremiumList {
           rates: ratesFor(m),
           options: this.options(),
           adjustment: f(m),
+          specialInsured: this.special().get(employee.id)?.(m) ?? false,
         });
         for (const g of r.groups) {
           for (const l of g.lines) {
@@ -463,7 +470,7 @@ export class PremiumList {
     const c = collectBonusResults(
       this.employees(),
       payments,
-      { ratesFor: ratesForOffice(office, tables), insurerOf: insurerKeyOf(office), options: this.options() },
+      { ratesFor: ratesForOffice(office, tables), insurerOf: insurerKeyOf(office), options: this.options(), specialInsuredOf: (id) => this.special().get(id) },
       (d) => d.startsWith(month),
     );
     const bonus = officeTotals(c.results);
@@ -488,7 +495,7 @@ export class PremiumList {
     return bonusResultsByEmployee(
       this.employees(),
       payments,
-      { ratesFor: ratesForOffice(office, tables), insurerOf: insurerKeyOf(office), options: this.options() },
+      { ratesFor: ratesForOffice(office, tables), insurerOf: insurerKeyOf(office), options: this.options(), specialInsuredOf: (id) => this.special().get(id) },
       (d) => d.startsWith(month),
     );
   });
@@ -985,6 +992,8 @@ export class PremiumList {
         this.contracts.set(new Map(employees.map((e, i) => [e.id, contracts[i]])));
         this.criteria.set(criteria);
       }
+      // 特定被保険者の制度を採用している組合の期間があるときだけ、扶養家族を読む（11/26）
+      this.special.set(await this.specialApi.forEmployees(officeId, office, employees));
       this.employees.set(employees);
       this.tables.set(tables);
       this.bonusPayments.set(bonusPayments);

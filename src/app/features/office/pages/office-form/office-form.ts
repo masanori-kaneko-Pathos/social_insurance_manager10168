@@ -187,6 +187,8 @@ export class OfficeForm {
       insurerType: ['kyokai' as HealthInsurerType],
       kumiaiName: ['', [Validators.maxLength(100)]],
       insurerNumber: [''],
+      /** 特定被保険者の制度（組合の規約。11/26） */
+      specialInsured: [false],
       officeSymbol: ['', [Validators.maxLength(20)]],
       officeNumber: ['', [Validators.pattern(/^\d{1,10}$/)]],
       employeeCount: this.fb.control<number | null>(null, [
@@ -734,6 +736,7 @@ export class OfficeForm {
       insurerType: o.healthInsurer.type,
       kumiaiName: o.healthInsurer.kumiaiName ?? '',
       insurerNumber: o.healthInsurer.insurerNumber ?? '',
+      specialInsured: o.healthInsurer.specialInsured === true,
       officeSymbol: o.officeSymbol ?? '',
       officeNumber: o.officeNumber ?? '',
       employeeCount: o.employeeCount,
@@ -776,6 +779,8 @@ export class OfficeForm {
               type,
               kumiaiName: (v.kumiaiName ?? '').trim(),
               insurerNumber: normalizeInsurerNumber(v.insurerNumber) || null,
+              // 採用しているときだけ書く（前の文書と同じ形を保ち、保険者の履歴の比べ方を変えない）
+              ...(v.specialInsured ? { specialInsured: true } : {}),
             }
           : { type, kumiaiName: null },
     };
@@ -840,6 +845,7 @@ export class OfficeForm {
       insurerType: o.healthInsurer.type,
       kumiaiName: o.healthInsurer.kumiaiName ?? '',
       insurerNumber: o.healthInsurer.insurerNumber ?? '',
+      specialInsured: o.healthInsurer.specialInsured === true,
       industry: o.industry ?? '',
       closingDay: payroll.closingDay,
       payMonth: payroll.payMonth,

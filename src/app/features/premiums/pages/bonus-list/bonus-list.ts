@@ -40,6 +40,7 @@ import {
   sortBonusRows,
 } from '../../logic/bonus-list-view';
 import { bonusTotalOf, DEFAULT_NATURE, recipientsOf } from '../../logic/bonus-nature';
+import { SpecialInsuredMap, SpecialInsuredService } from '../../../employees/special-insured.service';
 
 /** 開いた支給の、1人ずつの行 */
 interface PersonRow {
@@ -85,15 +86,21 @@ export class BonusList {
   readonly loading = signal(true);
   readonly errorKey = signal<string | null>(null);
 
+  /** 特定被保険者（組合健保）：従業員ID → 「月 → 特定被保険者か」。制度を使っていなければ空（11/26） */
+  private readonly special = signal<SpecialInsuredMap>(new Map());
+  private readonly specialApi = inject(SpecialInsuredService);
+
   /** 1回の支給を1行に（新しい順） */
   readonly rows = computed<ListRow[]>(() => {
     const tables = this.tables();
     const office = this.context.current();
     if (!tables || !office) return [];
+    const special = this.special();
     const ctx = {
       ratesFor: ratesForOffice(office, tables),
       insurerOf: insurerKeyOf(office),
       options: premiumOf(office),
+      specialInsuredOf: (id: string) => special.get(id),
     };
     const payments = this.payments();
     return payments.map((payment) => {
@@ -184,10 +191,12 @@ export class BonusList {
     const payments = this.payments();
     const payment = payments.find((p) => p.id === id);
     if (!payment || !tables || !office) return [];
+    const special = this.special();
     const ctx = {
       ratesFor: ratesForOffice(office, tables),
       insurerOf: insurerKeyOf(office),
       options: premiumOf(office),
+      specialInsuredOf: (id: string) => special.get(id),
     };
     const list = this.employees().filter((e) => bonusTotalOf(payment, e.id) > 0);
     return filterAndSort(
@@ -237,6 +246,7 @@ export class BonusList {
         this.bonusApi.list(office.id),
         this.rates.tablesFor(office.id, everKumiai(office)),
       ]);
+      this.special.set(await this.specialApi.forEmployees(office.id, office, employees));
       this.employees.set(employees);
       this.payments.set(payments);
       this.tables.set(tables);

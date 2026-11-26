@@ -54,6 +54,10 @@
   <!-- 保険料調整制度：本人分を軽くした額（会社が一時的に多く払う。11/16） -->
   <p class="slip-note">{{ 'premium.slip.adjustment' | transloco: { n: milli(slip().reductionMilli) } }}</p>
 }
+@if (result().specialInsured) {
+  <!-- 特定被保険者（組合健保の規約。本人は40〜64歳でないが、40〜64歳の扶養家族がいる。11/26） -->
+  <p class="slip-note">{{ 'premium.slip.specialInsured' | transloco }}</p>
+}
 
 </div>
 

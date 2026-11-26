@@ -77,6 +77,8 @@ export interface PremiumResult {
   exempt?: boolean;
   /** 免除の条件に当たるが、申出書がまだなので保険料をかけている（申出すれば免除。11/19） */
   exemptPending?: boolean;
+  /** 特定被保険者として介護保険料をかけた（組合健保。本人は40〜64歳でない。11/26） */
+  specialInsured?: boolean;
 }
 
 /** 賞与1回分の結果（月額の結果に、標準賞与額と上限の情報を足したもの） */

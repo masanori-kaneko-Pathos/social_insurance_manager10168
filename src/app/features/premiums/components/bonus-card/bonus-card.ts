@@ -15,6 +15,7 @@ import { fiscalYearOf, todayLocal, toYearMonth } from '../../../../shared/utils/
 import { parseYen } from '../../../rates/logic/grade';
 import { EmployeeService } from '../../../employees/employee.service';
 import { HEALTH_BONUS_CAP_PER_YEAR } from '../../logic/calc-bonus';
+import { SpecialInsuredMap, SpecialInsuredService } from '../../../employees/special-insured.service';
 
 interface CardRow extends BonusRow {
   payment: BonusPayment;
@@ -40,6 +41,8 @@ export class BonusCard implements OnInit {
 
   private readonly payments = signal<BonusPayment[]>([]);
   private readonly tables = signal<RateTables | null>(null);
+  private readonly special = signal<SpecialInsuredMap>(new Map());
+  private readonly specialApi = inject(SpecialInsuredService);
   readonly loading = signal(true);
   readonly errorKey = signal<string | null>(null);
 
@@ -49,7 +52,13 @@ export class BonusCard implements OnInit {
     const office = this.context.current();
     if (!tables || !office) return [];
     const e = this.employee();
-    const ctx = { ratesFor: ratesForOffice(office, tables), insurerOf: insurerKeyOf(office), options: premiumOf(office) };
+    const special = this.special();
+    const ctx = {
+      ratesFor: ratesForOffice(office, tables),
+      insurerOf: insurerKeyOf(office),
+      options: premiumOf(office),
+      specialInsuredOf: (id: string) => special.get(id),
+    };
     const payments = this.payments();
     return payments
       .filter((p) => bonusTotalOf(p, e.id) > 0)
@@ -72,6 +81,8 @@ export class BonusCard implements OnInit {
         this.bonusApi.list(office.id),
         this.rates.tablesFor(office.id, everKumiai(office)),
       ]);
+      // 特定被保険者（組合健保。制度を採用している期間があるときだけ扶養家族を読む。11/26）
+      this.special.set(await this.specialApi.forEmployees(office.id, office, [this.employee()]));
       this.payments.set(payments);
       this.tables.set(tables);
     } catch (err) {

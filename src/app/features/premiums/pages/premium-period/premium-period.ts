@@ -31,6 +31,7 @@ import {
   TotalCategory,
 } from '../../logic/period-totals';
 import { BackLink } from '../../../../shared/components/back-link/back-link';
+import { SpecialInsuredMap, SpecialInsuredService } from '../../../employees/special-insured.service';
 
 /**
  * 期間ごとの会社負担の集計（11/24）
@@ -96,6 +97,7 @@ export class PremiumPeriod {
         this.contracts.set(new Map(employees.map((e, i) => [e.id, contracts[i]])));
         this.criteria.set(criteria);
       }
+      this.special.set(await this.specialApi.forEmployees(office.id, office, employees));
       this.employees.set(employees);
       this.tables.set(tables);
       this.payments.set(payments);
@@ -106,6 +108,10 @@ export class PremiumPeriod {
       this.loading.set(false);
     }
   }
+
+  /** 特定被保険者（組合健保）：従業員ID → 「月 → 特定被保険者か」。制度を使っていなければ空（11/26） */
+  private readonly special = signal<SpecialInsuredMap>(new Map());
+  private readonly specialApi = inject(SpecialInsuredService);
 
   /** 月ごとの行（期間・データが変わると計算し直す） */
   readonly rows = computed<PeriodMonth[]>(() => {
@@ -127,9 +133,10 @@ export class PremiumPeriod {
         adjustmentFor: ao
           ? adjustmentForEmployee(ao, e, this.contracts().get(e.id) ?? [], this.criteria(), this.remunerations().get(e.id) ?? [])
           : undefined,
+        specialInsuredFor: this.special().get(e.id),
       }),
       payments: this.payments(),
-      bonusCtx: { ratesFor, insurerOf: insurerKeyOf(office), options },
+      bonusCtx: { ratesFor, insurerOf: insurerKeyOf(office), options, specialInsuredOf: (id: string) => this.special().get(id) },
     };
     return months.map((m) => periodMonth(m, input));
   });

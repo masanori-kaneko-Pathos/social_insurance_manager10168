@@ -12,6 +12,11 @@ export interface HealthInsurer {
    * 同じ組合かどうかは、両方に番号があれば番号で、なければ名前で見分ける
    */
   insurerNumber?: string | null;
+  /**
+   * 特定被保険者の制度を採用している組合か（規約で定めているとき true。11/26）
+   * 40歳未満・65歳以上の被保険者でも、40〜64歳の被扶養者がいれば介護保険料を取る。協会けんぽ・前の文書にはない
+   */
+  specialInsured?: boolean | null;
 }
 
 /**

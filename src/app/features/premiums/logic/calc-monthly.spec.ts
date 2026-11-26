@@ -415,3 +415,26 @@ describe('calcMonthly：産休・育休の免除', () => {
     expect(r.exemptPending).toBeUndefined();
   });
 });
+
+describe('特定被保険者（組合健保。11/26）', () => {
+  const rems = [rem('2024-04', [22, 300000], [19, 300000])];
+  const parts = (r: ReturnType<typeof calcMonthly>) => r.groups.flatMap((g) => g.lines.map((l) => l.part));
+
+  it('40歳未満でも、特定被保険者の月は介護保険料をかけ、印を付ける', () => {
+    const r = calcMonthly({ month: '2026-11', employee: AGE30, remunerations: rems, rates: rates('13', '2026-11'), specialInsured: true });
+    expect(parts(r)).toContain('care');
+    expect(r.specialInsured).toBeTrue();
+  });
+
+  it('省いたとき・false のときは、今までどおり介護保険料をかけない', () => {
+    const r = calcMonthly({ month: '2026-11', employee: AGE30, remunerations: rems, rates: rates('13', '2026-11') });
+    expect(parts(r)).not.toContain('care');
+    expect(r.specialInsured).toBeUndefined();
+  });
+
+  it('40〜64歳の本人はふつうの介護保険料（特定被保険者の印は付けない。二重にもかけない）', () => {
+    const r = calcMonthly({ month: '2026-11', employee: AGE50, remunerations: rems, rates: rates('13', '2026-11'), specialInsured: true });
+    expect(parts(r).filter((p) => p === 'care').length).toBe(1);
+    expect(r.specialInsured).toBeUndefined();
+  });
+});

@@ -57,6 +57,7 @@ import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
 import { BackLink } from '../../../../shared/components/back-link/back-link';
+import { SpecialInsuredMap, SpecialInsuredService } from '../../../employees/special-insured.service';
 const DATE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 /** 新規の支給を計算の中で区別するための仮の ID */
 const NEW_ID = '__new__';
@@ -187,11 +188,16 @@ export class BonusForm {
       this.payments().some((p) => p.id !== this.bonusId && p.paidDate === this.paidDate()),
   );
 
+  /** 特定被保険者（組合健保）：従業員ID → 「月 → 特定被保険者か」。制度を使っていなければ空（11/26） */
+  private readonly special = signal<SpecialInsuredMap>(new Map());
+  private readonly specialApi = inject(SpecialInsuredService);
+
   private readonly ctx = computed<BonusContext | null>(() => {
     const tables = this.tables();
     const office = this.context.current();
     if (!tables || !office) return null;
-    return { ratesFor: ratesForOffice(office, tables), insurerOf: insurerKeyOf(office), options: this.options() };
+    const special = this.special();
+    return { ratesFor: ratesForOffice(office, tables), insurerOf: insurerKeyOf(office), options: this.options(), specialInsuredOf: (id) => special.get(id) };
   });
 
   /**
@@ -307,6 +313,7 @@ export class BonusForm {
         this.itemsApi.list(office.id).catch(() => [] as BonusItem[]),
       ]);
       this.items.set(items);
+      this.special.set(await this.specialApi.forEmployees(office.id, office, employees));
       this.employees.set(employees);
       this.payments.set(payments);
       this.tables.set(tables);

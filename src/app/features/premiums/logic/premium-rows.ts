@@ -62,6 +62,8 @@ export interface RowInput {
   options: PremiumOptions;
   /** 保険料調整制度の軽減割合（月ごと。省くと軽減なし。11/16） */
   adjustmentFor?: (month: YearMonth) => AdjustmentInput | null;
+  /** 月 → 特定被保険者として介護保険料をかけるか（組合健保。省くとかけない。11/26） */
+  specialInsuredFor?: (month: YearMonth) => boolean;
 }
 
 const HEALTH_PARTS: PremiumPart[] = ['health', 'care', 'childSupport'];
@@ -78,6 +80,7 @@ function calcSafe(
       rates: input.ratesFor(month),
       options: input.options,
       adjustment: input.adjustmentFor?.(month) ?? null,
+      specialInsured: input.specialInsuredFor?.(month) ?? false,
     });
     if (result.exempt) return { state: 'exempt', result };
     if (result.missing.length > 0) return { state: 'missing', result };
