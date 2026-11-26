@@ -6,6 +6,7 @@ import { ChangeHistory } from '../../../../core/models/employee-records';
 import { OfficeContext } from '../../../office/office-context.service';
 import { HistoryService } from '../../history.service';
 import { displayValue, HistoryEntry, recordSummary, valuesAt } from '../../logic/history';
+import { jaDateLabel } from '../../../../shared/utils/date';
 
 /** 最初に出す件数（「もっと見る」で全部） */
 const FIRST = 20;
@@ -96,7 +97,7 @@ export class HistoryCard {
   /** 何の記録か（従業員の情報・雇用契約（2026-04-01〜）など） */
   target(h: ChangeHistory): string {
     const [kind, key] = h.target.split('/');
-    return this.t(`history.target.${kind}`, { key }) ?? h.target;
+    return this.t(`history.target.${kind}`, { key, label: jaDateLabel(key ?? '') }) ?? h.target;
   }
 
   /** どの項目か（作成・削除は「登録」「削除」） */

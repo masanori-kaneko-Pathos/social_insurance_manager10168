@@ -1816,8 +1816,8 @@
   },
   "payroll": {
     "listTitle": "Payroll",
-    "prevYear": "← Previous 12 months",
-    "nextYear": "Next 12 months →",
+    "prevYear": "‹ Previous 12 months",
+    "nextYear": "Next 12 months ›",
     "latest": "Latest",
     "missingCount": "{{count}} not entered",
     "monthTitle": "Pay paid in {{month}}",
@@ -3133,7 +3133,7 @@
   },
   "inKind": {
     "open": "Calculate by rates",
-    "openTitle": "Calculate in-kind meals and housing with the prefecture values",
+    "openTitle": "Calculate meals and housing with the prefecture values, and other in-kind items at market value",
     "title": "In-kind calculation: {{name}} (paid {{month}})",
     "table": "Uses the values for {{name}} (table from {{from}}), the prefecture of the workplace (office address).",
     "kumiai": "A health insurance society may set its own values in its rules. Health insurance follows those values; check with the society (the pension uses this table).",
@@ -3162,12 +3162,13 @@
     "total": "Amount counted",
     "yen": "yen",
     "apply": "Use this amount",
-    "hint": "Fractions of a yen are rounded down. Own products, commuter passes, etc. are valued at market price and are not part of this calculation. A value set in a labor agreement is treated as the market price. Press Save after entering.",
+    "hint": "Fractions of a yen are rounded down. Enter own products, commuter passes, etc. under \"Other\" at market value. A value set in a labor agreement is treated as the market value. Press Save after entering.",
     "formError": {
       "count": "Enter counts as whole numbers from 0 to 93.",
       "yen": "Enter the employee payment in whole yen.",
       "size": "Enter a size greater than 0 (up to 2 decimals).",
-      "movedIn": "Enter a move-in date in this month."
+      "movedIn": "Enter a move-in date in this month.",
+      "otherValue": "Enter the market value as a whole number of yen."
     },
     "error": {
       "load": "Could not load in-kind values.",
@@ -3182,7 +3183,12 @@
     "changePrefecture": "Change",
     "dispatchedHint": "For dispatched workers, the value is calculated for the prefecture of the dispatching office (this office), not the actual workplace (Japan Pension Service Q&A on in-kind remuneration).",
     "pickPerson": "Person",
-    "pickNone": "Choose a person"
+    "pickNone": "Choose a person",
+    "other": "Other (commuter passes, company products, clothing other than uniforms, etc.)",
+    "otherShort": "Other (market value)",
+    "otherHint": "There is no value table. Enter the market value (or the amount set in the labor agreement, if any).",
+    "otherValue": "Market value (yen per month)",
+    "otherPays": "Employee pays (yen per month)"
   },
   "invite": {
     "accept": {
@@ -4135,9 +4141,9 @@
       "days": "Monthly: calendar days / hourly, daily: days worked",
       "inKind": "Price table amount − employee payment",
       "prorated": "A raise or new allowance started mid-period",
-      "state": "Leave-of-absence pay only. Maternity and childcare:",
-      "toLeave": "register as leave",
-      "hours": "Scheduled + overtime within legal limits"
+      "state": "Choose only for months with leave-of-absence pay.",
+      "toLeave": "Register maternity or childcare leave",
+      "hours": "Used to check whether an uninsured employee actually works 20 hours or more a week. Scheduled hours plus overtime within legal limits. Do not include overtime beyond legal limits (over 8 hours a day or 40 hours a week)."
     },
     "readback": {
       "total": "Total (money + in kind): ¥{{total}}",
@@ -5581,7 +5587,10 @@
       "noticeSolo": "Saved (no other member to double-check)",
       "noticeChecked": "Double-checked {{date}} by {{name}}",
       "noticeWaiting": "Waiting for check (asked by {{name}})",
-      "noticeAsk": "Not yet double-checked"
+      "noticeAsk": "Not yet double-checked",
+      "employeeTodo": "Check the table and mark it as checked",
+      "softTodo": "Optional: load the deduction file",
+      "totalTodo": "Fixed when you mark ① as checked"
     },
     "title": {
       "employee": "1. Employee share deducted from pay",

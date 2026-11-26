@@ -62,6 +62,10 @@
 }
 
 .slip-note {
+  /* 注記は明細の表の幅で折り返す（幅 0 ＋ 最小 100%：長い1行が左の列（max-content）を押し広げて、
+     計算式の列が画面の外に出ていた。11/26） */
+  width: 0;
+  min-width: 100%;
   margin: 2px 0 0;
   font-size: var(--font-xs);
   color: var(--color-text-sub);

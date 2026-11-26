@@ -251,7 +251,7 @@
         <!-- 月給・日給月給の人は、自分で入れていなければ自動の日数（薄い字で「31（自動）」）。その数で保存する。
              空にすると自動に戻る（11/26。見えている数が本当に保存されるので placeholder を使う） -->
         <input
-          class="input num"
+          class="input num days-input"
           formControlName="days"
           inputmode="numeric"
           [placeholder]="candidate() !== null ? ('payroll.autoDays' | transloco: { days: candidate() }) : ''"
@@ -275,13 +275,16 @@
             <option [value]="s">{{ 'payroll.state.' + s | transloco }}</option>
           }
         </select>
-        <!-- 産休・育休は給与の状態ではなく休業で登録する。従業員のページの休業の追加を開く（11/25。文の続きなので矢印なし・すき間なし） -->
-        <small class="field-note"
-          >{{ 'payrollEntry.note.state' | transloco
-          }}@if (leaveLink(); as link) {<a [routerLink]="link" [queryParams]="{ tab: 'employment', add: 'leave' }">{{
-              'payrollEntry.note.toLeave' | transloco
-            }}</a>} @else {{{ 'payrollEntry.note.toLeave' | transloco }}}</small
-        >
+        <!-- 産休・育休は給与の状態ではなく休業で登録する。従業員のページの休業の追加を開く。
+             「休職給の月だけ。」で改行し、案内は1つのリンクにする（「へ」だけ次の行に残らないように。11/26） -->
+        <small class="field-note">{{ 'payrollEntry.note.state' | transloco }}</small>
+        <small class="field-note">
+          @if (leaveLink(); as link) {
+            <a [routerLink]="link" [queryParams]="{ tab: 'employment', add: 'leave' }">{{ 'payrollEntry.note.toLeave' | transloco }} ›</a>
+          } @else {
+            {{ 'payrollEntry.note.toLeave' | transloco }}
+          }
+        </small>
       </div>
     </div>
 

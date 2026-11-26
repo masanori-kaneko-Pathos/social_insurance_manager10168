@@ -1,4 +1,6 @@
-// ホームの「今月の処理」（11/26）：手続き → 給与 → 改定 → 保険料の確認 の段ごとに、実際の人数と状態を出す
+// ホームの「今月の処理」（11/26）：手続き → 保険料の確認 → 給与 → 改定 の段ごとに、実際の人数と状態を出す
+// 順番は仕事の順：今月払いの給与から控除する保険料は、給与ソフトで給与を計算する前に決める。
+// このアプリの「給与の入力」は払ったあとの明細の記録で、改定の候補はその記録から出る
 // 段の数字は、それぞれの画面と同じ数え方の結果を受け取るだけ（ここでは数えない）
 // Angular・Firebase に依存しない純粋な関数
 
@@ -83,5 +85,5 @@ export function monthSpine(x: MonthSpineInput): GuideStep[] {
             ? step('premium', 'todo', 'premiumReview', { m })
             : step('premium', 'done', 'premiumDone', { m });
 
-  return [todo, payroll, revision, premium];
+  return [todo, premium, payroll, revision];
 }

@@ -49,9 +49,28 @@ details.totals[open] {
 
 .fold-toggle {
   margin-left: auto;
-  font-size: var(--font-sm);
-  color: var(--color-primary);
   white-space: nowrap;
+}
+
+/* 開ける印（表の行と同じ形。開くと上向き。11/26） */
+.chev {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin: 0 6px 3px 0;
+  border-right: 2px solid var(--color-text-sub);
+  border-bottom: 2px solid var(--color-text-sub);
+  transform: rotate(45deg);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+details[open] > summary .chev {
+  margin-bottom: -3px;
+  transform: rotate(-135deg);
+}
+
+.totals-strip:hover .chev {
+  border-color: var(--color-text);
 }
 
 details:not([open]) > summary .when-open,
@@ -115,4 +134,17 @@ tbody th {
   margin: var(--space-sm) 0 0;
   font-size: var(--font-xs);
   color: var(--color-text-sub);
+}
+
+/* 画面には出さず、読み上げだけ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

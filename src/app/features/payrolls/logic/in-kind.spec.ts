@@ -100,6 +100,7 @@ describe('readInKindForm', () => {
       input: {
         meal: { fullMonth: false, breakfasts: 0, lunches: 20, dinners: 0, employeePays: 1000 },
         housing: { size: 25.5, proration: null, employeePays: 0 },
+        other: null,
       },
     });
   });
@@ -132,5 +133,24 @@ describe('年金機構 Q&A の例（2026.pdf）', () => {
     expect(prorationOf('2026-11-01', '2026-11')).toBeNull();
     const v = { ...emptyInKindForm(), useHousing: true, size: '6', movedIn: '2026-10-15' };
     expect(readInKindForm(v, '2026-11')).toEqual({ errors: ['movedIn'] });
+  });
+});
+
+describe('その他の現物（時価。11/26）', () => {
+  it('時価 − 本人負担 を報酬に入れ、食事・住宅と合わせる', () => {
+    const r = inKindAmount(TOKYO_SQM, { meal: null, housing: null, other: { value: 12000, employeePays: 2000 } });
+    expect(r.other?.counted).toBe(10000);
+    expect(r.total).toBe(10000);
+  });
+
+  it('本人負担が時価以上なら 0', () => {
+    expect(inKindAmount(TOKYO_SQM, { meal: null, housing: null, other: { value: 5000, employeePays: 6000 } }).total).toBe(0);
+  });
+
+  it('画面の入力：その他だけでも計算でき、時価が空・読めなければエラー', () => {
+    const ok = readInKindForm({ ...emptyInKindForm(), useOther: true, otherValue: '12,000', otherPays: '' }, '2026-11');
+    expect('input' in ok && ok.input.other).toEqual({ value: 12000, employeePays: 0 });
+    const ng = readInKindForm({ ...emptyInKindForm(), useOther: true, otherValue: '' }, '2026-11');
+    expect('errors' in ng && ng.errors).toEqual(['otherValue']);
   });
 });

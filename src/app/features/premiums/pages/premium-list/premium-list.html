@@ -697,12 +697,12 @@
   <!-- 毎月の納付額の突き合わせ：年金事務所の告知額とアプリの合計（月額＋その月の賞与） -->
   @if (rows().length > 0) {
     @let nc = noticeCheck();
-    <details class="card notice fold step" id="step-notice">
-      <summary class="fold-head notice-head">
-        <h2>{{ 'premiumGuide.title.notice' | transloco }}</h2>
+    <!-- ④ 告知額：①〜③と同じ見出しの段（11/26。前は開け閉めする欄で、ほかの段と形が違っていた） -->
+    <section class="step notice" id="step-notice">
+      <h2 class="step-title notice-head">
+        {{ 'premiumGuide.title.notice' | transloco }}
         <span class="status s-{{ nc.status }}">{{ 'premiumNotice.status.' + nc.status | transloco }}</span>
-        <span class="fold-toggle"><span class="when-closed">{{ 'premiumList.breakdown' | transloco }} ▽</span><span class="when-open">{{ 'premiumList.breakdown' | transloco }} △</span></span>
-      </summary>
+      </h2>
       <p class="hint">
         {{ (kumiaiMonth() ? 'premiumNotice.leadKumiai' : 'premiumNotice.lead') | transloco: { arrival: arrival(), due: dueDate() } }}
       </p>
@@ -850,6 +850,6 @@
       @if (nc.status !== 'notEntered') {
         <app-review-box class="review" [target]="noticeReviewId(month())" (changed)="onNoticeReview($event)" />
       }
-    </details>
+    </section>
   }
 }

@@ -152,7 +152,7 @@
             <p class="muted">{{ 'employee.overview.noTodos' | transloco }}</p>
           }
           @if (todos().length > 0) {
-            <a [routerLink]="['/o', context.current()?.id]">{{ 'employee.overview.toTodos' | transloco }} →</a>
+            <a [routerLink]="['/o', context.current()?.id]">{{ 'employee.overview.toTodos' | transloco }} ›</a>
           }
         </section>
 
@@ -165,7 +165,7 @@
                 <li>
                   {{ 'employee.overview.missingItem.' + m | transloco }}
                   <a [routerLink]="[]" [queryParams]="tabLink(missingTab[m])" queryParamsHandling="merge"
-                    >{{ 'employee.tab.' + missingTab[m] | transloco }} →</a
+                    >{{ 'employee.tab.' + missingTab[m] | transloco }} ›</a
                   >
                 </li>
               }
@@ -181,7 +181,7 @@
               @for (g of registerGaps(); track g) {
                 <li>
                   {{ 'employee.register.gap.' + g | transloco }}
-                  <a [routerLink]="['edit']">{{ 'common.edit' | transloco }} →</a>
+                  <a [routerLink]="['edit']">{{ 'common.edit' | transloco }} ›</a>
                 </li>
               }
             </ul>

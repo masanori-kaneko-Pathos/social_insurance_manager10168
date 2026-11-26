@@ -13,6 +13,13 @@ const states = (x: Partial<PremiumGuideInput>) => premiumGuideSteps({ ...base, .
 describe('保険料のページの業務の順の案内（11/26）', () => {
   it('はじめは全部「まだ」。先に直す人がいれば①は要確認', () => {
     expect(states({})).toEqual(['todo', 'todo', 'todo', 'todo']);
+    // まだの段にも、次にやることを書く（11/26）
+    expect(premiumGuideSteps(base).map((x) => x.noteKey)).toEqual([
+      'premiumGuide.note.employeeTodo',
+      'premiumGuide.note.softTodo',
+      'premiumGuide.note.totalTodo',
+      'premiumGuide.note.noticeWait',
+    ]);
     const s = premiumGuideSteps({ ...base, fixCount: 3 })[0];
     expect(s.state).toBe('attention');
     expect(s.noteParams).toEqual({ count: 3 });

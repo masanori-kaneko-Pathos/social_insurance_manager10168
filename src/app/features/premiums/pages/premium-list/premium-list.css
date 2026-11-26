@@ -364,6 +364,7 @@ td.calc {
 }
 
 .notice .status {
+  font-weight: 400;
   padding: 0 8px;
   font-size: var(--font-xs);
   border-radius: var(--radius-sm);

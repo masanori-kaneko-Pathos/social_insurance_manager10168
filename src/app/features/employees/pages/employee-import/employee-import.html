@@ -19,7 +19,7 @@
   @if (mode() === 'employees' && noStandard()) {
     <div class="alert alert-warning">
       {{ 'employeeCsv.noStandard' | transloco }}
-      <a [routerLink]="['/o', context.current()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} →</a>
+      <a [routerLink]="['/o', context.current()?.id, 'settings']">{{ 'dashboard.todo.toSettings' | transloco }} ›</a>
     </div>
   }
 
@@ -193,7 +193,7 @@
                           @let link = changeLink(x.employeeId, d.item);
                           <a [routerLink]="link.path" [queryParams]="link.tab ? { tab: link.tab } : {}">{{
                             (link.tab ? 'employee.tab.' + link.tab : 'common.edit') | transloco
-                          }} →</a>
+                          }} ›</a>
                         }
                       </td>
                     </tr>

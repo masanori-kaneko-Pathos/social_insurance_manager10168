@@ -32,7 +32,6 @@ import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
 import { hasPayGroups, payGroupAt, payrollAt } from '../../../office/logic/pay-group';
-import { BackLink } from '../../../../shared/components/back-link/back-link';
 import { RemunerationService } from '../../../employees/remuneration.service';
 import type { RemunerationDoc } from '../../../../core/models/remuneration';
 import { CriteriaService } from '../../../office/criteria.service';
@@ -66,7 +65,7 @@ const NO_PARTS: readonly SpreadPart[] = [];
 
 @Component({
   selector: 'app-payroll-month',
-  imports: [BackLink, PersonName, HalfWidthDigits, InKindCalculator, MonthPicker, Pager, PayrollEntry, PersonListBar, ReactiveFormsModule, RouterLink, SortHeader, TranslocoPipe],
+  imports: [PersonName, HalfWidthDigits, InKindCalculator, MonthPicker, Pager, PayrollEntry, PersonListBar, ReactiveFormsModule, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './payroll-month.html',
   styleUrl: './payroll-month.css',
   host: {
@@ -258,6 +257,14 @@ export class PayrollMonth {
   openInKind(v: ViewRow): void {
     this.inKindDispatched.set(false);
     this.inKindFor.set(v);
+    // 開いた窓まで動かして、最初の欄にカーソルを置く（押しても何も起きないように見えて迷うため。11/26）
+    setTimeout(() => {
+      const box = document.querySelector<HTMLElement>('.in-kind-box');
+      if (!box) return;
+      const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      box.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      box.querySelector<HTMLElement>('input, select')?.focus({ preventScroll: true });
+    });
     const officeId = this.context.current()?.id;
     if (!officeId) return;
     const monthEnd = `${this.month()}-${String(daysInMonth(this.month())).padStart(2, '0')}`;

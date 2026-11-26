@@ -112,3 +112,11 @@ export function monthsPeriodEnd(from: DateStr, months: number): DateStr {
   if (d > last) return `${target}-${pad2(last)}`;
   return addDays(`${target}-${pad2(d)}`, -1);
 }
+
+/** 記録の鍵（2026-11・2026-04-01）を「2026年11月」「2026年4月1日」に（日本語の表示用。変更履歴・現物の計算の見出し。11/26） */
+export function jaDateLabel(key: string): string {
+  const m = /^(\d{4})-(\d{2})(?:-(\d{2}))?$/.exec(key);
+  if (!m) return key;
+  const ym = `${m[1]}年${Number(m[2])}月`;
+  return m[3] ? `${ym}${Number(m[3])}日` : ym;
+}

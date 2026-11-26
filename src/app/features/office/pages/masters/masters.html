@@ -5,11 +5,11 @@
   <!-- 事業所ごとに登録する決まり（項目のページへ） -->
   <div class="entries">
     <a class="card entry" [routerLink]="['/o', context.current()?.id, 'payrolls', 'items']">
-      <strong>{{ 'payrollItem.title' | transloco }} →</strong>
+      <strong>{{ 'payrollItem.title' | transloco }} ›</strong>
       <span class="hint">{{ 'masters.payrollItems' | transloco }}</span>
     </a>
     <a class="card entry" [routerLink]="['/o', context.current()?.id, 'bonuses', 'items']">
-      <strong>{{ 'bonusItem.title' | transloco }} →</strong>
+      <strong>{{ 'bonusItem.title' | transloco }} ›</strong>
       <span class="hint">{{ 'masters.bonusItems' | transloco }}</span>
     </a>
   </div>

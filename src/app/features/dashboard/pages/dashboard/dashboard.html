@@ -183,7 +183,7 @@
           <!-- 年齢到達で絞っているときは、今は手続きがなくても1年先までの一覧へ行けるように -->
           @if (kindFilter() === 'age') {
             <a class="empty-link" [routerLink]="['/o', office()?.id, 'ages']"
-              >{{ 'dashboard.todo.toAges' | transloco }} →</a
+              >{{ 'dashboard.todo.toAges' | transloco }} ›</a
             >
           }
         </p>
@@ -598,28 +598,28 @@
                             <a
                               [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
                               [queryParams]="{ tab: 'person' }"
-                              >{{ 'dashboard.todo.toMyNumber' | transloco }} →</a
+                              >{{ 'dashboard.todo.toMyNumber' | transloco }} ›</a
                             >
                           }
                           @case ('myNumberDispose') {
                             <a
                               [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
                               [queryParams]="{ tab: 'person' }"
-                              >{{ 'dashboard.todo.toMyNumber' | transloco }} →</a
+                              >{{ 'dashboard.todo.toMyNumber' | transloco }} ›</a
                             >
                           }
                           @case ('noContract') {
                             <a
                               [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
                               [queryParams]="{ tab: 'employment' }"
-                              >{{ 'dashboard.todo.toContract' | transloco }} →</a
+                              >{{ 'dashboard.todo.toContract' | transloco }} ›</a
                             >
                           }
                           @case ('registerGaps') {
                             <a
                               [routerLink]="['/o', office()?.id, 'employees']"
                               [queryParams]="{ register: 'gaps', status: 'all' }"
-                              >{{ 'employeeCsv.register.toList' | transloco }} →</a
+                              >{{ 'employeeCsv.register.toList' | transloco }} ›</a
                             >
                           }
                           @case ('officerCheck') {
@@ -631,31 +631,31 @@
                                 it.employeeId,
                                 'edit',
                               ]"
-                              >{{ 'dashboard.todo.toOfficer' | transloco }} →</a
+                              >{{ 'dashboard.todo.toOfficer' | transloco }} ›</a
                             >
                           }
                           @case ('lose') {
                             <a
                               [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
                               [queryParams]="{ tab: 'employment' }"
-                              >{{ 'dashboard.todo.toContractCheck' | transloco }} →</a
+                              >{{ 'dashboard.todo.toContractCheck' | transloco }} ›</a
                             >
                           }
                           @case ('acquire') {
                             <a
                               [routerLink]="['/o', office()?.id, 'filings']"
                               [queryParams]="{ kind: 'acquire', from: it.date?.slice(0, 7) }"
-                              >{{ 'dashboard.todo.toFilings' | transloco }} →</a
+                              >{{ 'dashboard.todo.toFilings' | transloco }} ›</a
                             >
                           }
                           @case ('office') {
                             @if (it.office === 'noStandard' || it.office === 'newApplication') {
                               <a [routerLink]="['/o', office()?.id, 'settings']"
-                                >{{ 'dashboard.todo.toSettings' | transloco }} →</a
+                                >{{ 'dashboard.todo.toSettings' | transloco }} ›</a
                               >
                             } @else if (it.office === 'noInsurerNumber') {
                               <a [routerLink]="['/o', office()?.id, 'settings']" fragment="sec-insurer"
-                                >{{ 'dashboard.todo.toSettings' | transloco }} →</a
+                                >{{ 'dashboard.todo.toSettings' | transloco }} ›</a
                               >
                             }
                           }
@@ -663,12 +663,12 @@
                             <a
                               [routerLink]="['/o', office()?.id, 'requests']"
                               [queryParams]="{ status: 'submitted' }"
-                              >{{ 'dashboard.todo.toRequests' | transloco }} →</a
+                              >{{ 'dashboard.todo.toRequests' | transloco }} ›</a
                             >
                           }
                           @case ('age') {
                             <a [routerLink]="['/o', office()?.id, 'ages']"
-                              >{{ 'dashboard.todo.toAges' | transloco }} →</a
+                              >{{ 'dashboard.todo.toAges' | transloco }} ›</a
                             >
                           }
                           @case ('residence') {
@@ -680,64 +680,64 @@
                                 it.employeeId,
                                 'edit',
                               ]"
-                              >{{ 'dashboard.todo.toForeign' | transloco }} →</a
+                              >{{ 'dashboard.todo.toForeign' | transloco }} ›</a
                             >
                           }
                           @case ('workPermit') {
                             <a
                               [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
                               [queryParams]="{ tab: 'employment' }"
-                              >{{ 'dashboard.todo.toContractCheck' | transloco }} →</a
+                              >{{ 'dashboard.todo.toContractCheck' | transloco }} ›</a
                             >
                           }
                           @case ('specificOffice') {
                             <a [routerLink]="['/o', office()?.id, 'settings']"
-                              >{{ 'dashboard.todo.toSettings' | transloco }} →</a
+                              >{{ 'dashboard.todo.toSettings' | transloco }} ›</a
                             >
                           }
                           @case ('adjustmentDeadline') {
                             <a [routerLink]="['/o', office()?.id, 'settings']"
-                              >{{ 'dashboard.todo.toSettings' | transloco }} →</a
+                              >{{ 'dashboard.todo.toSettings' | transloco }} ›</a
                             >
                           }
                           @case ('acquireAmount') {
                             <a
                               [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
                               [queryParams]="{ tab: 'employment' }"
-                              >{{ 'dashboard.todo.toContractCheck' | transloco }} →</a
+                              >{{ 'dashboard.todo.toContractCheck' | transloco }} ›</a
                             >
                           }
                           @case ('actualHours') {
                             <a
                               [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
                               [queryParams]="{ tab: 'employment' }"
-                              >{{ 'dashboard.todo.toContractCheck' | transloco }} →</a
+                              >{{ 'dashboard.todo.toContractCheck' | transloco }} ›</a
                             >
                           }
                           @case ('bonusNone') {
                             <a [routerLink]="['/o', office()?.id, 'bonuses']"
-                              >{{ 'dashboard.todo.toBonuses' | transloco }} →</a
+                              >{{ 'dashboard.todo.toBonuses' | transloco }} ›</a
                             >
                           }
                           @case ('bonusReport') {
                             <a
                               [routerLink]="['/o', office()?.id, 'filings']"
                               [queryParams]="{ kind: 'bonus', from: it.date?.slice(0, 7) }"
-                              >{{ 'dashboard.todo.toBonusFiling' | transloco }} →</a
+                              >{{ 'dashboard.todo.toBonusFiling' | transloco }} ›</a
                             >
                           }
                           @case ('acquireReport') {
                             <a
                               [routerLink]="['/o', office()?.id, 'filings']"
                               [queryParams]="{ kind: 'acquire', from: it.date?.slice(0, 7) }"
-                              >{{ 'dashboard.todo.toFilings' | transloco }} →</a
+                              >{{ 'dashboard.todo.toFilings' | transloco }} ›</a
                             >
                           }
                           @case ('lossReport') {
                             <a
                               [routerLink]="['/o', office()?.id, 'filings']"
                               [queryParams]="{ kind: 'loss', from: it.date?.slice(0, 7) }"
-                              >{{ 'dashboard.todo.toLossFiling' | transloco }} →</a
+                              >{{ 'dashboard.todo.toLossFiling' | transloco }} ›</a
                             >
                           }
                           @case ('dependentReport') {
@@ -745,7 +745,7 @@
                               <a
                                 [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
                                 [queryParams]="{ tab: 'person' }"
-                                >{{ 'dashboard.todo.toDependents' | transloco }} →</a
+                                >{{ 'dashboard.todo.toDependents' | transloco }} ›</a
                               >
                             }
                           }
@@ -754,84 +754,84 @@
                             <a
                               [routerLink]="['/o', office()?.id, 'help']"
                               [queryParams]="{ q: 'help.topic.childcareSpecial.title' | transloco }"
-                              >{{ 'dashboard.todo.toHelp' | transloco }} →</a
+                              >{{ 'dashboard.todo.toHelp' | transloco }} ›</a
                             >
                           }
                           @case ('bonusCumulative') {
                             <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
-                              >{{ 'dashboard.todo.toEmployee' | transloco }} →</a
+                              >{{ 'dashboard.todo.toEmployee' | transloco }} ›</a
                             >
                           }
                           @case ('birthDate') {
                             <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
-                              >{{ 'dashboard.todo.toEmployee' | transloco }} →</a
+                              >{{ 'dashboard.todo.toEmployee' | transloco }} ›</a
                             >
                           }
                           @case ('insurerChange') {
                             <a [routerLink]="['/o', office()?.id, 'settings']"
-                              >{{ 'dashboard.todo.toSettings' | transloco }} →</a
+                              >{{ 'dashboard.todo.toSettings' | transloco }} ›</a
                             >
                           }
                           @case ('payrollMissing') {
                             <a [routerLink]="['/o', office()?.id, 'payrolls', it.extra!.params['month']]"
-                              >{{ 'dashboard.todo.toPayroll' | transloco }} →</a
+                              >{{ 'dashboard.todo.toPayroll' | transloco }} ›</a
                             >
                           }
                           @case ('ratesMissing') {
                             @if (it.extra!.params['insurer'] === 'kumiai') {
                               <a [routerLink]="['/o', office()?.id, 'settings']"
-                                >{{ 'dashboard.todo.toSettings' | transloco }} →</a
+                                >{{ 'dashboard.todo.toSettings' | transloco }} ›</a
                               >
                             }
                           }
                           @case ('officeNameAddress') {
                             <a [routerLink]="['/o', office()?.id, 'settings']"
-                              >{{ 'dashboard.todo.toSettings' | transloco }} →</a
+                              >{{ 'dashboard.todo.toSettings' | transloco }} ›</a
                             >
                           }
                           @case ('officeRelation') {
                             <a [routerLink]="['/o', office()?.id, 'settings']"
-                              >{{ 'dashboard.todo.toSettings' | transloco }} →</a
+                              >{{ 'dashboard.todo.toSettings' | transloco }} ›</a
                             >
                           }
                           @case ('address') {
                             <a
                               [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
                               [queryParams]="{ tab: 'person' }"
-                              >{{ 'dashboard.todo.toPerson' | transloco }} →</a
+                              >{{ 'dashboard.todo.toPerson' | transloco }} ›</a
                             >
                           }
                           @case ('addressKumiai') {
                             <a
                               [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
                               [queryParams]="{ tab: 'person' }"
-                              >{{ 'dashboard.todo.toPerson' | transloco }} →</a
+                              >{{ 'dashboard.todo.toPerson' | transloco }} ›</a
                             >
                           }
                           @case ('name') {
                             <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
-                              >{{ 'dashboard.todo.toEmployee' | transloco }} →</a
+                              >{{ 'dashboard.todo.toEmployee' | transloco }} ›</a
                             >
                           }
                           @case ('dependentChange') {
                             <a
                               [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
                               [queryParams]="{ tab: 'person' }"
-                              >{{ 'dashboard.todo.toDependents' | transloco }} →</a
+                              >{{ 'dashboard.todo.toDependents' | transloco }} ›</a
                             >
                           }
                           @case ('overseasCertificate') {
                             <a
                               [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
                               [queryParams]="{ tab: 'employment' }"
-                              >{{ 'dashboard.todo.toOverseas' | transloco }} →</a
+                              >{{ 'dashboard.todo.toOverseas' | transloco }} ›</a
                             >
                           }
                           @case ('overseasPayAbroad') {
                             <a
                               [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
                               [queryParams]="{ tab: 'employment' }"
-                              >{{ 'dashboard.todo.toOverseas' | transloco }} →</a
+                              >{{ 'dashboard.todo.toOverseas' | transloco }} ›</a
                             >
                             <a
                               [routerLink]="[
@@ -841,14 +841,14 @@
                                 it.employeeId,
                                 'edit',
                               ]"
-                              >{{ 'dashboard.todo.toLoss' | transloco }} →</a
+                              >{{ 'dashboard.todo.toLoss' | transloco }} ›</a
                             >
                           }
                           @case ('contractEnd') {
                             <a
                               [routerLink]="['/o', office()?.id, 'employees', it.employeeId]"
                               [queryParams]="{ tab: 'employment' }"
-                              >{{ 'dashboard.todo.toRenew' | transloco }} →</a
+                              >{{ 'dashboard.todo.toRenew' | transloco }} ›</a
                             >
                             <a
                               [routerLink]="[
@@ -858,7 +858,7 @@
                                 it.employeeId,
                                 'edit',
                               ]"
-                              >{{ 'dashboard.todo.toRetire' | transloco }} →</a
+                              >{{ 'dashboard.todo.toRetire' | transloco }} ›</a
                             >
                           }
                         }

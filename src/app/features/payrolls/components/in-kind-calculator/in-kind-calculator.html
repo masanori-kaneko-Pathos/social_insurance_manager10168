@@ -1,6 +1,6 @@
 <section class="card calc" aria-labelledby="in-kind-title">
   <div class="head">
-    <h2 id="in-kind-title">{{ 'inKind.title' | transloco: { name: employeeName(), month: month() } }}</h2>
+    <h2 id="in-kind-title">{{ 'inKind.title' | transloco: { name: employeeName(), month: month(), label: monthLabel() } }}</h2>
     <button type="button" class="btn btn-small" (click)="closed.emit()">{{ 'common.close' | transloco }}</button>
   </div>
 
@@ -9,7 +9,7 @@
   } @else if (tables() === null) {
     <p class="muted">{{ 'common.loading' | transloco }}</p>
   } @else if (!table()) {
-    <div class="alert alert-warning">{{ 'inKind.error.noTable' | transloco: { month: month() } }}</div>
+    <div class="alert alert-warning">{{ 'inKind.error.noTable' | transloco: { month: month(), label: monthLabel() } }}</div>
   } @else {
     @let t = table()!;
     <div class="pref">
@@ -101,6 +101,24 @@
           </div>
         }
       </fieldset>
+
+      <!-- その他（時価）：食事・住宅のほかの現物。価額の表はないので、時価の額を入れる（11/26） -->
+      <fieldset>
+        <label class="check"><input type="checkbox" formControlName="useOther" />{{ 'inKind.other' | transloco }}</label>
+        @if (form.controls.useOther.value) {
+          <p class="rates">{{ 'inKind.otherHint' | transloco }}</p>
+          <div class="grid">
+            <div class="field">
+              <label for="ik-ov">{{ 'inKind.otherValue' | transloco }}</label>
+              <input id="ik-ov" class="input num" inputmode="numeric" formControlName="otherValue" />
+            </div>
+            <div class="field">
+              <label for="ik-op">{{ 'inKind.otherPays' | transloco }}</label>
+              <input id="ik-op" class="input num" inputmode="numeric" formControlName="otherPays" />
+            </div>
+          </div>
+        }
+      </fieldset>
     </form>
 
     @for (e of errors(); track e) {
@@ -127,6 +145,14 @@
               <td class="num">{{ h.value.toLocaleString() }}</td>
               <td class="num">− {{ h.employeePays.toLocaleString() }}</td>
               <td class="num">{{ h.counted.toLocaleString() }}</td>
+            </tr>
+          }
+          @if (r.other; as o) {
+            <tr>
+              <th>{{ 'inKind.otherShort' | transloco }}</th>
+              <td class="num">{{ o.value.toLocaleString() }}</td>
+              <td class="num">− {{ o.employeePays.toLocaleString() }}</td>
+              <td class="num">{{ o.counted.toLocaleString() }}</td>
             </tr>
           }
           <tr class="total">

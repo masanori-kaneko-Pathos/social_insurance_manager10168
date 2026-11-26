@@ -52,7 +52,7 @@ export function premiumGuideSteps(x: PremiumGuideInput): GuideStep[] {
     x.close?.closedByName && x.close?.closedOn
       ? ['checkedBy', { name: x.close.closedByName, date: x.close.closedOn }]
       : ['checked'];
-  const employee = closed ? step('employee', 'done', ...checkedNote()) : x.fixCount > 0 ? step('employee', 'attention', 'fix', { count: x.fixCount }) : step('employee', 'todo');
+  const employee = closed ? step('employee', 'done', ...checkedNote()) : x.fixCount > 0 ? step('employee', 'attention', 'fix', { count: x.fixCount }) : step('employee', 'todo', 'employeeTodo');
   // 照合：確認済みなら記録した結果、まだなら今の画面で読んだ結果
   const sc = closed ? (x.close!.softCheck ?? null) : x.softNow;
   const soft = sc
@@ -61,8 +61,9 @@ export function premiumGuideSteps(x: PremiumGuideInput): GuideStep[] {
       : step('soft', 'done', 'softMatch', { count: sc.matched })
     : closed
       ? step('soft', 'skipped', 'softNone')
-      : step('soft', 'todo');
-  const total = closed ? step('total', 'done', ...checkedNote()) : step('total', 'todo');
+      : step('soft', 'todo', 'softTodo');
+  // まだの段は「まだ」だけでなく、次にやることを書く（11/26）
+  const total = closed ? step('total', 'done', ...checkedNote()) : step('total', 'todo', 'totalTodo');
   return [employee, soft, total, noticeStep(x)];
 }
 

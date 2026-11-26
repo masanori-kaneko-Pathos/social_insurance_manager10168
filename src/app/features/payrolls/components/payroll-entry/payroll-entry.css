@@ -403,3 +403,9 @@ tr.line-err span + span::before {
   font-size: var(--font-xs);
   color: var(--color-text-sub);
 }
+
+/* 自動の日数（「31（自動）」）は、入っている数と同じ黒で見せる（保存される数なので。11/26） */
+.days-input::placeholder {
+  color: var(--color-text);
+  opacity: 1;
+}

@@ -5,7 +5,8 @@
     <span class="strip-item"><small>{{ 'premiumList.col.employeeSum' | transloco }}</small><strong>{{ yen(employeeYen()) }}</strong></span>
     <span class="strip-item"><small>{{ 'premiumList.col.employerSum' | transloco }}</small><strong>{{ yen(employerYen()) }}</strong></span>
     <span class="strip-item main"><small>{{ 'premiumList.col.payment' | transloco }}</small><strong>{{ yen(paymentYen()) }}</strong></span>
-    <span class="fold-toggle"><span class="when-closed">{{ 'premiumList.breakdown' | transloco }} ▽</span><span class="when-open">{{ 'premiumList.breakdown' | transloco }} △</span></span>
+    <!-- 開ける印（文字のボタンはやめ、表の行と同じ下向きの印。帯のどこを押しても開く。11/26） -->
+    <span class="fold-toggle"><span class="sr-only">{{ 'premiumList.breakdown' | transloco }}</span><span class="chev" aria-hidden="true"></span></span>
   </summary>
   @if (excluded() > 0) {
     <p class="warn">{{ 'premiumList.totalsExcluded' | transloco: { count: excluded() } }}</p>

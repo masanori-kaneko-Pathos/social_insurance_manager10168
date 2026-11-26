@@ -4,6 +4,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { InKindDoc } from '../../../../core/models/master';
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { InKindService } from '../../in-kind.service';
+import { jaDateLabel } from '../../../../shared/utils/date';
 import { emptyInKindForm, inKindAmount, InKindFormValue, inKindTableAt, readInKindForm } from '../../logic/in-kind';
 
 /**
@@ -22,6 +23,8 @@ export class InKindCalculator {
 
   /** 支払の月（その月に効いている表を使う） */
   readonly month = input.required<string>();
+  /** 見出しの年月（2026-11 → 2026年11月） */
+  readonly monthLabel = computed(() => jaDateLabel(this.month()));
   /** 勤務地の都道府県 '01'〜'47'（事業所の都道府県） */
   readonly prefecture = input.required<string>();
   /** 健康保険組合（規約で別の価額を決めていることがある） */

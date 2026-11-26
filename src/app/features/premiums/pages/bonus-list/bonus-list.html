@@ -32,7 +32,7 @@
     }
     <span class="muted">{{ 'bonus.plannedMonthsNote' | transloco }}</span>
     @if (context.isAdmin()) {
-      <a [routerLink]="['/o', office.id, 'settings']" fragment="bonus-months">{{ 'bonus.plannedMonthsEdit' | transloco }} →</a>
+      <a [routerLink]="['/o', office.id, 'settings']" fragment="bonus-months">{{ 'bonus.plannedMonthsEdit' | transloco }} ›</a>
     }
   </p>
 }
@@ -54,7 +54,7 @@
           | transloco: { count: looseNames().length, names: looseNames().join('、') }
       }}
       <a [routerLink]="['/o', context.current()?.id, 'bonuses', 'items']"
-        >{{ 'bonus.toItems' | transloco }} →</a
+        >{{ 'bonus.toItems' | transloco }} ›</a
       >
     </p>
   }

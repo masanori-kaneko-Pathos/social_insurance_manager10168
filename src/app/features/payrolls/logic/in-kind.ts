@@ -46,9 +46,19 @@ export interface HousingInput {
   employeePays: number;
 }
 
+/** 食事・住宅のほかの現物（通勤定期券・自社製品・被服など）。価額の表はなく、時価で決める（11/26） */
+export interface OtherInKindInput {
+  /** 時価（円・1か月。労働協約に定めがあればその額） */
+  value: number;
+  /** 本人が払った額（円） */
+  employeePays: number;
+}
+
 export interface InKindInput {
   meal: MealInput | null;
   housing: HousingInput | null;
+  /** その他（時価）。前の呼び出しは省いてよい */
+  other?: OtherInKindInput | null;
 }
 
 export interface InKindPart {
@@ -63,6 +73,7 @@ export interface InKindPart {
 export interface InKindResult {
   meal: InKindPart | null;
   housing: InKindPart | null;
+  other: InKindPart | null;
   total: number;
 }
 
@@ -97,7 +108,12 @@ export function inKindAmount(p: InKindPrefecture, input: InKindInput): InKindRes
     const pays = input.housing.employeePays;
     housing = { value, employeePays: pays, counted: Math.max(0, value - pays), twoThirds: false };
   }
-  return { meal, housing, total: (meal?.counted ?? 0) + (housing?.counted ?? 0) };
+  let other: InKindPart | null = null;
+  if (input.other) {
+    const { value, employeePays } = input.other;
+    other = { value, employeePays, counted: Math.max(0, value - employeePays), twoThirds: false };
+  }
+  return { meal, housing, other, total: (meal?.counted ?? 0) + (housing?.counted ?? 0) + (other?.counted ?? 0) };
 }
 
 // ===== 入力の文字 → 数 =====
@@ -114,9 +130,13 @@ export interface InKindFormValue {
   /** 月の途中から入居した日（空 ＝ 1か月まるごと） */
   movedIn: string;
   housingPays: string;
+  /** その他（時価）：通勤定期券・自社製品など（11/26） */
+  useOther: boolean;
+  otherValue: string;
+  otherPays: string;
 }
 
-export type InKindFormError = 'count' | 'yen' | 'size' | 'movedIn' | 'nothing';
+export type InKindFormError = 'count' | 'yen' | 'size' | 'movedIn' | 'nothing' | 'otherValue';
 
 export function emptyInKindForm(): InKindFormValue {
   return {
@@ -130,6 +150,9 @@ export function emptyInKindForm(): InKindFormValue {
     size: '',
     movedIn: '',
     housingPays: '',
+    useOther: false,
+    otherValue: '',
+    otherPays: '',
   };
 }
 
@@ -146,7 +169,7 @@ export function readInKindForm(
   const errors = new Set<InKindFormError>();
   const okCount = (s: string) => s.trim() === '' || (COUNT_RE.test(s.trim()) && Number(s) <= 93);
   const okYen = (s: string) => s.trim() === '' || YEN_RE.test(s.trim().replace(/,/g, ''));
-  if (!v.useMeal && !v.useHousing) errors.add('nothing');
+  if (!v.useMeal && !v.useHousing && !v.useOther) errors.add('nothing');
   if (v.useMeal) {
     if (!v.fullMonth && ![v.breakfasts, v.lunches, v.dinners].every(okCount)) errors.add('count');
     if (!okYen(v.mealPays)) errors.add('yen');
@@ -155,6 +178,10 @@ export function readInKindForm(
     if (!SIZE_RE.test(v.size.trim()) || Number(v.size) <= 0) errors.add('size');
     if (!okYen(v.housingPays)) errors.add('yen');
     if (v.movedIn && (!DATE_RE.test(v.movedIn) || toYearMonth(v.movedIn) !== month)) errors.add('movedIn');
+  }
+  if (v.useOther) {
+    if (!YEN_RE.test(v.otherValue.trim().replace(/,/g, ''))) errors.add('otherValue');
+    if (!okYen(v.otherPays)) errors.add('yen');
   }
   if (errors.size > 0) return { errors: [...errors] };
   return {
@@ -171,6 +198,7 @@ export function readInKindForm(
       housing: v.useHousing
         ? { size: Number(v.size.trim()), proration: prorationOf(v.movedIn, month), employeePays: num(v.housingPays) }
         : null,
+      other: v.useOther ? { value: num(v.otherValue), employeePays: num(v.otherPays) } : null,
     },
   };
 }
