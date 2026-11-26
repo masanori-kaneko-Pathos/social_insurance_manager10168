@@ -143,6 +143,11 @@ export function allocateSpreads(payrolls: Map<string, Payroll>): Map<string, num
  * まとめて払った額の全部がこの月の中に入る行は、総額が変わらない割り振り（余りは支給した月）にする。
  * 一部だけ入る行は、端数のまま足して切り捨て（きまり 1・2）のまま
  */
+/** まとめて払った額の全部が、平均を出す月の中に入るか（きまり 3 を当てる行か） */
+function isWhole(part: Pick<SpreadPart, 'paidMonth' | 'months'>, inWindow: ReadonlySet<string>): boolean {
+  return Array.from({ length: part.months }, (_, i) => shiftMonth(part.paidMonth, i)).every((m) => inWindow.has(m));
+}
+
 export function forWindow(payrolls: ReadonlyMap<string, Payroll>, months: readonly string[]): ReadonlyMap<string, Payroll> {
   const inWindow = new Set(months);
   let out: Map<string, Payroll> | null = null;
@@ -151,7 +156,7 @@ export function forWindow(payrolls: ReadonlyMap<string, Payroll>, months: readon
     if (!p) continue;
     const all = partsCovering(payrolls, t);
     if (all.length === 0) continue;
-    const whole = all.filter((x) => Array.from({ length: x.months }, (_, i) => shiftMonth(x.paidMonth, i)).every((m) => inWindow.has(m)));
+    const whole = all.filter((x) => isWhole(x, inWindow));
     if (whole.length === 0) continue;
     const rest = all.filter((x) => !whole.includes(x));
     const diff = whole.reduce((s, x) => s + wholeShare(x, t), 0) + floorSum(rest) - floorSum(all);
@@ -160,4 +165,27 @@ export function forWindow(payrolls: ReadonlyMap<string, Payroll>, months: readon
     out.set(t, { ...p, cash: p.cash + diff });
   }
   return out ?? payrolls;
+}
+
+/**
+ * 年4回以上の賞与（賞与に係る報酬 ＝ 年額 ÷ 12）の円未満を、定期代の月割りの円未満と合わせて切り捨てたときに増える額（0 か 1円。11/26）
+ * 月額変更届 15 の 2：端数の出るものが複数あるときは、端数のまま足して、その月の報酬を決めるときに切り捨てる
+ * （200,000 ＋ 7,056.66… ＋ 41,666.66… ＝ 248,723円。別々に切り捨てると 248,722円）
+ * 賞与に係る報酬は、年額 ÷ 12 の切り捨て（bonusMonthly）として各月に足しているので、ここではその円未満（bonusRest ＝ 年額 ÷ 12 の余り）だけを見る
+ * まとめて払った額の全部が平均を出す月に入る行は、総額を変えない割り振り（整数）なので端数がない（きまり 3）
+ */
+export function bonusCarry(
+  payrolls: ReadonlyMap<string, Pick<Payroll, 'lines'>>,
+  month: string,
+  window: readonly string[],
+  bonusRest: number,
+): number {
+  if (!bonusRest) return 0;
+  const inWindow = new Set(window);
+  const rest = partsCovering(payrolls, month).filter((x) => !isWhole(x, inWindow));
+  if (rest.length === 0) return 0;
+  const d = rest.reduce((acc, p) => (acc * p.months) / gcd(acc, p.months), 12);
+  const num = rest.reduce((s, p) => s + p.amount * (d / p.months), 0);
+  const spreadRem = num - Math.floor(num / d) * d;
+  return spreadRem + bonusRest * (d / 12) >= d ? 1 : 0;
 }

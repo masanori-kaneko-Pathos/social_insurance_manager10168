@@ -134,7 +134,7 @@ export class PayrollEntry implements OnInit {
     for (const d of this.lines() ?? []) {
       const amount = readAmount(d.amount, d.category);
       if (d.name.trim() && d.category && amount !== null)
-        ok.push({ name: d.name.trim(), category: d.category, amount, forMonth: d.forMonth ?? null, months: d.months ?? null });
+        ok.push({ name: d.name.trim(), category: d.category, amount, forMonth: d.forMonth ?? null, months: d.months ?? null, periodChange: !!d.periodChange });
     }
     return totalsOf(ok, this.payType());
   });
@@ -183,9 +183,14 @@ export class PayrollEntry implements OnInit {
     return m ? { y: m.slice(0, 4), m: String(Number(m.slice(5))) } : null;
   });
 
-  /** 本来の月を選べる行か（遡及支払額・報酬にならない行は選べない） */
+  /** 本来の月を選べる行か（報酬にならない行は選べない。遡及支払額は「いつの分から」を選ぶ。11/26） */
   canPickMonth(d: LineDraft): boolean {
-    return !!d.category && FOR_MONTH_CATEGORIES.includes(d.category) && this.forMonthOptions().length > 0;
+    return !!d.category && (FOR_MONTH_CATEGORIES.includes(d.category) || this.isRetro(d)) && this.forMonthOptions().length > 0;
+  }
+
+  /** 遡及支払額の行か（同じ欄で「いつの分から」を選ぶ。起算月より前の月の分だけを平均から除くため） */
+  isRetro(d: LineDraft): boolean {
+    return d.category === 'retro';
   }
 
   /**
@@ -194,8 +199,15 @@ export class PayrollEntry implements OnInit {
    */
   setForMonth(i: number, value: string): void {
     const next = [...(this.lines() ?? [])];
-    const months = /^x\d+$/.test(value) ? Number(value.slice(1)) : null;
-    next[i] = { ...next[i], forMonth: months || !value ? null : value, months };
+    if (this.isRetro(next[i])) {
+      // 遡及支払額：いつの分から（空 ＝ 分からない：全部除く）
+      next[i] = { ...next[i], retroFrom: value || null, forMonth: null, months: null, periodChange: false };
+    } else {
+      // 'period' ＝ 締め日の変更で増えた期間の分（平均から除く。11/26）
+      const period = value === 'period';
+      const months = /^x\d+$/.test(value) ? Number(value.slice(1)) : null;
+      next[i] = { ...next[i], forMonth: months || period || !value ? null : value, months, periodChange: period };
+    }
     this.set(next);
   }
 
@@ -211,6 +223,8 @@ export class PayrollEntry implements OnInit {
 
   /** 選択欄の今の値 */
   pickValue(d: LineDraft): string {
+    if (this.isRetro(d)) return d.retroFrom ?? '';
+    if (d.periodChange) return 'period';
     if (d.months && d.months > 1 && this.canSpread(d)) return `x${d.months}`;
     return d.forMonth ?? '';
   }

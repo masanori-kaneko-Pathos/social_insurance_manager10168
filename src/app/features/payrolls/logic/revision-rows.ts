@@ -24,7 +24,7 @@ import { endOf } from '../../employees/logic/leave';
 import { coverageForMonth } from '../../employees/logic/coverage';
 import { pickGradeTable } from '../../rates/logic/grade';
 import { withCapRevisions } from '../../rates/logic/cap-revision';
-import { ContractLike, contractStartMonths, findStartMonths, IrregularResult, judgeIrregular } from './irregular';
+import { ContractLike, contractStartMonths, findStartMonths, furloughEndAllowed, IrregularResult, judgeIrregular } from './irregular';
 import { judgeLeaveEnd, LeaveEndResult } from './leave-end';
 import { PaySchedule, periodOf } from './payroll-rows';
 import { GradeRows, Remuneration } from './regular';
@@ -45,6 +45,8 @@ export interface RevisionPerson {
   wageChanges?: readonly WageChange[];
   /** 定時決定の年 → 賞与に係る報酬（年4回以上の賞与の 年額÷12）。省くと 0（11/19。bonus-nature.ts） */
   bonusMonthlyFor?: (year: number) => number;
+  /** 定時決定の年 → 賞与に係る報酬の円未満（年額 ÷ 12 の余り）。省くと 0（11/26。月額変更届 15 の 2） */
+  bonusRestFor?: (year: number) => number;
 }
 
 export interface RevisionContext {
@@ -66,6 +68,7 @@ const PART_TYPES = ['part', 'arbeit'];
  * 支払基礎日数の基準を、支払月ごとに出す（随時改定・休業終了時改定・定時決定で共通。11/16 に切り出した）
  * - minDaysAt：その月の区分が短時間労働者なら11日、ほかは17日
  * - partAt：その月、4分の3以上で働くパート・アルバイト（短時間就労者）か（17日の月がなければ15日で読み替える）
+ *   日給で所定労働日数が通常の労働者より少ない短時間正社員も同じ（11/26）
  */
 export function dayRulesOf(
   p: Pick<RevisionPerson, 'employee' | 'contracts'>,
@@ -90,7 +93,12 @@ export function dayRulesOf(
   const partAt = (m: string) => {
     const { date, c } = classAt(m);
     const contract = contractAt(p.contracts, date);
-    return c.category === 'regular' && !!contract && PART_TYPES.includes(contract.employmentType);
+    if (c.category !== 'regular' || !contract) return false;
+    if (PART_TYPES.includes(contract.employmentType)) return true;
+    // 短時間正社員：日給で、契約の月の所定労働日数が通常の労働者より少ない人も、パートと同じく15日の扱い
+    // （疑義照会回答 育児休業等終了時報酬月額変更届 1。勤務日数が少ないのが一般的、が別の扱いの理由。11/26）
+    const full = ctx.office.standardHours?.monthlyDays ?? null;
+    return contract.payType === 'daily' && full !== null && contract.monthlyDays > 0 && contract.monthlyDays < full;
   };
   return { minDaysAt, partAt };
 }
@@ -145,6 +153,8 @@ export function revisionItems(p: RevisionPerson, ctx: RevisionContext): Revision
   };
   for (const start of findStartMonths(p.payrolls, p.wageChanges ?? [], { amountComparable, contractStarts, minDaysAt, leaveAt })) {
     if (start.month < ctx.fromMonth) continue;
+    // 一時帰休の解消は、休業手当で決めた・改定した標準報酬があるときだけ（疑義照会回答 月額変更届 25・28。11/26）
+    if (start.source === 'furlough' && start.direction === 'up' && !furloughEndAllowed(start.month, p.payrolls, remunerations)) continue;
     const revisedFrom = shiftMonth(start.month, 3);
     const r = judgeIrregular({
       start,
@@ -155,6 +165,7 @@ export function revisionItems(p: RevisionPerson, ctx: RevisionContext): Revision
       pensionAt,
       // 7〜9月の改定はその年、ほかは直前の定時決定の額（irregularBonusYearOf）
       bonusMonthly: p.bonusMonthlyFor?.(irregularBonusYearOf(revisedFrom)) ?? 0,
+      bonusRest: p.bonusRestFor?.(irregularBonusYearOf(revisedFrom)) ?? 0,
     });
     items.push({ type: 'irregular', employeeId: e.id, result: r, reflected: reflected(r.revisedFrom) });
   }

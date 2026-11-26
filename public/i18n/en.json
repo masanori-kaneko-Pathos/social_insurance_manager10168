@@ -4048,11 +4048,16 @@
       "fromLines": "The fields above are calculated from the lines.",
       "forMonth": "Original month",
       "forOption": "Paid {{y}}-{{m}}",
-      "forMonthNote": "For settled forgotten pay, choose the month it was due in \"Original month\"; for a retroactive raise, use the \"Retroactive pay\" category. For a 3- or 6-month commuter pass paid at once, choose \"3 months\" or \"6 months\" on the commuting allowance line.",
+      "forMonthNote": "For settled forgotten pay, choose the month it was due in \"Original month\"; for a retroactive raise, use the \"Retroactive pay\" category. For a 3- or 6-month commuter pass paid at once, choose \"3 months\" or \"6 months\" on the commuting allowance line. For a retroactive raise, choosing the month it starts from excludes only the part before the start month from the averages. For pay for an extra period caused by a closing-day change, choose \"Extra from a closing-day change\".",
       "forOptionShort": "Paid in month {{m}}",
       "lead": "Enter the lines in the earnings section of the payslip from the top. Do not enter the deductions section (taxes, social insurance, and so on).",
       "forMonthOrSpread": "Original month or months covered",
-      "spreadOption": "{{n}} months"
+      "spreadOption": "{{n}} months",
+      "retroFrom": "Which month the difference starts from",
+      "retroUnknown": "Which months (optional)",
+      "retroOptionShort": "From pay for month {{m}}",
+      "retroOption": "From pay for {{y}}-{{m}}",
+      "periodOption": "Extra from a closing-day change"
     },
     "side": {
       "days": "Days and hours",
@@ -4081,7 +4086,8 @@
       "note": "This is used as the monthly remuneration.",
       "spreadLater": "Of which, commuter pass for later months: ¥{{amount}}",
       "spreadIn": "Monthly share of a commuter pass paid earlier: ¥{{amount}}",
-      "remuneration": "Used as this month's remuneration: ¥{{amount}} (a commuter pass paid for several months is divided by the months, starting from the month paid)"
+      "remuneration": "Used as this month's remuneration: ¥{{amount}} (a commuter pass paid for several months is divided by the months, starting from the month paid)",
+      "periodExtra": "Of which, extra period from a closing-day change (excluded from the averages): ¥{{amount}}"
     },
     "add": "Enter pay",
     "check": {

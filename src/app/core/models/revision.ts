@@ -25,6 +25,8 @@ export interface RegularDecisionDoc {
   monthlyAmount: number; // 等級を決めた報酬月額
   /** 各月の報酬に足した「賞与に係る報酬」（年4回以上の賞与の 年額÷12。なし・0 は足していない。11/19） */
   bonusMonthly?: number | null;
+  /** その「賞与に係る報酬」のもとにした賞与の年額（÷12 の円未満を、定期代の月割りの端数と合わせるため。11/26。前のデータにはない） */
+  bonusAnnual?: number | null;
   seasonal: boolean; // 年間平均：業務の性質上、例年発生する
   consent: boolean; // 年間平均：被保険者が同意した
   health: StandardRemuneration;

@@ -22,7 +22,7 @@ import { payrollOf } from '../../../office/office-settings';
 import { findStartMonths } from '../../../payrolls/logic/irregular';
 import { latestPaidMonth, periodOf } from '../../../payrolls/logic/payroll-rows';
 import { payrollAt } from '../../../office/logic/pay-group';
-import { regularYearOf } from '../../../payrolls/logic/regular';
+import { july1PayOf, regularYearOf } from '../../../payrolls/logic/regular';
 import { standardAt } from '../../../payrolls/logic/revision-base';
 import { PayrollService } from '../../../payrolls/payroll.service';
 import { RegularService } from '../../../payrolls/regular.service';
@@ -34,8 +34,8 @@ import { ageReachDate, isOver70Employee } from '../../../employees/logic/coverag
 import { acquireBonusRemunerationOf, bonusRemunerationOf, enrolledFromOf, irregularBonusYearOf, isNotCovered, isRemunerationBonus, recipientsOf } from '../../../premiums/logic/bonus-nature';
 import { acquiredDateOf, acquireRow, addedAcquireBonus, bonusRow, FILING_COLUMNS, FILING_KINDS, filingFileName, FilingKind, FilingRow, irregularRemarks, lossesIn, lossRow, mergeSameMonth, regularRemarks, revisionRow, specialRemarks, specialRow, toCells } from '../../logic/filing-rows';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
-import { allocateOtherMonths } from '../../../payrolls/logic/payroll-lines';
-import { forWindow } from '../../../payrolls/logic/spread';
+import { allocateOtherMonths, averageExclusion } from '../../../payrolls/logic/payroll-lines';
+import { bonusCarry, forWindow } from '../../../payrolls/logic/spread';
 
 /**
  * 届書の一覧：様式と期間を選んで「表示」→ 表で確かめて CSV に書き出す
@@ -226,7 +226,8 @@ export class FilingsPage {
     const tIds = targets.map((e) => e.id);
     // 7月は一時帰休が7/1に解消したかを見るためだけに読む（6月の途中で解消したとき。11/19）
     // 前の年の11月〜2月は、まとめて払った定期代（6か月分まで）を4〜6月に割り振るためだけに読む（11/26）
-    const months = [`${year - 1}-11`, `${year - 1}-12`, ...['01', '02', '03', '04', '05', '06', '07'].map((m) => `${year}-${m}`)];
+    // 8月は、翌月払いの事業所で7月1日を含む期間の給与（一時帰休の解消を見る。疑義照会回答 月額変更届 14）として読む（11/26）
+    const months = [`${year - 1}-11`, `${year - 1}-12`, ...['01', '02', '03', '04', '05', '06', '07', '08'].map((m) => `${year}-${m}`)];
     // 賞与に係る報酬を足した人がいれば、備考に書く支払月のために支給を読む（11/19）
     const anyBonus = targets.some((e) => (decisions.get(e.id)!.bonusMonthly ?? 0) > 0);
     const [byMonth, rems, bonusPayments] = await Promise.all([
@@ -252,12 +253,20 @@ export class FilingsPage {
       const aprJun = ['04', '05', '06'].map((m) => `${year}-${m}`);
       const win = forWindow(payrolls, aprJun);
       const three = aprJun.map((m) => win.get(m) ?? null);
+      // 賞与に係る報酬の円未満（年額 ÷ 12 の余り）。定時決定の記録に残した年額から出す（11/26）
+      // 前のデータで年額がなければ、額が同じときだけ支給の記録から出した年額を使う
+      const bonusInfo = (d.bonusMonthly ?? 0) > 0 ? bonusRemunerationOf(e.id, year, bonusPayments) : null;
+      const annual = d.bonusAnnual ?? (bonusInfo && bonusInfo.monthly === d.bonusMonthly ? bonusInfo.annual : null);
+      const bonusRest = annual != null && Math.floor(annual / 12) === d.bonusMonthly ? annual % 12 : 0;
       this.nenkinExtra.set(e.id, {
         previous: prev ? { health: prev.health.standard, pension: prev.pension.standard, from: prev.from } : null,
         regular: {
           // 賞与に係る報酬（年4回以上の賞与）は各月の通貨の額に足す（11/19）
-          months: three.map((p) => (p ? { days: p.days, cash: p.cash + (d.bonusMonthly ?? 0), inKind: p.inKind } : null)),
-          retro: three.reduce((s, p) => s + (p?.retro ?? 0), 0),
+          months: three.map((p, k) =>
+            p ? { days: p.days, cash: p.cash + (d.bonusMonthly ?? 0) + bonusCarry(payrolls, aprJun[k], aprJun, bonusRest), inKind: p.inKind } : null,
+          ),
+          // 平均から除く額（4月より前の月の分の遡及支払額・締め日の変更で増えた分。11/26）
+          retro: three.reduce((s, p) => s + (p ? averageExclusion(p, `${year}-04`) : 0), 0),
         },
         bonus: null,
       });
@@ -276,6 +285,7 @@ export class FilingsPage {
           year,
           annual: d.method === 'annual',
           payrolls,
+          july1Pay: july1PayOf(payrolls, payrollAt(this.context.current()!, e, `${year}-07`), year),
           bonusMonthly: d.bonusMonthly,
           bonusMonths: (d.bonusMonthly ?? 0) > 0 ? bonusRemunerationOf(e.id, year, bonusPayments).months : [],
           // 70歳以上被用者の算定基礎月：平均に使った月のうち、計算期間の初日が70歳到達日以後の月（11/25）
@@ -284,6 +294,7 @@ export class FilingsPage {
             .map((m) => Number(m.slice(5, 7))),
         }),
         bonusMonthly: d.bonusMonthly ?? 0,
+        bonusRest,
       });
     });
   }
@@ -348,9 +359,9 @@ export class FilingsPage {
             this.payrollApi.ofEmployeeMonths(officeId, e.id, months),
             this.remunerationsApi.list(officeId, e.id),
           ]);
-          // 払い忘れの精算は、本来の月に割り振って書く（記入例。前後の月は割り振りのためだけに読んだので外す）
+          // 払い忘れの精算は、本来の月に割り振って書く（記入例）。前後の月は割り振りのためだけに読んだ（届には3か月だけ書く）
+          // 前の月は外さない（定期代の月割りの端数を、賞与の端数と合わせるのに使う。11/26）
           const payrolls = allocateOtherMonths(loaded).payrolls;
-          for (const m of months) if (m < d.startMonth || m > shiftMonth(d.startMonth, 2)) payrolls.delete(m);
           const prev = standardAt(rems, shiftMonth(d.revisedFrom, -1));
           return revisionRow('irregular', {
             employee: e,
@@ -371,6 +382,7 @@ export class FilingsPage {
               bonusMonths: bonusOf(e.id, d.revisedFrom).months,
             }),
             bonusMonthly: bonusMonthlyOf(e.id, d.revisedFrom),
+            bonusRest: bonusOf(e.id, d.revisedFrom).annual % 12,
           });
         }),
     );

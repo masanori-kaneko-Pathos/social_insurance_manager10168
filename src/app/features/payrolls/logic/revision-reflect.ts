@@ -45,8 +45,10 @@ export function personRevisions(s: PersonRevisionSource, ctx: RevisionContext, t
   const allocated = allocateOtherMonths(new Map(s.payrolls.map((p): [string, Payroll] => [p.paidMonth, p])));
   const payrolls = allocated.payrolls;
   const bonusMonthlyFor = (y: number) => bonusRemunerationOf(e.id, y, s.bonusPayments, enrolledFromOf(e)).monthly;
+  // 賞与に係る報酬の円未満（年額 ÷ 12 の余り）。定期代の月割りの円未満と合わせて切り捨てる（11/26）
+  const bonusRestFor = (y: number) => bonusRemunerationOf(e.id, y, s.bonusPayments, enrolledFromOf(e)).annual % 12;
   const items = revisionItems(
-    { employee: e, contracts: s.contracts, payrolls, remunerations: s.remunerations, wageChanges: s.wageChanges, bonusMonthlyFor },
+    { employee: e, contracts: s.contracts, payrolls, remunerations: s.remunerations, wageChanges: s.wageChanges, bonusMonthlyFor, bonusRestFor },
     ctx,
   );
   return {

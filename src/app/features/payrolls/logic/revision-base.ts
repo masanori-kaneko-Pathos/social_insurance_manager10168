@@ -11,6 +11,7 @@ import type { StandardRemuneration } from '../../../core/models/remuneration';
 import { gradeOf } from '../../rates/logic/grade';
 import type { Category } from '../../employees/logic/classify';
 import type { GradeRows, Remuneration } from './regular';
+import { averageExclusion } from './payroll-lines';
 
 export const MIN_DAYS = 17;
 export const MIN_DAYS_SHORT_TIME = 11;
@@ -46,7 +47,9 @@ export function averageOfMonths(months: RevisionMonth[]): Average | null {
   const used = months.filter((m) => m.used && m.payroll);
   if (used.length === 0) return null;
   const total = used.reduce((s, m) => s + m.amount, 0);
-  const retro = used.reduce((s, m) => s + (m.payroll?.retro ?? 0), 0);
+  // 除くのは、起算月より前の月の分の遡及支払額と、締め日の変更で増えた分（疑義照会回答 月額変更届 13・算定基礎届 1。11/26）
+  const start = months[0].month;
+  const retro = used.reduce((s, m) => s + (m.payroll ? averageExclusion(m.payroll, start) : 0), 0);
   return {
     total,
     retro,

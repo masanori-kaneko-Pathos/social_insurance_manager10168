@@ -39,6 +39,8 @@ export interface LineTotals {
    * 総支給額には入れる（この月に払った）が、この月の固定的賃金・非固定的賃金には入れない。この月の分は固定的賃金に入る
    */
   spreadLater: number;
+  /** 締め日の変更で増えた期間の分（11/26）。総支給額には入れるが、この月の固定的賃金・非固定的賃金には入れない */
+  periodExtra: number;
 }
 
 /** 本来の月を持てる分類（遡及支払額・報酬にならないものは持たない） */
@@ -67,9 +69,11 @@ export function baseIsFixed(payType: PayType | null): boolean {
  *   次の月からの分は allocateOtherMonths（の中の allocateSpreads）で各月に割り振る（11/26）
  */
 export function totalsOf(lines: readonly PayrollLine[], payType: PayType | null): LineTotals {
-  const own = lines.filter((l) => !isOtherMonth(l) && spreadMonthsOf(l) === 1);
+  const isPeriod = (l: PayrollLine) => !!l.periodChange && PERIOD_CATEGORIES.includes(l.category) && !isOtherMonth(l);
+  const own = lines.filter((l) => !isOtherMonth(l) && spreadMonthsOf(l) === 1 && !isPeriod(l));
   const sum = (c: PayrollItemCategory) => own.filter((l) => l.category === c).reduce((s, l) => s + l.amount, 0);
-  const parts = partsOf(lines.filter((l) => !isOtherMonth(l)), '');
+  const periodExtra = lines.filter(isPeriod).reduce((s, l) => s + (l.category === 'deduction' ? -l.amount : l.amount), 0);
+  const parts = partsOf(lines.filter((l) => !isOtherMonth(l) && !isPeriod(l)), '');
   const share = floorSum(parts);
   const spreadLater = parts.reduce((s, p) => s + p.amount, 0) - share;
   const base = sum('base');
@@ -80,8 +84,41 @@ export function totalsOf(lines: readonly PayrollLine[], payType: PayType | null)
   const otherMonth = lines.filter(isOtherMonth).reduce((s, l) => s + (l.category === 'deduction' ? -l.amount : l.amount), 0);
   const ownCash = legal + sum('variable') + retro - deduction;
   const fixed = Math.max(0, Math.min(legal - deduction, ownCash - retro));
-  const cash = ownCash + otherMonth + spreadLater;
-  return { cash, fixed, fixedFull, retro, nonFixed: ownCash - fixed - retro, otherMonth, spreadLater };
+  const cash = ownCash + otherMonth + spreadLater + periodExtra;
+  return { cash, fixed, fixedFull, retro, nonFixed: ownCash - fixed - retro, otherMonth, spreadLater, periodExtra };
+}
+
+/** 締め日の変更で増えた分を持てる分類（遡及支払額・報酬にならないものは持たない） */
+export const PERIOD_CATEGORIES: readonly PayrollItemCategory[] = ['base', 'fixedAllowance', 'commute', 'variable', 'deduction'];
+
+/**
+ * 定時決定・随時改定の平均で除く額（11/26。今までの「遡及支払額を全部除く」を、資料どおりに分けた）
+ * - 遡及支払額：起算月（windowStart）より前の月の分だけ（疑義照会回答 月額変更届 13）。いつの分か分からない行は全部
+ *   いつの分かは「この月から払った月の前の月まで」とみて、月数で按分する（1円未満切り捨て）
+ * - 締め日の変更で増えた期間の分：いつも除く（疑義照会回答 算定基礎届 1）
+ * 内訳がない月は、遡及支払額を全部除く（今までどおり）
+ */
+export function averageExclusion(p: Pick<Payroll, 'retro' | 'lines' | 'paidMonth'>, windowStart: string): number {
+  if (!p.lines) return p.retro;
+  let out = 0;
+  for (const l of p.lines) {
+    if (l.category === 'retro') out += retroBefore(l, p.paidMonth, windowStart);
+    else if (l.periodChange && PERIOD_CATEGORIES.includes(l.category) && !isOtherMonth(l)) out += l.category === 'deduction' ? -l.amount : l.amount;
+  }
+  return out;
+}
+
+/** 遡及支払額の行のうち、起算月より前の月の分 */
+function retroBefore(l: Pick<PayrollLine, 'amount' | 'retroFrom'>, paidMonth: string, windowStart: string): number {
+  const from = l.retroFrom;
+  if (!from || from >= paidMonth) return l.amount;
+  const [y1, m1] = from.split('-').map(Number);
+  const [y2, m2] = paidMonth.split('-').map(Number);
+  const total = (y2 - y1) * 12 + (m2 - m1); // from 〜 払った月の前の月
+  if (windowStart <= from) return 0;
+  const [y3, m3] = windowStart.split('-').map(Number);
+  const before = Math.min(total, (y3 - y1) * 12 + (m3 - m1));
+  return Math.floor((l.amount * before) / total);
 }
 
 /** 固定的賃金に入る分類（本来の月へ割り振るとき、その月の固定的賃金も動かす） */
@@ -151,6 +188,10 @@ export interface LineDraft {
   forMonth?: string | null;
   /** 何か月分（通勤手当だけ。空・1 ＝ この月の分。11/26） */
   months?: number | null;
+  /** 遡及支払額が、どの支払月の分からか（11/26） */
+  retroFrom?: string | null;
+  /** 締め日の変更で増えた期間の分（11/26） */
+  periodChange?: boolean;
 }
 
 export type LineError = 'name' | 'category' | 'amount';
@@ -200,6 +241,9 @@ export function readLines(drafts: readonly LineDraft[]): LinesRead {
       const line: PayrollLine = { name, category: d.category!, amount: amount! };
       if (forMonth) line.forMonth = forMonth;
       if (months) line.months = months;
+      // 遡及支払額のいつの分か・締め日の変更で増えた分（11/26）
+      if (d.category === 'retro' && d.retroFrom && /^\d{4}-(0[1-9]|1[0-2])$/.test(d.retroFrom)) line.retroFrom = d.retroFrom;
+      if (d.periodChange && !forMonth && !months && PERIOD_CATEGORIES.includes(d.category!)) line.periodChange = true;
       lines.push(line);
     }
   });
@@ -221,6 +265,8 @@ export function toDrafts(lines: readonly PayrollLine[]): LineDraft[] {
     amount: l.amount.toLocaleString('ja-JP'),
     forMonth: l.forMonth ?? null,
     months: l.months ?? null,
+    retroFrom: l.retroFrom ?? null,
+    periodChange: !!l.periodChange,
   }));
 }
 

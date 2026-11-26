@@ -11,7 +11,8 @@ import { payTotal, type Payroll } from '../../../core/models/payroll';
 import { addDays, DateStr, shiftMonth, YearMonth } from '../../../shared/utils/date';
 import { ageReachDate, birthdayAt } from '../../employees/logic/coverage';
 import { toWareki, toWarekiMonth } from './wareki';
-import { forWindow } from '../../payrolls/logic/spread';
+import { bonusCarry, forWindow } from '../../payrolls/logic/spread';
+import { averageExclusion } from '../../payrolls/logic/payroll-lines';
 
 export type FilingKind = 'acquire' | 'loss' | 'regular' | 'irregular' | 'bonus';
 export const FILING_KINDS: readonly FilingKind[] = ['acquire', 'loss', 'regular', 'irregular', 'bonus'];
@@ -219,16 +220,21 @@ export interface RevisionRowInput {
   remarks: string[];
   /** 賞与に係る報酬（年4回以上の賞与の 年額÷12）。各月の通貨の額に足して書く（11/19） */
   bonusMonthly?: number;
+  /** 賞与に係る報酬の円未満（年額 ÷ 12 の余り）。定期代の月割りの円未満と合わせて切り捨てる（11/26。月額変更届 15 の 2） */
+  bonusRest?: number;
 }
 
 function monthCells(x: RevisionRowInput): FilingRow {
   const row: FilingRow = {};
-  const bonus = x.bonusMonthly ?? 0; // 賞与に係る報酬は各月の通貨の額に足す（11/19）
+  const bonusBase = x.bonusMonthly ?? 0; // 賞与に係る報酬は各月の通貨の額に足す（11/19）
   // まとめて払った定期代の全部が3か月に入るときは、総額が変わらないように書く（余りは支給した月。月額変更届 15。11/26）
-  const pays = forWindow(x.payrolls, [0, 1, 2].map((i) => shiftMonth(x.firstMonth, i)));
+  const window = [0, 1, 2].map((i) => shiftMonth(x.firstMonth, i));
+  const pays = forWindow(x.payrolls, window);
   [0, 1, 2].forEach((i) => {
     const month = shiftMonth(x.firstMonth, i);
     const p = pays.get(month);
+    // 賞与に係る報酬の円未満と、定期代の月割りの円未満は、合わせて切り捨てる（11/26）
+    const bonus = bonusBase + bonusCarry(x.payrolls, month, window, x.bonusRest ?? 0);
     const n = i + 1;
     row[`m${n}Month`] = `${Number(month.slice(5))}月`;
     row[`m${n}Days`] = p ? `${p.days}日` : '';
@@ -257,9 +263,11 @@ export function bonusRemark(
 /** ⑧遡及支払額：3か月のうち遡及支払のあった月と額（複数あれば足す。月は最初の月） */
 function retroOf(x: RevisionRowInput): string {
   const months = [0, 1, 2].map((i) => shiftMonth(x.firstMonth, i));
-  const hits = months.map((m) => ({ m, p: x.payrolls.get(m) })).filter((h) => (h.p?.retro ?? 0) > 0);
+  // 書くのは平均から除く額（起算月より前の月の分の遡及支払額・締め日の変更で増えた分。11/26）
+  const ex = (p: Payroll | undefined) => (p ? averageExclusion(p, x.firstMonth) : 0);
+  const hits = months.map((m) => ({ m, p: x.payrolls.get(m) })).filter((h) => ex(h.p) > 0);
   if (hits.length === 0) return '';
-  const sum = hits.reduce((s, h) => s + h.p!.retro, 0);
+  const sum = hits.reduce((s, h) => s + ex(h.p), 0);
   return `${Number(hits[0].m.slice(5))}月 ${yen(sum)}円`;
 }
 
@@ -297,6 +305,8 @@ export function regularRemarks(x: {
   bonusMonths?: readonly number[];
   /** 70歳以上被用者の算定基礎月（70歳到達日以後の計算期間の月。備考に書く。11/25） */
   over70Months?: readonly number[];
+  /** 7月1日を含む計算期間の給与（一時帰休の解消を見る。regular.ts の july1PayOf。省くと7月払いの給与。11/26） */
+  july1Pay?: Payroll | null;
 }): string[] {
   const e = x.employee;
   const y = x.year;
@@ -312,7 +322,7 @@ export function regularRemarks(x: {
     // 一時帰休は「5」ではなく「9．その他」に書く（ガイドブック。11/19）
     months.some((p) => p && p.state === 'suspended') && '5．病休・育休・休職等',
     x.annual && '8．年間平均',
-    furloughRemark(months, x.payrolls.get(`${y}-07`)),
+    furloughRemark(months, x.july1Pay !== undefined ? (x.july1Pay ?? undefined) : x.payrolls.get(`${y}-07`)),
     bonusRemark('9', x.bonusMonthly, x.bonusMonths),
   ].filter((s): s is string => !!s);
 }
@@ -324,7 +334,7 @@ export function regularRemarks(x: {
 function furloughRemark(months: (Payroll | undefined)[], july: Payroll | undefined): string | false {
   const hit = months.map((p, i) => (p?.state === 'furlough' ? i + 4 : 0)).filter((m) => m > 0);
   if (hit.length === 0) return false;
-  // 7/1に解消：6月の給与がふつう、または7月の給与がもう入っていてふつう（定時決定の計算と同じ。regular.ts）
+  // 7/1に解消：6月の給与がふつう、または7月1日を含む期間の給与がもう入っていてふつう（定時決定の計算と同じ。regular.ts）
   const resolved = (months[2] != null && months[2].state !== 'furlough') || (july != null && july.state !== 'furlough');
   return `9．その他（一時帰休 休業手当 ${hit.join('.')}月${resolved ? '・一時帰休解消' : ''}）`;
 }

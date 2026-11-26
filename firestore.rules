@@ -598,13 +598,15 @@ service cloud.firestore {
         match /regularDecisions/{year} {
           function validRegular(d) {
             // bonusMonthly は 11/19 に足した任意の項目（各月の報酬に足した賞与に係る報酬。年4回以上の賞与）
+            // bonusAnnual は 11/26 に足した任意の項目（そのもとにした賞与の年額。÷12 の円未満を定期代の端数と合わせる）
             return d.keys().hasAll(['officeId', 'employeeId', 'year', 'method', 'usedMonths', 'total', 'average',
                                  'corrected', 'annualAverage', 'monthlyAmount', 'seasonal', 'consent',
                                  'health', 'pension', 'createdAt', 'updatedAt'])
               && d.keys().hasOnly(['officeId', 'employeeId', 'year', 'method', 'usedMonths', 'total', 'average',
                                  'corrected', 'annualAverage', 'monthlyAmount', 'seasonal', 'consent',
-                                 'health', 'pension', 'createdAt', 'updatedAt', 'bonusMonthly'])
+                                 'health', 'pension', 'createdAt', 'updatedAt', 'bonusMonthly', 'bonusAnnual'])
               && (!('bonusMonthly' in d) || optIntIn(d.bonusMonthly, 0, 99999999))
+              && (!('bonusAnnual' in d) || optIntIn(d.bonusAnnual, 0, 1999999999))
               && d.officeId == officeId && d.employeeId == employeeId
               && d.year == year && year.matches('^[0-9]{4}$')
               && d.method in ['normal', 'annual', 'keep']

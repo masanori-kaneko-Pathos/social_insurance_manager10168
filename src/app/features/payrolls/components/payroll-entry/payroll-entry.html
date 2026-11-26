@@ -67,6 +67,10 @@
         @if (rb.otherMonth !== 0) {
           <span>{{ 'payrollEntry.readback.otherMonth' | transloco: { amount: yen(rb.otherMonth) } }}</span>
         }
+        <!-- 締め日の変更で増えた期間の分（定時決定・随時改定の平均では除く。11/26） -->
+        @if (hasAmounts() && totals().periodExtra !== 0) {
+          <span>{{ 'payrollEntry.readback.periodExtra' | transloco: { amount: yen(totals().periodExtra) } }}</span>
+        }
         <!-- まとめて払った定期代（11/26）：次の月から割り振る分・前の月から割り振られる分と、この月の報酬として計算する額 -->
         @if (spreadLater() !== 0) {
           <span>{{ 'payrollEntry.readback.spreadLater' | transloco: { amount: yen(spreadLater()) } }}</span>
@@ -146,14 +150,22 @@
                 <!-- 通勤手当は同じ欄で「3か月分・6か月分」も選べる（まとめて払った定期代。払った月から月数で割る。11/26） -->
                 @if (canPickMonth(d)) {
                   @let pick = pickValue(d);
+                  @let pickLabel = (isRetro(d) ? 'payrollEntry.lines.retroFrom' : canSpread(d) ? 'payrollEntry.lines.forMonthOrSpread' : 'payrollEntry.lines.forMonth') | transloco;
                   <select
                     class="input for-pick"
                     [class.set]="pick !== ''"
-                    [attr.aria-label]="(canSpread(d) ? 'payrollEntry.lines.forMonthOrSpread' : 'payrollEntry.lines.forMonth') | transloco"
-                    [title]="(canSpread(d) ? 'payrollEntry.lines.forMonthOrSpread' : 'payrollEntry.lines.forMonth') | transloco"
+                    [attr.aria-label]="pickLabel"
+                    [title]="pickLabel"
                     [disabled]="!canEdit()"
                     (change)="setForMonth(i, $any($event.target).value)"
                   >
+                    <!-- 遡及支払額：いつの分からの差額か（起算月より前の月の分だけ平均から除く。疑義照会回答 月額変更届 13。11/26） -->
+                    @if (isRetro(d)) {
+                      <option value="" [selected]="pick === ''">{{ 'payrollEntry.lines.retroUnknown' | transloco }}</option>
+                      @for (o of forMonthOptions(); track o.value) {
+                        <option [value]="o.value" [selected]="pick === o.value">{{ (o.sameYear ? 'payrollEntry.lines.retroOptionShort' : 'payrollEntry.lines.retroOption') | transloco: o }}</option>
+                      }
+                    } @else {
                     <option value="" [selected]="pick === ''">{{ 'payrollEntry.lines.forOptionShort' | transloco: thisMonthOption() ?? undefined }}</option>
                     @if (canSpread(d)) {
                       @for (n of spreadChoices; track n) {
@@ -162,6 +174,9 @@
                     }
                     @for (o of forMonthOptions(); track o.value) {
                       <option [value]="o.value" [selected]="pick === o.value">{{ (o.sameYear ? 'payrollEntry.lines.forOptionShort' : 'payrollEntry.lines.forOption') | transloco: o }}</option>
+                    }
+                    <!-- 締め日の変更で、この月に増えた期間の分（平均から除く。疑義照会回答 算定基礎届 1。11/26） -->
+                    <option value="period" [selected]="pick === 'period'">{{ 'payrollEntry.lines.periodOption' | transloco }}</option>
                     }
                   </select>
                 }

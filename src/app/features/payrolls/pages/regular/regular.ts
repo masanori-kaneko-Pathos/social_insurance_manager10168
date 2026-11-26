@@ -278,9 +278,13 @@ export class RegularPage {
   }
 
   private redecide(v: View): void {
-    const bonusMonthly = monthlyOf(this.bonusAnnualOf(v));
+    const annual = Math.max(0, this.bonusAnnualOf(v));
+    const bonusMonthly = monthlyOf(annual);
+    // 年額も渡す：÷12 の円未満を定期代の月割りの円未満と合わせて切り捨て、反映するときに記録にも残す（月額変更届 15 の 2。11/26）
     this.views.update((list) =>
-      list.map((x) => (x.employee.id === v.employee.id ? { ...x, result: decideRegular({ ...x.input, bonusMonthly }) } : x)),
+      list.map((x) =>
+        x.employee.id === v.employee.id ? { ...x, result: decideRegular({ ...x.input, bonusMonthly, bonusAnnual: annual }) } : x,
+      ),
     );
   }
 

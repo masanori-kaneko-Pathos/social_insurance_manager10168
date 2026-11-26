@@ -18,7 +18,8 @@ import { gradeOf } from '../../rates/logic/grade';
 import { PayrollEmployee, PaySchedule, periodOf } from './payroll-rows';
 import { shiftMonth } from '../../../shared/utils/date';
 import { MIN_DAYS_PART_FALLBACK } from './revision-base';
-import { forWindow } from './spread';
+import { bonusCarry, forWindow } from './spread';
+import { averageExclusion } from './payroll-lines';
 
 export const REGULAR_MIN_DAYS = 17;
 
@@ -94,6 +95,8 @@ export interface RegularResult {
   annual: AnnualCandidate | null;
   /** 各月の報酬に足した賞与に係る報酬（年4回以上の賞与の 年額÷12。なければ 0。11/19） */
   bonusMonthly: number;
+  /** そのもとにした賞与の年額（bonusMonthly と合うときだけ。分からなければ null。11/26。記録に残す） */
+  bonusAnnual: number | null;
   /**
    * 4〜6月とも休業手当で、7/1までに一時帰休が解消したとき、決定に使った標準報酬の適用月（11/25）
    * 休業手当による随時改定を飛ばした、その前の標準報酬（事務取扱いの事例集 一時帰休（定時決定）問7）。ふだんは null
@@ -178,15 +181,18 @@ function useMonths(
   acquired: string | null,
 ): MonthUse[] {
   const minDaysAt = x.minDaysAt ?? (() => REGULAR_MIN_DAYS);
-  const bonus = x.bonusMonthly ?? 0;
-  const months = list.map((m) => useMonth(m, x.payrolls.get(m), acquired, x.schedule, minDaysAt(m), bonus));
+  // 賞与に係る報酬の円未満と、定期代の月割りの円未満は、合わせて切り捨てる（月額変更届 15 の 2。11/26）
+  const annual = annualOf(x);
+  const rest = annual !== null ? annual % 12 : (x.bonusRest ?? 0);
+  const bonusAt = (m: string) => (x.bonusMonthly ?? 0) + bonusCarry(x.payrolls, m, list, rest);
+  const months = list.map((m) => useMonth(m, x.payrolls.get(m), acquired, x.schedule, minDaysAt(m), bonusAt(m)));
   const partAt = x.partAt;
   if (!partAt || months.some((m) => m.used) || !months.every((m) => m.skip === 'noRecord' || m.skip === 'beforeAcquisition' || partAt(m.month))) {
     return months;
   }
   return months.map((m) =>
     m.skip === 'shortDays'
-      ? useMonth(m.month, x.payrolls.get(m.month), acquired, x.schedule, MIN_DAYS_PART_FALLBACK, bonus)
+      ? useMonth(m.month, x.payrolls.get(m.month), acquired, x.schedule, MIN_DAYS_PART_FALLBACK, bonusAt(m.month))
       : m,
   );
 }
@@ -194,7 +200,7 @@ function useMonths(
 /**
  * 一時帰休が7月1日までに解消していれば、休業手当を受けた月（状態が一時帰休の月）を平均から除く（11/19）
  * 解消したかは 7月1日の時点で見る（事例集 5(1) 問3・4）：6月の実績が一時帰休でない、
- * または 7月に払った給与（july）がもう入っていて一時帰休でない（6月の途中で解消したなど）なら解消
+ * または 7月1日を含む期間の給与（july。july1PayOf）がもう入っていて一時帰休でない（6月の途中で解消したなど）なら解消
  * 解消していなければ、休業手当を含めたまま平均する
  */
 export function withoutResolvedFurlough(months: MonthUse[], july: Payroll | null = null): MonthUse[] {
@@ -208,10 +214,28 @@ export function withoutResolvedFurlough(months: MonthUse[], july: Payroll | null
   );
 }
 
+/**
+ * 一時帰休が7月1日に解消していたかを見る給与（11/26）
+ * 7月1日を含む計算期間の給与（月末締め・翌月払いなら8月払い）。7月払いの給与に休業手当が入っていても、
+ * それが6月の期間の分で、7月1日からは一時帰休をしていなければ「解消」（疑義照会回答 月額変更届 14）
+ * その給与がまだ入っていなければ、今までどおり7月払いの給与で見る
+ */
+export function july1PayOf(payrolls: ReadonlyMap<string, Payroll>, schedule: PaySchedule, year: number): Payroll | null {
+  const day = `${year}-07-01`;
+  const july = payrolls.get(`${year}-07`) ?? null;
+  for (const m of [`${year}-07`, `${year}-08`]) {
+    const per = periodOf(m, schedule);
+    if (per.start <= day && day <= per.end) return payrolls.get(m) ?? july;
+  }
+  return july;
+}
+
 /** 平均（1円未満切り捨て）。withoutRetro なら遡及支払額を引く */
 function averageOf(months: MonthUse[], withoutRetro: boolean): number {
   const used = months.filter((m) => m.used);
-  const sum = used.reduce((s, m) => s + m.amount - (withoutRetro ? m.payroll!.retro : 0), 0);
+  // 除くのは、最初の月より前の月の分の遡及支払額と、締め日の変更で増えた分（疑義照会回答 月額変更届 13・算定基礎届 1。11/26）
+  const start = months[0]?.month ?? '';
+  const sum = used.reduce((s, m) => s + m.amount - (withoutRetro ? averageExclusion(m.payroll!, start) : 0), 0);
   return Math.floor(sum / used.length);
 }
 
@@ -261,6 +285,19 @@ export interface RegularInput {
   partAt?: (paidMonth: string) => boolean;
   /** 賞与に係る報酬（年4回以上の賞与の 7/1前1年の額 ÷ 12）。各月の報酬に足す。省くと 0（11/19。bonus-nature.ts） */
   bonusMonthly?: number;
+  /**
+   * 賞与に係る報酬の円未満（年額 ÷ 12 の余り。0〜11）。定期代の月割りの円未満と合わせて切り捨てる（月額変更届 15 の 2。11/26）
+   * 省くと 0（賞与に係る報酬を手で直した月など、年額が分からないとき）
+   */
+  bonusRest?: number;
+  /** 賞与に係る報酬のもとにした賞与の年額（11/26）。bonusMonthly（年額 ÷ 12 の切り捨て）と合えば、÷12 の円未満をここから出す */
+  bonusAnnual?: number | null;
+}
+
+/** 賞与の年額が bonusMonthly と合うか（合わなければ、手で直した月の額など：年額を使わない） */
+function annualOf(x: Pick<RegularInput, 'bonusMonthly' | 'bonusAnnual'>): number | null {
+  const a = x.bonusAnnual;
+  return a != null && a >= 0 && Math.floor(a / 12) === (x.bonusMonthly ?? 0) ? a : null;
 }
 
 export function decideRegular(x: RegularInput): RegularResult {
@@ -281,6 +318,7 @@ export function decideRegular(x: RegularInput): RegularResult {
     change: null,
     annual: null,
     bonusMonthly: x.bonusMonthly ?? 0,
+    bonusAnnual: (x.bonusMonthly ?? 0) > 0 ? annualOf(x) : null,
     restoredFrom: null,
   };
 
@@ -312,7 +350,7 @@ export function decideRegular(x: RegularInput): RegularResult {
   const threeMonths = ['04', '05', '06'].map((m) => `${y}-${m}`);
   const months = withoutResolvedFurlough(
     useMonths(threeMonths, { ...x, payrolls: forWindow(x.payrolls, threeMonths) }, acquired),
-    x.payrolls.get(`${y}-07`) ?? null,
+    july1PayOf(x.payrolls, x.schedule, y),
   );
   const usedCount = months.filter((m) => m.used).length;
   const withMonths = { ...base, excluded: null, months, usedCount, current };
@@ -440,7 +478,8 @@ export function over70Basis(
 ): { months: string[]; average: number } | null {
   const use = months.filter((m) => m.used && periodOf(m.month, schedule).start >= reachDate);
   if (use.length === 0) return null;
-  const sum = use.reduce((s, m) => s + m.amount - m.payroll!.retro, 0);
+  const start = months[0]?.month ?? '';
+  const sum = use.reduce((s, m) => s + m.amount - averageExclusion(m.payroll!, start), 0);
   return { months: use.map((m) => m.month), average: Math.floor(sum / use.length) };
 }
 

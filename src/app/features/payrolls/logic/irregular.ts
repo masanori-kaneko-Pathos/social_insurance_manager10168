@@ -27,7 +27,7 @@ import type { StandardRemuneration } from '../../../core/models/remuneration';
 import { shiftMonth } from '../../../shared/utils/date';
 import { gradeOf } from '../../rates/logic/grade';
 import { oneGradeException, GradeRows, Remuneration } from './regular';
-import { forWindow } from './spread';
+import { bonusCarry, forWindow } from './spread';
 import {
   averageOfMonths,
   Average,
@@ -155,7 +155,10 @@ export function findStartMonths(
       continue;
     }
     if (prev && furlough(shiftMonth(m, -1))) {
-      found.set(m, { month: m, direction: 'up', source: 'furlough' });
+      // 一時帰休の間に固定的賃金が変わっていれば、戻った月をその変動の起算月にする（疑義照会回答 28 の②）
+      // 変わっていなければ「解消」の候補（休業手当で改定していたときだけ随時改定になる：furloughEndAllowed）
+      const changed = !!last && fixedForChange(p) > 0 && fixedForChange(p) !== fixedForChange(last);
+      found.set(m, changed ? { month: m, direction: directionOf(last!, p, false), source: 'fixed' } : { month: m, direction: 'up', source: 'furlough' });
       if (fixedForChange(p) > 0) last = p;
       continue;
     }
@@ -255,6 +258,11 @@ export interface IrregularInput {
   pensionAt: (month: string) => boolean;
   /** 賞与に係る報酬（年4回以上の賞与の 年額÷12）。各月の報酬に足す。省くと 0（局部長通知 2(1)・2(3)。11/19） */
   bonusMonthly?: number;
+  /**
+   * 賞与に係る報酬の円未満（年額 ÷ 12 の余り。0〜11）。定期代の月割りの円未満と合わせて切り捨てる（月額変更届 15 の 2。11/26）
+   * 省くと 0（賞与に係る報酬を手で直した月など、年額が分からないとき）
+   */
+  bonusRest?: number;
 }
 
 export interface IrregularResult {
@@ -388,7 +396,8 @@ export function judgeIrregular(x: IrregularInput): IrregularResult {
   const s = x.start.month;
   const revisedFrom = shiftMonth(s, 3);
   // まとめて払った定期代の全部が3か月に入るときは、総額が変わらないように割り振る（月額変更届 15。11/26）
-  const pays = forWindow(x.payrolls, [0, 1, 2].map((i) => shiftMonth(s, i)));
+  const window = [0, 1, 2].map((i) => shiftMonth(s, i));
+  const pays = forWindow(x.payrolls, window);
   const months: RevisionMonth[] = [0, 1, 2].map((i) => {
     const month = shiftMonth(s, i);
     const payroll = pays.get(month) ?? null;
@@ -397,7 +406,8 @@ export function judgeIrregular(x: IrregularInput): IrregularResult {
       month,
       payroll,
       // 賞与に係る報酬は各月の報酬に足す（賞与の額が変わっただけでは随時改定の起算にならない。11/19）
-      amount: payroll ? payTotal(payroll) + (x.bonusMonthly ?? 0) : 0,
+      // 賞与に係る報酬の円未満と、定期代の月割りの円未満は、合わせて切り捨てる（月額変更届 15 の 2。11/26）
+      amount: payroll ? payTotal(payroll) + (x.bonusMonthly ?? 0) + bonusCarry(x.payrolls, month, window, x.bonusRest ?? 0) : 0,
       minDays,
       used: !!payroll && payroll.days >= minDays,
     };
@@ -453,4 +463,34 @@ export function judgeIrregular(x: IrregularInput): IrregularResult {
         })
       : null;
   return { ...base, status, average, beforeAmount: current.monthlyAmount, health, pension, annual };
+}
+
+/**
+ * 一時帰休が解消した月を、随時改定の起算月にしてよいか（11/26）
+ * 疑義照会回答（月額変更届 25・28）：解消による随時改定は「休業手当等をもって標準報酬の決定又は改定を行った後に、
+ * 一時帰休の状況が解消したとき」に限る。休業手当で決めた・改定した標準報酬がなければ、解消して報酬が上がっても随時改定にしない
+ * 休業手当で決めた・改定したとみるもの（一時帰休が始まった月より後に始まる標準報酬）
+ * - 随時改定：一時帰休が始まった月を起算月とした改定（4か月目から）
+ * - 定時決定：4〜6月のどれかが一時帰休の月（7/1までに解消していなかった）
+ * - 資格取得時の決定：一時帰休の間に資格を取った（入社した当初から一時帰休。算定基礎届 2）
+ */
+export function furloughEndAllowed(
+  month: string,
+  payrolls: ReadonlyMap<string, Pick<Payroll, 'state'>>,
+  remunerations: readonly Pick<Remuneration, 'from' | 'reason'>[],
+): boolean {
+  const furlough = (m: string) => payrolls.get(m)?.state === 'furlough';
+  if (!furlough(shiftMonth(month, -1))) return false;
+  // 一時帰休が始まった月（続いている月を前へたどる）
+  let start = shiftMonth(month, -1);
+  while (furlough(shiftMonth(start, -1))) start = shiftMonth(start, -1);
+  return remunerations.some((r) => {
+    if (r.from <= start || r.from > month) return false;
+    if (r.reason === 'irregular') return r.from === shiftMonth(start, 3);
+    if (r.reason === 'regular') {
+      const y = r.from.slice(0, 4);
+      return ['04', '05', '06'].some((mm) => furlough(`${y}-${mm}`));
+    }
+    return r.reason === 'acquisition';
+  });
 }

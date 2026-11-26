@@ -90,19 +90,25 @@ export function buildRegularView(s: RegularViewSource): RegularView {
   const bonusAuto = bonusRemunerationOf(employee.id, year, bonusPayments, enrolledFromOf(employee));
   // 反映済みなら保存した額、まだなら7/1前1年の実績から出した額
   const bonusMonthly = s.decision?.bonusMonthly ?? bonusAuto.monthly;
+  // 賞与に係る報酬のもとにした年額（÷12 の円未満を定期代の端数と合わせる。11/26。月額変更届 15 の 2）
+  // 反映済みなら記録した年額（前のデータで年額がなければ、額が同じときだけ7/1前1年の実績から出した年額）
+  const bonusAnnual = s.decision
+    ? (s.decision.bonusAnnual ?? (bonusMonthly === bonusAuto.monthly ? bonusAuto.annual : null))
+    : bonusAuto.annual;
   const bonusMonthlyFor = (y: number) => bonusRemunerationOf(employee.id, y, bonusPayments, enrolledFromOf(employee)).monthly;
+  const bonusRestFor = (y: number) => bonusRemunerationOf(employee.id, y, bonusPayments, enrolledFromOf(employee)).annual % 12;
   return {
     employee,
     input,
     bonusAuto,
     bonusCount: bonusCountOf(employee.id, year, bonusPayments),
     otherMonths: { moved: allocated.moved, unplaced: allocated.unplaced },
-    result: decideRegular({ ...input, bonusMonthly }),
+    result: decideRegular({ ...input, bonusMonthly, bonusAnnual }),
     decision: s.decision,
     septemberExists: rems.some((r) => r.from === `${year}-09`),
     remunerations: rems,
     pending: pendingSummerRevision(
-      revisionItems({ employee, contracts, payrolls, remunerations: rems, bonusMonthlyFor }, revisionCtx),
+      revisionItems({ employee, contracts, payrolls, remunerations: rems, bonusMonthlyFor, bonusRestFor }, revisionCtx),
       year,
     ),
   };
@@ -167,7 +173,10 @@ export function regularReflectItem(
     health,
     pension,
     // 各月の報酬に足した賞与に係る報酬（届の各月の額にも足す。11/19）
-    ...(method !== 'keep' && r.bonusMonthly > 0 ? { bonusMonthly: r.bonusMonthly } : {}),
+    // 足していなければ null を書く（反映し直したとき、前の記録の額が残らないように。11/26）
+    bonusMonthly: method !== 'keep' && r.bonusMonthly > 0 ? r.bonusMonthly : null,
+    // そのもとにした賞与の年額（÷12 の円未満を、届の各月の額でも定期代の端数と合わせるため。11/26）
+    bonusAnnual: method !== 'keep' && r.bonusMonthly > 0 ? r.bonusAnnual : null,
   };
   const remuneration: RemunerationInput = {
     from: `${y}-09`,

@@ -344,7 +344,7 @@ tr.line-err span + span::before {
 
 /* 本来の月：ふだんは目立たせない（「この月の分」）。選んだ行だけ色を付ける */
 .l-for {
-  width: 7.5em;
+  width: 9em; /* 「4月払いの分から」が入る幅（11/26） */
 }
 
 .for-pick {
