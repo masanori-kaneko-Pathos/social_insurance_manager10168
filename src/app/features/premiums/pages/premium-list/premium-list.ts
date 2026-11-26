@@ -160,6 +160,22 @@ export class PremiumList {
     this.openId.update((cur) => (cur === id ? null : id));
   }
 
+  /** 行を押したら根拠を開く・閉じる（氏名のリンク・ボタン・入力欄を押したときは何もしない。11/26） */
+  rowClick(event: MouseEvent, id: string): void {
+    const el = event.target as HTMLElement | null;
+    if (el?.closest('a, button, input, select, textarea, label')) return;
+    if (window.getSelection()?.toString()) return; // 文字を選んでいるときは開かない
+    this.toggleOpen(id);
+  }
+
+  /** 行に移って Enter・スペースで開く・閉じる（行の中のリンクにいるときは、リンクのまま） */
+  rowKey(event: KeyboardEvent, id: string): void {
+    if (event.target !== event.currentTarget) return;
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    this.toggleOpen(id);
+  }
+
   /** 内訳の3列 */
   readonly healthPartKeys: readonly PremiumPart[] = ['health', 'care', 'childSupport'];
 

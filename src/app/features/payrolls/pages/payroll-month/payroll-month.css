@@ -635,16 +635,12 @@ col.c-status {
 }
 
 col.c-open {
-  width: 5em;
+  width: 2.5em;
 }
 
-/* 「内訳 ▽」（保険料一覧の「内訳」と同じ見た目） */
+/* 開ける印の列（11/26 に「内訳 ▽」の文字のボタンから印だけにした） */
 td.open-col {
   text-align: right;
-}
-
-td.open-col .link-btn {
-  color: var(--color-primary);
 }
 
 .badge-danger {
@@ -702,4 +698,31 @@ thead th.wrap .bulk-btn {
   margin-left: var(--space-sm);
   font-size: var(--font-sm);
   white-space: nowrap;
+}
+
+/* 開ける印（下向きの「>」。開いた行は上向き。11/26） */
+.chev {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin: 0 6px 3px 0;
+  border-right: 2px solid var(--color-text-sub);
+  border-bottom: 2px solid var(--color-text-sub);
+  transform: rotate(45deg);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+tr.is-open .chev {
+  margin-bottom: -3px;
+  transform: rotate(-135deg);
+}
+
+tr.clickable:hover .chev {
+  border-color: var(--color-text);
+}
+
+/* キーボードで行に移ったときの印 */
+tr.clickable:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
 }

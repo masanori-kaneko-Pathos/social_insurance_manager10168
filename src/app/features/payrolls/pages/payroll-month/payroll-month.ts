@@ -36,10 +36,8 @@ import { RemunerationService } from '../../../employees/remuneration.service';
 import type { RemunerationDoc } from '../../../../core/models/remuneration';
 import { CriteriaService } from '../../../office/criteria.service';
 import type { CriteriaDoc } from '../../../../core/models/master';
-import { standardAt } from '../../logic/revision-base';
-import { dayRulesOf } from '../../logic/revision-rows';
-import { contractStartMonths, ContractLike } from '../../logic/irregular';
 import type { EntryCheckContext } from '../../logic/entry-check';
+import { entryCheckContextOf } from '../../logic/entry-check-context';
 
 interface ViewRow {
   employee: Employee;
@@ -127,6 +125,14 @@ export class PayrollMonth {
     const idx = this.filtered().indexOf(target);
     if (idx >= 0) this.page.set(Math.floor(idx / this.listOptions().size) + 1);
     this.open(target);
+  }
+
+  /** 行に移って Enter・スペースで内訳を開く・閉じる（行の中のリンクにいるときは、リンクのまま。11/26） */
+  rowKey(event: KeyboardEvent, v: ViewRow): void {
+    if (event.target !== event.currentTarget) return;
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    this.toggleOpen(v);
   }
 
   /** 行を押したら内訳を開く・閉じる（氏名のリンク・ボタン・入力欄を押したときは何もしない。11/26） */
@@ -530,29 +536,19 @@ export class PayrollMonth {
     const criteria = this.criteria();
     if (!office || !criteria || !this.prevPays().has(id) || !this.remunerations().has(id)) return null;
     const month = this.month();
-    const schedule = payrollAt(office, v.employee, month);
-    const contracts = this.contracts().get(id) ?? [];
-    const withPay: ContractLike[] = contracts.flatMap((c) =>
-      c.payType ? [{ from: c.from, payType: c.payType, hourlyWage: c.hourlyWage ?? null, dailyWage: c.dailyWage ?? null, weeklyMinutes: c.weeklyMinutes }] : [],
-    );
-    const change = contractStartMonths(withPay, (m) => periodOf(m, schedule).start).find((s) => s.month === month);
-    const ctx = {
-      office: { standardHours: office.standardHours ?? null, specificApplication: office.specificApplication },
+    return entryCheckContextOf({
+      employee: v.employee,
+      office,
+      month,
+      schedule: payrollAt(office, v.employee, month),
+      premiumMonth: this.premiumMonth(),
+      contracts: this.contracts().get(id) ?? [],
       criteria,
-      schedule,
-    };
-    const minDays = dayRulesOf({ employee: v.employee, contracts }, ctx).minDaysAt(month);
-    const rem = standardAt(this.remunerations().get(id) ?? [], this.premiumMonth());
-    const prev = this.prevPays().get(id) ?? null;
-    const pay = this.contractOf(v)?.payType;
-    return {
-      prev: prev ? { fixed: prev.fixed, fixedFull: prev.fixedFull ?? null, inKind: prev.inKind } : null,
-      standard: rem ? { health: rem.health?.standard ?? null, pension: rem.pension?.standard ?? null } : null,
-      minDays,
-      contractChange: change?.direction ?? null,
-      byUnit: pay === 'hourly' || pay === 'daily',
-    };
+      remunerations: this.remunerations().get(id) ?? [],
+      prev: this.prevPays().get(id) ?? null,
+    });
   }
+
 
 
   /** 今の項目名の並びを、事業所のひな形にする（内訳の「この並びを事業所のひな形にする」） */

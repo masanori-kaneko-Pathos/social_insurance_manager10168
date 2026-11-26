@@ -187,14 +187,17 @@
       <tbody>
         @for (v of shown().rows; track v.employee.id) {
           @let isOpen = openId() === v.employee.id;
-          <!-- 行のどこを押しても内訳が開く（氏名のリンク・ボタンは除く。11/26） -->
+          <!-- 行のどこを押しても内訳が開く（氏名のリンクは除く）。キーボードは行に移って Enter・スペース（11/26） -->
           <tr
             class="clickable"
+            tabindex="0"
             [attr.data-row]="v.employee.id"
+            [attr.aria-expanded]="isOpen"
             [class.is-open]="isOpen"
             [class.has-error]="rowErrors().has(v.employee.id)"
             [class.edited]="v.form.dirty"
             (click)="rowClick($event, v)"
+            (keydown)="rowKey($event, v)"
           >
             <td class="emp-no">{{ v.employee.employeeNumber ?? '—' }}</td>
             <td>
@@ -237,10 +240,8 @@
               }
             </td>
             <td class="open-col">
-              <!-- 保険料一覧の「内訳」と同じ：文字のリンクで、行のすぐ下に開く -->
-              <button type="button" class="link-btn" [attr.aria-expanded]="isOpen" (click)="toggleOpen(v)">
-                {{ 'payroll.breakdown' | transloco }} {{ isOpen ? '△' : '▽' }}
-              </button>
+              <!-- 開ける印（ボタンではない。開くのは行。11/26） -->
+              <span class="chev" aria-hidden="true"></span>
             </td>
           </tr>
           @if (isOpen) {

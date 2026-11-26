@@ -258,16 +258,9 @@ th.part-head {
   color: var(--color-text-sub);
 }
 
-td.calc .link-btn {
-  padding: 0;
-  background: none;
-  border: 0;
-  font: inherit;
-  font-size: var(--font-xs);
-  color: var(--color-primary);
-  text-decoration: underline;
-  white-space: nowrap;
-  cursor: pointer;
+/* 開ける印の列（11/26 に「内訳 ▽」の文字のボタンから印だけにした。給与と同じ） */
+td.calc {
+  text-align: right;
 }
 
 .sr-only {
@@ -840,4 +833,39 @@ details.fold[open]::details-content {
 .close-table td .badge {
   display: table;
   margin: 2px 0 0;
+}
+
+/* 開ける印（下向きの「>」。開いた行は上向き。11/26。給与の月の画面と同じ） */
+.chev {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin: 0 6px 3px 0;
+  border-right: 2px solid var(--color-text-sub);
+  border-bottom: 2px solid var(--color-text-sub);
+  transform: rotate(45deg);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+tr.open .chev {
+  margin-bottom: -3px;
+  transform: rotate(-135deg);
+}
+
+/* 計算できた行は、どこを押しても根拠が開く */
+tr.clickable {
+  cursor: pointer;
+}
+
+tr.clickable:not(.open):hover td {
+  background: var(--color-hover);
+}
+
+tr.clickable:hover .chev {
+  border-color: var(--color-text);
+}
+
+tr.clickable:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
 }

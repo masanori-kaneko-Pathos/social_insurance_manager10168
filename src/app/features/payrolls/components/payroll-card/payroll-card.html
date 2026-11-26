@@ -43,6 +43,7 @@
         [itemsLink]="['/o', context.current()?.id, 'payrolls', 'items']"
         [leaveLink]="context.isAdmin() ? ['/o', context.current()?.id, 'employees', employee().id] : null"
         [errors]="errors()"
+        [check]="check()"
         [hasNext]="false"
         [inKindCalc]="false"
         [saving]="saving()"

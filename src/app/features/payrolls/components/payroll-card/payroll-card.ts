@@ -17,7 +17,13 @@ import { candidateDays, PayrollRowText, readEntry, RowError, sameInput, textOf }
 import { OfficeContext } from '../../../office/office-context.service';
 import { formatHours } from '../../../../shared/utils/number';
 import { employedDuring, latestPaidMonth, periodOf, suggestDays } from '../../logic/payroll-rows';
-import { payrollOf } from '../../../office/office-settings';
+import { payrollOf, premiumMonthOfPay } from '../../../office/office-settings';
+import { RemunerationService } from '../../../employees/remuneration.service';
+import type { RemunerationDoc } from '../../../../core/models/remuneration';
+import { CriteriaService } from '../../../office/criteria.service';
+import type { CriteriaDoc } from '../../../../core/models/master';
+import type { EntryCheckContext } from '../../logic/entry-check';
+import { entryCheckContextOf } from '../../logic/entry-check-context';
 import { PayrollService } from '../../payroll.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { payrollAt } from '../../../office/logic/pay-group';
@@ -138,6 +144,31 @@ export class PayrollCard {
     return m ? this.prevLinesOf(m) : null;
   });
 
+  // ===== この入力で決まること（月の画面と同じ材料・同じ案内。11/26） =====
+  private readonly remunerationApi = inject(RemunerationService);
+  private readonly criteriaApi = inject(CriteriaService);
+  /** 標準報酬月額の履歴（同じページの標準報酬のカードが読んだものを覚えているので、ふつうは読み直さない） */
+  private readonly remunerations = signal<RemunerationDoc[] | null>(null);
+  private readonly criteria = signal<CriteriaDoc[] | null>(null);
+  readonly check = computed<EntryCheckContext | null>(() => {
+    const m = this.editMonth();
+    const office = this.context.current();
+    const rems = this.remunerations();
+    const criteria = this.criteria();
+    if (!m || !office || !rems || !criteria) return null;
+    return entryCheckContextOf({
+      employee: this.employee(),
+      office,
+      month: m,
+      schedule: payrollAt(office, this.employee(), m),
+      premiumMonth: premiumMonthOfPay(m, payrollOf(office), office.deductionHistory),
+      contracts: this.contracts(),
+      criteria,
+      remunerations: rems,
+      prev: this.savedOf(shiftMonth(m, -1)),
+    });
+  });
+
   /** 今の項目名の並びを、事業所のひな形にする */
   async saveTemplate(names: string[]): Promise<void> {
     const office = this.context.current();
@@ -184,6 +215,9 @@ export class PayrollCard {
       })
       .catch((err) => console.error(err));
     this.contractsApi.list(office.id, this.employee().id).then((x) => this.contracts.set(x)).catch((err) => console.error(err));
+    // この入力で決まること（読めなければ出さない）
+    this.remunerationApi.list(office.id, this.employee().id).then((x) => this.remunerations.set(x)).catch((err) => console.error(err));
+    this.criteriaApi.list().then((x) => this.criteria.set(x)).catch((err) => console.error(err));
   }
 
   /** 月を変えたら、その月の保存済みを入れ直す（なければ内訳の1行目から） */

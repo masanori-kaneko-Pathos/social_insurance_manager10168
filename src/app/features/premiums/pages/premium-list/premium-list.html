@@ -626,7 +626,16 @@
         </thead>
         <tbody>
           @for (r of sortedRows(); track r.employee.id) {
-            <tr [class.problem]="r.state !== 'ok' && r.state !== 'exempt'" [class.open]="openId() === r.employee.id">
+            <!-- 計算できた行は、どこを押しても根拠が開く（氏名のリンクは除く）。キーボードは行に移って Enter・スペース（11/26。給与と同じ） -->
+            <tr
+              [class.problem]="r.state !== 'ok' && r.state !== 'exempt'"
+              [class.open]="openId() === r.employee.id"
+              [class.clickable]="!!r.result"
+              [attr.tabindex]="r.result ? 0 : null"
+              [attr.aria-expanded]="r.result ? openId() === r.employee.id : null"
+              (click)="r.result && rowClick($event, r.employee.id)"
+              (keydown)="r.result && rowKey($event, r.employee.id)"
+            >
               <td class="emp-no">{{ r.employee.employeeNumber ?? '—' }}</td>
               <td>
                 <app-person-name [person]="r.employee" [link]="['/o', context.current()?.id, 'employees', r.employee.id]" />
@@ -706,15 +715,8 @@
               }
               <td class="calc">
                 @if (r.result) {
-                  <!-- 計算の根拠を、この行のすぐ下に開く（ページは移らない。11/13） -->
-                  <button
-                    type="button"
-                    class="link-btn"
-                    [attr.aria-expanded]="openId() === r.employee.id"
-                    (click)="toggleOpen(r.employee.id)"
-                  >
-                    {{ 'premiumList.breakdown' | transloco }} {{ openId() === r.employee.id ? '△' : '▽' }}
-                  </button>
+                  <!-- 開ける印（ボタンではない。開くのは行。計算の根拠は、この行のすぐ下に開く。11/26） -->
+                  <span class="chev" aria-hidden="true"></span>
                 }
               </td>
             </tr>
