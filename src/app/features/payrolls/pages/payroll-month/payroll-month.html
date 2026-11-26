@@ -114,10 +114,7 @@
 
   <div class="toolbar">
     <span class="muted">{{ 'payroll.openHint' | transloco }}</span>
-    <span class="toolbar-links">
-      <!-- 給与の項目と分類は、マスタの管理のページができたらそちらへ移す（11/26） -->
-      <a [routerLink]="['/o', context.current()?.id, 'payrolls', 'items']">{{ 'payrollItem.title' | transloco }}</a>
-    </span>
+    <!-- 給与の項目と分類は、設定 › マスタから開く（11/26） -->
   </div>
 
   <!-- 探す・絞る・並べる・ページ（入れた値は、ページを移っても保存するまで残る） -->

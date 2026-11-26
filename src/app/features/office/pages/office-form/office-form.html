@@ -9,6 +9,7 @@
   @if (isEdit) {
     <app-back-link [fallback]="['/o', office()?.id]" fallbackName="back.home" />
     <h1 id="sec-top">{{ 'office.form.titleEdit' | transloco }}</h1>
+    <app-settings-tabs />
     <p class="lead">
       {{ (readOnly ? 'office.form.readOnly' : 'office.form.leadEdit') | transloco }}
     </p>

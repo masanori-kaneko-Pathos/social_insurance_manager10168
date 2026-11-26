@@ -310,6 +310,13 @@ export const routes: Routes = withUnsavedGuard([
             loadComponent: () =>
               import('./features/office/pages/office-form/office-form').then((m) => m.OfficeForm),
           },
+          {
+            // 設定 › マスタ（給与・賞与の項目への入口、保険料額表と組合の料率の閲覧。11/26）
+            path: 'settings/masters',
+            data: { backName: 'back.settings' },
+            loadComponent: () =>
+              import('./features/office/pages/masters/masters').then((m) => m.Masters),
+          },
         ],
       },
     ],

@@ -5478,5 +5478,64 @@
     },
     "softLead": "Export data for your payroll software and calculate the deductions for pay in month {{payMonth}} there. Then load the file with the deducted amounts to list only the people whose amounts differ from this app.",
     "totalLead": "Amount to pay = total withheld from employees + employer share. The employer share is set by rounding the office total (the per-person employer share in step 1 is an estimate). The child and child-rearing contribution is paid by the company alone and is included in the amount to pay."
+  },
+  "settings": {
+    "tabs": "Settings sections",
+    "tab": {
+      "office": "Office",
+      "masters": "Masters"
+    }
+  },
+  "masters": {
+    "title": "Masters",
+    "lead": "Register and check the rules used to calculate premiums: payslip items, bonus items, the premium table and more.",
+    "payrollItems": "Sort payslip items into fixed wages, non-fixed wages and items outside remuneration.",
+    "bonusItems": "Group bonus names to count whether they are paid four or more times a year, and set how social insurance treats them.",
+    "loadError": "Could not load rates and grade tables. Please try again later.",
+    "monthOf": "{{m}}/{{y}}",
+    "table": {
+      "title": "Premium table",
+      "month": "Month",
+      "whoKyokai": "Calculated with Kyokai Kenpo ({{pref}}) rates for {{month}}.",
+      "whoKumiai": "Calculated with {{name}} rates for {{month}}.",
+      "noInsurer": "{{month}} is before the first registered health insurer.",
+      "noRates": "No health insurance rate or grade table is registered for {{month}}, so the table cannot be shown.",
+      "note": "Amounts are in yen, including fractions. Fractions of the employee share are handled at payment, as set under Payroll and deduction on the Office tab. Numbers in parentheses are pension grades.",
+      "kyokaiNote": "Kyokai Kenpo rates, national rates and grade tables are view-only (updated by the operator).",
+      "kumiaiNote": "Society rates are registered under Health insurance on the Office tab. Pension, contribution and grade tables are view-only (updated by the operator)."
+    },
+    "rate": {
+      "health": "Health insurance",
+      "care": "Long-term care",
+      "childSupport": "Child support levy",
+      "pension": "Employees' pension",
+      "childContribution": "Child contribution (employer only)",
+      "split": "Employee {{employee}} / Employer {{employer}}",
+      "from": "from {{month}}"
+    },
+    "source": {
+      "kyokai": "Kyokai Kenpo",
+      "kumiai": "Society",
+      "national": "National"
+    },
+    "col": {
+      "grade": "Grade",
+      "standard": "Standard monthly",
+      "range": "Monthly pay",
+      "health": "Health (no care)",
+      "healthCare": "Health (with care)",
+      "childSupport": "Child support levy",
+      "pension": "Employees' pension",
+      "total": "Total",
+      "half": "Half",
+      "employee": "Employee",
+      "employer": "Employer"
+    },
+    "kumiai": {
+      "title": "Society rates",
+      "from": "From",
+      "where": "To register, change or import rates, go to ",
+      "toInsurer": "Health insurance on the Office tab"
+    }
   }
 }
