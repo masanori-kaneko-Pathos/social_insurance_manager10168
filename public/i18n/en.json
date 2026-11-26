@@ -4143,7 +4143,8 @@
       "prorated": "A raise or new allowance started mid-period",
       "state": "Choose only for months with leave-of-absence pay.",
       "toLeave": "Register maternity or childcare leave",
-      "hours": "Used to check whether an uninsured employee actually works 20 hours or more a week. Scheduled hours plus overtime within legal limits. Do not include overtime beyond legal limits (over 8 hours a day or 40 hours a week)."
+      "hours": "Used to check whether an uninsured employee actually works 20 hours or more a week. Scheduled hours plus overtime within legal limits. Do not include overtime beyond legal limits (over 8 hours a day or 40 hours a week).",
+      "suspendedOnLeave": "This period is registered as leave (maternity, childcare, etc.). Maternity and childcare leave are handled by the leave record, so choose leave of absence only for months with leave-of-absence pay."
     },
     "readback": {
       "total": "Total (money + in kind): ¥{{total}}",

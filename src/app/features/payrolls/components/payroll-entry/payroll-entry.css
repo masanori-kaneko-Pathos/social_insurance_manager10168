@@ -409,3 +409,8 @@ tr.line-err span + span::before {
   color: var(--color-text);
   opacity: 1;
 }
+
+/* 状態の食い違いの知らせ（休業の期間なのに「休職」。11/26） */
+.warn-note {
+  color: var(--color-warning-text);
+}

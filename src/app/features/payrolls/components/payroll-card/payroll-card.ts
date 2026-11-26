@@ -17,7 +17,7 @@ import { daysInclusive, shiftMonth, todayLocal } from '../../../../shared/utils/
 import { autoDaysText, candidateDays, PayrollRowText, readEntry, RowError, sameInput, textOf } from '../../logic/payroll-input';
 import { OfficeContext } from '../../../office/office-context.service';
 import { formatHours } from '../../../../shared/utils/number';
-import { employedDuring, latestPaidMonth, periodOf, suggestDays } from '../../logic/payroll-rows';
+import { employedDuring, latestPaidMonth, onLeaveDuring, periodOf, suggestDays } from '../../logic/payroll-rows';
 import { payrollOf, premiumMonthOfPay } from '../../../office/office-settings';
 import { RemunerationService } from '../../../employees/remuneration.service';
 import type { RemunerationDoc } from '../../../../core/models/remuneration';
@@ -113,6 +113,11 @@ export class PayrollCard {
     const m = this.editMonth();
     const office = this.context.current();
     return m && office ? periodOf(m, payrollAt(office, this.employee(), m)) : null;
+  });
+  /** 編集中の月の対象期間に休業が登録されているか（「休職」を選んだときの知らせ） */
+  readonly onLeave = computed(() => {
+    const p = this.editPeriod();
+    return !!p && onLeaveDuring(this.employee(), p);
   });
   readonly editPeriodDays = computed(() => {
     const p = this.editPeriod();

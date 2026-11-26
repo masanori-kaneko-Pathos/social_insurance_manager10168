@@ -278,6 +278,10 @@
         <!-- 産休・育休は給与の状態ではなく休業で登録する。従業員のページの休業の追加を開く。
              「休職給の月だけ。」で改行し、案内は1つのリンクにする（「へ」だけ次の行に残らないように。11/26） -->
         <small class="field-note">{{ 'payrollEntry.note.state' | transloco }}</small>
+        <!-- 休業の期間なのに「休職」：産休・育休は休業の記録で扱う。休職は休職給を払った月だけ（11/26） -->
+        @if (onLeave() && form().controls.state.value === 'suspended') {
+          <small class="field-note warn-note">{{ 'payrollEntry.note.suspendedOnLeave' | transloco }}</small>
+        }
         <small class="field-note">
           @if (leaveLink(); as link) {
             <a [routerLink]="link" [queryParams]="{ tab: 'employment', add: 'leave' }">{{ 'payrollEntry.note.toLeave' | transloco }} ›</a>

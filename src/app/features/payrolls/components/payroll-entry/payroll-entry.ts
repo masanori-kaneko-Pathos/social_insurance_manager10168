@@ -78,6 +78,8 @@ export class PayrollEntry implements OnInit {
   readonly canEdit = input(true);
   /** 休業を登録する画面へのリンク（その人の従業員のページ。null ＝ 出さない。11/25） */
   readonly leaveLink = input<readonly unknown[] | null>(null);
+  /** この給与の対象期間に、休業（産休・育休など）が登録されているか（「休職」を選んだときの知らせ。11/26） */
+  readonly onLeave = input(false);
   /** この給与の支払月（内訳の行の「本来の月」の選択肢を作る。11/24） */
   readonly paidMonth = input<string | null>(null);
   /** この人の給与の実績が入っている支払月（本来の月に実績がないと割り振れないので知らせる。null ＝ 分からない） */
