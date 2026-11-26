@@ -5518,7 +5518,6 @@
     "monthOf": "{{y}}年{{m}}月",
     "table": {
       "title": "保険料額表",
-      "month": "対象の月",
       "whoKyokai": "{{month}}分・協会けんぽ（{{pref}}）の料率で出しています。",
       "whoKumiai": "{{month}}分・{{name}}の料率で出しています。",
       "noInsurer": "{{month}}は、健康保険の保険者が登録された時期より前です。",

@@ -24,15 +24,26 @@ section.card {
 .table-head {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
 }
 
-.month-pick {
-  display: inline-flex;
+.period {
+  display: flex;
   align-items: center;
   gap: var(--space-sm);
+}
+
+.period .btn:first-child,
+.period .btn:nth-child(3) {
+  width: 40px;
+  padding: 0;
+}
+
+.period-label {
+  min-width: 9em; /* 「2026年10月分」と「1月」で幅が変わって › が動かないように */
+  text-align: center;
 }
 
 .rates {

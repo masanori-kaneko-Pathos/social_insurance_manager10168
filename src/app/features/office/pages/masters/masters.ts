@@ -8,7 +8,8 @@ import type {
   RateSplit,
 } from '../../../../core/models/rates';
 import { PREFECTURES } from '../../../../core/master/prefectures';
-import { todayLocal, toYearMonth, YEAR_MONTH_RE } from '../../../../shared/utils/date';
+import { shiftMonth, todayLocal, toYearMonth, YEAR_MONTH_RE } from '../../../../shared/utils/date';
+import { MonthPicker } from '../../../../shared/components/month-picker/month-picker';
 import { formatMilli } from '../../../premiums/logic/rounding';
 import { pickGradeTable } from '../../../rates/logic/grade';
 import { isHalf, premiumTable, TableAmount } from '../../../rates/logic/premium-table';
@@ -32,7 +33,7 @@ interface RateLine {
  */
 @Component({
   selector: 'app-masters',
-  imports: [RouterLink, TranslocoPipe, SettingsTabs],
+  imports: [RouterLink, TranslocoPipe, SettingsTabs, MonthPicker],
   templateUrl: './masters.html',
   styleUrl: './masters.css',
 })
@@ -41,7 +42,8 @@ export class Masters {
   private readonly rates = inject(RateService);
   private readonly transloco = inject(TranslocoService);
 
-  readonly month = signal(toYearMonth(todayLocal()));
+  readonly thisMonth = toYearMonth(todayLocal());
+  readonly month = signal(this.thisMonth);
   readonly loading = signal(true);
   readonly errorKey = signal<string | null>(null);
   private readonly tables = signal<RateTables | null>(null);
@@ -79,6 +81,10 @@ export class Masters {
 
   setMonth(value: string): void {
     if (YEAR_MONTH_RE.test(value)) this.month.set(value);
+  }
+
+  shift(diff: number): void {
+    this.month.set(shiftMonth(this.month(), diff));
   }
 
   /** その月の保険者（協会けんぽ・組合）と都道府県。保険者の履歴より前なら null */

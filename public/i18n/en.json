@@ -5518,7 +5518,6 @@
     "monthOf": "{{m}}/{{y}}",
     "table": {
       "title": "Premium table",
-      "month": "Month",
       "whoKyokai": "Calculated with Kyokai Kenpo ({{pref}}) rates for {{month}}.",
       "whoKumiai": "Calculated with {{name}} rates for {{month}}.",
       "noInsurer": "{{month}} is before the first registered health insurer.",

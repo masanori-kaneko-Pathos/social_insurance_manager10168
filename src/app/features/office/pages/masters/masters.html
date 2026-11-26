@@ -18,10 +18,33 @@
   <section class="card" id="premium-table" aria-labelledby="premium-table-title">
     <div class="table-head">
       <h2 id="premium-table-title">{{ 'masters.table.title' | transloco }}</h2>
-      <label class="month-pick">
-        {{ 'masters.table.month' | transloco }}
-        <input type="month" [value]="month()" (change)="setMonth($any($event.target).value)" />
-      </label>
+      <!-- 月の切り替え：保険料のページと同じ ‹ 月 › と、真ん中を押すと年と12か月の選び窓（11/26） -->
+      <div class="period">
+        <button
+          type="button"
+          class="btn"
+          (click)="shift(-1)"
+          [attr.aria-label]="'premiumList.prev' | transloco"
+        >
+          ‹
+        </button>
+        <app-month-picker
+          class="period-label"
+          [value]="month()"
+          [today]="thisMonth"
+          (picked)="setMonth($event)"
+        >
+          {{ 'premium.monthLabel' | transloco: { y: month().slice(0, 4), m: +month().slice(5) } }}
+        </app-month-picker>
+        <button
+          type="button"
+          class="btn"
+          (click)="shift(1)"
+          [attr.aria-label]="'premiumList.next' | transloco"
+        >
+          ›
+        </button>
+      </div>
     </div>
 
     @if (loading()) {

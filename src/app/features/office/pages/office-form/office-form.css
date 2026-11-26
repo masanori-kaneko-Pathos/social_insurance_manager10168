@@ -425,6 +425,20 @@ h3 {
   color: var(--color-text-sub);
 }
 
+/* 事業所の設定（編集）：見出しとタブは目次より上（app-settings-tabs）。
+   本文の上と左の余白（.page の padding）をなくし、タブのすぐ下・目次のすぐ横から始める（11/26） */
+.layout.with-toc:not(.standalone) {
+  gap: var(--space-lg);
+}
+
+.layout.with-toc:not(.standalone) .page {
+  padding: 0 0 var(--space-xl);
+}
+
+.layout.with-toc:not(.standalone) .toc {
+  margin-top: 0;
+}
+
 /* 目次で飛んだとき、見出しが画面の端に貼り付きすぎないように */
 .page [id^='sec-'] {
   scroll-margin-top: var(--space-lg);
