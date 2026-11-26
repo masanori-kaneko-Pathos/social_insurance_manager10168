@@ -788,3 +788,19 @@ export const PAYROLL_FIX_FIELDS: Record<string, FixField> = (() => {
   ) as Record<string, FixField>;
   return { ...byHeader(PAYROLL_HEADERS.ja, fields), ...byHeader(PAYROLL_HEADERS.en, fields), ...old };
 })();
+
+/**
+ * 取り込むファイルの、支払月ごとの人数と「通貨によるものの額」の合計（11/26）
+ * 取り込む前に、給与ソフトの支給総額と同じかを見比べてもらう（報酬にならない項目は通貨によるものの額に入らないので、その分は違ってよい）
+ * 新規・上書き・変わらない行を全部数える（ファイル全体を見比べるため）。新しい月が先
+ */
+export function monthTotalsOf(items: readonly ImportItem[]): { month: string; count: number; cash: number }[] {
+  const by = new Map<string, { count: number; cash: number }>();
+  for (const it of items) {
+    const t = by.get(it.paidMonth) ?? { count: 0, cash: 0 };
+    t.count += 1;
+    t.cash += it.input.cash;
+    by.set(it.paidMonth, t);
+  }
+  return [...by.entries()].sort((a, b) => b[0].localeCompare(a[0])).map(([month, t]) => ({ month, ...t }));
+}

@@ -168,7 +168,8 @@
         "acquireAmount": "Remuneration at acquisition",
         "childcareSpecial": "Childcare period special rule (pension)",
         "dependentReport": "Dependent change notification",
-        "registerGaps": "Employee data: empty items"
+        "registerGaps": "Employee data: empty items",
+        "payrollMissing": "Pay not entered"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. An Application to Enroll in EPI / EHI (資格取得届) is needed.",
@@ -236,7 +237,8 @@
         "acquireAmount": "The fixed wage paid in {{month}} ({{fixed}} yen) is higher than the monthly remuneration on the acquisition notification ({{reported}} yen). Allowances such as commuting or housing that started late still belong in the acquisition amount: correct the expected pay in the contract and file a correction (put catch-up payments back in the months they belong to). If this is a raise decided after acquisition, hide it with \"Checked\".",
         "childcareSpecial": "Raising a child under 3 since {{child}}; the pension standard monthly remuneration from {{month}} ({{now}} yen) is below the month before ({{base}}: {{pre}} yen). If the employee applies, premiums stay the same but the future pension uses the earlier amount. Tell the employee and mark as checked once the application is submitted.",
         "dependentReport": "Dependents changed on {{date}}. Submit the Dependent (Change) Notification within 5 days to the pension office (or to the health insurance society). For a spouse, the National Pension Category 3 notification uses the same form. Dependents added on the date of acquisition are submitted together with the acquisition notification. Mark as done once submitted.",
-        "registerGaps": "Empty items in employee data: {{n}} people"
+        "registerGaps": "Empty items in employee data: {{n}} people",
+        "payrollMissing": "Pay for month {{m}}: {{count}} not entered"
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -308,7 +310,8 @@
       "dismissMembers": "Mark as done ({{count}})",
       "memberCheck": "Mark this person as done",
       "withDependents": "{{count}} dependents",
-      "dependentCounts": "{{start}} dependent(s) added, {{end}} removed."
+      "dependentCounts": "{{start}} dependent(s) added, {{end}} removed.",
+      "toPayroll": "Enter pay"
     }
   },
   "nav": {
@@ -2094,7 +2097,10 @@
       "button": "Import ({{c}} new, {{u}} overwrite)",
       "noInKind": "This file has no in-kind column. How should in-kind remuneration be handled?",
       "inKindZero": "There is none (import as 0 yen)",
-      "inKindMerged": "The payroll software includes it in the amount paid in money (import as \"Not itemized\")"
+      "inKindMerged": "The payroll software includes it in the amount paid in money (import as \"Not itemized\")",
+      "totalsLead": "Check that these match the gross pay totals in your payroll software (items that are not remuneration are excluded).",
+      "totalsCount": "{{n}} people",
+      "totalsCash": "Cash pay total ¥{{amount}}"
     },
     "encoding": {
       "utf-8": "UTF-8",
@@ -4036,12 +4042,13 @@
       },
       "makeTemplate": "Use these items as the office payroll items",
       "templateDone": "Saved as the office payroll items",
-      "direct": "Enter the payment lines of the payslip and the fields above are calculated (do not enter tax or social insurance deductions).",
+      "direct": "Enter the earnings lines and the fields above are calculated automatically.",
       "fromLines": "The fields above are calculated from the lines.",
       "forMonth": "Original month",
       "forOption": "Paid {{y}}-{{m}}",
       "forMonthNote": "For settled forgotten pay, choose the month it was due in \"Original month\"; for a retroactive raise, use the \"Retroactive pay\" category.",
-      "forOptionShort": "Paid in month {{m}}"
+      "forOptionShort": "Paid in month {{m}}",
+      "lead": "Enter the lines in the earnings section of the payslip from the top. Do not enter the deductions section (taxes, social insurance, and so on)."
     },
     "side": {
       "days": "Days and hours",
@@ -5152,7 +5159,7 @@
       "variable": "overtime, holiday, late-night, attendance, commission, overtime beyond the fixed amount, per-day transport allowance × days worked",
       "deduction": "absence deduction, lateness deduction",
       "retro": "retroactive raise difference",
-      "excluded": "travel expense refunds, congratulatory or condolence payments"
+      "excluded": "Business travel reimbursements, travel when a remote worker comes in on business (when home is the place of work), congratulatory or condolence payments"
     },
     "treatment": {
       "base": "Counted in amount paid in money and as fixed wages (including hourly rate × hours; for hourly or daily pay, changes are found from contract rate or hour changes)",

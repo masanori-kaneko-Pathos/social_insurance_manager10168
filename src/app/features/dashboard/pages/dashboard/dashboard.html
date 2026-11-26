@@ -453,6 +453,9 @@
                                 | transloco
                             }}
                           }
+                          @case ('payrollMissing') {
+                            {{ 'dashboard.todo.text.payrollMissing' | transloco: it.extra!.params }}
+                          }
                           @case ('ratesMissing') {
                             {{
                               'dashboard.todo.text.ratesMissing.' + it.extra!.params['insurer']
@@ -754,6 +757,11 @@
                           @case ('insurerChange') {
                             <a [routerLink]="['/o', office()?.id, 'settings']"
                               >{{ 'dashboard.todo.toSettings' | transloco }} →</a
+                            >
+                          }
+                          @case ('payrollMissing') {
+                            <a [routerLink]="['/o', office()?.id, 'payrolls', it.extra!.params['month']]"
+                              >{{ 'dashboard.todo.toPayroll' | transloco }} →</a
                             >
                           }
                           @case ('ratesMissing') {

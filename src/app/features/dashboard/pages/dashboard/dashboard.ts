@@ -59,6 +59,7 @@ import {
   RATES_NOTICE_FROM,
   RATES_NOTICE_TO,
   ratesMissingTodo,
+  payrollMissingTodo,
   registerGapsTodo,
   bonusNoneTodos,
   bonusReportTodos,
@@ -287,6 +288,10 @@ export class Dashboard {
     );
     const froms = this.rateFroms();
     const ratesMissing = froms ? ratesMissingTodo(o.healthInsurer.type, froms, this.today) : null;
+    // 今月払いの給与の未入力（「月ごとの給与」と同じ数え方。対象期間はその人の給与の支払区分で。11/26）
+    const saved = this.payrollSaved();
+    const pm = this.payMonth();
+    const payrollMissing = saved ? payrollMissingTodo(pm, this.employees(), (e) => periodOf(pm, payrollAt(o, e, pm)), saved) : null;
     const adjustment = adjustmentDeadlineTodo(
       adjustmentOfficeStatus(o.specificApplication).deadline,
       !!o.premiumAdjustment?.since,
@@ -298,6 +303,7 @@ export class Dashboard {
       ...myNumberTodos(this.employees(), this.myNumberIndex(), this.today, this.familyIndex()).map(extraItem),
       ...(specific ? [extraItem(specific)] : []),
       ...(ratesMissing ? [extraItem(ratesMissing)] : []),
+      ...(payrollMissing ? [extraItem(payrollMissing)] : []),
       ...(this.registerTodo() ? [extraItem(this.registerTodo()!)] : []),
       ...(adjustment ? [extraItem(adjustment)] : []),
       ...insurerChangeTodos(o, this.today).map(extraItem),
@@ -365,6 +371,8 @@ export class Dashboard {
 
   /** 最新の支払月に給与の実績が入っている人数（月の索引を1件読む。null ＝ まだ） */
   readonly payrollCount = signal<number | null>(null);
+  /** 今月払いの給与を入力済みの人（To-do の「未入力」を数える。11/26） */
+  private readonly payrollSaved = signal<ReadonlySet<string> | null>(null);
   /** 「閉じる」を押した（事業所ごとにこのブラウザに覚える） */
   readonly stepsClosed = signal(false);
 
@@ -473,10 +481,14 @@ export class Dashboard {
         }
         this.payrollApi
           .savedIdsByMonth(office.id, [month], true)
-          .then((m) => this.payrollCount.set(m.get(month)?.size ?? 0))
+          .then((m) => {
+            this.payrollCount.set(m.get(month)?.size ?? 0);
+            this.payrollSaved.set(m.get(month) ?? new Set());
+          })
           .catch((err) => {
             console.error(err);
             this.payrollCount.set(null);
+            this.payrollSaved.set(null);
           });
       });
     });

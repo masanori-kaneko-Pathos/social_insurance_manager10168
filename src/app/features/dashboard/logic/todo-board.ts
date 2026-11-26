@@ -57,6 +57,7 @@ export const BOARD_ORDER: readonly BoardKind[] = [
   'address',
   'name',
   'dependentChange',
+  'payrollMissing', // 今月払いの給与の未入力（毎月の作業。11/26）
   'upcoming',
   'categoryChange',
   'certificateEnd',
@@ -117,6 +118,7 @@ export const SECTION_OF: Record<BoardKind, Section> = {
   specificOffice: 'soon',
   adjustmentDeadline: 'soon',
   ratesMissing: 'soon',
+  payrollMissing: 'now',
   insurerChange: 'soon',
   actualHours: 'now',
   acquireAmount: 'now',

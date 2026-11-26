@@ -2,6 +2,8 @@
   <!-- 左：給与明細の支給 -->
   <div class="entry-main">
     <h3>{{ 'payrollEntry.lines.title' | transloco }}</h3>
+    <!-- 何を入れるか（控除欄は入れない）を、行を入れ始めてもいつも出す（11/26） -->
+    <p class="hint lines-lead">{{ 'payrollEntry.lines.lead' | transloco }}</p>
     <!-- 行は明細どおり、計算は分類で（課税・非課税の通勤手当など、分かれていれば分けたままでよい。11/24） -->
     <!--
       合計の欄はいつも同じ場所に置く（11/24）。
@@ -102,7 +104,8 @@
                   >
                     <option value="" [selected]="!d.category">{{ 'payrollEntry.lines.pickCategory' | transloco }}</option>
                     @for (c of categories; track c) {
-                      <option [value]="c" [selected]="d.category === c">{{ 'payrollItem.category.' + c | transloco }}</option>
+                      <!-- 名前だけでは選べないので、例を付ける（「給与の項目と分類」の画面と同じ例。11/26） -->
+                      <option [value]="c" [selected]="d.category === c">{{ 'payrollItem.category.' + c | transloco }}（{{ 'payrollItem.exampleLabel' | transloco: { list: ('payrollItem.example.' + c | transloco) } }}）</option>
                     }
                   </select>
                 } @else if (d.category) {

@@ -134,6 +134,22 @@
             }
           </div>
 
+          <!-- 取り込む前に、給与ソフトの支給総額と見比べる（支払月ごとの人数と合計。11/26） -->
+          @if (monthTotals().length > 0) {
+            <div class="month-totals">
+              <p class="mt-lead">{{ 'payrollCsv.import.totalsLead' | transloco }}</p>
+              <ul>
+                @for (t of monthTotals(); track t.month) {
+                  <li>
+                    <span>{{ 'payroll.monthPick' | transloco: monthParts(t.month) }}</span>
+                    <span class="sub">{{ 'payrollCsv.import.totalsCount' | transloco: { n: t.count } }}</span>
+                    <strong class="num">{{ 'payrollCsv.import.totalsCash' | transloco: { amount: yen(t.cash) } }}</strong>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+
           @if (!pv.read.hasInKindColumn) {
             <!-- 現物の列がないファイル：現物はないのか、給与ソフトが支払額に含めて出しているのか -->
             <fieldset class="in-kind-choice">

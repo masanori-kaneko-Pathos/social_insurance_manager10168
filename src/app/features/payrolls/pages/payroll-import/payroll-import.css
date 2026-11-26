@@ -304,3 +304,29 @@ td.mono {
   font-size: var(--font-sm);
   color: var(--color-danger-text);
 }
+
+/* 支払月ごとの人数と合計（給与ソフトの支給総額と見比べる。11/26） */
+.month-totals {
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-highlight-soft);
+  font-size: var(--font-sm);
+}
+
+.month-totals .mt-lead {
+  margin: 0 0 var(--space-xs);
+}
+
+.month-totals ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.month-totals li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-xs) var(--space-md);
+}

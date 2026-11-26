@@ -31,7 +31,7 @@ import {
   payrollLabels,
   PAYROLL_TABLE_SPEC,
   payrollFileName,
-  readPayrollCsv, PAYROLL_FIX_FIELDS, scheduleFor } from '../../logic/payroll-csv';
+  readPayrollCsv, PAYROLL_FIX_FIELDS, scheduleFor, monthTotalsOf } from '../../logic/payroll-csv';
 import { monthsBetween, shiftMonth, todayLocal } from '../../../../shared/utils/date';
 import { latestPaidMonth } from '../../logic/payroll-rows';
 import { payrollOf, premiumMonthOfPay } from '../../../office/office-settings';
@@ -174,6 +174,15 @@ export class PayrollImport {
     return this.writes().filter((it) => created.has(it)).length;
   });
   readonly updatedCount = computed(() => this.writes().length - this.createdCount());
+  /** ファイルの支払月ごとの人数と、通貨によるものの額の合計（給与ソフトの支給総額と見比べる。11/26） */
+  readonly monthTotals = computed(() => {
+    const p = this.preview();
+    return p ? monthTotalsOf([...p.created, ...p.updated, ...p.unchanged]) : [];
+  });
+  monthParts(m: string): { y: string; m: number } {
+    return { y: m.slice(0, 4), m: Number(m.slice(5)) };
+  }
+
   readonly canImport = computed(() => {
     const p = this.preview();
     return (

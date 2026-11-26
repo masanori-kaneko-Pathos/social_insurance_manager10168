@@ -56,6 +56,7 @@ import { bonusStatus, healthBonusCapOf, priorHealthOf, PriorBonusHolder, standar
 import { bonusesOf, BonusPaymentLike } from '../../premiums/logic/bonus-rows';
 import { isNotCovered, recipientsOf } from '../../premiums/logic/bonus-nature';
 import { CoverageInput, healthLostDate } from '../../employees/logic/coverage';
+import { insuredDuring, Period, PayrollEmployee } from '../../payrolls/logic/payroll-rows';
 
 export type ExtraKind =
   | 'registerGaps'
@@ -71,6 +72,7 @@ export type ExtraKind =
   | 'overseasCertificate'
   | 'overseasPayAbroad'
   | 'ratesMissing'
+  | 'payrollMissing'
   | 'adjustmentDeadline'
   | 'insurerChange'
   | 'bonusNone'
@@ -178,6 +180,22 @@ export function specificOfficeTodo(
     date: null,
     params: { count, min: sizeMin, how: manual != null ? 'manual' : 'app' },
   };
+}
+
+/**
+ * 今月払いの給与で、まだ入力していない人がいる（11/26）
+ * 数え方は「月ごとの給与」の「未入力」と同じ：その人の対象期間に社会保険に加入していて、給与がまだない人。
+ * 支払日を過ぎた最新の月だけ（呼ぶ側が latestPaidMonth を渡す）。入力すれば消えるので、確認済みにはしない
+ */
+export function payrollMissingTodo<E extends PayrollEmployee>(
+  month: YearMonth,
+  employees: readonly E[],
+  periodOfEmployee: (e: E) => Period,
+  saved: ReadonlySet<string>,
+): ExtraTodo | null {
+  const count = employees.filter((e) => insuredDuring(e, periodOfEmployee(e)) && !saved.has(e.id)).length;
+  if (count === 0) return null;
+  return { kind: 'payrollMissing', employeeId: null, date: null, params: { month, m: Number(month.slice(5, 7)), count } };
 }
 
 /** 来年度の料率を知らせ始める月・やめる月（協会けんぽの料率は2月上旬に決まり、3月分から変わる） */

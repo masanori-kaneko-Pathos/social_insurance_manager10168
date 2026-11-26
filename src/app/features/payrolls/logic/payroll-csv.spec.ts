@@ -2,7 +2,7 @@ import { emptyPayrollInput, Payroll } from '../../../core/models/payroll';
 import { parseCsv, toCsv } from '../../../shared/csv/csv';
 import { guessMapping, missingRequired, OurTableSpec, toOurTable } from '../../../shared/import/column-map';
 import { categoryOf } from './payroll-lines';
-import { buildPayrollCsv, isOurPayrollFormat, payrollDerived, exportLineNames, lineHeaderOf, splitLineHeader, classifyImport, isInKindMerged, CsvEmployee, makeMatcher, PAYROLL_IMPORT_FIELDS, PAYROLL_TABLE_SPEC, mapHeader, parseFlag, parseMonth, parseState, payrollFileName, readPayrollCsv } from './payroll-csv';
+import { buildPayrollCsv, isOurPayrollFormat, payrollDerived, exportLineNames, lineHeaderOf, splitLineHeader, classifyImport, isInKindMerged, CsvEmployee, makeMatcher, PAYROLL_IMPORT_FIELDS, PAYROLL_TABLE_SPEC, mapHeader, parseFlag, parseMonth, parseState, payrollFileName, readPayrollCsv, monthTotalsOf } from './payroll-csv';
 import { monthsBetween } from '../../../shared/utils/date';
 import { PaySchedule } from './payroll-rows';
 
@@ -524,5 +524,18 @@ describe('isOurPayrollFormat：列を合わせる画面を出さずに進める�
   it('事業所で登録した項目名（交通費（日額））も内訳の列として見分ける', () => {
     const items = [{ name: '交通費（日額）', labels: [], category: 'variable' as const }];
     expect(isOurPayrollFormat(['社員番号', '支払月', '給与計算の基礎日数', '交通費（日額）'], items)).toBeTrue();
+  });
+});
+
+describe('monthTotalsOf：取り込むファイルの支払月ごとの合計（11/26）', () => {
+  const item = (paidMonth: string, cash: number) => ({ line: 2, employeeId: 'e', employeeLabel: '', paidMonth, input: { cash } }) as never;
+  it('支払月ごとに人数と通貨によるものの額を足し、新しい月から並べる', () => {
+    expect(monthTotalsOf([item('2026-10', 300000), item('2026-11', 250000), item('2026-11', 312000)])).toEqual([
+      { month: '2026-11', count: 2, cash: 562000 },
+      { month: '2026-10', count: 1, cash: 300000 },
+    ]);
+  });
+  it('行がなければ空', () => {
+    expect(monthTotalsOf([])).toEqual([]);
   });
 });
