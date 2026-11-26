@@ -28,7 +28,7 @@
   }
 
   @if (loaded(); as f) {
-    <app-column-mapper [hidden]="!mapping()" [tables]="f.tables" [spec]="spec" memoryKey="dependents" [officeId]="context.current()?.id ?? null" [canSave]="context.isAdmin()" (confirmed)="onMapped($event)" (cancelled)="clear()" />
+    <app-column-mapper [hidden]="!mapping()" [tables]="f.tables" [spec]="spec" noteKey="importMap.dependentNote" memoryKey="dependents" [officeId]="context.current()?.id ?? null" [canSave]="context.isAdmin()" (confirmed)="onMapped($event)" (cancelled)="clear()" />
   }
 
   @if (preview(); as pv) {

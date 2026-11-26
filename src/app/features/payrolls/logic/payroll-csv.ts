@@ -663,17 +663,28 @@ const WORDS: Record<PayrollColumn, readonly string[]> = {
   // 「対象年月」（○月分）は、翌月払いだと支払月とずれるので結ばない（11/24）
   paidMonth: ['支給年月', '支給月', '支払年月', '支給日', '支払日', '給与支給日'],
   cash: ['総支給金額', '支給合計', '支給額合計', '社保対象額', '社会保険対象額', '社会保険の報酬', '報酬額'],
-  fixed: ['固定給', '固定的賃金計', '固定的賃金の合計', '毎月決まった額'],
+  // 「固定給」「毎月決まった額」は基本給だけ・通勤手当を含まないことが多いので、似た列として聞く（NEAR。11/25）
+  fixed: ['固定的賃金計', '固定的賃金の合計'],
   // 「出勤日数」は給与計算の基礎日数に結ばない（月給の人の基礎日数は暦日で、意味が違う。11/25）
   days: ['基礎日数', '支払基礎日数', '支払日数'],
   inKind: ['現物給与', '現物支給額', '現物給与額'],
-  retro: ['遡及額', '遡及分', '昇給差額', '差額支給'],
+  retro: ['遡及額', '遡及分', '昇給差額'],
   absentDays: ['欠勤'],
-  hours: ['労働時間', '総労働時間', '勤務時間'],
+  // 実労働時間は「所定＋法定内の残業」。総労働時間などは法定外の残業も含むので、似た列として聞く（NEAR。11/25）
+  hours: [],
   prorated: [],
   state: [],
   attendedDays: ['出勤日', '勤務日数', '労働日数', '出勤日数計', 'days worked'],
 };
+
+/** 似ているけれど意味が違うことがある見出し（自動では結ばず、列を合わせる画面で確かめてもらう。11/25） */
+const NEAR: Partial<Record<PayrollColumn, ImportField['near']>> = {
+  fixed: [{ words: ['固定給', '毎月決まった額'], noteKey: 'payrollCsv.near.fixed' }],
+  retro: [{ words: ['差額支給'], noteKey: 'payrollCsv.near.retro' }],
+  hours: [{ words: ['労働時間', '総労働時間', '勤務時間'], noteKey: 'payrollCsv.near.hours' }],
+};
+/** 時給・日給の基礎日数は有給休暇を含む（ガイドブック）。明細で分かれていれば出勤日数に足す */
+const PAID_LEAVE_WORDS = ['有給日数', '有休日数', '有給休暇日数', '有給取得日数', '有休取得日数', '年休日数'];
 
 const KINDS: Partial<Record<PayrollColumn, ValueKind>> = {
   paidMonth: 'month', cash: 'number', fixed: 'number', inKind: 'number', retro: 'number',
@@ -688,6 +699,9 @@ export const PAYROLL_IMPORT_FIELDS: readonly ImportField<PayrollColumn>[] = PAYR
   required: PAYROLL_REQUIRED.includes(key),
   // 社員番号の列がないファイルでも、氏名の列があれば氏名で照合する（うちの表には空の社員番号の列が出る）
   orFrom: key === 'employeeNumber' ? (['name'] as const) : undefined,
+  near: NEAR[key],
+  summable: key === 'attendedDays' || undefined,
+  autoPlus: key === 'attendedDays' ? PAID_LEAVE_WORDS : undefined,
 }));
 
 /**

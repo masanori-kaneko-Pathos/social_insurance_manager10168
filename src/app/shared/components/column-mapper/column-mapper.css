@@ -142,3 +142,25 @@ tr:has(+ .formula-row) > * {
   color: var(--color-text-sub);
   line-height: 1.5;
 }
+
+/* 似た列（意味が違うことがある見出し。11/25） */
+.near {
+  margin: 0;
+  font-size: var(--font-xs);
+  color: var(--color-warning-text);
+  line-height: 1.6;
+}
+
+.near .btn {
+  margin-left: var(--space-xs);
+}
+
+.near-mark {
+  font-size: var(--font-xs);
+  color: var(--color-warning-text);
+}
+
+.near-hint {
+  margin-right: var(--space-sm);
+  font-size: var(--font-xs);
+}

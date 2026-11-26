@@ -175,6 +175,10 @@
         </table>
       }
 
+      @if (confirmDelete()) {
+        <app-rate-impact-note [impact]="deleteImpact()" [loading]="closedLoading()" [closedError]="closedError()" />
+      }
+
       @if (saveError()) {
         <div class="alert alert-danger" role="alert">{{ 'rateDialog.error.save' | transloco }}</div>
       }
@@ -192,6 +196,12 @@
             {{ (kumiaiRows().length ? 'rateDialog.csv.export' : 'rateDialog.csv.template') | transloco }}
           </button>
           @if (rateImport(); as imp) {
+            <app-rate-impact-note
+              actions
+              [impact]="importImpact()"
+              [loading]="closedLoading()"
+              [closedError]="closedError()"
+            />
             <div actions class="actions">
               <button
                 type="button"
@@ -321,6 +331,7 @@
           }
           <p class="hint">{{ 'rateDialog.childSupportHint' | transloco }}</p>
           <p class="hint">{{ 'rateDialog.saveHint' | transloco }}</p>
+          <app-rate-impact-note [impact]="editImpact()" [loading]="closedLoading()" [closedError]="closedError()" />
 
           <div class="actions">
             <button type="button" class="btn" (click)="cancelEdit()">

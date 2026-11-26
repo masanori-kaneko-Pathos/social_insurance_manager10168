@@ -1,6 +1,6 @@
 import { emptyPayrollInput, Payroll } from '../../../core/models/payroll';
 import { parseCsv, toCsv } from '../../../shared/csv/csv';
-import { guessMapping, missingRequired, OurTableSpec, toOurTable } from '../../../shared/import/column-map';
+import { guessMapping, missingRequired, nearColumns, OurTableSpec, toOurTable } from '../../../shared/import/column-map';
 import { categoryOf } from './payroll-lines';
 import { buildPayrollCsv, isOurPayrollFormat, payrollDerived, exportLineNames, lineHeaderOf, splitLineHeader, classifyImport, isInKindMerged, CsvEmployee, makeMatcher, PAYROLL_IMPORT_FIELDS, PAYROLL_TABLE_SPEC, mapHeader, parseFlag, parseMonth, parseState, payrollFileName, readPayrollCsv, monthTotalsOf } from './payroll-csv';
 import { monthsBetween } from '../../../shared/utils/date';
@@ -179,7 +179,7 @@ describe('readPayrollCsv', () => {
     });
 
     it('社員番号の列がないファイルも、氏名の列で照合できる（列を合わせる画面）', () => {
-      const table = [['氏名', '支給日', '総支給額', '固定給', '出勤日数'], ['番号 なし子', '2026/10/25', '200,000', '200000', '30']];
+      const table = [['氏名', '支給日', '総支給額', '固定的賃金計', '出勤日数'], ['番号 なし子', '2026/10/25', '200,000', '200000', '30']];
       const m = guessMapping(table[0], PAYROLL_IMPORT_FIELDS);
       // 出勤日数は給与計算の基礎日数に結ばない（11/25）。基礎日数は給与の形から出す（月給なら暦日）
       expect(missingRequired(PAYROLL_IMPORT_FIELDS, m)).toEqual(['days']);
@@ -258,6 +258,26 @@ describe('readPayrollCsv', () => {
       const late = emp('L', 'L1', 'テスト遅', '2026-03-18');
       const r = readPayrollCsv(parseCsv(`${H}\nL1,2026-04,140000,140000,,10`), [late], S, { payTypeOf: () => 'monthly' });
       expect(r.items[0].input.days).toBe(14);
+    });
+  });
+
+  describe('似た列（意味が違うことがある見出し）は自動では結ばない（11/25）', () => {
+    const field = (k: string) => PAYROLL_IMPORT_FIELDS.find((f) => f.key === k)!;
+    it('固定給・総労働時間・差額支給は、似た列として出る', () => {
+      const h = ['社員番号', '支給日', '総支給額', '固定給', '総労働時間', '差額支給'];
+      const m = guessMapping(h, PAYROLL_IMPORT_FIELDS);
+      expect([m.fixed, m.hours, m.retro]).toEqual([undefined, undefined, undefined]);
+      expect(nearColumns(h, field('fixed')).map((n) => n.col)).toEqual([3]);
+      expect(nearColumns(h, field('hours')).map((n) => n.col)).toEqual([4]);
+      expect(nearColumns(h, field('retro')).map((n) => n.col)).toEqual([5]);
+    });
+    it('出勤日数に、有給日数の列を自動で足す（時給・日給の基礎日数は有給休暇を含む）', () => {
+      const h = ['社員番号', '支給日', '総支給額', '固定的賃金計', '出勤日数', '有給日数'];
+      const m = guessMapping(h, PAYROLL_IMPORT_FIELDS);
+      expect(m.attendedDays).toEqual({ col: 4, plus: [5] });
+      const t = toOurTable([h, ['0012', '2026/10/25', '110000', '6000', '16', '1']], m, PAYROLL_TABLE_SPEC);
+      const r = readPayrollCsv(t, EMPS, S, { payTypeOf: () => 'hourly' });
+      expect(r.items[0].input.days).toBe(17);
     });
   });
 

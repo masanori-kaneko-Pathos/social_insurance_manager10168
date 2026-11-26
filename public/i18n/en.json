@@ -2159,7 +2159,12 @@
       "save": "Could not save (nothing was saved). Please try again later."
     },
     "derivedNote": "Item column categories are set in Pay items and categories. Headers without a category appear under unused columns and are not counted.",
-    "daysDerived": "Monthly pay: calendar days of the period (days employed in the month of hire or leaving). Daily-monthly: scheduled days minus absences (calendar days if none). Hourly and daily: the days worked column. Days worked is not used for monthly pay."
+    "daysDerived": "Monthly pay: calendar days of the period (days employed in the month of hire or leaving). Daily-monthly: scheduled days minus absences (calendar days if none). Hourly and daily: the days worked column (including paid leave; a paid leave days column is added automatically). Days worked is not used for monthly pay.",
+    "near": {
+      "fixed": "Often basic pay only or without commuting allowance. Choose it if it is basic pay plus fixed allowances plus commuting allowance.",
+      "retro": "May be a settlement of unpaid amounts. Choose it if it is back pay for a raise decided retroactively.",
+      "hours": "Often includes statutory overtime. Choose it if it is scheduled hours plus non-statutory overtime only."
+    }
   },
   "contract": {
     "title": "Employment contract",
@@ -2794,6 +2799,12 @@
       "newGaps": "{{n}} people have empty items ({{text}}). Fill them in later by editing, or import a file with those columns again.",
       "after": "People with empty items: {{n}} ({{text}})",
       "toList": "See them in the list"
+    },
+    "near": {
+      "scheduled": "May be actual attendance. Choose it if it is the contracted scheduled hours or days.",
+      "standard": "This is the standard monthly remuneration (grade amount), not the remuneration at enrollment. Choose it if it is the amount written on the enrollment notification.",
+      "healthInsured": "For health insurance societies, the health insurance number differs from the pension number. Choose it if it equals the pension insured number.",
+      "dailyWage": "May be a daily commuting allowance. Choose it if it is daily pay."
     }
   },
   "historyCsv": {
@@ -2851,6 +2862,9 @@
     "done": "Imported {{n}} records.",
     "error": {
       "partial": "Stopped partway. Import the same file again: records already imported are skipped and only the rest are added."
+    },
+    "near": {
+      "order": "May be the date of a transfer or promotion order. Choose it if it is the date the contract terms changed."
     }
   },
   "account": {
@@ -3736,7 +3750,13 @@
     "restored": "Using the assignment last used in this office (matched by column headings). When you continue, the current assignment is remembered for next time.",
     "useAuto": "Use automatic matching",
     "formula": "Example {{n}}: ",
-    "passed": "Item columns imported: "
+    "passed": "Item columns imported: ",
+    "near": "Similar column: \"{{col}}\" (example 1: {{ex}}).",
+    "useNear": "Use this column",
+    "nearTag": "may mean something else",
+    "nearHint": "Similar: {{col}}",
+    "payrollNote": "Some payroll software includes non-remuneration items (such as travel expense settlements) or in-kind pay in the gross pay column. With item columns, it is checked against their total.",
+    "dependentNote": "Annual income means the expected amount for the next year. If the column holds last year's income, check it against the expectation."
   },
   "members": {
     "title": "Members",
@@ -4637,6 +4657,9 @@
       "toBeforeFrom": "End date is before the start date",
       "fromBeforeBirth": "Start date is before the birth date",
       "reasonMismatch": "Reason does not match the relationship"
+    },
+    "near": {
+      "supporter": "Often the name of the supporting employee. Choose it if it is the dependent's name."
     }
   },
   "importFix": {
@@ -5536,6 +5559,19 @@
       "from": "From",
       "where": "To register, change or import rates, go to ",
       "toInsurer": "Health insurance on the Office tab"
+    }
+  },
+  "rateImpact": {
+    "changed": "Months whose calculation changes: {{spans}}",
+    "count": " ({{n}} months)",
+    "closed": "Already marked checked among them: {{spans}} ({{n}} months)",
+    "closedHint": "Premiums for months marked checked will change too. After saving, settle them under \"Differences since marked checked\" on the premiums page.",
+    "loading": "Looking up months marked checked…",
+    "loadError": "Could not load months marked checked (showing only the months whose calculation changes).",
+    "span": {
+      "one": "{{month}}",
+      "range": "{{from}} to {{to}}",
+      "open": "from {{from}}"
     }
   }
 }

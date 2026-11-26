@@ -32,6 +32,15 @@ export interface ImportField<K extends string = string> {
   required?: boolean;
   /** 必須でも、この項目がすべて結ばれていれば足りる（例：週の時間 ← 1日の分 × 週の日数） */
   orFrom?: readonly K[];
+  /**
+   * 似ているけれど意味が違うことがある見出し（11/25）。自動では結ばず、列を合わせる画面で
+   * 「似た列があります」と注意の文（翻訳キー）を出して、人が［この列を使う］で選ぶ
+   */
+  near?: readonly { words: readonly string[]; noteKey: string }[];
+  /** 列を足せる（金額でなくても。出勤日数＋有給休暇日数 など） */
+  summable?: boolean;
+  /** 結んだ列に、自動で足す列の見出し（出勤日数に有給休暇日数 など。11/25） */
+  autoPlus?: readonly string[];
 }
 
 /**
@@ -41,8 +50,8 @@ export interface ImportField<K extends string = string> {
 export type Source = { col: number; plus?: number[] } | { fixed: string } | null;
 
 /** 列を足して1つの項目にできるか（金額の項目だけ） */
-export function canSum(f: Pick<ImportField, 'kind'>): boolean {
-  return f.kind === 'number';
+export function canSum(f: Pick<ImportField, 'kind' | 'summable'>): boolean {
+  return f.kind === 'number' || !!f.summable;
 }
 export type Mapping<K extends string = string> = Partial<Record<K, Source>>;
 
@@ -74,6 +83,29 @@ export function guessMapping<K extends string>(
     const key = lookup.get(headerKey(h));
     if (key && out[key] === undefined) out[key] = { col: i };
   });
+  // 自動で足す列（出勤日数に有給休暇日数 など）
+  for (const f of fields) {
+    const s = out[f.key];
+    if (!f.autoPlus?.length || !s || !('col' in s)) continue;
+    const want = new Set(f.autoPlus.map(headerKey));
+    const plus = headers.map((h, i) => (want.has(headerKey(h)) && i !== s.col ? i : -1)).filter((i) => i >= 0);
+    if (plus.length > 0) out[f.key] = { col: s.col, plus };
+  }
+  return out;
+}
+
+/** 似ているけれど意味が違うことがある列（その項目の near に当たる見出しの列と、注意の文） */
+export function nearColumns(
+  headers: readonly string[],
+  f: Pick<ImportField, 'near'>,
+): { col: number; noteKey: string }[] {
+  const out: { col: number; noteKey: string }[] = [];
+  for (const n of f.near ?? []) {
+    const want = new Set(n.words.map(headerKey));
+    headers.forEach((h, i) => {
+      if (want.has(headerKey(h)) && !out.some((x) => x.col === i)) out.push({ col: i, noteKey: n.noteKey });
+    });
+  }
   return out;
 }
 

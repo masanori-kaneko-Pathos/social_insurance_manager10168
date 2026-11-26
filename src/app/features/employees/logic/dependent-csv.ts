@@ -60,8 +60,9 @@ const WORDS: Partial<Record<DependentImportKey, readonly string[]>> = {
   employeeNumber: ['従業員番号', '従業員コード', '社員コード', '社員No', '被保険者の社員番号'],
   relationship: ['続き柄', '関係', '本人との続柄'],
   relationshipNote: ['続柄の内容', '続柄（その他）', '具体的な続柄', 'その他の続柄'],
-  lastName: ['被扶養者の姓', '扶養者姓', '家族の姓'],
-  firstName: ['被扶養者の名', '扶養者名', '家族の名'],
+  // 「扶養者姓・名」は扶養している側（従業員本人）のことが多いので、似た列として聞く（NEAR。11/25）
+  lastName: ['被扶養者の姓', '家族の姓'],
+  firstName: ['被扶養者の名', '家族の名'],
   lastNameKana: ['被扶養者のセイ', 'フリガナ（姓）'],
   firstNameKana: ['被扶養者のメイ', 'フリガナ（名）'],
   birthDate: ['被扶養者の生年月日', '家族の生年月日'],
@@ -76,6 +77,12 @@ const WORDS: Partial<Record<DependentImportKey, readonly string[]>> = {
   remittance: ['送金額', '仕送り額'],
   remittanceTimes: ['送金回数', '仕送り回数'],
   note: ['備考'],
+};
+
+/** 似ているけれど意味が違うことがある見出し（11/25） */
+const NEAR: Partial<Record<DependentImportKey, ImportField['near']>> = {
+  lastName: [{ words: ['扶養者姓'], noteKey: 'dependentCsv.near.supporter' }],
+  firstName: [{ words: ['扶養者名'], noteKey: 'dependentCsv.near.supporter' }],
 };
 
 const KIND: Partial<Record<DependentImportKey, 'date' | 'number' | 'digits' | 'kana'>> = {
@@ -101,6 +108,7 @@ export const DEPENDENT_IMPORT_FIELDS: readonly ImportField<DependentImportKey>[]
   kind: KIND[key],
   required: (REQUIRED as readonly string[]).includes(key),
   orFrom: key === 'lastName' ? ['fullName'] : key === 'lastNameKana' ? ['fullNameKana'] : undefined,
+  near: NEAR[key],
 }));
 
 export const DEPENDENT_TABLE_SPEC: OurTableSpec<DependentImportKey, DependentColumn> = {

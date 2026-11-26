@@ -10,6 +10,7 @@ import {
   ImportField,
   Mapping,
   missingRequired,
+  nearColumns,
   OurTableSpec,
   SavedMapping,
   Source,
@@ -151,6 +152,30 @@ export class ColumnMapper {
   /** 列を足せる項目があるか（あれば上に説明を出す。11/24） */
   readonly hasSummable = computed(() => this.fields().some((f) => canSum(f)));
   readonly unused = computed(() => unusedColumns(this.headers(), this.mapping()).filter((i) => !this.passed().includes(i)));
+
+  // ===== 似た列（意味が違うことがある見出し。自動では結ばない。11/25） =====
+  /** 結ばれていない項目の、似た列（ほかの項目に使っている列は出さない） */
+  nearOf(key: string): { col: number; noteKey: string }[] {
+    if (this.mapping()[key] || this.isDerived(key)) return [];
+    const f = this.fields().find((x) => x.key === key);
+    if (!f) return [];
+    const used = new Set(unusedColumns(this.headers(), this.mapping()));
+    return nearColumns(this.headers(), f).filter((n) => used.has(n.col));
+  }
+  /** 使わない列のうち、どれかの項目の似た列（「意味が違うかもしれません」を付ける） */
+  readonly nearUnused = computed(() => {
+    const all = new Set<number>();
+    for (const f of this.fields()) for (const n of nearColumns(this.headers(), f)) all.add(n.col);
+    return all;
+  });
+  /** 似た列の例の値（例1） */
+  nearExample(col: number): string {
+    const row = this.table().slice(1).find((r) => r.some((c) => c.trim() !== ''));
+    return row?.[col]?.trim() ?? '';
+  }
+  useNear(key: string, col: number): void {
+    this.mapping.update((m) => ({ ...m, [key]: { col } }));
+  }
 
   // ===== 表示 =====
 

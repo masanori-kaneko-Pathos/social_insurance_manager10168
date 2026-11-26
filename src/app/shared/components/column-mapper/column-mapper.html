@@ -92,6 +92,19 @@
         <td class="example">{{ example(f.key, $index) }}</td>
       }
     </tr>
+    <!-- 似た列（意味が違うことがある見出し）：自動では結ばず、確かめて選んでもらう（11/25） -->
+    @for (n of nearOf(f.key); track n.col) {
+      <tr class="formula-row near-row">
+        <td></td>
+        <td [attr.colspan]="1 + samples().length">
+          <p class="near">
+            {{ 'importMap.near' | transloco: { col: columnName(n.col), ex: nearExample(n.col) || '—' } }}
+            {{ n.noteKey | transloco }}
+            <button type="button" class="btn btn-small" (click)="useNear(f.key, n.col)">{{ 'importMap.useNear' | transloco }}</button>
+          </p>
+        </td>
+      </tr>
+    }
     <!-- 内訳の列から計算する項目：式は行の下に横いっぱいで（折り返さずに読めるように。11/25） -->
     @if (isDerived(f.key) && (formulaText(f.key) || explainOf(f.key))) {
       <tr class="formula-row">
@@ -157,7 +170,9 @@
     <p class="sub unused">
       {{ 'importMap.unused' | transloco }}
       @for (i of unused(); track i) {
-        <span class="tag">{{ columnName(i) }}</span>
+        <span class="tag" [class.tag-near]="nearUnused().has(i)" [attr.title]="nearUnused().has(i) ? ('importMap.nearTag' | transloco) : null"
+          >{{ columnName(i) }}@if (nearUnused().has(i)) {<span class="near-mark">（{{ 'importMap.nearTag' | transloco }}）</span>}</span
+        >
       }
     </p>
   }
@@ -167,6 +182,9 @@
       {{ 'importMap.missing' | transloco }}
       @for (k of missing(); track k) {
         <span class="tag">{{ headerOf(k) }}</span>
+        @for (n of nearOf(k); track n.col) {
+          <span class="near-hint">{{ 'importMap.nearHint' | transloco: { col: columnName(n.col) } }}</span>
+        }
       }
     </div>
   }

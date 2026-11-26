@@ -811,7 +811,8 @@ export const EMPLOYEE_WORDS: Partial<Record<EmployeeImportKey, readonly string[]
   sex: ['男女', '男女コード', '男女区分', '戸籍上の性別', '性別コード', 'gender', 'sex'],
   basicPensionNumber: ['basic pension number'],
   myNumber: ['個人番号', 'マイナンバー（個人番号）', '個人番号（マイナンバー）', 'my number', 'individual number'],
-  insuredNumber: ['健康保険の被保険者整理番号', '健康保険被保険者整理番号', '厚生年金保険の被保険者整理番号'],
+  // 健康保険の整理番号は、組合健保だと厚生年金（年金事務所）の番号と違うので、似た列として聞く（NEAR。11/25）
+  insuredNumber: ['厚生年金保険の被保険者整理番号'],
   // 労働者名簿（様式第19号）の見出しも（名簿の Excel から登録する会社が多いため。11/24）
   hireDate: ['入社年月日', '雇用開始日', '採用日', '入社年月', '雇入年月日', '雇入れ年月日', '雇入の年月日', 'hire date'],
   retireDate: ['退職年月日', '退社日', '離職日', '退職年月', '退職又は死亡の年月日', '解雇・退職または死亡の年月日', '解雇･退職または死亡年月日', '退職の年月日'],
@@ -823,21 +824,33 @@ export const EMPLOYEE_WORDS: Partial<Record<EmployeeImportKey, readonly string[]
   history: ['職歴', '経歴', '社内履歴', '異動歴'],
   healthEnrolled: ['健康保険に加入しているか', '健康保険の加入', '健康保険加入', '健保加入'],
   pensionEnrolled: ['厚生年金保険に加入しているか', '厚生年金保険の加入', '厚生年金加入', '厚年加入'],
-  monthlyAmount: ['報酬月額', '標準報酬月額', '健康保険標準報酬月額', '健康保険の標準報酬月額'],
+  // 標準報酬月額は等級の額（しかも今の額）で、資格取得時の報酬月額ではない。似た列として聞く（NEAR。11/25）
+  monthlyAmount: ['報酬月額'],
   employmentType: ['雇用区分', '社員区分', 'employment type'],
   specialEmployment: ['雇い方', '適用除外の雇い方', '雇用の種類（適用除外）'],
   payType: ['給与方式', '給与支給形態', '給与形態', '賃金形態', '支給形態', 'pay type'],
-  weeklyHours: ['週所定労働時間', '週の労働時間', '所定労働時間（週）'],
-  monthlyDays: ['月所定労働日数', '一ヶ月の平均所定労働日数', '1か月の平均所定労働日数', '月平均所定労働日数', '月の労働日数'],
+  // 「所定」が付かない言い方は勤怠の実績のことがあるので、似た列として聞く（NEAR。11/25）
+  weeklyHours: ['週所定労働時間', '所定労働時間（週）'],
+  monthlyDays: ['月所定労働日数', '一ヶ月の平均所定労働日数', '1か月の平均所定労働日数', '月平均所定労働日数'],
   dailyMinutes: ['日の契約労働時間', '1日の所定労働時間（分）', '1日の所定労働時間分'],
-  weeklyDays: ['週の契約労働日数', '週所定労働日数', '週の労働日数'],
+  weeklyDays: ['週の契約労働日数', '週所定労働日数'],
   hourlyWage: ['時間給', '基本時給'],
-  dailyWage: ['日額'],
+  dailyWage: [],
   periodEnd: ['契約終了日', '雇用期間終了日', '契約満了日', '契約期間の終わり'],
   renewal: ['契約更新の有無', '更新の有無'],
   nationality: ['国籍・地域', 'nationality'],
   romanMiddleName: ['ミドルネーム', 'middle name'],
   note: ['備考'],
+};
+
+/** 似ているけれど意味が違うことがある見出し（自動では結ばず、列を合わせる画面で確かめてもらう。11/25） */
+const NEAR: Partial<Record<EmployeeImportKey, ImportField['near']>> = {
+  weeklyHours: [{ words: ['週の労働時間', '週労働時間'], noteKey: 'employeeCsv.near.scheduled' }],
+  monthlyDays: [{ words: ['月の労働日数', '月労働日数'], noteKey: 'employeeCsv.near.scheduled' }],
+  weeklyDays: [{ words: ['週の労働日数', '週労働日数'], noteKey: 'employeeCsv.near.scheduled' }],
+  monthlyAmount: [{ words: ['標準報酬月額', '健康保険標準報酬月額', '健康保険の標準報酬月額'], noteKey: 'employeeCsv.near.standard' }],
+  insuredNumber: [{ words: ['健康保険の被保険者整理番号', '健康保険被保険者整理番号'], noteKey: 'employeeCsv.near.healthInsured' }],
+  dailyWage: [{ words: ['日額'], noteKey: 'employeeCsv.near.dailyWage' }],
 };
 
 const KIND: Partial<Record<EmployeeImportKey, ValueKind>> = {
@@ -880,6 +893,7 @@ export const EMPLOYEE_IMPORT_FIELDS: readonly ImportField<EmployeeImportKey>[] =
   kind: KIND[key],
   required: (EMPLOYEE_REQUIRED as readonly string[]).includes(key),
   orFrom: OR_FROM[key as EmployeeColumn],
+  near: NEAR[key],
 }));
 
 /**

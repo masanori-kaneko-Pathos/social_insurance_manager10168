@@ -1,4 +1,4 @@
-import { guessMapping, isOurFormat, Mapping, missingRequired, toOurTable } from '../../../shared/import/column-map';
+import { guessMapping, isOurFormat, Mapping, missingRequired, nearColumns, toOurTable } from '../../../shared/import/column-map';
 import {
   EMPLOYEE_COLUMNS,
   EMPLOYEE_CSV_HEADERS,
@@ -41,8 +41,12 @@ describe('従業員の取り込み：よその見出しを当てる', () => {
     expect(m.dailyMinutes).toEqual(col(EXPORT_B, '1日の所定労働時間(分)'));
     expect(m.monthlyDays).toEqual(col(EXPORT_B, '一ヶ月の平均所定労働日数'));
     expect(m.healthEnrolled).toEqual(col(EXPORT_B, '健康保険に加入しているか'));
-    expect(m.monthlyAmount).toEqual(col(EXPORT_B, '健康保険標準報酬月額'));
-    expect(m.insuredNumber).toEqual(col(EXPORT_B, '健康保険の被保険者整理番号'));
+    // 標準報酬月額は資格取得時の報酬月額ではなく、健保の整理番号は組合健保だと厚年と違う → 自動では結ばず、似た列として聞く（11/25）
+    expect(m.monthlyAmount).toBeUndefined();
+    expect(m.insuredNumber).toBeUndefined();
+    const near = (k: EmployeeImportKey) => nearColumns(EXPORT_B, EMPLOYEE_IMPORT_FIELDS.find((f) => f.key === k)!).map((n) => n.col);
+    expect(near('monthlyAmount')).toEqual([(col(EXPORT_B, '健康保険標準報酬月額') as { col: number }).col]);
+    expect(near('insuredNumber')).toEqual([(col(EXPORT_B, '健康保険の被保険者整理番号') as { col: number }).col]);
     expect(m.scheduledWage).toBeUndefined(); // 基本給 ≠ 所定内賃金（諸手当を含まない）。人が決める
     // 週の時間は、週の日数がないので計算できない
     expect(missingRequired(EMPLOYEE_IMPORT_FIELDS, m).sort()).toEqual(['scheduledWage', 'weeklyHours']);
@@ -123,6 +127,9 @@ describe('従業員の取り込み：よそのファイル → 今の読み取�
       '1234-567890', '時給', '0', '360', '15.5', '加入している', '200,000', '123', '加入していない'];
     const m: Mapping<EmployeeImportKey> = {
       ...guessMapping(EXPORT_B, EMPLOYEE_IMPORT_FIELDS),
+      // 似た列を、人が［この列を使う］で選んだ
+      monthlyAmount: col(EXPORT_B, '健康保険標準報酬月額'),
+      insuredNumber: col(EXPORT_B, '健康保険の被保険者整理番号'),
       weeklyHours: { fixed: '24' },
       hourlyWage: { fixed: '1000' }, // 時給の人は時給の額が要る（契約の部品のチェック）
       scheduledWage: { fixed: '100000' },

@@ -408,7 +408,9 @@ export const CONTRACT_HISTORY_FIELDS: readonly ImportField<ContractHistoryImport
   {
     key: 'from',
     header: CONTRACT_HISTORY_HEADERS.from,
-    words: ['開始日', '契約開始日', '雇用契約開始日', '適用開始日', '有効開始日', '契約期間の始まり', '契約期間開始日', '発令日', 'start date'],
+    // 「発令日」は異動・昇進の辞令の日で、契約の変わった日と違うことがあるので、似た列として聞く（11/25）
+    words: ['開始日', '契約開始日', '雇用契約開始日', '適用開始日', '有効開始日', '契約期間の始まり', '契約期間開始日', 'start date'],
+    near: [{ words: ['発令日'], noteKey: 'historyCsv.near.order' }],
     kind: 'date',
     required: true,
   },

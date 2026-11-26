@@ -2,14 +2,17 @@ import {
   afterNextRender,
   Component,
   computed,
+  effect,
   ElementRef,
   inject,
   input,
   OnInit,
   output,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ImportFileError, MAX_FILE_BYTES } from '../../../../shared/import/parse';
 import { findRates, guessFill, RateCandidate } from '../../logic/rate-pdf';
@@ -36,6 +39,9 @@ import { downloadCsv, safeFileName } from '../../../../shared/csv/csv';
 import { todayLocal } from '../../../../shared/utils/date';
 import { rateCsvTable } from '../../logic/rate-csv';
 import { RateFileImport } from '../rate-file-import/rate-file-import';
+import { applyRates, impactStart, RateImpact, rateImpact } from '../../logic/rate-impact';
+import { MonthCloseService } from '../../../premiums/month-close.service';
+import { RateImpactNote } from '../rate-impact-note/rate-impact-note';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 /** 窓で扱う期間と保険者（開く側で、保存済みの履歴から作る） */
@@ -64,12 +70,13 @@ const CHILD_SUPPORT_DEFAULT: RateSplit = { employee: 1150, employer: 1150 };
 
 @Component({
   selector: 'app-rate-dialog',
-  imports: [HalfWidthDigits, ReactiveFormsModule, TranslocoPipe, RateFileImport],
+  imports: [HalfWidthDigits, ReactiveFormsModule, TranslocoPipe, RateFileImport, RateImpactNote],
   templateUrl: './rate-dialog.html',
   styleUrl: './rate-dialog.css',
 })
 export class RateDialog implements OnInit {
   private readonly rates = inject(RateService);
+  private readonly closes = inject(MonthCloseService);
   private readonly fb = inject(FormBuilder);
 
   readonly target = input.required<RateDialogTarget>();
@@ -151,12 +158,95 @@ export class RateDialog implements OnInit {
     childSupport: this.splitGroup(),
   });
 
+  // ===== 保存したら計算が変わる月（11/26）。確認済みにした月が含まれるかを、保存の前に見せる =====
+  /** 確認済みにした月（closedFrom の月から後ろ。まだ読んでいなければ closedFrom は null） */
+  private readonly closedMonths = signal<string[]>([]);
+  private readonly closedFrom = signal<string | null>(null);
+  readonly closedLoading = signal(false);
+  readonly closedError = signal(false);
+
+  private readonly formValue = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
+
+  /** 取り込む行（新規・上書き） */
+  private readonly importSave = computed(() => this.rateImport()?.toSave().map((x) => x.input) ?? []);
+  /** 手入力の行（読める値がそろったときだけ） */
+  private readonly editSave = computed<KumiaiRateInput[]>(() => {
+    const mode = this.editing();
+    if (!mode) return [];
+    this.formValue();
+    const v = this.form.getRawValue();
+    const from = mode === NEW ? v.from : mode;
+    if (!MONTH.test(from) || !inRange(from, this.range())) return [];
+    const parsed: Partial<Record<Kind, RateSplit>> = {};
+    for (const kind of KINDS) {
+      const r = parseSplit(v[kind], this.unit());
+      if (!r.ok) return [];
+      parsed[kind] = r.split;
+    }
+    return [{ from, health: parsed.health!, care: parsed.care!, childSupport: parsed.childSupport! }];
+  });
+
+  readonly importImpact = computed(() => this.impactOf(this.importSave(), []));
+  readonly editImpact = computed(() => this.impactOf(this.editSave(), []));
+  readonly deleteImpact = computed(() => {
+    const from = this.confirmDelete();
+    return from ? this.impactOf([], [from]) : null;
+  });
+
+  /** 確認済みの月をまだ読んでいなければ null（読み終わると出る） */
+  private impactOf(save: KumiaiRateInput[], remove: string[]): RateImpact | null {
+    const before = this.kumiaiAll();
+    const start = impactStart(before, save, remove);
+    if (!start) return null;
+    const loaded = this.closedFrom();
+    if (!this.closedError() && (loaded === null || loaded > start)) return null;
+    return rateImpact(before, applyRates(before, save, remove), this.range(), this.closedMonths());
+  }
+
   /** 背景で押し始めたか（窓の中で押して背景で離したときに閉じないため） */
   private pressedOnBackdrop = false;
 
   constructor() {
     // 画面に出てから showModal（背景が暗くなり、Esc で閉じられ、フォーカスが窓の中に入る）
     afterNextRender(() => this.dialog().nativeElement.showModal());
+    // 変わる行の一番古い月より前から読んでいなければ、確認済みの月を読み足す
+    effect(() => {
+      const before = this.kumiaiAll();
+      const starts = [
+        impactStart(before, this.importSave()),
+        impactStart(before, this.editSave()),
+        this.confirmDelete(),
+      ].filter((m): m is string => m !== null);
+      if (!starts.length) return;
+      const start = starts.sort()[0];
+      untracked(() => void this.loadClosed(start));
+    });
+  }
+
+  /** 読んでいる間に、もっと前の月が要るようになったとき */
+  private pendingStart: string | null = null;
+
+  private async loadClosed(start: string): Promise<void> {
+    const loaded = this.closedFrom();
+    if (this.closedError() || (loaded !== null && loaded <= start)) return;
+    if (this.closedLoading()) {
+      if (this.pendingStart === null || start < this.pendingStart) this.pendingStart = start;
+      return;
+    }
+    this.closedLoading.set(true);
+    try {
+      const list = await this.closes.range(this.target().officeId, start, '9999-12');
+      this.closedMonths.set(list.map((c) => c.month));
+      this.closedFrom.set(start);
+    } catch (err) {
+      console.error(err);
+      this.closedError.set(true);
+    } finally {
+      this.closedLoading.set(false);
+    }
+    const next = this.pendingStart;
+    this.pendingStart = null;
+    if (next !== null) await this.loadClosed(next);
   }
 
   ngOnInit(): void {

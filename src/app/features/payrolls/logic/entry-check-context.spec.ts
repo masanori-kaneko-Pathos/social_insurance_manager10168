@@ -9,7 +9,7 @@ const rem = (from: string, health: number, pension: number) =>
 
 const source = (x: Partial<EntryCheckSource> = {}): EntryCheckSource => ({
   employee: { id: 'e1', birthDate: '1990-01-01', hireDate: '2020-04-01', optInDate: null, optOutDate: null } as never,
-  office: { standardHours: null, specificApplication: undefined },
+  office: { standardHours: null, specificApplication: undefined as never },
   month: '2026-11',
   schedule,
   premiumMonth: '2026-10',
