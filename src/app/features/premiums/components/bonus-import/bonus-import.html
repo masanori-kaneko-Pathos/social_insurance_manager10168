@@ -17,6 +17,10 @@
   @if (errorKey(); as key) {
     <div class="alert alert-danger">{{ key | transloco }}</div>
   }
+  <!-- 途中で止まった（保存済みの件数。表は読み直してある。11/26） -->
+  @if (partial(); as p) {
+    <div class="alert alert-danger" role="alert">{{ 'importPartial.message' | transloco: { done: p.done, total: p.total } }}</div>
+  }
   @if (done(); as d) {
     <div class="alert alert-success">
       {{ 'bonusCsv.done' | transloco: { people: d.people, payments: d.payments } }}

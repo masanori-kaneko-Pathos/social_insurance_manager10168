@@ -59,6 +59,8 @@ export class AbroadImport {
   readonly errorKey = signal<string | null>(null);
   readonly saving = signal(false);
   readonly progress = signal<{ done: number; total: number } | null>(null);
+  /** 途中で止まったとき：保存できた件数（表は読み直して、保存済みの行は取り込まない側になる。11/26） */
+  readonly partial = signal<{ done: number; total: number } | null>(null);
   readonly doneCount = signal<number | null>(null);
   /** 読んだのにまだ取り込んでいなければ、画面を離れる前に確かめる（11/17） */
   private readonly unsaved = watchUnsaved(() => this.preview() !== null && this.doneCount() === null);
@@ -167,6 +169,7 @@ export class AbroadImport {
   }
 
   private reset(): void {
+    this.partial.set(null);
     this.preview.set(null);
     this.doneCount.set(null);
     this.errorKey.set(null);
@@ -183,6 +186,7 @@ export class AbroadImport {
     this.saving.set(true);
     this.progress.set({ done: 0, total });
     this.errorKey.set(null);
+    this.partial.set(null);
     let done = 0;
     try {
       for (const [id, rows] of byEmployee) {
@@ -201,7 +205,14 @@ export class AbroadImport {
       this.preview.set(null);
     } catch (err) {
       console.error(err);
-      this.errorKey.set(errorKeyOf(err, 'abroadCsv.error.save'));
+      // 1人ずつ書いているので、done 人は保存済み。表を読み直すと、その人の行は「登録済み」（証明書は同じ・海外勤務は期間の重なり）になる
+      if (done > 0) {
+        this.partial.set({ done, total });
+        const table = this.preview()?.table;
+        if (table) await this.showPreview(table);
+      } else {
+        this.errorKey.set(errorKeyOf(err, 'abroadCsv.error.save'));
+      }
     } finally {
       this.saving.set(false);
       this.progress.set(null);

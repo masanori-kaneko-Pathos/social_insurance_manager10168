@@ -94,6 +94,8 @@ export class BonusImport {
   readonly errorKey = signal<string | null>(null);
   readonly saving = signal(false);
   readonly progress = signal<{ done: number; total: number } | null>(null);
+  /** 途中で止まったとき：保存できた件数（表は読み直して、保存済みの行は取り込まない側になる。11/26） */
+  readonly partial = signal<{ done: number; total: number } | null>(null);
   /** 取り込んだ人数と支給の数 */
   readonly done = signal<{ people: number; payments: number } | null>(null);
   readonly skipErrors = signal(true); // 問題の行は、行のチェックが外れて取り込まない（11/17）
@@ -209,6 +211,7 @@ export class BonusImport {
   }
 
   private reset(): void {
+    this.partial.set(null);
     this.loaded.set(null);
     this.mapping.set(false);
     this.preview.set(null);
@@ -259,11 +262,14 @@ export class BonusImport {
     this.saving.set(true);
     this.progress.set({ done: 0, total: writes.length });
     this.errorKey.set(null);
+    this.partial.set(null);
+    let done = 0;
     try {
-      for (const [i, w] of writes.entries()) {
+      for (const w of writes) {
         if (w.existingId) await this.bonusApi.update(office.id, w.existingId, w.input);
         else await this.bonusApi.create(office.id, w.input);
-        this.progress.set({ done: i + 1, total: writes.length });
+        done++;
+        this.progress.set({ done, total: writes.length });
       }
       this.looseAfterImport.set(this.hasLooseNames());
       this.done.set({ people, payments: writes.length });
@@ -271,11 +277,19 @@ export class BonusImport {
       this.loaded.set(null);
     } catch (err) {
       console.error(err);
-      this.errorKey.set(errorKeyOf(err, 'bonusCsv.error.save'));
+      if (done > 0) await this.afterPartial(done, writes.length);
+      else this.errorKey.set(errorKeyOf(err, 'bonusCsv.error.save'));
     } finally {
       this.saving.set(false);
       this.progress.set(null);
     }
+  }
+
+  /** 途中で止まった：件数を出し、表を読み直す（保存済みの支給は「登録済み」として足し込み側に入るので、もう一度押せば残りだけ書く） */
+  private async afterPartial(done: number, total: number): Promise<void> {
+    this.partial.set({ done, total });
+    const table = this.preview()?.table;
+    if (table) await this.showPreview(table);
   }
 
   // ===== 表示 =====

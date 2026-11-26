@@ -5604,5 +5604,8 @@
       "range": "{{from}} to {{to}}",
       "open": "from {{from}}"
     }
+  },
+  "importPartial": {
+    "message": "The import stopped partway ({{done}} of {{total}} saved). The table has been reloaded so saved rows are left out; press Import again to import only the rest."
   }
 }
