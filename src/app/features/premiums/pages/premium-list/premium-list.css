@@ -869,3 +869,44 @@ tr.clickable:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: -2px;
 }
+
+/* ===== 毎月の業務の順（11/26） ===== */
+/* この画面の目的（給与の月の画面と同じ見た目） */
+.purpose {
+  margin: 0 0 var(--space-md);
+  font-size: var(--font-sm);
+  line-height: 1.7;
+  color: var(--color-text-sub);
+}
+
+/* ①〜④の段。案内から動いたとき、上に少し余白を残す */
+.step {
+  margin-top: var(--space-lg);
+  scroll-margin-top: var(--space-lg);
+}
+
+.step-title {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-md);
+}
+
+/* 出力（記録として見出しの横に） */
+.head-export {
+  display: flex;
+  align-items: center;
+}
+
+/* ② 照合の2つのボタン */
+.soft-start {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+/* 照合をしていないときの知らせ（押せるが、目に入るように） */
+.soft-missing {
+  color: var(--color-warning-text);
+  font-weight: 600;
+}

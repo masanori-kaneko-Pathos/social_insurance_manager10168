@@ -19,6 +19,17 @@ export interface MonthCloseDoc {
   /** 確定した人の表示名（一覧で「○○さんが確定」と出すため。メンバーが外れても残る） */
   closedByName: string | null;
   closedAt: Timestamp;
+  /**
+   * 給与ソフトとの照合の結果（11/26）。確認済みにしたとき、同じ月の控除額のファイルと比べていれば人数を残す
+   * null ＝ 照合しないで確認済みにした。前のデータにはない（照合なしと同じ）
+   */
+  softCheck?: SoftCheck | null;
+}
+
+/** 給与ソフトとの照合の結果（一致した人数・差などで確かめが要る人数） */
+export interface SoftCheck {
+  matched: number;
+  diff: number;
 }
 
 export type MonthClose = MonthCloseDoc;

@@ -1049,8 +1049,14 @@ service cloud.firestore {
       match /monthCloses/{month} {
         allow read: if isMember(officeId);
         allow create: if isAdmin(officeId)
+          // softCheck は 11/26 に足した（給与ソフトとの照合の結果。null ＝ 照合なし）
           && exactKeys(request.resource.data, ['month', 'people', 'count', 'employeeYen', 'premiumTotalMilli',
-                                               'contributionMilli', 'closedBy', 'closedByName', 'closedAt'])
+                                               'contributionMilli', 'closedBy', 'closedByName', 'closedAt', 'softCheck'])
+          && (request.resource.data.softCheck == null
+              || (request.resource.data.softCheck is map
+                  && request.resource.data.softCheck.keys().hasOnly(['matched', 'diff'])
+                  && request.resource.data.softCheck.matched is int && request.resource.data.softCheck.matched >= 0
+                  && request.resource.data.softCheck.diff is int && request.resource.data.softCheck.diff >= 0))
           && request.resource.data.month == month && isMonth(month)
           && request.resource.data.people is map && request.resource.data.people.size() <= 20000
           && request.resource.data.count == request.resource.data.people.size()

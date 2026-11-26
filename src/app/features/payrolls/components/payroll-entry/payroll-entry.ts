@@ -83,6 +83,8 @@ export class PayrollEntry implements OnInit {
   readonly paidMonth = input<string | null>(null);
   /** この人の給与の実績が入っている支払月（本来の月に実績がないと割り振れないので知らせる。null ＝ 分からない） */
   readonly savedMonths = input<ReadonlySet<string> | null>(null);
+  /** 内訳の上に出す「誰の・どの月か」（null ＝ 出さない：従業員のページは見出しが別にある。11/26） */
+  readonly heading = input<{ name: string; m: number; start: string; end: string } | null>(null);
   /** 前の月にまとめて払った定期代のうち、この月に割り振る分（11/26。読めていなければ空） */
   readonly spreadIn = input<readonly SpreadPart[]>([]);
 

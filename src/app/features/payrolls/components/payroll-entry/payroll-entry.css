@@ -14,6 +14,14 @@
   }
 }
 
+/* 誰の・どの月の入力か（左右の列の上にまたがる。11/26） */
+.entry-title {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: var(--font-md);
+  font-weight: 700;
+}
+
 h3 {
   margin: 0 0 var(--space-sm);
   font-size: var(--font-sm);

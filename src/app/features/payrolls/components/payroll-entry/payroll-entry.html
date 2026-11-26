@@ -1,4 +1,8 @@
 <div class="entry" [formGroup]="form()">
+  <!-- 誰の・どの月の入力か（内訳は縦に長く、上の行が見えなくなるため。「保存して次の人へ」で人が替わったときの確かめ。11/26） -->
+  @if (heading(); as h) {
+    <p class="entry-title">{{ 'payrollEntry.heading' | transloco: h }}</p>
+  }
   <!-- 左：給与明細の支給 -->
   <div class="entry-main">
     <h3>{{ 'payrollEntry.lines.title' | transloco }}</h3>

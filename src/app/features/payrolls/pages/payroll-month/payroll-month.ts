@@ -534,6 +534,16 @@ export class PayrollMonth {
   /** 前の月にまとめて払った定期代のうち、この月に割り振る分（従業員ID → 行。11/26） */
   readonly spreadIns = signal<ReadonlyMap<string, readonly SpreadPart[]>>(new Map());
 
+  /** 内訳の上の「○○さん　11月払い（対象期間 10/1〜10/31）」。対象期間はその人の給与の支払区分のもの（11/26） */
+  headingOf(v: ViewRow): { name: string; m: number; start: string; end: string } {
+    return {
+      name: `${v.employee.lastName} ${v.employee.firstName}`,
+      m: this.monthNum(this.month()),
+      start: this.md(v.row.period.start),
+      end: this.md(v.row.period.end),
+    };
+  }
+
   spreadInOf(v: ViewRow): readonly SpreadPart[] {
     return this.spreadIns().get(v.employee.id) ?? NO_PARTS;
   }

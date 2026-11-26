@@ -77,7 +77,9 @@ import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
 import { regularPending } from '../../logic/regular-pending';
 import { MonthCloseService } from '../../month-close.service';
-import { MonthClose } from '../../../../core/models/month-close';
+import { MonthClose, SoftCheck } from '../../../../core/models/month-close';
+import { GuideStep, StepGuide } from '../../../../shared/components/step-guide/step-guide';
+import { premiumGuideSteps } from '../../logic/premium-guide';
 import { deductionHistoryAt, hasPayGroups, payrollAt } from '../../../office/logic/pay-group';
 import {
   buildPeople,
@@ -101,7 +103,7 @@ interface ListItem extends PremiumRow {
 
 @Component({
   selector: 'app-premium-list',
-  imports: [PersonName, CloseOnOutside, ColumnMapper, ExportDialog, MonthPicker, Pager, PersonListBar, PremiumBreakdown, ReviewBox, RouterLink, TranslocoPipe, PremiumTotals],
+  imports: [PersonName, CloseOnOutside, ColumnMapper, ExportDialog, MonthPicker, Pager, PersonListBar, PremiumBreakdown, ReviewBox, RouterLink, TranslocoPipe, PremiumTotals, StepGuide],
   templateUrl: './premium-list.html',
   styleUrl: './premium-list.css',
 })
@@ -515,6 +517,47 @@ export class PremiumList {
       const month = this.month();
       if (officeId) this.loadClose(officeId, month);
     });
+    // 月を開いたら、①の表は「前月から変わった人と要確認の人」から見せる（変わった人がいなければ全員。11/26）
+    // 月ごとに1回だけ決める（押して全員に戻したあとは、そのまま）
+    effect(() => {
+      const key = `${this.context.current()?.id ?? ''}|${this.month()}`;
+      if (this.loading() || this.rows().length === 0 || this.changedDefaultFor === key) return;
+      this.changedDefaultFor = key;
+      this.onlyChanged.set(this.changedCount() > 0);
+      this.page.set(1);
+    });
+  }
+
+  /** ①の表の初めの見せ方を決めた月（事業所|月） */
+  private changedDefaultFor: string | null = null;
+
+  // ===== 毎月の業務の順の案内（①本人負担 → ②給与ソフトと照合 → ③納付額 → ④告知額。11/26） =====
+
+  /** 今の画面で読んだ控除額のファイルとの照合の結果（この月のものだけ。読んでいなければ null） */
+  readonly softCheckNow = computed<SoftCheck | null>(() => {
+    const r = this.deductionResult();
+    if (!r || r.month !== this.month()) return null;
+    const matched = r.rows.filter((x) => x.status === 'match').length;
+    return { matched, diff: r.rows.length - matched };
+  });
+
+  readonly guideSteps = computed<GuideStep[]>(() =>
+    premiumGuideSteps({
+      close: this.savedClose() ?? null,
+      fixCount: this.problems().length + (this.regularPending()?.ids.length ?? 0),
+      softNow: this.softCheckNow(),
+      noticeSaved: !!this.savedNotice(),
+      noticeStatus: this.noticeCheck().status,
+      noticeHasReason: this.noticeReasons().size > 0,
+    }),
+  );
+
+  /** 案内を押した段へ動く（告知額の段は閉じていれば開く） */
+  goStep(key: string): void {
+    const el = document.getElementById(`step-${key}`);
+    if (!el) return;
+    if (el instanceof HTMLDetailsElement) el.open = true;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   // ===== 月次確定（「この月はこの額で控除した」記録。11/24） =====
@@ -604,18 +647,20 @@ export class PremiumList {
     if (!officeId || !this.context.isAdmin() || this.closeBusy() || this.closeBlock()) return;
     const people = buildPeople(this.sourcesOf(this.allRows()));
     const t = peopleTotals(people);
+    const soft = this.softCheckNow();
     const ok = window.confirm(
       this.transloco.translate('monthClose.confirm', {
         month: this.monthParts(this.month()).m,
         count: t.count,
         employee: this.yen(t.employeeYen),
+        soft: soft ? this.transloco.translate('monthClose.softReady', soft) : this.transloco.translate('monthClose.softMissing'),
       }),
     );
     if (!ok) return;
     this.closeBusy.set(true);
     this.closeError.set(null);
     try {
-      await this.closeApi.close(officeId, this.month(), people);
+      await this.closeApi.close(officeId, this.month(), people, this.softCheckNow());
       await this.loadClose(officeId, this.month());
     } catch (err) {
       console.error(err);

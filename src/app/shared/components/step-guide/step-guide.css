@@ -1,0 +1,103 @@
+/* 業務の段階の案内（11/26）：横に並べ、段の間に矢印。狭い画面では2列 */
+.step-guide ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-md);
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.step-guide li {
+  position: relative;
+}
+
+.step-guide li + li::before {
+  content: '›';
+  position: absolute;
+  top: 50%;
+  left: calc(-1 * var(--space-sm));
+  width: var(--space-sm);
+  text-align: center;
+  transform: translateY(-50%);
+  color: var(--color-text-sub);
+}
+
+.step-guide button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  height: 100%;
+  padding: 8px 12px;
+  text-align: left;
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-card-border, var(--color-border));
+  border-radius: var(--radius-md, 8px);
+  cursor: pointer;
+}
+
+.step-guide button:hover {
+  background: var(--color-hover, var(--color-bg));
+}
+
+.step-guide button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.no {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  font-size: var(--font-xs);
+  font-weight: 700;
+  border-radius: 999px;
+  color: var(--color-text-sub);
+  border: 1px solid var(--color-border);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--font-sm);
+  font-weight: 600;
+}
+
+.state {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+/* 済み：緑の印 */
+.s-done .no {
+  color: var(--color-success-text);
+  background: var(--color-success-bg);
+  border-color: transparent;
+}
+
+/* 要確認：黄色の印と文字 */
+.s-attention .no {
+  color: var(--color-warning-text);
+  background: var(--color-warning-bg);
+  border-color: transparent;
+}
+
+.s-attention .state {
+  color: var(--color-warning-text);
+  font-weight: 600;
+}
+
+/* していない（飛ばした）：点線 */
+.s-skipped .no {
+  border-style: dashed;
+}

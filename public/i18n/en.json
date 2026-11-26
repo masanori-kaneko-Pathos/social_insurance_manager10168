@@ -1477,7 +1477,8 @@
       "titleOff": "Click to show only people whose premium changed from last month",
       "titleOn": "Click to show everyone again",
       "rest": "only (the other {{count}} are the same as last month; totals cover everyone)"
-    }
+    },
+    "purpose": "Check the employee share deducted from pay and the amount the company pays, calculated from the standard monthly remuneration. Go through steps 1 to 4 below each month."
   },
   "rateDialog": {
     "title": "Health insurance rates",
@@ -2982,7 +2983,7 @@
       "save": "Could not save.",
       "delete": "Could not delete."
     },
-    "closedHint": "For closed months ({{n}}), the closed amounts (what was actually deducted) are used as the amounts before correction."
+    "closedHint": "For months marked checked ({{n}}), the amount at that time (actually deducted) is used as the amount before correction."
   },
   "careExemption": {
     "title": "Periods without long-term care premiums (介護保険適用除外, exemption)",
@@ -4115,7 +4116,8 @@
     "spread": {
       "row": "{{name}} (paid in month {{m}}, month {{nth}} of {{months}})",
       "amount": "¥{{amount}}"
-    }
+    },
+    "heading": "{{name}} — pay for month {{m}} (period {{start}}–{{end}})"
   },
   "filing": {
     "title": "Filing lists",
@@ -4307,8 +4309,8 @@
     "export": "CSV for payroll software (standard remuneration, employee share)",
     "exportNote": "Deducted from wages paid in month {{payMonth}}",
     "fileLabel": "for-payroll-software",
-    "check": "Check deductions",
-    "result": "Compared with “{{file}}”: {{match}} matched, {{other}} need checking",
+    "check": "Load the deducted file",
+    "result": "Compared with \"{{file}}\": {{match}} match, {{other}} need checking",
     "otherMonth": "(compared with the list for {{month}})",
     "showAll": "Show matched rows too",
     "hideMatch": "Show differences only",
@@ -4335,7 +4337,8 @@
     },
     "checkHint": "Choose the deduction file (CSV/Excel) from your payroll software to list only people whose amounts differ from this app.",
     "checkTitle": "Deduction check",
-    "checkLead": "Compares the premiums your payroll software deducted with the employee share calculated here. Payroll software does the deduction; this app checks the correct amount."
+    "checkLead": "Compares the premiums your payroll software deducted with the employee share calculated here. Payroll software does the deduction; this app checks the correct amount.",
+    "exportButton": "Export for payroll software"
   },
   "myNumber": {
     "title": "My Number",
@@ -5242,35 +5245,35 @@
     }
   },
   "monthClose": {
-    "closed": "Closed",
+    "closed": "Checked",
     "closedBy": "{{at}} · {{name}} · {{count}} people",
-    "changedAfter": "Changed after closing: {{count}}",
-    "allSettled": "Differences after closing are settled ({{count}})",
-    "cancel": "Cancel closing",
-    "close": "Close month {{month}}",
-    "lead": "Record the amounts you deducted. If you later correct standard remuneration retroactively, you can see the differences.",
+    "changedAfter": "Changed after checking: {{count}}",
+    "allSettled": "Differences after checking are settled ({{count}})",
+    "cancel": "Undo checked",
+    "close": "Mark month {{month}} employee share as checked",
+    "lead": "Recording the deducted amounts shows the differences if standard remuneration etc. is corrected retroactively later.",
     "block": {
-      "future": "You cannot close a month that has not come yet.",
-      "problems": "Some people cannot be calculated, so this month cannot be closed. Fix the people in the warning above first.",
+      "future": "A future month cannot be marked checked.",
+      "problems": "Some people cannot be calculated, so this month cannot be marked checked. Fix the people in the warning above first.",
       "empty": "No one is insured in this month."
     },
-    "confirm": "Close the premiums for month {{month}}.\nPeople: {{count}} · Employee share total ¥{{employee}}\nYou can still edit after closing. People whose amounts change will be shown as \"Changed after closing\".",
-    "cancelConfirm": "Cancel the closing of month {{month}}? The settlement records will also be deleted.",
+    "confirm": "Mark the employee share for month {{month}} as checked.\nPeople: {{count}}, employee share total ¥{{employee}}\n{{soft}}\nYou can still edit after marking. People who change will show as \"Changed after checking\".",
+    "cancelConfirm": "Undo \"checked\" for month {{month}}? Settlement records will also be deleted.",
     "error": {
-      "close": "Could not close the month. Please try again.",
-      "cancel": "Could not cancel the closing. Please try again.",
+      "close": "Could not mark as checked. Please try again.",
+      "cancel": "Could not undo \"checked\". Please try again.",
       "settle": "Could not save the settlement record. Please try again.",
       "payMonth": "Enter the pay month for the settlement.",
-      "load": "Could not load the closing records."
+      "load": "Could not load the checked record."
     },
     "diff": {
-      "title": "Differences from the closed amounts",
-      "lead": "People whose premiums changed after closing (standard remuneration, eligibility, rates, etc.). Settle the difference in a later payroll (deduct or refund in your payroll software).",
+      "title": "Differences since marked checked",
+      "lead": "People whose premiums changed after the month was marked checked (standard remuneration, coverage, rates, etc.). Settle the difference in a later pay (deduct or refund in your payroll software).",
       "open": "Not settled: {{count}} · Employee ¥{{employee}} · Employer ¥{{employer}}",
       "noOpen": "No one is waiting for settlement.",
       "payMonth": "Pay month for settlement",
       "col": {
-        "closed": "Employee share (closed)",
+        "closed": "Employee share when checked",
         "now": "Employee share (now)",
         "employee": "Employee difference",
         "employer": "Employer difference",
@@ -5288,16 +5291,20 @@
       "hint": "Positive amounts are additional deductions; negative amounts are refunds. Employer differences are estimates including fractions of a yen."
     },
     "summary": {
-      "lead": "When a retroactive notification is processed, past differences appear as \"settlement up to last month\" on the payment notice. Compare the closed months whose amounts changed after closing.",
-      "none": "No closed month has changed after closing.",
-      "load": "Show differences in closed months",
+      "lead": "When retroactive filings are processed, past differences appear in the notice as adjustments. You can compare the checked months whose calculation changed afterwards.",
+      "none": "No checked month has changed since.",
+      "load": "Show differences of checked months",
       "col": {
         "month": "Month",
         "count": "People",
         "premium": "Premium difference (total)",
         "contribution": "Contribution difference"
       }
-    }
+    },
+    "softReady": "Matched with payroll software ({{matched}} match, {{diff}} differ).",
+    "softMissing": "Not matched with payroll software yet (you can still mark it checked).",
+    "softDone": "Matching: {{matched}} match, {{diff}} differ",
+    "softNone": "No matching"
   },
   "transfer": {
     "open": "Transfer to another office",
@@ -5429,5 +5436,41 @@
     "meRequest": "Request",
     "meChange": "Change request",
     "payrollMonths": "Pay by month"
+  },
+  "stepGuide": {
+    "label": "Steps",
+    "state": {
+      "done": "Done",
+      "attention": "Check",
+      "todo": "Not yet",
+      "skipped": "Skipped"
+    }
+  },
+  "premiumGuide": {
+    "step": {
+      "employee": "Employee share",
+      "soft": "Match payroll software",
+      "total": "Amount to pay",
+      "notice": "Notice amount"
+    },
+    "note": {
+      "checked": "Checked",
+      "fix": "{{count}} to fix first",
+      "softDiff": "{{count}} with differences",
+      "softMatch": "All match ({{count}})",
+      "softNone": "Checked without matching",
+      "noticeWait": "Enter when the notice arrives",
+      "noticeReason": "Difference explained",
+      "noticeDiff": "Difference not explained",
+      "noticeMatch": "Match"
+    },
+    "title": {
+      "employee": "1. Employee share deducted from pay",
+      "soft": "2. Match against payroll software",
+      "total": "3. Amount the company pays",
+      "notice": "4. Compare with the payment notice"
+    },
+    "softLead": "Export data for your payroll software and calculate the deductions for pay in month {{payMonth}} there. Then load the file with the deducted amounts to list only the people whose amounts differ from this app.",
+    "totalLead": "Amount to pay = total withheld from employees + employer share. The employer share is set by rounding the office total (the per-person employer share in step 1 is an estimate). The child and child-rearing contribution is paid by the company alone and is included in the amount to pay."
   }
 }

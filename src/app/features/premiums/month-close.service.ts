@@ -14,7 +14,7 @@ import {
 } from 'firebase/firestore';
 import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { auth, db } from '../../core/firebase';
-import { MonthClose, MonthCloseDoc, SettlementDoc } from '../../core/models/month-close';
+import { MonthClose, MonthCloseDoc, SettlementDoc, SoftCheck } from '../../core/models/month-close';
 import { ClosePeople, peopleTotals, Settlement } from './logic/month-close';
 
 /**
@@ -56,7 +56,7 @@ export class MonthCloseService {
   }
 
   /** 確定する（作成だけ。同じ月がもうあればルールで止まる） */
-  async close(officeId: string, month: string, people: ClosePeople): Promise<void> {
+  async close(officeId: string, month: string, people: ClosePeople, softCheck: SoftCheck | null): Promise<void> {
     const user = auth.currentUser;
     if (!user) throw new Error('not signed in');
     const t = peopleTotals(people);
@@ -70,6 +70,7 @@ export class MonthCloseService {
       closedBy: user.uid,
       closedByName: user.displayName || user.email || null,
       closedAt: serverTimestamp(),
+      softCheck,
     });
   }
 
