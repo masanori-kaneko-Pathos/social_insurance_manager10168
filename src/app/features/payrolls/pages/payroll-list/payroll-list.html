@@ -1,19 +1,10 @@
+<!-- 月ごとの給与（11/26 に「給与」から分けた）：支払月ごとの合計と未入力の人数。今月の入力は月の画面（左メニューの「給与」）から -->
+<app-back-link [fallback]="['/o', context.current()?.id, 'payrolls']" fallbackName="back.payrolls" />
 <div class="page-head">
   <div>
-    <h1>{{ 'payroll.listTitle' | transloco }}</h1>
-    <p class="lead">{{ 'payroll.listLead' | transloco }}</p>
+    <h1>{{ 'payroll.monthsTitle' | transloco }}</h1>
+    <p class="lead">{{ 'payroll.monthsLead' | transloco }}</p>
   </div>
-  @if (context.isAdmin() && latest()) {
-    <div class="head-actions">
-      <a class="btn" [routerLink]="['/o', context.current()?.id, 'payrolls', 'items']">{{ 'payrollItem.title' | transloco }}</a>
-      <a class="btn" [routerLink]="['/o', context.current()?.id, 'import']" [queryParams]="{ kind: 'payrolls', from: 'payrolls' }">
-        {{ 'payroll.csv' | transloco }}
-      </a>
-      <a class="btn btn-primary" [routerLink]="['/o', context.current()?.id, 'payrolls', latest()]">
-        {{ 'payroll.inputLatest' | transloco: { month: latest() } }}
-      </a>
-    </div>
-  }
 </div>
 
 @if (loading()) {
@@ -21,14 +12,6 @@
 } @else if (errorKey(); as key) {
   <div class="alert alert-danger">{{ key | transloco }}</div>
 } @else {
-  <p class="to-regular">
-    <a [routerLink]="['/o', context.current()?.id, 'regular', regularYear()]">
-      {{ 'payroll.toRegular' | transloco: { year: regularYear() } }} →
-    </a>
-    <a [routerLink]="['/o', context.current()?.id, 'revisions']">
-      {{ 'payroll.toRevisions' | transloco }} →
-    </a>
-  </p>
   <!-- 前の12か月・年と月を選ぶ・次の12か月（いちばん早い入社の月より前と、実績のない先の月へは進まない。11/16） -->
   <div class="pager">
     @if (canPrev()) {
@@ -62,7 +45,7 @@
           <tr [class.future]="r.future">
             <td class="mono">
               <a class="name" [routerLink]="['/o', context.current()?.id, 'payrolls', r.month]">
-                {{ r.month }}
+                {{ 'payroll.monthPick' | transloco: monthLabel(r.month) }}
               </a>
               @if (r.month === latest()) {
                 <span class="badge badge-info">{{ 'payroll.latest' | transloco }}</span>

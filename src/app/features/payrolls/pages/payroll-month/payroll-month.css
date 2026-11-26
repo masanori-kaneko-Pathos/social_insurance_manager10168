@@ -689,3 +689,17 @@ thead th.wrap .bulk-btn {
   white-space: normal;
   text-align: right;
 }
+
+/* 表の上の右側のリンク（CSV・給与の項目と分類。11/26） */
+.toolbar-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+}
+
+/* 月の切り替えの横の「月ごとの一覧」（11/26） */
+.to-months {
+  margin-left: var(--space-sm);
+  font-size: var(--font-sm);
+  white-space: nowrap;
+}

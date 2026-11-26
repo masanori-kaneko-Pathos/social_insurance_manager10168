@@ -28,9 +28,10 @@ interface MonthRow {
 
 const MONTH_RE = /^[0-9]{4}-(0[1-9]|1[0-2])$/;
 
+import { BackLink } from '../../../../shared/components/back-link/back-link';
 @Component({
   selector: 'app-payroll-list',
-  imports: [MonthPicker, RouterLink, TranslocoPipe],
+  imports: [BackLink, MonthPicker, RouterLink, TranslocoPipe],
   templateUrl: './payroll-list.html',
   styleUrl: './payroll-list.css',
 })

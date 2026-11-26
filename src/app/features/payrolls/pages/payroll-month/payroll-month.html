@@ -1,4 +1,4 @@
-<app-back-link [fallback]="['/o', context.current()?.id, 'payrolls']" fallbackName="back.payrolls" />
+<app-back-link [fallback]="['/o', context.current()?.id, 'payrolls', 'months']" fallbackName="back.payrollMonths" />
 
 <!-- 保険料一覧と同じ形：見出しの横に「‹ 年月 › 今月」、年月の下に小さく対象期間（11/13） -->
 <div class="page-head">
@@ -27,6 +27,8 @@
     @if (month() !== thisMonth) {
       <button type="button" class="btn" (click)="goMonth(thisMonth)">{{ 'premiumList.thisMonth' | transloco }}</button>
     }
+    <!-- 支払月ごとの合計と未入力の人数（11/26 に「給与」から分けた） -->
+    <a class="to-months" [routerLink]="['/o', context.current()?.id, 'payrolls', 'months']">{{ 'payroll.toMonths' | transloco }}</a>
   </div>
   <!-- この月の全員の支払額の合計（絞り込みに関係なく。給与ソフトの支給総額と突き合わせる。11/20） -->
   @if (views().length > 0) {
@@ -104,7 +106,12 @@
 
   <div class="toolbar">
     <span class="muted">{{ 'payroll.openHint' | transloco }}</span>
-    <a [routerLink]="['/o', context.current()?.id, 'payrolls', 'items']">{{ 'payrollItem.title' | transloco }}</a>
+    <span class="toolbar-links">
+      @if (context.isAdmin()) {
+        <a [routerLink]="['/o', context.current()?.id, 'import']" [queryParams]="{ kind: 'payrolls', from: 'payrolls' }">{{ 'payroll.csv' | transloco }}</a>
+      }
+      <a [routerLink]="['/o', context.current()?.id, 'payrolls', 'items']">{{ 'payrollItem.title' | transloco }}</a>
+    </span>
   </div>
 
   <!-- 探す・絞る・並べる・ページ（入れた値は、ページを移っても保存するまで残る） -->

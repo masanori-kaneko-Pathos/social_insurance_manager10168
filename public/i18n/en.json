@@ -1799,12 +1799,10 @@
   },
   "payroll": {
     "listTitle": "Payroll",
-    "listLead": "For each pay month, enter the payslip payments (amount paid in money, fixed wages) and payment basis days. They are used for the annual determination and revisions.",
-    "inputLatest": "Enter {{month}} payroll",
     "prevYear": "← Previous 12 months",
     "nextYear": "Next 12 months →",
     "latest": "Latest",
-    "missingCount": "{{count}} missing",
+    "missingCount": "{{count}} not entered",
     "monthTitle": "Pay paid in {{month}}",
     "monthLead": "Pay period {{start}}–{{end}} ({{days}} days)",
     "emptyMonth": "No employees were employed during this pay period.",
@@ -1821,7 +1819,6 @@
     "cardTitle": "Payroll",
     "cardEmpty": "No records yet.",
     "toList": "Go to payroll",
-    "toRegular": "Annual SMR determination {{year}}",
     "csv": "Import / export CSV",
     "col": {
       "paidMonth": "Pay month",
@@ -1873,7 +1870,7 @@
       "lines": "The breakdown has an item without a category or an amount that cannot be read"
     },
     "hint": {
-      "list": "\"Missing\" counts employees insured during the pay period who have no record yet (only months whose pay day has passed).",
+      "list": "\"Not entered\" counts employees insured during the pay period whose pay has not been entered yet (only months whose pay day has passed).",
       "cash": "Amount paid in money: the \"amount paid in money\" column of the notification of change in monthly remuneration and the base calculation notification. It includes the commuting allowance (even the tax-free part) and is after absence deductions. Do not include payments that are not remuneration, such as actual travel expenses or condolence money. Not the net pay.",
       "fixed": "Fixed wages (used to detect SMR revisions): pay with a set rate or amount, such as base pay, position allowance and commuting allowance (including hourly rate × hours and daily rate × days). Non-fixed wages: pay that depends on the month, such as overtime, attendance allowance and commission. With a breakdown, these are calculated from the categories. A revision candidate appears when fixed wages (before absence deductions) change for monthly-paid people, or when the contract rate or scheduled hours change for hourly or daily-paid people.",
       "inKind": "Remuneration provided in kind (現物給与): company housing, dormitories and meals are converted to yen with the value set by the government for each prefecture, minus what the employee pays (different from the tax valuation). Use \"Calculate\" for meals and housing.",
@@ -1892,7 +1889,6 @@
       "rows": "Some rows have problems. Fix them and save again (nothing was saved).",
       "badMonth": "The month is not valid."
     },
-    "toRevisions": "Revision candidates (irregular / after leave)",
     "sortOldest": "Oldest first",
     "sortNewest": "Newest first",
     "inKindMerged": "Not itemized",
@@ -1921,7 +1917,6 @@
       "unit": " yen",
       "allSub": "Amount paid in money + in kind · entered {{entered}} / {{n}}"
     },
-    "premiumNote": "Premiums are calculated from the standard monthly remuneration, not from the pay amounts entered here.",
     "openHint": "Click a row to enter the payslip breakdown.",
     "breakdown": "Breakdown",
     "status": {
@@ -1945,7 +1940,10 @@
     "done": {
       "title": "Pay for month {{m}} is entered for everyone.",
       "regular": "Go to the {{year}} annual determination"
-    }
+    },
+    "monthsTitle": "Pay by month",
+    "monthsLead": "See the pay total and the number of people not entered for each pay month. Click a pay month to enter that month's pay.",
+    "toMonths": "All months"
   },
   "regular": {
     "title": "Annual SMR determination {{year}} (定時決定, teiji kettei)",
@@ -5412,6 +5410,7 @@
     "officeNew": "New office",
     "me": "My page",
     "meRequest": "Request",
-    "meChange": "Change request"
+    "meChange": "Change request",
+    "payrollMonths": "Pay by month"
   }
 }

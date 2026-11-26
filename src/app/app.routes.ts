@@ -205,8 +205,18 @@ export const routes: Routes = withUnsavedGuard([
               import('./features/premiums/pages/bonus-form/bonus-form').then((m) => m.BonusForm),
           },
           {
+            // 左メニューの「給与」：今月払いの月の画面を開く（月がなければ、月の画面が今月払いへ送る。11/26）
             path: 'payrolls',
             data: { backName: 'back.payrolls', wide: true }, // 広い画面では表を横に伸ばす（11/16）
+            loadComponent: () =>
+              import('./features/payrolls/pages/payroll-month/payroll-month').then(
+                (m) => m.PayrollMonth,
+              ),
+          },
+          {
+            // 月ごとの給与（支払月ごとの合計と未入力の人数。11/26 に「給与」から分けた）。'payrolls/:month' より先に置く
+            path: 'payrolls/months',
+            data: { backName: 'back.payrollMonths', wide: true },
             loadComponent: () =>
               import('./features/payrolls/pages/payroll-list/payroll-list').then(
                 (m) => m.PayrollList,

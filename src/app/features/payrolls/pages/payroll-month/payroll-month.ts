@@ -319,7 +319,21 @@ export class PayrollMonth {
   constructor() {
     this.route.paramMap
       .pipe(takeUntilDestroyed(inject(DestroyRef)))
-      .subscribe((p) => this.load(p.get('month') ?? ''));
+      .subscribe((p) => {
+        const month = p.get('month');
+        // 月のない URL（左メニューの「給与」）：今月払いの月へ送る（履歴に残さない。11/26）
+        if (month === null) {
+          const office = this.context.current();
+          if (office) {
+            this.router.navigate(['/o', office.id, 'payrolls', latestPaidMonth(todayLocal(), payrollOf(office))], {
+              replaceUrl: true,
+              queryParamsHandling: 'preserve',
+            });
+          }
+          return;
+        }
+        void this.load(month);
+      });
   }
 
   private async load(month: string): Promise<void> {
