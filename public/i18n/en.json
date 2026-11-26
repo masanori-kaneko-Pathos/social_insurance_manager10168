@@ -5573,7 +5573,7 @@
   "premiumGuide": {
     "step": {
       "employee": "Employee share",
-      "soft": "Match payroll software",
+      "soft": "Check & mark",
       "total": "Amount to pay",
       "notice": "Notice amount"
     },
@@ -5592,13 +5592,13 @@
       "noticeChecked": "Double-checked {{date}} by {{name}}",
       "noticeWaiting": "Waiting for check (asked by {{name}})",
       "noticeAsk": "Not yet double-checked",
-      "employeeTodo": "Check the table and mark it as checked",
-      "softTodo": "Optional: load the deduction file",
+      "employeeTodo": "Check the table",
+      "softTodo": "Check and mark as checked (checking is optional)",
       "totalTodo": "Fixed when you mark ① as checked"
     },
     "title": {
       "employee": "1. Employee share deducted from pay",
-      "soft": "2. Match against payroll software",
+      "soft": "2. Check against payroll software and mark as checked",
       "total": "3. Amount the company pays",
       "notice": "4. Compare with the payment notice"
     },

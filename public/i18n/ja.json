@@ -5573,7 +5573,7 @@
   "premiumGuide": {
     "step": {
       "employee": "本人負担",
-      "soft": "給与ソフトと照合",
+      "soft": "照合・確認済み",
       "total": "納める額",
       "notice": "告知額"
     },
@@ -5592,13 +5592,13 @@
       "noticeChecked": "別の人が確認 {{date}} {{name}}",
       "noticeWaiting": "確認待ち（依頼：{{name}}）",
       "noticeAsk": "別の人の確認がまだ",
-      "employeeTodo": "表を確かめて、確認済みにする",
-      "softTodo": "任意：控除したファイルを読み込む",
+      "employeeTodo": "表を確かめる",
+      "softTodo": "照合して確認済みにする（照合は任意）",
       "totalTodo": "①を確認済みにすると決まります"
     },
     "title": {
       "employee": "① 給与から控除する本人負担",
-      "soft": "② 給与ソフトと照合する",
+      "soft": "② 給与ソフトと照合して、確認済みにする",
       "total": "③ 会社が納める額",
       "notice": "④ 告知額と突き合わせる"
     },
