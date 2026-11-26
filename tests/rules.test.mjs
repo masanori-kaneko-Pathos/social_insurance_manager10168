@@ -54,7 +54,7 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
     await setDoc(doc(db, `${O}/employees/${id}/payrolls/2026-11`), { cash: 300000 });
     await setDoc(doc(db, `${O}/employees/${id}/remunerations/2026-04`), { from: '2026-04' });
   }
-  await setDoc(doc(db, `${O}/history/h1`), { target: 'employee', changes: [] });
+  await setDoc(doc(db, `${O}/employees/E1/history/h1`), { target: 'employee', field: 'lastName', before: 'a', after: 'b' });
   await setDoc(doc(db, `${O}/myNumberVault/E1`), { cipher: 'xxx' });
   await setDoc(doc(db, `${O}/myNumberIndex/all`), { people: {} });
   await setDoc(doc(db, `${O}/myNumberLogs/l1`), { action: 'view' });
@@ -72,6 +72,8 @@ const guest = testEnv.unauthenticatedContext().firestore();
 
 let failed = 0;
 let passed = 0;
+/** NG になった項目（最後にまとめて出す。途中のログに埋もれないように） */
+const failures = [];
 async function check(label, promise) {
   try {
     await promise;
@@ -79,7 +81,9 @@ async function check(label, promise) {
     console.log(`OK  ${label}`);
   } catch (err) {
     failed++;
-    console.log(`NG  ${label}\n    ${err?.message ?? err}`);
+    const reason = String(err?.message ?? err).split('\n')[0];
+    failures.push(`NG  ${label}\n    ${reason}`);
+    console.log(`NG  ${label}\n    ${reason}`);
   }
 }
 const ok = (label, p) => check(label, assertSucceeds(p));
@@ -131,10 +135,11 @@ await ok('給与：メンバーは読める', read(general, `${O}/employees/E1/p
 await ng('給与：従業員のアカウントは読めない', read(emp1, `${O}/employees/E1/payrolls/2026-11`));
 await ng('給与：一般は書けない', setDoc(doc(general, `${O}/employees/E1/payrolls/2026-12`), { cash: 1 }));
 
-// ===== 変更履歴：管理者だけが読める。書き換え・削除はできない =====
-await ok('変更履歴：管理者は読める', read(admin, `${O}/history/h1`));
-await ng('変更履歴：一般は読めない', read(general, `${O}/history/h1`));
-await ng('変更履歴：管理者でも消せない', deleteDoc(doc(admin, `${O}/history/h1`)));
+// ===== 変更履歴（従業員ごと）：管理者だけが読める。書き換え・削除はできない =====
+await ok('変更履歴：管理者は読める', read(admin, `${O}/employees/E1/history/h1`));
+await ng('変更履歴：一般は読めない', read(general, `${O}/employees/E1/history/h1`));
+await ng('変更履歴：本人も読めない（変更前の住所などが入るため）', read(emp1, `${O}/employees/E1/history/h1`));
+await ng('変更履歴：管理者でも消せない', deleteDoc(doc(admin, `${O}/employees/E1/history/h1`)));
 
 // ===== マイナンバー：暗号化した番号は誰も読めない。状態と記録は管理者だけが読める。書くのは関数だけ =====
 await ng('マイナンバー（暗号化した番号）：管理者でも読めない', read(admin, `${O}/myNumberVault/E1`));
@@ -172,5 +177,6 @@ await ng('給与の項目：一般は作れない', setDoc(doc(general, `${O}/pa
 await ng('ほかの事業所：管理者でも、自分がメンバーでない事業所の従業員は読めない', read(admin, `${OTHER}/employees/X1`));
 
 console.log(`\n${passed} OK / ${failed} NG`);
+if (failures.length > 0) console.log(`\n===== NG の一覧 =====\n${failures.join('\n')}`);
 await testEnv.cleanup();
 process.exit(failed > 0 ? 1 : 0);
