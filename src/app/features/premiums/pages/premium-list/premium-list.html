@@ -450,6 +450,7 @@
                           <th class="num">{{ 'payrollSoft.col.softPension' | transloco }}</th>
                           <th class="num">{{ 'payrollSoft.col.diff' | transloco }}</th>
                           <th>{{ 'payrollSoft.col.status' | transloco }}</th>
+                          <th>{{ 'payrollSoft.col.cause' | transloco }}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -462,6 +463,8 @@
                             <td class="num">{{ d.soft?.pension != null ? yen(d.soft!.pension!) : '—' }}</td>
                             <td class="num">{{ d.diff != null ? (d.diff > 0 ? '+' : '') + yen(d.diff) : '—' }}</td>
                             <td><span class="status s-{{ d.status }}">{{ 'payrollSoft.status.' + d.status | transloco }}</span></td>
+                            <!-- 差の額に合う原因（アプリのデータから当てる。11/26） -->
+                            <td class="cause">{{ deductionCauseText(d) }}</td>
                           </tr>
                         }
                       </tbody>
@@ -783,6 +786,32 @@
         }
       </div>
 
+      <!-- 差に合う原因（アプリのデータから当てる。合わなければそう出す。11/26） -->
+      @if (nc.status === 'diff') {
+        <div class="notice-causes" role="status">
+          @if (noticeMatchedView().length) {
+            <p class="causes-lead">{{ 'premiumNotice.cause.lead' | transloco }}</p>
+            <ul>
+              @for (c of noticeMatchedView(); track c.key) {
+                <li>
+                  <strong>{{ 'premiumNotice.cause.' + c.key | transloco }}</strong>
+                  @if (c.names) {
+                    <span class="muted">（{{ c.names }}）</span>
+                  }
+                  <span class="cause-yen">{{
+                    'premiumNotice.cause.amounts'
+                      | transloco: { health: signedYen(c.yen.health), pension: signedYen(c.yen.pension), child: signedYen(c.yen.childContribution) }
+                  }}</span>
+                </li>
+              }
+            </ul>
+            <p class="hint">{{ 'premiumNotice.cause.checked' | transloco }}</p>
+          } @else {
+            <p class="hint">{{ 'premiumNotice.cause.none' | transloco }}</p>
+          }
+        </div>
+      }
+
       @if (nc.status === 'diff' || noticeReasons().size > 0) {
         <fieldset class="reasons">
           <legend>{{ 'premiumNotice.reasonsTitle' | transloco }}</legend>
@@ -819,7 +848,7 @@
       <p class="hint">{{ 'premiumNotice.hint' | transloco }}</p>
       <!-- 納める前に、作った人とは別の人が確かめる -->
       @if (nc.status !== 'notEntered') {
-        <app-review-box class="review" [target]="noticeReviewId(month())" />
+        <app-review-box class="review" [target]="noticeReviewId(month())" (changed)="onNoticeReview($event)" />
       }
     </details>
   }

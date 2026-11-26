@@ -1,8 +1,9 @@
 import { fixedForChange } from '../../../../core/models/payroll';
 import { Component, computed, HostListener, effect, ElementRef, inject, signal, untracked, viewChild } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ContractDoc } from '../../../../core/models/contract';
+import type { Office } from '../../../../core/models/office';
 import { Employee } from '../../../../core/models/employee';
 import { CriteriaDoc } from '../../../../core/models/master';
 import { TodoDismissalDoc } from '../../../../core/models/office-records';
@@ -14,7 +15,7 @@ import { countGaps, registerGaps, registerLarge } from '../../../employees/logic
 import type { EmployeePrivate } from '../../../../core/models/employee';
 import { classify, reasonParams } from '../../../employees/logic/classify';
 import { CriteriaService } from '../../../office/criteria.service';
-import { payrollOf } from '../../../office/office-settings';
+import { payrollOf, premiumMonthOfPay } from '../../../office/office-settings';
 import { latestPaidMonth, periodOf } from '../../../payrolls/logic/payroll-rows';
 import { payrollAt } from '../../../office/logic/pay-group';
 import { PayrollService } from '../../../payrolls/payroll.service';
@@ -87,6 +88,13 @@ import { RemunerationService } from '../../../employees/remuneration.service';
 import { BonusService } from '../../../premiums/bonus.service';
 import type { BonusPayment } from '../../../../core/models/bonus';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
+import { StepGuide } from '../../../../shared/components/step-guide/step-guide';
+import { RevisionCount, RevisionCountService } from '../../../payrolls/revision-count.service';
+import { MonthCloseService } from '../../../premiums/month-close.service';
+import { PremiumNoticeService } from '../../../premiums/premium-notice.service';
+import { ReviewService } from '../../../reviews/review.service';
+import { noticeReviewId } from '../../../reviews/logic/review';
+import { monthSpine } from '../../logic/month-spine';
 
 /** よく使うメニューの1つ */
 interface MenuTile {
@@ -137,7 +145,7 @@ function acquireReported(contracts: ContractDoc[], e: Employee): number | null {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [PersonName, Icon, RouterLink, TranslocoPipe, TodoDialog],
+  imports: [PersonName, Icon, RouterLink, TranslocoPipe, TodoDialog, StepGuide],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -158,6 +166,11 @@ export class Dashboard {
   private readonly dependentsApi = inject(DependentService);
   private readonly remunerationsApi = inject(RemunerationService);
   private readonly language = inject(LanguageService);
+  private readonly router = inject(Router);
+  private readonly revisionCountApi = inject(RevisionCountService);
+  private readonly closeApi = inject(MonthCloseService);
+  private readonly noticeApi = inject(PremiumNoticeService);
+  private readonly reviewApi = inject(ReviewService);
 
   /** 文の差し込みの国コードを、国の名前にする（海外勤務の To-do） */
   withCountry(params: Record<string, string | number>): Record<string, string | number> {
@@ -369,6 +382,89 @@ export class Dashboard {
     ];
   });
 
+  // ===== 今月の処理（手続き → 給与 → 改定 → 保険料の確認。人数はそれぞれの画面と同じ数え方。11/26） =====
+
+  /** 今月払いの給与から控除する保険料の月 */
+  readonly spinePremiumMonth = computed(() => {
+    const o = this.office();
+    return o ? premiumMonthOfPay(this.payMonth(), payrollOf(o), o.deductionHistory) : this.thisMonth;
+  });
+  readonly revisionCount = signal<RevisionCount | null | 'error'>(null);
+  readonly spinePremium = signal<{ closed: boolean; noticeSaved: boolean; reviewed: boolean; solo: boolean } | null>(null);
+  /** 改定の候補の人（改定の候補の画面と同じ数え方。押すとその画面へ） */
+  readonly spineSteps = computed(() => {
+    const o = this.office();
+    const r = this.revisionCount();
+    const todo = this.loading()
+      ? null
+      : this.groups()
+          .filter((g) => (g.section === 'now' || g.section === 'soon') && g.kind !== 'payrollMissing')
+          .reduce((n, g) => n + g.items.length, 0);
+    const saved = this.payrollSaved();
+    const pm = this.payMonth();
+    const missing =
+      !o || !saved
+        ? null
+        : (payrollMissingTodo(pm, this.employees(), (e) => periodOf(pm, payrollAt(o, e, pm)), saved)?.params?.['count'] as number | undefined) ?? 0;
+    return monthSpine({
+      todo,
+      payrollMissing: missing,
+      revision: r === null || r === 'error' ? r : { candidates: r.candidates.length, waiting: r.waiting.length },
+      premium: this.spinePremium(),
+      premiumMonth: Number(this.spinePremiumMonth().slice(5)),
+      payMonth: Number(pm.slice(5)),
+    });
+  });
+
+  /** 今月の処理を出すか（管理者で、従業員がいて、はじめの3ステップを出していないとき） */
+  readonly showSpine = computed(() => this.isAdmin() && this.employees().length > 0 && !this.showSteps());
+
+  /** 段を押したら、その画面へ（手続きはこのページの To-do へ） */
+  goSpine(key: string): void {
+    const id = this.office()?.id;
+    if (!id) return;
+    if (key === 'todo') {
+      document.getElementById('todo')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    if (key === 'payroll') void this.router.navigate(['/o', id, 'payrolls', this.payMonth()]);
+    if (key === 'revision') void this.router.navigate(['/o', id, 'revisions']);
+    if (key === 'premium') void this.router.navigate(['/o', id, 'premiums'], { queryParams: { month: this.spinePremiumMonth() } });
+  }
+
+  private async loadSpine(office: Office): Promise<void> {
+    this.revisionCount.set(null);
+    this.spinePremium.set(null);
+    const month = premiumMonthOfPay(latestPaidMonth(this.today, payrollOf(office)), payrollOf(office), office.deductionHistory);
+    // 保険料の確認：確認済み・告知額・別の人の確認（各1件）
+    void (async () => {
+      try {
+        const [close, notice, review] = await Promise.all([
+          this.closeApi.get(office.id, month),
+          this.noticeApi.get(office.id, month),
+          this.reviewApi.get(office.id, noticeReviewId(month)),
+        ]);
+        if (this.office()?.id !== office.id) return;
+        this.spinePremium.set({
+          closed: !!close,
+          noticeSaved: !!notice,
+          reviewed: !!review?.checkedByName,
+          solo: (office.memberUids?.length ?? 0) < 2,
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    })();
+    // 改定の候補：画面と同じ材料で数える（読み込みが多いので、ほかの段のあとに出る）
+    try {
+      const r = await this.revisionCountApi.count(office);
+      if (this.office()?.id === office.id) this.revisionCount.set(r);
+    } catch (err) {
+      console.error(err);
+      if (this.office()?.id === office.id) this.revisionCount.set('error');
+    }
+  }
+
   // ===== はじめの3ステップ（従業員 → 給与 → 保険料。済んだら消える。11/13） =====
 
   /** 最新の支払月に給与の実績が入っている人数（月の索引を1件読む。null ＝ まだ） */
@@ -469,6 +565,11 @@ export class Dashboard {
     effect(() => {
       const office = this.context.current();
       if (office) void this.load(office.id);
+    });
+    // 今月の処理（管理者だけ。改定の候補は読み込みが多いので、ほかと分けて読む。11/26）
+    effect(() => {
+      const office = this.context.current();
+      if (office && this.isAdmin()) untracked(() => void this.loadSpine(office));
     });
     // はじめの3ステップ：最新の支払月に給与が入っているか（管理者だけ。月の索引を1件読む）
     effect(() => {

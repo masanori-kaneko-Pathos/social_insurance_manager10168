@@ -43,6 +43,15 @@
   }
 </nav>
 
+<!-- 今月の処理：手続き → 給与 → 改定 → 保険料の確認（管理者。従業員がいて、はじめの3ステップを出していないとき。11/26）
+     人数はそれぞれの画面と同じ数え方。段を押すとその画面へ -->
+@if (showSpine()) {
+  <section class="card spine" aria-labelledby="spine-title">
+    <h2 id="spine-title">{{ 'home.spine.title' | transloco: monthParts(payMonth()) }}</h2>
+    <app-step-guide [steps]="spineSteps()" labelKey="home.spine.label" (go)="goSpine($event)" />
+  </section>
+}
+
 <!-- はじめの3ステップ（従業員か、今月の給与がまだのときだけ。11/13） -->
 @if (showSteps()) {
   <section class="card start-steps">
@@ -122,7 +131,7 @@
 
 <div class="home-grid">
   <!-- ===== To-do の表（1行1件。届出の期限の近い順） ===== -->
-  <section class="card todo">
+  <section class="card todo" id="todo">
     <div class="todo-head">
       <h2>
         {{ 'dashboard.todo.title' | transloco }}

@@ -661,3 +661,13 @@ h1 {
   padding-left: var(--space-md);
   color: var(--color-text-sub);
 }
+
+/* 今月の処理（手続き → 給与 → 改定 → 保険料の確認。11/26） */
+.spine {
+  margin-bottom: var(--space-lg);
+}
+
+.spine h2 {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-md);
+}

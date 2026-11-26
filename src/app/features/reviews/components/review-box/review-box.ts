@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { auth } from '../../../../core/firebase';
 import { OfficeContext } from '../../../office/office-context.service';
@@ -21,6 +21,8 @@ export class ReviewBox {
 
   /** 対象の鍵（filingReviewId・noticeReviewId） */
   readonly target = input.required<string>();
+  /** 頼んだ・確認した・やり直したあと、読み直した記録を知らせる（保険料のページの案内が④の状態を合わせる。11/26） */
+  readonly changed = output<Review | null>();
 
   readonly review = signal<Review | null | undefined>(undefined);
   readonly busy = signal(false);
@@ -60,6 +62,7 @@ export class ReviewBox {
     try {
       await fn(officeId);
       await this.load(officeId, this.target());
+      this.changed.emit(this.review() ?? null);
     } catch (err) {
       console.error(err);
       this.errorKey.set('review.error');

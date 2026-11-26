@@ -17,6 +17,7 @@ import { latest } from '../../rates/logic/pick-rates';
 import { calcMonthly, RemunerationLike } from './calc-monthly';
 import { AdjustmentInput } from './premium-adjustment';
 import { PremiumSplit, splitContribution } from './premium-core';
+import { CategoryMilli, categoryMilliOf, ZERO_CATEGORY } from './diff-causes';
 
 export type RowState = 'ok' | 'none' | 'missing' | 'error' | 'exempt';
 
@@ -48,6 +49,8 @@ export interface PremiumRow extends PremiumSplit {
     pension: StandardRemuneration | null;
     /** 前の月の本人負担の合計（計算できない・かからない月は null、免除の月は 0） */
     employeeYen: number | null;
+    /** 前の月の全額を告知書の欄ごとに（かからない・免除・計算できない月は 0。告知額の差の原因を当てる。11/26） */
+    categoryMilli: CategoryMilli;
   };
 }
 
@@ -127,7 +130,8 @@ function previousOf(input: RowInput, prev: { state: RowState; result: PremiumRes
   const month = shiftMonth(input.month, -1);
   const std = exemptStandards(input, month);
   const employeeYen = prev.state === 'ok' ? prev.result!.employeeYen : prev.state === 'exempt' ? 0 : null;
-  return { health: std.health, pension: std.pension, employeeYen };
+  const categoryMilli = prev.state === 'ok' ? categoryMilliOf(prev.result) : { ...ZERO_CATEGORY };
+  return { health: std.health, pension: std.pension, employeeYen, categoryMilli };
 }
 
 /** 免除の月は保険料の行がないので、標準報酬月額は履歴から出す（その月に加入している保険だけ） */

@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MonthPicker } from '../../../../shared/components/month-picker/month-picker';
@@ -31,6 +31,18 @@ import { employeeYenOfPart, healthPartTotals, officeTotals } from '../../logic/p
 import { PREMIUM_DEFAULT_KEYS, premiumExportColumns } from '../../logic/premium-export-columns';
 import { ExportDialog } from '../../../../shared/components/export-dialog/export-dialog';
 import { buildPremiumRow, PremiumRow } from '../../logic/premium-rows';
+import {
+  categoryMilliOf,
+  DeductionCause,
+  deductionCauses,
+  FoundCause,
+  matchNotice,
+  NOTICE_CAUSE_REASON,
+  NoticeCandidate,
+  noticeCandidates,
+  NoticeCause,
+  NoticePerson,
+} from '../../logic/diff-causes';
 import { calcMonthly } from '../../logic/calc-monthly';
 import { PremiumTotals } from '../../components/premium-totals/premium-totals';
 import { PremiumBreakdown } from '../../components/premium-breakdown/premium-breakdown';
@@ -58,6 +70,8 @@ import { checkNotice, noticeLabelKey, DIFF_REASONS, DiffReason, dueDateOf, NOTIC
 import { PremiumNoticeService } from '../../premium-notice.service';
 import { ReviewBox } from '../../../reviews/components/review-box/review-box';
 import { noticeReviewId } from '../../../reviews/logic/review';
+import { Review, ReviewService } from '../../../reviews/review.service';
+import type { NoticeReviewState } from '../../logic/premium-guide';
 import { PremiumNotice } from '../../../../core/models/premium-notice';
 import { parseNat } from '../../../../shared/utils/number';
 import { ColumnMapper } from '../../../../shared/components/column-mapper/column-mapper';
@@ -127,6 +141,7 @@ export class PremiumList {
   private readonly criteriaApi = inject(CriteriaService);
   private readonly noticeApi = inject(PremiumNoticeService);
   private readonly closeApi = inject(MonthCloseService);
+  private readonly reviewApi = inject(ReviewService);
   private readonly transloco = inject(TranslocoService);
   readonly context = inject(OfficeContext);
 
@@ -517,7 +532,27 @@ export class PremiumList {
     effect(() => {
       const officeId = this.context.current()?.id;
       const month = this.month();
-      if (officeId) this.loadNotice(officeId, month);
+      if (officeId) {
+        this.loadNotice(officeId, month);
+        this.loadNoticeReview(officeId, month);
+      }
+    });
+    // 告知額の差に合う原因が見つかったら、差の理由の印を先に付けておく（手で選んだあとは触らない。保存は担当者。11/26）
+    effect(() => {
+      const matched = this.noticeMatched();
+      untracked(() => {
+        if (this.reasonsTouched || matched.length === 0) return;
+        this.noticeReasons.set(new Set(matched.map((k) => NOTICE_CAUSE_REASON[k])));
+      });
+    });
+    // 給与ソフトと比べて差がある人がいたら、この給与の月の精算の記録を読む（精算を含めた控除かを当てるため。11/26）
+    effect(() => {
+      const res = this.deductionResult();
+      const officeId = this.context.current()?.id;
+      if (!officeId || !res || res.month !== this.month() || !res.rows.some((r) => r.status === 'diff')) return;
+      const month = this.month();
+      const payMonth = this.payMonth();
+      untracked(() => void this.loadSettledForPay(officeId, month, payMonth));
     });
     // 月を変えたら、その月の確定と精算の記録を読む（確定1件＋精算の記録）
     effect(() => {
@@ -551,14 +586,49 @@ export class PremiumList {
 
   readonly guideSteps = computed<GuideStep[]>(() =>
     premiumGuideSteps({
-      close: this.savedClose() ?? null,
+      close: this.closeForGuide(),
       fixCount: this.problems().length + (this.regularPending()?.ids.length ?? 0),
       softNow: this.softCheckNow(),
       noticeSaved: !!this.savedNotice(),
       noticeStatus: this.noticeCheck().status,
       noticeHasReason: this.noticeReasons().size > 0,
+      noticeReview: this.noticeReviewState(),
+      solo: (this.context.current()?.memberUids?.length ?? 0) < 2,
     }),
   );
+
+  /** 確認済みの記録を、案内に出す形に（誰が・いつ。11/26） */
+  private readonly closeForGuide = computed(() => {
+    const c = this.savedClose();
+    if (!c) return null;
+    return { softCheck: c.softCheck ?? null, closedByName: c.closedByName ?? null, closedOn: shortDate(c.closedAt) };
+  });
+
+  // ===== 告知額のダブルチェック（④の済み・まだを決める。11/26） =====
+  /** この月の確認の記録（読み込み中は undefined） */
+  readonly noticeReview = signal<Review | null | undefined>(undefined);
+  readonly noticeReviewState = computed<NoticeReviewState | null | undefined>(() => {
+    const r = this.noticeReview();
+    if (r === undefined) return undefined;
+    if (r === null) return null;
+    return { requestedByName: r.requestedByName ?? null, checkedByName: r.checkedByName ?? null, checkedOn: shortDate(r.checkedAt) };
+  });
+
+  private async loadNoticeReview(officeId: string, month: string): Promise<void> {
+    this.noticeReview.set(undefined);
+    try {
+      const r = await this.reviewApi.get(officeId, noticeReviewId(month));
+      if (month === this.month()) this.noticeReview.set(r);
+    } catch (err) {
+      console.error(err);
+      if (month === this.month()) this.noticeReview.set(null);
+    }
+  }
+
+  /** 枠の中で頼んだ・確認した・やり直したら、案内も合わせる */
+  onNoticeReview(r: Review | null): void {
+    this.noticeReview.set(r);
+  }
 
   /** 案内を押した段へ動く（告知額の段は閉じていれば開く） */
   goStep(key: string): void {
@@ -783,6 +853,8 @@ export class PremiumList {
   /** 入力中の告知額（文字のまま） */
   readonly noticeText = signal<Record<NoticeCategory, string>>({ health: '', pension: '', childContribution: '' });
   readonly noticeReasons = signal<ReadonlySet<DiffReason>>(new Set());
+  /** 差の理由を手で選んだか（選ぶ前は、アプリが当てた原因に印を付けておく。11/26） */
+  private reasonsTouched = false;
   readonly noticeNote = signal('');
   readonly noticeSaving = signal(false);
   readonly noticeSaved = signal(false);
@@ -799,6 +871,7 @@ export class PremiumList {
       const t = (v: number | null | undefined) => (v == null ? '' : String(v));
       this.noticeText.set({ health: t(n?.health), pension: t(n?.pension), childContribution: t(n?.childContribution) });
       this.noticeReasons.set(new Set((n?.reasons ?? []) as DiffReason[]));
+      this.reasonsTouched = (n?.reasons?.length ?? 0) > 0;
       this.noticeNote.set(n?.note ?? '');
     } catch (err) {
       console.error(err);
@@ -850,6 +923,7 @@ export class PremiumList {
   }
 
   toggleReason(r: DiffReason): void {
+    this.reasonsTouched = true;
     this.noticeReasons.update((s) => {
       const next = new Set(s);
       if (next.has(r)) next.delete(r);
@@ -1176,6 +1250,133 @@ export class PremiumList {
   });
   readonly deductionMatchCount = computed(() => this.deductionResult()?.rows.filter((x) => x.status === 'match').length ?? 0);
 
+  // ===== 差の原因を、アプリのデータから当てる（② 給与ソフト・④ 告知額。11/26） =====
+
+  /** この給与の月で精算した差額（従業員ID → 本人分の合計）。差がある人がいるときだけ読む */
+  readonly settledForPay = signal<Map<string, number> | null>(null);
+  private settledKey: string | null = null;
+
+  private async loadSettledForPay(officeId: string, month: string, payMonth: string): Promise<void> {
+    const key = `${officeId}|${month}|${payMonth}`;
+    if (this.settledKey === key) return;
+    this.settledKey = key;
+    this.settledForPay.set(null);
+    try {
+      // 精算できるのは、確認済みにした前の月だけ（時効の2年まで）
+      const closes = await this.closeApi.range(officeId, shiftMonth(month, -24), shiftMonth(month, -1));
+      const lists = await Promise.all(closes.map((c) => this.closeApi.settlements(officeId, c.month)));
+      const sum = new Map<string, number>();
+      for (const list of lists) {
+        for (const s of Object.values(list)) {
+          if (s.payMonth === payMonth) sum.set(s.employeeId, (sum.get(s.employeeId) ?? 0) + s.diffEmployeeYen);
+        }
+      }
+      if (this.settledKey === key) this.settledForPay.set(sum);
+    } catch (err) {
+      console.error(err);
+      if (this.settledKey === key) this.settledForPay.set(new Map());
+    }
+  }
+
+  /** 差がある人の、考えられる原因（従業員ID → 原因。合うものがなければ空の配列） */
+  readonly deductionCauseMap = computed(() => {
+    const res = this.deductionResult();
+    const out = new Map<string, FoundCause<DeductionCause>[]>();
+    if (!res || res.month !== this.month()) return out;
+    const byId = new Map(this.rows().map((r) => [r.employee.id, r]));
+    const settled = this.settledForPay() ?? new Map<string, number>();
+    for (const d of res.rows) {
+      if (d.status !== 'diff' || !d.employee || !d.soft) continue;
+      const r = byId.get(d.employee.id);
+      if (!r) continue;
+      const softYen = d.soft.total ?? (d.soft.health ?? 0) + (d.soft.pension ?? 0);
+      out.set(
+        d.employee.id,
+        deductionCauses(softYen, {
+          appYen: r.healthEmployeeYen + r.pensionEmployeeYen,
+          previousYen: r.previous?.employeeYen ?? null,
+          changes: r.changes,
+          lastMonth: r.lastMonth,
+          childSupportYen: employeeYenOfPart(r.result, 'childSupport') ?? 0,
+          careYen: employeeYenOfPart(r.result, 'care') ?? 0,
+          settlementYen: settled.get(d.employee.id) ?? 0,
+        }),
+      );
+    }
+    return out;
+  });
+
+  /** 原因の一文（画面に出す言葉） */
+  deductionCauseText(row: CompareRow): string {
+    if (row.status !== 'diff' || !row.employee) return '';
+    const causes = this.deductionCauseMap().get(row.employee.id);
+    if (!causes) return '';
+    if (causes.length === 0) return this.transloco.translate('payrollSoft.cause.unknown');
+    return causes
+      .map((c) => {
+        const p: Record<string, string | number> = { ...(c.params ?? {}) };
+        if (typeof p['amount'] === 'number') p['amount'] = this.yen(p['amount'] as number);
+        if (typeof p['previous'] === 'number') p['previous'] = this.yen(p['previous'] as number);
+        if (typeof p['changes'] === 'string') {
+          p['changes'] = (p['changes'] as string)
+            .split(',')
+            .map((k) => this.transloco.translate(`premiumList.change.${k}`))
+            .join('・');
+        }
+        return this.transloco.translate(`payrollSoft.cause.${c.key}`, p);
+      })
+      .join(' ／ ');
+  }
+
+  /** 告知額の差に合う原因の候補（この月の全員から作る） */
+  readonly noticeCandidateList = computed<NoticeCandidate[]>(() => {
+    const month = this.month();
+    // 前の月で資格を失った人（今月はかからない）も入れるため、表から外した人も含めて見る
+    const people: NoticePerson[] = this.allRows().map((r) => {
+      const now = r.state === 'ok' ? categoryMilliOf(r.result) : { health: 0, pension: 0, childContribution: 0 };
+      const before = r.previous?.categoryMilli ?? { health: 0, pension: 0, childContribution: 0 };
+      const had = before.health + before.pension + before.childContribution > 0;
+      const has = now.health + now.pension + now.childContribution > 0;
+      const rem = (this.remunerations().get(r.employee.id) ?? []).find((x) => x.from === month);
+      return {
+        name: `${r.employee.lastName} ${r.employee.firstName}`,
+        now,
+        before,
+        joined: r.changes.includes('new'),
+        left: had && !has && r.state === 'none',
+        regraded: !!rem && rem.reason !== 'acquisition',
+      };
+    });
+    const bonus = this.bonusSummary()?.rows.find((x) => x.key === 'bonus')?.totals ?? null;
+    const bonusMilli = bonus
+      ? {
+          health: (bonus.find((t) => t.category === 'health')?.totalYen ?? 0) * 1000,
+          pension: (bonus.find((t) => t.category === 'pension')?.totalYen ?? 0) * 1000,
+          childContribution: (bonus.find((t) => t.category === 'childContribution')?.totalYen ?? 0) * 1000,
+        }
+      : null;
+    return noticeCandidates(people, bonusMilli);
+  });
+
+  /** 告知額の差に合った原因（差がない・入れていないときは空） */
+  readonly noticeMatched = computed<NoticeCause[]>(() => {
+    const nc = this.noticeCheck();
+    if (nc.status !== 'diff') return [];
+    const diff = { health: null, pension: null, childContribution: null } as Record<NoticeCategory, number | null>;
+    for (const l of nc.lines) diff[l.category] = l.diff;
+    return matchNotice(diff, this.noticeCandidateList());
+  });
+
+  /** 画面に出す形（原因・人・欄ごとの額） */
+  readonly noticeMatchedView = computed(() =>
+    this.noticeMatched().map((key) => {
+      const c = this.noticeCandidateList().find((x) => x.key === key)!;
+      const shown = c.names.slice(0, 3).join('・');
+      const more = c.names.length > 3 ? this.transloco.translate('premiumNotice.cause.more', { n: c.names.length - 3 }) : '';
+      return { key, names: shown + more, yen: c.yen };
+    }),
+  );
+
   nameOf(row: CompareRow): string {
     return row.employee ? `${row.employee.lastName} ${row.employee.firstName}` : row.label;
   }
@@ -1285,4 +1486,11 @@ export class PremiumList {
 
   readonly yen = (n: number) => n.toLocaleString('ja-JP');
   readonly milli = formatMilli;
+}
+
+/** 記録の日時を「M/D」に（ない・読めないときは null） */
+function shortDate(t: { toDate(): Date } | null | undefined): string | null {
+  if (!t || typeof t.toDate !== 'function') return null;
+  const d = t.toDate();
+  return `${d.getMonth() + 1}/${d.getDate()}`;
 }

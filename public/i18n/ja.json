@@ -3987,6 +3987,31 @@
     "io": {
       "import": "ファイルの取り込み",
       "export": "出力する画面を選ぶ…"
+    },
+    "spine": {
+      "title": "今月の処理（{{m}}月払いの給与）",
+      "label": "今月の処理",
+      "step": {
+        "todo": "手続き・届",
+        "payroll": "給与の入力",
+        "revision": "改定の候補",
+        "premium": "保険料の確認"
+      },
+      "note": {
+        "loading": "確認中…",
+        "todoCount": "今すぐ・期限が近い {{count}}件",
+        "todoNone": "急ぎの手続きなし",
+        "payrollMissing": "{{m}}月払い：未入力 {{count}}人",
+        "payrollDone": "{{m}}月払い：全員入力済み",
+        "revisionCandidates": "改定に当たる人 {{count}}人",
+        "revisionWaiting": "月がそろうのを待つ人 {{count}}人",
+        "revisionNone": "候補なし",
+        "revisionError": "読み込めませんでした（押すと画面で確認）",
+        "premiumOpen": "{{m}}月分：本人負担の確認がまだ",
+        "premiumNotice": "{{m}}月分：告知額の入力待ち",
+        "premiumReview": "{{m}}月分：別の人の確認待ち",
+        "premiumDone": "{{m}}月分：確認まで完了"
+      }
     }
   },
   "myPages": {
@@ -4289,6 +4314,17 @@
     "hint": "アプリの合計は、年金機構と同じく、全員の全額（月額と、この月に払った賞与）を足してから、制度ごとに1円未満を切り捨てて出しています。年金事務所の告知額とは1円もずれないはずです。ずれたら、上の理由を確認してください。告知額が正なので、差は会社負担で調整し、届の漏れがあれば届を出します。",
     "error": {
       "save": "保存できませんでした。時間をおいてもう一度お試しください。"
+    },
+    "cause": {
+      "lead": "差の額に合う原因：",
+      "more": " ほか{{n}}人",
+      "amounts": "健康保険 {{health}}円・厚生年金 {{pension}}円・拠出金 {{child}}円",
+      "checked": "下の「差の理由」に印を付けました。告知書の内容と照らして確かめ、保存してください。",
+      "none": "アプリのデータでは、差の額に合う原因が見つかりません。告知書の「前月までの精算額」などを確かめて、下の理由を選んでください。",
+      "gradePending": "標準報酬の改定が、年金事務所でまだ処理されていない（告知は前の額）",
+      "acquirePending": "今月から加入した人が、告知にまだ入っていない（資格取得届の処理待ち）",
+      "lossPending": "前の月で資格を失った人が、告知にまだ入っている（資格喪失届の処理待ち）",
+      "bonusPending": "この月の賞与が、告知にまだ入っていない（賞与支払届の処理待ち）"
     }
   },
   "calendar": {
@@ -4358,7 +4394,8 @@
       "appPension": "厚年（アプリ）",
       "softPension": "厚年（給与ソフト）",
       "diff": "差",
-      "status": "結果"
+      "status": "結果",
+      "cause": "考えられる原因"
     },
     "status": {
       "match": "一致",
@@ -4377,7 +4414,16 @@
     "changeExport": "標準報酬が変わる人の CSV（給与ソフトの等級を直す）",
     "changeNote": "{{month}}月分から変わる人：{{n}}人",
     "changeNone": "{{month}}月分から変わる人はいません（見出しだけ出力します）",
-    "changeFileLabel": "標準報酬が変わる人"
+    "changeFileLabel": "標準報酬が変わる人",
+    "cause": {
+      "stale": "給与ソフトが前の月の額（{{previous}}円）のまま。{{changes}}がまだ給与ソフトに入っていません",
+      "settlement": "確認済みの月の差額 {{amount}}円を、この給与で精算して控除しています",
+      "twoMonths": "最後の給与で、前月分とこの月分の2か月分を控除しています",
+      "noChildSupport": "子ども・子育て支援金（{{amount}}円）を控除していません",
+      "care": "介護保険料（{{amount}}円）の有無が違います（40歳・65歳の切り替わり）",
+      "rounding": "1円の端数の違いです（50銭の扱い、健保と支援金を合算するか個別か）",
+      "unknown": "アプリのデータでは、差の額に合う原因が見つかりません。給与ソフトの設定を確かめてください"
+    }
   },
   "myNumber": {
     "title": "マイナンバー",
@@ -5523,7 +5569,12 @@
       "noticeWait": "告知書が届いたら入力",
       "noticeReason": "差の理由を記録済み",
       "noticeDiff": "差の理由がまだ",
-      "noticeMatch": "一致"
+      "noticeMatch": "一致",
+      "checkedBy": "確認済み {{date}} {{name}}",
+      "noticeSolo": "保存済み（確認できる別のメンバーがいません）",
+      "noticeChecked": "別の人が確認 {{date}} {{name}}",
+      "noticeWaiting": "確認待ち（依頼：{{name}}）",
+      "noticeAsk": "別の人の確認がまだ"
     },
     "title": {
       "employee": "① 給与から控除する本人負担",

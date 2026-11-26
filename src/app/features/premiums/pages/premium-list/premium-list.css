@@ -911,3 +911,34 @@ tr.clickable:focus-visible {
   color: var(--color-warning-text);
   font-weight: 600;
 }
+
+/* 差の原因（アプリのデータから当てたもの。11/26） */
+td.cause {
+  min-width: 14em;
+  white-space: normal;
+  font-size: var(--font-sm);
+}
+
+.notice-causes {
+  margin: var(--space-md) 0;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.notice-causes ul {
+  margin: var(--space-xs) 0;
+  padding-left: 1.5em;
+}
+
+.notice-causes .causes-lead {
+  margin: 0;
+  font-weight: 600;
+}
+
+.notice-causes .cause-yen {
+  display: block;
+  font-size: var(--font-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-sub);
+}
