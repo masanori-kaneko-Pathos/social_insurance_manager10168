@@ -42,6 +42,13 @@ export interface PremiumRow extends PremiumSplit {
    * 年金事務所から連絡があり、厚生年金保険料は納めなくてよくなる（健康保険・介護は対象外。2015年10月から）
    */
   sameMonthPension: boolean;
+  /** 前の月の標準報酬と本人負担（標準報酬が変わる人の CSV で「前」に出す。11/26） */
+  previous?: {
+    health: StandardRemuneration | null;
+    pension: StandardRemuneration | null;
+    /** 前の月の本人負担の合計（計算できない・かからない月は null、免除の月は 0） */
+    employeeYen: number | null;
+  };
 }
 
 export interface RowInput {
@@ -115,10 +122,18 @@ export function changesBetween(
   return [...reasons];
 }
 
+/** 前の月の標準報酬（その月に加入していた保険だけ）と本人負担 */
+function previousOf(input: RowInput, prev: { state: RowState; result: PremiumResult | null }): PremiumRow['previous'] {
+  const month = shiftMonth(input.month, -1);
+  const std = exemptStandards(input, month);
+  const employeeYen = prev.state === 'ok' ? prev.result!.employeeYen : prev.state === 'exempt' ? 0 : null;
+  return { health: std.health, pension: std.pension, employeeYen };
+}
+
 /** 免除の月は保険料の行がないので、標準報酬月額は履歴から出す（その月に加入している保険だけ） */
-function exemptStandards(input: RowInput) {
-  const rem = latest(input.remunerations, input.month);
-  const cov = coverageForMonth(input.employee, input.month);
+function exemptStandards(input: RowInput, month: YearMonth = input.month) {
+  const rem = latest(input.remunerations, month);
+  const cov = coverageForMonth(input.employee, month);
   return {
     health: cov.health ? (rem?.health ?? null) : null,
     pension: cov.pension ? (rem?.pension ?? null) : null,
@@ -156,6 +171,7 @@ export function buildPremiumRow(input: RowInput): PremiumRow {
       .filter((g) => g.parts.includes('pension'))
       .reduce((s, g) => s + g.employeeYen, 0),
     changes: capChanges(input, changesBetween(prev, cur)),
+    previous: previousOf(input, prev),
     lastMonth: cur.state === 'ok' && isLastMonthBeforeLeaving(input.employee, input.month),
     sameMonthPension: isSameMonthPension(input.employee, input.month),
   };

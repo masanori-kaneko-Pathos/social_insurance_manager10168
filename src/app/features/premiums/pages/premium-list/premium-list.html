@@ -22,6 +22,14 @@
             {{ 'payrollSoft.export' | transloco }}
             <small>{{ 'payrollSoft.exportNote' | transloco: { payMonth: monthParts(payMonth()).m } }}</small>
           </button>
+          <!-- 標準報酬が変わる人だけ（給与ソフトの等級を直すため。0人の月も出せる。11/26） -->
+          <button type="button" role="menuitem" (click)="exportStandardChanges()">
+            {{ 'payrollSoft.changeExport' | transloco }}
+            <small>{{
+              (standardChanges().length ? 'payrollSoft.changeNote' : 'payrollSoft.changeNone')
+                | transloco: { month: monthParts(month()).m, n: standardChanges().length }
+            }}</small>
+          </button>
         </div>
       </details>
       <app-export-dialog

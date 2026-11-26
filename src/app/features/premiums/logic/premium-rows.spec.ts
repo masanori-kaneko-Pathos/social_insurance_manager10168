@@ -68,6 +68,17 @@ describe('buildPremiumRow：一覧の1行', () => {
     expect(row('2025-09', A, remA).changes).toEqual(['grade']);
   });
 
+  it('前の月の標準報酬と本人負担を持つ（標準報酬が変わる人の CSV の「前」。11/26）', () => {
+    const r = row('2025-09', A, remA);
+    expect(r.previous?.health).toEqual({ grade: 22, standard: 300000 });
+    expect(r.previous?.pension).toEqual({ grade: 19, standard: 300000 });
+    expect(r.previous?.employeeYen).toBe(row('2025-08', A, remA).result!.employeeYen);
+    // 資格を取った月は、前の月に加入していないので空
+    const first = row('2024-04', A, remA);
+    expect(first.previous?.health).toBeNull();
+    expect(first.previous?.employeeYen).toBeNull();
+  });
+
   it('届出なしの一斉改定の行から始まる月は cap（等級変更の代わり。11/16）', () => {
     const rems: RemunerationLike[] = [
       rem('2025-09', [40, 830000], [32, 650000]),

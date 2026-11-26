@@ -62,7 +62,15 @@ import { PremiumNotice } from '../../../../core/models/premium-notice';
 import { parseNat } from '../../../../shared/utils/number';
 import { ColumnMapper } from '../../../../shared/components/column-mapper/column-mapper';
 import { IMPORT_ACCEPT, ImportFileError, readTables, SheetTable } from '../../../../shared/import/parse';
-import { AppDeduction, compareDeductions, CompareRow, DEDUCTION_TABLE_SPEC, softwareExportRows } from '../../logic/payroll-software';
+import {
+  AppDeduction,
+  compareDeductions,
+  CompareRow,
+  DEDUCTION_TABLE_SPEC,
+  softwareExportRows,
+  StandardChangeRow,
+  standardChangeRows,
+} from '../../logic/payroll-software';
 import { buildPremiumCsv, PremiumCsvRow, premiumFileName } from '../../logic/premium-csv';
 import {
   DEFAULT_PREMIUM_SORT,
@@ -1049,6 +1057,8 @@ export class PremiumList {
         name: `${r.employee.lastName} ${r.employee.firstName}`,
         healthStandard: r.health?.standard ?? null,
         pensionStandard: r.pension?.standard ?? null,
+        healthGrade: r.health?.grade ?? null,
+        pensionGrade: r.pension?.grade ?? null,
         care: !!r.care,
         healthEmployeeYen: r.healthEmployeeYen,
         pensionEmployeeYen: r.pension ? r.pensionEmployeeYen : null,
@@ -1062,6 +1072,49 @@ export class PremiumList {
       this.payMonth(),
     );
     const label = this.transloco.translate('payrollSoft.fileLabel');
+    downloadCsv(safeFileName(`${label}_${office.name}_${this.month()}.csv`), rows);
+  }
+
+  /**
+   * この月分から標準報酬が変わる人（標準報酬の履歴に、この月からの行がある人。11/26）
+   * 給与ソフトの従業員の等級を、改定のたびに直すための一覧
+   */
+  readonly standardChanges = computed<StandardChangeRow[]>(() => {
+    const month = this.month();
+    return this.softwareTargets().flatMap((r) => {
+      const rems = this.remunerations().get(r.employee.id) ?? [];
+      const rem = rems.find((x) => x.from === month);
+      if (!rem) return [];
+      const cap = !!(rem as { capRevised?: readonly string[] }).capRevised?.length;
+      const reason = cap
+        ? this.transloco.translate('premiumList.change.cap')
+        : this.transloco.translate(`remuneration.reason.${rem.reason}`);
+      return [
+        {
+          employeeNumber: r.employee.employeeNumber ?? null,
+          name: `${r.employee.lastName} ${r.employee.firstName}`,
+          reason,
+          before: {
+            health: r.previous?.health ?? null,
+            pension: r.previous?.pension ?? null,
+            employeeYen: r.previous?.employeeYen ?? null,
+          },
+          after: {
+            health: r.health,
+            pension: r.pension,
+            employeeYen: r.state === 'ok' ? r.healthEmployeeYen + r.pensionEmployeeYen : 0,
+          },
+        },
+      ];
+    });
+  });
+
+  /** 標準報酬が変わる人だけの CSV（0人の月も見出しだけ出す。ボタンは出したり消したりしない） */
+  exportStandardChanges(): void {
+    const office = this.context.current();
+    if (!office || !this.context.isAdmin()) return;
+    const rows = standardChangeRows(this.standardChanges(), this.month(), this.payMonth());
+    const label = this.transloco.translate('payrollSoft.changeFileLabel');
     downloadCsv(safeFileName(`${label}_${office.name}_${this.month()}.csv`), rows);
   }
 

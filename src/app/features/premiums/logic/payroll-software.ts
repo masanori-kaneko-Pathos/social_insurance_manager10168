@@ -13,6 +13,9 @@ export interface SoftwareRow {
   name: string;
   healthStandard: number | null;
   pensionStandard: number | null;
+  /** 等級（給与ソフトは等級で持つことが多い。11/26） */
+  healthGrade?: number | null;
+  pensionGrade?: number | null;
   care: boolean;
   healthEmployeeYen: number; // 本人負担 健保等（介護・支援金を含む）
   pensionEmployeeYen: number | null;
@@ -25,6 +28,8 @@ export const SOFTWARE_HEADER = [
   '本人負担 健保等', '本人負担 厚年', '本人負担 合計',
   // 健保等の内訳（後ろに足した。前の列の位置は変えない。11/24）
   '健保等のうち 健康保険', '健保等のうち 介護保険', '健保等のうち 子ども・子育て支援金',
+  // 等級（後ろに足した。前の列の位置は変えない。11/26）
+  '健保 等級', '厚年 等級',
 ] as const;
 
 export function softwareExportRows(rows: readonly SoftwareRow[], month: string, payMonth: string): string[][] {
@@ -45,6 +50,50 @@ export function softwareExportRows(rows: readonly SoftwareRow[], month: string, 
         const v = r.healthParts?.[k];
         return v == null ? '' : String(v);
       }),
+      r.healthGrade == null ? '' : String(r.healthGrade),
+      r.pensionGrade == null ? '' : String(r.pensionGrade),
+    ]),
+  ];
+}
+
+// ===== アプリ → 給与ソフト：標準報酬が変わる人だけ（11/26） =====
+// 改定のたびに、給与ソフトの従業員の標準報酬（等級）を直すための一覧。
+// 全員分の「給与ソフト向け CSV」を前の月と見比べなくても、誰を・何月分から・いくつからいくつへ が分かる
+
+export const STANDARD_CHANGE_HEADER = [
+  '社員番号', '氏名', '変わる理由', '何月分から', '控除する給与の月から',
+  '健保 等級（前）', '健保 標準報酬月額（前）', '健保 等級（後）', '健保 標準報酬月額（後）',
+  '厚年 等級（前）', '厚年 標準報酬月額（前）', '厚年 等級（後）', '厚年 標準報酬月額（後）',
+  '本人負担 合計（前）', '本人負担 合計（後）',
+] as const;
+
+type Std = { grade: number; standard: number } | null;
+
+export interface StandardChangeRow {
+  employeeNumber: string | null;
+  name: string;
+  /** 変わる理由（画面の言葉に直したもの。例：定時決定） */
+  reason: string;
+  before: { health: Std; pension: Std; employeeYen: number | null };
+  after: { health: Std; pension: Std; employeeYen: number | null };
+}
+
+/** 標準報酬が変わる人の CSV（month：何月分から、payMonth：その月分を控除する給与の月） */
+export function standardChangeRows(rows: readonly StandardChangeRow[], month: string, payMonth: string): string[][] {
+  const g = (s: Std) => (s ? String(s.grade) : '');
+  const v = (s: Std) => (s ? String(s.standard) : '');
+  const y = (n: number | null) => (n == null ? '' : String(n));
+  return [
+    [...STANDARD_CHANGE_HEADER],
+    ...rows.map((r) => [
+      r.employeeNumber ?? '',
+      r.name,
+      r.reason,
+      month,
+      payMonth,
+      g(r.before.health), v(r.before.health), g(r.after.health), v(r.after.health),
+      g(r.before.pension), v(r.before.pension), g(r.after.pension), v(r.after.pension),
+      y(r.before.employeeYen), y(r.after.employeeYen),
     ]),
   ];
 }

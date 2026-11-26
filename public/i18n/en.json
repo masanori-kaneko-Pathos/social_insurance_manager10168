@@ -4373,7 +4373,11 @@
     "checkHint": "Choose the deduction file (CSV/Excel) from your payroll software to list only people whose amounts differ from this app.",
     "checkTitle": "Deduction check",
     "checkLead": "Compares the premiums your payroll software deducted with the employee share calculated here. Payroll software does the deduction; this app checks the correct amount.",
-    "exportButton": "Export for payroll software"
+    "exportButton": "Export for payroll software",
+    "changeExport": "CSV of people whose standard monthly remuneration changes (to update grades in payroll software)",
+    "changeNote": "{{n}} change from month {{month}}",
+    "changeNone": "No one changes from month {{month}} (only the header is exported)",
+    "changeFileLabel": "Standard remuneration changes"
   },
   "myNumber": {
     "title": "My Number",
