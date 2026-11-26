@@ -1,189 +1,196 @@
-<app-back-link [fallback]="['/o', context.current()?.id]" fallbackName="back.home" />
-<h1>{{ 'masters.title' | transloco }}</h1>
 <app-settings-tabs />
-<p class="lead">{{ 'masters.lead' | transloco }}</p>
+<div class="body">
+  <p class="lead">{{ 'masters.lead' | transloco }}</p>
 
-<!-- 事業所ごとに登録する決まり（項目のページへ） -->
-<div class="entries">
-  <a class="card entry" [routerLink]="['/o', context.current()?.id, 'payrolls', 'items']">
-    <strong>{{ 'payrollItem.title' | transloco }} →</strong>
-    <span class="hint">{{ 'masters.payrollItems' | transloco }}</span>
-  </a>
-  <a class="card entry" [routerLink]="['/o', context.current()?.id, 'bonuses', 'items']">
-    <strong>{{ 'bonusItem.title' | transloco }} →</strong>
-    <span class="hint">{{ 'masters.bonusItems' | transloco }}</span>
-  </a>
-</div>
-
-<!-- 保険料額表（閲覧だけ） -->
-<section class="card" id="premium-table" aria-labelledby="premium-table-title">
-  <div class="table-head">
-    <h2 id="premium-table-title">{{ 'masters.table.title' | transloco }}</h2>
-    <label class="month-pick">
-      {{ 'masters.table.month' | transloco }}
-      <input type="month" [value]="month()" (change)="setMonth($any($event.target).value)" />
-    </label>
+  <!-- 事業所ごとに登録する決まり（項目のページへ） -->
+  <div class="entries">
+    <a class="card entry" [routerLink]="['/o', context.current()?.id, 'payrolls', 'items']">
+      <strong>{{ 'payrollItem.title' | transloco }} →</strong>
+      <span class="hint">{{ 'masters.payrollItems' | transloco }}</span>
+    </a>
+    <a class="card entry" [routerLink]="['/o', context.current()?.id, 'bonuses', 'items']">
+      <strong>{{ 'bonusItem.title' | transloco }} →</strong>
+      <span class="hint">{{ 'masters.bonusItems' | transloco }}</span>
+    </a>
   </div>
 
-  @if (loading()) {
-    <p class="muted">{{ 'common.loading' | transloco }}</p>
-  } @else if (errorKey(); as key) {
-    <div class="alert alert-danger">{{ key | transloco }}</div>
-  } @else if (!insurer()) {
-    <p class="muted">{{ 'masters.table.noInsurer' | transloco: { month: monthLabel(month()) } }}</p>
-  } @else {
-    <p class="hint">
-      @if (isKumiai()) {
-        {{
-          'masters.table.whoKumiai' | transloco: { month: monthLabel(month()), name: kumiaiName() }
-        }}
+  <!-- 保険料額表（閲覧だけ） -->
+  <section class="card" id="premium-table" aria-labelledby="premium-table-title">
+    <div class="table-head">
+      <h2 id="premium-table-title">{{ 'masters.table.title' | transloco }}</h2>
+      <label class="month-pick">
+        {{ 'masters.table.month' | transloco }}
+        <input type="month" [value]="month()" (change)="setMonth($any($event.target).value)" />
+      </label>
+    </div>
+
+    @if (loading()) {
+      <p class="muted">{{ 'common.loading' | transloco }}</p>
+    } @else if (errorKey(); as key) {
+      <div class="alert alert-danger">{{ key | transloco }}</div>
+    } @else if (!insurer()) {
+      <p class="muted">
+        {{ 'masters.table.noInsurer' | transloco: { month: monthLabel(month()) } }}
+      </p>
+    } @else {
+      <p class="hint">
+        @if (isKumiai()) {
+          {{
+            'masters.table.whoKumiai'
+              | transloco: { month: monthLabel(month()), name: kumiaiName() }
+          }}
+        } @else {
+          {{
+            'masters.table.whoKyokai'
+              | transloco: { month: monthLabel(month()), pref: prefectureName() }
+          }}
+        }
+      </p>
+
+      <ul class="rates">
+        @for (l of rateLines(); track l.key) {
+          <li>
+            <span class="r-name">{{ 'masters.rate.' + l.key | transloco }}</span>
+            <span class="r-val">{{ pct(total(l.rate)) }}</span>
+            @if (l.rate.employee !== l.rate.employer) {
+              <span class="hint">{{
+                'masters.rate.split'
+                  | transloco: { employee: pct(l.rate.employee), employer: pct(l.rate.employer) }
+              }}</span>
+            }
+            <span class="hint"
+              >{{ 'masters.rate.from' | transloco: { month: monthLabel(l.rate.from) } }}・{{
+                'masters.source.' + l.rate.source | transloco
+              }}</span
+            >
+          </li>
+        }
+      </ul>
+
+      @if (table(); as rows) {
+        <div class="table-wrap scroll">
+          <table class="amounts">
+            <thead>
+              <tr>
+                <th rowspan="2" scope="col">{{ 'masters.col.grade' | transloco }}</th>
+                <th rowspan="2" scope="col" class="num">
+                  {{ 'masters.col.standard' | transloco }}
+                </th>
+                <th rowspan="2" scope="col" class="num">{{ 'masters.col.range' | transloco }}</th>
+                <th [attr.colspan]="half() ? 2 : 3" scope="colgroup" class="group-head g-start">
+                  {{ 'masters.col.health' | transloco }}
+                </th>
+                <th [attr.colspan]="half() ? 2 : 3" scope="colgroup" class="group-head g-start">
+                  {{ 'masters.col.healthCare' | transloco }}
+                </th>
+                @if (hasSupport()) {
+                  <th [attr.colspan]="half() ? 2 : 3" scope="colgroup" class="group-head g-start">
+                    {{ 'masters.col.childSupport' | transloco }}
+                  </th>
+                }
+                <th [attr.colspan]="half() ? 2 : 3" scope="colgroup" class="group-head g-start">
+                  {{ 'masters.col.pension' | transloco }}
+                </th>
+              </tr>
+              <tr>
+                @for (g of hasSupport() ? [1, 2, 3, 4] : [1, 2, 3]; track g) {
+                  <th scope="col" class="num g-start">{{ 'masters.col.total' | transloco }}</th>
+                  @if (half()) {
+                    <th scope="col" class="num">{{ 'masters.col.half' | transloco }}</th>
+                  } @else {
+                    <th scope="col" class="num">{{ 'masters.col.employee' | transloco }}</th>
+                    <th scope="col" class="num">{{ 'masters.col.employer' | transloco }}</th>
+                  }
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of rows; track r.grade) {
+                <tr>
+                  <td>
+                    {{ r.grade }}
+                    @if (r.pensionGrade !== null) {
+                      <span class="muted">（{{ r.pensionGrade }}）</span>
+                    }
+                  </td>
+                  <td class="num">{{ r.standard.toLocaleString() }}</td>
+                  <td class="num range">
+                    {{ r.min.toLocaleString() }}〜{{ r.max !== null ? r.max.toLocaleString() : '' }}
+                  </td>
+                  @for (
+                    a of hasSupport()
+                      ? [r.health, r.healthCare, r.childSupport, r.pension]
+                      : [r.health, r.healthCare, r.pension];
+                    track $index
+                  ) {
+                    <td class="num g-start">{{ cell(a, 'total') }}</td>
+                    @if (half()) {
+                      <td class="num">{{ cell(a, 'employee') }}</td>
+                    } @else {
+                      <td class="num">{{ cell(a, 'employee') }}</td>
+                      <td class="num">{{ cell(a, 'employer') }}</td>
+                    }
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="hint">{{ 'masters.table.note' | transloco }}</p>
       } @else {
-        {{
-          'masters.table.whoKyokai'
-            | transloco: { month: monthLabel(month()), pref: prefectureName() }
-        }}
+        <p class="muted">
+          {{ 'masters.table.noRates' | transloco: { month: monthLabel(month()) } }}
+        </p>
       }
-    </p>
 
-    <ul class="rates">
-      @for (l of rateLines(); track l.key) {
-        <li>
-          <span class="r-name">{{ 'masters.rate.' + l.key | transloco }}</span>
-          <span class="r-val">{{ pct(total(l.rate)) }}</span>
-          @if (l.rate.employee !== l.rate.employer) {
-            <span class="hint">{{
-              'masters.rate.split'
-                | transloco: { employee: pct(l.rate.employee), employer: pct(l.rate.employer) }
-            }}</span>
-          }
-          <span class="hint"
-            >{{ 'masters.rate.from' | transloco: { month: monthLabel(l.rate.from) } }}・{{
-              'masters.source.' + l.rate.source | transloco
-            }}</span
-          >
-        </li>
-      }
-    </ul>
+      <p class="hint">
+        @if (isKumiai()) {
+          {{ 'masters.table.kumiaiNote' | transloco }}
+        } @else {
+          {{ 'masters.table.kyokaiNote' | transloco }}
+        }
+      </p>
+    }
+  </section>
 
-    @if (table(); as rows) {
-      <div class="table-wrap scroll">
-        <table class="sticky-head amounts">
+  <!-- 組合の料率（組合健保だった時期がある事業所だけ） -->
+  @if (!loading() && kumiai().length > 0) {
+    <section class="card" aria-labelledby="kumiai-title">
+      <h2 id="kumiai-title">{{ 'masters.kumiai.title' | transloco }}</h2>
+      <div class="table-wrap">
+        <table>
           <thead>
             <tr>
-              <th rowspan="2" scope="col">{{ 'masters.col.grade' | transloco }}</th>
-              <th rowspan="2" scope="col" class="num">{{ 'masters.col.standard' | transloco }}</th>
-              <th rowspan="2" scope="col" class="num">{{ 'masters.col.range' | transloco }}</th>
-              <th [attr.colspan]="half() ? 2 : 3" scope="colgroup" class="group-head g-start">
-                {{ 'masters.col.health' | transloco }}
-              </th>
-              <th [attr.colspan]="half() ? 2 : 3" scope="colgroup" class="group-head g-start">
-                {{ 'masters.col.healthCare' | transloco }}
-              </th>
-              @if (hasSupport()) {
-                <th [attr.colspan]="half() ? 2 : 3" scope="colgroup" class="group-head g-start">
-                  {{ 'masters.col.childSupport' | transloco }}
-                </th>
-              }
-              <th [attr.colspan]="half() ? 2 : 3" scope="colgroup" class="group-head g-start">
-                {{ 'masters.col.pension' | transloco }}
-              </th>
-            </tr>
-            <tr>
-              @for (g of hasSupport() ? [1, 2, 3, 4] : [1, 2, 3]; track g) {
-                <th scope="col" class="num g-start">{{ 'masters.col.total' | transloco }}</th>
-                @if (half()) {
-                  <th scope="col" class="num">{{ 'masters.col.half' | transloco }}</th>
-                } @else {
-                  <th scope="col" class="num">{{ 'masters.col.employee' | transloco }}</th>
-                  <th scope="col" class="num">{{ 'masters.col.employer' | transloco }}</th>
-                }
-              }
+              <th scope="col">{{ 'masters.kumiai.from' | transloco }}</th>
+              <th scope="col" class="num">{{ 'masters.rate.health' | transloco }}</th>
+              <th scope="col" class="num">{{ 'masters.rate.care' | transloco }}</th>
+              <th scope="col" class="num">{{ 'masters.rate.childSupport' | transloco }}</th>
             </tr>
           </thead>
           <tbody>
-            @for (r of rows; track r.grade) {
+            @for (k of kumiai(); track k.from) {
               <tr>
-                <td>
-                  {{ r.grade }}
-                  @if (r.pensionGrade !== null) {
-                    <span class="muted">（{{ r.pensionGrade }}）</span>
-                  }
-                </td>
-                <td class="num">{{ r.standard.toLocaleString() }}</td>
-                <td class="num range">
-                  {{ r.min.toLocaleString() }}〜{{ r.max !== null ? r.max.toLocaleString() : '' }}
-                </td>
-                @for (
-                  a of hasSupport()
-                    ? [r.health, r.healthCare, r.childSupport, r.pension]
-                    : [r.health, r.healthCare, r.pension];
-                  track $index
-                ) {
-                  <td class="num g-start">{{ cell(a, 'total') }}</td>
-                  @if (half()) {
-                    <td class="num">{{ cell(a, 'employee') }}</td>
-                  } @else {
-                    <td class="num">{{ cell(a, 'employee') }}</td>
-                    <td class="num">{{ cell(a, 'employer') }}</td>
-                  }
+                <td>{{ monthLabel(k.from) }}</td>
+                @for (s of [k.health, k.care, k.childSupport]; track $index) {
+                  <td class="num">
+                    {{ pct(total(s)) }}
+                    <span class="hint split">{{
+                      'masters.rate.split'
+                        | transloco: { employee: pct(s.employee), employer: pct(s.employer) }
+                    }}</span>
+                  </td>
                 }
               </tr>
             }
           </tbody>
         </table>
       </div>
-      <p class="hint">{{ 'masters.table.note' | transloco }}</p>
-    } @else {
-      <p class="muted">{{ 'masters.table.noRates' | transloco: { month: monthLabel(month()) } }}</p>
-    }
-
-    <p class="hint">
-      @if (isKumiai()) {
-        {{ 'masters.table.kumiaiNote' | transloco }}
-      } @else {
-        {{ 'masters.table.kyokaiNote' | transloco }}
-      }
-    </p>
+      <p class="hint">
+        {{ 'masters.kumiai.where' | transloco }}
+        <a [routerLink]="['/o', context.current()?.id, 'settings']" fragment="sec-insurer">{{
+          'masters.kumiai.toInsurer' | transloco
+        }}</a>
+      </p>
+    </section>
   }
-</section>
-
-<!-- 組合の料率（組合健保だった時期がある事業所だけ） -->
-@if (!loading() && kumiai().length > 0) {
-  <section class="card" aria-labelledby="kumiai-title">
-    <h2 id="kumiai-title">{{ 'masters.kumiai.title' | transloco }}</h2>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">{{ 'masters.kumiai.from' | transloco }}</th>
-            <th scope="col" class="num">{{ 'masters.rate.health' | transloco }}</th>
-            <th scope="col" class="num">{{ 'masters.rate.care' | transloco }}</th>
-            <th scope="col" class="num">{{ 'masters.rate.childSupport' | transloco }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (k of kumiai(); track k.from) {
-            <tr>
-              <td>{{ monthLabel(k.from) }}</td>
-              @for (s of [k.health, k.care, k.childSupport]; track $index) {
-                <td class="num">
-                  {{ pct(total(s)) }}
-                  <span class="hint split">{{
-                    'masters.rate.split'
-                      | transloco: { employee: pct(s.employee), employer: pct(s.employer) }
-                  }}</span>
-                </td>
-              }
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-    <p class="hint">
-      {{ 'masters.kumiai.where' | transloco }}
-      <a [routerLink]="['/o', context.current()?.id, 'settings']" fragment="sec-insurer">{{
-        'masters.kumiai.toInsurer' | transloco
-      }}</a>
-    </p>
-  </section>
-}
+</div>

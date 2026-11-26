@@ -8,7 +8,6 @@ import type {
   RateSplit,
 } from '../../../../core/models/rates';
 import { PREFECTURES } from '../../../../core/master/prefectures';
-import { BackLink } from '../../../../shared/components/back-link/back-link';
 import { todayLocal, toYearMonth, YEAR_MONTH_RE } from '../../../../shared/utils/date';
 import { formatMilli } from '../../../premiums/logic/rounding';
 import { pickGradeTable } from '../../../rates/logic/grade';
@@ -33,7 +32,7 @@ interface RateLine {
  */
 @Component({
   selector: 'app-masters',
-  imports: [RouterLink, TranslocoPipe, BackLink, SettingsTabs],
+  imports: [RouterLink, TranslocoPipe, SettingsTabs],
   templateUrl: './masters.html',
   styleUrl: './masters.css',
 })

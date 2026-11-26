@@ -313,7 +313,7 @@ export const routes: Routes = withUnsavedGuard([
           {
             // 設定 › マスタ（給与・賞与の項目への入口、保険料額表と組合の料率の閲覧。11/26）
             path: 'settings/masters',
-            data: { backName: 'back.settings' },
+            data: { backName: 'back.settings', tabRoot: true }, // タブの切り替えは「前の画面」に積まない
             loadComponent: () =>
               import('./features/office/pages/masters/masters').then((m) => m.Masters),
           },

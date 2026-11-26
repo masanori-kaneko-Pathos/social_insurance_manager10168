@@ -1,3 +1,7 @@
+<!-- 事業所の設定の見出しとタブ：目次より上に置き、どのタブでも同じ位置（11/26） -->
+@if (isEdit) {
+  <app-settings-tabs />
+}
 <div class="layout with-toc" [class.standalone]="!isEdit">
   <!-- 目次（押すとその欄へ。11/13。はじめの登録の画面にも出す。11/16） -->
   <nav class="toc" [attr.aria-label]="'office.toc.label' | transloco">
@@ -7,9 +11,6 @@
   </nav>
 <div class="page">
   @if (isEdit) {
-    <app-back-link [fallback]="['/o', office()?.id]" fallbackName="back.home" />
-    <h1 id="sec-top">{{ 'office.form.titleEdit' | transloco }}</h1>
-    <app-settings-tabs />
     <p class="lead">
       {{ (readOnly ? 'office.form.readOnly' : 'office.form.leadEdit') | transloco }}
     </p>

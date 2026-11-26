@@ -101,3 +101,25 @@ tbody tr:hover td {
 .split {
   display: block;
 }
+
+/* 見出しとタブ（app-settings-tabs）と左の端をそろえる（11/26） */
+@media (min-width: 1001px) {
+  .body {
+    padding-left: var(--space-sm);
+  }
+}
+
+/* 額表は枠の中で縦横に送る（等級は50行・組合は列が多い）。見出しは2行まとめて枠の上に残す（11/26）
+   th ごとに貼り付けると2行目が1行目に重なるので、thead ごと貼り付ける */
+.table-wrap.scroll thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.table-wrap.scroll thead th {
+  position: static;
+  background: var(--color-surface);
+  border-bottom: 0;
+  box-shadow: inset 0 -1px 0 var(--color-border);
+}
