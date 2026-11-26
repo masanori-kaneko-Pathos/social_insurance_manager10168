@@ -1,5 +1,5 @@
 import { emptyPayrollInput } from '../../../core/models/payroll';
-import { candidateDays, PayrollRowText, readEntry, readRow, sameInput, sumPayrolls, textOf, totalOf } from './payroll-input';
+import { autoDaysText, candidateDays, PayrollRowText, readEntry, readRow, sameInput, sumPayrolls, textOf, totalOf } from './payroll-input';
 import { formatHours, parseHours, parseNat } from '../../../shared/utils/number';
 
 const blank = (): PayrollRowText => textOf(null);
@@ -174,5 +174,36 @@ describe('readEntry：内訳つきの1人分（11/24）', () => {
     // ひな形の行を並べただけ（金額なし）も内訳なし：総支給額の欄から読む
     const names = readEntry({ ...empty, cash: '200000', fixed: '200000', days: '30' }, [{ name: '基本給', category: 'base', amount: '' }], null, 30);
     expect(names.kind === 'ok' && names.input.cash).toBe(200000);
+  });
+});
+
+describe('自動の日数（11/26）', () => {
+  const t = (x: Partial<PayrollRowText> = {}): PayrollRowText => ({ ...textOf(null), cash: '300000', fixed: '300000', ...x });
+
+  it('日数が空なら、自動の日数で保存する', () => {
+    const r = readRow(t(), 31, 31);
+    expect(r.kind).toBe('ok');
+    if (r.kind === 'ok') expect(r.input.days).toBe(31);
+  });
+
+  it('日数を入れたら、その数で保存する', () => {
+    const r = readRow(t({ days: '28' }), 31, 31);
+    if (r.kind === 'ok') expect(r.input.days).toBe(28);
+    else fail('ok のはず');
+  });
+
+  it('自動にならない人（時給・日給・契約なし）は、日数が空なら入れてもらう', () => {
+    const r = readRow(t(), 31, null);
+    expect(r.kind === 'invalid' && r.errors).toEqual(['daysRequired']);
+  });
+
+  it('何も入れていない行は、自動の日数があっても保存しない', () => {
+    expect(readRow(textOf(null), 31, 31).kind).toBe('blank');
+  });
+
+  it('保存済みの日数が自動の日数と同じなら空欄で見せ、違えばそのまま', () => {
+    expect(autoDaysText(t({ days: '31' }), 31).days).toBe('');
+    expect(autoDaysText(t({ days: '28' }), 31).days).toBe('28');
+    expect(autoDaysText(t({ days: '31' }), null).days).toBe('31');
   });
 });

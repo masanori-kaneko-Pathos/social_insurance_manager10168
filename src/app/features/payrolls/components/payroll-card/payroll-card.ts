@@ -14,7 +14,7 @@ import { incomingParts, SpreadPart } from '../../logic/spread';
 import { PayrollEntry, PayrollRowForm } from '../payroll-entry/payroll-entry';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { daysInclusive, shiftMonth, todayLocal } from '../../../../shared/utils/date';
-import { candidateDays, PayrollRowText, readEntry, RowError, sameInput, textOf } from '../../logic/payroll-input';
+import { autoDaysText, candidateDays, PayrollRowText, readEntry, RowError, sameInput, textOf } from '../../logic/payroll-input';
 import { OfficeContext } from '../../../office/office-context.service';
 import { formatHours } from '../../../../shared/utils/number';
 import { employedDuring, latestPaidMonth, periodOf, suggestDays } from '../../logic/payroll-rows';
@@ -239,7 +239,10 @@ export class PayrollCard {
     if (!/^\d{4}-\d{2}$/.test(month)) return;
     const saved = this.savedOf(month);
     this.editMonth.set(month);
+    // 保存済みの日数が自動の日数と同じなら、空欄にして「31（自動）」と見せる（11/26）
     this.form = this.buildForm(textOf(saved));
+    const auto = this.candidate();
+    if (saved && auto !== null) this.form.controls.days.setValue(autoDaysText(textOf(saved), auto).days);
     // まだない月は、前の月の項目名 → 事業所のひな形 → アプリの例 を並べる
     // 内訳のある月はその行、ない月（新しい月・前のデータ）は、前の月の項目名 → 事業所の給与項目 → アプリの例 を並べる
     this.lines.set(saved?.lines ? toDrafts(saved.lines) : startDrafts(this.prevLinesOf(month), this.template(), this.payrollItems()));
@@ -255,7 +258,7 @@ export class PayrollCard {
     const office = this.context.current();
     const month = this.editMonth();
     if (!office || !month || this.saving()) return;
-    const r = readEntry(this.form.getRawValue(), this.lines(), this.payType(), this.editPeriodDays());
+    const r = readEntry(this.form.getRawValue(), this.lines(), this.payType(), this.editPeriodDays(), this.candidate());
     const before = this.editingSaved();
     if (r.kind === 'invalid') {
       this.errors.set(r.errors);

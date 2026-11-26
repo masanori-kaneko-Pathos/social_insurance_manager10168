@@ -29,6 +29,8 @@ export interface EntryCheckContext {
   contractChange: Direction | null;
   /** 時給・日給の人か */
   byUnit: boolean;
+  /** 雇用契約の所定内賃金（月給・日給月給の人だけ。ほかは null。11/26） */
+  scheduledWage?: number | null;
 }
 
 export interface EntryCheckInput {
@@ -97,4 +99,22 @@ function kindOf(x: EntryCheckInput): EntryCheckKind {
 /** 起算月になる種類か（この月から3か月の平均で確かめる） */
 export function startsHere(kind: EntryCheckKind): boolean {
   return kind === 'contract' || kind === 'up' || kind === 'down' || kind === 'inKind' || kind === 'retro';
+}
+
+/**
+ * 固定的賃金が、雇用契約の所定内賃金より少ない（11/26。保存はできる）
+ * - 所定内賃金は基本給と諸手当（通勤手当・家族手当などは入れない）。固定的賃金はそれらも含むので、
+ *   ふつうは 固定的賃金 ≧ 所定内賃金。少ないときは、契約が古い（賃金が下がったのに直していない）か、
+ *   固定的賃金の欄に別の額（欠勤控除のあとの額・基本給だけ など）を入れている
+ * - 比べられるのは欠勤控除の前の額だけ。内訳がなく欠勤日数が入っている月、日割りの月は比べない
+ * 少ないときは、比べた所定内賃金を返す（なければ null）
+ */
+export function belowContract(x: {
+  fixedBeforeDeduction: number | null;
+  scheduledWage: number | null | undefined;
+  prorated: boolean;
+}): number | null {
+  const w = x.scheduledWage ?? null;
+  if (w === null || w <= 0 || x.prorated || x.fixedBeforeDeduction === null) return null;
+  return x.fixedBeforeDeduction < w ? w : null;
 }

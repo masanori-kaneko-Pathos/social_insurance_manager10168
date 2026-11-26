@@ -10,7 +10,7 @@ import { EmployeeService } from '../../../employees/employee.service';
 import { ContractService } from '../../../employees/contract.service';
 import { contractAt } from '../../../employees/logic/contract-form-model';
 import { OfficeContext } from '../../../office/office-context.service';
-import { candidateDays, PayrollRowText, readEntry, RowError, sameInput, sumPayrolls, textOf } from '../../logic/payroll-input';
+import { autoDaysText, candidateDays, PayrollRowText, readEntry, RowError, sameInput, sumPayrolls, textOf } from '../../logic/payroll-input';
 import { allocateOtherMonths, categoryOf, copyNames, hasAmounts, LineDraft, startDrafts, toDrafts } from '../../logic/payroll-lines';
 import { incomingParts, SpreadPart } from '../../logic/spread';
 import { latestPaidMonth, onLeaveDuring, Period, PayrollRow, payrollRowsFor, periodOf } from '../../logic/payroll-rows';
@@ -319,6 +319,8 @@ export class PayrollMonth {
     try {
       const lists = await Promise.all(employees.map((e) => this.contractsApi.list(officeId, e.id)));
       this.contracts.set(new Map(employees.map((e, i) => [e.id, lists[i]])));
+      // 契約が読めてから、自動の日数と同じ保存済みの日数を「自動」に見せる
+      for (const v of this.views()) this.showAutoDays(v);
     } catch (err) {
       console.error(err); // 読めなくても入力はできる（絞り込みと日数の候補が出ないだけ）
     }
@@ -414,7 +416,18 @@ export class PayrollMonth {
     const form = this.buildForm(textOf(row.saved));
     if (!this.context.isAdmin()) form.disable();
     const lines = row.saved?.lines ? toDrafts(row.saved.lines) : null;
-    return { employee, row, form, lines: signal(lines) };
+    const v: ViewRow = { employee, row, form, lines: signal(lines) };
+    this.showAutoDays(v);
+    return v;
+  }
+
+  /** 保存済みの日数が自動の日数と同じなら、欄を空にして「31（自動）」と見せる（直している行は触らない。11/26） */
+  private showAutoDays(v: ViewRow): void {
+    if (v.form.dirty || !v.row.saved) return;
+    const c = this.candidate(v);
+    const t = v.form.controls.days.value;
+    const after = autoDaysText({ ...v.form.getRawValue(), days: t }, c).days;
+    if (after !== t) v.form.controls.days.setValue(after);
   }
 
   private buildForm(t: PayrollRowText): PayrollRowForm {
@@ -604,7 +617,8 @@ export class PayrollMonth {
   }
 
   /**
-   * 給与計算の基礎日数の候補（11/12：給与の形で分ける。11/25：ガイドブック (4) どおりに）
+   * 給与計算の基礎日数の自動の値（11/12：給与の形で分ける。11/25：ガイドブック (4) どおりに。11/26：候補から自動に）
+   * 日数の欄が空なら、この数で保存する
    * - 月給：在籍していた暦日数（欠勤を入れても引かない）
    * - 日給月給：欠勤がある月は「契約の月の所定労働日数 − 欠勤日数」、ない月は暦日数
    * - 時給・日給：候補は出さない（実際の出勤日数。有給休暇を含む）。契約が分からないときも出さない
@@ -616,18 +630,10 @@ export class PayrollMonth {
     return candidateDays(v.row.suggestedDays, v.form.controls.absentDays.value, pay, c?.monthlyDays ?? null);
   }
 
-  fillCandidate(v: ViewRow): void {
-    const c = this.candidate(v);
-    if (c !== null) {
-      v.form.controls.days.setValue(String(c));
-      v.form.markAsDirty();
-    }
-  }
-
   // ===== 支払基礎日数をまとめて入れる（見出しの窓。絞り込んだ人全員、ページをまたいで。11/13） =====
   readonly bulkOpen = signal(false);
   readonly bulkDays = signal('');
-  /** 空欄の人だけに入れる（初期値。入れた値を上書きしないように） */
+  /** 自分で日数を入れていない人（自動・空欄）だけに入れる（初期値。入れた値を上書きしないように） */
   readonly bulkEmptyOnly = signal(true);
   private readonly bulkWrap = viewChild<ElementRef<HTMLElement>>('bulkWrap');
 
@@ -655,12 +661,6 @@ export class PayrollMonth {
     this.bulkOpen.set(false);
   }
 
-  /** 月給・日給月給の人に、候補（在籍した暦日数 − 欠勤日数）を入れる。時給・日給の人には入れない */
-  applyBulkCandidate(): void {
-    for (const v of this.bulkTargets()) this.fillCandidate(v);
-    this.bulkOpen.set(false);
-  }
-
   onDocumentClick(event: MouseEvent): void {
     const el = this.bulkWrap()?.nativeElement;
     if (this.bulkOpen() && el && !el.contains(event.target as Node)) this.bulkOpen.set(false);
@@ -670,7 +670,7 @@ export class PayrollMonth {
 
   /** 1人分を読む（直していなければ null ＝ 変更なし） */
   private changeOf(v: ViewRow): { change: PayrollChange | null; errors: RowError[] } {
-    const r = readEntry(v.form.getRawValue(), v.lines(), this.contractOf(v)?.payType ?? null, this.daysOf(v));
+    const r = readEntry(v.form.getRawValue(), v.lines(), this.contractOf(v)?.payType ?? null, this.daysOf(v), this.candidate(v));
     const id = v.employee.id;
     if (r.kind === 'blank') {
       return { change: v.row.saved ? { employeeId: id, input: null, exists: true, before: v.row.saved } : null, errors: [] };

@@ -172,9 +172,6 @@
                         {{ 'payroll.bulk.apply' | transloco }}
                       </button>
                     </div>
-                    <button type="button" class="btn btn-small" (click)="applyBulkCandidate()">
-                      {{ 'payroll.bulk.candidate' | transloco }}
-                    </button>
                     <p class="bulk-note">{{ 'payroll.bulk.note' | transloco }}</p>
                   </div>
                 }
@@ -233,7 +230,10 @@
             </td>
             <td class="num">{{ yenOf(v.form.controls.cash.value) }}</td>
             <td class="num">{{ fixedText(v) }}</td>
-            <td class="num">{{ v.form.controls.days.value || '—' }}</td>
+            @let auto = candidate(v);
+            <td class="num" [class.auto-days]="!v.form.controls.days.value && auto !== null">
+              {{ v.form.controls.days.value || (auto !== null ? ('payroll.autoDays' | transloco: { days: auto }) : '—') }}
+            </td>
             <td>
               @switch (status(v)) {
                 @case ('saved') { <span class="badge badge-sub">{{ 'payroll.status.saved' | transloco }}</span> }

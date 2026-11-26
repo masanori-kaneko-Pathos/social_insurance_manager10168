@@ -900,6 +900,10 @@
       },
       "dataName": "Employee data",
       "exportName": "Employee data list"
+    },
+    "dateNote": {
+      "acquiredNotHire": "The acquisition date differs from the hire date. If the employee met the coverage conditions after joining (for example, their scheduled hours increased), you can leave it as it is.",
+      "lostNotRetireNext": "The loss date is not the day after the retirement date. If coverage ended earlier because of age or another reason, you can leave it as it is."
     }
   },
   "office": {
@@ -1824,7 +1828,6 @@
     "showAll": "Show more input fields",
     "showBasic": "Show fewer input fields",
     "fillEmptyDays": "Fill empty days for monthly and daily-monthly paid employees",
-    "candidate": "Use {{days}}",
     "candidateTitle": "Calendar days employed for monthly pay; for daily-monthly pay with absences, scheduled days minus absences",
     "save": "Save",
     "saving": "Saving…",
@@ -1887,7 +1890,7 @@
       "cash": "Amount paid in money: the \"amount paid in money\" column of the notification of change in monthly remuneration and the base calculation notification. It includes the commuting allowance (even the tax-free part) and is after absence deductions. Do not include payments that are not remuneration, such as actual travel expenses or condolence money. Not the net pay.",
       "fixed": "Fixed wages (used to detect SMR revisions): pay with a set rate or amount, such as base pay, position allowance and commuting allowance (including hourly rate × hours and daily rate × days). Non-fixed wages: pay that depends on the month, such as overtime, attendance allowance and commission. With a breakdown, these are calculated from the categories. A revision candidate appears when fixed wages (before absence deductions) change for monthly-paid people, or when the contract rate or scheduled hours change for hourly or daily-paid people.",
       "inKind": "Remuneration provided in kind (現物給与): company housing, dormitories and meals are converted to yen with the value set by the government for each prefecture, minus what the employee pays (different from the tax valuation). Use \"Calculate\" for meals and housing. If you hand over a commuter pass or coupon tickets, enter their value here too.",
-      "days": "Days for pay calculation (payment basis days): for monthly pay, the calendar days (30, 31 and so on) regardless of days worked. For daily-monthly pay where absences are deducted, only in months with absences, the company's set number of days minus absences. For daily or hourly pay, the days actually worked (including paid leave). The suggestion appears under the field when a different number is entered.",
+      "days": "Base days for payroll: for monthly paid employees, the calendar days (30, 31, etc.) regardless of attendance. For daily-monthly paid employees whose pay is reduced for absences, the company's scheduled days minus absent days, only in months with absences. These two are filled in automatically (\"31 (auto)\"). Enter a number only when you need different days. For daily and hourly paid employees, enter the actual days worked (including paid leave).",
       "blank": "Empty rows are not saved. Clearing a saved row and saving deletes that month's record.",
       "hours": "Hours worked: scheduled hours plus overtime within the legal limits (up to 8 hours a day and 40 a week), as \"160:30\" (160 hours 30 minutes) or \"160.5\". Do not include overtime beyond the legal limits.",
       "inKindMerged": "In months marked \"Not itemized\", in-kind remuneration is included in the amount paid in money (the imported file had no in-kind column). Totals and premiums are still correct, but changes in in-kind remuneration (such as moving into company housing) cannot be detected, so enter the in-kind amount with \"Enter separately\" when you know it.",
@@ -1912,11 +1915,10 @@
     "workedDaysTitle": "For hourly or daily pay, the days for pay calculation are the days actually worked, including paid leave.",
     "bulk": {
       "title": "Fill in for the {{n}} people shown",
-      "emptyOnly": "Only where empty",
+      "emptyOnly": "Only for people whose days you have not entered yourself",
       "daysUnit": "days",
       "apply": "Fill in",
-      "candidate": "Enter the suggested days for monthly and daily-monthly paid people",
-      "note": "The suggestion is the calendar days employed for monthly pay, or scheduled days minus absences for daily-monthly pay in months with absences. Hourly and daily-paid people are skipped. The days are saved with \"Save\"."
+      "note": "For monthly and daily-monthly paid employees, the days are saved automatically if you leave them blank (calendar days employed, or scheduled days minus absent days for daily-monthly pay in months with absences). Days entered here are saved when you press Save."
     },
     "next": {
       "premiums": "See the premiums deducted from the {{paid}} pay (for month {{month}})",
@@ -1957,7 +1959,8 @@
     },
     "monthsTitle": "Pay by month",
     "monthsLead": "See the pay total and the number of people not entered for each pay month. Click a pay month to enter that month's pay.",
-    "toMonths": "All months"
+    "toMonths": "All months",
+    "autoDays": "{{days}} (auto)"
   },
   "regular": {
     "title": "Annual SMR determination {{year}} (定時決定, teiji kettei)",
@@ -2584,6 +2587,9 @@
       "load": "Could not load dependents.",
       "save": "Could not save.",
       "delete": "Could not delete."
+    },
+    "warning": {
+      "fromBeforeHire": "This is before the hire date ({{date}}). A dependent can be covered from the date the employee acquires health insurance at the earliest (you can still save)."
     }
   },
   "revision": {
@@ -4171,7 +4177,8 @@
         "plain": "Fixed wages",
         "beforeDeduction": "Fixed wages (before absence deductions)",
         "withoutBase": "Fixed wages (excluding hourly or daily pay × time)"
-      }
+      },
+      "belowContract": "The fixed wages are lower than the scheduled wage in the employment contract ({{amount}} yen). Check whether the contract is out of date, or whether you entered an amount after absence deductions or only the base salary."
     },
     "spread": {
       "row": "{{name}} (paid in month {{m}}, month {{nth}} of {{months}})",

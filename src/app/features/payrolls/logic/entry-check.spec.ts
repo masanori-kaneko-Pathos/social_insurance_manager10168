@@ -1,4 +1,4 @@
-import { entryCheck, EntryCheckInput, startsHere } from './entry-check';
+import { belowContract, entryCheck, EntryCheckInput, startsHere } from './entry-check';
 
 const base = (x: Partial<EntryCheckInput> = {}): EntryCheckInput => ({
   byUnit: false,
@@ -69,5 +69,21 @@ describe('entryCheck：この入力で決まること（11/26）', () => {
   it('起算月になる種類', () => {
     expect(['contract', 'up', 'down', 'inKind', 'retro'].every((k) => startsHere(k as never))).toBeTrue();
     expect(['empty', 'prorated', 'byContract', 'noPrev', 'same'].some((k) => startsHere(k as never))).toBeFalse();
+  });
+});
+
+describe('belowContract（固定的賃金と契約の所定内賃金）', () => {
+  it('所定内賃金より少ないと、その所定内賃金を返す', () => {
+    expect(belowContract({ fixedBeforeDeduction: 280000, scheduledWage: 300000, prorated: false })).toBe(300000);
+  });
+  it('同じか多い（通勤手当・家族手当を含むので多いのがふつう）なら null', () => {
+    expect(belowContract({ fixedBeforeDeduction: 300000, scheduledWage: 300000, prorated: false })).toBeNull();
+    expect(belowContract({ fixedBeforeDeduction: 315000, scheduledWage: 300000, prorated: false })).toBeNull();
+  });
+  it('日割りの月・欠勤控除の前の額が分からない月・契約がない（時給の人を含む）ときは比べない', () => {
+    expect(belowContract({ fixedBeforeDeduction: 150000, scheduledWage: 300000, prorated: true })).toBeNull();
+    expect(belowContract({ fixedBeforeDeduction: null, scheduledWage: 300000, prorated: false })).toBeNull();
+    expect(belowContract({ fixedBeforeDeduction: 150000, scheduledWage: null, prorated: false })).toBeNull();
+    expect(belowContract({ fixedBeforeDeduction: 150000, scheduledWage: undefined, prorated: false })).toBeNull();
   });
 });

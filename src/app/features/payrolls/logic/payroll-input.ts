@@ -72,15 +72,18 @@ function isBlank(t: PayrollRowText): boolean {
   );
 }
 
-/** 1行を読む。支払額・固定的賃金・日数は必須、現物・遡及は空欄なら 0、欠勤・時間は空欄なら null */
-export function readRow(t: PayrollRowText, periodDays: number): RowResult {
+/**
+ * 1行を読む。支払額・固定的賃金は必須、現物・遡及は空欄なら 0、欠勤・時間は空欄なら null
+ * 日数：空欄なら autoDays（月給・日給月給の人の自動の日数。11/26）。自動にならない人（時給・日給・契約なし）は必須
+ */
+export function readRow(t: PayrollRowText, periodDays: number, autoDays: number | null = null): RowResult {
   if (isBlank(t)) return { kind: 'blank' };
 
   const cash = parseNat(t.cash);
   const fixed = parseNat(t.fixed);
   const inKind = t.inKindMerged ? null : parseNat(t.inKind);
   const retro = parseNat(t.retro);
-  const days = parseNat(t.days);
+  const days = t.days.trim() === '' && autoDays !== null ? autoDays : parseNat(t.days);
   const absentDays = parseNat(t.absentDays);
   const workMinutes = parseHours(t.hours);
 
@@ -134,20 +137,35 @@ export function sameInput(a: PayrollInput, b: PayrollInput): boolean {
  * - 内訳がある：行を読み、総支給額・固定的賃金・昇給差額は内訳から出す（文字の欄は使わない）。
  *   読めない行・分類が決まっていない行があれば 'lines'（行ごとの誤りは readLines で画面に出す）
  */
-export function readEntry(t: PayrollRowText, drafts: readonly LineDraft[] | null, payType: PayType | null, periodDays: number): RowResult {
+export function readEntry(
+  t: PayrollRowText,
+  drafts: readonly LineDraft[] | null,
+  payType: PayType | null,
+  periodDays: number,
+  autoDays: number | null = null,
+): RowResult {
   // 金額が1つも入っていなければ内訳なし（ひな形の行を並べただけの月は、今までどおり総支給額の欄から読む）
-  if (!hasAmounts(drafts)) return readRow(t, periodDays);
+  if (!hasAmounts(drafts)) return readRow(t, periodDays, autoDays);
   const r = readLines(drafts!);
   if (!r.lines) return { kind: 'invalid', errors: ['lines'] };
   const tot = totalsOf(r.lines, payType);
   const n = (v: number) => (v === 0 ? '' : String(v));
-  const row = readRow({ ...t, cash: String(tot.cash), fixed: String(tot.fixed), retro: n(tot.retro) }, periodDays);
+  const row = readRow({ ...t, cash: String(tot.cash), fixed: String(tot.fixed), retro: n(tot.retro) }, periodDays, autoDays);
   if (row.kind !== 'ok') return row;
   return { kind: 'ok', input: { ...row.input, lines: r.lines, fixedFull: tot.fixedFull } };
 }
 
 /**
- * 日数（給与計算の基礎日数）の候補（11/25 に算定基礎届の記入・提出ガイドブック「(4) 支払基礎日数とは」どおりに直した）
+ * 保存済みの日数が、今の自動の日数と同じなら空欄にする（開いたときに「31（自動）」と見せるため。11/26）
+ * 自動かどうかの印は保存しない。保存した日数と、今の自動の日数が同じなら自動として扱う
+ */
+export function autoDaysText(t: PayrollRowText, autoDays: number | null): PayrollRowText {
+  if (autoDays === null || t.days.trim() === '' || Number(t.days) !== autoDays) return t;
+  return { ...t, days: '' };
+}
+
+/**
+ * 日数（給与計算の基礎日数）の自動の値（11/25 に算定基礎届の記入・提出ガイドブック「(4) 支払基礎日数とは」どおりに直した）
  * - 月給：出勤日数に関係なく、在籍していた暦日数（欠勤を入れても引かない）
  * - 日給月給（欠勤日数分だけ給料を引く）：欠勤がある月は「事業所が定めた日数（契約の月の所定労働日数）− 欠勤日数」、
  *   欠勤がない月は暦日数

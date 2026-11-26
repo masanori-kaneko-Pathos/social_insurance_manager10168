@@ -351,6 +351,9 @@
           <label for="dp-from">{{ 'dependent.field.from' | transloco }}<span class="req" aria-hidden="true">※</span></label>
           <input id="dp-from" class="input" type="date" formControlName="from" [class.is-invalid]="errorOf('from')" />
           @if (errorOf('from'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          @if (!errorOf('from') && fromBeforeHire()) {
+            <p class="hint warn">{{ 'dependent.warning.fromBeforeHire' | transloco: { date: employee().hireDate } }}</p>
+          }
           @for (c of fromCandidates(); track c.key) {
             <button type="button" class="candidate" (click)="useFrom(c.date)">
               {{ 'dependent.candidate.from_' + c.key | transloco: { date: c.date } }}

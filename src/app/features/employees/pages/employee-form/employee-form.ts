@@ -24,6 +24,7 @@ import {
 import type { Employee } from '../../../../core/models/employee';
 import { EmployeeDeleteCard } from '../../components/employee-delete-card/employee-delete-card';
 import { addDays, todayLocal } from '../../../../shared/utils/date';
+import { EnrollmentNote, enrollmentNotes } from '../../logic/enrollment-notes';
 import { toHalfWidth } from '../../../../shared/utils/text';
 import { OfficeContext } from '../../../office/office-context.service';
 import { ToastService } from '../../../../shared/services/toast.service';
@@ -606,6 +607,9 @@ export class EmployeeForm {
       }
     }
     const c = this.form.controls;
+    // 資格取得日・資格喪失日の注意（入社日・退職日の翌日と違うとき。保存はできる。11/26）
+    this.form.valueChanges.subscribe(() => this.syncEnrollmentNotes());
+    this.syncEnrollmentNotes();
     c.hasForeign.valueChanges.subscribe((v) => this.foreignOn.set(v));
     c.hireDate.valueChanges.subscribe((hire) => {
       this.syncAcquired(hire);
@@ -659,6 +663,18 @@ export class EmployeeForm {
         ? { country: f.certCountry.trim().toUpperCase(), from: f.certFrom, to: f.certTo || null, covers: f.certCovers }
         : null,
     );
+  }
+
+  readonly enrollmentNotes = signal<Record<'health' | 'pension', EnrollmentNote[]>>({ health: [], pension: [] });
+  hasEnrollmentNote(k: string, note: EnrollmentNote): boolean {
+    return (k === 'health' || k === 'pension') && this.enrollmentNotes()[k].includes(note);
+  }
+  private syncEnrollmentNotes(): void {
+    const v = this.form.getRawValue();
+    this.enrollmentNotes.set({
+      health: enrollmentNotes(v.hireDate, v.retireDate, v.health),
+      pension: enrollmentNotes(v.hireDate, v.retireDate, v.pension),
+    });
   }
 
   private syncAcquired(value: string): void {

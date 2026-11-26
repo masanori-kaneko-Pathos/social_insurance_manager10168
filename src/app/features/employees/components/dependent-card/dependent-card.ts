@@ -122,6 +122,13 @@ export class DependentCard implements OnInit {
     return out;
   });
 
+  /** 扶養に入った日が入社日より前（保存はできる。取り込みの注意と同じ決まり。11/26） */
+  readonly fromBeforeHire = computed(() => {
+    const from = this.value().from;
+    const hire = this.employee().hireDate;
+    return !!from && !!hire && from < hire;
+  });
+
   /** 入力中の判定（扶養に入った日の時点） */
   readonly preview = computed<DependentCheck | null>(() => {
     const input = fromDependentForm(this.value());

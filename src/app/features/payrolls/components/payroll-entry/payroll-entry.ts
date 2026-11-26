@@ -10,7 +10,7 @@ import { toHalfWidth } from '../../../../shared/utils/text';
 import { categoryOf, FOR_MONTH_CATEGORIES, hasAmounts, itemKey, itemNames, LineDraft, readAmount, readLines, startDrafts, totalsOf } from '../../logic/payroll-lines';
 import { shiftMonth } from '../../../../shared/utils/date';
 import type { RowError } from '../../logic/payroll-input';
-import { entryCheck, EntryCheckContext, EntryCheckKind, startsHere } from '../../logic/entry-check';
+import { belowContract, entryCheck, EntryCheckContext, EntryCheckKind, startsHere } from '../../logic/entry-check';
 import { incomingDelta, nthMonthOf, partsOf, SpreadPart, SPREAD_CATEGORIES, SPREAD_CHOICES } from '../../logic/spread';
 
 /** 「この入力で決まること」に出すもの */
@@ -31,6 +31,8 @@ export interface EntryCheckView {
   standard: { same: string | null; health: string | null; pension: string | null } | null;
   /** 3か月の支払月（「11月・12月・1月払い」の材料） */
   months: string;
+  /** 固定的賃金が契約の所定内賃金より少ないとき、その所定内賃金（円の文字。少なくなければ null。11/26） */
+  contractWage: string | null;
 }
 
 /** 1人分の入力の文字（月の表の行と同じ形。cash・fixed・retro は内訳があれば内訳から入る） */
@@ -49,7 +51,6 @@ export type PayrollRowForm = FormGroup<{
 }>;
 
 /** 日数の候補の一覧（datalist）の id に付ける番号 */
-let entrySeq = 0;
 
 /**
  * 給与明細の内訳を入れる（1人・1か月分。11/24）
@@ -70,10 +71,8 @@ export class PayrollEntry implements OnInit {
   readonly lines = model<LineDraft[] | null>(null);
   readonly items = input<readonly PayrollItemInput[]>([]);
   readonly payType = input<PayType | null>(null);
-  /** 支払基礎日数の候補（月給の人だけ） */
+  /** 支払基礎日数の自動の値（月給・日給月給の人だけ。日数の欄が空のとき、この数で保存する） */
   readonly candidate = input<number | null>(null);
-  /** 日数の候補の一覧（datalist）の id。同じ画面に部品が2つあってもぶつからないように */
-  readonly daysListId = `days-candidate-${++entrySeq}`;
   /** 前の月の内訳（項目名を写す。なければ出さない） */
   readonly prevLines = input<readonly PayrollLine[] | null>(null);
   readonly canEdit = input(true);
@@ -317,7 +316,7 @@ export class PayrollEntry implements OnInit {
       retro: lines ? t.retro : (n(c.retro.value) ?? 0),
       prorated: !!c.prorated.value,
       contractChange: ctx.contractChange,
-      days: n(c.days.value),
+      days: n(c.days.value) ?? this.candidate(),
       minDays: ctx.minDays,
     });
     const s = ctx.standard;
@@ -326,6 +325,13 @@ export class PayrollEntry implements OnInit {
     // 日割りの月は次の月から数える
     const first = pm ? (r.kind === 'prorated' ? shiftMonth(pm, 1) : pm) : null;
     const months = first ? [0, 1, 2].map((i) => `${Number(shiftMonth(first, i).slice(5))}`).join('・') : '';
+    // 契約の所定内賃金より少ない（欠勤控除の前の額で比べる。内訳がないときは欠勤日数が空の月だけ）
+    const absent = n(c.absentDays.value);
+    const below = belowContract({
+      fixedBeforeDeduction: lines || !absent ? fixedNow : null,
+      scheduledWage: ctx.scheduledWage,
+      prorated: !!c.prorated.value,
+    });
     const fixedLabel = !lines ? 'plain' : ctx.byUnit ? 'withoutBase' : t.fixedFull !== t.fixed ? 'beforeDeduction' : 'plain';
     return {
       kind: r.kind,
@@ -341,6 +347,7 @@ export class PayrollEntry implements OnInit {
           : { same: null, health: yenOrNull(s.health), pension: yenOrNull(s.pension) }
         : null,
       months,
+      contractWage: below === null ? null : this.yen(below),
     };
   }
 
@@ -448,21 +455,6 @@ export class PayrollEntry implements OnInit {
   /** 控除の行は「−」を付けて見せる（入れるのは正の数でよい） */
   isMinus(d: LineDraft): boolean {
     return d.category === 'deduction';
-  }
-
-  /** 支払基礎日数が候補と違う（月給の人。勤務日数を入れる間違いに気づけるように） */
-  daysOff(): number | null {
-    const c = this.candidate();
-    const t = this.form().controls.days.value.trim();
-    if (c === null || t === '') return null;
-    return Number(toHalfWidth(t)) === c ? null : c;
-  }
-
-  fillCandidate(): void {
-    const c = this.candidate();
-    if (c === null) return;
-    this.form().controls.days.setValue(String(c));
-    this.form().markAsDirty();
   }
 
   /** 「内訳なし」の現物を、分けて入れる */

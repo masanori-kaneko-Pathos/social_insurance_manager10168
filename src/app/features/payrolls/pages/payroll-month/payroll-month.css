@@ -728,3 +728,8 @@ tr.clickable:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: -2px;
 }
+
+/* 自動の日数（自分で入れていない月給・日給月給の人。11/26） */
+.auto-days {
+  color: var(--color-text-sub);
+}

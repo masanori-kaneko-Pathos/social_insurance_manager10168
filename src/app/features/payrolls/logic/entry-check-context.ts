@@ -49,12 +49,15 @@ export function entryCheckContextOf(x: EntryCheckSource): EntryCheckContext {
   const minDays = dayRulesOf({ employee: x.employee, contracts }, ctx).minDaysAt(x.month);
   const rem = standardAt(x.remunerations, x.premiumMonth);
   const current = contractAt(withPay, periodOf(x.month, x.schedule).end);
+  const full = contractAt(contracts, periodOf(x.month, x.schedule).end);
+  const monthlyPaid = full?.payType === 'monthly' || full?.payType === 'dailyMonthly';
   return {
     prev: x.prev ? { fixed: x.prev.fixed, fixedFull: x.prev.fixedFull ?? null, inKind: x.prev.inKind } : null,
     standard: rem ? { health: rem.health?.standard ?? null, pension: rem.pension?.standard ?? null } : null,
     minDays,
     contractChange: change?.direction ?? null,
     byUnit: current?.payType === 'hourly' || current?.payType === 'daily',
+    scheduledWage: monthlyPaid ? (full?.scheduledWage ?? null) : null,
   };
 }
 

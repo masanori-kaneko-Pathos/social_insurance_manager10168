@@ -574,6 +574,9 @@
                 @if (groupError(k + 'AcquiredRequired', k + '.acquiredDate')) {
                   <span class="field-error">{{ 'employee.validation.required' | transloco }}</span>
                 }
+                @if (hasEnrollmentNote(k, 'acquiredNotHire')) {
+                  <p class="hint warn">{{ 'employee.dateNote.acquiredNotHire' | transloco }}</p>
+                }
               </div>
               <div class="field">
                 <label [for]="k + 'Lost'">
@@ -583,6 +586,9 @@
                        [class.is-invalid]="groupError(k + 'LostBeforeAcquired', k + '.lostDate')" />
                 @if (groupError(k + 'LostBeforeAcquired', k + '.lostDate')) {
                   <span class="field-error">{{ 'employee.validation.lostBeforeAcquired' | transloco }}</span>
+                }
+                @if (hasEnrollmentNote(k, 'lostNotRetireNext')) {
+                  <p class="hint warn">{{ 'employee.dateNote.lostNotRetireNext' | transloco }}</p>
                 }
               </div>
               @if (form.get(k + '.lostDate')?.value) {
