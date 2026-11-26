@@ -9,7 +9,8 @@ import { ContractDoc, PayType } from '../../../../core/models/contract';
 import { ContractService } from '../../../employees/contract.service';
 import { contractAt } from '../../../employees/logic/contract-form-model';
 import { PayrollItemService } from '../../payroll-item.service';
-import { categoryOf, hasAmounts, LineDraft, startDrafts, toDrafts } from '../../logic/payroll-lines';
+import { allocateOtherMonths, categoryOf, hasAmounts, LineDraft, startDrafts, toDrafts } from '../../logic/payroll-lines';
+import { incomingParts, SpreadPart } from '../../logic/spread';
 import { PayrollEntry, PayrollRowForm } from '../payroll-entry/payroll-entry';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { daysInclusive, shiftMonth, todayLocal } from '../../../../shared/utils/date';
@@ -165,8 +166,21 @@ export class PayrollCard {
       contracts: this.contracts(),
       criteria,
       remunerations: rems,
-      prev: this.savedOf(shiftMonth(m, -1)),
+      // 前の月の額は、前の月までの定期代を割り振った額（この月と同じ数え方で比べる。11/26）
+      prev: this.allocated().get(shiftMonth(m, -1)) ?? null,
     });
+  });
+
+  /** 支払月 → 実績（入力中の月は除く。保存済みの値で割り振る） */
+  private readonly byMonth = computed(() => {
+    const m = this.editMonth();
+    return new Map(this.all().filter((p) => p.paidMonth !== m).map((p): [string, Payroll] => [p.paidMonth, p]));
+  });
+  private readonly allocated = computed(() => allocateOtherMonths(this.byMonth()).payrolls);
+  /** 前の月にまとめて払った定期代のうち、入力中の月に割り振る分（11/26） */
+  readonly spreadIn = computed<readonly SpreadPart[]>(() => {
+    const m = this.editMonth();
+    return m ? incomingParts(this.byMonth(), m) : [];
   });
 
   /** 今の項目名の並びを、事業所のひな形にする */

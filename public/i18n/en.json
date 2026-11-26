@@ -1876,7 +1876,7 @@
       "list": "\"Not entered\" counts employees insured during the pay period whose pay has not been entered yet (only months whose pay day has passed).",
       "cash": "Amount paid in money: the \"amount paid in money\" column of the notification of change in monthly remuneration and the base calculation notification. It includes the commuting allowance (even the tax-free part) and is after absence deductions. Do not include payments that are not remuneration, such as actual travel expenses or condolence money. Not the net pay.",
       "fixed": "Fixed wages (used to detect SMR revisions): pay with a set rate or amount, such as base pay, position allowance and commuting allowance (including hourly rate × hours and daily rate × days). Non-fixed wages: pay that depends on the month, such as overtime, attendance allowance and commission. With a breakdown, these are calculated from the categories. A revision candidate appears when fixed wages (before absence deductions) change for monthly-paid people, or when the contract rate or scheduled hours change for hourly or daily-paid people.",
-      "inKind": "Remuneration provided in kind (現物給与): company housing, dormitories and meals are converted to yen with the value set by the government for each prefecture, minus what the employee pays (different from the tax valuation). Use \"Calculate\" for meals and housing.",
+      "inKind": "Remuneration provided in kind (現物給与): company housing, dormitories and meals are converted to yen with the value set by the government for each prefecture, minus what the employee pays (different from the tax valuation). Use \"Calculate\" for meals and housing. If you hand over a commuter pass or coupon tickets, enter their value here too.",
       "days": "Days for pay calculation (payment basis days): for monthly pay, the calendar days (30, 31 and so on) regardless of days worked. For daily-monthly pay where absences are deducted, only in months with absences, the company's set number of days minus absences. For daily or hourly pay, the days actually worked (including paid leave). The suggestion appears under the field when a different number is entered.",
       "blank": "Empty rows are not saved. Clearing a saved row and saving deletes that month's record.",
       "hours": "Hours worked: scheduled hours plus overtime within the legal limits (up to 8 hours a day and 40 a week), as \"160:30\" (160 hours 30 minutes) or \"160.5\". Do not include overtime beyond the legal limits.",
@@ -1929,7 +1929,7 @@
     },
     "otherMonth": {
       "moved": "Allocated {{n}}",
-      "movedTitle": "Forgotten or miscalculated pay settled later, allocated to its original month. It differs from the payroll screen (amounts actually paid) by this amount.",
+      "movedTitle": "Settled forgotten or miscalculated pay, or a commuter pass paid for several months, allocated to each month. It differs from the payroll screen (amounts actually paid) by this amount.",
       "unplaced": "Unallocated settlements: {{n}}",
       "unplacedTitle": "There is no payroll record for the original month ({{months}}), so the amount is counted in the month it was paid. Enter that month to allocate it.",
       "noTarget": "There is no payroll record for {{y}}-{{m}}, so this cannot be allocated (it is counted in this month). Enter that month to allocate it."
@@ -1938,7 +1938,8 @@
     "progress": {
       "label": "Pay for month {{m}}",
       "value": "Entered {{saved}} / {{total}}",
-      "start": "Start with the first person not entered"
+      "start": "Start with the first person not entered",
+      "fromFile": "Import from a file"
     },
     "done": {
       "title": "Pay for month {{m}} is entered for everyone.",
@@ -4046,9 +4047,11 @@
       "fromLines": "The fields above are calculated from the lines.",
       "forMonth": "Original month",
       "forOption": "Paid {{y}}-{{m}}",
-      "forMonthNote": "For settled forgotten pay, choose the month it was due in \"Original month\"; for a retroactive raise, use the \"Retroactive pay\" category.",
+      "forMonthNote": "For settled forgotten pay, choose the month it was due in \"Original month\"; for a retroactive raise, use the \"Retroactive pay\" category. For a 3- or 6-month commuter pass paid at once, choose \"3 months\" or \"6 months\" on the commuting allowance line.",
       "forOptionShort": "Paid in month {{m}}",
-      "lead": "Enter the lines in the earnings section of the payslip from the top. Do not enter the deductions section (taxes, social insurance, and so on)."
+      "lead": "Enter the lines in the earnings section of the payslip from the top. Do not enter the deductions section (taxes, social insurance, and so on).",
+      "forMonthOrSpread": "Original month or months covered",
+      "spreadOption": "{{n}} months"
     },
     "side": {
       "days": "Days and hours",
@@ -4074,7 +4077,10 @@
       "total": "Total (money + in kind): ¥{{total}}",
       "merged": "Total: ¥{{total}} (in-kind remuneration is included in the amount paid in money)",
       "otherMonth": "Of which, allocated to original months: ¥{{amount}}",
-      "note": "This is used as the monthly remuneration."
+      "note": "This is used as the monthly remuneration.",
+      "spreadLater": "Of which, commuter pass for later months: ¥{{amount}}",
+      "spreadIn": "Monthly share of a commuter pass paid earlier: ¥{{amount}}",
+      "remuneration": "Used as this month's remuneration: ¥{{amount}} (a commuter pass paid for several months is divided by the months, starting from the month paid)"
     },
     "add": "Enter pay",
     "check": {
@@ -4105,6 +4111,10 @@
         "beforeDeduction": "Fixed wages (before absence deductions)",
         "withoutBase": "Fixed wages (excluding hourly or daily pay × time)"
       }
+    },
+    "spread": {
+      "row": "{{name}} (paid in month {{m}}, month {{nth}} of {{months}})",
+      "amount": "¥{{amount}}"
     }
   },
   "filing": {

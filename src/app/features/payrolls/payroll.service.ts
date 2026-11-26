@@ -173,6 +173,20 @@ export class PayrollService {
   }
 
   /**
+   * 1人の、選んだ月の分だけ（支払月 → 実績。1か月 ＝ 1回の読み込み。11/26）
+   * 内訳を開いたとき・月額変更届を書くときに使う（月ごとの問い合わせは、その月の全員分を読んでしまうため）
+   */
+  async ofEmployeeMonths(officeId: string, employeeId: string, months: readonly string[]): Promise<Map<string, Payroll>> {
+    const unique = [...new Set(months)];
+    const snaps = await Promise.all(unique.map((m) => countedGetDoc(doc(this.col(officeId, employeeId), m))));
+    const map = new Map<string, Payroll>();
+    snaps.forEach((snap, i) => {
+      if (snap.exists()) map.set(unique[i], this.strip(snap.data()));
+    });
+    return map;
+  }
+
+  /**
    * 事業所の全員の、選んだ月の分だけ（定時決定・CSV の取り込みと出力で使う。11/16）
    * 全部を読むと、年数がたつほど読み込みが増える（1000人 × 5年 ＝ 6万回）。画面で使う月は決まっているので、その月だけ読む
    * in は1回に30個までなので、30か月ずつに分ける

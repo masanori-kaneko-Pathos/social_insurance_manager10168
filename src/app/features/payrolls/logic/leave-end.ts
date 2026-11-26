@@ -15,6 +15,7 @@ import { payTotal, type Payroll } from '../../../core/models/payroll';
 import { addDays, ageAt, shiftMonth, toYearMonth } from '../../../shared/utils/date';
 import { endOf } from '../../employees/logic/leave';
 import { GradeRows, Remuneration } from './regular';
+import { forWindow } from './spread';
 import {
   averageOfMonths,
   Average,
@@ -93,9 +94,11 @@ export function judgeLeaveEnd(x: LeaveEndInput): LeaveEndResult | null {
   const next = addDays(end, 1);
   const startMonth = toYearMonth(next);
   const revisedFrom = shiftMonth(startMonth, 3);
+  // まとめて払った定期代の全部が3か月に入るときは、総額が変わらないように割り振る（月額変更届 15。11/26）
+  const pays = forWindow(x.payrolls, [0, 1, 2].map((i) => shiftMonth(startMonth, i)));
   const months: RevisionMonth[] = [0, 1, 2].map((i) => {
     const month = shiftMonth(startMonth, i);
-    const payroll = x.payrolls.get(month) ?? null;
+    const payroll = pays.get(month) ?? null;
     const minDays = x.minDaysAt(month);
     return {
       month,

@@ -151,6 +151,23 @@ tr.line-err span + span::before {
   content: '・';
 }
 
+/* 前の月にまとめて払った定期代の、この月の分（読み取りだけ。行と同じ並びで、色を薄く。11/26） */
+.spread-in {
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}
+
+.spread-in li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: 4px 6px;
+  border-bottom: 1px dashed var(--color-border);
+}
+
 .line-tools {
   display: flex;
   flex-wrap: wrap;

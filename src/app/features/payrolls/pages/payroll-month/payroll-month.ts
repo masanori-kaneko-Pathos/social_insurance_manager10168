@@ -11,7 +11,8 @@ import { ContractService } from '../../../employees/contract.service';
 import { contractAt } from '../../../employees/logic/contract-form-model';
 import { OfficeContext } from '../../../office/office-context.service';
 import { candidateDays, PayrollRowText, readEntry, RowError, sameInput, sumPayrolls, textOf } from '../../logic/payroll-input';
-import { categoryOf, copyNames, hasAmounts, LineDraft, startDrafts, toDrafts } from '../../logic/payroll-lines';
+import { allocateOtherMonths, categoryOf, copyNames, hasAmounts, LineDraft, startDrafts, toDrafts } from '../../logic/payroll-lines';
+import { incomingParts, SpreadPart } from '../../logic/spread';
 import { latestPaidMonth, onLeaveDuring, Period, PayrollRow, payrollRowsFor, periodOf } from '../../logic/payroll-rows';
 import { payrollOf, premiumMonthOfPay, premiumMonthsOfPay } from '../../../office/office-settings';
 import { MonthPicker } from '../../../../shared/components/month-picker/month-picker';
@@ -61,6 +62,7 @@ const MONTH_RE = /^[0-9]{4}-(0[1-9]|1[0-2])$/;
  */
 /** 入力済みの月がない人（同じ空の Set を使い回す） */
 const EMPTY_MONTHS: ReadonlySet<string> = new Set();
+const NO_PARTS: readonly SpreadPart[] = [];
 
 @Component({
   selector: 'app-payroll-month',
@@ -351,6 +353,7 @@ export class PayrollMonth {
     this.rowErrors.set(new Map());
     this.openId.set(null);
     this.prevPays.set(new Map());
+    this.spreadIns.set(new Map());
     this.allDone.set(false);
     this.savedByMonth.set(null);
     if (!MONTH_RE.test(month)) {
@@ -511,13 +514,28 @@ export class PayrollMonth {
           .catch((err) => console.error(err));
     if (!this.prevPays().has(id)) {
       try {
-        const prev = await this.payrollApi.month(officeId, [id], this.prevMonth());
-        this.prevPays.set(new Map([...this.prevPays(), [id, prev.get(id) ?? null]]));
+        // その人の前の5か月を読む（前の月の額と、まとめて払った定期代（6か月分まで）の月割り。11/26）
+        // 月ごとの問い合わせはその月の全員分を読んでしまうので、その人の文書だけを読む
+        const month = this.month();
+        const months = [1, 2, 3, 4, 5].map((i) => shiftMonth(month, -i));
+        const hist = await this.payrollApi.ofEmployeeMonths(officeId, id, months);
+        if (this.month() !== month) return;
+        // 前の月の額は、前の月までの定期代を割り振った額（この月と同じ数え方で比べる）
+        const prev = allocateOtherMonths(hist).payrolls.get(shiftMonth(month, -1)) ?? null;
+        this.prevPays.set(new Map([...this.prevPays(), [id, prev]]));
+        this.spreadIns.set(new Map([...this.spreadIns(), [id, incomingParts(hist, month)]]));
       } catch (err) {
         console.error(err);
       }
     }
     await remP;
+  }
+
+  /** 前の月にまとめて払った定期代のうち、この月に割り振る分（従業員ID → 行。11/26） */
+  readonly spreadIns = signal<ReadonlyMap<string, readonly SpreadPart[]>>(new Map());
+
+  spreadInOf(v: ViewRow): readonly SpreadPart[] {
+    return this.spreadIns().get(v.employee.id) ?? NO_PARTS;
   }
 
   prevLinesOf(v: ViewRow): PayrollLine[] | null {

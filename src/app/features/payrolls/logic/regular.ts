@@ -18,6 +18,7 @@ import { gradeOf } from '../../rates/logic/grade';
 import { PayrollEmployee, PaySchedule, periodOf } from './payroll-rows';
 import { shiftMonth } from '../../../shared/utils/date';
 import { MIN_DAYS_PART_FALLBACK } from './revision-base';
+import { forWindow } from './spread';
 
 export const REGULAR_MIN_DAYS = 17;
 
@@ -307,8 +308,10 @@ export function decideRegular(x: RegularInput): RegularResult {
     : null;
 
   // --- 4・5・6月 ---
+  // まとめて払った定期代の全部が4〜6月に入るときは、総額が変わらないように割り振る（疑義照会回答 月額変更届 15。11/26）
+  const threeMonths = ['04', '05', '06'].map((m) => `${y}-${m}`);
   const months = withoutResolvedFurlough(
-    useMonths(['04', '05', '06'].map((m) => `${y}-${m}`), x, acquired),
+    useMonths(threeMonths, { ...x, payrolls: forWindow(x.payrolls, threeMonths) }, acquired),
     x.payrolls.get(`${y}-07`) ?? null,
   );
   const usedCount = months.filter((m) => m.used).length;
@@ -341,11 +344,8 @@ export function decideRegular(x: RegularInput): RegularResult {
   const change = changeOf(current, next);
 
   // --- 年間平均（前年7月〜当年6月） ---
-  const annualMonths = useMonths(
-    Array.from({ length: 12 }, (_, i) => shiftMonth(`${y - 1}-07`, i)),
-    x,
-    acquired,
-  );
+  const twelve = Array.from({ length: 12 }, (_, i) => shiftMonth(`${y - 1}-07`, i));
+  const annualMonths = useMonths(twelve, { ...x, payrolls: forWindow(x.payrolls, twelve) }, acquired);
   const annualUsed = annualMonths.filter((m) => m.used).length;
   // 年間平均の対象は「当年3月までに資格取得した人」
   const annualEligible = acquired <= `${y}-03-31`;

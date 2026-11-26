@@ -63,7 +63,18 @@
         @if (rb.otherMonth !== 0) {
           <span>{{ 'payrollEntry.readback.otherMonth' | transloco: { amount: yen(rb.otherMonth) } }}</span>
         }
-        <span class="muted">{{ 'payrollEntry.readback.note' | transloco }}</span>
+        <!-- まとめて払った定期代（11/26）：次の月から割り振る分・前の月から割り振られる分と、この月の報酬として計算する額 -->
+        @if (spreadLater() !== 0) {
+          <span>{{ 'payrollEntry.readback.spreadLater' | transloco: { amount: yen(spreadLater()) } }}</span>
+        }
+        @if (spreadInYen() !== 0) {
+          <span>{{ 'payrollEntry.readback.spreadIn' | transloco: { amount: yen(spreadInYen()) } }}</span>
+        }
+        @if (rb.remuneration; as r) {
+          <span>{{ 'payrollEntry.readback.remuneration' | transloco: { amount: r } }}</span>
+        } @else {
+          <span class="muted">{{ 'payrollEntry.readback.note' | transloco }}</span>
+        }
       </p>
     }
     <p class="hint">
@@ -128,18 +139,25 @@
               </td>
               <td class="l-for">
                 <!-- 本来の月：払い忘れ・計算誤りを後の月に精算した行だけ選ぶ（その月の報酬として計算する） -->
+                <!-- 通勤手当は同じ欄で「3か月分・6か月分」も選べる（まとめて払った定期代。払った月から月数で割る。11/26） -->
                 @if (canPickMonth(d)) {
+                  @let pick = pickValue(d);
                   <select
                     class="input for-pick"
-                    [class.set]="!!d.forMonth"
-                    [attr.aria-label]="'payrollEntry.lines.forMonth' | transloco"
-                    [title]="'payrollEntry.lines.forMonth' | transloco"
+                    [class.set]="pick !== ''"
+                    [attr.aria-label]="(canSpread(d) ? 'payrollEntry.lines.forMonthOrSpread' : 'payrollEntry.lines.forMonth') | transloco"
+                    [title]="(canSpread(d) ? 'payrollEntry.lines.forMonthOrSpread' : 'payrollEntry.lines.forMonth') | transloco"
                     [disabled]="!canEdit()"
                     (change)="setForMonth(i, $any($event.target).value)"
                   >
-                    <option value="" [selected]="!d.forMonth">{{ 'payrollEntry.lines.forOptionShort' | transloco: thisMonthOption() ?? undefined }}</option>
+                    <option value="" [selected]="pick === ''">{{ 'payrollEntry.lines.forOptionShort' | transloco: thisMonthOption() ?? undefined }}</option>
+                    @if (canSpread(d)) {
+                      @for (n of spreadChoices; track n) {
+                        <option [value]="'x' + n" [selected]="pick === 'x' + n">{{ 'payrollEntry.lines.spreadOption' | transloco: { n: n } }}</option>
+                      }
+                    }
                     @for (o of forMonthOptions(); track o.value) {
-                      <option [value]="o.value" [selected]="d.forMonth === o.value">{{ (o.sameYear ? 'payrollEntry.lines.forOptionShort' : 'payrollEntry.lines.forOption') | transloco: o }}</option>
+                      <option [value]="o.value" [selected]="pick === o.value">{{ (o.sameYear ? 'payrollEntry.lines.forOptionShort' : 'payrollEntry.lines.forOption') | transloco: o }}</option>
                     }
                   </select>
                 }
@@ -171,6 +189,19 @@
           }
         </tbody>
       </table>
+      <!-- 前の月にまとめて払った定期代の、この月の分（読み取りだけ。直すときは払った月の内訳で。11/26） -->
+      @if (spreadInRows(); as rows) {
+        @if (rows.length > 0) {
+          <ul class="spread-in">
+            @for (r of rows; track $index) {
+              <li>
+                <span>{{ 'payrollEntry.spread.row' | transloco: r }}</span>
+                <span class="num">{{ 'payrollEntry.spread.amount' | transloco: { amount: r.amount } }}</span>
+              </li>
+            }
+          </ul>
+        }
+      }
       @if (canEdit()) {
         <div class="line-tools">
           <button type="button" class="link-btn" (click)="addLine()">＋ {{ 'payrollEntry.lines.add' | transloco }}</button>

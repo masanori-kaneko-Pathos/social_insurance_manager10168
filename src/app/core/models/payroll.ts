@@ -23,6 +23,12 @@ export interface PayrollLine {
    * 省略・null ＝ この月の分。遡って決まった昇給の差額は、本来の月ではなく分類「遡及支払額」（払った月が起算月）
    */
   forMonth?: string | null;
+  /**
+   * 何か月分をまとめて払ったか（通勤手当だけ。2〜6。省略・null・1 ＝ この月の分。11/26）
+   * 3か月・6か月分の定期代は、払った月から月数で割って各月の報酬にする（疑義照会回答 月額変更届 4・15。payrolls/logic/spread.ts）
+   * 本来の月（forMonth）とは一緒に持たない
+   */
+  months?: number | null;
 }
 
 /** 画面で入力する項目 */

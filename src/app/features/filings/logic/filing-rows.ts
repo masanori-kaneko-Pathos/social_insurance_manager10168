@@ -11,6 +11,7 @@ import { payTotal, type Payroll } from '../../../core/models/payroll';
 import { addDays, DateStr, shiftMonth, YearMonth } from '../../../shared/utils/date';
 import { ageReachDate, birthdayAt } from '../../employees/logic/coverage';
 import { toWareki, toWarekiMonth } from './wareki';
+import { forWindow } from '../../payrolls/logic/spread';
 
 export type FilingKind = 'acquire' | 'loss' | 'regular' | 'irregular' | 'bonus';
 export const FILING_KINDS: readonly FilingKind[] = ['acquire', 'loss', 'regular', 'irregular', 'bonus'];
@@ -223,9 +224,11 @@ export interface RevisionRowInput {
 function monthCells(x: RevisionRowInput): FilingRow {
   const row: FilingRow = {};
   const bonus = x.bonusMonthly ?? 0; // 賞与に係る報酬は各月の通貨の額に足す（11/19）
+  // まとめて払った定期代の全部が3か月に入るときは、総額が変わらないように書く（余りは支給した月。月額変更届 15。11/26）
+  const pays = forWindow(x.payrolls, [0, 1, 2].map((i) => shiftMonth(x.firstMonth, i)));
   [0, 1, 2].forEach((i) => {
     const month = shiftMonth(x.firstMonth, i);
-    const p = x.payrolls.get(month);
+    const p = pays.get(month);
     const n = i + 1;
     row[`m${n}Month`] = `${Number(month.slice(5))}月`;
     row[`m${n}Days`] = p ? `${p.days}日` : '';

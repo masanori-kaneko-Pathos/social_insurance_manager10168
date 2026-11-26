@@ -80,8 +80,16 @@
         <div [style.width.%]="pg.pct"></div>
       </div>
     </div>
-    @if (context.isAdmin() && pg.saved < pg.total) {
-      <button type="button" class="btn btn-solid" (click)="openFirstUnsaved()">{{ 'payroll.progress.start' | transloco }}</button>
+    <!-- 入れ方は2つ：明細を見ながら1人ずつ（主役）／給与ソフトのファイルから取り込む（11/26。表の上のリンクから移した） -->
+    @if (context.isAdmin()) {
+      <div class="progress-actions">
+        <a class="btn" [routerLink]="['/o', context.current()?.id, 'import']" [queryParams]="{ kind: 'payrolls', from: 'payrolls' }">{{
+          'payroll.progress.fromFile' | transloco
+        }}</a>
+        @if (pg.saved < pg.total) {
+          <button type="button" class="btn btn-solid" (click)="openFirstUnsaved()">{{ 'payroll.progress.start' | transloco }}</button>
+        }
+      </div>
     }
   </section>
 
@@ -107,9 +115,7 @@
   <div class="toolbar">
     <span class="muted">{{ 'payroll.openHint' | transloco }}</span>
     <span class="toolbar-links">
-      @if (context.isAdmin()) {
-        <a [routerLink]="['/o', context.current()?.id, 'import']" [queryParams]="{ kind: 'payrolls', from: 'payrolls' }">{{ 'payroll.csv' | transloco }}</a>
-      }
+      <!-- 給与の項目と分類は、マスタの管理のページができたらそちらへ移す（11/26） -->
       <a [routerLink]="['/o', context.current()?.id, 'payrolls', 'items']">{{ 'payrollItem.title' | transloco }}</a>
     </span>
   </div>
@@ -252,6 +258,7 @@
                   [(lines)]="v.lines"
                   [paidMonth]="month()"
                   [savedMonths]="savedMonthsOf(v.employee.id)"
+                  [spreadIn]="spreadInOf(v)"
                   [items]="items()"
                   [payType]="contractOf(v)?.payType ?? null"
                   [candidate]="candidate(v)"

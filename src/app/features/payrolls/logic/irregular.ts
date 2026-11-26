@@ -27,6 +27,7 @@ import type { StandardRemuneration } from '../../../core/models/remuneration';
 import { shiftMonth } from '../../../shared/utils/date';
 import { gradeOf } from '../../rates/logic/grade';
 import { oneGradeException, GradeRows, Remuneration } from './regular';
+import { forWindow } from './spread';
 import {
   averageOfMonths,
   Average,
@@ -334,10 +335,10 @@ export function judgeAnnualIrregular(x: {
   current: { health: StandardRemuneration; pension: StandardRemuneration };
   withPension: boolean;
 }): IrregularAnnual | null {
-  const months = Array.from({ length: 12 }, (_, i) => {
-    const month = shiftMonth(x.startMonth, i - 9);
-    return annualMonthOf(month, x.payrolls.get(month) ?? null, x.minDaysAt(month), i >= 9);
-  });
+  const list = Array.from({ length: 12 }, (_, i) => shiftMonth(x.startMonth, i - 9));
+  // まとめて払った定期代の全部が12か月に入るときは、総額が変わらないように割り振る（月額変更届 15。11/26）
+  const pays = forWindow(x.payrolls, list);
+  const months = list.map((month, i) => annualMonthOf(month, pays.get(month) ?? null, x.minDaysAt(month), i >= 9));
   const three = months.filter((m) => m.inThree);
   if (three.some((m) => !m.payroll)) return null;
   const used = months.filter((m) => m.used);
@@ -386,9 +387,11 @@ function sameDirection(direction: Direction, diff: number): boolean {
 export function judgeIrregular(x: IrregularInput): IrregularResult {
   const s = x.start.month;
   const revisedFrom = shiftMonth(s, 3);
+  // まとめて払った定期代の全部が3か月に入るときは、総額が変わらないように割り振る（月額変更届 15。11/26）
+  const pays = forWindow(x.payrolls, [0, 1, 2].map((i) => shiftMonth(s, i)));
   const months: RevisionMonth[] = [0, 1, 2].map((i) => {
     const month = shiftMonth(s, i);
-    const payroll = x.payrolls.get(month) ?? null;
+    const payroll = pays.get(month) ?? null;
     const minDays = x.minDaysAt(month);
     return {
       month,

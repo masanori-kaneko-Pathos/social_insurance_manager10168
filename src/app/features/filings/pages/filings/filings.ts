@@ -35,6 +35,7 @@ import { acquireBonusRemunerationOf, bonusRemunerationOf, enrolledFromOf, irregu
 import { acquiredDateOf, acquireRow, addedAcquireBonus, bonusRow, FILING_COLUMNS, FILING_KINDS, filingFileName, FilingKind, FilingRow, irregularRemarks, lossesIn, lossRow, mergeSameMonth, regularRemarks, revisionRow, specialRemarks, specialRow, toCells } from '../../logic/filing-rows';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { allocateOtherMonths } from '../../../payrolls/logic/payroll-lines';
+import { forWindow } from '../../../payrolls/logic/spread';
 
 /**
  * 届書の一覧：様式と期間を選んで「表示」→ 表で確かめて CSV に書き出す
@@ -224,7 +225,8 @@ export class FilingsPage {
     if (targets.length === 0) return [];
     const tIds = targets.map((e) => e.id);
     // 7月は一時帰休が7/1に解消したかを見るためだけに読む（6月の途中で解消したとき。11/19）
-    const months = ['03', '04', '05', '06', '07'].map((m) => `${year}-${m}`);
+    // 前の年の11月〜2月は、まとめて払った定期代（6か月分まで）を4〜6月に割り振るためだけに読む（11/26）
+    const months = [`${year - 1}-11`, `${year - 1}-12`, ...['01', '02', '03', '04', '05', '06', '07'].map((m) => `${year}-${m}`)];
     // 賞与に係る報酬を足した人がいれば、備考に書く支払月のために支給を読む（11/19）
     const anyBonus = targets.some((e) => (decisions.get(e.id)!.bonusMonthly ?? 0) > 0);
     const [byMonth, rems, bonusPayments] = await Promise.all([
@@ -246,7 +248,10 @@ export class FilingsPage {
       const raise = findStartMonths(payrolls).find(
         (s) => s.month >= `${year}-04` && s.month <= `${year}-06` && s.direction !== 'unclear' && s.source !== 'furlough',
       );
-      const three = ['04', '05', '06'].map((m) => payrolls.get(`${year}-${m}`) ?? null);
+      // まとめて払った定期代の全部が4〜6月に入るときは、総額が変わらないように書く（月額変更届 15。11/26）
+      const aprJun = ['04', '05', '06'].map((m) => `${year}-${m}`);
+      const win = forWindow(payrolls, aprJun);
+      const three = aprJun.map((m) => win.get(m) ?? null);
       this.nenkinExtra.set(e.id, {
         previous: prev ? { health: prev.health.standard, pension: prev.pension.standard, from: prev.from } : null,
         regular: {
@@ -336,19 +341,16 @@ export class FilingsPage {
         .map(async (d) => {
           const e = byId.get(d.employeeId)!;
           // 3か月目の払い忘れを翌月に精算した分も割り振れるよう、4か月目まで読む（11/24）
-          const months = [0, 1, 2, 3].map((i) => shiftMonth(d.startMonth, i));
-          const [maps, rems] = await Promise.all([
-            Promise.all(months.map((m) => this.payrollApi.month(officeId, [e.id], m))),
+          // 起算月の前の5か月は、まとめて払った定期代（6か月分まで）を割り振るためだけに読む。
+          // その人の月の文書だけを読む（月ごとの問い合わせは、その月の全員分を読んでしまうため。11/26）
+          const months = [-5, -4, -3, -2, -1, 0, 1, 2, 3].map((i) => shiftMonth(d.startMonth, i));
+          const [loaded, rems] = await Promise.all([
+            this.payrollApi.ofEmployeeMonths(officeId, e.id, months),
             this.remunerationsApi.list(officeId, e.id),
           ]);
-          const loaded = new Map<string, Payroll>();
-          months.forEach((m, k) => {
-            const p = maps[k].get(e.id);
-            if (p) loaded.set(m, p);
-          });
-          // 払い忘れの精算は、本来の月に割り振って書く（記入例。4か月目は割り振りのためだけに読んだので外す）
+          // 払い忘れの精算は、本来の月に割り振って書く（記入例。前後の月は割り振りのためだけに読んだので外す）
           const payrolls = allocateOtherMonths(loaded).payrolls;
-          payrolls.delete(months[3]);
+          for (const m of months) if (m < d.startMonth || m > shiftMonth(d.startMonth, 2)) payrolls.delete(m);
           const prev = standardAt(rems, shiftMonth(d.revisedFrom, -1));
           return revisionRow('irregular', {
             employee: e,

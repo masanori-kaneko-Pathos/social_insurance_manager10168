@@ -154,6 +154,13 @@ input.num {
   padding: var(--space-md) var(--space-lg);
 }
 
+/* 入れ方の2つのボタン（ファイル／1人ずつ。11/26） */
+.progress-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
 .progress-label {
   font-size: var(--font-xs);
   color: var(--color-text-sub);

@@ -12,6 +12,7 @@ import {
   PayrollItemInput,
 } from '../../../core/models/payroll-item';
 import { toHalfWidth } from '../../../shared/utils/text';
+import { allocateSpreads, floorSum, MAX_SPREAD_MONTHS, partsOf, spreadMonthsOf, SPREAD_CATEGORIES } from './spread';
 
 export interface LineTotals {
   /** 総支給額（報酬になる行の合計 − 控除）。報酬にならない行は入れない */
@@ -33,6 +34,11 @@ export interface LineTotals {
   nonFixed: number;
   /** 本来の月へ割り振る額（払い忘れ・計算誤りの精算。控除はマイナス）。この月の固定的賃金・非固定的賃金には入れない */
   otherMonth: number;
+  /**
+   * まとめて払った定期代のうち、次の月から割り振る額（11/26。払った額 − この月の分）
+   * 総支給額には入れる（この月に払った）が、この月の固定的賃金・非固定的賃金には入れない。この月の分は固定的賃金に入る
+   */
+  spreadLater: number;
 }
 
 /** 本来の月を持てる分類（遡及支払額・報酬にならないものは持たない） */
@@ -57,20 +63,25 @@ export function baseIsFixed(payType: PayType | null): boolean {
  * - 変動を見つけるための額 ＝ 控除を引く前の固定的賃金（時給・日給の人は基本給を除く）
  * - 本来の月がある行（払い忘れの精算）は、総支給額には入れる（この月に払った）が、この月の固定的賃金・非固定的賃金には入れない
  *   定時決定・随時改定・届出では allocateOtherMonths で本来の月へ割り振る
+ * - まとめて払った定期代（何か月分がある通勤手当）は、総支給額には全部を入れ、固定的賃金にはこの月の分（月数で割った額の切り捨て）だけ入れる
+ *   次の月からの分は allocateOtherMonths（の中の allocateSpreads）で各月に割り振る（11/26）
  */
 export function totalsOf(lines: readonly PayrollLine[], payType: PayType | null): LineTotals {
-  const own = lines.filter((l) => !isOtherMonth(l));
+  const own = lines.filter((l) => !isOtherMonth(l) && spreadMonthsOf(l) === 1);
   const sum = (c: PayrollItemCategory) => own.filter((l) => l.category === c).reduce((s, l) => s + l.amount, 0);
+  const parts = partsOf(lines.filter((l) => !isOtherMonth(l)), '');
+  const share = floorSum(parts);
+  const spreadLater = parts.reduce((s, p) => s + p.amount, 0) - share;
   const base = sum('base');
   const deduction = sum('deduction');
   const retro = sum('retro');
-  const legal = base + sum('fixedAllowance') + sum('commute');
+  const legal = base + sum('fixedAllowance') + sum('commute') + share;
   const fixedFull = legal - (baseIsFixed(payType) ? 0 : base);
   const otherMonth = lines.filter(isOtherMonth).reduce((s, l) => s + (l.category === 'deduction' ? -l.amount : l.amount), 0);
   const ownCash = legal + sum('variable') + retro - deduction;
   const fixed = Math.max(0, Math.min(legal - deduction, ownCash - retro));
-  const cash = ownCash + otherMonth;
-  return { cash, fixed, fixedFull, retro, nonFixed: ownCash - fixed - retro, otherMonth };
+  const cash = ownCash + otherMonth + spreadLater;
+  return { cash, fixed, fixedFull, retro, nonFixed: ownCash - fixed - retro, otherMonth, spreadLater };
 }
 
 /** 固定的賃金に入る分類（本来の月へ割り振るとき、その月の固定的賃金も動かす） */
@@ -84,6 +95,7 @@ const FIXED_CATEGORIES: readonly PayrollItemCategory[] = ['base', 'fixedAllowanc
  * - 本来の月：総支給額に足す。固定的な分類なら固定的賃金にも足す（その月から固定的賃金が変わった、になる）
  * - 本来の月の実績がないとき（入社前・入力漏れ）は割り振らずに残し、unplaced に出す
  * 定時決定・随時改定・届出の材料だけに使う。給与の実績の画面と保険料の立替の確認は、実際に払った額のまま
+ * まとめて払った定期代の月割り（spread.ts の allocateSpreads）も、ここでいっしょに行う（11/26。呼ぶ側を増やさないため）
  */
 export interface OtherMonths {
   /** 割り振りで動いた額（支払月 → 増減。払った月はマイナス、本来の月はプラス。動いていない月は入れない） */
@@ -123,6 +135,8 @@ export function allocateOtherMonths(payrolls: ReadonlyMap<string, Payroll>): Oth
       }
     }
   }
+  // まとめて払った定期代を、払った月から月数分に割り振る（11/26）
+  for (const [m, v] of allocateSpreads(out)) move(m, v);
   return { payrolls: out, moved, unplaced };
 }
 
@@ -135,6 +149,8 @@ export interface LineDraft {
   amount: string;
   /** 本来払う月（空 ＝ この月の分） */
   forMonth?: string | null;
+  /** 何か月分（通勤手当だけ。空・1 ＝ この月の分。11/26） */
+  months?: number | null;
 }
 
 export type LineError = 'name' | 'category' | 'amount';
@@ -176,7 +192,15 @@ export function readLines(drafts: readonly LineDraft[]): LinesRead {
     if (errs.length > 0) lineErrors.set(i, errs);
     else {
       const forMonth = d.forMonth && /^\d{4}-(0[1-9]|1[0-2])$/.test(d.forMonth) && FOR_MONTH_CATEGORIES.includes(d.category!) ? d.forMonth : null;
-      lines.push(forMonth ? { name, category: d.category!, amount: amount!, forMonth } : { name, category: d.category!, amount: amount! });
+      // 何か月分は通勤手当だけ。本来の月とは一緒に持たない（本来の月を優先。11/26）
+      const months =
+        !forMonth && SPREAD_CATEGORIES.includes(d.category!) && Number.isInteger(d.months) && d.months! >= 2 && d.months! <= MAX_SPREAD_MONTHS
+          ? d.months!
+          : null;
+      const line: PayrollLine = { name, category: d.category!, amount: amount! };
+      if (forMonth) line.forMonth = forMonth;
+      if (months) line.months = months;
+      lines.push(line);
     }
   });
   const errors: LinesError[] = [];
@@ -191,7 +215,13 @@ export function readLines(drafts: readonly LineDraft[]): LinesRead {
 
 /** 保存済みの行 → 入力中の行 */
 export function toDrafts(lines: readonly PayrollLine[]): LineDraft[] {
-  return lines.map((l) => ({ name: l.name, category: l.category, amount: l.amount.toLocaleString('ja-JP'), forMonth: l.forMonth ?? null }));
+  return lines.map((l) => ({
+    name: l.name,
+    category: l.category,
+    amount: l.amount.toLocaleString('ja-JP'),
+    forMonth: l.forMonth ?? null,
+    months: l.months ?? null,
+  }));
 }
 
 /** 金額が1つでも入っているか（入っていなければ内訳なしとして読む） */

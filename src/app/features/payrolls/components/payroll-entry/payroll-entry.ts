@@ -11,6 +11,7 @@ import { categoryOf, FOR_MONTH_CATEGORIES, hasAmounts, itemKey, itemNames, LineD
 import { shiftMonth } from '../../../../shared/utils/date';
 import type { RowError } from '../../logic/payroll-input';
 import { entryCheck, EntryCheckContext, EntryCheckKind, startsHere } from '../../logic/entry-check';
+import { incomingDelta, nthMonthOf, partsOf, SpreadPart, SPREAD_CATEGORIES, SPREAD_CHOICES } from '../../logic/spread';
 
 /** 「この入力で決まること」に出すもの */
 export interface EntryCheckView {
@@ -82,6 +83,8 @@ export class PayrollEntry implements OnInit {
   readonly paidMonth = input<string | null>(null);
   /** この人の給与の実績が入っている支払月（本来の月に実績がないと割り振れないので知らせる。null ＝ 分からない） */
   readonly savedMonths = input<ReadonlySet<string> | null>(null);
+  /** 前の月にまとめて払った定期代のうち、この月に割り振る分（11/26。読めていなければ空） */
+  readonly spreadIn = input<readonly SpreadPart[]>([]);
 
   /** 本来の月を選んだのに、その月の実績がない行か */
   missingTarget(d: LineDraft): boolean {
@@ -128,7 +131,8 @@ export class PayrollEntry implements OnInit {
     const ok: PayrollLine[] = [];
     for (const d of this.lines() ?? []) {
       const amount = readAmount(d.amount, d.category);
-      if (d.name.trim() && d.category && amount !== null) ok.push({ name: d.name.trim(), category: d.category, amount, forMonth: d.forMonth ?? null });
+      if (d.name.trim() && d.category && amount !== null)
+        ok.push({ name: d.name.trim(), category: d.category, amount, forMonth: d.forMonth ?? null, months: d.months ?? null });
     }
     return totalsOf(ok, this.payType());
   });
@@ -182,14 +186,77 @@ export class PayrollEntry implements OnInit {
     return !!d.category && FOR_MONTH_CATEGORIES.includes(d.category) && this.forMonthOptions().length > 0;
   }
 
+  /**
+   * 選んだ値：本来の月（'YYYY-MM'）か、まとめて払った月数（'x3'・'x6'。通勤手当だけ。11/26）
+   * 同じ欄で選ぶ（欄を増やさない）。本来の月と月数は一緒に持たない
+   */
   setForMonth(i: number, value: string): void {
     const next = [...(this.lines() ?? [])];
-    next[i] = { ...next[i], forMonth: value || null };
+    const months = /^x\d+$/.test(value) ? Number(value.slice(1)) : null;
+    next[i] = { ...next[i], forMonth: months || !value ? null : value, months };
     this.set(next);
   }
 
+  // ===== まとめて払った定期代（何か月分。11/26） =====
+
+  /** 何か月分を選べる行か（通勤手当） */
+  canSpread(d: LineDraft): boolean {
+    return !!d.category && SPREAD_CATEGORIES.includes(d.category);
+  }
+
+  /** 選べる月数（1 ＝ この月の分は、先頭の「○月払い」と同じなので出さない） */
+  readonly spreadChoices = SPREAD_CHOICES.filter((n) => n > 1);
+
+  /** 選択欄の今の値 */
+  pickValue(d: LineDraft): string {
+    if (d.months && d.months > 1 && this.canSpread(d)) return `x${d.months}`;
+    return d.forMonth ?? '';
+  }
+
+  /** この月に払った定期代のうち、次の月から割り振る額（読み取りの帯に出す） */
+  readonly spreadLater = computed(() => (this.hasAmounts() ? this.totals().spreadLater : 0));
+
+  /** 前の月から割り振られて、この月の報酬に足す額（この月の分と端数のまま足してから切り捨て） */
+  readonly spreadInYen = computed(() => {
+    const inc = this.spreadIn();
+    if (inc.length === 0) return 0;
+    return incomingDelta(this.ownParts(), inc);
+  });
+
+  /** この月に払った、まとめ払いの行（読めた行だけ） */
+  private ownParts(): SpreadPart[] {
+    const m = this.paidMonth() ?? '';
+    const ok: PayrollLine[] = [];
+    for (const d of this.lines() ?? []) {
+      const amount = readAmount(d.amount, d.category);
+      if (d.category && amount !== null) ok.push({ name: d.name, category: d.category, amount, forMonth: d.forMonth ?? null, months: d.months ?? null });
+    }
+    return partsOf(ok, m);
+  }
+
+  /** 月割りの行の文（「通勤手当（10月払い・6か月分の2か月目）」と、割った額。端数は小数2桁＋…） */
+  spreadInRows(): { name: string; m: string; months: number; nth: number; amount: string }[] {
+    const pm = this.paidMonth() ?? '';
+    return this.spreadIn().map((p) => ({
+      name: p.name,
+      m: String(Number(p.paidMonth.slice(5))),
+      months: p.months,
+      nth: nthMonthOf(p, pm),
+      amount: this.shareText(p.amount, p.months),
+    }));
+  }
+
+  /** 割った額（割り切れなければ小数2桁で切って「…」） */
+  shareText(amount: number, months: number): string {
+    const whole = Math.floor(amount / months);
+    const rest = amount - whole * months;
+    if (rest === 0) return this.yen(whole);
+    const cents = Math.floor((rest * 100) / months);
+    return `${this.yen(whole)}.${String(cents).padStart(2, '0')}…`;
+  }
+
   /** 読み取りの合計（通貨＋現物）。定時決定・随時改定・届出が報酬月額の材料にする額 */
-  readback(): { total: string; merged: boolean; otherMonth: number } | null {
+  readback(): { total: string; merged: boolean; otherMonth: number; remuneration: string | null } | null {
     const n = (s: string) => {
       const t = toHalfWidth(s ?? '').replace(/[,，\s]/g, '');
       return t === '' ? 0 : /^\d+$/.test(t) ? Number(t) : NaN;
@@ -200,7 +267,11 @@ export class PayrollEntry implements OnInit {
     const merged = !!c.inKindMerged.value;
     const total = cash + (merged ? 0 : n(c.inKind.value));
     if (!Number.isFinite(total)) return null;
-    return { total: this.yen(total), merged, otherMonth: this.hasAmounts() ? this.totals().otherMonth : 0 };
+    // まとめて払った定期代があれば、この月の報酬として計算する額を別に出す（払った額 − 次の月からの分 ＋ 前の月からの分。11/26）
+    const later = this.spreadLater();
+    const inYen = this.spreadInYen();
+    const remuneration = later !== 0 || inYen !== 0 ? this.yen(total - later + inYen) : null;
+    return { total: this.yen(total), merged, otherMonth: this.hasAmounts() ? this.totals().otherMonth : 0, remuneration };
   }
 
   /**
@@ -217,7 +288,8 @@ export class PayrollEntry implements OnInit {
     const c = this.form().controls;
     const lines = this.hasAmounts();
     const t = this.totals();
-    const fixedNow = lines ? t.fixedFull : n(c.fixed.value);
+    // 前の月にまとめて払った定期代の、この月の分も足す（前の月の額も同じように割り振った額。11/26）
+    const fixedNow = lines ? t.fixedFull + this.spreadInYen() : n(c.fixed.value);
     const prevFixed = ctx.prev ? (ctx.prev.fixedFull ?? ctx.prev.fixed) : null;
     const r = entryCheck({
       byUnit: ctx.byUnit,
