@@ -1922,7 +1922,7 @@
       "allSub": "Amount paid in money + in kind · entered {{entered}} / {{n}}"
     },
     "premiumNote": "Premiums are calculated from the standard monthly remuneration, not from the pay amounts entered here.",
-    "openHint": "Press \"Breakdown\" to enter the payslip breakdown.",
+    "openHint": "Click a row to enter the payslip breakdown.",
     "breakdown": "Breakdown",
     "status": {
       "saved": "Entered",
@@ -1935,6 +1935,16 @@
       "unplaced": "Unallocated settlements: {{n}}",
       "unplacedTitle": "There is no payroll record for the original month ({{months}}), so the amount is counted in the month it was paid. Enter that month to allocate it.",
       "noTarget": "There is no payroll record for {{y}}-{{m}}, so this cannot be allocated (it is counted in this month). Enter that month to allocate it."
+    },
+    "purpose": "Record the earnings on each payslip every month. Recorded pay is used to decide and review the standard monthly remuneration. Entering pay does not change that month's premiums (premiums are calculated from the standard monthly remuneration).",
+    "progress": {
+      "label": "Pay for month {{m}}",
+      "value": "Entered {{saved}} / {{total}}",
+      "start": "Start with the first person not entered"
+    },
+    "done": {
+      "title": "Pay for month {{m}} is entered for everyone.",
+      "regular": "Go to the {{year}} annual determination"
     }
   },
   "regular": {
@@ -4061,7 +4071,36 @@
       "otherMonth": "Of which, allocated to original months: ¥{{amount}}",
       "note": "This is used as the monthly remuneration."
     },
-    "add": "Enter pay"
+    "add": "Enter pay",
+    "check": {
+      "title": "What this entry affects",
+      "yen": "¥{{amount}}",
+      "standard": "Current standard monthly remuneration",
+      "standardSame": "¥{{amount}} (health and pension)",
+      "standardBoth": "Health ¥{{health}} / Pension ¥{{pension}}",
+      "standardNone": "Not registered",
+      "kind": {
+        "empty": "Enter the earnings to see the result here.",
+        "contract": "The hourly or daily wage, scheduled hours, or pay type in the employment contract changed this month.",
+        "prorated": "This month is prorated (the change happened mid-period).",
+        "up": "Fixed wages went up from the previous month.",
+        "down": "Fixed wages went down from the previous month.",
+        "inKind": "The in-kind benefit amount differs from the previous month.",
+        "retro": "This month includes a retroactive payment (back pay from a raise).",
+        "byContract": "For hourly or daily workers, pay that changes with hours worked does not trigger an occasional revision. It is judged from the month the contract's hourly or daily wage or scheduled hours change.",
+        "noPrev": "The previous month's pay is not entered, so fixed wages cannot be compared.",
+        "same": "Fixed wages are the same as the previous month."
+      },
+      "average": "Whether an occasional revision applies is judged from the average of the 3 months starting this month (pay for months {{months}}).",
+      "averageNext": "The occasional revision is judged from the average of the 3 months starting next month (pay for months {{months}}).",
+      "shortDays": "Payment basis days are under {{min}}, so this month is not used in the averages for the annual determination or occasional revision.",
+      "note": "This entry does not change this month's premiums.",
+      "fixed": {
+        "plain": "Fixed wages",
+        "beforeDeduction": "Fixed wages (before absence deductions)",
+        "withoutBase": "Fixed wages (excluding hourly or daily pay × time)"
+      }
+    }
   },
   "filing": {
     "title": "Filing lists",

@@ -55,8 +55,10 @@
     <p class="muted">{{ 'payroll.readonly' | transloco }}</p>
   }
 
-  <!-- 明細の控除額と見比べる入口（保存しなくても出す）。入れた額では今月の保険料は変わらないことも、ここで伝える（11/24） -->
-  <div class="premium-link">
+  <!-- この画面の目的（11/26）：記録した給与は標準報酬月額を決める・見直す材料。入力した月の保険料は変わらない。
+       明細の控除額と見比べる入口（保険料の一覧）も、同じ段に続けて置く -->
+  <p class="purpose">
+    {{ 'payroll.purpose' | transloco }}
     @if (premiumCount() === 0) {
       <span>{{ 'payroll.next.noDeduction' | transloco: { paid: monthNum(month()) } }}</span>
     } @else {
@@ -64,8 +66,41 @@
         'payroll.next.premiums' | transloco: { paid: monthNum(month()), month: monthNum(premiumMonth()) }
       }} ›</a>
     }
-    <span class="muted">{{ 'payroll.premiumNote' | transloco }}</span>
-  </div>
+  </p>
+
+  <!-- この月の入力の進み具合と、主役のボタン（11/26）。押すと最初の未入力の人の内訳が開く -->
+  @let pg = progress();
+  <section class="card progress-card">
+    <div>
+      <div class="progress-label">{{ 'payroll.progress.label' | transloco: { m: monthNum(month()) } }}</div>
+      <div class="progress-value">{{ 'payroll.progress.value' | transloco: { saved: pg.saved, total: pg.total } }}</div>
+      <div class="progress-bar" role="progressbar" [attr.aria-valuenow]="pg.saved" aria-valuemin="0" [attr.aria-valuemax]="pg.total">
+        <div [style.width.%]="pg.pct"></div>
+      </div>
+    </div>
+    @if (context.isAdmin() && pg.saved < pg.total) {
+      <button type="button" class="btn btn-solid" (click)="openFirstUnsaved()">{{ 'payroll.progress.start' | transloco }}</button>
+    }
+  </section>
+
+  <!-- 全員が入力済みになったら、次にやることをまとめて出す（11/26） -->
+  @if (allDone()) {
+    <div class="alert alert-success done-box" role="status">
+      <strong>{{ 'payroll.done.title' | transloco: { m: monthNum(month()) } }}</strong>
+      <span class="next-steps">
+        {{ 'common.next' | transloco }}
+        <a [routerLink]="['/o', context.current()?.id, 'revisions']">{{ 'payroll.next.revisions' | transloco }} ›</a>
+        @if (regularMonth()) {
+          <a [routerLink]="['/o', context.current()?.id, 'regular', regularYear()]">{{ 'payroll.done.regular' | transloco: { year: regularYear() } }} ›</a>
+        }
+        @if (premiumCount() > 0) {
+          <a [routerLink]="['/o', context.current()?.id, 'premiums']" [queryParams]="{ month: premiumMonth() }">{{
+            'payroll.next.premiums' | transloco: { paid: monthNum(month()), month: monthNum(premiumMonth()) }
+          }} ›</a>
+        }
+      </span>
+    </div>
+  }
 
   <div class="toolbar">
     <span class="muted">{{ 'payroll.openHint' | transloco }}</span>
@@ -145,7 +180,15 @@
       <tbody>
         @for (v of shown().rows; track v.employee.id) {
           @let isOpen = openId() === v.employee.id;
-          <tr [attr.data-row]="v.employee.id" [class.is-open]="isOpen" [class.has-error]="rowErrors().has(v.employee.id)" [class.edited]="v.form.dirty">
+          <!-- 行のどこを押しても内訳が開く（氏名のリンク・ボタンは除く。11/26） -->
+          <tr
+            class="clickable"
+            [attr.data-row]="v.employee.id"
+            [class.is-open]="isOpen"
+            [class.has-error]="rowErrors().has(v.employee.id)"
+            [class.edited]="v.form.dirty"
+            (click)="rowClick($event, v)"
+          >
             <td class="emp-no">{{ v.employee.employeeNumber ?? '—' }}</td>
             <td>
               <app-person-name [person]="v.employee" [link]="['/o', context.current()?.id, 'employees', v.employee.id]" />
@@ -210,6 +253,7 @@
                   [canEdit]="context.isAdmin()"
                   [leaveLink]="context.isAdmin() ? ['/o', context.current()?.id, 'employees', v.employee.id] : null"
                   [errors]="rowErrors().get(v.employee.id) ?? []"
+                  [check]="checkOf(v)"
                   [hasNext]="!!nextOf(v)"
                   [saving]="saving()"
                   (save)="saveOne(v)"
@@ -257,8 +301,9 @@
       }
     </table>
   </div>
-  <app-pager variant="bottom" [total]="filtered().length" [(page)]="page" [size]="listOptions().size" [showBand]="anyDirty()">
-    @if (context.isAdmin() && anyDirty()) {
+  <!-- 下の帯の「保存する」は、内訳を開いていない行を直したときだけ（日数をまとめて入れたときなど。開いている人は内訳の中で保存。11/26） -->
+  <app-pager variant="bottom" [total]="filtered().length" [(page)]="page" [size]="listOptions().size" [showBand]="closedDirty()">
+    @if (context.isAdmin() && closedDirty()) {
       <button bandEnd type="button" class="btn btn-solid" (click)="save()" [disabled]="saving()">
         {{ (saving() ? 'payroll.saving' : 'payroll.save') | transloco }}
       </button>

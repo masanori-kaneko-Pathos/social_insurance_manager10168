@@ -32,6 +32,14 @@ import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
 import { hasPayGroups, payGroupAt, payrollAt } from '../../../office/logic/pay-group';
 import { BackLink } from '../../../../shared/components/back-link/back-link';
+import { RemunerationService } from '../../../employees/remuneration.service';
+import type { RemunerationDoc } from '../../../../core/models/remuneration';
+import { CriteriaService } from '../../../office/criteria.service';
+import type { CriteriaDoc } from '../../../../core/models/master';
+import { standardAt } from '../../logic/revision-base';
+import { dayRulesOf } from '../../logic/revision-rows';
+import { contractStartMonths, ContractLike } from '../../logic/irregular';
+import type { EntryCheckContext } from '../../logic/entry-check';
 
 interface ViewRow {
   employee: Employee;
@@ -92,13 +100,58 @@ export class PayrollMonth {
   readonly saving = signal(false);
   readonly errorKey = signal<string | null>(null);
   readonly savedCount = signal<number | null>(null);
+  /** 「保存して次の人へ」で、この月の全員が入力済みになった（完了の案内を出す。11/26） */
+  readonly allDone = signal(false);
+
+  /** この月の入力の進み具合（全員。絞り込みに関係なく。11/26） */
+  readonly progress = computed(() => {
+    const all = this.views();
+    const saved = all.filter((v) => !!v.row.saved).length;
+    return { saved, total: all.length, pct: all.length ? Math.round((saved / all.length) * 100) : 0 };
+  });
+
+  /** 4〜6月払いの月か（完了の案内に定時決定を出す） */
+  readonly regularMonth = computed(() => ['04', '05', '06'].includes(this.month().slice(5)));
+  readonly regularYear = computed(() => Number(this.month().slice(0, 4)));
+
+  /** 下の帯の「保存する」を出すか：内訳を開いていない行に直した値があるときだけ（開いている人は内訳の「保存して次の人へ」。11/26） */
+  closedDirty(): boolean {
+    const open = this.openId();
+    return this.views().some((v) => v.form.dirty && v.employee.id !== open);
+  }
+
+  /** 「未入力の人から入力する」：絞り込んだ順で最初の未入力の人を開く（いなければ全員の中から） */
+  openFirstUnsaved(): void {
+    const target = this.filtered().find((v) => !v.row.saved) ?? this.views().find((v) => !v.row.saved);
+    if (!target) return;
+    const idx = this.filtered().indexOf(target);
+    if (idx >= 0) this.page.set(Math.floor(idx / this.listOptions().size) + 1);
+    this.open(target);
+  }
+
+  /** 行を押したら内訳を開く・閉じる（氏名のリンク・ボタン・入力欄を押したときは何もしない。11/26） */
+  rowClick(event: MouseEvent, v: ViewRow): void {
+    const el = event.target as HTMLElement | null;
+    if (el?.closest('a, button, input, select, textarea, label')) return;
+    if (window.getSelection()?.toString()) return; // 文字を選んでいるときは開かない
+    this.toggleOpen(v);
+  }
   /** 行ごとのエラー（従業員ID → エラー） */
   readonly rowErrors = signal<ReadonlyMap<string, RowError[]>>(new Map());
 
   /** 内訳を開いている人（同時に1人だけ） */
   readonly openId = signal<string | null>(null);
-  /** 前の月の内訳（項目名を写す。開いたときに読む。従業員ID → 行。内訳がなければ null） */
-  readonly prevLines = signal<ReadonlyMap<string, PayrollLine[] | null>>(new Map());
+  /**
+   * 前の月の給与（開いたときに読む。従業員ID → 給与。入力がなければ null）
+   * 内訳の項目名を写すのと、「この入力で決まること」で固定的賃金を比べるのに使う（11/26）
+   */
+  readonly prevPays = signal<ReadonlyMap<string, Payroll | null>>(new Map());
+  /** 標準報酬月額の履歴（開いたときに読む。「この入力で決まること」の今の標準報酬月額。11/26） */
+  readonly remunerations = signal<ReadonlyMap<string, RemunerationDoc[]>>(new Map());
+  /** 適用拡大の基準（短時間労働者か ＝ 支払基礎日数の基準 11日・17日 を出すのに使う。11/26） */
+  private readonly criteria = signal<CriteriaDoc[] | null>(null);
+  private readonly remunerationApi = inject(RemunerationService);
+  private readonly criteriaApi = inject(CriteriaService);
   /** 前の12か月の「入力済みの人」（月の索引。内訳の「本来の月」に実績があるかを知らせる。11/24） */
   private readonly savedByMonth = signal<ReadonlyMap<string, Set<string>> | null>(null);
   /** 従業員ID → 実績が入っている支払月（前の12か月） */
@@ -277,7 +330,8 @@ export class PayrollMonth {
     this.savedCount.set(null);
     this.rowErrors.set(new Map());
     this.openId.set(null);
-    this.prevLines.set(new Map());
+    this.prevPays.set(new Map());
+    this.allDone.set(false);
     this.savedByMonth.set(null);
     if (!MONTH_RE.test(month)) {
       this.errorKey.set('payroll.error.badMonth');
@@ -317,6 +371,10 @@ export class PayrollMonth {
         .list(office.id)
         .then((items) => this.items.set(items))
         .catch((err) => console.error(err)); // 読めなくても、よくある名前の分類で入力できる
+      this.criteriaApi
+        .list()
+        .then((c) => this.criteria.set(c))
+        .catch((err) => console.error(err)); // 読めなければ「この入力で決まること」を出さない
       this.itemsApi
         .template(office.id)
         .then((t) => this.template.set(t))
@@ -420,22 +478,66 @@ export class PayrollMonth {
     });
   }
 
-  /** 前の月の内訳を読む（項目名を写すため。読めなくても入力はできる） */
+  /** 前の月の給与と標準報酬月額を読む（項目名を写す・「この入力で決まること」。読めなくても入力はできる） */
   private async loadPrev(v: ViewRow): Promise<void> {
     const officeId = this.context.current()?.id;
     const id = v.employee.id;
-    if (!officeId || this.prevLines().has(id)) return;
-    try {
-      const prev = await this.payrollApi.month(officeId, [id], this.prevMonth());
-      const lines = prev.get(id)?.lines ?? null;
-      this.prevLines.set(new Map([...this.prevLines(), [id, lines]]));
-    } catch (err) {
-      console.error(err);
+    if (!officeId) return;
+    const remP = this.remunerations().has(id)
+      ? Promise.resolve()
+      : this.remunerationApi
+          .list(officeId, id)
+          .then((list) => this.remunerations.set(new Map([...this.remunerations(), [id, list]])))
+          .catch((err) => console.error(err));
+    if (!this.prevPays().has(id)) {
+      try {
+        const prev = await this.payrollApi.month(officeId, [id], this.prevMonth());
+        this.prevPays.set(new Map([...this.prevPays(), [id, prev.get(id) ?? null]]));
+      } catch (err) {
+        console.error(err);
+      }
     }
+    await remP;
   }
 
   prevLinesOf(v: ViewRow): PayrollLine[] | null {
-    return this.prevLines().get(v.employee.id) ?? null;
+    return this.prevPays().get(v.employee.id)?.lines ?? null;
+  }
+
+  /**
+   * 「この入力で決まること」の材料（11/26）。前の月の給与・標準報酬月額・基準を読み終えるまでは null（出さない）
+   * - 支払基礎日数の基準：給与計算期間の末日の区分（短時間労働者なら11日、ほかは17日。dayRulesOf）
+   * - 雇用契約の変更：時給・日給・所定労働時間・給与の形が変わった月（contractStartMonths。改定の候補と同じ）
+   * - 今の標準報酬月額：この給与から控除する保険料の月のもの
+   */
+  checkOf(v: ViewRow): EntryCheckContext | null {
+    const office = this.context.current();
+    const id = v.employee.id;
+    const criteria = this.criteria();
+    if (!office || !criteria || !this.prevPays().has(id) || !this.remunerations().has(id)) return null;
+    const month = this.month();
+    const schedule = payrollAt(office, v.employee, month);
+    const contracts = this.contracts().get(id) ?? [];
+    const withPay: ContractLike[] = contracts.flatMap((c) =>
+      c.payType ? [{ from: c.from, payType: c.payType, hourlyWage: c.hourlyWage ?? null, dailyWage: c.dailyWage ?? null, weeklyMinutes: c.weeklyMinutes }] : [],
+    );
+    const change = contractStartMonths(withPay, (m) => periodOf(m, schedule).start).find((s) => s.month === month);
+    const ctx = {
+      office: { standardHours: office.standardHours ?? null, specificApplication: office.specificApplication },
+      criteria,
+      schedule,
+    };
+    const minDays = dayRulesOf({ employee: v.employee, contracts }, ctx).minDaysAt(month);
+    const rem = standardAt(this.remunerations().get(id) ?? [], this.premiumMonth());
+    const prev = this.prevPays().get(id) ?? null;
+    const pay = this.contractOf(v)?.payType;
+    return {
+      prev: prev ? { fixed: prev.fixed, fixedFull: prev.fixedFull ?? null, inKind: prev.inKind } : null,
+      standard: rem ? { health: rem.health?.standard ?? null, pension: rem.pension?.standard ?? null } : null,
+      minDays,
+      contractChange: change?.direction ?? null,
+      byUnit: pay === 'hourly' || pay === 'daily',
+    };
   }
 
 
@@ -452,11 +554,15 @@ export class PayrollMonth {
     }
   }
 
-  /** 絞り込んだ順で次の人（いなければ null） */
+  /**
+   * 絞り込んだ順で次の人（いなければ null）
+   * 後ろに未入力の人がいれば、その人へ飛ぶ（入力済みの人を1人ずつ開き直さない。11/26）。全員入力済みなら、すぐ次の人
+   */
   nextOf(v: ViewRow): ViewRow | null {
     const list = this.filtered();
     const i = list.indexOf(v);
-    return i >= 0 && i < list.length - 1 ? list[i + 1] : null;
+    if (i < 0 || i >= list.length - 1) return null;
+    return list.slice(i + 1).find((x) => !x.row.saved) ?? list[i + 1];
   }
 
   /**
@@ -601,6 +707,9 @@ export class PayrollMonth {
       } else {
         this.openId.set(null);
       }
+      // 全員が入力済みになったら、完了の案内を出して、そこまで動かす
+      this.allDone.set(this.views().length > 0 && this.views().every((x) => !!x.row.saved));
+      if (this.allDone()) setTimeout(() => document.querySelector('.done-box')?.scrollIntoView({ block: 'center', behavior: 'smooth' }));
     } catch (err) {
       console.error(err);
       this.errorKey.set(errorKeyOf(err, 'payroll.error.save'));
@@ -635,6 +744,7 @@ export class PayrollMonth {
       await this.write(changes);
       await this.load(this.month());
       this.savedCount.set(changes.length);
+      this.allDone.set(this.views().length > 0 && this.views().every((x) => !!x.row.saved));
     } catch (err) {
       console.error(err);
       this.errorKey.set(errorKeyOf(err, 'payroll.error.save'));

@@ -10,6 +10,27 @@ import { toHalfWidth } from '../../../../shared/utils/text';
 import { categoryOf, FOR_MONTH_CATEGORIES, hasAmounts, itemKey, itemNames, LineDraft, readAmount, readLines, startDrafts, totalsOf } from '../../logic/payroll-lines';
 import { shiftMonth } from '../../../../shared/utils/date';
 import type { RowError } from '../../logic/payroll-input';
+import { entryCheck, EntryCheckContext, EntryCheckKind, startsHere } from '../../logic/entry-check';
+
+/** 「この入力で決まること」に出すもの */
+export interface EntryCheckView {
+  kind: EntryCheckKind;
+  startsHere: boolean;
+  shortDays: boolean;
+  minDays: number;
+  /**
+   * 固定的賃金の行の名前（出している額に合わせる。一覧の「固定的賃金」の列と違う額のときは、違いを名前に書く）
+   * plain：そのまま／beforeDeduction：欠勤控除を引く前／withoutBase：時給・日給×時間を除く
+   */
+  fixedLabel: 'plain' | 'beforeDeduction' | 'withoutBase';
+  /** 固定的賃金（変動を見る額）：前の月（未入力は null）とこの月 */
+  fixedPrev: string | null;
+  fixedNow: string | null;
+  /** 今の標準報酬月額：健保と厚年が同じなら same に入る */
+  standard: { same: string | null; health: string | null; pension: string | null } | null;
+  /** 3か月の支払月（「11月・12月・1月払い」の材料） */
+  months: string;
+}
 
 /** 1人分の入力の文字（月の表の行と同じ形。cash・fixed・retro は内訳があれば内訳から入る） */
 export type PayrollRowForm = FormGroup<{
@@ -73,6 +94,8 @@ export class PayrollEntry implements OnInit {
   }
   /** 保存を押したあとの誤り（押す前は行の誤りを出さない） */
   readonly errors = input<readonly RowError[]>([]);
+  /** 「この入力で決まること」の材料（null ＝ まだ読めていない：出さない。11/26） */
+  readonly check = input<EntryCheckContext | null>(null);
   /** 次の人がいるか（いなければ「保存する」） */
   readonly hasNext = input(true);
   readonly saving = input(false);
@@ -178,6 +201,59 @@ export class PayrollEntry implements OnInit {
     const total = cash + (merged ? 0 : n(c.inKind.value));
     if (!Number.isFinite(total)) return null;
     return { total: this.yen(total), merged, otherMonth: this.hasAmounts() ? this.totals().otherMonth : 0 };
+  }
+
+  /**
+   * 「この入力で決まること」（11/26）。随時改定の起算月になりそうか・平均に入る月かを、入力したその場で出す。
+   * 決まりは entry-check.ts（改定の候補の画面と同じ順）。判定は改定の候補の画面で行い、ここは案内だけ
+   */
+  checkView(): EntryCheckView | null {
+    const ctx = this.check();
+    if (!ctx) return null;
+    const n = (s: string): number | null => {
+      const t = toHalfWidth(s ?? '').replace(/[,，\s]/g, '');
+      return /^\d+$/.test(t) ? Number(t) : null;
+    };
+    const c = this.form().controls;
+    const lines = this.hasAmounts();
+    const t = this.totals();
+    const fixedNow = lines ? t.fixedFull : n(c.fixed.value);
+    const prevFixed = ctx.prev ? (ctx.prev.fixedFull ?? ctx.prev.fixed) : null;
+    const r = entryCheck({
+      byUnit: ctx.byUnit,
+      fixedNow,
+      hasLines: lines,
+      fixedPrev: prevFixed,
+      inKindNow: c.inKindMerged.value ? null : (n(c.inKind.value) ?? 0),
+      inKindPrev: ctx.prev ? ctx.prev.inKind : null,
+      retro: lines ? t.retro : (n(c.retro.value) ?? 0),
+      prorated: !!c.prorated.value,
+      contractChange: ctx.contractChange,
+      days: n(c.days.value),
+      minDays: ctx.minDays,
+    });
+    const s = ctx.standard;
+    const yenOrNull = (v: number | null) => (v === null ? null : this.yen(v));
+    const pm = this.paidMonth();
+    // 日割りの月は次の月から数える
+    const first = pm ? (r.kind === 'prorated' ? shiftMonth(pm, 1) : pm) : null;
+    const months = first ? [0, 1, 2].map((i) => `${Number(shiftMonth(first, i).slice(5))}`).join('・') : '';
+    const fixedLabel = !lines ? 'plain' : ctx.byUnit ? 'withoutBase' : t.fixedFull !== t.fixed ? 'beforeDeduction' : 'plain';
+    return {
+      kind: r.kind,
+      fixedLabel,
+      startsHere: startsHere(r.kind),
+      shortDays: r.shortDays,
+      minDays: ctx.minDays,
+      fixedPrev: yenOrNull(prevFixed),
+      fixedNow: yenOrNull(fixedNow),
+      standard: s
+        ? s.health !== null && s.health === s.pension
+          ? { same: this.yen(s.health), health: null, pension: null }
+          : { same: null, health: yenOrNull(s.health), pension: yenOrNull(s.pension) }
+        : null,
+      months,
+    };
   }
 
   // ===== 行の編集 =====

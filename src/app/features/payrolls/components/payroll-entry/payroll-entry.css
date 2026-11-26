@@ -343,3 +343,50 @@ tr.line-err span + span::before {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* ===== この入力で決まること（11/26） ===== */
+/* 入力の結果を、保存の前にその場で見せる。決まりの案内なので、色は控えめ（起算月になりそうなときだけ文字に色） */
+.check-box {
+  margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-highlight-soft);
+  font-size: var(--font-sm);
+}
+
+.check-box h4 {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-sm);
+}
+
+.check-box dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px var(--space-md);
+  margin: 0 0 var(--space-xs);
+}
+
+.check-box dt {
+  color: var(--color-text-sub);
+}
+
+.check-box dd {
+  margin: 0;
+  text-align: right;
+  white-space: nowrap; /* 額の途中で折り返さない（名前の側を折り返す） */
+}
+
+.check-msg {
+  margin: 0 0 2px;
+  line-height: 1.6;
+}
+
+.check-msg.starts {
+  color: var(--color-tab-active);
+}
+
+.check-note {
+  margin: 0;
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+}

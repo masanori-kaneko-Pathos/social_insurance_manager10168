@@ -268,10 +268,53 @@
       }
     }
 
+    <!-- この入力で決まること（11/26）：随時改定の起算月になりそうか・平均に入る月か。判定は改定の候補の画面 -->
+    @if (checkView(); as cv) {
+      <section class="check-box" role="status" aria-live="polite">
+        <h4>{{ 'payrollEntry.check.title' | transloco }}</h4>
+        @if (cv.kind !== 'empty') {
+          <dl>
+            <dt>{{ 'payrollEntry.check.fixed.' + cv.fixedLabel | transloco }}</dt>
+            <dd class="num">
+              @if (cv.fixedPrev !== null && cv.fixedPrev !== cv.fixedNow) {
+                {{ 'payrollEntry.check.yen' | transloco: { amount: cv.fixedPrev } }} →
+                <strong>{{ 'payrollEntry.check.yen' | transloco: { amount: cv.fixedNow } }}</strong>
+              } @else {
+                {{ 'payrollEntry.check.yen' | transloco: { amount: cv.fixedNow } }}
+              }
+            </dd>
+            <dt>{{ 'payrollEntry.check.standard' | transloco }}</dt>
+            <dd class="num">
+              @if (cv.standard?.same; as same) {
+                {{ 'payrollEntry.check.standardSame' | transloco: { amount: same } }}
+              } @else if (cv.standard && (cv.standard.health || cv.standard.pension)) {
+                {{ 'payrollEntry.check.standardBoth' | transloco: { health: cv.standard.health ?? '—', pension: cv.standard.pension ?? '—' } }}
+              } @else {
+                {{ 'payrollEntry.check.standardNone' | transloco }}
+              }
+            </dd>
+          </dl>
+        }
+        <p class="check-msg" [class.starts]="cv.startsHere || cv.kind === 'prorated'">
+          {{ 'payrollEntry.check.kind.' + cv.kind | transloco }}
+          @if (cv.startsHere) {
+            {{ 'payrollEntry.check.average' | transloco: { months: cv.months } }}
+          } @else if (cv.kind === 'prorated') {
+            {{ 'payrollEntry.check.averageNext' | transloco: { months: cv.months } }}
+          }
+        </p>
+        @if (cv.shortDays) {
+          <p class="check-msg starts">{{ 'payrollEntry.check.shortDays' | transloco: { min: cv.minDays } }}</p>
+        }
+        <p class="check-note">{{ 'payrollEntry.check.note' | transloco }}</p>
+      </section>
+    }
+
     <div class="actions">
       <button type="button" class="btn" (click)="closed.emit()">{{ 'payrollEntry.close' | transloco }}</button>
       @if (canEdit()) {
-        <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save.emit()">
+        <!-- 保存はここ1か所（11/26。下の帯の「保存する」は、閉じている行を直したときだけ出る） -->
+        <button type="button" class="btn btn-solid" [disabled]="saving()" (click)="save.emit()">
           {{ (hasNext() ? 'payrollEntry.saveNext' : 'payrollEntry.saveOnly') | transloco }}
         </button>
       }
