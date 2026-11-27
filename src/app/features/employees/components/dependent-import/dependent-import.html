@@ -67,7 +67,7 @@
         <span class="skip-note">{{ 'importFix.notImported' | transloco: { n: n } }}</span>
       }
       <button type="button" class="btn" [disabled]="saving()" (click)="clear()">{{ 'common.cancel' | transloco }}</button>
-      <button type="button" class="btn btn-primary" [disabled]="!canImport()" (click)="importCsv()">
+      <button type="button" class="btn btn-solid" [disabled]="!canImport()" (click)="importCsv()">
         {{ 'dependentCsv.import' | transloco: { n: addRows().length } }}
       </button>
     </div>
@@ -121,7 +121,7 @@
                     }
                   }
                 </td>
-                <td class="act-col"><button type="button" class="btn btn-small" [class.btn-primary]="!!x.issue" [disabled]="fix.busy()" (click)="fix.openLine(x.line)">{{ 'importFix.check' | transloco }}</button></td>
+                <td class="act-col"><button type="button" class="btn btn-small" [disabled]="fix.busy()" (click)="fix.openLine(x.line)">{{ 'importFix.check' | transloco }}</button></td>
               </tr>
             } @else if (x.issue; as is) {
               <tr app-issue-row [issue]="is" [fix]="fix" [span]="4"></tr>

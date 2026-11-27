@@ -13,10 +13,24 @@ describe('アプリの中の前の画面（11/25）', () => {
     expect(s.length).toBe(3);
     expect(previousOf(s, '/o/1/payrolls')?.url).toBe('/o/1/employees/a?tab=pay');
   });
-  it('前に見た画面に戻ったら、そこから後ろは捨てる（行ったり来たりで輪にならない）', () => {
-    const s = run(e('/o/1'), e('/o/1/employees'), e('/o/1/employees/a'), e('/o/1/employees'));
+  it('ふつうのリンクで前に見た画面へ来たら、前の画面はすぐ前に見た画面（11/27）', () => {
+    // 依頼・申請 → 定時決定 → 従業員 → 定時決定（ページ内のリンク）：定時決定の前は従業員
+    const s = run(e('/o/1/requests'), e('/o/1/regular/2026'), e('/o/1/employees'), e('/o/1/regular/2026'));
+    expect(previousOf(s, '/o/1/regular/2026')?.path).toBe('/o/1/employees');
+  });
+  it('「‹ 前の画面」で戻ったら、そこから後ろは捨てる（行ったり来たりで輪にならない）', () => {
+    let s = run(e('/o/1'), e('/o/1/employees'), e('/o/1/employees/a'));
+    s = pushEntry(s, e('/o/1/employees'), 'back');
     expect(s.map((x) => x.path)).toEqual(['/o/1', '/o/1/employees']);
     expect(previousOf(s, '/o/1/employees')?.path).toBe('/o/1');
+  });
+  it('サイドバー・ホームから来たら、前の画面は出さない（11/27）', () => {
+    let s = run(e('/o/1/requests'), e('/o/1/regular/2026'), e('/o/1/employees'));
+    s = pushEntry(s, e('/o/1/regular/2026'), 'root');
+    expect(previousOf(s, '/o/1/regular/2026')).toBeNull();
+    // そこからページ内のリンクで進めば、また前の画面が出る
+    s = pushEntry(s, e('/o/1/employees/a'));
+    expect(previousOf(s, '/o/1/employees/a')?.path).toBe('/o/1/regular/2026');
   });
   it('積まない画面（編集）では、いちばん上が前の画面。保存して詳細に戻っても、編集画面は出てこない', () => {
     const s = run(e('/o/1/employees'), e('/o/1/employees/a'));

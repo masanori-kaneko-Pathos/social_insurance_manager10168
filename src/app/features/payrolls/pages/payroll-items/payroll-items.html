@@ -5,7 +5,7 @@
   </div>
   @if (context.isAdmin() && !draft()) {
     <div class="head-actions">
-      <button type="button" class="btn btn-primary" (click)="startNew()">{{ 'payrollItem.add' | transloco }}</button>
+      <button type="button" class="btn" (click)="startNew()">{{ 'payrollItem.add' | transloco }}</button>
     </div>
   }
 </div>
@@ -113,7 +113,7 @@
       }
       <div class="actions">
         <button type="button" class="btn" (click)="cancel()" [disabled]="saving()">{{ 'common.cancel' | transloco }}</button>
-        <button type="button" class="btn btn-primary" (click)="save()" [disabled]="saving()">{{ 'common.save' | transloco }}</button>
+        <button type="button" class="btn btn-solid" (click)="save()" [disabled]="saving()">{{ 'common.save' | transloco }}</button>
       </div>
     </section>
   }

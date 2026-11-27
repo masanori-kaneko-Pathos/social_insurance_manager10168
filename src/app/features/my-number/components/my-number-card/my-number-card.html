@@ -79,7 +79,7 @@
         @for (a of actions(); track a) {
           @switch (a) {
             @case ('set') {
-              <button type="button" class="btn" [class.btn-primary]="!status()" [disabled]="busy()" (click)="open('set')">
+              <button type="button" class="btn" [disabled]="busy()" (click)="open('set')">
                 {{ (canView() ? 'myNumber.action.change' : 'myNumber.action.set') | transloco }}
               </button>
             }

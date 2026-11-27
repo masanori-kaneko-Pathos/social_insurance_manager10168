@@ -193,7 +193,7 @@
     <button type="button" class="btn" (click)="cancelled.emit()">
       {{ 'common.cancel' | transloco }}
     </button>
-    <button type="button" class="btn btn-primary" (click)="confirm()" [disabled]="missing().length > 0">
+    <button type="button" class="btn btn-solid" (click)="confirm()" [disabled]="missing().length > 0">
       {{ 'importMap.next' | transloco }}
     </button>
   </div>

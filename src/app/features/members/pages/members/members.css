@@ -76,8 +76,9 @@ h3 {
   margin-left: var(--space-xs);
   padding: 1px 8px;
   border-radius: 999px;
-  background: var(--color-primary);
-  color: var(--color-text);
+  /* 濃いオレンジの地に白い文字（明るいオレンジに白は読みにくいため、選択中のタブの文字と同じ濃さ。11/27） */
+  background: var(--color-tab-active);
+  color: #fff;
   font-size: var(--font-xs, 12px);
   font-weight: 600;
 }

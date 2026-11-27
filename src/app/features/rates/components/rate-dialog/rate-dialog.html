@@ -191,7 +191,7 @@
 
       @if (editable() && !editing()) {
         <div class="actions">
-          <button type="button" class="btn btn-primary" (click)="startNew()">
+          <button type="button" class="btn" (click)="startNew()">
             {{ 'rateDialog.add' | transloco }}
           </button>
         </div>
@@ -216,7 +216,7 @@
             <div actions class="actions">
               <button
                 type="button"
-                class="btn btn-primary"
+                class="btn btn-solid"
                 [disabled]="csvSaving() || imp.toSave().length === 0 || imp.blocked()"
                 (click)="importCsv()"
               >

@@ -14,7 +14,7 @@
           @if (canCheck()) {
             <input class="input comment" maxlength="200" [placeholder]="'review.commentPlaceholder' | transloco"
                    [value]="comment()" (input)="comment.set($any($event.target).value)" />
-            <button type="button" class="btn btn-small btn-primary" [disabled]="busy()" (click)="check()">{{ 'review.check' | transloco }}</button>
+            <button type="button" class="btn btn-small" [disabled]="busy()" (click)="check()">{{ 'review.check' | transloco }}</button>
           } @else if (isRequester()) {
             <span class="sub">{{ 'review.selfNote' | transloco }}</span>
           }

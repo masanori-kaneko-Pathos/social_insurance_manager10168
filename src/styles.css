@@ -1176,3 +1176,34 @@ details.menu > summary.disabled {
   opacity: 0.5;
   pointer-events: none;
 }
+
+/* ===== 11/27：画面の見直し（2回目） ===== */
+
+/* 今の業務と一覧の切れ目（薄い灰色の線） */
+hr.section-sep {
+  margin: var(--space-lg) 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+/* たたむ部品（details.fold）の印：右向きの ›（線で描く）が、開くと下を向く。回る動きは今までどおり
+   「決定内容を通知」など、ボタンで開け閉めする部品も同じ印にそろえた */
+.fold > summary::before {
+  content: '';
+  width: 0.45em;
+  height: 0.45em;
+  margin: 0 0.2em;
+  border: 0;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  border-radius: 0;
+  font-size: inherit;
+  transform: rotate(-45deg);
+}
+.fold[open] > summary::before {
+  content: '';
+  transform: rotate(45deg);
+}
+.fold > summary:hover {
+  color: var(--color-text);
+}

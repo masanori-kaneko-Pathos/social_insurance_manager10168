@@ -213,7 +213,7 @@
             <input class="input" type="date" [value]="requestedOf(v)" (change)="setRequested(v, $any($event.target).value)" />
           </label>
         }
-        <button type="button" class="btn btn-primary" [disabled]="!canReflect(v)" (click)="reflect(v)">
+        <button type="button" class="btn" [disabled]="!canReflect(v)" (click)="reflect(v)">
           {{ (saving() === v.key ? 'revision.saving' : 'revision.reflect') | transloco }}
         </button>
       </div>

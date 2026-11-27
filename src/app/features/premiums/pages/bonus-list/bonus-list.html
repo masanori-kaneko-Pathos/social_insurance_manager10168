@@ -12,6 +12,8 @@
 @if (context.isAdmin()) {
   <app-entry-choice [items]="entryItems()" />
 }
+<!-- 今の業務と一覧の切れ目（薄い線。給与・賞与・保険料・従業員で同じ場所。11/27） -->
+<hr class="section-sep" />
 
 <!-- 賞与の支払予定月（事業所として日本年金機構に届けている月）。変えると To-do に事業所関係変更届が出る（11/20） -->
 @if (context.current(); as office) {

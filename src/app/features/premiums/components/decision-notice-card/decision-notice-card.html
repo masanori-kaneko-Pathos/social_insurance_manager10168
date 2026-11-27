@@ -1,9 +1,11 @@
-<section class="card">
+<!-- 11/27：閉じているときは白い箱を出さず、ほかの折りたたみ（details.fold）と同じ見た目の1行にする。開くと中身を箱で出す -->
+<section class="dn">
   <button type="button" class="toggle" [attr.aria-expanded]="open()" (click)="toggle()">
-    <!-- 開閉の印はほかの折りたたみと同じ ▷（開くと90度回る）。11/20 -->
-    <span class="mark" aria-hidden="true">▷</span>{{ 'decisionNotice.title' | transloco }}
+    <!-- 開閉の印はほかの折りたたみと同じ（右向きの › が、開くと下を向く） -->
+    <span class="mark" aria-hidden="true"></span>{{ 'decisionNotice.title' | transloco }}
   </button>
   @if (open()) {
+  <div class="card dn-body">
     <!-- 根拠：健康保険法49条・厚生年金保険法29条（事業主は通知を受けたら速やかに被保険者へ知らせる。怠ると罰則） -->
     <p class="hint">{{ 'decisionNotice.lead' | transloco }}</p>
 
@@ -76,12 +78,13 @@
       </div>
       @if (context.isAdmin()) {
         <div class="actions">
-          <button type="button" class="btn btn-primary" [disabled]="toSend().length === 0 || sending()" (click)="send()">
+          <button type="button" class="btn btn-solid" [disabled]="toSend().length === 0 || sending()" (click)="send()">
             {{ 'decisionNotice.send' | transloco: { n: toSend().length } }}
           </button>
         </div>
       }
       <p class="hint">{{ 'decisionNotice.hint' | transloco }}</p>
     }
+  </div>
   }
 </section>

@@ -1,26 +1,49 @@
+.dn {
+  margin: var(--space-sm) 0 var(--space-md);
+}
+
+/* 開閉の行：ほかの折りたたみ（styles.css の .fold > summary）と同じ大きさ・色・印（11/27） */
 .toggle {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--space-xs);
   background: none;
   border: none;
   padding: 0;
-  /* 見出しほど大きくしない（ページの本文と同じ大きさ。11/20） */
-  font-size: var(--font-md);
-  font-weight: 600;
-  color: inherit;
+  font: inherit;
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
   cursor: pointer;
 }
 
+.toggle:hover {
+  color: var(--color-text);
+}
+
+/* 右向きの ›（線で描く）。開くと下を向く。回る動きは残す */
 .toggle .mark {
   display: inline-block;
-  font-size: var(--font-sm);
-  color: var(--color-text-sub);
-  transition: transform var(--dur-fast, 0.15s) var(--ease-out, ease-out);
+  width: 0.45em;
+  height: 0.45em;
+  margin: 0 0.2em;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform var(--dur-base) var(--ease-out);
 }
 
 .toggle[aria-expanded='true'] .mark {
-  transform: rotate(90deg);
+  transform: rotate(45deg);
+}
+
+.dn-body {
+  margin-top: var(--space-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toggle .mark {
+    transition: none;
+  }
 }
 .hint,
 .sub {

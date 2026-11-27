@@ -166,7 +166,7 @@
     @if (selected().size > 0) {
       <div class="selection-bar" role="region" [attr.aria-label]="'myPages.selectionBar' | transloco" animate.enter="bar-enter" animate.leave="bar-leave">
         <span class="sel-count">{{ 'myPages.selectedCount' | transloco: { n: selected().size } }}</span>
-        <button type="button" class="btn btn-primary btn-small" [disabled]="working()" (click)="inviteSelected()">
+        <button type="button" class="btn btn-solid btn-small" [disabled]="working()" (click)="inviteSelected()">
           {{ 'myPages.inviteSelected' | transloco: { count: selected().size } }}
         </button>
         <button type="button" class="link-btn" (click)="clearSelection()">{{ 'myPages.clearSelection' | transloco }}</button>

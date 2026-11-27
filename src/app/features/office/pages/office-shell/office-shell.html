@@ -1,4 +1,3 @@
-
 <div class="shell-body" [class.nav-collapsed]="navCollapsed()">
   <nav
     class="side-nav"
@@ -16,18 +15,31 @@
         [title]="(navCollapsed() ? 'nav.expand' : 'nav.collapse') | transloco"
         (click)="toggleNav()"
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
           <rect x="3.5" y="4.5" width="17" height="15" rx="3" />
           <path d="M9.5 4.5v15" />
         </svg>
       </button>
       <!-- アプリの名前を押すとホームへ -->
-      <a class="app-home" [routerLink]="['/o', officeId()]">{{ 'common.appName' | transloco }}</a>
+      <a class="app-home" [routerLink]="['/o', officeId()]" [state]="{ navRoot: true }">{{
+        'common.appName' | transloco
+      }}</a>
     </div>
     <!-- 見出しは置かず、細い線で区切る：ホーム → 毎月の作業 → 人 → 年1回・随時 → 設定 -->
     <a
       [routerLink]="['/o', officeId()]"
       routerLinkActive="active"
+      [state]="{ navRoot: true }"
       [routerLinkActiveOptions]="{ exact: true }"
       [attr.title]="navCollapsed() ? ('nav.home' | transloco) : null"
     >
@@ -38,6 +50,7 @@
     <a
       [routerLink]="['/o', officeId(), 'payrolls']"
       routerLinkActive="active"
+      [state]="{ navRoot: true }"
       [attr.title]="navCollapsed() ? ('payroll.listTitle' | transloco) : null"
     >
       <app-icon name="payroll" /><span class="label">{{ 'payroll.listTitle' | transloco }}</span>
@@ -45,6 +58,7 @@
     <a
       [routerLink]="['/o', officeId(), 'bonuses']"
       routerLinkActive="active"
+      [state]="{ navRoot: true }"
       [attr.title]="navCollapsed() ? ('nav.bonuses' | transloco) : null"
     >
       <app-icon name="bonus" /><span class="label">{{ 'nav.bonuses' | transloco }}</span>
@@ -52,6 +66,7 @@
     <a
       [routerLink]="['/o', officeId(), 'premiums']"
       routerLinkActive="active"
+      [state]="{ navRoot: true }"
       [attr.title]="navCollapsed() ? ('nav.premiums' | transloco) : null"
     >
       <app-icon name="premium" /><span class="label">{{ 'nav.premiums' | transloco }}</span>
@@ -61,6 +76,7 @@
     <a
       [routerLink]="['/o', officeId(), 'employees']"
       routerLinkActive="active"
+      [state]="{ navRoot: true }"
       [attr.title]="navCollapsed() ? ('nav.employees' | transloco) : null"
     >
       <app-icon name="people" /><span class="label">{{ 'nav.employees' | transloco }}</span>
@@ -68,6 +84,7 @@
     <a
       [routerLink]="['/o', officeId(), 'requests']"
       routerLinkActive="active"
+      [state]="{ navRoot: true }"
       [attr.title]="navCollapsed() ? ('nav.requests' | transloco) : null"
     >
       <app-icon name="request" /><span class="label">{{ 'nav.requests' | transloco }}</span>
@@ -77,6 +94,7 @@
     <a
       [routerLink]="['/o', officeId(), 'regular', regularYear()]"
       routerLinkActive="active"
+      [state]="{ navRoot: true }"
       [attr.title]="navCollapsed() ? ('nav.regular' | transloco) : null"
     >
       <app-icon name="regular" /><span class="label">{{ 'nav.regular' | transloco }}</span>
@@ -84,6 +102,7 @@
     <a
       [routerLink]="['/o', officeId(), 'revisions']"
       routerLinkActive="active"
+      [state]="{ navRoot: true }"
       [attr.title]="navCollapsed() ? ('nav.revisions' | transloco) : null"
     >
       <app-icon name="revision" /><span class="label">{{ 'nav.revisions' | transloco }}</span>
@@ -91,6 +110,7 @@
     <a
       [routerLink]="['/o', officeId(), 'calendar']"
       routerLinkActive="active"
+      [state]="{ navRoot: true }"
       [attr.title]="navCollapsed() ? ('nav.calendar' | transloco) : null"
     >
       <app-icon name="calendar" /><span class="label">{{ 'nav.calendar' | transloco }}</span>
@@ -98,6 +118,7 @@
     <a
       [routerLink]="['/o', officeId(), 'filings']"
       routerLinkActive="active"
+      [state]="{ navRoot: true }"
       [attr.title]="navCollapsed() ? ('nav.filings' | transloco) : null"
     >
       <app-icon name="filing" /><span class="label">{{ 'nav.filings' | transloco }}</span>
@@ -110,6 +131,7 @@
       <a
         [routerLink]="['/o', officeId(), 'import']"
         routerLinkActive="active"
+        [state]="{ navRoot: true }"
         [attr.title]="navCollapsed() ? ('nav.import' | transloco) : null"
       >
         <app-icon name="download" /><span class="label">{{ 'nav.import' | transloco }}</span>
@@ -117,6 +139,7 @@
       <a
         [routerLink]="['/o', officeId(), 'settings']"
         routerLinkActive="active"
+        [state]="{ navRoot: true }"
         [attr.title]="navCollapsed() ? ('nav.settings' | transloco) : null"
       >
         <app-icon name="settings" /><span class="label">{{ 'nav.settings' | transloco }}</span>
@@ -124,6 +147,7 @@
       <a
         [routerLink]="['/o', officeId(), 'members']"
         routerLinkActive="active"
+        [state]="{ navRoot: true }"
         [attr.title]="navCollapsed() ? ('nav.members' | transloco) : null"
       >
         <app-icon name="admin" /><span class="label">{{ 'nav.members' | transloco }}</span>
@@ -132,6 +156,7 @@
     <a
       [routerLink]="['/o', officeId(), 'help']"
       routerLinkActive="active"
+      [state]="{ navRoot: true }"
       [attr.title]="navCollapsed() ? ('nav.help' | transloco) : null"
     >
       <app-icon name="help" /><span class="label">{{ 'nav.help' | transloco }}</span>

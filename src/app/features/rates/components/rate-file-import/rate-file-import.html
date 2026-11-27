@@ -111,7 +111,7 @@
                     {{ 'rateDialog.csv.status.' + r.status | transloco }}
                   }
                 </td>
-                <td class="act-col"><button type="button" class="btn btn-small" [class.btn-primary]="!!x.issue" [disabled]="fix.busy()" (click)="fix.openLine(x.line)">{{ 'importFix.check' | transloco }}</button></td>
+                <td class="act-col"><button type="button" class="btn btn-small" [disabled]="fix.busy()" (click)="fix.openLine(x.line)">{{ 'importFix.check' | transloco }}</button></td>
               </tr>
             } @else if (x.issue; as is) {
               <tr app-issue-row [issue]="is" [fix]="fix" [span]="5"></tr>

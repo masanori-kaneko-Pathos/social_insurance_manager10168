@@ -94,6 +94,8 @@
   @if (rows().length > 0) {
     <app-step-guide [steps]="guideSteps()" (go)="goStep($event)" />
   }
+  <!-- 今の業務と一覧の切れ目（薄い線。給与・賞与・保険料・従業員で同じ場所。11/27） -->
+  <hr class="section-sep" />
   <!-- 先に直す人（定時決定の未反映・計算できない人）。合計から抜けたり、前の額のまま計算したりしているので、①より前に出す -->
   <!-- 定時決定がまだ反映されていない人（前の標準報酬のまま計算している。11/19） -->
   @if (regularPending(); as rp) {
@@ -523,7 +525,7 @@
             </button>
           }
         } @else {
-          <button type="button" class="btn btn-primary" [disabled]="closeBusy() || !!closeBlock()" (click)="closeMonth()">
+          <button type="button" class="btn btn-solid" [disabled]="closeBusy() || !!closeBlock()" (click)="closeMonth()">
             {{ 'monthClose.close' | transloco: { month: monthParts(month()).m } }}
           </button>
           @if (closeBlock(); as b) {

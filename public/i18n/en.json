@@ -4965,7 +4965,7 @@
     "fileHint": "CSV or Excel (xlsx, xls)."
   },
   "decisionNotice": {
-    "title": "Notify employees of decisions (My Page)",
+    "title": "Notify decisions",
     "lead": "When the pension office (or health insurance society) notifies you of confirmed coverage start or end, or of decisions on standard monthly remuneration or standard bonus, check and promptly pass them on to the employee. Keep the notices for two years.",
     "month": "From month",
     "empty": "No one has a standard remuneration starting in {{month}}.",

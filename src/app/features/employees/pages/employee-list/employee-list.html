@@ -47,6 +47,8 @@
   @if (context.isAdmin()) {
     <app-entry-choice [items]="entryItems()" />
   }
+  <!-- 今の業務と一覧の切れ目（薄い線。給与・賞与・保険料・従業員で同じ場所。11/27） -->
+  <hr class="section-sep" />
   @if (exportErrorKey(); as e) {
     <div class="alert alert-danger">{{ e | transloco }}</div>
   }

@@ -243,7 +243,7 @@
                           (change)="setCheck(v, 'consent', $any($event.target).checked)" />
                         {{ 'regular.annual.consent' | transloco }}
                       </label>
-                      <button type="button" class="btn btn-primary" (click)="reflectAnnual(v)"
+                      <button type="button" class="btn" (click)="reflectAnnual(v)"
                         [disabled]="!canReflectAnnual(v) || saving()">
                         {{ 'regular.annual.reflect' | transloco }}
                       </button>

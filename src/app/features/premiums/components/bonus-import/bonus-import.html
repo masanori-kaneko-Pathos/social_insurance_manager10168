@@ -124,7 +124,7 @@
       <button type="button" class="btn" [disabled]="saving()" (click)="clear()">
         {{ 'common.cancel' | transloco }}
       </button>
-      <button type="button" class="btn btn-primary" [disabled]="!canImport()" (click)="importCsv()">
+      <button type="button" class="btn btn-solid" [disabled]="!canImport()" (click)="importCsv()">
         {{ 'bonusCsv.import' | transloco: { people: peopleToWrite(), payments: writes().length } }}
       </button>
     </div>
@@ -208,7 +208,6 @@
                   <button
                     type="button"
                     class="btn btn-small"
-                    [class.btn-primary]="!!x.issue"
                     [disabled]="fix.busy()"
                     (click)="fix.openLine(x.line)"
                   >

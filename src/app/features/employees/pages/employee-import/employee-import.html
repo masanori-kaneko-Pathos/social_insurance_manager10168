@@ -205,7 +205,7 @@
           @if (pv.plan.items.length === 0 && changeCount() > 0) {
             <div class="actions">
               <button type="button" class="btn" (click)="clear()" [disabled]="saving()">{{ 'common.cancel' | transloco }}</button>
-              <button type="button" class="btn btn-primary" (click)="importCsv()" [disabled]="!canImport()">
+              <button type="button" class="btn btn-solid" (click)="importCsv()" [disabled]="!canImport()">
                 {{ 'employeeCsv.same.button' | transloco: { n: changeCount() } }}
               </button>
             </div>
@@ -238,7 +238,7 @@
             <span class="skip-note">{{ 'importFix.notImported' | transloco: { n: n } }}</span>
           }
           <button type="button" class="btn" (click)="clear()" [disabled]="saving()">{{ 'common.cancel' | transloco }}</button>
-          <button type="button" class="btn btn-primary" (click)="importCsv()" [disabled]="!canImport()">
+          <button type="button" class="btn btn-solid" (click)="importCsv()" [disabled]="!canImport()">
             {{ 'employeeCsv.import' | transloco: { n: importItems().length } }}
           </button>
         </div>
@@ -314,7 +314,7 @@
                       }
                     </td>
                     <td class="num">{{ it.leaves.length || '—' }}</td>
-                    <td class="act-col"><button type="button" class="btn btn-small" [class.btn-primary]="!!x.issue" [disabled]="fix.busy()" (click)="fix.openLine(x.line)">{{ 'importFix.check' | transloco }}</button></td>
+                    <td class="act-col"><button type="button" class="btn btn-small" [disabled]="fix.busy()" (click)="fix.openLine(x.line)">{{ 'importFix.check' | transloco }}</button></td>
                   </tr>
                 } @else if (x.issue; as is) {
                   <tr app-issue-row [issue]="is" [fix]="fix" [cols]="issueCols"></tr>
@@ -383,7 +383,7 @@
         }
         <div class="actions top">
           <button type="button" class="btn" [disabled]="numberSaving()" (click)="numberRead.set(null)">{{ 'common.cancel' | transloco }}</button>
-          <button type="button" class="btn btn-primary" [disabled]="numberSaving() || r.items.length === 0" (click)="saveNumbers()">
+          <button type="button" class="btn btn-solid" [disabled]="numberSaving() || r.items.length === 0" (click)="saveNumbers()">
             {{ 'myNumber.import.button' | transloco: { n: r.items.length } }}
           </button>
         </div>

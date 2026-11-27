@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { ActivatedRouteSnapshot, NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
-import { NavEntry, nameEntry, previousOf, pushEntry } from '../logic/nav-history';
+import { NavEntry, nameEntry, previousOf, PushMode, pushEntry } from '../logic/nav-history';
 
 /**
  * アプリの中で見た画面を覚える（「‹ 前の画面」のリンクのため。11/25）
@@ -15,11 +15,19 @@ export class NavHistoryService {
   private readonly stack = signal<NavEntry[]>([]);
   /** 今の画面のパス */
   readonly currentPath = signal('');
+  /** 今の画面に、サイドバーかホームから来たか（そのときは「‹ 前の画面」を出さない。決まった行き先も出さない。11/27） */
+  readonly arrivedFromRoot = signal(false);
 
   constructor() {
     this.router.events.pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd)).subscribe((e) => {
       const leaf = leafOf(this.router.routerState.snapshot.root);
       const path = leaf.data['tabRoot'] ? parentOf(pathOf(e.urlAfterRedirects)) : pathOf(e.urlAfterRedirects);
+      // どう来たか：サイドバーのリンクは state.navRoot、「‹ 前の画面」は state.navBack。ホーム（/o/:id）からのリンクもサイドバーと同じ（11/27）
+      const state = this.router.lastSuccessfulNavigation?.extras.state as { navRoot?: boolean; navBack?: boolean } | undefined;
+      const fromHome = /^\/o\/[^/]+$/.test(this.currentPath()) && path !== this.currentPath();
+      const mode: PushMode = state?.navRoot || fromHome ? 'root' : state?.navBack ? 'back' : 'push';
+      // 同じ画面の中の切り替え（タブ・絞り込み）は、来た道を変えない
+      if (path !== this.currentPath()) this.arrivedFromRoot.set(mode === 'root');
       this.currentPath.set(path);
       const key = leaf.data['backName'] as string | undefined;
       if (!key || leaf.data['backSkip']) return;
@@ -31,7 +39,7 @@ export class NavHistoryService {
         params['m'] = String(Number(month.slice(5)));
       }
       if (leaf.params['year']) params['year'] = leaf.params['year'];
-      this.stack.update((s) => pushEntry(s, { path, url: e.urlAfterRedirects, name: { key, params } }));
+      this.stack.update((s) => pushEntry(s, { path, url: e.urlAfterRedirects, name: { key, params } }, mode));
     });
   }
 

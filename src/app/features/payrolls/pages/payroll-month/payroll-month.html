@@ -91,6 +91,8 @@
       </div>
     }
   </section>
+  <!-- 今の業務と一覧の切れ目（薄い線。給与・賞与・保険料・従業員で同じ場所。11/27） -->
+  <hr class="section-sep" />
 
   <!-- 全員が入力済みになったら、次にやることをまとめて出す（11/26） -->
   @if (allDone()) {
@@ -167,7 +169,7 @@
                     <div class="bulk-row">
                       <input class="input num w-days" inputmode="numeric" maxlength="2" [value]="bulkDays()" (input)="bulkDays.set($any($event.target).value)" [attr.aria-label]="'payroll.col.days' | transloco" />
                       <span>{{ 'payroll.bulk.daysUnit' | transloco }}</span>
-                      <button type="button" class="btn btn-small btn-primary" [disabled]="!bulkDaysOk()" (click)="applyBulkDays()">
+                      <button type="button" class="btn btn-small" [disabled]="!bulkDaysOk()" (click)="applyBulkDays()">
                         {{ 'payroll.bulk.apply' | transloco }}
                       </button>
                     </div>

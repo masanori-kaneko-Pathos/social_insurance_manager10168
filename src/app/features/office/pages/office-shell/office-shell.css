@@ -89,9 +89,8 @@
 }
 
 /* 開くときのガタつきを止める（11/20）
-   - 名前は折り返さない・横にはみ出た分は隠す
-   - 11/27：開け閉めの動き（幅・本文の幅・名前のふわっと）をやめ、押したらその場で切り替える。
-     幅が少しずつ変わる間、本文の文字（ホームのボタンなど）が何度も折り返し直してガタついて見えたため */
+   - 名前は折り返さない・横にはみ出た分は隠す（開いている途中で縦に並んで、縦のスクロールバーが一瞬出るのを防ぐ）
+   - 名前は、サイドバーがほぼ開いてから、ふわっと出す */
 .side-nav {
   overflow-x: hidden;
 }
@@ -101,6 +100,26 @@
   white-space: nowrap;
 }
 
+.side-nav:not(.collapsed) .label,
+.side-nav:not(.collapsed) .nav-top .app-home {
+  animation: nav-label-in var(--dur-fast) var(--ease-out) var(--dur-base) both;
+}
+
+@keyframes nav-label-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .side-nav:not(.collapsed) .label,
+  .side-nav:not(.collapsed) .nav-top .app-home {
+    animation: none;
+  }
+}
 
 /* 右の列：ヘッダーと本文を縦に（11/20） */
 .shell-right {
@@ -176,6 +195,12 @@
 }
 
 /* ===== しまったとき：アイコンだけ（押せばそのメニューへ。名前は指したときに出る） ===== */
+.side-nav {
+  transition:
+    width var(--dur-base) var(--ease-out),
+    padding var(--dur-base) var(--ease-out);
+}
+
 .side-nav.collapsed {
   width: 60px;
   padding-left: var(--space-xs);
@@ -202,6 +227,7 @@
   min-width: 0;
   max-width: 1080px;
   padding: var(--space-xl) var(--space-lg);
+  transition: max-width var(--dur-base) var(--ease-out);
 }
 
 /* サイドバーをしまったら、空いた幅（220px → 60px の差）だけ本文を広げる（左に詰めるだけにしない） */

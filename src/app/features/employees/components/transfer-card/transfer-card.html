@@ -51,7 +51,7 @@
         }
         <div class="actions">
           <button type="button" class="btn" [disabled]="busy()" (click)="cancel()">{{ 'common.cancel' | transloco }}</button>
-          <button type="button" class="btn btn-primary" [disabled]="busy() || !toId() || !date()" (click)="check()">{{ 'transfer.check' | transloco }}</button>
+          <button type="button" class="btn" [disabled]="busy() || !toId() || !date()" (click)="check()">{{ 'transfer.check' | transloco }}</button>
         </div>
       </div>
 
