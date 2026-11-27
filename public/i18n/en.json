@@ -4336,7 +4336,7 @@
       "diff": "Difference (notice − app)",
       "noticeKumiai": "Notice / society bill"
     },
-    "reasonsTitle": "Reasons for the difference (check what you confirmed)",
+    "reasonsTitle": "Reasons to record (select)",
     "reason": {
       "acquireLoss": "Acquisition or loss mid-month (app data differs from the filing)",
       "pendingFiling": "Filing not yet processed by the pension office",
@@ -4344,7 +4344,9 @@
       "retroAdjust": "Retroactive corrections for previous months",
       "gradeChange": "Timing of standard remuneration revisions",
       "excluded": "Some employees could not be calculated in the app",
-      "other": "Other (write a note)"
+      "other": "Other (write a note)",
+      "rateMonth": "Rate registration or start month differs (union rates entered, or the month rates change)",
+      "registeredFiled": "Registered SMR differs from the filed or notified value"
     },
     "excludedNow": "{{count}} now",
     "note": "Note",
@@ -4357,13 +4359,15 @@
       "lead": "Causes that match the difference:",
       "more": " and {{n}} more",
       "amounts": "Health {{health}} yen, pension {{pension}} yen, contribution {{child}} yen",
-      "checked": "The matching reasons below have been ticked. Check them against the notice and save.",
+      "checked": "The matching reasons are ticked under \"Reasons to record\". Check them against the notice and save.",
       "none": "No cause matching the difference was found in the app's data. Check items such as the settlement for previous months on the notice and choose reasons below.",
       "gradePending": "A standard remuneration revision is not yet processed by the pension office (the notice uses the old amount)",
       "acquirePending": "People who joined this month are not yet on the notice (acquisition filing pending)",
       "lossPending": "People who left last month are still on the notice (loss filing pending)",
-      "bonusPending": "This month's bonus is not yet on the notice (bonus payment filing pending)"
-    }
+      "bonusPending": "This month's bonus is not yet on the notice (bonus payment filing pending)",
+      "ratePending": "Rates changed this month, but the notice still uses the previous rates (rate registration or start month)"
+    },
+    "causesTitle": "Possible reasons (calculated by the app)"
   },
   "calendar": {
     "title": "Year calendar",
@@ -5353,6 +5357,12 @@
       "down": "Move down",
       "saved": "Order saved",
       "remove": "Remove"
+    },
+    "group": {
+      "fixed": "Fixed wages (same every month)",
+      "variable": "Non-fixed wages (vary by month)",
+      "retro": "For earlier months",
+      "excluded": "Not remuneration"
     }
   },
   "premiumPeriod": {
@@ -5400,7 +5410,8 @@
     "block": {
       "future": "A future month cannot be marked checked.",
       "problems": "Some people cannot be calculated, so this month cannot be marked checked. Fix the people in the warning above first.",
-      "empty": "No one is insured in this month."
+      "empty": "No one is insured in this month.",
+      "bonusProblems": "Some bonuses cannot be calculated, so this month cannot be marked as checked. Fix them on the bonus page."
     },
     "confirm": "Mark the employee share for month {{month}} as checked.\nPeople: {{count}}, employee share total ¥{{employee}}\n{{soft}}\nYou can still edit after marking. People who change will show as \"Changed after checking\".",
     "cancelConfirm": "Undo \"checked\" for month {{month}}? Settlement records will also be deleted.",
@@ -5449,7 +5460,14 @@
     "softReady": "Matched with payroll software ({{matched}} match, {{diff}} differ).",
     "softMissing": "Not matched with payroll software yet (you can still mark it checked).",
     "softDone": "Matching: {{matched}} match, {{diff}} differ",
-    "softNone": "No matching"
+    "softNone": "No matching",
+    "note": {
+      "softDiff": "{{count}} people differ from the payroll software. Check the reasons before marking as checked.",
+      "regularPending": "{{count}} people do not have the annual SMR decision applied yet. Their premiums use the previous SMR."
+    },
+    "softFile": "Compared file: {{file}} ({{at}})",
+    "softPeople": "People who differed from the payroll software ({{count}})",
+    "softPeopleMore": "{{count}} more (over the limit of names kept, or only in the file)"
   },
   "transfer": {
     "open": "Transfer to another office",

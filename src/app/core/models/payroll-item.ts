@@ -34,6 +34,18 @@ export const PAYROLL_ITEM_CATEGORIES: readonly PayrollItemCategory[] = [
   'excluded',
 ];
 
+/**
+ * 分類を選ぶ欄の見出し（11/27。Q10）。7分類を、担当者が分かるまとまりの下に並べる
+ * - 固定的賃金：欠勤控除も、固定的賃金から引くのでここ
+ * - 前の月までの分：遡及支払額は、固定的にも非固定的にも入らない（定時決定・随時改定の平均から除く）ので別にする
+ */
+export const PAYROLL_ITEM_GROUPS: readonly { key: 'fixed' | 'variable' | 'retro' | 'excluded'; categories: readonly PayrollItemCategory[] }[] = [
+  { key: 'fixed', categories: ['base', 'fixedAllowance', 'commute', 'deduction'] },
+  { key: 'variable', categories: ['variable'] },
+  { key: 'retro', categories: ['retro'] },
+  { key: 'excluded', categories: ['excluded'] },
+];
+
 /** 毎月決まった額に数える分類（基本給は給与の形しだいなので入れない） */
 export const FIXED_CATEGORIES: readonly PayrollItemCategory[] = ['fixedAllowance', 'commute'];
 

@@ -1,6 +1,8 @@
 import {
   buildPeople,
   closeBlockers,
+  closeCheck,
+  CloseCheckInput,
   CloseSource,
   diffsOf,
   monthDiffSummary,
@@ -138,6 +140,33 @@ describe('month-close', () => {
         '2026-11-24',
       );
       expect(s).toEqual({ month: '2026-09', count: 1, totalMilli: 100000, contributionMilli: 500, expired: false });
+    });
+  });
+
+  describe('closeCheck（確認済みにできるか。11/27）', () => {
+    const ok: CloseCheckInput = { future: false, blockers: 0, bonusProblems: 0, rowCount: 10, regularPending: 0, soft: { matched: 10, diff: 0 } };
+
+    it('全員が照合で一致していれば、止めず知らせることもない', () => {
+      expect(closeCheck(ok)).toEqual({ block: null, notes: [] });
+    });
+    it('照合していない・差がある・定時決定の未反映は、止めずに知らせる', () => {
+      expect(closeCheck({ ...ok, soft: null })).toEqual({ block: null, notes: ['softMissing'] });
+      expect(closeCheck({ ...ok, soft: { matched: 8, diff: 2 } })).toEqual({ block: null, notes: ['softDiff'] });
+      expect(closeCheck({ ...ok, soft: null, regularPending: 3 })).toEqual({ block: null, notes: ['softMissing', 'regularPending'] });
+    });
+    it('賞与に計算できない人がいれば止める（納付額が欠けたまま進まない）', () => {
+      expect(closeCheck({ ...ok, bonusProblems: 1 }).block).toBe('bonusProblems');
+    });
+    it('止める理由は、まだ来ていない月 → 月額 → 賞与 → 人がいない の順', () => {
+      expect(closeCheck({ ...ok, future: true, blockers: 1, bonusProblems: 1, rowCount: 0 }).block).toBe('future');
+      expect(closeCheck({ ...ok, blockers: 1, bonusProblems: 1 }).block).toBe('problems');
+      expect(closeCheck({ ...ok, rowCount: 0 }).block).toBe('empty');
+    });
+    it('止めるときも、知らせることは一緒に返す（照合なし・差あり・未反映の組み合わせ）', () => {
+      expect(closeCheck({ ...ok, bonusProblems: 2, soft: { matched: 0, diff: 10 }, regularPending: 1 })).toEqual({
+        block: 'bonusProblems',
+        notes: ['softDiff', 'regularPending'],
+      });
     });
   });
 });

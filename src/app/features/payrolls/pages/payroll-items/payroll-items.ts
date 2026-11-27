@@ -1,6 +1,6 @@
 import { Component, computed, effect, ElementRef, inject, signal, untracked, viewChild } from '@angular/core';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { DEFAULT_TEMPLATE_NAMES, PAYROLL_ITEM_CATEGORIES, PayrollItem, PayrollItemCategory } from '../../../../core/models/payroll-item';
+import { DEFAULT_TEMPLATE_NAMES, PAYROLL_ITEM_CATEGORIES, PAYROLL_ITEM_GROUPS, PayrollItem, PayrollItemCategory } from '../../../../core/models/payroll-item';
 import { categoryOf, itemKey } from '../../logic/payroll-lines';
 import { OfficeContext } from '../../../office/office-context.service';
 import { PayrollItemService } from '../../payroll-item.service';
@@ -35,6 +35,8 @@ export class PayrollItems {
   private readonly transloco = inject(TranslocoService);
 
   readonly categories = PAYROLL_ITEM_CATEGORIES;
+  /** 分類の見出し（11/27） */
+  readonly categoryGroups = PAYROLL_ITEM_GROUPS;
   readonly loading = signal(true);
   readonly errorKey = signal<string | null>(null);
   readonly items = signal<PayrollItem[]>([]);

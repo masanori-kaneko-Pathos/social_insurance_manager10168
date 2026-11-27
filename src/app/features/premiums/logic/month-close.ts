@@ -40,6 +40,54 @@ export function closeBlockers(rows: readonly CloseSource[]): number {
   return rows.filter((r) => r.state === 'missing' || r.state === 'error').length;
 }
 
+/** 確認済みにする前に確かめること（11/27。Q3・Q4・Q5） */
+export interface CloseCheckInput {
+  /** まだ来ていない月か */
+  future: boolean;
+  /** 月額の保険料を計算できない人の数（closeBlockers） */
+  blockers: number;
+  /** この月に払った賞与で、計算できない人の数 */
+  bonusProblems: number;
+  /** 一覧の行の数（加入している人がいない月は 0） */
+  rowCount: number;
+  /** 定時決定がまだ反映されていない人の数 */
+  regularPending: number;
+  /** 給与ソフトとの照合（今の額で比べた結果。読んでいなければ null） */
+  soft: { matched: number; diff: number } | null;
+}
+
+export type CloseNote = 'softMissing' | 'softDiff' | 'regularPending';
+
+export interface CloseCheck {
+  /** 確認済みにできない理由（monthClose.block.* のキーの末尾）。できるなら null */
+  block: 'future' | 'problems' | 'bonusProblems' | 'empty' | null;
+  /** 止めないが、押す前に知らせること（順に出す） */
+  notes: CloseNote[];
+}
+
+/**
+ * 確認済みにできるか
+ * - 止める：まだ来ていない月・月額か賞与に計算できない人がいる（納付額が欠けたまま進むため）・加入している人がいない
+ * - 知らせる：照合していない・照合で差がある・定時決定が反映されていない（決定通知書の前に控除する会社があるので止めない）
+ * 確認済みの後も編集は止めず、変わった分は差額に出る（11/24の方針）
+ */
+export function closeCheck(x: CloseCheckInput): CloseCheck {
+  const notes: CloseNote[] = [];
+  if (!x.soft) notes.push('softMissing');
+  else if (x.soft.diff > 0) notes.push('softDiff');
+  if (x.regularPending > 0) notes.push('regularPending');
+  const block = x.future
+    ? 'future'
+    : x.blockers > 0
+      ? 'problems'
+      : x.bonusProblems > 0
+        ? 'bonusProblems'
+        : x.rowCount === 0
+          ? 'empty'
+          : null;
+  return { block, notes };
+}
+
 /**
  * その月の確定の記録（人ごと）
  * - 計算できた人はその額、免除の人は 0（免除だったことも記録する。あとで免除が外れたら差額に出る）

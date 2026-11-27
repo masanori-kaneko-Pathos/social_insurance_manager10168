@@ -5,6 +5,7 @@
 // Angular・Firebase に依存しない純粋な関数
 
 import type { ImportField, OurTableSpec } from '../../../shared/import/column-map';
+import { SOFT_DIFF_IDS_MAX, type SoftCheck } from '../../../core/models/month-close';
 
 // ===== アプリ → 給与ソフト =====
 
@@ -243,4 +244,18 @@ export function compareDeductions(table: readonly (readonly string[])[], app: re
     });
   }
   return out;
+}
+
+/**
+ * 照合の結果を、確認済みの記録に残す形にする（11/27。Q6）
+ * 一致した人数・差などで確かめが要る人数・ファイル名・照合した日時・差があった人（従業員ID。上限つき）
+ */
+export function softCheckOf(rows: readonly CompareRow[], fileName: string, checkedAt: string): SoftCheck {
+  const matched = rows.filter((x) => x.status === 'match').length;
+  const ids = rows
+    .filter((x) => x.status !== 'match' && x.employee)
+    .map((x) => x.employee!)
+    .sort((a, b) => (a.employeeNumber ?? '\uffff').localeCompare(b.employeeNumber ?? '\uffff', 'ja', { numeric: true }))
+    .map((e) => e.id);
+  return { matched, diff: rows.length - matched, fileName: fileName.slice(0, 200), checkedAt, diffIds: [...new Set(ids)].slice(0, SOFT_DIFF_IDS_MAX) };
 }

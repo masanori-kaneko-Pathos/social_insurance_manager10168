@@ -173,6 +173,33 @@ await ok('給与の項目：管理者は作れる', setDoc(doc(admin, `${O}/payr
 await ng('給与の項目：知らない分類では作れない', setDoc(doc(admin, `${O}/payrollItems/i2`), item('bonus')));
 await ng('給与の項目：一般は作れない', setDoc(doc(general, `${O}/payrollItems/i3`), item('base')));
 
+// ===== 確認済みの記録（monthCloses）：管理者が作る・消す。書き換えはできない。照合の結果の形（11/27） =====
+const close = (month, uid, softCheck) => ({
+  month,
+  people: { E1: { e: 45408, t: 90816000, c: 1152000 } },
+  count: 1,
+  employeeYen: 45408,
+  premiumTotalMilli: 90816000,
+  contributionMilli: 1152000,
+  closedBy: uid,
+  closedByName: 'テスト',
+  closedAt: serverTimestamp(),
+  softCheck,
+});
+const soft = { matched: 9, diff: 1, fileName: '控除額.csv', checkedAt: '2026-11-27T10:30', diffIds: ['E1'] };
+await ok('確認済み：管理者は照合なしで作れる', setDoc(doc(admin, `${O}/monthCloses/2026-08`), close('2026-08', 'admin1', null)));
+await ok('確認済み：管理者は照合の結果（人数だけの前の形）で作れる', setDoc(doc(admin, `${O}/monthCloses/2026-09`), close('2026-09', 'admin1', { matched: 1, diff: 0 })));
+await ok('確認済み：管理者は照合の結果（ファイル名・日時・差の人）で作れる', setDoc(doc(admin, `${O}/monthCloses/2026-10`), close('2026-10', 'admin1', soft)));
+await ng('確認済み：一般は作れない', setDoc(doc(general, `${O}/monthCloses/2026-11`), close('2026-11', 'general1', null)));
+await ng('確認済み：従業員本人は作れない', setDoc(doc(emp1, `${O}/monthCloses/2026-11`), close('2026-11', 'emp1', null)));
+await ng('確認済み：照合の結果に知らないキーがあれば作れない', setDoc(doc(admin, `${O}/monthCloses/2026-11`), close('2026-11', 'admin1', { ...soft, extra: 1 })));
+await ng('確認済み：照合した日時の形がちがえば作れない', setDoc(doc(admin, `${O}/monthCloses/2026-11`), close('2026-11', 'admin1', { ...soft, checkedAt: '11/27' })));
+await ng('確認済み：差の人が差の人数より多ければ作れない', setDoc(doc(admin, `${O}/monthCloses/2026-11`), close('2026-11', 'admin1', { ...soft, diff: 0 })));
+await ng('確認済み：書き換えはできない', updateDoc(doc(admin, `${O}/monthCloses/2026-10`), { count: 2 }));
+await ok('確認済み：メンバー（一般）は読める', read(general, `${O}/monthCloses/2026-10`));
+await ng('確認済み：部外者は読めない', read(outsider, `${O}/monthCloses/2026-10`));
+await ok('確認済み：管理者は取り消せる（消す）', deleteDoc(doc(admin, `${O}/monthCloses/2026-08`)));
+
 // ===== ほかの事業所 =====
 await ng('ほかの事業所：管理者でも、自分がメンバーでない事業所の従業員は読めない', read(admin, `${OTHER}/employees/X1`));
 

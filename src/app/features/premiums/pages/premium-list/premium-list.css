@@ -403,7 +403,18 @@ td.calc {
 .reasons legend {
   padding: 0 var(--space-xs);
   font-size: var(--font-sm);
-  color: var(--color-text-sub);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* 「考えられる理由（アプリが計算）」の見出し。下の「記録する理由（選択）」と同じ大きさ（11/27） */
+.reasons-head {
+  margin: var(--space-md) 0 0;
+  font-size: var(--font-sm);
+  font-weight: 600;
+}
+.reasons-head + .notice-causes {
+  margin-top: var(--space-xs);
 }
 
 .reasons .check {
@@ -744,7 +755,8 @@ details.fold[open]::details-content {
 .close-bar {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  /* 横の文の1行目にそろえる（注意の行が増えても、ボタンの位置が動かないように。11/27） */
+  align-items: baseline;
   gap: var(--space-sm);
   margin: 0 0 var(--space-md);
   font-size: var(--font-sm);
@@ -913,6 +925,14 @@ tr.clickable:focus-visible {
   font-weight: 600;
 }
 
+/* 照合の差・定時決定の未反映（押せるが、目に入るように。1行ずつ。11/27） */
+.close-note {
+  display: block;
+  margin-top: var(--space-xs);
+  color: var(--color-warning-text);
+  font-weight: 600;
+}
+
 /* 差の原因（アプリのデータから当てたもの。11/26） */
 td.cause {
   min-width: 14em;
@@ -942,4 +962,15 @@ td.cause {
   font-size: var(--font-sm);
   font-variant-numeric: tabular-nums;
   color: var(--color-text-sub);
+}
+
+/* 照合で差があった人（確認済みの記録。11/27） */
+.close-soft-people {
+  margin: 0 0 var(--space-md);
+  font-size: var(--font-sm);
+}
+.close-soft-people ul {
+  margin: var(--space-xs) 0 0;
+  padding-left: 1.2em;
+  columns: 3 14em;
 }

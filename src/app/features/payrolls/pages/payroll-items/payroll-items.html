@@ -92,15 +92,19 @@
 
       <fieldset class="choices">
         <legend>{{ 'payrollItem.field.category' | transloco }}</legend>
-        @for (c of categories; track c) {
-          <label class="choice" [class.on]="d.category === c">
-            <input type="radio" name="category" [checked]="d.category === c" (change)="patch({ category: c })" />
-            <span>
-              <strong>{{ 'payrollItem.category.' + c | transloco }}</strong>
-              <span class="hint">{{ 'payrollItem.exampleLabel' | transloco: { list: ('payrollItem.example.' + c | transloco) } }}</span>
-              <span class="hint">{{ 'payrollItem.treatment.' + c | transloco }}</span>
-            </span>
-          </label>
+        <!-- 4つの見出しの下に並べる（明細の内訳の選択欄と同じまとまり。11/27） -->
+        @for (g of categoryGroups; track g.key) {
+          <p class="choice-group">{{ 'payrollItem.group.' + g.key | transloco }}</p>
+          @for (c of g.categories; track c) {
+            <label class="choice" [class.on]="d.category === c">
+              <input type="radio" name="category" [checked]="d.category === c" (change)="patch({ category: c })" />
+              <span>
+                <strong>{{ 'payrollItem.category.' + c | transloco }}</strong>
+                <span class="hint">{{ 'payrollItem.exampleLabel' | transloco: { list: ('payrollItem.example.' + c | transloco) } }}</span>
+                <span class="hint">{{ 'payrollItem.treatment.' + c | transloco }}</span>
+              </span>
+            </label>
+          }
         }
       </fieldset>
 

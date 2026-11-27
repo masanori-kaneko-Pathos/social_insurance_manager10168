@@ -32,6 +32,8 @@ export const DIFF_REASONS = [
   'bonusFiling', // 賞与支払届の出し忘れ・反映待ち
   'retroAdjust', // 前の月までのさかのぼりの訂正（告知額に調整が入っている）
   'gradeChange', // 標準報酬（定時決定・随時改定）の反映の時期の違い
+  'rateMonth', // 料率の登録や適用月の違い（組合の料率の入れ違い・料率が変わる月。11/27）
+  'registeredFiled', // 登録した標準報酬と、届出・決定通知書の値の違い（11/27）
   'excluded', // アプリで計算できない人がいる（合計から抜けている）
   'other',
 ] as const;

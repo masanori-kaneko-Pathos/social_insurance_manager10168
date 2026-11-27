@@ -101,3 +101,9 @@
 .s-skipped .no {
   border-style: dashed;
 }
+
+/* いまの段階（次にやる段）：枠をオレンジに。大きさ・位置は変えない（11/27） */
+.current button {
+  border-color: var(--color-tab-active);
+  box-shadow: inset 0 0 0 1px var(--color-tab-active);
+}

@@ -126,9 +126,14 @@
                     (change)="setCategory(i, $any($event.target).value)"
                   >
                     <option value="" [selected]="!d.category">{{ 'payrollEntry.lines.pickCategory' | transloco }}</option>
-                    @for (c of categories; track c) {
-                      <!-- 名前だけでは選べないので、例を付ける（「給与の項目と分類」の画面と同じ例。11/26） -->
-                      <option [value]="c" [selected]="d.category === c">{{ 'payrollItem.category.' + c | transloco }}（{{ 'payrollItem.exampleLabel' | transloco: { list: ('payrollItem.example.' + c | transloco) } }}）</option>
+                    <!-- 4つの見出しの下に並べる（固定的賃金・非固定的賃金・前の月までの分・報酬にならない。11/27） -->
+                    @for (g of categoryGroups; track g.key) {
+                      <optgroup [label]="'payrollItem.group.' + g.key | transloco">
+                        @for (c of g.categories; track c) {
+                          <!-- 名前だけでは選べないので、例を付ける（「給与の項目と分類」の画面と同じ例。11/26） -->
+                          <option [value]="c" [selected]="d.category === c">{{ 'payrollItem.category.' + c | transloco }}（{{ 'payrollItem.exampleLabel' | transloco: { list: ('payrollItem.example.' + c | transloco) } }}）</option>
+                        }
+                      </optgroup>
                     }
                   </select>
                 } @else if (d.category) {

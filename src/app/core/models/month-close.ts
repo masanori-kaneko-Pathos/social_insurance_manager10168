@@ -30,7 +30,16 @@ export interface MonthCloseDoc {
 export interface SoftCheck {
   matched: number;
   diff: number;
+  /** 照合した控除額のファイルの名前（11/27。前のデータにはない） */
+  fileName?: string;
+  /** 照合した日時（ローカルの YYYY-MM-DDTHH:mm。11/27） */
+  checkedAt?: string;
+  /** 差があった人の従業員ID（社員番号の順に、最大 SOFT_DIFF_IDS_MAX 人。ファイルにしかいない人は入らない。11/27） */
+  diffIds?: string[];
 }
+
+/** 差があった人として残す人数の上限（文書が大きくなりすぎないように。人数は diff にいつも全部残る） */
+export const SOFT_DIFF_IDS_MAX = 200;
 
 export type MonthClose = MonthCloseDoc;
 

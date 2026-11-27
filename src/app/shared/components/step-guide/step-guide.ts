@@ -1,5 +1,6 @@
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { currentStepKey } from './step-current';
 
 /** 段階の状態：済み／要確認／まだ／していない（飛ばした） */
 export type StepState = 'done' | 'attention' | 'todo' | 'skipped';
@@ -30,4 +31,6 @@ export class StepGuide {
   /** 案内の名前（読み上げ用。翻訳のキー） */
   readonly labelKey = input('stepGuide.label');
   readonly go = output<string>();
+  /** 次にやる段（印を付ける。11/27） */
+  readonly current = computed(() => currentStepKey(this.steps()));
 }

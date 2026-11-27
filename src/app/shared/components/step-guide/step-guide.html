@@ -1,8 +1,8 @@
 <nav class="step-guide" [attr.aria-label]="labelKey() | transloco">
   <ol>
     @for (s of steps(); track s.key; let i = $index) {
-      <li [class]="'s-' + s.state">
-        <button type="button" (click)="go.emit(s.key)">
+      <li [class]="'s-' + s.state" [class.current]="current() === s.key">
+        <button type="button" [attr.aria-current]="current() === s.key ? 'step' : null" (click)="go.emit(s.key)">
           <span class="no" aria-hidden="true">{{ s.state === 'done' ? '✓' : i + 1 }}</span>
           <span class="text">
             <span class="label">{{ s.labelKey | transloco }}</span>

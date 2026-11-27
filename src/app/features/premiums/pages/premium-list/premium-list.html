@@ -499,6 +499,12 @@
           <span class="badge badge-closed">{{ 'monthClose.closed' | transloco }}</span>
           <span class="muted">{{ 'monthClose.closedBy' | transloco: { at: closedAtText(), name: c.closedByName ?? '—', count: c.count } }}</span>
           <span class="muted">{{ (c.softCheck ? 'monthClose.softDone' : 'monthClose.softNone') | transloco: (c.softCheck ?? {}) }}</span>
+          <!-- 照合したファイルと日時（11/27。前の記録にはない） -->
+          @if (closeSoftInfo(); as si) {
+            @if (si.fileName) {
+              <span class="muted">{{ 'monthClose.softFile' | transloco: { file: si.fileName, at: si.at } }}</span>
+            }
+          }
           @if (closeDiffs().length > 0) {
             <!-- 押せる文字：押すと差額の表を開く・もう一度で閉じる -->
             <button
@@ -530,10 +536,30 @@
                 <span class="soft-missing">{{ 'monthClose.softMissing' | transloco }}</span>
               }
               {{ 'monthClose.lead' | transloco }}
+              <!-- 照合の差・定時決定の未反映（止めないが、押す前に分かるように。ボタンの右に出すので、ボタンの位置は動かない。11/27） -->
+              @for (t of closeNoteTexts(); track t) {
+                <span class="close-note">{{ t }}</span>
+              }
             </span>
           }
         }
       </div>
+    }
+    <!-- 照合で差があった人（確認済みの記録に残した人。ふだんは閉じる。11/27） -->
+    @if (closeSoftInfo(); as si) {
+      @if (si.people.length > 0) {
+        <details class="fold close-soft-people">
+          <summary>{{ 'monthClose.softPeople' | transloco: { count: si.diff } }}</summary>
+          <ul>
+            @for (p of si.people; track p.id) {
+              <li><span class="emp-no">{{ p.no }}</span> {{ p.name }}</li>
+            }
+          </ul>
+          @if (si.more > 0) {
+            <p class="hint">{{ 'monthClose.softPeopleMore' | transloco: { count: si.more } }}</p>
+          }
+        </details>
+      }
     }
     @if (closeError(); as k) {
       <div class="alert alert-danger" role="alert">{{ k | transloco }}</div>
@@ -786,8 +812,10 @@
         }
       </div>
 
-      <!-- 差に合う原因（アプリのデータから当てる。合わなければそう出す。11/26） -->
+      <!-- 差に合う原因（アプリのデータから当てる。合わなければそう出す。11/26）
+           11/27：上に「考えられる理由（アプリが計算）」、下に「記録する理由（選択）」。見る順と役目を見出しで分ける -->
       @if (nc.status === 'diff') {
+        <h3 class="reasons-head">{{ 'premiumNotice.causesTitle' | transloco }}</h3>
         <div class="notice-causes" role="status">
           @if (noticeMatchedView().length) {
             <p class="causes-lead">{{ 'premiumNotice.cause.lead' | transloco }}</p>

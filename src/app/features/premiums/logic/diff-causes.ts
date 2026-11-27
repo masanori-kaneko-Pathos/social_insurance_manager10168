@@ -80,7 +80,8 @@ export type NoticeCause =
   | 'gradePending' // 標準報酬の改定が、年金事務所でまだ処理されていない（告知は前の額）
   | 'acquirePending' // 今月から加入した人が、告知にまだ入っていない（資格取得届の処理待ち）
   | 'lossPending' // 前の月で資格を失った人が、告知にまだ入っている（資格喪失届の処理待ち）
-  | 'bonusPending'; // この月の賞与が、告知にまだ入っていない（賞与支払届の処理待ち）
+  | 'bonusPending' // この月の賞与が、告知にまだ入っていない（賞与支払届の処理待ち）
+  | 'ratePending'; // この月から料率が変わったが、告知は前の料率のまま（料率の登録や適用月の違い。11/27）
 
 /** 欄ごとの全額（1/1000円） */
 export type CategoryMilli = Record<NoticeCategory, number>;
@@ -124,6 +125,8 @@ export interface NoticePerson {
   left: boolean;
   /** 今月から標準報酬が変わった（資格取得時決定を除く） */
   regraded: boolean;
+  /** 今月から料率が変わった（前の月と同じ標準報酬で、料率だけが違う。11/27。省くと false） */
+  rateChanged?: boolean;
 }
 
 const toYen = (m: CategoryMilli): CategoryMilli => ({
@@ -155,6 +158,8 @@ export function noticeCandidates(people: readonly NoticePerson[], bonusMilli: Ca
   collect('acquirePending', (p) => p.joined, (p) => add(ZERO_CATEGORY, p.now, -1));
   // 告知にまだ入っている → 差 ＝ ＋前
   collect('lossPending', (p) => p.left, (p) => p.before);
+  // 告知が前の料率のまま → 差 ＝ 前 − 今（改定・加入・喪失の人は、それぞれの候補で見る。11/27）
+  collect('ratePending', (p) => !!p.rateChanged && !p.regraded && !p.joined && !p.left, (p) => add(p.before, p.now, -1));
   if (bonusMilli && (bonusMilli.health || bonusMilli.pension || bonusMilli.childContribution)) {
     out.push({ key: 'bonusPending', yen: toYen(add(ZERO_CATEGORY, bonusMilli, -1)), names: [] });
   }
@@ -185,9 +190,10 @@ export function matchNotice(diff: Record<NoticeCategory, number | null>, candida
 }
 
 /** 当てた原因を、告知の「差の理由」の印に直す（手で選ぶ欄の初期値に使う） */
-export const NOTICE_CAUSE_REASON: Record<NoticeCause, 'gradeChange' | 'acquireLoss' | 'bonusFiling'> = {
+export const NOTICE_CAUSE_REASON: Record<NoticeCause, 'gradeChange' | 'acquireLoss' | 'bonusFiling' | 'rateMonth'> = {
   gradePending: 'gradeChange',
   acquirePending: 'acquireLoss',
   lossPending: 'acquireLoss',
   bonusPending: 'bonusFiling',
+  ratePending: 'rateMonth',
 };

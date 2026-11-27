@@ -1038,9 +1038,10 @@ service cloud.firestore {
             && d.month == month && isMonth(month)
             && optIntIn(d.health, 0, 999999999) && optIntIn(d.pension, 0, 999999999)
             && optIntIn(d.childContribution, 0, 999999999)
-            && d.reasons is list && d.reasons.size() <= 8
+            && d.reasons is list && d.reasons.size() <= 10
+            // 11/27：rateMonth（料率の登録や適用月の違い）・registeredFiled（登録した値と届出の値の違い）を足した
             && d.reasons.hasOnly(['acquireLoss', 'pendingFiling', 'bonusFiling', 'retroAdjust', 'gradeChange',
-                                  'excluded', 'rounding', 'other'])
+                                  'rateMonth', 'registeredFiled', 'excluded', 'rounding', 'other'])
             && optStr(d.note, 500)
             && d.updatedBy == request.auth.uid && d.updatedAt == request.time;
         }
@@ -1061,11 +1062,22 @@ service cloud.firestore {
           // softCheck は 11/26 に足した（給与ソフトとの照合の結果。null ＝ 照合なし）
           && exactKeys(request.resource.data, ['month', 'people', 'count', 'employeeYen', 'premiumTotalMilli',
                                                'contributionMilli', 'closedBy', 'closedByName', 'closedAt', 'softCheck'])
+          // 11/27：ファイル名・照合した日時・差があった人（従業員ID、200人まで）も残す。前の形（人数だけ）も通す
           && (request.resource.data.softCheck == null
               || (request.resource.data.softCheck is map
-                  && request.resource.data.softCheck.keys().hasOnly(['matched', 'diff'])
+                  && request.resource.data.softCheck.keys().hasAll(['matched', 'diff'])
+                  && request.resource.data.softCheck.keys().hasOnly(['matched', 'diff', 'fileName', 'checkedAt', 'diffIds'])
                   && request.resource.data.softCheck.matched is int && request.resource.data.softCheck.matched >= 0
-                  && request.resource.data.softCheck.diff is int && request.resource.data.softCheck.diff >= 0))
+                  && request.resource.data.softCheck.diff is int && request.resource.data.softCheck.diff >= 0
+                  && (!('fileName' in request.resource.data.softCheck)
+                      || (request.resource.data.softCheck.fileName is string && request.resource.data.softCheck.fileName.size() <= 200))
+                  && (!('checkedAt' in request.resource.data.softCheck)
+                      || (request.resource.data.softCheck.checkedAt is string
+                          && request.resource.data.softCheck.checkedAt.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}$')))
+                  && (!('diffIds' in request.resource.data.softCheck)
+                      || (request.resource.data.softCheck.diffIds is list
+                          && request.resource.data.softCheck.diffIds.size() <= 200
+                          && request.resource.data.softCheck.diffIds.size() <= request.resource.data.softCheck.diff))))
           && request.resource.data.month == month && isMonth(month)
           && request.resource.data.people is map && request.resource.data.people.size() <= 20000
           && request.resource.data.count == request.resource.data.people.size()

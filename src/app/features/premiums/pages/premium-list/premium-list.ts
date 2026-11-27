@@ -83,8 +83,7 @@ import {
   DEDUCTION_TABLE_SPEC,
   softwareExportRows,
   StandardChangeRow,
-  standardChangeRows,
-} from '../../logic/payroll-software';
+  standardChangeRows, softCheckOf } from '../../logic/payroll-software';
 import { buildPremiumCsv, PremiumCsvRow, premiumFileName } from '../../logic/premium-csv';
 import {
   DEFAULT_PREMIUM_SORT,
@@ -107,6 +106,7 @@ import { deductionHistoryAt, hasPayGroups, payrollAt } from '../../../office/log
 import {
   buildPeople,
   closeBlockers,
+  closeCheck,
   CloseDiff,
   ClosePeople,
   CloseSource,
@@ -554,9 +554,9 @@ export class PremiumList {
     });
     // 給与ソフトと比べて差がある人がいたら、この給与の月の精算の記録を読む（精算を含めた控除かを当てるため。11/26）
     effect(() => {
-      const res = this.deductionResult();
       const officeId = this.context.current()?.id;
-      if (!officeId || !res || res.month !== this.month() || !res.rows.some((r) => r.status === 'diff')) return;
+      // 結果は額が変わるたびに計算し直すので、「差がある人がいるか」だけで読み直しを決める（11/27）
+      if (!officeId || !this.deductionHasDiff()) return;
       const month = this.month();
       const payMonth = this.payMonth();
       untracked(() => void this.loadSettledForPay(officeId, month, payMonth));
@@ -587,8 +587,7 @@ export class PremiumList {
   readonly softCheckNow = computed<SoftCheck | null>(() => {
     const r = this.deductionResult();
     if (!r || r.month !== this.month()) return null;
-    const matched = r.rows.filter((x) => x.status === 'match').length;
-    return { matched, diff: r.rows.length - matched };
+    return softCheckOf(r.rows, r.fileName, r.checkedAt);
   });
 
   readonly guideSteps = computed<GuideStep[]>(() =>
@@ -691,13 +690,34 @@ export class PremiumList {
     return buildPeople(this.sourcesOf(rows).filter((r) => r.state !== 'missing' && r.state !== 'error'));
   }
 
+  /** 確認済みにできるか・押す前に知らせること（条件は month-close.ts の closeCheck。11/27） */
+  readonly closeState = computed(() =>
+    closeCheck({
+      future: this.month() > this.thisMonth,
+      blockers: closeBlockers(this.sourcesOf(this.allRows())),
+      bonusProblems: this.bonusSummary()?.problemCount ?? 0,
+      rowCount: this.rows().length,
+      regularPending: this.regularPending()?.ids.length ?? 0,
+      soft: this.softCheckNow(),
+    }),
+  );
+
   /** 確定できない理由（null なら確定できる） */
   readonly closeBlock = computed<string | null>(() => {
-    if (this.month() > this.thisMonth) return 'monthClose.block.future';
-    if (closeBlockers(this.sourcesOf(this.allRows())) > 0) return 'monthClose.block.problems';
-    if (this.rows().length === 0) return 'monthClose.block.empty';
-    return null;
+    const b = this.closeState().block;
+    return b ? `monthClose.block.${b}` : null;
   });
+
+  /** 押す前に知らせる文（照合の差・定時決定の未反映。照合なしはボタンの横の文で出す） */
+  readonly closeNoteTexts = computed<string[]>(() =>
+    this.closeState()
+      .notes.filter((n) => n !== 'softMissing')
+      .map((n) =>
+        this.transloco.translate(`monthClose.note.${n}`, {
+          count: n === 'softDiff' ? (this.softCheckNow()?.diff ?? 0) : (this.regularPending()?.ids.length ?? 0),
+        }),
+      ),
+  );
 
   /** 確定時と今の計算の差がある人（社員番号の順） */
   readonly closeDiffs = computed<(CloseDiff & { employee: Employee | null })[]>(() => {
@@ -714,6 +734,21 @@ export class PremiumList {
       .sort((a, b) =>
         (a.employee?.employeeNumber ?? '\uffff').localeCompare(b.employee?.employeeNumber ?? '\uffff', 'ja', { numeric: true }),
       );
+  });
+
+  /** 確認済みの記録に残した照合（ファイル名・日時・差があった人。11/27） */
+  readonly closeSoftInfo = computed(() => {
+    const sc = this.savedClose()?.softCheck;
+    if (!sc) return null;
+    const byId = new Map(this.employees().map((e) => [e.id, e]));
+    const ids = sc.diffIds ?? [];
+    const people = ids.map((id) => {
+      const e = byId.get(id);
+      return { id, no: e?.employeeNumber ?? '—', name: e ? `${e.lastName} ${e.firstName}` : '—' };
+    });
+    const at = sc.checkedAt ? sc.checkedAt.replace(/^\d{4}-(\d{2})-(\d{2})T/, (_, m, d) => `${Number(m)}/${Number(d)} `) : '';
+    // 差の人数のうち、名前を残していない人（上限を超えた人・ファイルにしかいない人）
+    return { fileName: sc.fileName ?? '', at, diff: sc.diff, people, more: Math.max(0, sc.diff - ids.length) };
   });
 
   /** 精算がまだの差額の合計（札と表の上に出す） */
@@ -739,7 +774,7 @@ export class PremiumList {
         count: t.count,
         employee: this.yen(t.employeeYen),
         soft: soft ? this.transloco.translate('monthClose.softReady', soft) : this.transloco.translate('monthClose.softMissing'),
-      }),
+      }) + this.closeNoteTexts().map((t) => `\n${t}`).join(''),
     );
     if (!ok) return;
     this.closeBusy.set(true);
@@ -1205,8 +1240,27 @@ export class PremiumList {
   readonly deductionSpec = DEDUCTION_TABLE_SPEC;
   /** 読んだ控除額のファイル（列を合わせている間） */
   readonly deductionFile = signal<{ name: string; tables: SheetTable[] } | null>(null);
+  /**
+   * 列を合わせ終わった控除額のファイル（どの月の一覧と比べるか・ファイル名・照合した日時。11/27）
+   * 結果は保存せず、今の本人負担と毎回比べ直す（照合のあとに料率や標準報酬を直しても、結果が追いつく。Q7）
+   */
+  private readonly deductionTable = signal<{ month: string; fileName: string; checkedAt: string; table: string[][] } | null>(null);
   /** 比べた結果（どの月の一覧と比べたか） */
-  readonly deductionResult = signal<{ month: string; fileName: string; rows: CompareRow[] } | null>(null);
+  readonly deductionResult = computed<{ month: string; fileName: string; checkedAt: string; rows: CompareRow[] } | null>(() => {
+    const t = this.deductionTable();
+    if (!t || t.month !== this.month()) return null;
+    const app: AppDeduction[] = this.softwareTargets().map((r) => ({
+      id: r.employee.id,
+      employeeNumber: r.employee.employeeNumber ?? null,
+      lastName: r.employee.lastName,
+      firstName: r.employee.firstName,
+      healthEmployeeYen: r.healthEmployeeYen,
+      pensionEmployeeYen: r.pensionEmployeeYen,
+    }));
+    return { month: t.month, fileName: t.fileName, checkedAt: t.checkedAt, rows: compareDeductions(t.table, app) };
+  });
+  /** 照合で差がある人がいるか（精算の記録を読むかどうか。値が同じなら読み直さない） */
+  private readonly deductionHasDiff = computed(() => !!this.deductionResult()?.rows.some((r) => r.status === 'diff'));
   readonly deductionError = signal<string | null>(null);
   readonly showAllDeductions = signal(false);
 
@@ -1215,7 +1269,7 @@ export class PremiumList {
     const file = input.files?.[0];
     input.value = '';
     if (!file) return;
-    this.deductionResult.set(null);
+    this.deductionTable.set(null);
     this.deductionError.set(null);
     try {
       const { tables } = await readTables(file);
@@ -1230,16 +1284,8 @@ export class PremiumList {
   onDeductionMapped(table: string[][]): void {
     const file = this.deductionFile();
     this.deductionFile.set(null);
-    const app: AppDeduction[] = this.softwareTargets().map((r) => ({
-      id: r.employee.id,
-      employeeNumber: r.employee.employeeNumber ?? null,
-      lastName: r.employee.lastName,
-      firstName: r.employee.firstName,
-      healthEmployeeYen: r.healthEmployeeYen,
-      pensionEmployeeYen: r.pensionEmployeeYen,
-    }));
     this.showAllDeductions.set(false);
-    this.deductionResult.set({ month: this.month(), fileName: file?.name ?? '', rows: compareDeductions(table, app) });
+    this.deductionTable.set({ month: this.month(), fileName: file?.name ?? '', checkedAt: nowMinute(), table });
   }
 
   cancelDeduction(): void {
@@ -1247,7 +1293,7 @@ export class PremiumList {
   }
 
   closeDeduction(): void {
-    this.deductionResult.set(null);
+    this.deductionTable.set(null);
     this.deductionError.set(null);
   }
 
@@ -1354,6 +1400,7 @@ export class PremiumList {
         joined: r.changes.includes('new'),
         left: had && !has && r.state === 'none',
         regraded: !!rem && rem.reason !== 'acquisition',
+        rateChanged: r.changes.includes('rate'),
       };
     });
     const bonus = this.bonusSummary()?.rows.find((x) => x.key === 'bonus')?.totals ?? null;
@@ -1502,4 +1549,11 @@ function shortDate(t: { toDate(): Date } | null | undefined): string | null {
   if (!t || typeof t.toDate !== 'function') return null;
   const d = t.toDate();
   return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+/** 今の日時（照合した日時の記録。ローカルの YYYY-MM-DDTHH:mm。11/27） */
+function nowMinute(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }

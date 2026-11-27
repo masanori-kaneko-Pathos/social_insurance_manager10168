@@ -4,7 +4,7 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import type { PayType } from '../../../../core/models/contract';
 import { PAYROLL_STATES, PayrollLine, PayrollState } from '../../../../core/models/payroll';
-import { PayrollItemCategory, PayrollItemInput, PAYROLL_ITEM_CATEGORIES } from '../../../../core/models/payroll-item';
+import { PayrollItemCategory, PayrollItemInput, PAYROLL_ITEM_CATEGORIES, PAYROLL_ITEM_GROUPS } from '../../../../core/models/payroll-item';
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { toHalfWidth } from '../../../../shared/utils/text';
 import { categoryOf, FOR_MONTH_CATEGORIES, hasAmounts, itemKey, itemNames, LineDraft, readAmount, readLines, startDrafts, totalsOf } from '../../logic/payroll-lines';
@@ -122,6 +122,8 @@ export class PayrollEntry implements OnInit {
 
   readonly states = PAYROLL_STATES;
   readonly categories = PAYROLL_ITEM_CATEGORIES;
+  /** 分類を選ぶ欄の見出し（固定的賃金・非固定的賃金・前の月までの分・報酬にならない。11/27） */
+  readonly categoryGroups = PAYROLL_ITEM_GROUPS;
   readonly names = computed(() => itemNames(this.items()));
   /** datalist の id（同じ画面に2つ開いても重ならないように） */
   readonly listId = `pi-names-${Math.random().toString(36).slice(2, 8)}`;

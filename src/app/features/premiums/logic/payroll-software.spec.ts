@@ -1,4 +1,5 @@
-import { AppDeduction, compareDeductions, softwareExportRows, STANDARD_CHANGE_HEADER, standardChangeRows } from './payroll-software';
+import { AppDeduction, compareDeductions, CompareRow, softCheckOf, softwareExportRows, STANDARD_CHANGE_HEADER, standardChangeRows } from './payroll-software';
+import { SOFT_DIFF_IDS_MAX } from '../../../core/models/month-close';
 
 const app: AppDeduction[] = [
   { id: 'a', employeeNumber: '0012', lastName: '伊藤', firstName: '一郎', healthEmployeeYen: 14955, pensionEmployeeYen: 27450 },
@@ -77,5 +78,29 @@ describe('payroll-software：給与ソフトとの役割分担', () => {
   it('同じ氏名が2人なら ambiguous', () => {
     const twins = [...app, { ...app[1], id: 'd' }];
     expect(compareDeductions([H, ['', '佐藤花子', '1', '', '1', '']], twins)[0].status).toBe('ambiguous');
+  });
+
+  describe('softCheckOf（確認済みの記録に残す照合の結果。11/27）', () => {
+    const emp = (id: string, no: string | null): AppDeduction => ({
+      id, employeeNumber: no, lastName: 'テスト', firstName: id, healthEmployeeYen: 0, pensionEmployeeYen: 0,
+    });
+    const r = (status: CompareRow['status'], e: AppDeduction | null): CompareRow => ({
+      label: e?.employeeNumber ?? 'x', employee: e, app: null, soft: null, diff: null, status,
+    });
+    it('人数・ファイル名・日時と、差があった人を社員番号の順に残す（ファイルにしかいない人は人数だけ）', () => {
+      const c = softCheckOf(
+        [r('match', emp('A', '1')), r('diff', emp('C', '10')), r('diff', emp('B', '2')), r('diff', null)],
+        '控除額_11月.csv',
+        '2026-11-27T10:30',
+      );
+      expect(c).toEqual({ matched: 1, diff: 3, fileName: '控除額_11月.csv', checkedAt: '2026-11-27T10:30', diffIds: ['B', 'C'] });
+    });
+    it('差があった人は上限まで（人数はいつも全部）', () => {
+      const rows = Array.from({ length: SOFT_DIFF_IDS_MAX + 5 }, (_, i) => r('diff', emp(`E${i}`, String(i + 1))));
+      const c = softCheckOf(rows, 'f.csv', '2026-11-27T10:30');
+      expect(c.diff).toBe(SOFT_DIFF_IDS_MAX + 5);
+      expect(c.diffIds!.length).toBe(SOFT_DIFF_IDS_MAX);
+      expect(c.diffIds![0]).toBe('E0');
+    });
   });
 });

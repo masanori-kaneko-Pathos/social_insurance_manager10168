@@ -99,6 +99,16 @@ describe('差の原因：④ 告知額（欄ごと。11/26）', () => {
     expect(matchNotice({ health: -98820, pension: -182940, childContribution: -3600 }, c)).toEqual(['bonusPending']);
   });
 
+  it('料率が変わった月で、告知が前の料率のまま（11/27）', () => {
+    // 田中：標準報酬は同じで、今月から料率だけが変わった（健保 30,000→30,600）
+    const tanaka = person({ name: '田中', rateChanged: true, before: cm(30000_000, 54900_000), now: cm(30600_000, 54900_000) });
+    const c = noticeCandidates([tanaka, yamada], null);
+    expect(c.map((x) => x.key)).toEqual(['gradePending', 'ratePending']);
+    expect(matchNotice({ health: -600, pension: 0, childContribution: 0 }, c)).toEqual(['ratePending']);
+    // 改定もあった人は、改定の候補だけで見る（二重に数えない）
+    expect(noticeCandidates([person({ ...yamada, rateChanged: true })], null).map((x) => x.key)).toEqual(['gradePending']);
+  });
+
   it('合わなければ空（アプリでは分からない）。差がなければ空', () => {
     const c = noticeCandidates([yamada], null);
     expect(matchNotice({ health: 12345, pension: 0, childContribution: 0 }, c)).toEqual([]);

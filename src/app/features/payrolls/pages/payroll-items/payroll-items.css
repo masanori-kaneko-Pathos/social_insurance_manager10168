@@ -432,3 +432,15 @@ td.in-col {
   margin: var(--space-xs) 0 0;
   font-size: var(--font-xs);
 }
+
+/* 分類の見出し（固定的賃金・非固定的賃金・前の月までの分・報酬にならない）：行いっぱいに置き、その下にカードを並べる（11/27） */
+.choice-group {
+  grid-column: 1 / -1;
+  margin: var(--space-sm) 0 0;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--color-text-sub);
+}
+.choice-group:first-of-type {
+  margin-top: 0;
+}
