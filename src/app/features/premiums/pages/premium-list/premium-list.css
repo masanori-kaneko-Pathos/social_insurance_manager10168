@@ -31,8 +31,8 @@ h2 {
 }
 
 .period-label {
-  /* 月が1桁と2桁で幅が変わって › が動かないように、下の薄い1行（「2026年12月に支払う給与から控除」が一番長い）まで入る幅にする（11/26） */
-  min-width: 14em;
+  /* 月が1桁と2桁で幅が変わって › と控除の月が動かないように、幅を決めておく（11/26・11/27） */
+  min-width: 7.5em;
   text-align: center;
   font-weight: 600;
 }
@@ -904,10 +904,11 @@ tr.clickable:focus-visible {
   font-size: var(--font-md);
 }
 
-/* 出力（記録として見出しの横に） */
+/* 出力（記録として見出しの行の右に。11/27） */
 .head-export {
   display: flex;
   align-items: center;
+  margin-left: auto;
 }
 
 /* ② 照合の2つのボタン */
@@ -973,4 +974,20 @@ td.cause {
   margin: var(--space-xs) 0 0;
   padding-left: 1.2em;
   columns: 3 14em;
+}
+
+/* ===== 11/27：見出しの行と、①の帯の左の月 ===== */
+.title-group {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-md);
+}
+.bar-month {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+.empty-nav {
+  margin-bottom: var(--space-md);
 }

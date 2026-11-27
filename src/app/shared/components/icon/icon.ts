@@ -19,6 +19,7 @@ export type IconName =
   | 'upload' // 出力する（箱から外へ）
   | 'download' // 取り込む（箱の中へ。11/16）
   | 'plus' // 追加・登録（11/26）
+  | 'pencil' // 入力する（給与の「1人ずつ入力」。11/27）
   | 'folder' // インポート／エクスポート（フォルダ。上下の矢印は「随時改定の候補」と重なるため。11/16）
   | 'admin'; // 管理者（鍵）
 
@@ -106,6 +107,10 @@ export type IconName =
         }
         @case ('plus') {
           <path d="M8 3v10M3 8h10" />
+        }
+        @case ('pencil') {
+          <path d="M3 13l1-3 7-7 2 2-7 7z" />
+          <path d="M9.5 4.5l2 2" />
         }
         @case ('userPlus') {
           <circle cx="6" cy="5" r="2.5" />

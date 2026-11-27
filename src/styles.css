@@ -1207,3 +1207,68 @@ hr.section-sep {
 .fold > summary:hover {
   color: var(--color-text);
 }
+
+/* ===== 11/27：画面の見直し（3回目） ===== */
+
+/* 見出しの横の小さなリンク（「過去の一覧 ›」「会社負担の期間集計 ›」） */
+.sub-link {
+  font-size: var(--font-sm);
+  font-weight: 400;
+  color: var(--color-tab-active);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.sub-link:hover {
+  text-decoration: underline;
+}
+
+/* 月・年の切り替え「‹ 2026年11月払い ›」：ボタンではなく押せる文字。高さはフィルター・検索と同じ 36px */
+.mnav {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  gap: 2px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.mnav > a,
+.mnav > button {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 36px;
+  padding: 0 4px;
+  font: inherit;
+  font-size: var(--font-lg);
+  color: var(--color-text-sub);
+  text-decoration: none;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.mnav > a:hover,
+.mnav > button:hover {
+  color: var(--color-text);
+  background: var(--color-hover);
+}
+/* 年月の横の小さな説明（対象期間・控除する給与の月） */
+.mnav-sub {
+  font-size: var(--font-xs);
+  color: var(--color-text-sub);
+  white-space: nowrap;
+}
+/* 文字だけのボタン（「今月」など） */
+.link-btn {
+  padding: 0;
+  font: inherit;
+  font-size: var(--font-sm);
+  color: var(--color-tab-active);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.link-btn:hover {
+  text-decoration: underline;
+}

@@ -1,11 +1,6 @@
 <div class="page-head">
-    <!-- 見出しの横に基準日（その日の時点の一覧：在籍・区分・加入・年齢。11/18 に絞り込みの帯から移した） -->
     <div class="title-group">
       <h1>{{ 'employee.list.title' | transloco }}</h1>
-      <label class="as-of">
-        <span>{{ 'employee.list.asOf' | transloco }}</span>
-        <input class="input" type="date" [value]="asOf()" (change)="setAsOf($any($event.target).value)" />
-      </label>
     </div>
     @if (context.isAdmin()) {
       <span class="head-actions">
@@ -60,6 +55,13 @@
     </div>
   }
   <div class="toolbar">
+    <!-- 左：基準日（その日の時点の一覧：在籍・区分・加入・年齢）。給与・保険料の帯の左の「月」と同じ場所（11/27） -->
+    <div class="bar-left">
+      <label class="as-of">
+        <span>{{ 'employee.list.asOf' | transloco }}</span>
+        <input class="input" type="date" [value]="asOf()" (change)="setAsOf($any($event.target).value)" />
+      </label>
+    </div>
     <!-- フィルター（複数の条件を組み合わせる。選んだらすぐ反映） -->
     <div class="filter-wrap" #filterWrap>
       <button
@@ -178,6 +180,7 @@
       type="search"
       [placeholder]="'employee.list.search' | transloco"
       [value]="query()"
+      [attr.title]="query() || null"
       (input)="onQuery($event)"
     />
     @if (hasRoman()) {

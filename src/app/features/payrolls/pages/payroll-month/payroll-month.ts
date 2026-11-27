@@ -16,6 +16,8 @@ import { incomingParts, SpreadPart } from '../../logic/spread';
 import { latestPaidMonth, onLeaveDuring, Period, PayrollRow, payrollRowsFor, periodOf } from '../../logic/payroll-rows';
 import { payrollOf, premiumMonthOfPay, premiumMonthsOfPay } from '../../../office/office-settings';
 import { MonthPicker } from '../../../../shared/components/month-picker/month-picker';
+import { EntryChoice, EntryChoiceItem } from '../../../../shared/components/entry-choice/entry-choice';
+import { NgTemplateOutlet } from '@angular/common';
 import { Icon } from '../../../../shared/components/icon/icon';
 import { shiftMonth, daysInclusive, daysInMonth, todayLocal, toYearMonth } from '../../../../shared/utils/date';
 import { PayrollChange, PayrollService } from '../../payroll.service';
@@ -66,7 +68,7 @@ const NO_PARTS: readonly SpreadPart[] = [];
 
 @Component({
   selector: 'app-payroll-month',
-  imports: [PersonName, HalfWidthDigits, Icon, InKindCalculator, MonthPicker, Pager, PayrollEntry, PersonListBar, ReactiveFormsModule, RouterLink, SortHeader, TranslocoPipe],
+  imports: [PersonName, EntryChoice, HalfWidthDigits, Icon, InKindCalculator, MonthPicker, NgTemplateOutlet, Pager, PayrollEntry, PersonListBar, ReactiveFormsModule, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './payroll-month.html',
   styleUrl: './payroll-month.css',
   host: {
@@ -109,6 +111,36 @@ export class PayrollMonth {
     const saved = all.filter((v) => !!v.row.saved).length;
     return { saved, total: all.length, pct: all.length ? Math.round((saved / all.length) * 100) : 0 };
   });
+
+  /**
+   * 入れ方のカード（11/27。従業員・賞与と同じ入り口カード）
+   * 1人ずつ入力：押すと最初の未入力の人を開く。入力済みのメーターをカードの中に出す。全員入力済みなら押せない
+   */
+  readonly entryItems = computed<EntryChoiceItem[]>(() => {
+    const pg = this.progress();
+    const id = this.context.current()?.id;
+    return [
+      {
+        icon: 'pencil',
+        titleKey: 'payroll.entry.one.title',
+        noteKey: pg.saved < pg.total ? 'payroll.entry.one.note' : 'payroll.entry.one.allDone',
+        key: 'one',
+        disabled: pg.saved >= pg.total,
+        meter: { textKey: 'payroll.progress.value', params: { saved: pg.saved, total: pg.total }, pct: pg.pct },
+      },
+      {
+        icon: 'download',
+        titleKey: 'payroll.entry.file.title',
+        noteKey: 'payroll.entry.file.note',
+        link: ['/o', id, 'import'],
+        queryParams: { kind: 'payrolls', from: 'payrolls' },
+      },
+    ];
+  });
+
+  onEntry(key: string): void {
+    if (key === 'one') this.openFirstUnsaved();
+  }
 
   /** 4〜6月払いの月か（完了の案内に定時決定を出す） */
   readonly regularMonth = computed(() => ['04', '05', '06'].includes(this.month().slice(5)));

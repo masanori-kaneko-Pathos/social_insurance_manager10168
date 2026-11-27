@@ -473,8 +473,8 @@ tr.has-error td {
 }
 
 .period-label {
-  /* 月が1桁と2桁で幅が変わって › が動かないように、下の薄い1行（「2026年12月に支払う給与から控除」が一番長い）まで入る幅にする（11/26） */
-  min-width: 14em;
+  /* 月が1桁と2桁で幅が変わって › と対象期間が動かないように、幅を決めておく（11/26・11/27） */
+  min-width: 8.5em;
   text-align: center;
   font-weight: 600;
 }
@@ -607,14 +607,11 @@ tfoot .sum-row > td.num {
 
 /* 見出しの右：この月の全員の支払額の合計（11/20） */
 .month-total {
+  /* 11/27：箱はやめて、見出しの行の右に1行で */
   display: flex;
   align-items: baseline;
   gap: var(--space-xs);
   margin-left: auto;
-  padding: var(--space-sm) var(--space-md);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
 }
 
 .month-total .label {
@@ -623,7 +620,7 @@ tfoot .sum-row > td.num {
 }
 
 .month-total strong {
-  font-size: var(--font-lg);
+  font-size: var(--font-md);
   font-variant-numeric: tabular-nums;
 }
 
@@ -727,4 +724,25 @@ tr.clickable:hover .chev {
 tr.clickable:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: -2px;
+}
+
+/* ===== 11/27：見出しの行・入り口カード・帯の左の月 ===== */
+.title-group {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-md);
+}
+.bar-month,
+.empty-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+.empty-nav {
+  margin-bottom: var(--space-md);
+}
+.open-hint {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-sm);
 }

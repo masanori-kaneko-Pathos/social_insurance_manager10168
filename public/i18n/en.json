@@ -1982,8 +1982,19 @@
     },
     "monthsTitle": "Pay by month",
     "monthsLead": "See the pay total and the number of people not entered for each pay month. Click a pay month to enter that month's pay.",
-    "toMonths": "All months",
-    "autoDays": "{{days}} (auto)"
+    "toMonths": "Past months",
+    "autoDays": "{{days}} (auto)",
+    "entry": {
+      "one": {
+        "title": "Enter one by one",
+        "note": "Enter from the payslip. Opens the first person not yet entered.",
+        "allDone": "Everyone is entered for this month. To fix one, select the row."
+      },
+      "file": {
+        "title": "Import from a file",
+        "note": "Payroll list from payroll software or a spreadsheet (CSV, Excel, PDF). For everyone at once."
+      }
+    }
   },
   "regular": {
     "title": "Annual SMR determination {{year}} (定時決定, teiji kettei)",
@@ -2104,7 +2115,8 @@
       "included": "Includes {{n}} yen bonus remuneration",
       "hint": "If the pay rules changed during the year, enter the amount the employee would have received under the new rules.",
       "estimated": "(estimate: average × scheduled count)"
-    }
+    },
+    "yearOf": "{{year}}"
   },
   "payrollCsv": {
     "lead": "Export a CSV, fix it in Excel, and import it back as is (the same format both ways).",
@@ -4478,7 +4490,8 @@
       "care": "Long-term care premium ({{amount}} yen) differs (turning 40 or 65)",
       "rounding": "A 1-yen rounding difference (how 0.5 yen is handled, or combined vs separate rounding)",
       "unknown": "No cause matching the difference was found in the app's data. Check the payroll software settings"
-    }
+    },
+    "exportCardNote": "Standard monthly remuneration, care status and employee shares (CSV) to load into your payroll software."
   },
   "myNumber": {
     "title": "My Number",

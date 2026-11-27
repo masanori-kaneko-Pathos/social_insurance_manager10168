@@ -35,6 +35,8 @@ const ORDERS: Record<ListField, readonly string[]> = {
   },
   template: `
     <div class="toolbar">
+      <!-- 左：画面ごとのもの（月の切り替え・基準日など。barLeft を付けた要素）。右：フィルターと検索（11/27） -->
+      <div class="bar-left"><ng-content select="[barLeft]" /></div>
       <div class="filter-wrap" #wrap>
         <button type="button" class="btn filter-btn" [class.on]="count() > 0" [attr.aria-expanded]="open()" (click)="open.set(!open())">
           <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M2 3.5h12L9.5 9v4l-3 1.5V9z" /></svg>
@@ -136,6 +138,7 @@ const ORDERS: Record<ListField, readonly string[]> = {
         [placeholder]="'personList.search' | transloco"
         [attr.aria-label]="'personList.search' | transloco"
         [value]="options().query"
+        [attr.title]="options().query || null"
         (input)="set('query', $any($event.target).value)"
       />
     </div>
@@ -143,8 +146,12 @@ const ORDERS: Record<ListField, readonly string[]> = {
   `,
   styles: `
     :host { display: block; margin-bottom: var(--space-sm); }
-    .toolbar { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-bottom: var(--space-sm); }
-    .search { flex: 1; min-width: 200px; }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm); }
+    /* 左の差し込み口は残りの幅を取り、フィルターと検索を右に寄せる（11/27） */
+    .bar-left { flex: 1; display: flex; align-items: center; gap: var(--space-sm); min-width: 0; }
+    .bar-left:empty { display: block; }
+    /* 検索は16文字ぶんで固定。長い文字は「…」（入力中は欄の中で流れる）。幅を変えないので隣の位置は動かない */
+    .search { width: 16em; flex: none; text-overflow: ellipsis; }
     .muted { color: var(--color-text-sub); }
   `,
 })

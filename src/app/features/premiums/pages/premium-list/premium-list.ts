@@ -2,6 +2,9 @@ import { Component, computed, effect, inject, signal, untracked, viewChild } fro
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MonthPicker } from '../../../../shared/components/month-picker/month-picker';
+import { EntryChoice, EntryChoiceItem } from '../../../../shared/components/entry-choice/entry-choice';
+import { NgTemplateOutlet } from '@angular/common';
+import { ElementRef } from '@angular/core';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { map } from 'rxjs';
 import { Employee } from '../../../../core/models/employee';
@@ -126,7 +129,7 @@ interface ListItem extends PremiumRow {
 
 @Component({
   selector: 'app-premium-list',
-  imports: [PersonName, CloseOnOutside, ColumnMapper, ExportDialog, MonthPicker, Pager, PersonListBar, PremiumBreakdown, ReviewBox, RouterLink, TranslocoPipe, PremiumTotals, StepGuide],
+  imports: [PersonName, CloseOnOutside, ColumnMapper, EntryChoice, ExportDialog, MonthPicker, NgTemplateOutlet, Pager, PersonListBar, PremiumBreakdown, ReviewBox, RouterLink, TranslocoPipe, PremiumTotals, StepGuide],
   templateUrl: './premium-list.html',
   styleUrl: './premium-list.css',
 })
@@ -1077,6 +1080,19 @@ export class PremiumList {
   // ===== 項目を選んで出力（11/24） =====
 
   private readonly exportDialog = viewChild(ExportDialog);
+  /** ②の「控除したファイルを読み込み」のカードで開くファイルの選び窓（11/27） */
+  private readonly deductionInput = viewChild<ElementRef<HTMLInputElement>>('deductionInput');
+
+  /** ②の2つの操作（入り口カード。11/27） */
+  readonly softItems = computed<EntryChoiceItem[]>(() => [
+    { icon: 'upload', titleKey: 'payrollSoft.exportButton', noteKey: 'payrollSoft.exportCardNote', key: 'export' },
+    { icon: 'download', titleKey: 'payrollSoft.check', noteKey: 'payrollSoft.checkHint', key: 'read' },
+  ]);
+
+  onSoftChoice(key: string): void {
+    if (key === 'export') this.exportForSoftware();
+    if (key === 'read') this.deductionInput()?.nativeElement.click();
+  }
   readonly exportDefaultKeys = PREMIUM_DEFAULT_KEYS;
   /** 出せる項目の目録（月・言語が変わったら作り直す） */
   readonly exportCatalog = computed(() => {

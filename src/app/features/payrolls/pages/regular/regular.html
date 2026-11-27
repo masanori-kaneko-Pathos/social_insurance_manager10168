@@ -5,10 +5,12 @@
     <h1>{{ 'regular.title' | transloco: { year: year() } }}</h1>
     <p class="lead">{{ 'regular.lead' | transloco: { year: year() } }}</p>
   </div>
-  <div class="year-nav">
-    <a class="btn" [routerLink]="['/o', context.current()?.id, 'regular', year() - 1]">← {{ year() - 1 }}</a>
-    <a class="btn" [routerLink]="['/o', context.current()?.id, 'regular', year() + 1]">{{ year() + 1 }} ›</a>
-  </div>
+  <!-- 年の切り替え「‹ 2026年 ›」（給与・保険料の月の切り替えと同じ、押せる文字。11/27） -->
+  <span class="mnav year-nav">
+    <a [routerLink]="['/o', context.current()?.id, 'regular', year() - 1]" [attr.aria-label]="'regular.yearOf' | transloco: { year: year() - 1 }">‹</a>
+    <span class="year-label">{{ 'regular.yearOf' | transloco: { year: year() } }}</span>
+    <a [routerLink]="['/o', context.current()?.id, 'regular', year() + 1]" [attr.aria-label]="'regular.yearOf' | transloco: { year: year() + 1 }">›</a>
+  </span>
 </div>
 
 @if (loading()) {

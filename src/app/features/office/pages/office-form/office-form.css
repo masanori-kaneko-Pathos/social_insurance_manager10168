@@ -225,9 +225,9 @@ h3 {
 }
 
 .chip.on {
-  /* 濃いオレンジの地に白い文字（「代表」のチップと同じ。11/27） */
-  background: var(--color-tab-active);
-  border-color: var(--color-tab-active);
+  /* オレンジの塗りのボタンと同じ地に白い文字（「代表」のチップと同じ。11/27） */
+  background: var(--color-primary);
+  border-color: var(--color-primary);
   color: #fff;
   font-weight: 600;
 }

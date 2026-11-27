@@ -19,13 +19,23 @@
   .toolbar {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: var(--space-sm);
     margin-bottom: var(--space-md);
   }
   
+  /* 検索は16文字ぶんで固定。長い文字は「…」（給与・保険料の帯と同じ。11/27） */
   .search {
+    width: 16em;
+    flex: none;
+    text-overflow: ellipsis;
+  }
+  /* 左の基準日は残りの幅を取り、フィルターと検索を右に寄せる */
+  .bar-left {
     flex: 1;
-    min-width: 200px;
+    display: flex;
+    align-items: center;
+    min-width: 0;
   }
   
   .segmented {

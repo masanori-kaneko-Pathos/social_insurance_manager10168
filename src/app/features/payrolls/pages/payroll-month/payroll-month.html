@@ -1,33 +1,11 @@
 
 <!-- 保険料一覧と同じ形：見出しの横に「‹ 年月 › 今月」、年月の下に小さく対象期間（11/13） -->
+<!-- 見出しの行（11/27）：見出しと「過去の一覧」、右にこの月の合計を1行で。月の切り替えは表の上の帯の左へ移した -->
 <div class="page-head">
-  <h1>{{ 'payroll.listTitle' | transloco }}</h1>
-  <div class="period">
-    <a
-      class="btn"
-      [routerLink]="['/o', context.current()?.id, 'payrolls', prevMonth()]"
-      queryParamsHandling="preserve"
-      [attr.aria-label]="prevMonth()"
-    >‹</a>
-    <app-month-picker class="period-label" [value]="month()" [today]="thisMonth" (picked)="goMonth($event)">
-      {{ 'payroll.monthPick' | transloco: monthParts(month()) }}
-      @if (period(); as p) {
-        <small class="period-sub">{{
-          'payroll.monthLead' | transloco: { start: md(p.start), end: md(p.end), days: periodDays() }
-        }}@if (hasGroups()) {{{ 'payGroup.headerNote' | transloco }}}</small>
-      }
-    </app-month-picker>
-    <a
-      class="btn"
-      [routerLink]="['/o', context.current()?.id, 'payrolls', nextMonth()]"
-      queryParamsHandling="preserve"
-      [attr.aria-label]="nextMonth()"
-    >›</a>
-    @if (month() !== thisMonth) {
-      <button type="button" class="btn" (click)="goMonth(thisMonth)">{{ 'premiumList.thisMonth' | transloco }}</button>
-    }
+  <div class="title-group">
+    <h1>{{ 'payroll.listTitle' | transloco }}</h1>
     <!-- 支払月ごとの合計と未入力の人数（11/26 に「給与」から分けた） -->
-    <a class="to-months" [routerLink]="['/o', context.current()?.id, 'payrolls', 'months']">{{ 'payroll.toMonths' | transloco }}</a>
+    <a class="sub-link" [routerLink]="['/o', context.current()?.id, 'payrolls', 'months']">{{ 'payroll.toMonths' | transloco }} ›</a>
   </div>
   <!-- この月の全員の支払額の合計（絞り込みに関係なく。給与ソフトの支給総額と突き合わせる。11/20） -->
   @if (views().length > 0) {
@@ -40,11 +18,31 @@
   }
 </div>
 
+<!-- 月の切り替え（‹ 年月 ›。押せる文字。表の上の帯の左に置く。表がない月でも出す。11/27） -->
+<ng-template #monthNav>
+  <span class="mnav">
+    <a [routerLink]="['/o', context.current()?.id, 'payrolls', prevMonth()]" queryParamsHandling="preserve" [attr.aria-label]="prevMonth()">‹</a>
+    <app-month-picker class="period-label" [value]="month()" [today]="thisMonth" (picked)="goMonth($event)">
+      {{ 'payroll.monthPick' | transloco: monthParts(month()) }}
+    </app-month-picker>
+    <a [routerLink]="['/o', context.current()?.id, 'payrolls', nextMonth()]" queryParamsHandling="preserve" [attr.aria-label]="nextMonth()">›</a>
+  </span>
+  @if (period(); as p) {
+    <small class="mnav-sub">{{
+      'payroll.monthLead' | transloco: { start: md(p.start), end: md(p.end), days: periodDays() }
+    }}@if (hasGroups()) {{{ 'payGroup.headerNote' | transloco }}}</small>
+  }
+  @if (month() !== thisMonth) {
+    <button type="button" class="link-btn" (click)="goMonth(thisMonth)">{{ 'premiumList.thisMonth' | transloco }}</button>
+  }
+</ng-template>
+
 @if (loading()) {
   <p class="muted">{{ 'common.loading' | transloco }}</p>
 } @else if (errorKey() === 'payroll.error.load' || errorKey() === 'payroll.error.badMonth') {
   <div class="alert alert-danger">{{ errorKey()! | transloco }}</div>
 } @else if (views().length === 0) {
+  <div class="empty-nav"><ng-container *ngTemplateOutlet="monthNav" /></div>
   <section class="card empty">
     <p>{{ 'payroll.emptyMonth' | transloco }}</p>
   </section>
@@ -69,28 +67,10 @@
     }
   </p>
 
-  <!-- この月の入力の進み具合と、主役のボタン（11/26）。押すと最初の未入力の人の内訳が開く -->
-  @let pg = progress();
-  <section class="card progress-card">
-    <div>
-      <div class="progress-label">{{ 'payroll.progress.label' | transloco: { m: monthNum(month()) } }}</div>
-      <div class="progress-value">{{ 'payroll.progress.value' | transloco: { saved: pg.saved, total: pg.total } }}</div>
-      <div class="progress-bar" role="progressbar" [attr.aria-valuenow]="pg.saved" aria-valuemin="0" [attr.aria-valuemax]="pg.total">
-        <div [style.width.%]="pg.pct"></div>
-      </div>
-    </div>
-    <!-- 入れ方は2つ：明細を見ながら1人ずつ（主役）／給与ソフトのファイルから取り込む（11/26。表の上のリンクから移した） -->
-    @if (context.isAdmin()) {
-      <div class="progress-actions">
-        <a class="btn" [routerLink]="['/o', context.current()?.id, 'import']" [queryParams]="{ kind: 'payrolls', from: 'payrolls' }"><app-icon name="download" />{{
-          'payroll.progress.fromFile' | transloco
-        }}</a>
-        @if (pg.saved < pg.total) {
-          <button type="button" class="btn btn-solid" (click)="openFirstUnsaved()">{{ 'payroll.progress.start' | transloco }}</button>
-        }
-      </div>
-    }
-  </section>
+  <!-- 入れ方は2つ（従業員・賞与と同じ入り口カード。11/27）：明細を見ながら1人ずつ（押すと最初の未入力の人が開く。カードの中に入力済みのメーター）／ファイルから取り込む -->
+  @if (context.isAdmin()) {
+    <app-entry-choice [items]="entryItems()" (chosen)="onEntry($event)" />
+  }
   <!-- 今の業務と一覧の切れ目（薄い線。給与・賞与・保険料・従業員で同じ場所。11/27） -->
   <hr class="section-sep" />
 
@@ -113,12 +93,7 @@
     </div>
   }
 
-  <div class="toolbar">
-    <span class="muted">{{ 'payroll.openHint' | transloco }}</span>
-    <!-- 給与の項目と分類は、設定 › マスタから開く（11/26） -->
-  </div>
-
-  <!-- 探す・絞る・並べる・ページ（入れた値は、ページを移っても保存するまで残る） -->
+  <!-- 探す・絞る・並べる・ページ（入れた値は、ページを移っても保存するまで残る）。左に月の切り替え（11/27） -->
   <app-person-list-bar
     [departments]="context.current()?.departments ?? []"
     [(options)]="listOptions"
@@ -126,7 +101,10 @@
     [total]="filtered().length"
     [pages]="shown().pages"
     entryKey="personList.entryState."
-  />
+  >
+    <div barLeft class="bar-month"><ng-container *ngTemplateOutlet="monthNav" /></div>
+  </app-person-list-bar>
+  <p class="muted open-hint">{{ 'payroll.openHint' | transloco }}</p>
 
   <div class="card table-wrap">
     <!-- 一覧は表示だけ。入力は「内訳」で行の下に開く（11/24。横に項目を並べない） -->
