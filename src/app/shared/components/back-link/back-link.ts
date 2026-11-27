@@ -30,7 +30,9 @@ import { NavHistoryService } from '../../services/nav-history.service';
       bottom: var(--space-xs);
       left: 0;
       white-space: nowrap;
-      font-size: var(--font-sm);
+      /* 11/27：14px → 12px。見出しの上の余白に収まるように（14px だと上の帯に当たって切れかけた） */
+      font-size: var(--font-xs);
+      line-height: 1.4;
       color: var(--color-text-sub);
       text-decoration: none;
     }

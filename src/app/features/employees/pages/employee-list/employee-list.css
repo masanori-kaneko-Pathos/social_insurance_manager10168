@@ -24,9 +24,9 @@
     margin-bottom: var(--space-md);
   }
   
-  /* 検索は16文字ぶんで固定。長い文字は「…」（給与・保険料の帯と同じ。11/27） */
+  /* 検索は18文字ぶんで固定。長い文字は「…」（給与・保険料の帯と同じ。フィルターがその分左に寄り、開いた中身が右で切れない。11/27） */
   .search {
-    width: 16em;
+    width: 18em;
     flex: none;
     text-overflow: ellipsis;
   }

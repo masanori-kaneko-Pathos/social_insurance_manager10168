@@ -150,8 +150,8 @@ const ORDERS: Record<ListField, readonly string[]> = {
     /* 左の差し込み口は残りの幅を取り、フィルターと検索を右に寄せる（11/27） */
     .bar-left { flex: 1; display: flex; align-items: center; gap: var(--space-sm); min-width: 0; }
     .bar-left:empty { display: block; }
-    /* 検索は16文字ぶんで固定。長い文字は「…」（入力中は欄の中で流れる）。幅を変えないので隣の位置は動かない */
-    .search { width: 16em; flex: none; text-overflow: ellipsis; }
+    /* 検索は18文字ぶんで固定（11/27に16→18。フィルターがその分左に寄り、開いた中身が右で切れない）。長い文字は「…」（入力中は欄の中で流れる）。幅を変えないので隣の位置は動かない */
+    .search { width: 18em; flex: none; text-overflow: ellipsis; }
     .muted { color: var(--color-text-sub); }
   `,
 })
