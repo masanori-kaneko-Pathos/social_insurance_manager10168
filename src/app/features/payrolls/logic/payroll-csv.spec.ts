@@ -254,6 +254,13 @@ describe('readPayrollCsv', () => {
       expect(readP('0012,2026-04,110000,6000,,17', 'hourly').items[0].input.days).toBe(17);
       expect(readP('0012,2026-04,110000,6000,,', 'hourly').errors[0].codes).toContain('daysRequired');
     });
+    it('契約がない月：月給とみなさない。出勤日数の列があれば使い、なければ「契約なし」で知らせる（11/27）', () => {
+      const readN = (body: string) =>
+        readPayrollCsv(parseCsv(`${H}\n${body}`), EMPS, S, { payTypeOf: () => null, scheduledDaysOf: () => null });
+      expect(readN('0012,2026-04,300000,300000,,20').items[0].input.days).toBe(20);
+      const r = readN('0012,2026-04,300000,300000,,');
+      expect(r.errors[0].codes).toEqual(['noContractDays']);
+    });
     it('入社の月は在籍した日（日割り）', () => {
       const late = emp('L', 'L1', 'テスト遅', '2026-03-18');
       const r = readPayrollCsv(parseCsv(`${H}\nL1,2026-04,140000,140000,,10`), [late], S, { payTypeOf: () => 'monthly' });

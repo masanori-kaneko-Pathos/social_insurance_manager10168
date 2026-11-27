@@ -287,6 +287,8 @@
               <td class="wrap">
                 @if (e.health.enrolled) { <span class="badge">{{ 'employee.badge.health' | transloco }}</span> }
                 @if (e.pension.enrolled) { <span class="badge">{{ 'employee.badge.pension' | transloco }}</span> }
+                <!-- 特定被保険者（組合の規約。本人は40〜64歳でないが、40〜64歳の扶養家族がいて介護保険料がかかる。11/27） -->
+                @if (isSpecial(e)) { <span class="badge" [title]="'employee.badge.specialTitle' | transloco">{{ 'employee.badge.special' | transloco }}</span> }
                 @if (isRetired(e)) { <span class="badge badge-muted">{{ 'employee.status.retired' | transloco }}</span> }
                 @if (categoryOf(e); as c) { <span class="badge badge-cat cat-{{ c }}">{{ 'employee.list.categoryShort.' + c | transloco }}</span> }
               </td>

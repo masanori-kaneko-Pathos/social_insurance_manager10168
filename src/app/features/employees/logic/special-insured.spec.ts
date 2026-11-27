@@ -1,4 +1,4 @@
-import { careDependentIn, specialEnabledAt, specialInsuredFor, specialInsuredIn, usesSpecialInsured } from './special-insured';
+import { careDependentsIn, careDependentIn, specialEnabledAt, specialInsuredFor, specialInsuredIn, usesSpecialInsured } from './special-insured';
 
 describe('特定被保険者（11/26）', () => {
   // 本人 30歳（1996-05-10 生まれ）、配偶者 1985-03-15 生まれ（2025-03 に40歳到達、2050-03 に65歳到達）
@@ -60,5 +60,11 @@ describe('特定被保険者（11/26）', () => {
     expect(usesSpecialInsured(history)).toBeTrue();
     const f = specialInsuredFor(history, '1996-05-10', [spouse]);
     expect(['2026-03', '2026-04', '2027-04'].map(f)).toEqual([false, true, false]);
+  });
+
+  it('理由になった扶養家族だけを返す（11/27）', () => {
+    const a = { name: 'A', birthDate: '1980-05-10', from: '2020-01-01', to: null };
+    const b = { name: 'B', birthDate: '2015-05-10', from: '2020-01-01', to: null };
+    expect(careDependentsIn([a, b], '2026-11').map((d) => d.name)).toEqual(['A']);
   });
 });

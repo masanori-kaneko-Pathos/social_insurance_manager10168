@@ -56,7 +56,12 @@
 }
 @if (result().specialInsured) {
   <!-- 特定被保険者（組合健保の規約。本人は40〜64歳でないが、40〜64歳の扶養家族がいる。11/26） -->
-  <p class="slip-note">{{ 'premium.slip.specialInsured' | transloco }}</p>
+  <!-- 理由になった扶養家族の氏名が分かれば添える（従業員の詳細の概要。11/27） -->
+  @if (specialNames().length > 0) {
+    <p class="slip-note">{{ 'premium.slip.specialInsuredNames' | transloco: { names: specialNames().join('・') } }}</p>
+  } @else {
+    <p class="slip-note">{{ 'premium.slip.specialInsured' | transloco }}</p>
+  }
 }
 
 </div>

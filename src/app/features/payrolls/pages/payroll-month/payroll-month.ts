@@ -323,6 +323,8 @@ export class PayrollMonth {
   readonly page = signal(1);
   /** 従業員ごとの契約（雇用形態・給与の形で絞る・日数の候補に使う。覚えておいた分は読まない） */
   readonly contracts = signal<ReadonlyMap<string, ContractDoc[]>>(new Map());
+  /** 契約を読み終えたか（読む前に「契約なし」と出さないため。11/27） */
+  readonly contractsLoaded = signal(false);
 
   /** その期間の終わりに効いている契約 */
   contractOf(v: ViewRow): ContractDoc | null {
@@ -360,6 +362,7 @@ export class PayrollMonth {
     try {
       const lists = await Promise.all(employees.map((e) => this.contractsApi.list(officeId, e.id)));
       this.contracts.set(new Map(employees.map((e, i) => [e.id, lists[i]])));
+      this.contractsLoaded.set(true);
       // 契約が読めてから、自動の日数と同じ保存済みの日数を「自動」に見せる
       for (const v of this.views()) this.showAutoDays(v);
     } catch (err) {
@@ -663,6 +666,12 @@ export class PayrollMonth {
    * - 日給月給：欠勤がある月は「契約の月の所定労働日数 − 欠勤日数」、ない月は暦日数
    * - 時給・日給：候補は出さない（実際の出勤日数。有給休暇を含む）。契約が分からないときも出さない
    */
+  /** その月に効いている契約がない人の、契約を登録する画面（契約を読み終えていなければ null。11/27） */
+  noContractLink(v: ViewRow): unknown[] | null {
+    if (!this.contractsLoaded() || this.contractOf(v)) return null;
+    return ['/o', this.context.current()?.id, 'employees', v.employee.id];
+  }
+
   candidate(v: ViewRow): number | null {
     const c = this.contractOf(v);
     const pay = c?.payType;

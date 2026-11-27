@@ -281,7 +281,9 @@ export type ImportErrorCode =
   // 内訳の列の合計が、総支給額の列と合わない（列が抜けている・総支給額に別のものが入っている。11/24）
   | 'linesMismatch'
   // 本来の月の列（見出しの [YYYY-MM]）に、支払月と同じか後の月の金額がある（11/24）
-  | 'badForMonth';
+  | 'badForMonth'
+  // 給与計算の基礎日数が空で、その月に効いている雇用契約がない（給与の形が分からず、日数を出せない。11/27）
+  | 'noContractDays';
 
 export interface ImportItem {
   line: number; // ファイルの行番号（見出しが1行目）
@@ -482,9 +484,18 @@ export function readPayrollCsv(
     const hasAmount =
       [text.cash, text.fixed, text.inKind, text.retro].some((v) => v.trim() !== '') ||
       (drafts ?? []).some((d) => d.amount.trim() !== '');
-    if (text.days.trim() === '' && hasAmount && employee && paidMonth) {
+    // 11/27：契約がない月は、給与の形が分からないので日数を出さない（前は月給とみなして暦日を入れていた）
+    // 契約を読んでいない呼び出し（payTypeOf なし）は、今までどおり月給とみなす
+    const noContract = !!opts.payTypeOf && payType === null;
+    const daysBlank = text.days.trim() === '';
+    if (daysBlank && hasAmount && employee && paidMonth && !noContract) {
       text.days = derivedDays(payType, employedDays ?? periodDays, text.absentDays, cell(row, 'attendedDays'),
         opts.scheduledDaysOf?.(employee.id, paidMonth) ?? null);
+    }
+    if (daysBlank && hasAmount && employee && paidMonth && noContract) {
+      // 契約がないので日数を入力してもらう（「日数を入力してください」より、理由の分かる知らせにする）
+      text.days = cell(row, 'attendedDays').trim();
+      if (text.days === '') codes.push('noContractDays');
     }
     const r = readEntry(text, drafts, payType, periodDays);
     // 総支給額の列も書いてあれば、内訳の合計と合うかを見る（列の抜け・別のものの混入に気づくため）
@@ -502,7 +513,8 @@ export function readPayrollCsv(
         return;
       }
     } else if (r.kind === 'invalid') {
-      codes.push(...r.errors);
+      // 契約なしの知らせを出したときは、同じことを言う「日数を入力してください」は重ねない
+      codes.push(...r.errors.filter((e) => !(e === 'daysRequired' && codes.includes('noContractDays'))));
     }
 
     if (codes.length > 0 || !employee || !paidMonth || r.kind !== 'ok') {

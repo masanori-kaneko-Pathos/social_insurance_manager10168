@@ -151,6 +151,8 @@ export class EmployeeDetail {
   private readonly tables = signal<RateTables | null>(null);
   /** 月 → 特定被保険者か（組合健保。制度を使っていなければ null。11/26） */
   private readonly special = signal<((month: string) => boolean) | null>(null);
+  /** 今月、特定被保険者の理由になっている扶養家族の氏名（概要の保険料に添える。11/27） */
+  readonly specialNames = signal<string[]>([]);
   private readonly specialApi = inject(SpecialInsuredService);
   /** 「＋登録」で開いたカード */
   readonly adding = signal<AddKind | null>(null);
@@ -368,7 +370,10 @@ export class EmployeeDetail {
       settle(this.rates.tablesFor(office.id, everKumiai(office)), (v) => this.tables.set(v)),
       // 特定被保険者（組合健保。制度を採用している期間があるときだけ扶養家族を読む。11/26）
       ...(this.employee()
-        ? [settle(this.specialApi.forEmployees(office.id, office, [this.employee()!]), (m) => this.special.set(m.get(id) ?? null))]
+        ? [
+            settle(this.specialApi.forEmployees(office.id, office, [this.employee()!]), (m) => this.special.set(m.get(id) ?? null)),
+            settle(this.specialApi.reasonNames(office.id, office, this.employee()!, this.thisMonth), (v) => this.specialNames.set(v)),
+          ]
         : []),
     ]);
   }

@@ -266,6 +266,13 @@
           [placeholder]="candidate() !== null ? ('payroll.autoDays' | transloco: { days: candidate() }) : ''"
           [title]="candidate() !== null ? ('payroll.candidateTitle' | transloco) : ''"
         />
+        <!-- 契約がない月：給与の形が分からず、日数を自動で出せない（11/27） -->
+        @if (noContractLink(); as link) {
+          <small class="field-note no-contract">
+            {{ 'payrollEntry.note.noContract' | transloco }}
+            <a [routerLink]="link" [queryParams]="{ tab: 'employment' }">{{ 'payrollEntry.note.addContract' | transloco }} ›</a>
+          </small>
+        }
         <!-- 月給と時給・日給で2行に分ける（11/27） -->
         <small class="field-note lines">{{ 'payrollEntry.note.days' | transloco }}</small>
       </div>

@@ -38,6 +38,11 @@ export function careDependentIn(d: CareDependentLike, month: YearMonth): boolean
   return inCareAge(d.birthDate, month);
 }
 
+/** その月に、介護保険の第2号被保険者として数える被扶養者（特定被保険者の理由を画面に出すため。11/27） */
+export function careDependentsIn<T extends CareDependentLike>(dependents: readonly T[], month: YearMonth): T[] {
+  return dependents.filter((d) => careDependentIn(d, month));
+}
+
 /**
  * その月、特定被保険者として介護保険料がかかるか
  * enabled：その月の保険者が、特定被保険者の制度を採用している組合か（事業所の保険者の履歴から）

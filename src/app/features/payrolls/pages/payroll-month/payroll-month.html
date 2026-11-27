@@ -237,6 +237,7 @@
                   [items]="items()"
                   [payType]="contractOf(v)?.payType ?? null"
                   [candidate]="candidate(v)"
+                  [noContractLink]="noContractLink(v)"
                   [prevLines]="prevLinesOf(v)"
                   [template]="template()"
                   [itemsLink]="['/o', context.current()?.id, 'payrolls', 'items']"

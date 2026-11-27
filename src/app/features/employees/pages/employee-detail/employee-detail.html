@@ -293,7 +293,7 @@
             @if (pr.exempt) {
               <p>{{ 'premium.exempt' | transloco }}</p>
             } @else {
-              <app-premium-breakdown [result]="pr" [formula]="false" />
+              <app-premium-breakdown [result]="pr" [formula]="false" [specialNames]="specialNames()" />
             }
           } @else {
             <p class="muted">{{ 'employee.summary.noPremium' | transloco }}</p>

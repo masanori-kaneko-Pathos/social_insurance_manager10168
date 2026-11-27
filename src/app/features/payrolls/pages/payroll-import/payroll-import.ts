@@ -73,6 +73,7 @@ const CSV_ERRORS = new Set([
   'badProrated',
   'badState',
   'linesMismatch',
+  'noContractDays',
 ]);
 
 interface Preview {

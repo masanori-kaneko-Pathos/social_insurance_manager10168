@@ -1,3 +1,4 @@
+import { SpecialInsuredMap, SpecialInsuredService } from '../../special-insured.service';
 import { Component, computed, effect, ElementRef, inject, signal, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -78,6 +79,9 @@ export class EmployeeList {
   private readonly contractsApi = inject(ContractService);
   private readonly criteriaApi = inject(CriteriaService);
   private readonly remApi = inject(RemunerationService);
+  private readonly specialApi = inject(SpecialInsuredService);
+  /** 特定被保険者の「月 → 当たるか」（組合が制度を採用しているときだけ読む。11/27） */
+  private readonly special = signal<SpecialInsuredMap>(new Map());
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   readonly context = inject(OfficeContext);
@@ -132,6 +136,10 @@ export class EmployeeList {
     return v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : this.today;
   });
   readonly asOfMonth = computed(() => toYearMonth(this.asOf()));
+  /** 基準日の月に、特定被保険者として介護保険料がかかる人か（11/27） */
+  isSpecial(e: Employee): boolean {
+    return this.special().get(e.id)?.(this.asOfMonth()) ?? false;
+  }
   readonly isPast = computed(() => this.asOf() !== this.today);
 
   /** 部署で絞る（URL の dept。'none' ＝ 部署なし） */
@@ -382,6 +390,8 @@ export class EmployeeList {
     this.pageContracts.set(new Map());
     try {
       this.employees.set(await this.employeesApi.list(officeId));
+      const office = this.context.current();
+      if (office) void this.specialApi.forEmployees(officeId, office, this.employees()).then((m) => this.special.set(m)).catch((err) => console.error(err));
     } catch (err) {
       console.error(err);
       this.employees.set([]);

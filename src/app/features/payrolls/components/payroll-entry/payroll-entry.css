@@ -419,3 +419,8 @@ tr.line-err span + span::before {
 .field-note.lines {
   white-space: pre-line;
 }
+
+/* 契約がない月の知らせ（日数を自動で出せない。11/27） */
+.field-note.no-contract {
+  color: var(--color-warning-text);
+}

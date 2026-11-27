@@ -73,6 +73,8 @@ export class PayrollEntry implements OnInit {
   readonly payType = input<PayType | null>(null);
   /** 支払基礎日数の自動の値（月給・日給月給の人だけ。日数の欄が空のとき、この数で保存する） */
   readonly candidate = input<number | null>(null);
+  /** その月に効いている契約がないときの、契約を登録する画面（日数を自動で出せないことを知らせる。11/27） */
+  readonly noContractLink = input<readonly unknown[] | null>(null);
   /** 前の月の内訳（項目名を写す。なければ出さない） */
   readonly prevLines = input<readonly PayrollLine[] | null>(null);
   readonly canEdit = input(true);

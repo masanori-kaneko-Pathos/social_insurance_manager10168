@@ -3,7 +3,8 @@ import type { Employee } from '../../core/models/employee';
 import type { HealthInsurer, InsurerPeriod } from '../../core/models/office';
 import { insurerHistoryOf } from '../office/office-settings';
 import { DependentService } from './dependent.service';
-import { specialInsuredFor, usesSpecialInsured } from './logic/special-insured';
+import { careDependentsIn, specialInsuredFor, usesSpecialInsured } from './logic/special-insured';
+import type { Dependent } from '../../core/models/dependent';
 import type { YearMonth } from '../../shared/utils/date';
 
 /** 保険者の履歴を読める事業所（事業所の文書か、従業員向けの写し） */
@@ -34,5 +35,13 @@ export class SpecialInsuredService {
     const insured = employees.filter((e) => e.health.enrolled);
     const lists = await Promise.all(insured.map((e) => this.dependents.list(officeId, e.id).catch(() => [])));
     return new Map(insured.map((e, i) => [e.id, specialInsuredFor(history, e.birthDate, lists[i])]));
+  }
+
+  /** 1人の、その月に特定被保険者の理由になっている扶養家族の氏名（特定被保険者でなければ空。11/27） */
+  async reasonNames(officeId: string, office: SpecialInsuredOffice, employee: Employee, month: YearMonth): Promise<string[]> {
+    if (!this.uses(office) || !employee.health.enrolled) return [];
+    const list: Dependent[] = await this.dependents.list(officeId, employee.id).catch(() => []);
+    if (!specialInsuredFor(insurerHistoryOf(office), employee.birthDate, list)(month)) return [];
+    return careDependentsIn(list, month).map((d) => `${d.lastName} ${d.firstName}`.trim());
   }
 }

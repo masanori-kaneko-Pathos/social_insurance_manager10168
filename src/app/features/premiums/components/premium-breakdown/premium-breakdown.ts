@@ -19,6 +19,8 @@ import { formatMilli } from '../../logic/rounding';
 })
 export class PremiumBreakdown {
   readonly result = input.required<PremiumResult>();
+  /** 特定被保険者の理由になった扶養家族の氏名（分かるときだけ。11/27） */
+  readonly specialNames = input<readonly string[]>([]);
   /** 計算式（右側）も出すか。従業員の社会保険のまとめでは明細だけ（計算式は下の保険料のカードで見られる。11/25） */
   readonly formula = input(true);
   readonly slip = computed(() => premiumSlip(this.result()));
