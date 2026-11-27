@@ -49,6 +49,7 @@ import { OfficeContext } from '../../../office/office-context.service';
 import { AuthService } from '../../../../core/auth/auth.service';
 
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
+import { YmPipe } from '../../../../shared/pipes/ym.pipe';
 /** 窓で扱う期間と保険者（開く側で、保存済みの履歴から作る） */
 export interface RateDialogTarget {
   officeId: string;
@@ -75,7 +76,7 @@ const CHILD_SUPPORT_DEFAULT: RateSplit = { employee: 1150, employer: 1150 };
 
 @Component({
   selector: 'app-rate-dialog',
-  imports: [HalfWidthDigits, ReactiveFormsModule, TranslocoPipe, RateFileImport, RateImpactNote, KumiaiSharePick, NgTemplateOutlet],
+  imports: [YmPipe, HalfWidthDigits, ReactiveFormsModule, TranslocoPipe, RateFileImport, RateImpactNote, KumiaiSharePick, NgTemplateOutlet],
   templateUrl: './rate-dialog.html',
   styleUrl: './rate-dialog.css',
 })

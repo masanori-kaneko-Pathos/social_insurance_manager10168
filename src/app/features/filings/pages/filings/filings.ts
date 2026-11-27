@@ -36,6 +36,7 @@ import { acquiredDateOf, acquireRow, addedAcquireBonus, bonusRow, FILING_COLUMNS
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { allocateOtherMonths, averageExclusion } from '../../../payrolls/logic/payroll-lines';
 import { bonusCarry, forWindow } from '../../../payrolls/logic/spread';
+import { YmPipe } from '../../../../shared/pipes/ym.pipe';
 
 /**
  * 届書の一覧：様式と期間を選んで「表示」→ 表で確かめて CSV に書き出す
@@ -44,7 +45,7 @@ import { bonusCarry, forWindow } from '../../../payrolls/logic/spread';
  */
 @Component({
   selector: 'app-filings',
-  imports: [DecisionNoticeCard, MonthPicker, ReviewBox, RouterLink, TranslocoPipe],
+  imports: [YmPipe, DecisionNoticeCard, MonthPicker, ReviewBox, RouterLink, TranslocoPipe],
   templateUrl: './filings.html',
   styleUrl: './filings.css',
 })

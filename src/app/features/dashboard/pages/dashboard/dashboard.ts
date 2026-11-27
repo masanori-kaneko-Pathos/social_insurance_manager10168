@@ -375,10 +375,11 @@ export class Dashboard {
     return [
       { key: 'payroll', icon: 'payroll', link: [...o, 'payrolls', this.payMonth()] },
       { key: 'premiums', icon: 'premium', link: [...o, 'premiums'] },
-      { key: 'addEmployee', icon: 'userPlus', link: [...o, 'employees', 'new'] },
+      // 従業員・依頼・賞与は、サイドバーと同じく一覧を開く（登録は一覧の入り口カードから。11/27）
+      { key: 'addEmployee', icon: 'people', link: [...o, 'employees'] },
       { key: 'import', icon: 'folder', link: [], action: 'import' },
-      { key: 'request', icon: 'request', link: [...o, 'requests', 'new'] },
-      { key: 'bonus', icon: 'bonus', link: [...o, 'bonuses', 'new'] },
+      { key: 'request', icon: 'request', link: [...o, 'requests'] },
+      { key: 'bonus', icon: 'bonus', link: [...o, 'bonuses'] },
     ];
   });
 

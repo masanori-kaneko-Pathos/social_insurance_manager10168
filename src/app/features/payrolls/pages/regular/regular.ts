@@ -34,6 +34,7 @@ import { PersonName } from '../../../../shared/components/person-name/person-nam
 import type { OtherMonths } from '../../logic/payroll-lines';
 import { payrollAt } from '../../../office/logic/pay-group';
 import { BackLink } from '../../../../shared/components/back-link/back-link';
+import { YmPipe } from '../../../../shared/pipes/ym.pipe';
 type View = RegularView;
 type ReflectItem = RegularReflectItem;
 
@@ -44,7 +45,7 @@ interface Checks {
 
 @Component({
   selector: 'app-regular',
-  imports: [BackLink, PersonName, DecisionNoticeCard, HalfWidthDigits, Pager, PersonListBar, RouterLink, SortHeader, TranslocoPipe],
+  imports: [YmPipe, BackLink, PersonName, DecisionNoticeCard, HalfWidthDigits, Pager, PersonListBar, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './regular.html',
   styleUrl: './regular.css',
 })

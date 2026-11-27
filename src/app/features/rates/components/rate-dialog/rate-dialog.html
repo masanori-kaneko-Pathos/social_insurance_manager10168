@@ -19,7 +19,7 @@
           }
           <span class="period mono">
             @if (target().startKnown) {
-              {{ range().from }}
+              {{ range().from | ym }}
             }
             〜
             @if (lastMonth(); as m) {
@@ -88,7 +88,7 @@
           <tbody>
             @for (r of kyokaiRows(); track r.month) {
               <tr>
-                <td class="mono">{{ r.month }}</td>
+                <td class="mono">{{ r.month | ym }}</td>
                 @for (kind of kinds; track kind) {
                   <td class="num">
                     @if (notYet(kind, r.month)) {
@@ -129,7 +129,7 @@
           <tbody>
             @for (k of kumiaiRows(); track k.from) {
               <tr [class.is-editing]="editing() === k.from">
-                <td class="mono">{{ k.from }}</td>
+                <td class="mono">{{ k.from | ym }}</td>
                 @for (kind of kinds; track kind) {
                   <td class="num">
                     @if (notYet(kind, k.from)) {

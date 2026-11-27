@@ -20,13 +20,7 @@
   <!-- 賞与額をファイルから読み込む（支払日より先に触ることが多いので一番上。11/17。給与ソフトの書き出しなど。入力欄に入れるだけで、保存は「保存する」。11/13）
      支払日を決める前でも読める。ファイルに支払日の列があれば、その日を支払日の欄に入れる（11/16） -->
   @if (!readOnly) {
-    <div class="import-line">
-      <label class="btn btn-small">
-        {{ 'bonus.import.button' | transloco }}
-        <input type="file" class="file-hidden" [accept]="importAccept" (change)="onImportFile($event)" />
-      </label>
-      <span class="muted">{{ 'bonus.import.note' | transloco }}</span>
-    </div>
+    <!-- 11/27：読み込みのボタンはなくした（賞与の一覧の入り口カード「ファイルから取り込み」に任せる）。下は読んだ結果を出す所 -->
     @if (importError(); as e) {
       <div class="alert alert-danger">{{ e | transloco }}</div>
     }

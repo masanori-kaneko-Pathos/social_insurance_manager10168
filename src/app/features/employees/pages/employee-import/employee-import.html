@@ -304,7 +304,7 @@
                     </td>
                     <td class="mono">
                       @if (it.remuneration; as r) {
-                        {{ r.from }}〜<br />
+                        {{ r.from | ym }}〜<br />
                         {{ 'employeeCsv.ins.health' | transloco }} {{ r.health.grade }}級
                         {{ yen(r.health.standard) }}<br />
                         {{ 'employeeCsv.ins.pension' | transloco }} {{ r.pension.grade }}級

@@ -31,6 +31,7 @@ import { PersonName } from '../../../../shared/components/person-name/person-nam
 import { BonusService } from '../../../premiums/bonus.service';
 import type { OtherMonths } from '../../logic/payroll-lines';
 import { payrollAt } from '../../../office/logic/pay-group';
+import { YmPipe } from '../../../../shared/pipes/ym.pipe';
 
 interface View {
   key: string; // 行の目印（従業員ID・種類・起算月）
@@ -49,7 +50,7 @@ interface View {
  */
 @Component({
   selector: 'app-revisions',
-  imports: [PersonName, DecisionNoticeCard, NgTemplateOutlet, TranslocoPipe, SpecialRevisionCard, WageChangeCard],
+  imports: [YmPipe, PersonName, DecisionNoticeCard, NgTemplateOutlet, TranslocoPipe, SpecialRevisionCard, WageChangeCard],
   templateUrl: './revisions.html',
   styleUrl: './revisions.css',
 })

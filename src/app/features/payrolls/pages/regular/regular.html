@@ -213,7 +213,7 @@
                     <div class="annual-months">
                       @for (m of a.months; track m.month) {
                         <div class="am" [class.skipped]="!m.used">
-                          <div class="sub">{{ m.month }}</div>
+                          <div class="sub">{{ m.month | ym }}</div>
                           <div>{{ m.payroll ? yen(m.amount) : m.skip === 'beforeAcquisition' ? '—' : ('regular.noRecord' | transloco) }}</div>
                         </div>
                       }

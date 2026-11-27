@@ -22,6 +22,7 @@ import {
 } from '../../logic/special-revision';
 import { RevisionService } from '../../revision.service';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
+import { YmPipe } from '../../../../shared/pipes/ym.pipe';
 
 /** 特例改定の材料（1人分。改定の候補の画面が読んだものを渡す） */
 export interface SpecialPerson {
@@ -41,7 +42,7 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
  */
 @Component({
   selector: 'app-special-revision-card',
-  imports: [PersonName, RouterLink, TranslocoPipe],
+  imports: [YmPipe, PersonName, RouterLink, TranslocoPipe],
   templateUrl: './special-revision-card.html',
   styleUrl: './special-revision-card.css',
 })

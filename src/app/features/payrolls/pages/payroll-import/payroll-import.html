@@ -229,7 +229,7 @@
                             {{ it.employeeLabel }}
                           }
                         </td>
-                        <td class="mono">{{ it.paidMonth }}</td>
+                        <td class="mono">{{ it.paidMonth | ym }}</td>
                         <td class="num">{{ yen(it.input.cash) }}</td>
                         <td class="num">{{ yen(it.input.fixed) }}</td>
                         <td class="num">{{ it.input.days }}</td>

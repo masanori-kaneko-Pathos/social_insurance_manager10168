@@ -11,7 +11,8 @@ import { LanguageService } from './core/i18n/language.service';
 import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
 import { TranslocoHttpLoader } from './transloco-loader';
-import { provideTransloco } from '@jsverse/transloco';
+import { provideTransloco, provideTranslocoTranspiler } from '@jsverse/transloco';
+import { MonthTranspiler } from './core/i18n/month-transpiler';
 import { LANG_CODES } from './core/i18n/languages';
 
 export const appConfig: ApplicationConfig = {
@@ -33,5 +34,7 @@ export const appConfig: ApplicationConfig = {
       },
       loader: TranslocoHttpLoader,
     }),
+    // 翻訳の引数の年月（YYYY-MM）を「2024年11月」などにする（provideTransloco の後に置く。11/27）
+    provideTranslocoTranspiler(MonthTranspiler),
   ],
 };

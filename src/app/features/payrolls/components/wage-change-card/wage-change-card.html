@@ -23,7 +23,7 @@
       <tbody>
         @for (r of sorted(); track r.employee.id + r.change.month) {
           <tr>
-            <td class="mono">{{ r.change.month }}</td>
+            <td class="mono">{{ r.change.month | ym }}</td>
             <td>
               @if (r.employee.employeeNumber) { <span class="emp-no">{{ r.employee.employeeNumber }}</span> }
               <app-person-name [person]="r.employee" layout="inline" />

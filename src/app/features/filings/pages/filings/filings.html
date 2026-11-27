@@ -28,7 +28,7 @@
     <div class="field">
       <span class="label">{{ 'filing.period.' + kind() | transloco }}</span>
       <div class="range">
-        <app-month-picker [value]="from()" [today]="thisMonth" (picked)="setFrom($event)">{{ from() }}</app-month-picker>
+        <app-month-picker [value]="from()" [today]="thisMonth" (picked)="setFrom($event)">{{ from() | ym }}</app-month-picker>
         <span>〜</span>
         <app-month-picker [value]="to()" [today]="thisMonth" (picked)="setTo($event)">{{ to() }}</app-month-picker>
       </div>

@@ -112,7 +112,7 @@
               <tbody>
                 @for (m of r.months; track m.month) {
                   <tr [class.expired]="m.expired" [class.changed]="m.afterEmployeeYen !== m.beforeEmployeeYen">
-                    <td class="mono">{{ m.month }}</td>
+                    <td class="mono">{{ m.month | ym }}</td>
                     <td class="num">{{ yen(m.beforeEmployeeYen) }}</td>
                     <td class="num">{{ yen(m.afterEmployeeYen) }}</td>
                     <td class="num">{{ yen(m.afterEmployeeYen - m.beforeEmployeeYen) }}</td>
@@ -155,7 +155,7 @@
               @for (m of s.months; track m.month) {
                 @if (m.afterEmployeeYen !== m.beforeEmployeeYen) {
                   <tr [class.expired]="m.expired">
-                    <td class="mono">{{ m.month }}</td>
+                    <td class="mono">{{ m.month | ym }}</td>
                     <td class="num">{{ yen(m.beforeEmployeeYen) }} → {{ yen(m.afterEmployeeYen) }}</td>
                     <td>@if (m.expired) { <span class="badge">{{ 'recalc.expired' | transloco }}</span> }</td>
                   </tr>

@@ -154,7 +154,7 @@
           @for (r of rows(); track r.from) {
             <tr [class.current]="r.from === currentFrom()">
               <td class="mono">
-                {{ r.from }}〜
+                {{ r.from | ym }}〜
                 @if (r.from === currentFrom()) { <span class="badge">{{ 'contract.current' | transloco }}</span> }
               </td>
               <td>

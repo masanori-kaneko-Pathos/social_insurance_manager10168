@@ -54,7 +54,7 @@
   @if (loading()) {
     <p class="muted">{{ 'common.loading' | transloco }}</p>
   } @else if (rows().length === 0) {
-    <p class="muted">{{ 'request.empty' | transloco }}</p>
+    <p class="muted">{{ (view() === 'applications' ? 'request.emptyOf.applications' : 'request.emptyOf.requests') | transloco }}</p>
   } @else {
     <div class="table-wrap">
       <table class="fixed-cols sticky-head">

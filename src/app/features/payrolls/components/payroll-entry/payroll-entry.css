@@ -414,3 +414,8 @@ tr.line-err span + span::before {
 .warn-note {
   color: var(--color-warning-text);
 }
+
+/* 注記の中の改行をそのまま出す（支払基礎日数の「月給／時給・日給」。11/27） */
+.field-note.lines {
+  white-space: pre-line;
+}

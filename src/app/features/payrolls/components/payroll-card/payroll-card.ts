@@ -28,6 +28,7 @@ import { entryCheckContextOf } from '../../logic/entry-check-context';
 import { PayrollService } from '../../payroll.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { payrollAt } from '../../../office/logic/pay-group';
+import { YmPipe } from '../../../../shared/pipes/ym.pipe';
 
 /**
  * 従業員の詳細：給与の実績（直近12件）
@@ -35,7 +36,7 @@ import { payrollAt } from '../../../office/logic/pay-group';
  */
 @Component({
   selector: 'app-payroll-card',
-  imports: [PayrollEntry, RouterLink, TranslocoPipe],
+  imports: [YmPipe, PayrollEntry, RouterLink, TranslocoPipe],
   templateUrl: './payroll-card.html',
   styleUrl: './payroll-card.css',
 })

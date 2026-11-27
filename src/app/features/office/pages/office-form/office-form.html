@@ -518,7 +518,7 @@
               <tr>
                 <td class="mono">
                   @if (periodLabel(i); as pr) {
-                    {{ pr.from }}〜{{ pr.to }}
+                    {{ pr.from | ym }}〜{{ pr.to | ym }}
                   } @else {
                     {{ 'office.history.all' | transloco }}
                   }

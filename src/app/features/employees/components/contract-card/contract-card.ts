@@ -23,6 +23,7 @@ import { ImportFileError } from '../../../../shared/import/parse';
 import { ContractCandidate, ContractPdfRead, readContractText } from '../../logic/contract-pdf';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
+import { YmPipe } from '../../../../shared/pipes/ym.pipe';
 
 /** 契約書の PDF の上限（読み取りの部品と同じ 5MB） */
 const MAX_PDF_BYTES = 5 * 1024 * 1024;
@@ -33,7 +34,7 @@ const MAX_PDF_BYTES = 5 * 1024 * 1024;
  */
 @Component({
   selector: 'app-contract-card',
-  imports: [ContractFields, ReactiveFormsModule, TranslocoPipe],
+  imports: [YmPipe, ContractFields, ReactiveFormsModule, TranslocoPipe],
   templateUrl: './contract-card.html',
   styleUrl: './contract-card.css',
 })

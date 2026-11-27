@@ -266,7 +266,8 @@
           [placeholder]="candidate() !== null ? ('payroll.autoDays' | transloco: { days: candidate() }) : ''"
           [title]="candidate() !== null ? ('payroll.candidateTitle' | transloco) : ''"
         />
-        <small class="field-note">{{ 'payrollEntry.note.days' | transloco }}</small>
+        <!-- 月給と時給・日給で2行に分ける（11/27） -->
+        <small class="field-note lines">{{ 'payrollEntry.note.days' | transloco }}</small>
       </div>
       <div class="field">
         <label>{{ 'payroll.col.absentDays' | transloco }}</label>

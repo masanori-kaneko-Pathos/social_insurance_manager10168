@@ -19,6 +19,7 @@ import {
 import { ageReachDate } from '../../logic/coverage';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
+import { YmPipe } from '../../../../shared/pipes/ym.pipe';
 
 const NEW = 'new';
 /** ルールの上限と同じ */
@@ -35,7 +36,7 @@ interface Row {
 /** 従業員の詳細に出す「介護保険の適用除外」（海外居住・施設入所・在留3か月以下） */
 @Component({
   selector: 'app-care-exemption-card',
-  imports: [ReactiveFormsModule, TranslocoPipe],
+  imports: [YmPipe, ReactiveFormsModule, TranslocoPipe],
   templateUrl: './care-exemption-card.html',
   styleUrl: '../leave-card/leave-card.css',
 })

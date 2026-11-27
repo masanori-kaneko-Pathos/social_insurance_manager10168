@@ -92,7 +92,7 @@
                 {{ 'careExemption.reason.' + r.item.reason | transloco }}
                 @if (r.item.note) { <div class="sub">{{ r.item.note }}</div> }
               </td>
-              <td class="mono">{{ r.item.from }} 〜 {{ r.item.to ?? '' }}</td>
+              <td class="mono">{{ r.item.from | ym }} 〜 {{ r.item.to | ym }}</td>
               <td class="mono">
                 @if (r.months; as m) {
                   {{ m.from }} 〜 {{ m.to ?? ('careExemption.ongoing' | transloco) }}

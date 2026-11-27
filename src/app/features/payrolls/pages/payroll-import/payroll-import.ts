@@ -55,6 +55,7 @@ import { PersonName } from '../../../../shared/components/person-name/person-nam
 import { Pager } from '../../../../shared/components/pager/pager';
 import { PAGE_SIZE, PageSize, pageOf } from '../../../../shared/logic/person-list';
 import { payrollAt } from '../../../office/logic/pay-group';
+import { YmPipe } from '../../../../shared/pipes/ym.pipe';
 /** 書き出せる期間の上限（月数） */
 const MAX_MONTHS = 24;
 /** 確認画面に出すエラーの行数 */
@@ -85,7 +86,7 @@ interface Preview {
 
 @Component({
   selector: 'app-payroll-import',
-  imports: [PersonName, Pager, IssueRow, ImportSteps, ImportPicker, ColumnMapper, ExportDialog, HalfWidthDigits, ImportIssues, RouterLink, TranslocoPipe, FormsModule],
+  imports: [YmPipe, PersonName, Pager, IssueRow, ImportSteps, ImportPicker, ColumnMapper, ExportDialog, HalfWidthDigits, ImportIssues, RouterLink, TranslocoPipe, FormsModule],
   templateUrl: './payroll-import.html',
   styleUrl: './payroll-import.css',
 })

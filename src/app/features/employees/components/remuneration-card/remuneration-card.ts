@@ -26,6 +26,7 @@ import { acquireBonusRemunerationOf, AcquireBonusRemuneration } from '../../../p
 import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
+import { YmPipe } from '../../../../shared/pipes/ym.pipe';
 type Kind = 'health' | 'pension';
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -33,7 +34,7 @@ const YEN = /^[0-9０-９,，\s]+$/;
 
 @Component({
   selector: 'app-remuneration-card',
-  imports: [HalfWidthDigits, ReactiveFormsModule, TranslocoPipe],
+  imports: [YmPipe, HalfWidthDigits, ReactiveFormsModule, TranslocoPipe],
   templateUrl: './remuneration-card.html',
   styleUrl: './remuneration-card.css',
 })

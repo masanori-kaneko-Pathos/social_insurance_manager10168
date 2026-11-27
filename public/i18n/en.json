@@ -3437,6 +3437,10 @@
     "lead": {
       "requests": "Requests from the company to employees (onboarding, change notices, etc.). Items waiting for review come first.",
       "applications": "Change applications sent by employees. Items waiting for review come first."
+    },
+    "emptyOf": {
+      "requests": "No requests.",
+      "applications": "No applications."
     }
   },
   "me": {
@@ -3944,10 +3948,10 @@
       "premiums": "Premiums",
       "employees": "Employees",
       "payrollsView": "Payroll",
-      "addEmployee": "Add employee",
+      "addEmployee": "Employees",
       "import": "Import / Export",
       "request": "Requests",
-      "bonus": "Add bonus"
+      "bonus": "Bonuses"
     },
     "filterKind": "Filter by type",
     "filterView": "Open or checked",
@@ -3956,7 +3960,7 @@
     "viewDismissed": "Checked ({{count}})",
     "noDismissed": "Nothing has been checked.",
     "col": {
-      "urgency": "Urgency",
+      "urgency": "Status",
       "kind": "Procedure",
       "who": "Employee",
       "date": "Occurred",
@@ -3968,7 +3972,7 @@
       "now": "Now",
       "soon": "Coming up",
       "missing": "Missing info",
-      "info": "Check"
+      "info": "Check needed"
     },
     "ageOn": "Age {{age}}, {{date}}",
     "overBy": "{{n}} days ago",
@@ -4170,7 +4174,7 @@
       "fixed": "Wages with a set rate or amount (incl. commuting; before absence deductions)",
       "nonFixed": "Overtime, commission, etc.",
       "retro": "Retroactive pay",
-      "days": "Monthly: calendar days / hourly, daily: days worked",
+      "days": "Monthly: calendar days\nHourly, daily: days worked",
       "inKind": "Price table amount − employee payment",
       "prorated": "A raise or new allowance started mid-period",
       "state": "Choose only for months with leave-of-absence pay.",
@@ -4863,7 +4867,7 @@
     "retro": "(excluding retroactive pay of {{n}} yen)"
   },
   "wageChange": {
-    "title": "Changes in fixed wages (added or removed by hand)",
+    "title": "Changes in fixed wages",
     "lead": "The start month for a revision is found automatically from months where the fixed wage amount changed. Add changes the amounts cannot show: hourly, daily or per-km unit prices, a non-fixed allowance (such as a shift allowance) newly paid or ended, in-kind values (including official revisions such as the October 2026 housing values) or contract hours. If the direction is unclear (e.g. fixed wage down while a variable allowance starts in the same month), choose \"direction to confirm\" (proposed automatically when the fixed wage rises and overtime drops to zero). Candidates are recalculated from three months starting with the added month.",
     "empty": "No changes have been added or removed by hand.",
     "add": "Add a change in fixed wages",
@@ -5729,5 +5733,8 @@
   },
   "entryChoice": {
     "label": "How to register"
+  },
+  "format": {
+    "yearMonth": "{{mon}} {{y}}"
   }
 }

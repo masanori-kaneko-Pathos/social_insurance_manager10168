@@ -20,6 +20,7 @@ import { MonthCloseService } from '../../month-close.service';
 import type { ClosedAmount } from '../../logic/month-close';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { SpecialInsuredService } from '../../../employees/special-insured.service';
+import { YmPipe } from '../../../../shared/pipes/ym.pipe';
 
 /** 画面の1行：何月から・何月まで（空 ＝ 今も）・報酬月額（「加入していない」なら null） */
 interface PeriodRow {
@@ -41,7 +42,7 @@ interface EnrollmentRow {
  */
 @Component({
   selector: 'app-recalc-card',
-  imports: [TranslocoPipe],
+  imports: [YmPipe, TranslocoPipe],
   templateUrl: './recalc-card.html',
   styleUrl: './recalc-card.css',
 })

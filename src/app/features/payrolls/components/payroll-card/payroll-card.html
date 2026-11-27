@@ -89,7 +89,7 @@
           @for (p of shown(); track p.paidMonth) {
             <tr>
               <td class="mono">
-                <a [routerLink]="['/o', context.current()?.id, 'payrolls', p.paidMonth]">{{ p.paidMonth }}</a>
+                <a [routerLink]="['/o', context.current()?.id, 'payrolls', p.paidMonth]">{{ p.paidMonth | ym }}</a>
               </td>
               <td class="mono">{{ periodText(p) }}</td>
               <td class="num">{{ yen(p.cash) }}</td>

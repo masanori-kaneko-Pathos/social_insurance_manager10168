@@ -152,7 +152,7 @@
       <tbody>
         @for (x of registered(); track x.employee.id + x.r.from) {
           <tr>
-            <td class="mono">{{ x.r.from }}〜</td>
+            <td class="mono">{{ x.r.from | ym }}〜</td>
             <td>
               @if (x.employee.employeeNumber) { <span class="emp-no">{{ x.employee.employeeNumber }}</span> }
               <app-person-name [person]="x.employee" [link]="['/o', context.current()?.id, 'employees', x.employee.id]" layout="inline" />
