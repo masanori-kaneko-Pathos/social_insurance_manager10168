@@ -67,9 +67,6 @@
           <path d="M2 3.5h12L9.5 9v4l-3 1.5V9z" />
         </svg>
         {{ 'employee.filter.button' | transloco }}
-        @if (filterCount() > 0) {
-          <span class="count">{{ filterCount() }}</span>
-        }
       </button>
       @if (filterOpen()) {
         @let f = options().filter;

@@ -316,16 +316,6 @@ th .arrow.default {
   border-color: var(--color-primary);
 }
 
-.filter-btn .count {
-  min-width: 18px;
-  padding: 0 5px;
-  border-radius: 999px;
-  background: var(--color-primary);
-  font-size: var(--font-xs, 12px);
-  font-weight: 600;
-  text-align: center;
-}
-
 .filter-panel {
   position: absolute;
   top: calc(100% + var(--space-xs));
