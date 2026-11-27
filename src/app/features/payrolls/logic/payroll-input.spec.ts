@@ -1,4 +1,4 @@
-import { emptyPayrollInput } from '../../../core/models/payroll';
+import { emptyPayrollInput, fixedForChange } from '../../../core/models/payroll';
 import { autoDaysText, candidateDays, PayrollRowText, readEntry, readRow, sameInput, sumPayrolls, textOf, totalOf } from './payroll-input';
 import { formatHours, parseHours, parseNat } from '../../../shared/utils/number';
 
@@ -54,7 +54,7 @@ describe('readRow', () => {
     const r = readRow({ ...blank(), cash: '330,000', fixed: '300000', days: '31' }, 31);
     expect(r).toEqual({
       kind: 'ok',
-      input: { ...emptyPayrollInput(), cash: 330000, fixed: 300000, days: 31 },
+      input: { ...emptyPayrollInput(), cash: 330000, fixed: 300000, fixedFull: 300000, days: 31 },
     });
   });
   it('必須が欠けている', () => {
@@ -65,9 +65,16 @@ describe('readRow', () => {
     const r = readRow({ ...blank(), prorated: true }, 31);
     expect(r.kind).toBe('invalid');
   });
-  it('数値のチェック（固定 > 通貨）も通す', () => {
+  it('固定的賃金は欠勤控除前：総支給額を超えても保存でき、計算に使う額は総支給額 − 遡及支払額まで（A2）', () => {
     const r = readRow({ ...blank(), cash: '100', fixed: '200', days: '31' }, 31);
-    expect(r).toEqual({ kind: 'invalid', errors: ['fixedOverCash'] });
+    expect(r).toEqual({ kind: 'ok', input: { ...emptyPayrollInput(), cash: 100, fixed: 100, fixedFull: 200, days: 31 } });
+    const withRetro = readRow({ ...blank(), cash: '280000', fixed: '300000', retro: '10000', days: '31' }, 31);
+    expect(withRetro.kind === 'ok' && [withRetro.input.fixed, withRetro.input.fixedFull]).toEqual([270000, 300000]);
+  });
+  it('欠勤の月（控除前の固定的賃金が同じ）は、変動を見る額が前の月と同じ（A2）', () => {
+    const full = readRow({ ...blank(), cash: '330000', fixed: '300000', days: '31' }, 31);
+    const absent = readRow({ ...blank(), cash: '290000', fixed: '300000', days: '31', absentDays: '2' }, 31);
+    expect(full.kind === 'ok' && absent.kind === 'ok' && fixedForChange(full.input) === fixedForChange(absent.input)).toBeTrue();
   });
   it('時間の読み違い', () => {
     const r = readRow({ ...blank(), cash: '100', fixed: '100', days: '20', hours: '8時間' }, 31);

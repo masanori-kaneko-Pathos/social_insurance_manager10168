@@ -2,7 +2,7 @@
 // 画面はすべて文字で持ち、「保存する」を押したときにここで数値に直す（共通ルール4：保存するまで保存しない）
 
 import type { PayType } from '../../../core/models/contract';
-import { PayrollInput, PayrollState } from '../../../core/models/payroll';
+import { fixedForChange, PayrollInput, PayrollState } from '../../../core/models/payroll';
 import { hasAmounts, LineDraft, readLines, totalsOf } from './payroll-lines';
 import { PayrollError, validatePayroll } from './payroll-rows';
 import { formatHours, parseHours, parseNat } from '../../../shared/utils/number';
@@ -42,7 +42,7 @@ export function textOf(p: PayrollInput | null): PayrollRowText {
   const n = (v: number) => (v === 0 ? '' : String(v)); // 0 は空欄で見せる（現物・遡及）
   return {
     cash: String(p.cash),
-    fixed: String(p.fixed),
+    fixed: String(fixedBeforeOf(p)),
     inKind: p.inKind === null ? '' : n(p.inKind),
     inKindMerged: p.inKind === null,
     retro: n(p.retro),
@@ -96,9 +96,12 @@ export function readRow(t: PayrollRowText, periodDays: number, autoDays: number 
   if (days === null) errors.push('daysRequired');
   if (errors.length > 0) return { kind: 'invalid', errors };
 
+  // 「うち固定的賃金」の欄は欠勤控除を引く前の額（A2。11/27。内訳ありのときと同じ意味）
+  // 変動を見る額（fixedFull）にはそのまま使い、計算に使う額（fixed）は総支給額 − 遡及支払額を超えないようにする
+  // （欠勤の月に、非固定的賃金がマイナスにならないように。内訳ありの totalsOf と同じ上限）
   const input: PayrollInput = {
     cash: cash!,
-    fixed: fixed!,
+    fixed: Math.max(0, Math.min(fixed!, cash! - (retro ?? 0))),
     inKind: t.inKindMerged ? null : (inKind ?? 0),
     retro: retro ?? 0,
     days: days!,
@@ -108,7 +111,7 @@ export function readRow(t: PayrollRowText, periodDays: number, autoDays: number 
     state: t.state,
     // 表・CSV の総支給額の入力は内訳なし（内訳は行の下の「内訳」で入れる。11/24）
     lines: null,
-    fixedFull: null,
+    fixedFull: fixed!,
   };
   const checks = validatePayroll(input, periodDays);
   return checks.length > 0 ? { kind: 'invalid', errors: checks } : { kind: 'ok', input };
@@ -126,7 +129,8 @@ export function sameInput(a: PayrollInput, b: PayrollInput): boolean {
     a.workMinutes === b.workMinutes &&
     a.prorated === b.prorated &&
     a.state === b.state &&
-    a.fixedFull === b.fixedFull &&
+    // 以前のデータ（fixedFull が null）と、新しい内訳なしの入力（fixedFull に控除前の額）は、変動を見る額で比べる（A2）
+    fixedForChange(a) === fixedForChange(b) &&
     JSON.stringify(a.lines) === JSON.stringify(b.lines)
   );
 }
@@ -150,9 +154,10 @@ export function readEntry(
   if (!r.lines) return { kind: 'invalid', errors: ['lines'] };
   const tot = totalsOf(r.lines, payType);
   const n = (v: number) => (v === 0 ? '' : String(v));
-  const row = readRow({ ...t, cash: String(tot.cash), fixed: String(tot.fixed), retro: n(tot.retro) }, periodDays, autoDays);
+  const row = readRow({ ...t, cash: String(tot.cash), fixed: String(tot.fixedBefore), retro: n(tot.retro) }, periodDays, autoDays);
   if (row.kind !== 'ok') return row;
-  return { kind: 'ok', input: { ...row.input, lines: r.lines, fixedFull: tot.fixedFull } };
+  // 内訳があれば、計算に使う額（控除後）・変動を見る額は内訳から出した値にする
+  return { kind: 'ok', input: { ...row.input, lines: r.lines, fixed: tot.fixed, fixedFull: tot.fixedFull } };
 }
 
 /**
@@ -207,4 +212,12 @@ export function totalOf(cash: string, inKind: string): number | null {
   const k = parseNat(inKind);
   if (c == null || k === undefined) return null;
   return c + (k ?? 0);
+}
+
+/**
+ * 画面と CSV の「うち固定的賃金」に出す額（欠勤控除を引く前。A2。11/27）
+ * 内訳があれば内訳から出す。内訳なしは fixedFull（以前のデータで null なら、保存した fixed）
+ */
+export function fixedBeforeOf(p: Pick<PayrollInput, 'fixed' | 'fixedFull' | 'lines'>): number {
+  return p.lines ? totalsOf(p.lines, null).fixedBefore : fixedForChange(p);
 }

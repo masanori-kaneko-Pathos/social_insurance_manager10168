@@ -149,7 +149,10 @@ export class PayrollEntry implements OnInit {
     return this.showLineErrors() ? (this.read().lineErrors.get(i) ?? []) : [];
   }
 
-  /** 内訳なしのとき：非固定的賃金 ＝ 総支給額 − 固定的賃金 − 昇給差額（読めなければ空） */
+  /**
+   * 内訳なしのとき：非固定的賃金 ＝ 総支給額 − 固定的賃金 − 遡及支払額（読めなければ空）
+   * 固定的賃金は欠勤控除前なので、欠勤の月は引ききれないことがある。そのときは 0（A2。保存の計算と同じ上限）
+   */
   directNonFixed(): string {
     const n = (s: string) => {
       const t = toHalfWidth(s).replace(/[,，\s]/g, '');
@@ -158,7 +161,7 @@ export class PayrollEntry implements OnInit {
     const c = this.form().controls;
     if (c.cash.value.trim() === '') return '';
     const v = n(c.cash.value) - n(c.fixed.value) - n(c.retro.value);
-    return Number.isFinite(v) && v >= 0 ? this.yen(v) : '';
+    return Number.isFinite(v) ? this.yen(Math.max(0, v)) : '';
   }
 
   yen(n: number): string {
@@ -371,7 +374,7 @@ export class PayrollEntry implements OnInit {
     const f = this.form();
     if (!this.hasAmounts()) return;
     f.controls.cash.setValue(String(t.cash));
-    f.controls.fixed.setValue(String(t.fixed));
+    f.controls.fixed.setValue(String(t.fixedBefore)); // 欠勤控除前（内訳なしの欄と同じ意味。A2）
     f.controls.retro.setValue(t.retro === 0 ? '' : String(t.retro));
     f.markAsDirty();
   }

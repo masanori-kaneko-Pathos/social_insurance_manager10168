@@ -203,6 +203,16 @@ describe('calcBonuses：支払日による例外', () => {
     expect(bonusStatus(true, '2026-06-10', null, '2026-06-10')).toBe('charged');
   });
 
+  it('資格取得月の同月合算は、資格取得日以降に払った賞与だけを使う（A3）', () => {
+    const [before, after] = calc(person('1996-05-15', '2026-06-10'), [
+      { paidDate: '2026-06-05', amount: 100500 },
+      { paidDate: '2026-06-20', amount: 200700 },
+    ]);
+    expect(before.standardBonus).toBe(0);
+    expect(after.standardBonus).toBe(200000);
+    expect(after.pensionBase).toBe(200000);
+  });
+
   it('同月得喪（6/10取得・6/26喪失）：6/20の賞与はかかる、6/27の賞与は対象外', () => {
     expect(bonusStatus(true, '2026-06-10', '2026-06-26', '2026-06-20')).toBe('charged');
     expect(bonusStatus(true, '2026-06-10', '2026-06-26', '2026-06-27')).toBe('none');

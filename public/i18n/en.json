@@ -416,15 +416,15 @@
     "field": {
       "employeeNumber": "Employee number",
       "name": "Name",
-      "lastName": "Last name",
-      "firstName": "First name",
-      "lastNameKana": "Last name (katakana)",
-      "firstNameKana": "First name (katakana)",
+      "lastName": "Surname",
+      "firstName": "Given name",
+      "lastNameKana": "Surname reading (katakana)",
+      "firstNameKana": "Given-name reading (katakana)",
       "birthDate": "Date of birth",
       "hireDate": "Hire date",
       "retireDate": "Retirement date",
-      "acquiredDate": "Coverage start date",
-      "lostDate": "Coverage end date",
+      "acquiredDate": "Coverage acquisition date",
+      "lostDate": "Coverage loss date",
       "sex": "Sex",
       "retireReason": "Reason for leaving",
       "lossReason": "Reason coverage ended",
@@ -1911,7 +1911,7 @@
     "hint": {
       "list": "\"Not entered\" counts employees insured during the pay period whose pay has not been entered yet (only months whose pay day has passed).",
       "cash": "Amount paid in money: the \"amount paid in money\" column of the notification of change in monthly remuneration and the base calculation notification. It includes the commuting allowance (even the tax-free part) and is after absence deductions. Do not include payments that are not remuneration, such as actual travel expenses or condolence money. Not the net pay.",
-      "fixed": "Fixed wages (used to detect SMR revisions): pay with a set rate or amount, such as base pay, position allowance and commuting allowance (including hourly rate × hours and daily rate × days). Non-fixed wages: pay that depends on the month, such as overtime, attendance allowance and commission. With a breakdown, these are calculated from the categories. A revision candidate appears when fixed wages (before absence deductions) change for monthly-paid people, or when the contract rate or scheduled hours change for hourly or daily-paid people.",
+      "fixed": "Fixed wages (used to detect SMR revisions): the amount before absence deductions. pay with a set rate or amount, such as base pay, position allowance and commuting allowance (including hourly rate × hours and daily rate × days). Non-fixed wages: pay that depends on the month, such as overtime, attendance allowance and commission. With a breakdown, these are calculated from the categories. A revision candidate appears when fixed wages (before absence deductions) change for monthly-paid people, or when the contract rate or scheduled hours change for hourly or daily-paid people.",
       "inKind": "Remuneration provided in kind (現物給与): company housing, dormitories and meals are converted to yen with the value set by the government for each prefecture, minus what the employee pays (different from the tax valuation). Use \"Calculate\" for meals and housing. If you hand over a commuter pass or coupon tickets, enter their value here too.",
       "days": "Base days for payroll: for monthly paid employees, the calendar days (30, 31, etc.) regardless of attendance. For daily-monthly paid employees whose pay is reduced for absences, the company's scheduled days minus absent days, only in months with absences. These two are filled in automatically (\"31 (auto)\"). Enter a number only when you need different days. For daily and hourly paid employees, enter the actual days worked (including paid leave).",
       "blank": "Empty rows are not saved. Clearing a saved row and saving deletes that month's record.",
@@ -2009,7 +2009,7 @@
       "result": "Result"
     },
     "days": "{{d}} days",
-    "retro": "back pay {{n}}",
+    "retro": "retroactive pay {{n}}",
     "noRecord": "Not entered",
     "skip": {
       "beforeAcquisition": "* before joining",
@@ -2020,7 +2020,7 @@
     },
     "corrected": "Corrected average",
     "restored": "Pre-furlough amount (from {{y}}-{{m}})",
-    "correctedNote": "(excluding back pay)",
+    "correctedNote": "(excluding retroactive pay)",
     "grade": "G{{h}} / G{{p}}",
     "change": {
       "up": "Up",
@@ -2409,8 +2409,8 @@
     "apart": "Living apart",
     "scheduled": "Upcoming",
     "commonLawShort": "(common-law)",
-    "thirdInsured": "Becomes a Category III insured person of the National Pension",
-    "thirdInsuredShort": "Cat. III",
+    "thirdInsured": "May qualify as a Category III insured person of the National Pension (check required)",
+    "thirdInsuredShort": "Possible Cat. III (check required)",
     "confirmDelete": "Delete this person",
     "household": {
       "insuredIncome": "This employee's expected annual income",
@@ -2627,7 +2627,7 @@
     },
     "source": {
       "fixed": "Fixed wages changed",
-      "retro": "Back pay",
+      "retro": "Retroactive pay",
       "manual": "Added manually",
       "furlough": "Furlough started or ended",
       "contract": "Contract rate or scheduled hours changed",
@@ -2642,12 +2642,12 @@
       "month": "Pay month",
       "days": "Base days",
       "amount": "Remuneration",
-      "retro": "Of which: back pay"
+      "retro": "Of which: retroactive pay"
     },
     "minDays": "min {{n}}",
     "noRecord": "No record yet",
     "average": "Average {{n}} yen",
-    "corrected": "Corrected average (without back pay) {{n}} yen",
+    "corrected": "Corrected average (without retroactive pay) {{n}} yen",
     "ins": {
       "health": "Health insurance",
       "pension": "Pension"
@@ -3216,7 +3216,7 @@
   "invite": {
     "accept": {
       "title": "Create your My Page account",
-      "lead": "This is an invitation from your company. Choose a name, email and password to see your social insurance information and answer requests from the company.",
+      "lead": "This is an invitation from your company. Choose an email and password to see your social insurance information and answer requests from the company.",
       "emailHint": "If the company specified an email address, register with that address. A verification email will be sent.",
       "submit": "Create account",
       "submitting": "Creating…",
@@ -4157,10 +4157,10 @@
     "saveNext": "Save and go to the next person",
     "saveOnly": "Save",
     "note": {
-      "cash": "Gross pay on the payslip (not net pay)",
-      "fixed": "Incl. commuting, minus absence deductions",
+      "cash": "Gross pay excluding non-remuneration items such as actual travel expenses and condolence money (not net pay)",
+      "fixed": "Wages with a set rate or amount (incl. commuting; before absence deductions)",
       "nonFixed": "Overtime, commission, etc.",
-      "retro": "Retroactive raise",
+      "retro": "Retroactive pay",
       "days": "Monthly: calendar days / hourly, daily: days worked",
       "inKind": "Price table amount − employee payment",
       "prorated": "A raise or new allowance started mid-period",
@@ -4177,7 +4177,8 @@
       "spreadLater": "Of which, commuter pass for later months: ¥{{amount}}",
       "spreadIn": "Monthly share of a commuter pass paid earlier: ¥{{amount}}",
       "remuneration": "Used as this month's remuneration: ¥{{amount}} (a commuter pass paid for several months is divided by the months, starting from the month paid)",
-      "periodExtra": "Of which, extra period from a closing-day change (excluded from the averages): ¥{{amount}}"
+      "periodExtra": "Of which, extra period from a closing-day change (excluded from the averages): ¥{{amount}}",
+      "deduction": "Absence deductions: ¥{{amount}} (fixed wages are shown before these deductions)"
     },
     "add": "Enter pay",
     "check": {
@@ -4282,17 +4283,17 @@
       "basicPensionNumber70": "Basic pension number (70+ only)",
       "paidDate": "Bonus payment date",
       "total1000": "Bonus amount (rounded down to 1,000 yen)",
-      "m1Month": "Pay month 1",
+      "m1Month": "Payroll payment month 1",
       "m1Days": "Days 1",
       "m1Cash": "Cash 1",
       "m1InKind": "In kind 1",
       "m1Total": "Total 1",
-      "m2Month": "Pay month 2",
+      "m2Month": "Payroll payment month 2",
       "m2Days": "Days 2",
       "m2Cash": "Cash 2",
       "m2InKind": "In kind 2",
       "m2Total": "Total 2",
-      "m3Month": "Pay month 3",
+      "m3Month": "Payroll payment month 3",
       "m3Days": "Days 3",
       "m3Cash": "Cash 3",
       "m3InKind": "In kind 3",
@@ -4846,7 +4847,7 @@
       "save": "Could not apply the special revision."
     },
     "consent": "Obtained the employee's written consent (statement and consent form)",
-    "retro": "(excluding back pay of {{n}} yen)"
+    "retro": "(excluding retroactive pay of {{n}} yen)"
   },
   "wageChange": {
     "title": "Changes in fixed wages (added or removed by hand)",

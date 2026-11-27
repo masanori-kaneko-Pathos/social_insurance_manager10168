@@ -108,10 +108,7 @@ export function calcBonuses(input: BonusInput): BonusPremiumResult[] {
 
   return sorted.map((b) => {
     const month = toYearMonth(b.paidDate);
-    const paidBefore = amountByMonth.get(month) ?? 0;
     standardBonusOf(b.amount); // 額のチェック
-    const standardBonus = standardBonusOf(paidBefore + b.amount) - standardBonusOf(paidBefore);
-    amountByMonth.set(month, paidBefore + b.amount);
     const rawHealth = bonusStatus(
       employee.health.enrolled,
       employee.health.acquiredDate,
@@ -125,6 +122,12 @@ export function calcBonuses(input: BonusInput): BonusPremiumResult[] {
         pensionLost,
         b.paidDate,
       ) === 'charged';
+    // 同じ月の合計（1,000円未満の切り捨て）には、健保・厚年のどちらかの対象になる賞与だけを入れる
+    // 資格を取る前に払った賞与は、あとで同じ月に払った賞与の標準賞与額を動かさない（A3。11/27）
+    const counted = rawHealth !== 'none' || rawPensionCharged;
+    const paidBefore = amountByMonth.get(month) ?? 0;
+    const standardBonus = counted ? standardBonusOf(paidBefore + b.amount) - standardBonusOf(paidBefore) : 0;
+    if (counted) amountByMonth.set(month, paidBefore + b.amount);
     // 産休・育休で免除：保険料はかからないが、健保は標準賞与額が決まり年度累計に入る（日本年金機構）
     // 免除は申出をした休業だけ。申出がまだなら保険料をかけ、exemptPending で知らせる（健保法159条・159条の3。11/19）
     const charged = rawHealth === 'charged' || rawPensionCharged;

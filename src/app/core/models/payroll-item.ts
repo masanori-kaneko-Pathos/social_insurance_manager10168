@@ -19,7 +19,7 @@ import { Timestamp } from 'firebase/firestore';
  *   1日いくら×出勤日数の交通費は variable（出勤日数の増減は起算月にしない。単価の変更は人が足す。調査指摘事例集 事例4。11/25）
  * - variable：非固定的な手当（残業・休日・深夜・皆勤・歩合・固定残業の超過分など）
  * - deduction：欠勤・遅刻早退の控除（総支給額から引く。毎月決まった額は引く前で見る）
- * - retro：昇給差額（前の月までの分。定時決定・随時改定の平均から除く）
+ * - retro：遡及支払額（前の月までの分。定時決定・随時改定の平均から除く）
  * - excluded：報酬にならないもの（出張旅費の精算・慶弔見舞金など。総支給額に入れない）
  */
 export type PayrollItemCategory = 'base' | 'fixedAllowance' | 'commute' | 'variable' | 'deduction' | 'retro' | 'excluded';
@@ -92,7 +92,7 @@ export const DEFAULT_PAYROLL_ITEMS: readonly PayrollItemInput[] = [
   { name: '歩合給', labels: ['インセンティブ', '能率給', '出来高給'], category: 'variable' },
   { name: '欠勤控除', labels: ['勤怠控除'], category: 'deduction' },
   { name: '遅刻早退控除', labels: [], category: 'deduction' },
-  { name: '昇給差額', labels: ['遡及支払額', '差額支給'], category: 'retro' },
+  { name: '遡及支払額', labels: ['昇給差額', '差額支給'], category: 'retro' },
   { name: '出張旅費', labels: ['旅費', '出張手当（実費）'], category: 'excluded' },
   { name: '慶弔見舞金', labels: ['見舞金', '慶弔金'], category: 'excluded' },
 ];

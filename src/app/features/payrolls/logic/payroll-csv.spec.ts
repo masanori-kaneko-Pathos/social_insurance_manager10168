@@ -112,7 +112,7 @@ describe('readPayrollCsv', () => {
         employeeId: 'A',
         employeeLabel: '0012 テスト一 太郎',
         paidMonth: '2026-10',
-        input: { ...emptyPayrollInput(), cash: 330000, fixed: 300000, days: 30 },
+        input: { ...emptyPayrollInput(), cash: 330000, fixed: 300000, fixedFull: 300000, days: 30 },
       },
     ]);
   });
@@ -123,7 +123,7 @@ describe('readPayrollCsv', () => {
         ',,2026-10,1,1,1', // 2: 社員番号なし
         '99,,2026-10,1,1,1', // 3: 未登録
         '0012,,2026-13,1,1,1', // 4: 月が読めない
-        '0012,,2026-10,100,200,30', // 5: 固定 > 通貨
+        '0012,,2026-10,100,200,30', // 5: 固定 > 通貨（固定的賃金は欠勤控除前なので、エラーにしない。A2）
         '0040,,2026-10,1,1,1', // 6: 四郎は10月払い（9月分）に在籍していない
         '0012,,2026-09,1,1,30', // 7: OK
         '0012,,2026-09,1,1,30', // 8: 重複
@@ -133,11 +133,10 @@ describe('readPayrollCsv', () => {
       { line: 2, codes: ['noEmployeeNumber'] },
       { line: 3, codes: ['unknownEmployee'] },
       { line: 4, codes: ['badMonth'] },
-      { line: 5, codes: ['fixedOverCash'] },
       { line: 6, codes: ['notEmployed'] },
       { line: 8, codes: ['duplicate'] },
     ]);
-    expect(r.items.map((x) => x.line)).toEqual([7]);
+    expect(r.items.map((x) => x.line)).toEqual([5, 7]);
   });
 
   it('10月払い ＝ 9月分なので、日数31はエラー（電気代の請求書のわな）', () => {
@@ -223,8 +222,9 @@ describe('readPayrollCsv', () => {
         ],
         total: 300000,
       });
-      expect(f.fixed?.total).toBe(280000);
-      expect(f.fixed?.terms.map((t) => t.name)).toEqual(['基本給', '役職手当', '通勤手当', '欠勤控除']);
+      // うち固定的賃金は欠勤控除を引く前（A2）
+      expect(f.fixed?.total).toBe(285000);
+      expect(f.fixed?.terms.map((t) => t.name)).toEqual(['基本給', '役職手当', '通勤手当']);
     });
     it('内訳の列はそのまま渡り、読み取りで内訳つきの給与になる（健康保険料・差引支給額は使わない）', () => {
       const m = guessMapping(table[0], PAYROLL_IMPORT_FIELDS);

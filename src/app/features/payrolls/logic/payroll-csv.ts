@@ -4,7 +4,7 @@
 import { Payroll, PayrollInput, PayrollState } from '../../../core/models/payroll';
 import { isBlankRow } from '../../../shared/csv/csv';
 import { toHalfWidth } from '../../../shared/utils/text';
-import { candidateDays, PayrollRowText, readEntry, RowError, sameInput } from './payroll-input';
+import { candidateDays, fixedBeforeOf, PayrollRowText, readEntry, RowError, sameInput } from './payroll-input';
 import type { PayType } from '../../../core/models/contract';
 import type { PayrollItemCategory, PayrollItemInput } from '../../../core/models/payroll-item';
 import { categoryOf, FOR_MONTH_CATEGORIES, itemKey, LineDraft, readAmount, totalsOf } from './payroll-lines';
@@ -586,7 +586,7 @@ export function payrollCells(r: PayrollExportRow, lang: CsvLang): Record<Payroll
     name: `${e.lastName} ${e.firstName}`,
     paidMonth: r.month,
     cash: s ? String(s.cash) : '',
-    fixed: s ? String(s.fixed) : '',
+    fixed: s ? String(fixedBeforeOf(s)) : '', // 欠勤控除を引く前（取り込みと同じ意味。A2）
     days: s ? String(s.days) : '',
     inKind: !s ? '' : s.inKind === null ? IN_KIND_MERGED_LABEL[lang] : s.inKind ? String(s.inKind) : '',
     retro: s && s.retro ? String(s.retro) : '',
@@ -735,10 +735,10 @@ export function payrollDerived(headers: readonly string[], items: readonly Payro
       });
       const t = totalsOf(lines, null);
       const signed = (l: (typeof lines)[number]) => ({ name: l.name, amount: l.category === 'deduction' ? -l.amount : l.amount });
-      const FIXED: readonly PayrollItemCategory[] = ['base', 'fixedAllowance', 'commute', 'deduction'];
+      const FIXED: readonly PayrollItemCategory[] = ['base', 'fixedAllowance', 'commute']; // 欠勤控除を引く前（A2）
       return {
         cash: { terms: lines.map(signed), total: t.cash },
-        fixed: { terms: lines.filter((l) => FIXED.includes(l.category) && !l.forMonth).map(signed), total: t.fixed },
+        fixed: { terms: lines.filter((l) => FIXED.includes(l.category) && !l.forMonth).map(signed), total: t.fixedBefore },
       };
     },
   };

@@ -28,6 +28,13 @@ export interface LineTotals {
    * 時給・日給・契約時間の変更は、雇用契約から見つける：contractStartMonths）
    */
   fixedFull: number;
+  /**
+   * 画面と CSV の「うち固定的賃金」に出す額（A2。11/27）：欠勤控除を引く前の固定的賃金（時給の人の基本給も入る）
+   * 内訳なしで入れる欄と同じ意味にそろえる。計算は fixed（実際に払った分）、変動を見るのは fixedFull を使う
+   */
+  fixedBefore: number;
+  /** 欠勤・遅刻早退の控除の合計（この月の分。画面で「固定的賃金から引いた額」として見せる） */
+  deduction: number;
   /** 遡及支払額（遡って決まった昇給の差額） */
   retro: number;
   /** 非固定的賃金（総支給額 − 固定的賃金 − 遡及支払額 − 本来の月へ割り振る額。残業・皆勤・歩合など） */
@@ -85,7 +92,7 @@ export function totalsOf(lines: readonly PayrollLine[], payType: PayType | null)
   const ownCash = legal + sum('variable') + retro - deduction;
   const fixed = Math.max(0, Math.min(legal - deduction, ownCash - retro));
   const cash = ownCash + otherMonth + spreadLater + periodExtra;
-  return { cash, fixed, fixedFull, retro, nonFixed: ownCash - fixed - retro, otherMonth, spreadLater, periodExtra };
+  return { cash, fixed, fixedFull, fixedBefore: legal, deduction, retro, nonFixed: ownCash - fixed - retro, otherMonth, spreadLater, periodExtra };
 }
 
 /** 締め日の変更で増えた分を持てる分類（遡及支払額・報酬にならないものは持たない） */

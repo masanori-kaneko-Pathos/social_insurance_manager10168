@@ -178,7 +178,8 @@ export function checkDependent(
     incomeSource: useContract ? 'contract' : 'estimate',
     contractIssues,
     remittanceYear,
-    thirdInsured: d.relationship === 'spouse' && age >= 20 && age < 60,
+    // 扶養の基準を外れる配偶者は第3号にならない。基準内でも本人の届出で決まるので、画面では「可能性（要確認）」と出す（A4。11/27）
+    thirdInsured: level !== 'ng' && d.relationship === 'spouse' && age >= 20 && age < 60,
     age,
   };
 }

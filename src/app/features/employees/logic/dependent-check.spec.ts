@@ -86,7 +86,9 @@ describe('checkDependent', () => {
   });
 
   it('上限以上・75歳以上は基準外', () => {
-    expect(checkDependent(dep({ annualIncome: 1_300_000 }), 9_000_000, today).issues).toEqual(['overLimit']);
+    const over = checkDependent(dep({ annualIncome: 1_300_000 }), 9_000_000, today);
+    expect(over.issues).toEqual(['overLimit']);
+    expect(over.thirdInsured).toBeFalse(); // A4：基準外の配偶者は第3号の可能性を出さない
     expect(checkDependent(dep({ relationship: 'parent', birthDate: '1950-01-01' }), 9_000_000, today).issues).toEqual(['age75']);
   });
 

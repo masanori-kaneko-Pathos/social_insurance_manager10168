@@ -461,7 +461,7 @@ export class PayrollMonth {
     return /^\d+$/.test(t) ? Number(t).toLocaleString('ja-JP') : '—';
   }
 
-  /** 固定的賃金（払った額。内訳があれば内訳から計算した値が欄に入っている） */
+  /** 固定的賃金（欠勤控除を引く前。内訳があれば内訳から計算した値が欄に入っている。A2） */
   fixedText(v: ViewRow): string {
     return this.yenOf(v.form.controls.fixed.value);
   }

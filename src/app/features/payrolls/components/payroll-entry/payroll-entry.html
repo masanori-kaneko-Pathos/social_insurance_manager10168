@@ -14,7 +14,7 @@
       内訳に金額がなければ直接入れられる（総支給額が書いてある明細から、ぱっと入れたいとき）。
       内訳に金額を入れると、内訳から計算した値を読み取りだけで出す（固定的賃金は欠勤控除を引く前）
     -->
-    <!-- 総支給額 ＝ 固定的賃金 ＋ 非固定的賃金 ＋ 昇給差額（非固定的賃金はいつも自動で計算する。11/24） -->
+    <!-- 総支給額 ＝ 固定的賃金（欠勤控除前）− 欠勤控除 ＋ 非固定的賃金 ＋ 遡及支払額（非固定的賃金はいつも自動で計算する。11/24・A2 11/27） -->
     <div class="row4 totals">
       @if (hasAmounts()) {
         <div class="field">
@@ -24,7 +24,7 @@
         </div>
         <div class="field">
           <label>{{ 'payroll.col.fixed' | transloco }}</label>
-          <input class="input num computed" [value]="yen(totals().fixed)" readonly tabindex="-1" />
+          <input class="input num computed" [value]="yen(totals().fixedBefore)" readonly tabindex="-1" />
           <small class="field-note">{{ 'payrollEntry.note.fixed' | transloco }}</small>
         </div>
         <div class="field">
@@ -66,6 +66,10 @@
         <strong>{{ (rb.merged ? 'payrollEntry.readback.merged' : 'payrollEntry.readback.total') | transloco: { total: rb.total } }}</strong>
         @if (rb.otherMonth !== 0) {
           <span>{{ 'payrollEntry.readback.otherMonth' | transloco: { amount: yen(rb.otherMonth) } }}</span>
+        }
+        <!-- 欠勤控除（固定的賃金は控除前で出しているので、4つの欄と総支給額の差をここで見せる。A2。11/27） -->
+        @if (hasAmounts() && totals().deduction !== 0) {
+          <span>{{ 'payrollEntry.readback.deduction' | transloco: { amount: yen(totals().deduction) } }}</span>
         }
         <!-- 締め日の変更で増えた期間の分（定時決定・随時改定の平均では除く。11/26） -->
         @if (hasAmounts() && totals().periodExtra !== 0) {

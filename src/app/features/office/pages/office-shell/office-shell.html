@@ -104,28 +104,31 @@
     </a>
 
     <span class="nav-sep" aria-hidden="true"></span>
-    <!-- ファイルの取り込み（区分を選んで取り込む。11/17） -->
-    <a
-      [routerLink]="['/o', officeId(), 'import']"
-      routerLinkActive="active"
-      [attr.title]="navCollapsed() ? ('nav.import' | transloco) : null"
-    >
-      <app-icon name="download" /><span class="label">{{ 'nav.import' | transloco }}</span>
-    </a>
-    <a
-      [routerLink]="['/o', officeId(), 'settings']"
-      routerLinkActive="active"
-      [attr.title]="navCollapsed() ? ('nav.settings' | transloco) : null"
-    >
-      <app-icon name="settings" /><span class="label">{{ 'nav.settings' | transloco }}</span>
-    </a>
-    <a
-      [routerLink]="['/o', officeId(), 'members']"
-      routerLinkActive="active"
-      [attr.title]="navCollapsed() ? ('nav.members' | transloco) : null"
-    >
-      <app-icon name="admin" /><span class="label">{{ 'nav.members' | transloco }}</span>
-    </a>
+    <!-- 取り込み・事業所の設定・管理者の設定は管理者だけ（一般のメンバーは開いても操作できないため。A10。11/27） -->
+    @if (context.isAdmin()) {
+      <!-- ファイルの取り込み（区分を選んで取り込む。11/17） -->
+      <a
+        [routerLink]="['/o', officeId(), 'import']"
+        routerLinkActive="active"
+        [attr.title]="navCollapsed() ? ('nav.import' | transloco) : null"
+      >
+        <app-icon name="download" /><span class="label">{{ 'nav.import' | transloco }}</span>
+      </a>
+      <a
+        [routerLink]="['/o', officeId(), 'settings']"
+        routerLinkActive="active"
+        [attr.title]="navCollapsed() ? ('nav.settings' | transloco) : null"
+      >
+        <app-icon name="settings" /><span class="label">{{ 'nav.settings' | transloco }}</span>
+      </a>
+      <a
+        [routerLink]="['/o', officeId(), 'members']"
+        routerLinkActive="active"
+        [attr.title]="navCollapsed() ? ('nav.members' | transloco) : null"
+      >
+        <app-icon name="admin" /><span class="label">{{ 'nav.members' | transloco }}</span>
+      </a>
+    }
     <a
       [routerLink]="['/o', officeId(), 'help']"
       routerLinkActive="active"
