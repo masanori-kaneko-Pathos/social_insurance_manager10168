@@ -5,6 +5,7 @@
 import type { Leave } from '../../../core/models/employee';
 import { isBlankRow } from '../../../shared/csv/csv';
 import { CsvRowError, EMPLOYEE_CSV_HEADERS, EmployeeColumn, readLeave } from './employee-csv';
+import { makeNumberMatcher } from '../../../shared/import/number-match';
 
 export const LEAVE_CSV_HEADERS = {
   employeeNumber: '社員番号',
@@ -62,6 +63,8 @@ export interface LeaveImportRow {
   errors: LeaveRowError[];
   /** 登録済みと同じ休業（飛ばす） */
   skip: boolean;
+  /** 社員番号の先頭の0を補って照合した（11/28） */
+  zeroPadded: boolean;
 }
 
 const norm = (s: string) => s.normalize('NFKC').replace(/\s+/g, '').toLowerCase();
@@ -76,7 +79,7 @@ export function planLeaveImport(table: readonly (readonly string[])[], targets: 
   }
   const missing = (['employeeNumber', 'kind', 'start'] as LeaveColumn[]).filter((c) => index[c] === undefined);
   if (missing.length > 0) return { rows: [], missing };
-  const byNumber = new Map(targets.filter((t) => t.employeeNumber).map((t) => [norm(t.employeeNumber!), t]));
+  const matchNo = makeNumberMatcher(targets, (t) => t.employeeNumber);
   const seen = new Set<string>();
   const rows: LeaveImportRow[] = [];
   table.slice(1).forEach((r, i) => {
@@ -84,8 +87,10 @@ export function planLeaveImport(table: readonly (readonly string[])[], targets: 
     if (isBlankRow(r)) return;
     const get = (c: LeaveColumn) => (index[c] === undefined ? '' : (r[index[c]!] ?? ''));
     const errors: LeaveRowError[] = [];
-    const employee = byNumber.get(norm(get('employeeNumber'))) ?? null;
-    if (!employee) errors.push({ column: 'employeeNumber', code: 'leaveCsv.error.unknownEmployee' });
+    const m = matchNo(get('employeeNumber'));
+    const employee = m.kind === 'ok' ? m.item : null;
+    if (m.kind === 'none') errors.push({ column: 'employeeNumber', code: 'leaveCsv.error.unknownEmployee' });
+    else if (m.kind === 'ambiguous') errors.push({ column: 'employeeNumber', code: 'leaveCsv.error.ambiguousEmployee' });
     // 従業員のファイルの休業1の列として読む（読み方・エラーを共有）
     const v: Partial<Record<EmployeeColumn, string>> = {};
     for (const [c, ec] of Object.entries(AS_EMPLOYEE)) v[ec] = get(c as LeaveColumn);
@@ -106,7 +111,7 @@ export function planLeaveImport(table: readonly (readonly string[])[], targets: 
       }
       skip = employee.leaves.some((l) => l.kind === leave.kind && l.start === leave.start);
     }
-    rows.push({ line, employee, leave: errors.length === 0 ? leave : null, errors, skip });
+    rows.push({ line, employee, leave: errors.length === 0 ? leave : null, errors, skip, zeroPadded: m.kind === 'ok' && m.zeroPadded });
   });
   return { rows, missing: [] };
 }

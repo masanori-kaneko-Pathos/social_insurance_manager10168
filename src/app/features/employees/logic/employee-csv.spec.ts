@@ -207,6 +207,46 @@ describe('planImport：契約から加入と標準報酬を出す', () => {
     expect(p.items.length).toBe(1);
     expect(p.errors.map((e) => e.code)).toEqual(['duplicateInFile', 'alreadyExists']);
   });
+  describe('あとで加入に変わった人（insuredLater。11/28）', () => {
+    const PART = { ...BASE, employmentType: 'パート', payType: '時給', hourlyWage: '1000', weeklyHours: '20', monthlyDays: '12', scheduledWage: '80000', expectedCash: '80000' };
+    const WAGE_CTX: ImportContext = {
+      ...CTX,
+      office: { ...CTX.office, specificApplication: { since: '2016-10' } },
+      criteria: [
+        { from: '2024-10', weeklyMinutesMin: 1200, wageMin: 88000, reducedWageMin: null },
+        { from: '2026-10', weeklyMinutesMin: 1200, wageMin: null, reducedWageMin: 88000 },
+      ],
+      today: '2026-11-28',
+    };
+    it('賃金要件の撤廃（2026-10）で加入に変わった人は、その日から加入として取り込む', () => {
+      const it0 = plan([{ ...PART, hireDate: '2025-04-01' }], WAGE_CTX).items[0];
+      expect(it0.warnings).toContain('insuredLater');
+      expect(it0.employee.health).toEqual({ enrolled: true, acquiredDate: '2026-10-01', lostDate: null, lossReason: null });
+      expect(it0.employee.pension.acquiredDate).toBe('2026-10-01');
+    });
+    it('特定適用事業所になった月から加入に変わった人も同じ（入社のあとに該当）', () => {
+      const ctx: ImportContext = { ...WAGE_CTX, office: { ...CTX.office, specificApplication: { since: '2026-07' } } };
+      const it0 = plan([{ ...PART, scheduledWage: '100000', expectedCash: '100000', hireDate: '2026-04-01' }], ctx).items[0];
+      expect(it0.warnings).toContain('insuredLater');
+      expect(it0.employee.health.acquiredDate).toBe('2026-07-01');
+    });
+    it('変わる日が今日より先・退職のあとなら、加入しないのまま', () => {
+      const early = plan([{ ...PART, hireDate: '2025-04-01' }], { ...WAGE_CTX, today: '2026-09-30' }).items[0];
+      expect(early.warnings).toEqual(['notInsured']);
+      expect(early.employee.health.enrolled).toBeFalse();
+      const retired = plan([{ ...PART, hireDate: '2025-04-01', retireDate: '2026-09-15' }], WAGE_CTX).items[0];
+      expect(retired.warnings).not.toContain('insuredLater');
+      expect(retired.employee.health.enrolled).toBeFalse();
+    });
+    it('加入の列で上書きした人・今日がない呼び方では、変わる日を探さない', () => {
+      const over = plan([{ ...PART, hireDate: '2025-04-01', healthEnrolled: 'いいえ', pensionEnrolled: 'いいえ' }], WAGE_CTX).items[0];
+      expect(over.warnings).not.toContain('insuredLater');
+      expect(over.employee.health.enrolled).toBeFalse();
+      const noToday = plan([{ ...PART, hireDate: '2025-04-01' }], { ...WAGE_CTX, today: undefined }).items[0];
+      expect(noToday.warnings).not.toContain('insuredLater');
+    });
+  });
+
   it('事業所の所定が空なら判定できない → 加入しないで登録して注意', () => {
     const it0 = plan([BASE], { ...CTX, office: { standardHours: null } }).items[0];
     expect(it0.warnings).toEqual(['unknownCategory']);
@@ -232,5 +272,24 @@ describe('登録済みの同じ人（11/17）', () => {
     expect(isSamePerson(a, { lastName: '山田 ', firstName: '花子', birthDate: '1990-01-01' })).toBeTrue();
     expect(isSamePerson(a, { ...a, birthDate: '1990-01-02' })).toBeFalse();
     expect(isSamePerson(a, { ...a, firstName: '太郎' })).toBeFalse();
+  });
+
+  it('先頭の0が消えた番号（19）でも、登録済みの 0019 の人として見る（11/28）', () => {
+    const ctx: ImportContext = {
+      ...CTX,
+      existingNumbers: new Set(['0019', '0050']),
+      existingPeople: new Map([
+        ['0019', { lastName: '山田', firstName: '太郎', birthDate: '1990-05-15' }],
+        ['0050', { lastName: '別人', firstName: '次郎', birthDate: '1980-01-01' }],
+      ]),
+    };
+    const p = planImport(readEmployeeCsv(table({ ...BASE, employeeNumber: '19' }, { ...BASE, employeeNumber: '50' })).rows, ctx);
+    expect(p.items).toEqual([]);
+    expect(p.skipped.map((s) => [s.employeeNumber, s.employee.employeeNumber])).toEqual([['0019', '0019']]);
+    expect(p.errors.map((e) => e.code)).toEqual(['alreadyExists']);
+  });
+  it('ファイルの中の 0019 と 19 は同じ番号として重複にする', () => {
+    const p = planImport(readEmployeeCsv(table({ ...BASE, employeeNumber: '0019' }, { ...BASE, employeeNumber: '19', lastName: '佐藤' })).rows, CTX);
+    expect(p.errors.map((e) => e.code)).toEqual(['duplicateInFile']);
   });
 });

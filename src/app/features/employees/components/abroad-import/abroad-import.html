@@ -97,7 +97,7 @@
                     } @else {
                       {{ 'abroadCsv.add' | transloco }}
                       @for (w of r.warnings; track w) {
-                        <br /><span class="badge">{{ (w === 'replace' ? 'abroadCsv.replace' : kind() === 'certificate' ? 'employee.agreement.warning.' + w : 'overseas.warning.' + w) | transloco }}</span>
+                        <br /><span class="badge">{{ (w === 'replace' ? 'abroadCsv.replace' : w === 'zeroPadded' ? 'importFix.zeroPadded' : kind() === 'certificate' ? 'employee.agreement.warning.' + w : 'overseas.warning.' + w) | transloco }}</span>
                       }
                     }
                   </td>

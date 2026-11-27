@@ -43,6 +43,7 @@ import {
 import { IssueRow } from '../../../../shared/components/import-issues/issue-row';
 import { ImportSteps } from '../../../../shared/components/import-steps/import-steps';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
+import { todayLocal } from '../../../../shared/utils/date';
 
 interface Preview {
   fileName: string;
@@ -240,7 +241,7 @@ export class BonusImport {
         hireDate: e.hireDate,
         retireDate: e.retireDate ?? null,
       }));
-      const plan = planBonusImport(table, targets, payments);
+      const plan = planBonusImport(table, targets, payments, todayLocal());
       this.preview.set({
         fileName: file.fileName,
         encoding: file.encoding,

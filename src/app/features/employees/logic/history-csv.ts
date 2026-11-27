@@ -31,9 +31,11 @@ import {
   finishEmployeeRow,
   pick,
   readContractCells,
+  dateErrorCode,
   readDate,
   readMonth,
 } from './employee-csv';
+import { makeNumberMatcher } from '../../../shared/import/number-match';
 
 export type HistoryKind = 'contract' | 'remuneration';
 
@@ -132,7 +134,7 @@ function readContractRow(line: number, v: Partial<Record<HistoryColumn, string>>
   const get = (c: HistoryColumn) => (v[c] ?? '').trim();
   for (const c of CONTRACT_REQUIRED) if (!get(c)) err(c, 'required');
   const from = readDate(get('from'));
-  if (from === undefined) err('from', 'date');
+  if (from === undefined) err('from', dateErrorCode(get('from')));
   const form = readContractCells(get, from, err, (c) => errors.some((e) => e.column === c));
   if (errors.length > 0) return { line, values: v, errors, parsed: null };
   return {
@@ -219,7 +221,8 @@ export interface HistoryContext {
 
 export type HistoryWarning =
   | 'gradeDiffers' // 書いてある等級と、報酬月額から出した等級が違う（書いてある方を使う）
-  | 'regularAfterIrregular'; // 7〜9月に随時改定がある年の、9月からの定時決定（11/24）
+  | 'regularAfterIrregular' // 7〜9月に随時改定がある年の、9月からの定時決定（11/24）
+  | 'zeroPadded'; // 社員番号の先頭の0を補って照合した（11/28）
 
 export interface HistoryItem {
   line: number;
@@ -237,6 +240,7 @@ export interface HistoryItem {
 
 export type HistoryPlanErrorCode =
   | 'unknownEmployee' // 登録されていない社員番号
+  | 'ambiguousEmployee' // 先頭の0を落とすと2人に当たる（0012 と 12 など。11/28）
   | 'duplicateInFile' // 同じ人・同じ日がファイルの中に2回
   | 'beforeHire' // 入社より前
   | 'afterRetire' // 退職より後
@@ -260,7 +264,7 @@ function tableFor(tables: readonly GradeTableDoc[], kind: 'health' | 'pension', 
 
 export function planHistoryImport(rows: readonly HistoryCsvRow[], ctx: HistoryContext): HistoryPlan {
   const plan: HistoryPlan = { items: [], skipped: [], errors: [] };
-  const byNumber = new Map(ctx.employees.filter((e) => e.employeeNumber).map((e) => [e.employeeNumber!, e]));
+  const matchNo = makeNumberMatcher(ctx.employees, (e) => e.employeeNumber);
   const seen = new Set<string>();
 
   for (const r of rows) {
@@ -270,11 +274,13 @@ export function planHistoryImport(rows: readonly HistoryCsvRow[], ctx: HistoryCo
     const fail = (code: HistoryPlanErrorCode) =>
       plan.errors.push({ line: r.line, code, employeeNumber: p.employeeNumber, id });
 
-    const e = byNumber.get(p.employeeNumber);
-    if (!e) {
-      fail('unknownEmployee');
+    const m = matchNo(p.employeeNumber);
+    if (m.kind !== 'ok') {
+      fail(m.kind === 'ambiguous' ? 'ambiguousEmployee' : 'unknownEmployee');
       continue;
     }
+    const e = m.item;
+    const padded: HistoryWarning[] = m.zeroPadded ? ['zeroPadded'] : [];
     const key = `${e.id}/${id}`;
     if (seen.has(key)) {
       fail('duplicateInFile');
@@ -307,7 +313,7 @@ export function planHistoryImport(rows: readonly HistoryCsvRow[], ctx: HistoryCo
       id,
     };
     if (p.kind === 'contract') {
-      plan.items.push({ ...base, contract: p.contract, remuneration: null, warnings: [] });
+      plan.items.push({ ...base, contract: p.contract, remuneration: null, warnings: [...padded] });
       continue;
     }
 
@@ -323,7 +329,7 @@ export function planHistoryImport(rows: readonly HistoryCsvRow[], ctx: HistoryCo
       fail('noGradeTable');
       continue;
     }
-    const warnings: HistoryWarning[] = [];
+    const warnings: HistoryWarning[] = [...padded];
     const calcH = gradeOf(ht.table.grades, p.monthlyAmount);
     const calcP = gradeOf(pt.table.grades, p.monthlyAmount);
     const rowOf = (t: GradeTableDoc, g: number | null) => (g === null ? null : (t.grades.find((x) => x.grade === g) ?? undefined));
@@ -369,8 +375,15 @@ function markRegularAfterIrregular(items: HistoryItem[]): void {
 
 /** ファイルに出てくる人（登録済みの記録を読む人だけに絞るため） */
 export function employeeIdsIn(rows: readonly HistoryCsvRow[], employees: readonly HistoryPerson[]): string[] {
-  const nums = new Set(rows.map((r) => r.parsed?.employeeNumber).filter((n): n is string => !!n));
-  return employees.filter((e) => e.employeeNumber && nums.has(e.employeeNumber)).map((e) => e.id);
+  // 先頭の0を補って照合する人も含める（planHistoryImport と同じ照合。11/28）
+  const matchNo = makeNumberMatcher(employees, (e) => e.employeeNumber);
+  const ids = new Set<string>();
+  for (const r of rows) {
+    const n = r.parsed?.employeeNumber;
+    const m = n ? matchNo(n) : null;
+    if (m?.kind === 'ok') ids.add(m.item.id);
+  }
+  return employees.filter((e) => ids.has(e.id)).map((e) => e.id);
 }
 
 // ===== ひな形 =====

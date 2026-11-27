@@ -63,6 +63,12 @@ export class ImportIssues {
   readonly busy = input(false);
   /** 見出し → 欄の種類（プルダウン・カレンダー・数。11/17）。ない列は文字の欄 */
   readonly fieldTypes = input<Readonly<Record<string, FixField>>>({});
+  /**
+   * 問題はないが、取り込まない行（11/28。給与：同じ人の別の行にエラーがある行）。
+   * チェックを外したのと同じに数え、取り込まない行の書き出しには blockedMessage を付ける
+   */
+  readonly blocked = input<ReadonlySet<number>>(new Set());
+  readonly blockedMessage = input('');
 
   readonly fixed = output<ImportFix>();
 
@@ -79,7 +85,17 @@ export class ImportIssues {
 
   /** 取り込む行か（外していない、かつ問題がない） */
   kept(line: number): boolean {
-    return !this.excluded().has(line) && !this.issueOf(line);
+    return !this.excluded().has(line) && !this.issueOf(line) && !this.blocked().has(line);
+  }
+
+  /** 何行かをまとめて入れる／外す（11/28。給与の取り込みの、人の行のチェック） */
+  setLines(lines: readonly number[], on: boolean): void {
+    const next = new Set(this.excluded());
+    for (const l of lines) {
+      if (on) next.delete(l);
+      else next.add(l);
+    }
+    this.excluded.set(next);
   }
 
   toggle(line: number): void {
@@ -393,6 +409,7 @@ export class ImportIssues {
   exportRows(): void {
     const errorHeader = this.transloco.translate('employeeCsv.errorColumn');
     const messages = new Map<number, string>([...this.excluded()].map((line) => [line, '']));
+    for (const line of this.blocked()) if (!messages.get(line)) messages.set(line, this.blockedMessage());
     for (const it of this.issues()) messages.set(it.line, it.messages.join(' ／ '));
     downloadCsv(`${this.fileStem()}-not-imported-${todayLocal()}.csv`, errorRowsTable(this.table(), messages, errorHeader));
   }

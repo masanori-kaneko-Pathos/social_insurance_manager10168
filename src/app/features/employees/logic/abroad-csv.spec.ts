@@ -41,6 +41,10 @@ describe('planAbroadImport：相手国の適用証明書（B9）', () => {
   it('必須の列がなければ missing', () => {
     expect(planAbroadImport('certificate', [['社員番号', '国']], [], ctx).missing).toEqual(['from']);
   });
+  it('存在しない日付（2/30・13月）は noSuchDate、形が読めない日付は date（11/28）', () => {
+    const r = planAbroadImport('certificate', [H, ['E001', '', 'DE', '', '２０２６／２／３０', 'いつか']], [T({ foreign: true })], ctx);
+    expect(r.rows[0].errors).toEqual([{ column: 'from', code: 'noSuchDate' }, { column: 'to', code: 'date' }]);
+  });
 });
 
 describe('planAbroadImport：海外勤務（B9）', () => {

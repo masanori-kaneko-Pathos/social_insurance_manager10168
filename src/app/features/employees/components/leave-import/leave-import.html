@@ -91,6 +91,9 @@
                       <span class="sub">{{ 'leaveCsv.skip' | transloco }}</span>
                     } @else {
                       {{ 'abroadCsv.add' | transloco }}
+                      @if (r.zeroPadded) {
+                        <br /><span class="badge">{{ 'importFix.zeroPadded' | transloco }}</span>
+                      }
                     }
                   </td>
                   <td class="act-col open-mark" aria-hidden="true">›</td>

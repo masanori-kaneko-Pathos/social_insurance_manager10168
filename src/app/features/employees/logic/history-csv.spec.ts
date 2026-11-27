@@ -63,6 +63,8 @@ describe('readHistoryCsv：契約の履歴', () => {
     const r = readHistoryCsv('contract', [header, row]).rows[0];
     expect(r.parsed).toBeNull();
     expect(r.errors.map((e) => e.column)).toContain('from');
+    // 2/30 は「形が違う」ではなく「存在しない日付」（11/28）
+    expect(r.errors.find((e) => e.column === 'from')?.code).toBe('noSuchDate');
   });
 });
 
@@ -113,6 +115,24 @@ describe('planHistoryImport：取り込みの計画', () => {
     });
     expect(plan.errors.map((e) => e.code)).toEqual(['unknownEmployee', 'duplicateInFile', 'beforeHire', 'afterRetire']);
     expect(plan.items.length).toBe(1);
+  });
+
+  it('社員番号の先頭の0が消えた行も結んで知らせる。2人に当たるときはエラー（11/28）', () => {
+    const people: HistoryPerson[] = [
+      { ...PEOPLE[0], id: 'z1', employeeNumber: '0007' },
+      { ...PEOPLE[0], id: 'z2', employeeNumber: '12' },
+      { ...PEOPLE[0], id: 'z3', employeeNumber: '012' },
+    ];
+    const t = [
+      ['社員番号', '標準報酬の開始月', '決定の理由', '報酬月額'],
+      ['7', '2027-09', '定時', '300000'],
+      ['0012', '2027-09', '定時', '300000'],
+    ];
+    const rows = readHistoryCsv('remuneration', t).rows;
+    const plan = planHistoryImport(rows, { employees: people, existing: new Map(), gradeTables: TABLES });
+    expect(plan.items.map((i) => [i.employeeId, i.warnings])).toEqual([['z1', ['zeroPadded']]]);
+    expect(plan.errors.map((e) => e.code)).toEqual(['ambiguousEmployee']);
+    expect(employeeIdsIn(rows, people)).toEqual(['z1']);
   });
 
   it('等級が空なら報酬月額から出す。書いてあればそれを使い、違えば注意', () => {

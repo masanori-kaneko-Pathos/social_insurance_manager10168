@@ -4,13 +4,14 @@
 import { Payroll, PayrollInput, PayrollState } from '../../../core/models/payroll';
 import { isBlankRow } from '../../../shared/csv/csv';
 import { toHalfWidth } from '../../../shared/utils/text';
+import { makeNumberMatcher } from '../../../shared/import/number-match';
 import { candidateDays, fixedBeforeOf, PayrollRowText, readEntry, RowError, sameInput } from './payroll-input';
 import type { PayType } from '../../../core/models/contract';
 import type { PayrollItemCategory, PayrollItemInput } from '../../../core/models/payroll-item';
 import { categoryOf, FOR_MONTH_CATEGORIES, itemKey, LineDraft, readAmount, totalsOf } from './payroll-lines';
 import { formatHours } from '../../../shared/utils/number';
 import { employedDuring, PayrollEmployee, PaySchedule, periodOf, suggestDays } from './payroll-rows';
-import { daysInclusive } from '../../../shared/utils/date';
+import { daysInclusive, isAfterNextMonth } from '../../../shared/utils/date';
 import { DerivedSpec, ImportField, OurTableSpec, ValueKind } from '../../../shared/import/column-map';
 import { byHeader, FixField, MONTH, NUMBER, select, YES_NO } from '../../../shared/import/fix-fields';
 
@@ -199,39 +200,16 @@ type Match =
   | { kind: 'none' }
   | { kind: 'ambiguous' };
 
-const stripZeros = (s: string) => s.replace(/^0+(?=\d)/, '');
-
 /**
  * 社員番号で照合する。そのままで見つからないときは、先頭の0を落とした形で照合する
  * （Excel で開くと「0012」が「12」になるため）。どちらも、2人以上あたれば ambiguous
+ * 11/28：ほかの取り込みと同じ部品（shared/import/number-match）にした
  */
 export function makeMatcher(employees: readonly CsvEmployee[]): (no: string) => Match {
-  const exact = new Map<string, CsvEmployee[]>();
-  const loose = new Map<string, CsvEmployee[]>();
-  for (const e of employees) {
-    if (!e.employeeNumber) continue;
-    const k = norm(e.employeeNumber);
-    exact.set(k, [...(exact.get(k) ?? []), e]);
-    if (/^\d+$/.test(k)) {
-      const z = stripZeros(k);
-      loose.set(z, [...(loose.get(z) ?? []), e]);
-    }
-  }
+  const m = makeNumberMatcher(employees, (e) => e.employeeNumber);
   return (raw: string) => {
-    const k = norm(raw);
-    const a = exact.get(k);
-    if (a)
-      return a.length === 1
-        ? { kind: 'ok', employee: a[0], zeroPadded: false }
-        : { kind: 'ambiguous' };
-    if (/^\d+$/.test(k)) {
-      const b = loose.get(stripZeros(k));
-      if (b)
-        return b.length === 1
-          ? { kind: 'ok', employee: b[0], zeroPadded: true }
-          : { kind: 'ambiguous' };
-    }
-    return { kind: 'none' };
+    const r = m(raw);
+    return r.kind === 'ok' ? { kind: 'ok', employee: r.item, zeroPadded: r.zeroPadded } : r;
   };
 }
 
@@ -274,6 +252,8 @@ export type ImportErrorCode =
   | 'unknownName'
   | 'ambiguousName'
   | 'badMonth'
+  // 支払月が来月より先（2027-10 などの打ち間違い。11/28）
+  | 'futureMonth'
   | 'notEmployed'
   | 'duplicate'
   | 'badProrated'
@@ -296,6 +276,10 @@ export interface ImportItem {
 export interface ImportError {
   line: number;
   codes: ImportErrorCode[];
+  /** 人は決まったが、ほかの欄にエラーがある行の人（確認の表で、人ごとにまとめるため。11/28） */
+  employeeId?: string;
+  /** 支払月が読めていれば、その月（人ごとの行の中で月の順に並べるため。11/28） */
+  paidMonth?: string;
 }
 
 export interface ImportRead {
@@ -367,6 +351,8 @@ export interface ReadOptions {
    * - merged：給与ソフトが支払額に足して出している（内訳なし）
    */
   inKindMissing?: 'zero' | 'merged';
+  /** 今日（'YYYY-MM-DD'）。支払月が来月より先の行をエラーにする（ないときは見ない。11/28） */
+  today?: string;
 }
 
 export function readPayrollCsv(
@@ -439,6 +425,7 @@ export function readPayrollCsv(
     // 月
     const paidMonth = parseMonth(cell(row, 'paidMonth'));
     if (!paidMonth) codes.push('badMonth');
+    else if (opts.today && isAfterNextMonth(paidMonth, opts.today)) codes.push('futureMonth');
 
     const prorated = parseFlag(cell(row, 'prorated'));
     if (prorated === undefined) codes.push('badProrated');
@@ -518,7 +505,7 @@ export function readPayrollCsv(
     }
 
     if (codes.length > 0 || !employee || !paidMonth || r.kind !== 'ok') {
-      result.errors.push({ line, codes });
+      result.errors.push({ line, codes, ...(employee ? { employeeId: employee.id } : {}), ...(paidMonth ? { paidMonth } : {}) });
       return;
     }
     result.items.push({
@@ -772,6 +759,7 @@ export const PAYROLL_FIX: Readonly<Record<string, readonly PayrollColumn[]>> = {
   unknownName: ['employeeNumber', 'name'],
   ambiguousName: ['employeeNumber', 'name'],
   badMonth: ['paidMonth'],
+  futureMonth: ['paidMonth'],
   notEmployed: ['paidMonth'],
   duplicate: ['employeeNumber', 'paidMonth'],
   badProrated: ['prorated'],

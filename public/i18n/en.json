@@ -2224,12 +2224,13 @@
       "ambiguousName": "More than one employee has this name. Enter the employee number",
       "linesMismatch": "The breakdown columns do not add up to the amount paid in money column (a breakdown column is missing, or the amount paid in money includes something else)",
       "badForMonth": "The original month in a column header ([YYYY-MM]) must be before the pay month",
-      "noContractDays": "No employment contract covers this month, so the days cannot be filled in automatically. Enter the payment basis days or add a contract for the employee."
+      "noContractDays": "No employment contract covers this month, so the days cannot be filled in automatically. Enter the payment basis days or add a contract for the employee.",
+      "futureMonth": "The pay month is later than next month. Check the year and month."
     },
     "hint": {
       "columns": "Columns are read by header name (any order; unknown columns are ignored). Required: employee number, pay month, amount paid in money, of which: fixed wages, days in pay calculation. Columns whose header is a payroll item name (base pay, tax-free commuting allowance, absence deduction, etc.; names and CSV headers in payroll items and categories) are read as the breakdown. With breakdown columns, the amount paid in money and other totals come from the breakdown, and a amount paid in money column, if present, is checked against it. The earlier headers (month paid, paid in money, fixed wages, retroactive pay, prorated) are also read. Rows without an employee number are matched by name. For a column that settles forgotten or miscalculated pay, add the original month after the header, like \"Family allowance[2026-04]\" (it is counted as remuneration for that month).",
       "excel": "CSV files saved by Excel (Shift_JIS) can be read as is, including months Excel turned into dates like 2026/10/1 and employee numbers that lost leading zeros.",
-      "allOrNothing": "Fix rows with errors here, or import with them left unchecked (only those rows are skipped). Saving is done in batches of 500."
+      "allOrNothing": "Records are imported per person. If a person has an error row, none of that person's records are imported until it is fixed (missing months would distort the averages for the regular and occasional revisions). Records are saved in batches of 500."
     },
     "error": {
       "load": "Could not load employees or payroll.",
@@ -2252,6 +2253,17 @@
       "skip": "Do not use this column",
       "apply": "Read again with these categories",
       "saveNote": "When you import, they are also added to your payroll items and categories."
+    },
+    "group": {
+      "keep": "Import the pay records of {{name}}",
+      "unknownPerson": "Not registered",
+      "months": "{{n}} months",
+      "sum": "Total gross pay",
+      "errors": "{{n}} error rows",
+      "blocked": "Not imported until fixed",
+      "overwrite": "Overwrite {{n}} months",
+      "notImported": "{{n}} rows will not be imported (rows of people with errors or unchecked people)",
+      "blockedExport": "Not imported because another row of the same person has an error"
     }
   },
   "contract": {
@@ -2933,7 +2945,8 @@
       "beforeHire": "Row {{line}}: {{id}} for employee number {{number}} is before the hire date.",
       "afterRetire": "Row {{line}}: {{id}} for employee number {{number}} is after the retirement date.",
       "badGrade": "Row {{line}}: {{id}} for employee number {{number}}: the grade is not in the grade table, or there is no grade table for that month.",
-      "noGradeTable": "Row {{line}}: {{id}} for employee number {{number}}: no grade table is registered for that month."
+      "noGradeTable": "Row {{line}}: {{id}} for employee number {{number}}: no grade table is registered for that month.",
+      "ambiguousEmployee": "Row {{line}}: more than one employee matches number {{number}} (numbers that are the same without leading zeros)."
     },
     "skipped": "Already registered, skipped: {{n}} (not overwritten)",
     "skippedItem": "Row {{line}}: {{id}} for employee number {{number}}",
@@ -2953,7 +2966,8 @@
     "warning": {
       "gradeDiffers": "Differs from the grades calculated from the monthly remuneration (health grade {{health}}, pension grade {{pension}}). The written grades will be registered",
       "oldTable": "Before the earliest grade table (calculated with the oldest table)",
-      "regularAfterIrregular": "There is an irregular revision from July to September of the same year. A regular determination is normally not made that year. Please check"
+      "regularAfterIrregular": "There is an irregular revision from July to September of the same year. A regular determination is normally not made that year. Please check",
+      "zeroPadded": "The leading zeros of the employee number were missing, so they were added before matching"
     },
     "import": "Import {{n}} records",
     "progress": "Importing… {{done}} / {{total}}",
@@ -4724,7 +4738,8 @@
       "error": {
         "notFound": "Row {{line}}: no employee with number {{no}}",
         "invalid": "Row {{line}}: the number for {{no}} is not valid",
-        "duplicate": "Row {{line}}: employee {{no}} appears twice"
+        "duplicate": "Row {{line}}: employee {{no}} appears twice",
+        "ambiguous": "Row {{line}}: more than one employee matches number {{no}}"
       }
     },
     "export": {
@@ -4875,7 +4890,8 @@
       "overLimit": "Income may exceed the dependent limit",
       "beforeHire": "Became dependent before the hire date",
       "age75": "Age 75 or over (cannot be a dependent)",
-      "spouseTwice": "Two spouses with overlapping dependent periods"
+      "spouseTwice": "Two spouses with overlapping dependent periods",
+      "zeroPadded": "The leading zeros of the employee number were missing, so they were added before matching"
     },
     "error": {
       "employeeNotFound": "The employee number is not correct",
@@ -4886,8 +4902,10 @@
       "sex": "The sex is not entered correctly",
       "yesNo": "Yes/no is not entered correctly",
       "date": "The date is not entered correctly",
+      "noSuchDate": "A date that does not exist is entered (e.g. February 30)",
       "save": "Saving stopped partway. Check the list for the people already imported.",
-      "relationshipNote": "When the relationship is \"Other\", enter the detail (uncle, aunt, nephew, niece, etc.)."
+      "relationshipNote": "When the relationship is \"Other\", enter the detail (uncle, aunt, nephew, niece, etc.).",
+      "ambiguousEmployee": "More than one employee matches this number (numbers that are the same without leading zeros)"
     },
     "fieldError": {
       "required": "Missing",
@@ -4927,7 +4945,8 @@
     "notKept": "Has errors, so it will not be imported",
     "check": "Details",
     "notImported": "{{n}} rows will not be imported (errors or unchecked)",
-    "fileLine": "line {{line}} in the file"
+    "fileLine": "line {{line}} in the file",
+    "zeroPadded": "The leading zeros of the employee number were missing, so they were added before matching"
   },
   "special": {
     "title": "Special revision (medical care, childcare or nursing care)",
@@ -5084,6 +5103,7 @@
       "notForeign": "This employee has no foreign information (set it in the employee form first)",
       "country": "Use a two-letter code for a country other than Japan",
       "date": "Cannot read the date. Enter it as 2026-04-01.",
+      "noSuchDate": "This date does not exist (e.g. February 30).",
       "order": "The end is before the start",
       "covers": "Coverage must be \"pension only\" or \"pension and health\"",
       "coversUnknown": "This country is not in the agreement list; please enter the coverage",
@@ -5091,7 +5111,8 @@
       "pair": "Enter both the start and end of the certificate period",
       "overlap": "Overlaps a saved overseas assignment",
       "duplicate": "The same person appears more than once (overlapping) in the file",
-      "save": "Saving stopped partway. Please check the employees who were imported."
+      "save": "Saving stopped partway. Please check the employees who were imported.",
+      "ambiguousEmployee": "More than one employee matches this number (numbers that are the same without leading zeros)"
     },
     "fileHint": "CSV or Excel (xlsx, xls)."
   },
@@ -5254,13 +5275,16 @@
       "amount": "Cannot read the bonus amount. Enter amounts in digits.",
       "inKind": "Cannot read the in-kind amount. Enter amounts in digits.",
       "duplicate": "Same person and paid date appear in an earlier row",
-      "save": "Could not save. Some payments may have been saved; check the bonus list and import again (merging means the same file will not double up)."
+      "save": "Could not save. Some payments may have been saved; check the bonus list and import again (merging means the same file will not double up).",
+      "numberAmbiguous": "More than one employee matches this number (numbers that are the same without leading zeros)",
+      "futureDate": "The paid date is later than next month. Check the year and month."
     },
     "warning": {
       "beforeHire": "Paid before the hire date (no premiums)",
       "afterRetire": "Paid after the retirement date (no premiums)",
       "titleDiffers": "Different title for the same paid date (the first row's title is used)",
-      "natureDiffers": "Different bonus items on the same paid date (the first row is used)"
+      "natureDiffers": "Different bonus items on the same paid date (the first row is used)",
+      "zeroPadded": "The leading zeros of the employee number were missing, so they were added before matching"
     },
     "itemsTitle": "Bonus items: ",
     "itemLoose": "not set yet",
@@ -5914,7 +5938,8 @@
       "unknownEmployee": "No employee is registered with this number",
       "duplicateInFile": "The same leave (person, kind, start) appears more than once in the file",
       "notEmployed": "The leave starts on a day the person is not employed",
-      "save": "Could not save. Please try again later."
+      "save": "Could not save. Please try again later.",
+      "ambiguousEmployee": "More than one employee matches this number (numbers that are the same without leading zeros)"
     }
   }
 }

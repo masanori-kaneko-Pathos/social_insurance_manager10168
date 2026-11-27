@@ -66,6 +66,14 @@ export function shiftMonth(month: YearMonth, diff: number): YearMonth {
   return `${String(Math.floor(total / 12)).padStart(4, '0')}-${pad2((total % 12) + 1)}`;
 }
 
+/**
+ * 支払月が来月より先か（11/28。取り込みで、年・月の打ち間違い（2027-10 など）を止めるため）
+ * today が 2026-11-28 なら、2026-12 までは false、2027-01 から true
+ */
+export function isAfterNextMonth(month: YearMonth, today: DateStr): boolean {
+  return month > shiftMonth(today.slice(0, 7), 1);
+}
+
 /** その月の日数（28〜31） */
 export function daysInMonth(month: YearMonth): number {
   const [y, m] = month.split('-').map(Number);

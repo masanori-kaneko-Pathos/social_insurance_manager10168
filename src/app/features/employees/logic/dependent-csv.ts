@@ -18,7 +18,8 @@ import { ageAt } from '../../../shared/utils/date';
 import { toHalfWidth, toKatakana } from '../../../shared/utils/text';
 import { limitOf } from './dependent-check';
 import { DependentField, dependentErrors, emptyDependentForm, fromDependentForm } from './dependent-form-model';
-import { readDate, yesNo } from './employee-csv';
+import { dateErrorCode, readDate, yesNo } from './employee-csv';
+import { makeNumberMatcher } from '../../../shared/import/number-match';
 
 // ===== 列 =====
 
@@ -198,6 +199,7 @@ export interface DependentTarget {
 
 export type DependentRowError =
   | 'employeeNotFound'
+  | 'ambiguousEmployee' // 先頭の0を落とすと2人に当たる（0012 と 12 など。11/28）
   | 'relationship'
   | 'occupation'
   | 'startReason'
@@ -205,9 +207,10 @@ export type DependentRowError =
   | 'sex'
   | 'yesNo'
   | 'date'
+  | 'noSuchDate'
   | `field.${DependentField}.${string}`;
 
-export type DependentRowWarning = 'noIncome' | 'overLimit' | 'beforeHire' | 'age75' | 'spouseTwice';
+export type DependentRowWarning = 'noIncome' | 'overLimit' | 'beforeHire' | 'age75' | 'spouseTwice' | 'zeroPadded';
 
 /** 配偶者の扶養の期間（重なりを見る。to は空なら今も続いている） */
 export interface SpousePeriod {
@@ -246,7 +249,7 @@ export function planDependentImport(
 ): DependentImportRow[] {
   const [head = [], ...rows] = table;
   const col = (c: DependentColumn) => head.indexOf(DEPENDENT_CSV_HEADERS[c]);
-  const byNo = new Map(targets.filter((t) => t.employeeNumber).map((t) => [key(t.employeeNumber!).replace(/^0+(?=\d)/, ''), t]));
+  const matchNo = makeNumberMatcher(targets, (t) => t.employeeNumber);
   const seen = new Set<string>();
   const out: DependentImportRow[] = [];
 
@@ -255,8 +258,11 @@ export function planDependentImport(
     if (DEPENDENT_COLUMNS.every((c) => !get(c))) return; // 空の行
     const errors: DependentRowError[] = [];
     const warnings: DependentRowWarning[] = [];
-    const employee = byNo.get(key(get('employeeNumber')).replace(/^0+(?=\d)/, '')) ?? null;
-    if (!employee) errors.push('employeeNotFound');
+    const m = matchNo(get('employeeNumber'));
+    const employee = m.kind === 'ok' ? m.item : null;
+    if (m.kind === 'none') errors.push('employeeNotFound');
+    else if (m.kind === 'ambiguous') errors.push('ambiguousEmployee');
+    else if (m.zeroPadded) warnings.push('zeroPadded');
 
     // 続柄
     const relWord = key(get('relationship'));
@@ -281,7 +287,9 @@ export function planDependentImport(
     const birth = readDate(get('birthDate'));
     const from = readDate(get('from'));
     const to = readDate(get('to'));
-    if (birth === undefined || from === undefined || to === undefined) errors.push('date');
+    // 形は読めるがその日がない（2026/02/30）は、形の知らせと分ける（11/28）
+    const badDates = (['birthDate', 'from', 'to'] as const).filter((_, i) => [birth, from, to][i] === undefined);
+    for (const code of new Set(badDates.map((c) => dateErrorCode(get(c))))) errors.push(code);
     v.birthDate = birth || '';
     v.from = from || '';
     v.to = to || '';
@@ -383,8 +391,10 @@ function markSpouseTwice(rows: DependentImportRow[], existingSpouses: ReadonlyMa
 /** エラーのコード → 画面で直す欄（11/16。取り込み画面の「その場で直す」） */
 const DEPENDENT_FIX: Readonly<Record<string, readonly DependentColumn[]>> = {
   employeeNotFound: ['employeeNumber'],
+  ambiguousEmployee: ['employeeNumber'],
   relationship: ['relationship'],
   date: ['birthDate', 'from', 'to'],
+  noSuchDate: ['birthDate', 'from', 'to'],
   sex: ['sex'],
   yesNo: ['livingTogether', 'disabled'],
   occupation: ['occupation'],

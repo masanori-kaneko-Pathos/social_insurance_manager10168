@@ -6,6 +6,7 @@
 
 import type { ImportField, OurTableSpec } from '../../../shared/import/column-map';
 import { SOFT_DIFF_IDS_MAX, type SoftCheck } from '../../../core/models/month-close';
+import { makeNumberMatcher } from '../../../shared/import/number-match';
 
 // ===== アプリ → 給与ソフト =====
 
@@ -172,7 +173,6 @@ export interface CompareRow {
 
 const num = (s: string | undefined) => (s && s.trim() !== '' && !Number.isNaN(Number(s)) ? Number(s) : null);
 const nameKey = (s: string) => s.normalize('NFKC').replace(/\s+/g, '');
-const noKey = (s: string) => s.normalize('NFKC').trim().replace(/^0+(?=\d)/, '');
 
 /**
  * 取り込んだ控除額（うちの見出しの表）とアプリの本人負担を比べる
@@ -184,10 +184,9 @@ const noKey = (s: string) => s.normalize('NFKC').trim().replace(/^0+(?=\d)/, '')
 export function compareDeductions(table: readonly (readonly string[])[], app: readonly AppDeduction[]): CompareRow[] {
   const [head, ...rows] = table;
   const col = (k: DeductionKey) => head.indexOf(HEADERS[k]);
-  const byNo = new Map<string, AppDeduction>();
+  const matchNo = makeNumberMatcher(app, (a) => a.employeeNumber);
   const byName = new Map<string, AppDeduction[]>();
   for (const a of app) {
-    if (a.employeeNumber) byNo.set(noKey(a.employeeNumber), a);
     const k = nameKey(`${a.lastName}${a.firstName}`);
     byName.set(k, [...(byName.get(k) ?? []), a]);
   }
@@ -206,8 +205,12 @@ export function compareDeductions(table: readonly (readonly string[])[], app: re
 
     let employee: AppDeduction | null = null;
     let status: CompareStatus | null = null;
-    if (no) employee = byNo.get(noKey(no)) ?? null;
-    if (!employee && name) {
+    if (no) {
+      const m = matchNo(no);
+      if (m.kind === 'ok') employee = m.item;
+      else if (m.kind === 'ambiguous') status = 'ambiguous';
+    }
+    if (!employee && status === null && name) {
       const list = byName.get(nameKey(name)) ?? [];
       if (list.length === 1) employee = list[0];
       else if (list.length > 1) status = 'ambiguous';

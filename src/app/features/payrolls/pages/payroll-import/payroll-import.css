@@ -388,3 +388,65 @@ tr.err-row:hover td {
   align-items: center;
   gap: var(--space-md);
 }
+
+/* ===== 人でくくる（11/28）：1人1行。押すとその人の月が開く ===== */
+tr.group-row {
+  cursor: pointer;
+}
+tr.group-row:hover td {
+  background: var(--color-hover);
+}
+tr.group-row.err-row:hover td {
+  background: var(--color-danger-bg, #fdeceb);
+}
+tr.group-row:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+tr.group-row.is-open td {
+  border-bottom-color: transparent;
+}
+.group-note {
+  display: block;
+  font-size: var(--font-sm);
+  font-weight: normal;
+  white-space: nowrap;
+}
+td.group-status {
+  white-space: normal;
+}
+.unknown-person {
+  font-weight: 600;
+}
+/* 開いた人の月の行：人の行より一段控えめに */
+tr.month-row td {
+  background: var(--color-bg);
+  font-size: var(--font-sm);
+}
+tr.month-row.blocked td {
+  color: var(--color-text-sub);
+}
+.chev {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin: 0 0 3px;
+  border-right: 2px solid var(--color-text-sub);
+  border-bottom: 2px solid var(--color-text-sub);
+  transform: rotate(45deg);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+tr.is-open .chev {
+  margin-bottom: -3px;
+  transform: rotate(-135deg);
+}
+tr.group-row:hover .chev {
+  border-color: var(--color-text);
+}
+td.group-status .group-note {
+  max-width: 10em;
+  white-space: normal;
+}
+td.group-months .range {
+  font-size: var(--font-sm);
+}

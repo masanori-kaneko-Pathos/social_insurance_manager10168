@@ -3,6 +3,7 @@
 // 取り込み（登録済みの従業員へ）：社員番号とマイナンバーの列があればよい（書き出したファイルをそのまま読める）
 
 import { isValidMyNumber, normalizeMyNumber } from './my-number';
+import { makeNumberMatcher } from '../../../shared/import/number-match';
 
 export const MY_NUMBER_CSV_HEADER = ['社員番号', '姓', '名', 'マイナンバー'] as const;
 
@@ -36,7 +37,7 @@ export interface MyNumberImportRead {
   /** 見つからなかった列（'employeeNumber' | 'myNumber'） */
   missing: ('employeeNumber' | 'myNumber')[];
   items: { line: number; employeeId: string; number: string }[];
-  errors: { line: number; code: 'notFound' | 'invalid' | 'duplicate'; label: string }[];
+  errors: { line: number; code: 'notFound' | 'ambiguous' | 'invalid' | 'duplicate'; label: string }[];
 }
 
 /** 1行目が見出し。社員番号で従業員を探す（先頭の0は無視）。番号が空の行は飛ばす */
@@ -50,8 +51,7 @@ export function readMyNumberTable(table: readonly (readonly string[])[], people:
   if (numCol < 0) missing.push('myNumber');
   if (missing.length) return { missing, items: [], errors: [] };
 
-  const noKey = (s: string) => s.normalize('NFKC').trim().replace(/^0+(?=\d)/, '');
-  const byNo = new Map(people.filter((p) => p.employeeNumber).map((p) => [noKey(p.employeeNumber!), p]));
+  const matchNo = makeNumberMatcher(people, (p) => p.employeeNumber);
   const seen = new Set<string>();
   const out: MyNumberImportRead = { missing, items: [], errors: [] };
   rows.forEach((r, i) => {
@@ -60,8 +60,10 @@ export function readMyNumberTable(table: readonly (readonly string[])[], people:
     const n = normalizeMyNumber(r[numCol] ?? '');
     if (!no && !n) return;
     if (!n) return;
-    const p = byNo.get(noKey(no));
-    if (!p) return void out.errors.push({ line, code: 'notFound', label: no });
+    const m = matchNo(no);
+    if (m.kind === 'ambiguous') return void out.errors.push({ line, code: 'ambiguous', label: no });
+    if (m.kind === 'none') return void out.errors.push({ line, code: 'notFound', label: no });
+    const p = m.item;
     if (!isValidMyNumber(n)) return void out.errors.push({ line, code: 'invalid', label: no });
     if (seen.has(p.id)) return void out.errors.push({ line, code: 'duplicate', label: no });
     seen.add(p.id);

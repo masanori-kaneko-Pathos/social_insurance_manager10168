@@ -210,12 +210,14 @@
               fileStem="payrolls"
               [(skip)]="skipErrors"
               [busy]="saving()"
+              [blocked]="blocked()"
+              [blockedMessage]="'payrollCsv.group.blockedExport' | transloco"
               (fixed)="onFix($event)"
             />
 
             <div class="actions top">
               @if (fix.notImported(allWrites()); as n) {
-                <span class="skip-note">{{ 'importFix.notImported' | transloco: { n: n } }}</span>
+                <span class="skip-note">{{ 'payrollCsv.group.notImported' | transloco: { n: n } }}</span>
               }
               <button type="button" class="btn" (click)="clear()" [disabled]="saving()">
                 {{ 'common.cancel' | transloco }}
@@ -241,40 +243,91 @@
                   </tr>
                 </thead>
                 <tbody>
-                  @let pg = pageOf(fix.withIssues(allWrites()), page(), pageSize());
-                  @for (x of pg.rows; track x.line) {
-                    @if (x.item; as it) {
-                      <tr [appOpenRow]="x.line" [openFix]="fix" [class.has-issue]="!!x.issue">
-                        <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line - 1 }" /></td>
-                        <td class="num">{{ it.line - 1 }}</td>
-                        <td>
-                          @if (employeeOf(it.employeeId); as e) {
-                            @if (e.employeeNumber) { <span class="emp-no">{{ e.employeeNumber }}</span> }
-                            <app-person-name [person]="e" />
-                          } @else {
-                            {{ it.employeeLabel }}
-                          }
-                        </td>
-                        <td class="mono">{{ it.paidMonth | ym }}</td>
-                        <td class="num">{{ yen(it.input.cash) }}</td>
-                        <td class="num">{{ yen(it.input.fixed) }}</td>
-                        <td class="num">{{ it.input.days }}</td>
-                        <td>
-                          @if (pv.updated.includes(it)) {
-                            <span class="badge badge-warn">{{ 'payrollCsv.overwrite' | transloco }}</span>
-                          }
-                        </td>
-                        <td class="act-col open-mark" aria-hidden="true">›</td>
-                      </tr>
-                    } @else if (x.issue; as is) {
-                      <tr app-issue-row [issue]="is" [fix]="fix" [cols]="issueCols()"></tr>
+                  <!-- 1人1行（11/28）。押すとその人の月が開く。エラーのある人は、直すまでその人の月を全部取り込まない -->
+                  @let pg = pageOf(groups(), page(), pageSize());
+                  @for (g of pg.rows; track g.key) {
+                    @let isOpen = opened().has(g.key);
+                    <tr
+                      class="group-row"
+                      tabindex="0"
+                      [class.err-row]="g.errors > 0"
+                      [class.is-open]="isOpen"
+                      [attr.aria-expanded]="isOpen"
+                      (click)="onGroupClick($event, g.key)"
+                      (keydown)="onGroupKey($event, g.key)"
+                    >
+                      <td class="pick-col">
+                        <input
+                          type="checkbox"
+                          [checked]="groupKept(fix, g)"
+                          [disabled]="g.errors > 0 || fix.busy()"
+                          (change)="fix.setLines(g.lines, $any($event.target).checked)"
+                          [attr.aria-label]="'payrollCsv.group.keep' | transloco: { name: g.employeeId ? (employeeOf(g.employeeId)?.lastName ?? '') : fileLabel(g) }"
+                        />
+                      </td>
+                      <td class="num"></td>
+                      <td>
+                        @if (g.employeeId && employeeOf(g.employeeId); as e) {
+                          @if (e.employeeNumber) { <span class="emp-no">{{ e.employeeNumber }}</span> }
+                          <app-person-name [person]="e" layout="stack" />
+                        } @else {
+                          <span class="unknown-person">{{ fileLabel(g) }}</span>
+                          <span class="sub group-note">{{ 'payrollCsv.group.unknownPerson' | transloco }}</span>
+                        }
+                      </td>
+                      <td class="mono group-months">
+                        @if (g.firstMonth) {
+                          <span class="range">{{ g.firstMonth | ym }}@if (g.lastMonth !== g.firstMonth) {〜{{ g.lastMonth | ym }}}</span>
+                        } @else {
+                          —
+                        }
+                        <span class="sub group-note">{{ 'payrollCsv.group.months' | transloco: { n: g.monthCount } }}</span>
+                      </td>
+                      <td class="num">
+                        {{ yen(g.cash) }}
+                        <span class="sub group-note">{{ 'payrollCsv.group.sum' | transloco }}</span>
+                      </td>
+                      <td></td>
+                      <td></td>
+                      <td class="group-status">
+                        @if (g.errors > 0) {
+                          <span class="badge badge-danger">{{ 'payrollCsv.group.errors' | transloco: { n: g.errors } }}</span>
+                          <span class="sub group-note">{{ 'payrollCsv.group.blocked' | transloco }}</span>
+                        } @else if (g.updated > 0) {
+                          <span class="badge badge-warn">{{ 'payrollCsv.group.overwrite' | transloco: { n: g.updated } }}</span>
+                        }
+                      </td>
+                      <td class="act-col open-mark"><span class="chev" aria-hidden="true"></span></td>
+                    </tr>
+                    @if (isOpen) {
+                      @for (x of g.rows; track x.line) {
+                        @if (x.item; as it) {
+                          <tr class="month-row" [appOpenRow]="x.line" [openFix]="fix" [class.blocked]="blocked().has(x.line)">
+                            <td class="pick-col"></td>
+                            <td class="num">{{ it.line - 1 }}</td>
+                            <td></td>
+                            <td class="mono">{{ it.paidMonth | ym }}</td>
+                            <td class="num">{{ yen(it.input.cash) }}</td>
+                            <td class="num">{{ yen(it.input.fixed) }}</td>
+                            <td class="num">{{ it.input.days }}</td>
+                            <td>
+                              @if (pv.updated.includes(it)) {
+                                <span class="badge badge-warn">{{ 'payrollCsv.overwrite' | transloco }}</span>
+                              }
+                            </td>
+                            <td class="act-col open-mark" aria-hidden="true">›</td>
+                          </tr>
+                        } @else if (x.issue; as is) {
+                          <tr app-issue-row class="month-row" [issue]="is" [fix]="fix" [cols]="issueCols()"></tr>
+                        }
+                      }
                     }
                   }
                 </tbody>
               </table>
             </div>
-            <!-- ほかの一覧と同じページ送り（100行ずつ。11/19） -->
-            <app-pager variant="bottom" [total]="fix.withIssues(allWrites()).length" [(page)]="page" [(size)]="pageSize" />
+            <!-- ほかの一覧と同じページ送り（100人ずつ。11/28 から人の数で数える） -->
+            <app-pager variant="bottom" [total]="groups().length" [(page)]="page" [(size)]="pageSize" />
           } @else {
             <p class="muted">{{ 'payrollCsv.import.nothing' | transloco }}</p>
           }

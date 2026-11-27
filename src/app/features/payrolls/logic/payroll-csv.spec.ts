@@ -28,6 +28,8 @@ const D = emp('D', '0040', 'テスト四', '2020-04-01', '2026-08-20');
 const EMPS = [A, B, D];
 
 const HEADER = '社員番号,氏名,支払った月,支払額,固定的賃金,支払基礎日数';
+/** エラーの行と種類だけを比べる（人・月は別の it で見る。11/28 に人と月を足した） */
+const lc = (es: readonly { line: number; codes: readonly string[] }[]) => es.map(({ line, codes }) => ({ line, codes }));
 
 describe('mapHeader', () => {
   it('日本語・英語・並び順は自由・知らない列は無視', () => {
@@ -129,7 +131,7 @@ describe('readPayrollCsv', () => {
         '0012,,2026-09,1,1,30', // 8: 重複
       ].join('\n'),
     );
-    expect(r.errors).toEqual([
+    expect(lc(r.errors)).toEqual([
       { line: 2, codes: ['noEmployeeNumber'] },
       { line: 3, codes: ['unknownEmployee'] },
       { line: 4, codes: ['badMonth'] },
@@ -137,10 +139,13 @@ describe('readPayrollCsv', () => {
       { line: 8, codes: ['duplicate'] },
     ]);
     expect(r.items.map((x) => x.line)).toEqual([5, 7]);
+    // 人と月が決まった行には、その人と月を付ける（確認の表で人ごとにまとめるため。11/28）
+    expect(r.errors[3]).toEqual({ line: 6, codes: ['notEmployed'], employeeId: 'D', paidMonth: '2026-10' });
+    expect(r.errors[1].employeeId).toBeUndefined();
   });
 
   it('10月払い ＝ 9月分なので、日数31はエラー（電気代の請求書のわな）', () => {
-    expect(read('0012,,2026-10,1,1,31').errors).toEqual([{ line: 2, codes: ['daysOutOfRange'] }]);
+    expect(lc(read('0012,,2026-10,1,1,31').errors)).toEqual([{ line: 2, codes: ['daysOutOfRange'] }]);
   });
 
   it('四郎の 9月払い（8/1〜8/20）は日数20まで', () => {
@@ -149,7 +154,7 @@ describe('readPayrollCsv', () => {
   });
 
   it('数字が空でも、社員番号が未登録ならエラー', () => {
-    expect(read('99,,2026-10,,,').errors).toEqual([{ line: 2, codes: ['unknownEmployee'] }]);
+    expect(lc(read('99,,2026-10,,,').errors)).toEqual([{ line: 2, codes: ['unknownEmployee'] }]);
   });
 
   describe('社員番号が空の行は氏名で照合する（社員番号は任意の項目）', () => {
@@ -167,11 +172,11 @@ describe('readPayrollCsv', () => {
     });
 
     it('同じ氏名が2人なら、社員番号を入れてもらう', () => {
-      expect(readN(',同姓 同名,2026-10,1,1,1').errors).toEqual([{ line: 2, codes: ['ambiguousName'] }]);
+      expect(lc(readN(',同姓 同名,2026-10,1,1,1').errors)).toEqual([{ line: 2, codes: ['ambiguousName'] }]);
     });
 
     it('番号も氏名も決まらない行：数字があればエラー、数字が空なら読み飛ばす', () => {
-      expect(readN(',いない 人,2026-10,1,1,1').errors).toEqual([{ line: 2, codes: ['unknownName'] }]);
+      expect(lc(readN(',いない 人,2026-10,1,1,1').errors)).toEqual([{ line: 2, codes: ['unknownName'] }]);
       const blank = readN(',いない 人,2026-10,,,\n,,2026-10,,,\n,同姓 同名,2026-10,,,');
       expect(blank.errors).toEqual([]);
       expect(blank.unfilledLines).toBe(3);
@@ -564,5 +569,16 @@ describe('monthTotalsOf：取り込むファイルの支払月ごとの合計（
   });
   it('行がなければ空', () => {
     expect(monthTotalsOf([])).toEqual([]);
+  });
+});
+
+describe('支払月が来月より先の行（11/28）', () => {
+  it('today を渡すと、来月より先の支払月をエラーにする（来月まではそのまま）', () => {
+    const read = (body: string) => readPayrollCsv(parseCsv(`${HEADER}\n${body}`), EMPS, S, { today: '2026-11-28' });
+    expect(read('0012,テスト 一郎,2027-10,300000,300000,30').errors[0].codes).toContain('futureMonth');
+    expect(read('0012,テスト 一郎,2026-12,300000,300000,30').errors).toEqual([]);
+    // today がない呼び方（前からの呼び方）は見ない
+    const old = readPayrollCsv(parseCsv(`${HEADER}\n0012,テスト 一郎,2027-10,300000,300000,30`), EMPS, S);
+    expect(old.errors.flatMap((e) => e.codes)).not.toContain('futureMonth');
   });
 });

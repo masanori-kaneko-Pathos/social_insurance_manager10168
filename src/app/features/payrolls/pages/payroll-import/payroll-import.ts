@@ -58,6 +58,8 @@ import { Pager } from '../../../../shared/components/pager/pager';
 import { PAGE_SIZE, PageSize, pageOf } from '../../../../shared/logic/person-list';
 import { payrollAt } from '../../../office/logic/pay-group';
 import { YmPipe } from '../../../../shared/pipes/ym.pipe';
+import { blockedLines, groupByPerson, PersonGroup } from '../../logic/import-groups';
+import { numberKey } from '../../../../shared/import/number-match';
 /** 書き出せる期間の上限（月数） */
 const MAX_MONTHS = 24;
 /** 確認画面に出すエラーの行数 */
@@ -70,6 +72,7 @@ const CSV_ERRORS = new Set([
   'unknownName',
   'ambiguousName',
   'badMonth',
+  'futureMonth',
   'notEmployed',
   'duplicate',
   'badProrated',
@@ -230,8 +233,75 @@ export class PayrollImport {
   private kept(line: number): boolean {
     return !(this.fixRef()?.excluded().has(line) ?? false);
   }
-  /** 取り込む行（チェックの入った行） */
+  /** 取り込む行（チェックの入った行。エラーのある人の行は、ImportIssues の blocked で外れる） */
   readonly writes = computed(() => this.allWrites().filter((it) => this.kept(it.line)));
+
+  // ===== 人でくくる（11/28）：確認の表を1人1行にして、押すとその人の月が開く =====
+  /**
+   * エラーの行がある人の、エラーでない行。その人の月は全部取り込まない
+   * （月が欠けると、定時決定・随時改定の平均が正しく出ないため。11/28 本人の決定）
+   */
+  readonly blocked = computed(() => {
+    const p = this.preview();
+    return p ? blockedLines(this.allWrites(), p.read.errors.map((e) => e.employeeId)) : new Set<number>();
+  });
+
+  /** 表の人の行（エラーのある人が上、そのあとは社員番号の順） */
+  readonly groups = computed<PersonGroup<ImportItem, ImportIssue>[]>(() => {
+    const fix = this.fixRef();
+    const p = this.preview();
+    const table = this.table();
+    if (!fix || !p || !table) return [];
+    const errors = new Map(p.read.errors.map((e) => [e.line, e]));
+    const updated = new Set(p.updated);
+    const noH = this.headerOf('employeeNumber');
+    const nameH = this.headerOf('name');
+    return groupByPerson(
+      fix.withIssues(this.allWrites()),
+      (line) => {
+        const e = errors.get(line);
+        const rec = rowRecord(table, line);
+        const fileKey = numberKey(rec[noH] ?? '') || (rec[nameH] ?? '').normalize('NFKC').replace(/\s+/g, '');
+        return { employeeId: e?.employeeId ?? null, fileKey, paidMonth: e?.paidMonth ?? null };
+      },
+      (it) => updated.has(it),
+      (id) => this.employeeOf(id)?.employeeNumber ?? '',
+    );
+  });
+
+  /** 人が決まらない行の、ファイルに書いてあった社員番号と氏名 */
+  fileLabel(g: PersonGroup<ImportItem, ImportIssue>): string {
+    const table = this.table();
+    if (!table) return g.fileKey;
+    const rec = rowRecord(table, g.lines[0]);
+    return [rec[this.headerOf('employeeNumber')], rec[this.headerOf('name')]].map((v) => (v ?? '').trim()).filter(Boolean).join(' ') || '—';
+  }
+
+  /** 開いている人の行 */
+  readonly opened = signal<ReadonlySet<string>>(new Set());
+  toggleOpen(key: string): void {
+    const next = new Set(this.opened());
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    this.opened.set(next);
+  }
+  onGroupClick(event: MouseEvent, key: string): void {
+    const el = event.target as HTMLElement | null;
+    if (el?.closest('a, button, input, select, textarea, label')) return;
+    if (window.getSelection()?.toString()) return;
+    this.toggleOpen(key);
+  }
+  onGroupKey(event: KeyboardEvent, key: string): void {
+    if (event.target !== event.currentTarget) return;
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    this.toggleOpen(key);
+  }
+
+  /** 人の行のチェック：その人の行が全部入っているか（エラーのある人は入らない） */
+  groupKept(fix: ImportIssues, g: PersonGroup<ImportItem, ImportIssue>): boolean {
+    return g.errors === 0 && g.lines.every((l) => fix.kept(l));
+  }
   readonly createdCount = computed(() => {
     const created = new Set(this.preview()?.created ?? []);
     return this.writes().filter((it) => created.has(it)).length;
@@ -430,6 +500,7 @@ export class PayrollImport {
     this.extraItems.set([]);
     this.skippedCols.set(new Set());
     this.pendingChoice.set({});
+    this.opened.set(new Set());
   }
 
   // ===== エラーの直し方（11/17。共通の部品 app-import-issues）：窓で1行ずつ直して、すぐ確かめ直す =====
@@ -519,6 +590,7 @@ export class PayrollImport {
       const schedule = this.scheduleOf(office);
       const read = readPayrollCsv(table, this.employees, schedule, {
         inKindMissing: this.inKindMissing(),
+        today: todayLocal(),
         items: this.allItems(),
         payTypeOf: (id, month) => contractAt(this.contracts?.get(id) ?? [], periodOf(month, scheduleFor(schedule, id, month)).end)?.payType ?? null,
         scheduledDaysOf: (id, month) =>

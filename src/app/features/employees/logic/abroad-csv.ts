@@ -9,7 +9,8 @@ import { isBlankRow } from '../../../shared/csv/csv';
 import { DATE_RE } from '../../../shared/utils/date';
 import { toHalfWidth } from '../../../shared/utils/text';
 import { AgreementLike, certificateWarnings, CertificateWarning, defaultCovers } from './agreement';
-import { readDate } from './employee-csv';
+import { dateErrorCode, readDate } from './employee-csv';
+import { makeNumberMatcher } from '../../../shared/import/number-match';
 import { ageReachDate } from './coverage';
 import { fromOverseasForm, OverseasFormValue, overseasErrors, overseasOverlaps, overseasWarnings, OverseasWarning } from './overseas';
 
@@ -113,9 +114,11 @@ export interface AbroadTarget {
 export type AbroadError =
   | 'required' // 必須の欄が空
   | 'unknownEmployee' // 社員番号の人がいない
+  | 'ambiguousEmployee' // 先頭の0を落とすと2人に当たる（0012 と 12 など。11/28）
   | 'notForeign' // 外国籍の情報がない人に、相手国の証明書
   | 'country' // 国が2文字のコードでない（日本も不可）
   | 'date' // 日付が読めない
+  | 'noSuchDate' // 形は読めるが、その日がない（2026/02/30 など）
   | 'order' // 終わりが始まりより前
   | 'covers' // 範囲が読めない
   | 'coversUnknown' // 範囲が空で、協定の一覧にない国（決められない）
@@ -133,7 +136,7 @@ export interface AbroadImportRow {
   line: number;
   employee: AbroadTarget | null;
   errors: AbroadRowError[];
-  warnings: (CertificateWarning | OverseasWarning | 'replace')[];
+  warnings: (CertificateWarning | OverseasWarning | 'replace' | 'zeroPadded')[];
   /** 登録済みと同じなので飛ばす */
   skip: 'same' | null;
   certificate: CertificateDoc | null;
@@ -164,9 +167,7 @@ export function planAbroadImport(
   const missing = REQUIRED[kind].filter((c) => index[c] === undefined);
   if (missing.length) return { missing, rows: [] };
 
-  const byNo = new Map(
-    targets.filter((t) => t.employeeNumber).map((t) => [key(t.employeeNumber!).replace(/^0+(?=\d)/, ''), t]),
-  );
+  const matchNo = makeNumberMatcher(targets, (t) => t.employeeNumber);
   const seen = new Map<string, Overseas[]>(); // 従業員ID → ファイルの中で先に出た海外勤務
   const seenCert = new Set<string>();
   const rows: AbroadImportRow[] = [];
@@ -182,9 +183,12 @@ export function planAbroadImport(
 
     for (const c of REQUIRED[kind]) if (!get(c)) err(c, 'required');
     const no = get('employeeNumber');
-    const employee = no ? (byNo.get(key(no).replace(/^0+(?=\d)/, '')) ?? null) : null;
+    const m = no ? matchNo(no) : null;
+    const employee = m?.kind === 'ok' ? m.item : null;
     row.employee = employee;
-    if (no && !employee) err('employeeNumber', 'unknownEmployee');
+    if (m?.kind === 'none') err('employeeNumber', 'unknownEmployee');
+    else if (m?.kind === 'ambiguous') err('employeeNumber', 'ambiguousEmployee');
+    const zeroPadded = m?.kind === 'ok' && m.zeroPadded;
     const country = toHalfWidth(get('country')).toUpperCase();
     if (country && (!/^[A-Z]{2}$/.test(country) || country === 'JP')) err('country', 'country');
 
@@ -192,8 +196,8 @@ export function planAbroadImport(
       if (employee && !employee.foreign) err('employeeNumber', 'notForeign');
       const from = date(get('from'));
       const to = date(get('to'));
-      if (from === undefined) err('from', 'date');
-      if (to === undefined) err('to', 'date');
+      if (from === undefined) err('from', dateErrorCode(get('from')));
+      if (to === undefined) err('to', dateErrorCode(get('to')));
       if (from && to && to <= from) err('to', 'order');
       const coversText = key(get('covers'));
       let covers: AgreementCovers | null = null;
@@ -216,7 +220,7 @@ export function planAbroadImport(
         return;
       }
       row.certificate = cert;
-      row.warnings = [...(before ? (['replace'] as const) : []), ...certificateWarnings(cert, ctx.agreements, ctx.today)];
+      row.warnings = [...(zeroPadded ? (['zeroPadded'] as const) : []), ...(before ? (['replace'] as const) : []), ...certificateWarnings(cert, ctx.agreements, ctx.today)];
       return;
     }
 
@@ -230,7 +234,7 @@ export function planAbroadImport(
       certificateFrom: date(get('certificateFrom')),
       certificateTo: date(get('certificateTo')),
     };
-    for (const [c, v] of Object.entries(dates)) if (v === undefined) err(c as AbroadColumn, 'date');
+    for (const [c, v] of Object.entries(dates)) if (v === undefined) err(c as AbroadColumn, dateErrorCode(get(c as AbroadColumn)));
     if (errors.length || !employee || !payer) return;
     const form: OverseasFormValue = {
       country,
@@ -261,12 +265,15 @@ export function planAbroadImport(
     }
     seen.set(employee.id, [...earlier, o]);
     row.overseas = o;
-    row.warnings = overseasWarnings({
-      item: o,
-      agreements: ctx.agreements,
-      careAge: { from: ageReachDate(employee.birthDate, 40), to: ageReachDate(employee.birthDate, 65) },
-      careExemptions: employee.careExemptions.filter((c) => c.reason === 'overseas'),
-    });
+    row.warnings = [
+      ...(zeroPadded ? (['zeroPadded'] as const) : []),
+      ...overseasWarnings({
+        item: o,
+        agreements: ctx.agreements,
+        careAge: { from: ageReachDate(employee.birthDate, 40), to: ageReachDate(employee.birthDate, 65) },
+        careExemptions: employee.careExemptions.filter((c) => c.reason === 'overseas'),
+      }),
+    ];
   });
   return { missing, rows };
 }

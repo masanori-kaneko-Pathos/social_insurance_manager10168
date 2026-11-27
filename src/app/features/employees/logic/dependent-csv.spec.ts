@@ -39,6 +39,15 @@ describe('扶養家族の取り込み', () => {
     expect(r.input?.relationship).toBe('other');
     expect(r.input?.relationshipNote).toBe('叔父');
   });
+
+  it('存在しない日付（2/30）は、形の読めない日付と分けて知らせる（11/28）', () => {
+    const [bad] = run([row({ ...BASE, relationship: '妻', from: '2021/2/30' })]);
+    expect(bad.errors).toContain('noSuchDate');
+    expect(bad.errors).not.toContain('date');
+    const [both] = run([row({ ...BASE, relationship: '妻', birthDate: '1990-02-30', to: 'そのうち' })]);
+    expect(both.errors).toEqual(jasmine.arrayContaining(['noSuchDate', 'date']));
+    expect(dependentFixColumns(['noSuchDate'])).toEqual(['birthDate', 'from', 'to']);
+  });
 });
 
 describe('dependentFixColumns（エラー → 直す欄。11/16）', () => {

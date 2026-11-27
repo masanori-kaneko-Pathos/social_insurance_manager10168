@@ -14,6 +14,7 @@ import type { GradeTableDoc } from '../../../core/models/rates';
 import type { RemunerationInput } from '../../../core/models/remuneration';
 import { isBlankRow } from '../../../shared/csv/csv';
 import { isImpossibleDate, normalizeDate, normalizeMonth } from '../../../shared/import/column-map';
+import { makeNumberMatcher, numberKey } from '../../../shared/import/number-match';
 import { DATE_RE, toYearMonth, YEAR_MONTH_RE } from '../../../shared/utils/date';
 import { formatHours, parseNat } from '../../../shared/utils/number';
 import {
@@ -182,6 +183,15 @@ export function readDate(s: string): string | undefined {
 }
 
 /**
+ * 読めなかった日付のエラーの種類（11/28。従業員だけでなく、扶養・海外・履歴・休業の取り込みでも同じ言い分けにする）
+ * - noSuchDate：形は読めるが、その日がない（2026/02/30 など）
+ * - date：形が読めない
+ */
+export function dateErrorCode(raw: string): 'noSuchDate' | 'date' {
+  return isImpossibleDate(toHalfWidth(raw).trim()) ? 'noSuchDate' : 'date';
+}
+
+/**
  * 2つの欄を比べるエラーの、もう一方の欄（11/27）。直す窓で両方を出す（入社日だけ出ていて、生年月日を直せなかったため）
  */
 export const RELATED_COLUMNS: Readonly<Record<string, readonly EmployeeColumn[]>> = {
@@ -239,7 +249,7 @@ export function readContractCells(
   ];
   for (const [c, x] of flags) if (x === undefined) err(c, 'yesNo');
   const periodEnd = readDate(get('periodEnd'));
-  if (periodEnd === undefined) err('periodEnd', 'date');
+  if (periodEnd === undefined) err('periodEnd', dateErrorCode(get('periodEnd')));
 
   const contractForm: ContractFormValue = {
     ...emptyContractForm(from || ''),
@@ -355,10 +365,10 @@ export function readLeave(
   const filedRaw = (v[filedCol] ?? '').trim();
   const notFiled = NOT_FILED_WORDS.includes(filedRaw.normalize('NFKC').toLowerCase());
   const filedOn = notFiled || filedRaw === '' ? null : readDate(filedRaw);
-  if (!start) errors.push({ column: startCol, code: 'date' });
-  if (end === undefined) errors.push({ column: endCol, code: 'date' });
-  if (birth === undefined) errors.push({ column: birthCol, code: 'date' });
-  if (filedOn === undefined) errors.push({ column: filedCol, code: 'date' });
+  if (!start) errors.push({ column: startCol, code: start === '' ? 'date' : dateErrorCode(v[startCol] ?? '') });
+  if (end === undefined) errors.push({ column: endCol, code: dateErrorCode(v[endCol] ?? '') });
+  if (birth === undefined) errors.push({ column: birthCol, code: dateErrorCode(v[birthCol] ?? '') });
+  if (filedOn === undefined) errors.push({ column: filedCol, code: dateErrorCode(filedRaw) });
   if (!start || end === undefined || birth === undefined || filedOn === undefined) return null;
   if (end && end < start) {
     errors.push({ column: endCol, code: 'endBeforeStart' });
@@ -410,7 +420,7 @@ function readRow(line: number, v: Partial<Record<EmployeeColumn, string>>): Empl
     ['optOutDate', optOutDate],
   ];
   // 形は読めるがその日がない（2026/02/30）は、形の知らせと分ける（11/27）
-  for (const [c, d] of dates) if (d === undefined) err(c, isImpossibleDate(get(c)) ? 'noSuchDate' : 'date');
+  for (const [c, d] of dates) if (d === undefined) err(c, dateErrorCode(get(c)));
   if (hireDate && retireDate && retireDate < hireDate) err('retireDate', 'retireBeforeHire');
   if (birthDate && hireDate && hireDate <= birthDate) err('hireDate', 'hireBeforeBirth');
 
@@ -696,19 +706,28 @@ export function planImport(rows: EmployeeCsvRow[], ctx: ImportContext): ImportPl
   const byPerson = new Map<string, string>();
   for (const [no, k] of ctx.existingPeople ?? []) byPerson.set(personKey(k), no);
 
+  // 登録済みの番号：Excel で先頭の0が消えた番号（0019 → 19）も、その人の番号として見る（11/28。ほかの取り込みと同じ照合）
+  const matchExisting = makeNumberMatcher([...ctx.existingNumbers], (n) => n);
+  const fileKey = (n: string) => {
+    const k = numberKey(n);
+    return /^\d+$/.test(k) ? k.replace(/^0+(?=\d)/, '') : k;
+  };
+
   for (const r of rows) {
     if (!r.parsed) continue;
     const p = r.parsed;
     const num = p.employee.employeeNumber ?? '';
-    if (ctx.existingNumbers.has(num)) {
-      const known = ctx.existingPeople?.get(num);
+    const reg = num ? matchExisting(num) : ({ kind: 'none' } as const);
+    if (reg.kind !== 'none') {
+      const known = reg.kind === 'ok' ? ctx.existingPeople?.get(reg.item) : undefined;
       const e = p.employee;
-      if (known && isSamePerson(known, { lastName: e.lastName, firstName: e.firstName, birthDate: e.birthDate })) {
+      if (reg.kind === 'ok' && known && isSamePerson(known, { lastName: e.lastName, firstName: e.firstName, birthDate: e.birthDate })) {
         const dept = departmentIdOf(r.values.department, ctx.departments);
+        // 先頭の0が消えた番号（19）でも、登録済みの番号（0019）で結ぶ（社員番号の変更点として出さない）
         skipped.push({
           line: r.line,
-          employeeNumber: num,
-          employee: withDepartment(e, dept),
+          employeeNumber: reg.item,
+          employee: withDepartment({ ...e, employeeNumber: reg.item }, dept),
           contract: p.contract,
           leaves: p.leaves,
           values: r.values,
@@ -722,11 +741,11 @@ export function planImport(rows: EmployeeCsvRow[], ctx: ImportContext): ImportPl
       }
       continue;
     }
-    if (seen.has(num)) {
+    if (seen.has(fileKey(num))) {
       errors.push({ line: r.line, code: 'duplicateInFile', employeeNumber: num });
       continue;
     }
-    seen.add(num);
+    seen.add(fileKey(num));
 
     const e = p.employee;
     const classification = classify(

@@ -7,6 +7,8 @@
 import type { BonusPaymentInput } from '../../../core/models/bonus';
 import { ImportField, normalizeDate, normalizeNumber, OurTableSpec } from '../../../shared/import/column-map';
 import { byHeader, DATE, NUMBER } from '../../../shared/import/fix-fields';
+import { makeNumberMatcher } from '../../../shared/import/number-match';
+import { isAfterNextMonth } from '../../../shared/utils/date';
 
 export const BONUS_CSV_COLUMNS = ['employeeNumber', 'name', 'paidDate', 'title', 'amount', 'inKind', 'nature'] as const;
 export type BonusCsvColumn = (typeof BONUS_CSV_COLUMNS)[number];
@@ -93,7 +95,9 @@ export interface BonusExisting {
 export type BonusCsvError =
   | 'employeeNotFound' // 社員番号（氏名）の人がいない
   | 'nameAmbiguous' // 氏名だけで、同じ氏名の人が何人もいる
+  | 'numberAmbiguous' // 先頭の0を落とすと2人に当たる（0012 と 12 など。11/28）
   | 'paidDate' // 支払日が読めない
+  | 'futureDate' // 支払日が来月より先（年・月の打ち間違い。11/28）
   | 'amount' // 賞与額が読めない・マイナス
   | 'inKind' // 現物が読めない・マイナス
   | 'duplicate'; // 同じ人・同じ支払日の行が前にもある
@@ -102,7 +106,8 @@ export type BonusCsvWarning =
   | 'beforeHire' // 支払日が入社日より前（保険料はかからない）
   | 'afterRetire' // 支払日が退職日より後（保険料はかからない）
   | 'titleDiffers' // 同じ支払日で名称が違う（最初の名称を使う）
-  | 'natureDiffers'; // 同じ支払日で性質が違う（最初の性質を使う。11/19）
+  | 'natureDiffers' // 同じ支払日で性質が違う（最初の性質を使う。11/19）
+  | 'zeroPadded'; // 社員番号の先頭の0を補って照合した（11/28）
 
 /** new：新しい支給／add：登録済みの支給に追加／update：額を上書き／same：変わらない */
 export type BonusRowStatus = 'new' | 'add' | 'update' | 'same' | 'error';
@@ -139,7 +144,6 @@ export interface BonusPlan {
 }
 
 const nameKey = (s: string) => s.normalize('NFKC').replace(/\s+/g, '');
-const noKey = (s: string) => s.normalize('NFKC').trim().replace(/^0+(?=\d)/, '');
 
 function realDate(s: string): string | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
@@ -164,15 +168,16 @@ export function planBonusImport(
   table: readonly (readonly string[])[],
   targets: readonly BonusCsvTarget[],
   existing: readonly BonusExisting[],
+  /** 今日（'YYYY-MM-DD'）。来月より先の支払日をエラーにする（ないときは見ない。11/28） */
+  today?: string,
 ): BonusPlan {
   const [head = [], ...body] = table;
   const index = new Map(head.map((h, i) => [h.replace(/^﻿/, '').trim(), i]));
   const col = (c: BonusCsvColumn) => index.get(BONUS_CSV_HEADERS[c]) ?? -1;
 
-  const byNo = new Map<string, BonusCsvTarget>();
+  const matchNo = makeNumberMatcher(targets, (t) => t.employeeNumber);
   const byName = new Map<string, BonusCsvTarget[]>();
   for (const t of targets) {
-    if (t.employeeNumber) byNo.set(noKey(t.employeeNumber), t);
     const k = nameKey(`${t.lastName}${t.firstName}`);
     byName.set(k, [...(byName.get(k) ?? []), t]);
   }
@@ -192,16 +197,20 @@ export function planBonusImport(
     const errors: BonusCsvError[] = [];
     const warnings: BonusCsvWarning[] = [];
 
-    let employee: BonusCsvTarget | null = no ? (byNo.get(noKey(no)) ?? null) : null;
+    const m = no ? matchNo(no) : null;
+    let employee: BonusCsvTarget | null = m?.kind === 'ok' ? m.item : null;
+    if (m?.kind === 'ambiguous') errors.push('numberAmbiguous');
+    else if (m?.kind === 'ok' && m.zeroPadded) warnings.push('zeroPadded');
     if (!employee && !no && name) {
       const list = byName.get(nameKey(name)) ?? [];
       if (list.length > 1) errors.push('nameAmbiguous');
       else employee = list[0] ?? null;
     }
-    if (!employee && !errors.includes('nameAmbiguous')) errors.push('employeeNotFound');
+    if (!employee && !errors.includes('nameAmbiguous') && !errors.includes('numberAmbiguous')) errors.push('employeeNotFound');
 
     const paidDate = realDate(normalizeDate(get('paidDate')));
     if (!paidDate) errors.push('paidDate');
+    else if (today && isAfterNextMonth(paidDate.slice(0, 7), today)) errors.push('futureDate');
 
     const amount = yen(get('amount'));
     if (amount === null || Number.isNaN(amount)) errors.push('amount');
@@ -305,10 +314,10 @@ export function bonusWrites(rows: readonly BonusCsvRow[], existing: readonly Bon
 export function bonusFixColumns(errors: readonly BonusCsvError[]): BonusCsvColumn[] {
   const out = new Set<BonusCsvColumn>();
   for (const e of errors) {
-    if (e === 'employeeNotFound' || e === 'nameAmbiguous') {
+    if (e === 'employeeNotFound' || e === 'nameAmbiguous' || e === 'numberAmbiguous') {
       out.add('employeeNumber');
       out.add('name');
-    } else if (e === 'paidDate') out.add('paidDate');
+    } else if (e === 'paidDate' || e === 'futureDate') out.add('paidDate');
     else if (e === 'amount') out.add('amount');
     else if (e === 'inKind') out.add('inKind');
     else if (e === 'duplicate') {

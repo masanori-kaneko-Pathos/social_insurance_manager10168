@@ -4,6 +4,7 @@
 // 支払日の列があれば読む（支払日を決める前に取り込めるように。11/16）
 
 import type { ImportField, OurTableSpec } from '../../../shared/import/column-map';
+import { makeNumberMatcher } from '../../../shared/import/number-match';
 
 export const BONUS_IMPORT_KEYS = ['employeeNumber', 'name', 'amount', 'paidDate'] as const;
 export type BonusImportKey = (typeof BONUS_IMPORT_KEYS)[number];
@@ -74,7 +75,6 @@ function dateOf(s: string): string | null {
 }
 
 const nameKey = (s: string) => s.normalize('NFKC').replace(/\s+/g, '');
-const noKey = (s: string) => s.normalize('NFKC').trim().replace(/^0+(?=\d)/, '');
 
 /** 金額（「500,000」「500000円」も読む）。読めなければ null */
 function yen(s: string): number | null {
@@ -92,10 +92,9 @@ function yen(s: string): number | null {
 export function matchBonusRows(table: readonly (readonly string[])[], targets: readonly BonusTarget[]): BonusImportResult {
   const [head = [], ...rows] = table;
   const col = (k: BonusImportKey) => head.indexOf(HEADERS[k]);
-  const byNo = new Map<string, BonusTarget>();
+  const matchNo = makeNumberMatcher(targets, (t) => t.employeeNumber);
   const byName = new Map<string, BonusTarget[]>();
   for (const t of targets) {
-    if (t.employeeNumber) byNo.set(noKey(t.employeeNumber), t);
     const k = nameKey(`${t.lastName}${t.firstName}`);
     byName.set(k, [...(byName.get(k) ?? []), t]);
   }
@@ -109,7 +108,12 @@ export function matchBonusRows(table: readonly (readonly string[])[], targets: r
     const label = no || name;
     const d = dateOf(get('paidDate'));
     if (d) dates.add(d);
-    let target: BonusTarget | null = no ? (byNo.get(noKey(no)) ?? null) : null;
+    const m = no ? matchNo(no) : null;
+    if (m?.kind === 'ambiguous') {
+      out.ambiguous.push(label);
+      continue;
+    }
+    let target: BonusTarget | null = m?.kind === 'ok' ? m.item : null;
     if (!target && name) {
       const list = byName.get(nameKey(name)) ?? [];
       if (list.length > 1) {

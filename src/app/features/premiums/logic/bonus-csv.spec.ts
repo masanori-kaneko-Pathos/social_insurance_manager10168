@@ -116,3 +116,24 @@ describe('planBonusImport：性質の列（年4回以上の賞与。11/19）', (
     expect(plain.writes[0].input.nature).toBeUndefined();
   });
 });
+
+describe('planBonusImport：社員番号の照合と先の支払日（11/28）', () => {
+  const nums = [
+    { id: 'x', employeeNumber: '0019', lastName: '山田', firstName: '太郎', hireDate: '2020-04-01', retireDate: null },
+    { id: 'y', employeeNumber: '12', lastName: '佐藤', firstName: '花子', hireDate: '2020-04-01', retireDate: null },
+    { id: 'z', employeeNumber: '012', lastName: '鈴木', firstName: '一郎', hireDate: '2020-04-01', retireDate: null },
+  ];
+  it('先頭の0が消えた番号は補って結び、知らせる。2人に当たる番号はエラー', () => {
+    const p = planBonusImport([H, row({ employeeNumber: '19', paidDate: '2026-07-10', amount: '1000' }), row({ employeeNumber: '0012', paidDate: '2026-07-10', amount: '1000' })], nums, []);
+    expect(p.rows[0].errors).toEqual([]);
+    expect(p.rows[0].warnings).toContain('zeroPadded');
+    expect(p.rows[1].errors).toEqual(['numberAmbiguous']);
+    expect(bonusFixColumns(['numberAmbiguous'])).toEqual(['employeeNumber', 'name']);
+  });
+  it('支払日が来月より先ならエラー（today を渡したときだけ）', () => {
+    const t = [H, row({ employeeNumber: '0019', paidDate: '2027-07-10', amount: '1000' })];
+    expect(planBonusImport(t, nums, [], '2026-11-28').rows[0].errors).toEqual(['futureDate']);
+    expect(planBonusImport(t, nums, []).rows[0].errors).toEqual([]);
+    expect(bonusFixColumns(['futureDate'])).toEqual(['paidDate']);
+  });
+});
