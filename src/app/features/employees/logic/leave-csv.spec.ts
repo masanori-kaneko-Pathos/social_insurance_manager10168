@@ -36,6 +36,14 @@ describe('休業の履歴の取り込み（11/27）', () => {
     expect(p.rows[1].errors.map((e) => e.code)).toEqual(['leaveCsv.error.ambiguousEmployee']);
   });
 
+  it('出産予定日の列（任意）を産休の予定日に入れる（11/28）', () => {
+    const t = [['社員番号', '休業の種類', '開始日', '終了日', '出産日・子の生年月日', '申出日', '出産予定日'], ['E003', '産休', '2026-07-10', '2026-10-20', '2026-08-25', '2026-07-01', '2026-08-20']];
+    const r = planLeaveImport(t, [T('E003')]).rows[0];
+    expect(r.errors).toEqual([]);
+    expect(r.leave?.birthDate).toBe('2026-08-25');
+    expect(r.leave?.expectedBirthDate).toBe('2026-08-20');
+  });
+
   it('従業員のファイルの見出し（休業1_種類など）でも読める', () => {
     const t = [['社員番号', '休業1_種類', '休業1_開始日'], ['E003', '育休', '2026-06-01']];
     expect(planLeaveImport(t, [T('E003')]).rows[0].errors).toEqual([]);

@@ -170,7 +170,8 @@
         "dependentReport": "Dependent change notification",
         "registerGaps": "Employee data: empty items",
         "payrollMissing": "Pay not entered",
-        "retention": "Retention period over"
+        "retention": "Retention period over",
+        "maternityChange": "Maternity leave change notice"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. An Application to Enroll in EPI / EHI (資格取得届) is needed.",
@@ -240,7 +241,9 @@
         "dependentReport": "Dependents changed on {{date}}. Submit the Dependent (Change) Notification within 5 days to the pension office (or to the health insurance society). For a spouse, the National Pension Category 3 notification uses the same form. Dependents added on the date of acquisition are submitted together with the acquisition notification. Mark as done once submitted.",
         "registerGaps": "Empty items in employee data: {{n}} people",
         "payrollMissing": "Pay for month {{m}}: {{count}} not entered",
-        "retention": "Five years have passed since retirement on {{retire}} (from {{date}}). Export the data on the employee page, then delete it. If the last pay or bonus was paid after retirement, the deletion date is later."
+        "retention": "Five years have passed since retirement on {{retire}} (from {{date}}). Export the data on the employee page, then delete it. If the last pay or bonus was paid after retirement, the deletion date is later.",
+        "maternityChange": "The birth date ({{date}}) differs from the expected date ({{expected}}). The end of postnatal leave changes, so submit the \"change notice for prenatal/postnatal leave\" to the pension office (and to the health insurance society if applicable). Also update the planned end of the leave. Mark it as checked once submitted.",
+        "lossReportDeath": "Coverage ended on {{date}} (death; the loss date is the day after the death). Submit the \"loss of insured status notice\" within 5 days (cause: death; also to the health insurance society if applicable). Attach any collected eligibility certificates. Dependents also lose their status from this date. Mark it as checked once submitted."
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -315,7 +318,8 @@
       "withDependents": "{{count}} dependents",
       "dependentCounts": "{{start}} dependent(s) added, {{end}} removed.",
       "toPayroll": "Enter pay",
-      "toRetention": "Open employee"
+      "toRetention": "Open employee",
+      "toLeave": "Go to leave records"
     }
   },
   "nav": {
@@ -2313,7 +2317,8 @@
       "note": "Note",
       "specialEmployment": "Employment type excluded from coverage",
       "renewalPrecedent": "Others on similar contracts at this office have been renewed",
-      "noExtensionAgreed": "Both parties agreed in writing (email OK) not to extend beyond the first period"
+      "noExtensionAgreed": "Both parties agreed in writing (email OK) not to extend beyond the first period",
+      "dailyHours": "Scheduled hours per day"
     },
     "col": {
       "type": "Type / pay",
@@ -2390,7 +2395,8 @@
         "temporaryBusiness": "Insured from the start if planned to continue beyond 6 months. Enter the end date."
       },
       "shortPeriod": "This contract is 2 months or shorter. If the contract says it will (or may) be renewed, or there is a precedent below, the employee is insured from the start, unless both parties agreed otherwise.",
-      "shortPeriodChange": "If renewal becomes expected later, add a new contract starting on the agreement date and update the renewal. The employee is insured from that day."
+      "shortPeriodChange": "If renewal becomes expected later, add a new contract starting on the agreement date and update the renewal. The employee is insured from that day.",
+      "dailyHours": "Fills the monthly hours as hours per day × days per month (e.g. 5:00 × 20 days → 100:00)."
     },
     "warning": {
       "beforeHire": "Starts before the hire date (can still be saved)."
@@ -5942,7 +5948,7 @@
     "yearMonth": "{{mon}} {{y}}"
   },
   "leaveCsv": {
-    "columns": "Columns: employee number, leave kind, start, end, birth date of the child, application date",
+    "columns": "Columns: employee number, leave type, start, end, birth date / child's birth date, application date, expected birth date (optional; for maternity leave when it differs from the birth date)",
     "done": "Imported {{n}} leaves.",
     "import": "Import {{n}}",
     "skip": "Already registered (skipped)",

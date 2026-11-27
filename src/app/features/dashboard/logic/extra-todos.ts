@@ -87,7 +87,8 @@ export type ExtraKind =
   | 'acquireAmount'
   | 'childcareSpecial'
   | 'dependentReport'
-  | 'retention';
+  | 'retention'
+  | 'maternityChange';
 
 export interface ExtraTodo {
   kind: ExtraKind;
@@ -532,6 +533,8 @@ export interface EnrollmentReportPerson {
   id: string;
   birthDate: DateStr;
   retireDate: DateStr | null;
+  /** 退職の理由（死亡なら、喪失届の文に喪失原因「死亡」と書く。11/28） */
+  retireReason?: string | null;
   health: { enrolled: boolean; acquiredDate: DateStr | null; lostDate: DateStr | null };
   pension: { enrolled: boolean; acquiredDate: DateStr | null; lostDate: DateStr | null };
 }
@@ -551,7 +554,8 @@ export function enrollmentReportTodos(p: EnrollmentReportPerson, today: DateStr)
     : null;
   const pensionLost = p.pension.enrolled ? left(p.pension) : null;
   const lost = [...new Set([healthLost, pensionLost].filter(inRange))].sort();
-  for (const date of lost) out.push({ kind: 'lossReport', employeeId: p.id, date, params: { date } });
+  const death = p.retireReason === 'death';
+  for (const date of lost) out.push({ kind: 'lossReport', employeeId: p.id, date, params: death ? { date, death: 1 } : { date } });
   return out;
 }
 
@@ -799,4 +803,26 @@ export function retentionTodo(p: { id: string; retireDate: DateStr | null }, tod
   if (!retentionCandidate(p.retireDate, today)) return null;
   const date = addDays(addYears(p.retireDate!, RETENTION_YEARS), 1);
   return { kind: 'retention', employeeId: p.id, date, params: { date, retire: p.retireDate! } };
+}
+
+/**
+ * 産休の出産日が予定日と違う（11/28。E051）→「産前産後休業取得者変更届」
+ * 産後休業は出産日の翌日から56日なので、出産が遅れる・早まると終了予定日が変わる。申出を出したあとの変更は変更届で知らせる
+ * 出産日から60日の間だけ出す（ほかの届の To-do と同じ幅）
+ */
+export const MATERNITY_CHANGE_DAYS = 60;
+export function maternityChangeTodos(
+  p: { id: string; leaves: readonly { kind: string; birthDate: DateStr | null; expectedBirthDate: DateStr | null }[] },
+  today: DateStr,
+): ExtraTodo[] {
+  const since = addDays(today, -MATERNITY_CHANGE_DAYS);
+  return p.leaves
+    .filter((l) => l.kind === 'maternity' && l.birthDate && l.expectedBirthDate && l.birthDate !== l.expectedBirthDate)
+    .filter((l) => l.birthDate! >= since && l.birthDate! <= today)
+    .map((l) => ({
+      kind: 'maternityChange' as const,
+      employeeId: p.id,
+      date: l.birthDate,
+      params: { date: l.birthDate!, expected: l.expectedBirthDate! },
+    }));
 }

@@ -410,6 +410,9 @@
                           @case ('retention') {
                             {{ 'dashboard.todo.text.retention' | transloco: it.extra!.params }}
                           }
+                          @case ('maternityChange') {
+                            {{ 'dashboard.todo.text.maternityChange' | transloco: it.extra!.params }}
+                          }
                           @case ('overseasCertificate') {
                             {{
                               'dashboard.todo.text.overseasCertificate'
@@ -494,7 +497,7 @@
                             {{ 'dashboard.todo.text.acquireReport' | transloco: it.extra!.params }}
                           }
                           @case ('lossReport') {
-                            {{ 'dashboard.todo.text.lossReport' | transloco: it.extra!.params }}
+                            {{ (it.extra!.params['death'] ? 'dashboard.todo.text.lossReportDeath' : 'dashboard.todo.text.lossReport') | transloco: it.extra!.params }}
                           }
                           @case ('dependentReport') {
                             @if (!it.members) {
@@ -612,6 +615,9 @@
                           }
                           @case ('retention') {
                             <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]">{{ 'dashboard.todo.toRetention' | transloco }} ›</a>
+                          }
+                          @case ('maternityChange') {
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]" [queryParams]="{ tab: 'employment' }">{{ 'dashboard.todo.toLeave' | transloco }} ›</a>
                           }
                           @case ('noContract') {
                             <a

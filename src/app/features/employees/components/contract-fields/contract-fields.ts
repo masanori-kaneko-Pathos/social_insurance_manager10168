@@ -21,6 +21,7 @@ import {
   scheduledWageCandidate,
   wageFieldOf,
   weeklyMinutesOf,
+  monthlyHoursFromDaily,
 } from '../../logic/contract-form-model';
 
 /** 雇用契約のフォーム（FormBuilder.nonNullable.group(emptyContractForm(...)) の形） */
@@ -85,6 +86,21 @@ export class ContractFields implements OnInit {
     const m = weeklyMinutesOf(v.hoursUnit, v.hours, v.cycleWeeks);
     return m == null ? null : formatHours(m);
   });
+  // ===== 月単位：1日の時間 × 月の日数（11/28）=====
+  /** 1日の所定労働時間（保存しない。月の時間の欄を埋めるための入力） */
+  readonly dailyHours = signal('');
+  onDaily(text: string): void {
+    this.dailyHours.set(text);
+    this.fillMonthly();
+  }
+  /** 1日の時間と月の日数がそろっていれば、月の時間の欄に入れる（月の時間は手で直してもよい） */
+  private fillMonthly(): void {
+    const f = this.form();
+    if (f.controls.hoursUnit.value !== 'month' || this.dailyHours() === '') return;
+    const m = monthlyHoursFromDaily(this.dailyHours(), String(f.controls.monthlyDays.value ?? ''));
+    if (m !== null && f.controls.hours.value !== m) f.controls.hours.setValue(m);
+  }
+
   /** 2か月以内の契約か（更新の実績・労使の合意の欄を出す） */
   readonly shortPeriod = computed(() => {
     const v = this.value();
@@ -99,6 +115,8 @@ export class ContractFields implements OnInit {
     form.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.value.set(form.getRawValue()));
+    // 月の日数を直したら、1日の時間から月の時間を入れ直す（11/28）
+    form.controls.monthlyDays.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.fillMonthly());
     // 見込みの報酬月額は、所定内賃金から写さない（11/24）
     // 所定内賃金は加入の判定用で通勤手当・残業代を含まないため、写すと保険料のもとが低く出る。担当者が入れる
   }

@@ -166,3 +166,14 @@ describe('isShortPeriod と、2か月以内の契約だけの項目', () => {
     expect(v.renewalPrecedent).toBeFalse();
   });
 });
+
+describe('monthlyHoursFromDaily（月単位の1日の時間 × 日数。11/28）', () => {
+  it('1日の時間 × 月の日数。空・読めない値は null', async () => {
+    const { monthlyHoursFromDaily } = await import('./contract-form-model');
+    expect(monthlyHoursFromDaily('5:00', '20')).toBe('100:00');
+    expect(monthlyHoursFromDaily('7.5', '21')).toBe('157:30');
+    expect(monthlyHoursFromDaily('', '20')).toBeNull();
+    expect(monthlyHoursFromDaily('8:00', '')).toBeNull();
+    expect(monthlyHoursFromDaily('25:00', '20')).toBeNull();
+  });
+});

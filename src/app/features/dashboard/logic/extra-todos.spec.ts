@@ -458,3 +458,20 @@ describe('労働者名簿の記入漏れ：To-do は事業所で1件（11/24）'
     expect(registerGapsTodo({ people: 0, by: {} })).toBeNull();
   });
 });
+
+describe('maternityChangeTodos・lossReport の死亡（11/28）', () => {
+  it('出産日が予定日と違う産休だけ、出産日から60日の間', async () => {
+    const { maternityChangeTodos } = await import('./extra-todos');
+    const l = (birthDate: string | null, expectedBirthDate: string | null, kind = 'maternity') => ({ kind, birthDate, expectedBirthDate });
+    const p = { id: 'e', leaves: [l('2026-08-25', '2026-08-20'), l('2026-09-01', '2026-09-01'), l('2026-10-01', '2026-09-20', 'childcare')] };
+    expect(maternityChangeTodos(p, '2026-09-10')).toEqual([
+      { kind: 'maternityChange', employeeId: 'e', date: '2026-08-25', params: { date: '2026-08-25', expected: '2026-08-20' } },
+    ]);
+    expect(maternityChangeTodos(p, '2026-11-28')).toEqual([]);
+  });
+  it('死亡で退職した人の喪失届には death を付ける', () => {
+    const base = { id: 'e', birthDate: '1963-04-13', retireDate: '2026-06-10', health: { enrolled: true, acquiredDate: '2015-04-01', lostDate: null }, pension: { enrolled: true, acquiredDate: '2015-04-01', lostDate: null } };
+    expect(enrollmentReportTodos({ ...base, retireReason: 'death' }, '2026-06-20')[0].params).toEqual({ date: '2026-06-11', death: 1 });
+    expect(enrollmentReportTodos(base, '2026-06-20')[0].params).toEqual({ date: '2026-06-11' });
+  });
+});

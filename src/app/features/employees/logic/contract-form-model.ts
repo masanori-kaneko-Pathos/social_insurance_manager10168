@@ -14,6 +14,7 @@ import {
 } from '../../../core/models/contract';
 import { monthsPeriodEnd } from '../../../shared/utils/date';
 import { formatHours, formatYen, parseHours, parseNat } from '../../../shared/utils/number';
+import { toHalfWidth } from '../../../shared/utils/text';
 
 /**
  * 所定労働時間の入れ方（年金機構の適用拡大 Q&A）
@@ -261,4 +262,16 @@ export function contractAt<T extends Pick<Contract, 'from'>>(rows: T[], date: st
   let best: T | null = null;
   for (const r of rows) if (r.from <= date && (!best || r.from > best.from)) best = r;
   return best;
+}
+
+/**
+ * 月単位：1日の所定労働時間 × 月の所定労働日数 ＝ 月の所定労働時間（11/28。契約書の「1日○時間・月○日」をそのまま入れるため）
+ * どちらかが空・読めないときは null。結果は '100:00' の形（月の時間の欄に入れる）
+ */
+export function monthlyHoursFromDaily(daily: string, days: string): string | null {
+  const m = parseHours(daily);
+  const d = Number(toHalfWidth(days).trim());
+  if (m === null || m === undefined || m <= 0 || m > 24 * 60) return null;
+  if (!Number.isInteger(d) || d < 1 || d > 31) return null;
+  return formatHours(m * d);
 }

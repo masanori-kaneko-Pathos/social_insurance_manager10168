@@ -4,7 +4,7 @@
 
 import type { Leave } from '../../../core/models/employee';
 import { isBlankRow } from '../../../shared/csv/csv';
-import { CsvRowError, EMPLOYEE_CSV_HEADERS, EmployeeColumn, readLeave } from './employee-csv';
+import { CsvRowError, dateErrorCode, EMPLOYEE_CSV_HEADERS, EmployeeColumn, readDate, readLeave } from './employee-csv';
 import { makeNumberMatcher } from '../../../shared/import/number-match';
 
 export const LEAVE_CSV_HEADERS = {
@@ -14,12 +14,14 @@ export const LEAVE_CSV_HEADERS = {
   end: '終了日',
   birth: '出産日・子の生年月日',
   filed: '申出日',
+  /** 産休の出産予定日（任意。出産日と違えば「産前産後休業取得者変更届」の To-do が出る。11/28） */
+  expected: '出産予定日',
 } as const;
 export type LeaveColumn = keyof typeof LEAVE_CSV_HEADERS;
 export const LEAVE_COLUMNS = Object.keys(LEAVE_CSV_HEADERS) as LeaveColumn[];
 
 /** 従業員のファイルの休業1の列と同じ並び（読み方を共有するため） */
-const AS_EMPLOYEE: Record<Exclude<LeaveColumn, 'employeeNumber'>, EmployeeColumn> = {
+const AS_EMPLOYEE: Record<Exclude<LeaveColumn, 'employeeNumber' | 'expected'>, EmployeeColumn> = {
   kind: 'leave1Kind',
   start: 'leave1Start',
   end: 'leave1End',
@@ -33,7 +35,8 @@ const WORDS: Record<LeaveColumn, readonly string[]> = {
   kind: ['休業の種類', '種類', EMPLOYEE_CSV_HEADERS.leave1Kind],
   start: ['開始日', '休業開始日', EMPLOYEE_CSV_HEADERS.leave1Start],
   end: ['終了日', '終了予定日', '休業終了日', EMPLOYEE_CSV_HEADERS.leave1End],
-  birth: ['出産日・子の生年月日', '出産日', '子の生年月日', '出産予定日', EMPLOYEE_CSV_HEADERS.leave1Birth],
+  birth: ['出産日・子の生年月日', '出産日', '子の生年月日', EMPLOYEE_CSV_HEADERS.leave1Birth],
+  expected: ['出産予定日', '休業1_出産予定日'],
   filed: ['申出日', '申出書の提出日', EMPLOYEE_CSV_HEADERS.leave1Filed],
 };
 
@@ -101,6 +104,13 @@ export function planLeaveImport(table: readonly (readonly string[])[], targets: 
       const col = (Object.entries(AS_EMPLOYEE).find(([, ec]) => ec === e.column)?.[0] ?? null) as LeaveColumn | null;
       errors.push({ column: col, code: `employeeCsv.rowError.${e.code}` });
     }
+    // 出産予定日（任意）：産休だけ。出産日がないときは、予定日として入れる
+    const expectedRaw = get('expected').trim();
+    if (expectedRaw && leave) {
+      const exp = readDate(expectedRaw);
+      if (exp === undefined) errors.push({ column: 'expected', code: `employeeCsv.rowError.${dateErrorCode(expectedRaw)}` });
+      else if (leave.kind === 'maternity') leave.expectedBirthDate = exp;
+    }
     let skip = false;
     if (employee && leave) {
       const key = `${employee.id}|${leave.kind}|${leave.start}`;
@@ -119,10 +129,10 @@ export function planLeaveImport(table: readonly (readonly string[])[], targets: 
 export function leaveCsvTemplate(): string[][] {
   return [
     LEAVE_COLUMNS.map((c) => LEAVE_CSV_HEADERS[c]),
-    ['E007', '産休', '2026-06-01', '2026-09-07', '2026-07-13', '2026-05-20'],
-    ['E007', '育休', '2026-09-08', '2027-07-12', '2026-07-13', '2026-08-20'],
-    ['E007', '育休', '2027-09-01', '2027-09-14', '2026-07-13', '2027-08-20'],
-    ['E003', '出生時育休', '2026-10-01', '2026-10-14', '2026-09-28', '2026-09-20'],
-    ['E003', '休職', '2027-01-10', '2027-03-31', '', ''],
+    ['E007', '産休', '2026-06-01', '2026-09-07', '2026-07-13', '2026-05-20', '2026-07-13'],
+    ['E007', '育休', '2026-09-08', '2027-07-12', '2026-07-13', '2026-08-20', ''],
+    ['E007', '育休', '2027-09-01', '2027-09-14', '2026-07-13', '2027-08-20', ''],
+    ['E003', '出生時育休', '2026-10-01', '2026-10-14', '2026-09-28', '2026-09-20', ''],
+    ['E003', '休職', '2027-01-10', '2027-03-31', '', '', ''],
   ];
 }

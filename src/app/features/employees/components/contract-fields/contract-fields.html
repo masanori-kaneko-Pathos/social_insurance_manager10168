@@ -52,6 +52,14 @@
         @if (errorOf('cycleWeeks'); as e) { <span class="field-error">{{ e | transloco }}</span> }
       </div>
     }
+    @if (f.controls.hoursUnit.value === 'month') {
+      <!-- 月単位：契約書の「1日○時間・月○日」から月の時間を出す（11/28。保存はしない入力） -->
+      <div class="field">
+        <label for="ct-daily">{{ 'contract.field.dailyHours' | transloco }}</label>
+        <input id="ct-daily" class="input num" inputmode="decimal" [value]="dailyHours()" (input)="onDaily($any($event.target).value)" />
+        <span class="hint">{{ 'contract.hint.dailyHours' | transloco }}</span>
+      </div>
+    }
     <div class="field">
       <label for="ct-hours">{{ 'contract.hoursLabel.' + f.controls.hoursUnit.value | transloco }}<span class="req" aria-hidden="true">※</span></label>
       <input id="ct-hours" class="input num" inputmode="decimal" formControlName="hours"

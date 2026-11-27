@@ -54,6 +54,7 @@ import {
   contractEndTodo,
   retireGuideTodo,
   retentionTodo,
+  maternityChangeTodos,
   lumpSumTodo,
   myNumberTodos,
   overseasCertificateTodo,
@@ -273,6 +274,8 @@ export class Dashboard {
         retireGuideTodo(e, o.healthInsurer.type, this.today),
         // 退職から5年（保存期間）を過ぎた人（11/27）
         retentionTodo(e, this.today),
+        // 産休の出産日が予定日と違う → 変更届（11/28）
+        ...maternityChangeTodos(e, this.today),
         overseasCertificateTodo(e, this.today),
         overseasPayAbroadTodo(e, this.today),
         // 所定は基準未満でも、実際の労働時間が2か月続けて基準以上（調査指摘事例集 事例1。11/19）

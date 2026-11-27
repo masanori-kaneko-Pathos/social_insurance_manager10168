@@ -88,6 +88,7 @@ export const BOARD_ORDER: readonly BoardKind[] = [
   'birthDate',
   'myNumberDispose',
   'retention',
+  'maternityChange',
   'addressKumiai',
   'noContract',
   'officerCheck',
@@ -136,6 +137,7 @@ export const SECTION_OF: Record<BoardKind, Section> = {
   birthDate: 'now',
   myNumberDispose: 'soon',
   retention: 'soon',
+  maternityChange: 'now',
   noContract: 'missing',
   officerCheck: 'missing',
   registerGaps: 'missing',
@@ -171,6 +173,7 @@ export const DISMISSABLE: ReadonlySet<BoardKind> = new Set<BoardKind>([
   'overseasPayAbroad', // 日本の会社が負担する給与（留守宅手当など）があって、被保険者のままでよいと確かめた場合
   'myNumberDispose', // 「完結の日」を通知の日と考えて待つ場合など。廃棄すれば、そもそも出なくなる
   'retention', // 退職金の支払いなどで、まだ保存すると決めた場合。削除すれば、そもそも出なくなる
+  'maternityChange', // 産前産後休業取得者変更届を出したら消す
 ]);
 
 /** 1つのまとまりで最初に出す件数 */
