@@ -62,6 +62,10 @@ export interface EntryChoiceItem {
       gap: var(--space-sm);
       margin-bottom: var(--space-md);
     }
+    /* カードが1枚だけ（依頼を作成）のときは、2枚並ぶ画面の1枚と同じ幅（横いっぱいの帯にしない。11/27） */
+    .entry:has(> :only-child) {
+      grid-template-columns: minmax(18rem, calc((100% - var(--space-sm)) / 2));
+    }
     .tile {
       display: flex;
       width: 100%;

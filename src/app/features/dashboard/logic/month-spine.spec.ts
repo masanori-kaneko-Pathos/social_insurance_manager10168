@@ -37,7 +37,9 @@ describe('ホームの「今月の処理」（11/26）', () => {
       payrollMissing: 8,
       revision: { candidates: 2, waiting: 1 },
     });
-    expect(s.map((x) => x.state)).toEqual(['attention', 'done', 'todo', 'attention']);
+    // 手続きが残っているので、保険料の確認は「済み」にならない（順番どおり。11/27）
+    expect(s.map((x) => x.state)).toEqual(['attention', 'todo', 'todo', 'attention']);
+    expect(s[1].noteKey).toBe('home.spine.note.waitFor.todo');
     expect(s[0].noteParams).toEqual({ count: 3 });
     expect(s[2].noteParams).toEqual({ count: 8, m: 11 });
     expect(s[3].noteParams).toEqual({ count: 2 });
@@ -45,6 +47,7 @@ describe('ホームの「今月の処理」（11/26）', () => {
 
   it('改定：月を待っている人だけなら済み（人数は出す）。読めなければ「まだ」', () => {
     const w = monthSpine({ ...base, revision: { candidates: 0, waiting: 4 } })[3];
+    // 前の段がすべて済んでいるとき
     expect(w.state).toBe('done');
     expect(w.noteKey).toBe('home.spine.note.revisionWaiting');
     expect(states({ revision: 'error' })[3]).toBe('todo');
@@ -64,5 +67,35 @@ describe('ホームの「今月の処理」（11/26）', () => {
     expect(p({ closed: true, noticeSaved: true, reviewed: false, solo: true })).toBe(
       'home.spine.note.premiumDone',
     );
+  });
+
+  describe('順番どおりに済みにする（11/27）', () => {
+    it('前の段が済んでいないうちは、あとの済みは「完了待ち」', () => {
+      const s = monthSpine({ ...base, premium: { closed: false, noticeSaved: false, reviewed: false, solo: false } });
+      expect(s.map((x) => x.state)).toEqual(['done', 'todo', 'todo', 'todo']);
+      expect(s.map((x) => x.noteKey)).toEqual([
+        'home.spine.note.todoNone',
+        'home.spine.note.premiumOpen',
+        'home.spine.note.waitFor.premium',
+        'home.spine.note.waitFor.premium',
+      ]);
+    });
+
+    it('止まっている段は、いちばん前の済んでいない段', () => {
+      const s = monthSpine({ ...base, payrollMissing: 3 });
+      expect(s[3].noteKey).toBe('home.spine.note.waitFor.payroll');
+    });
+
+    it('あとの段の要確認・まだは、そのまま（人数を残す）', () => {
+      const s = monthSpine({ ...base, payrollMissing: 3, revision: { candidates: 2, waiting: 0 } });
+      expect(s[3].state).toBe('attention');
+      expect(s[3].noteParams).toEqual({ count: 2 });
+    });
+
+    it('確認中の段のあとも、済みにはしない', () => {
+      const s = monthSpine({ ...base, todo: null });
+      expect(s.map((x) => x.state)).toEqual(['todo', 'todo', 'todo', 'todo']);
+      expect(s[1].noteKey).toBe('home.spine.note.waitFor.todo');
+    });
   });
 });

@@ -1,4 +1,4 @@
-<app-back-link [fallback]="['/o', context.current()?.id, 'requests']" fallbackName="back.requests" />
+<app-back-link [fallback]="['/o', context.current()?.id, 'requests']" fallbackName="back.requests" [fallbackParams]="{ view: 'requests' }" />
 
 <div class="page-head">
   <div>

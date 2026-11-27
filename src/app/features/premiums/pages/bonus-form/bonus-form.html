@@ -245,7 +245,7 @@
         </thead>
         <tbody>
           @for (r of shown().rows; track r.employee.id) {
-            <tr [class.problem]="r.state === 'missing' || r.state === 'error'" [class.edited]="rowDirty(r.employee.id)">
+            <tr [attr.data-row]="r.employee.id" [class.problem]="r.state === 'missing' || r.state === 'error'" [class.edited]="rowDirty(r.employee.id)">
               <td class="emp-no">{{ r.employee.employeeNumber ?? '—' }}</td>
               <td>
                 <app-person-name [person]="r.employee" [link]="['/o', context.current()?.id, 'employees', r.employee.id]" />

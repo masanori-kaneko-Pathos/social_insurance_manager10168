@@ -1,3 +1,4 @@
+import { centerOpenedRow } from '../../../../shared/utils/center-opened';
 import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -243,6 +244,8 @@ export class BonusList {
 
   toggle(id: string): void {
     this.openId.update((cur) => (cur === id ? null : id));
+    // 開いたら、行と支給を受けた人の一覧を画面の真ん中へ（11/27）
+    if (this.openId() === id) centerOpenedRow(id);
   }
 
   nameOf(e: Employee): string {

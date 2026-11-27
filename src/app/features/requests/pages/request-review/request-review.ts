@@ -122,7 +122,7 @@ export class RequestReview {
     try {
       await this.api.remove(officeId, r.id);
       // 申請を消したら申請のタブへ戻る（11/27。依頼と申請をタブで分けた）
-      await this.router.navigate(['/o', officeId, 'requests'], { queryParams: r.direction === 'fromEmployee' ? { view: 'applications' } : {} });
+      await this.router.navigate(['/o', officeId, 'requests'], { queryParams: { view: r.direction === 'fromEmployee' ? 'applications' : 'requests' } });
     } catch (err) {
       console.error(err);
       this.errorKey.set(errorKeyOf(err, 'request.error.delete'));

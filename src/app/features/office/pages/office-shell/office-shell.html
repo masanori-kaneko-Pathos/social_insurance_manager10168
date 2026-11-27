@@ -186,7 +186,7 @@
             <a
               class="bell-item"
               [routerLink]="['/o', officeId(), 'requests']"
-              [queryParams]="{ status: 'submitted' }"
+              [queryParams]="{ view: 'requests', status: 'submitted' }"
             >
               {{ 'bell.requests' | transloco }}
               @if (badge.requestCount() > 0) {

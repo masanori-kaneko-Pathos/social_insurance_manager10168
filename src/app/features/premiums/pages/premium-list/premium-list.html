@@ -246,6 +246,7 @@
             @for (r of sortedRows(); track r.employee.id) {
               <!-- 計算できた行は、どこを押しても根拠が開く（氏名のリンクは除く）。キーボードは行に移って Enter・スペース（11/26。給与と同じ） -->
               <tr
+                [attr.data-row]="r.employee.id"
                 [class.problem]="r.state !== 'ok' && r.state !== 'exempt'"
                 [class.open]="openId() === r.employee.id"
                 [class.clickable]="!!r.result"

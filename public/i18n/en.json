@@ -327,7 +327,7 @@
     "group": {
       "setup": "Setup"
     },
-    "requests": "Requests",
+    "requests": "Employee My Page",
     "help": "Help",
     "home": "Home",
     "members": "Administrators",
@@ -3444,7 +3444,8 @@
     "tab": {
       "requests": "Requests",
       "applications": "Applications",
-      "pending": "{{count}} waiting for review"
+      "pending": "{{count}} waiting for review",
+      "invites": "Issue"
     },
     "lead": {
       "requests": "Requests from the company to employees (onboarding, change notices, etc.). Items waiting for review come first.",
@@ -3453,6 +3454,13 @@
     "emptyOf": {
       "requests": "No requests.",
       "applications": "No applications."
+    },
+    "entry": {
+      "new": {
+        "title": "Create a request",
+        "note": "Start from a template. Send to one person or many."
+      },
+      "label": "Create a request"
     }
   },
   "me": {
@@ -3684,7 +3692,7 @@
       },
       "myPage": {
         "title": "Employee My Page and requests",
-        "body": "Create an invitation link from \"Personal info\" on the employee page and send it to the employee. On My Page, employees can see their premium breakdown, answer requests and apply for changes such as their address. Answers and applications are reviewed under \"Requests\"; approving writes them to the employee record (with change history). To invite several people at once, select them in My Pages > Invites and accounts, press \"Invite\", and export the links as CSV (only people with a contact email; no email is sent automatically)."
+        "body": "Create an invitation link from \"Personal info\" on the employee page and send it to the employee. On My Page, employees can see their premium breakdown, answer requests and apply for changes such as their address. Answers and applications are reviewed under Employee My Page > Requests and Applications; approving writes them to the employee record (with change history). To invite several people at once, select them in Employee My Page > Issue, press \"Invite\", and export the links as CSV (only people with a contact email; no email is sent automatically)."
       },
       "roles": {
         "title": "Roles (administrator, general, employee) and the representative",
@@ -3962,7 +3970,7 @@
       "payrollsView": "Payroll",
       "addEmployee": "Employees",
       "import": "Import / Export",
-      "request": "Requests",
+      "request": "Employee My Page",
       "bonus": "Bonuses"
     },
     "filterKind": "Filter by type",
@@ -4070,13 +4078,17 @@
         "premiumOpen": "Month {{m}}: employee share not checked",
         "premiumNotice": "Month {{m}}: waiting for the notice amount",
         "premiumReview": "Month {{m}}: waiting for a second check",
-        "premiumDone": "Month {{m}}: checks complete"
+        "premiumDone": "Month {{m}}: checks complete",
+        "waitFor": {
+          "todo": "Waiting for procedures and filings",
+          "premium": "Waiting for the premium check",
+          "payroll": "Waiting for pay entry"
+        }
       }
     }
   },
   "myPages": {
     "tabs": "Switch view",
-    "tab": "Issue My Page",
     "lead": "My Page status of employees. Inviting creates a sign-up link for each person (no email is sent automatically; export the links as CSV).",
     "status": {
       "linked": "Has account",
@@ -5613,7 +5625,7 @@
     "filings": "Filings",
     "regular": "{{year}} annual determination",
     "revisions": "Revision candidates",
-    "requests": "Requests",
+    "requests": "Employee My Page",
     "requestNew": "New request",
     "request": "Request",
     "help": "Help",

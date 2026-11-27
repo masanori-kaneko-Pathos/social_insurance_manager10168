@@ -12,9 +12,10 @@ import { sortRequests } from '../../logic/request-model';
 import { RequestService } from '../../request.service';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
+import { EntryChoice, EntryChoiceItem } from '../../../../shared/components/entry-choice/entry-choice';
 
 type Filter = RequestStatus | 'all';
-/** 画面の中のタブ：会社からの依頼／従業員からの申請／マイページの発行（11/27） */
+/** 画面の中のタブ：マイページの発行／会社からの依頼／従業員からの申請（11/27。並びは仕事の順） */
 export type RequestView = 'requests' | 'applications' | 'invites';
 
 /** タブごとの向き（依頼 ＝ 会社から従業員へ、申請 ＝ 従業員から） */
@@ -24,12 +25,12 @@ const DIRECTION_OF: Record<Exclude<RequestView, 'invites'>, RequestDirection> = 
 };
 
 /**
- * 依頼・申請の一覧（確認待ちが上）。タブ（?view=）と状態の絞り込み（?status=）は URL に持つ
+ * 従業員マイページ（発行・依頼・申請。確認待ちが上）。タブ（?view=）と状態の絞り込み（?status=）は URL に持つ
  * 11/27：依頼と申請をタブで分けた（向きが逆の仕事が1つの一覧に混ざっていたため。データは direction で分かれている）
  */
 @Component({
   selector: 'app-request-list',
-  imports: [PersonName, MyPageInvites, RouterLink, TranslocoPipe],
+  imports: [EntryChoice, PersonName, MyPageInvites, RouterLink, TranslocoPipe],
   templateUrl: './request-list.html',
   styleUrl: '../requests.css',
 })
@@ -46,16 +47,30 @@ export class RequestList {
     { initialValue: 'all' as Filter },
   );
 
-  /** 依頼／申請／マイページの発行（?view=。発行は管理者だけ。読めない値は依頼） */
-  readonly view = toSignal(
-    this.route.queryParamMap.pipe(
-      map((q): RequestView => {
-        const v = q.get('view');
-        return v === 'applications' || v === 'invites' ? v : 'requests';
-      }),
-    ),
-    { initialValue: 'requests' as RequestView },
-  );
+  /** ?view= の値（なければ null） */
+  private readonly viewParam = toSignal(this.route.queryParamMap.pipe(map((q) => q.get('view'))), { initialValue: null });
+
+  /**
+   * 発行／依頼／申請（?view=）。指定がなければ左のタブ（管理者は発行、それ以外は依頼。11/27）
+   * 発行は管理者だけ。読めない値は依頼
+   */
+  readonly view = computed((): RequestView => {
+    const v = this.viewParam();
+    const admin = this.context.isAdmin();
+    if (v === 'requests' || v === 'applications') return v;
+    if (v === 'invites' || v === null) return admin ? 'invites' : 'requests';
+    return 'requests';
+  });
+
+  /** 依頼のタブの入り口（依頼を作成。管理者だけ。11/27） */
+  readonly entryItems = computed<EntryChoiceItem[]>(() => [
+    {
+      icon: 'plus',
+      titleKey: 'request.entry.new.title',
+      noteKey: 'request.entry.new.note',
+      link: ['/o', this.context.current()?.id, 'requests', 'new'],
+    },
+  ]);
 
   readonly requests = signal<EmployeeRequest[]>([]);
   private readonly employees = signal<Map<string, Employee>>(new Map());

@@ -1,3 +1,4 @@
+import { centerOpenedRow } from '../../../../shared/utils/center-opened';
 import { Component, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -187,6 +188,8 @@ export class PremiumList {
 
   toggleOpen(id: string): void {
     this.openId.update((cur) => (cur === id ? null : id));
+    // 開いたら、行と根拠を画面の真ん中へ（11/27）
+    if (this.openId() === id) centerOpenedRow(id);
   }
 
   /** 行を押したら根拠を開く・閉じる（氏名のリンク・ボタン・入力欄を押したときは何もしない。11/26） */

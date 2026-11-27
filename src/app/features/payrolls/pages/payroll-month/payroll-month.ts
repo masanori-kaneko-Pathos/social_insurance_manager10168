@@ -1,3 +1,4 @@
+import { centerOpenedRow } from '../../../../shared/utils/center-opened';
 import { Component, computed, DestroyRef, ElementRef, inject, signal, viewChild, WritableSignal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -549,9 +550,8 @@ export class PayrollMonth {
         v.lines.set(copyNames(prev));
       }
     });
-    setTimeout(() => {
-      document.querySelector(`tr[data-row="${v.employee.id}"]`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    });
+    // 開いた行と内訳を画面の真ん中へ（長いときは行の頭を見出しの下へ。11/27）
+    centerOpenedRow(v.employee.id);
   }
 
   /** 前の月の給与と標準報酬月額を読む（項目名を写す・「この入力で決まること」。読めなくても入力はできる） */

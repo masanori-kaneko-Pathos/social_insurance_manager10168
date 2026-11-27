@@ -203,7 +203,7 @@
         </thead>
         <tbody>
           @for (r of shownRows(); track r.payment.id) {
-            <tr [class.is-open]="openId() === r.payment.id">
+            <tr [attr.data-row]="r.payment.id" [class.is-open]="openId() === r.payment.id">
               <td class="mono">
                 <a
                   class="name"

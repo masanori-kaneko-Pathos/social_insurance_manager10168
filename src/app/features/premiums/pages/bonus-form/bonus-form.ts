@@ -1,3 +1,4 @@
+import { centerOpenedRow } from '../../../../shared/utils/center-opened';
 import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -290,6 +291,8 @@ export class BonusForm {
   readonly openId = signal<string | null>(null);
   toggleOpen(id: string): void {
     this.openId.update((cur) => (cur === id ? null : id));
+    // 開いたら、行と内訳を画面の真ん中へ（11/27）
+    if (this.openId() === id) centerOpenedRow(id);
   }
 
   /** この支給の合計 */

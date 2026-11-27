@@ -271,7 +271,7 @@ export class RequestNew {
         dueDate: this.dueDate() || null,
       });
       this.unsaved.release();
-      await this.router.navigate(['/o', officeId, 'requests'], { queryParams: { status: 'open' } });
+      await this.router.navigate(['/o', officeId, 'requests'], { queryParams: { view: 'requests', status: 'open' } });
     } catch (err) {
       console.error(err);
       this.errorKey.set(errorKeyOf(err, 'request.error.send'));

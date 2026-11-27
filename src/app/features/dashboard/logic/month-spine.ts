@@ -85,5 +85,20 @@ export function monthSpine(x: MonthSpineInput): GuideStep[] {
             ? step('premium', 'todo', 'premiumReview', { m })
             : step('premium', 'done', 'premiumDone', { m });
 
-  return [todo, premium, payroll, revision];
+  return inOrder([todo, premium, payroll, revision]);
+}
+
+/**
+ * 順番どおりに「済み」にする（11/27）：前の段が済んでいないうちは、あとの段は済みにしない
+ * - あとの段の「済み」は「まだ」にして、注記は「（止まっている段）の完了待ち」にする
+ *   例：保険料の確認がまだなのに、給与が全員入力済みでも、給与の段は「保険料の確認の完了待ち」
+ * - 要確認・まだ・確認中の段は、そのまま（人数などの注記は残す）
+ */
+function inOrder(steps: GuideStep[]): GuideStep[] {
+  let blocker: string | null = null;
+  return steps.map((s) => {
+    const out = blocker !== null && s.state === 'done' ? step(s.key, 'todo', `waitFor.${blocker}`) : s;
+    if (blocker === null && s.state !== 'done') blocker = s.key;
+    return out;
+  });
 }

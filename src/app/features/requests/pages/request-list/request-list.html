@@ -1,14 +1,15 @@
 <div class="page-head">
   <h1>{{ 'nav.requests' | transloco }}</h1>
-  <!-- 依頼を作成：どのタブでも同じ場所に出す（タブで出たり消えたりして位置がずれないように。11/27） -->
-  @if (context.isAdmin()) {
-    <a class="btn" [routerLink]="['/o', context.current()?.id, 'requests', 'new']">{{ 'request.new' | transloco }}</a>
-  }
 </div>
 
-<!-- 依頼（会社から）｜申請（従業員から）｜マイページの発行（管理者だけ）。確認待ちの件数をタブに添える（11/27） -->
+<!-- 発行（管理者だけ）｜依頼（会社から）｜申請（従業員から）。並びは仕事の順。確認待ちの件数をタブに添える（11/27） -->
 <nav class="page-tabs" [attr.aria-label]="'myPages.tabs' | transloco">
-  <a [routerLink]="[]" [queryParams]="{ view: null, status: null }" [class.active]="view() === 'requests'">
+  @if (context.isAdmin()) {
+    <a [routerLink]="[]" [queryParams]="{ view: null, status: null }" [class.active]="view() === 'invites'">
+      {{ 'request.tab.invites' | transloco }}
+    </a>
+  }
+  <a [routerLink]="[]" [queryParams]="{ view: 'requests', status: null }" [class.active]="view() === 'requests'">
     {{ 'request.tab.requests' | transloco }}
     <!-- 0件でも場所は取っておく（件数が出たり消えたりして、隣のタブの位置がずれないように） -->
     <span class="tab-count" [class.zero]="pending().requests === 0" [attr.aria-label]="'request.tab.pending' | transloco: { count: pending().requests }">{{ pending().requests }}</span>
@@ -18,11 +19,6 @@
     <!-- 0件でも場所は取っておく（件数が出たり消えたりして、隣のタブの位置がずれないように） -->
     <span class="tab-count" [class.zero]="pending().applications === 0" [attr.aria-label]="'request.tab.pending' | transloco: { count: pending().applications }">{{ pending().applications }}</span>
   </a>
-  @if (context.isAdmin()) {
-    <a [routerLink]="[]" [queryParams]="{ view: 'invites', status: null }" [class.active]="view() === 'invites'">
-      {{ 'myPages.tab' | transloco }}
-    </a>
-  }
 </nav>
 
 @if (view() === 'invites' && context.isAdmin()) {
@@ -32,6 +28,11 @@
     <app-my-page-invites [employees]="employeeList()" />
   }
 } @else {
+<!-- 依頼を作成：依頼のタブの入り口カード（給与・賞与・従業員と同じ部品。11/27） -->
+@if (view() === 'requests' && context.isAdmin()) {
+  <app-entry-choice [items]="entryItems()" labelKey="request.entry.label" />
+  <hr class="section-sep" />
+}
 <p class="lead list-lead">{{ (view() === 'applications' ? 'request.lead.applications' : 'request.lead.requests') | transloco }}</p>
 
 <nav class="tabs" [attr.aria-label]="'request.filter' | transloco">
