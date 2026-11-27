@@ -1,5 +1,6 @@
 import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { EntryChoice, EntryChoiceItem } from '../../../../shared/components/entry-choice/entry-choice';
 import { Employee } from '../../../../core/models/employee';
 import { RemunerationDoc } from '../../../../core/models/remuneration';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
@@ -60,7 +61,7 @@ const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
  */
 @Component({
   selector: 'app-decision-notice-card',
-  imports: [PersonName, TranslocoPipe],
+  imports: [EntryChoice, PersonName, TranslocoPipe],
   templateUrl: './decision-notice-card.html',
   styleUrl: './decision-notice-card.css',
 })
@@ -83,6 +84,10 @@ export class DecisionNoticeCard implements OnInit {
   readonly kind = signal<NoticeKind>('monthly');
   readonly month = signal('');
   readonly open = signal(false);
+  /** 閉じているときの入り口カード（1枚。押すと開く・閉じる） */
+  readonly entryItems: EntryChoiceItem[] = [
+    { icon: 'request', titleKey: 'decisionNotice.title', noteKey: 'decisionNotice.cardNote', key: 'toggle' },
+  ];
   readonly loading = signal(false);
   readonly sending = signal(false);
   readonly errorKey = signal<string | null>(null);

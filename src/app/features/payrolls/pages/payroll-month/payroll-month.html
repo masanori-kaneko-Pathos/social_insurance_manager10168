@@ -323,15 +323,13 @@
   }
 
 
+  <!-- 入力でよく迷う3つだけ。ほかは使い方の「給与の入れ方」へ（11/27。9項目から減らした） -->
   <ul class="hint">
     <li>{{ 'payroll.hint.paidMonth' | transloco }}</li>
     <li>{{ 'payroll.hint.cash' | transloco }}</li>
-    <li>{{ 'payroll.hint.fixed' | transloco }}</li>
     <li>{{ 'payroll.hint.days' | transloco }}</li>
-    <li>{{ 'payroll.hint.inKind' | transloco }}</li>
-    <li>{{ 'payroll.hint.prorated' | transloco }}</li>
-    <li>{{ 'payroll.hint.state' | transloco }}</li>
-    <li>{{ 'payroll.hint.hours' | transloco }}</li>
-    <li>{{ 'payroll.hint.blank' | transloco }}</li>
+    <li>
+      <a [routerLink]="['/o', context.current()?.id, 'help']" [queryParams]="{ topic: 'payroll' }">{{ 'payroll.hint.more' | transloco }} ›</a>
+    </li>
   </ul>
 }

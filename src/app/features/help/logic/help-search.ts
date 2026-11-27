@@ -46,7 +46,7 @@ export const HELP_GROUPS: readonly { key: string; topics: readonly HelpTopic[] }
  * 小見出しのない項目は help.topic.<topic>.body の1段落
  */
 export const HELP_SECTIONS: Partial<Record<HelpTopic, readonly string[]>> = {
-  payroll: ['intro', 'fixed', 'commute', 'retro', 'prorated', 'days', 'decrease', 'bonus'],
+  payroll: ['intro', 'fixed', 'commute', 'retro', 'prorated', 'days', 'state', 'hours', 'decrease', 'bonus', 'blank'],
 };
 
 /** 比べやすい形にそろえる（カタカナ → ひらがな、全角英数 → 半角、小文字） */

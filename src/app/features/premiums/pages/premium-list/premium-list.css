@@ -920,9 +920,10 @@ tr.clickable:focus-visible {
   margin-bottom: var(--space-sm);
 }
 
-/* 照合をしていないときの知らせ（押せるが、目に入るように） */
-.soft-missing {
-  color: var(--color-warning-text);
+/* ② の中の小見出し「給与ソフトの控除額とくらべる（任意）」（11/27） */
+.soft-optional {
+  margin: var(--space-md) 0 var(--space-xs);
+  font-size: var(--font-sm);
   font-weight: 600;
 }
 

@@ -345,7 +345,8 @@
     </div>
   }
 
-  <!-- 決定通知を本人に届ける（B12。年を変えたら作り直す） -->
+  <!-- 決定通知を本人に届ける（B12。年を変えたら作り直す）。11/27：上と線で区切る -->
+  <hr class="section-sep" />
   @for (y of [year()]; track y) {
     <app-decision-notice-card [initialMonth]="y + '-09'" />
   }

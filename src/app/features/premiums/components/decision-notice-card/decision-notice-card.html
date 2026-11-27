@@ -1,9 +1,6 @@
-<!-- 11/27：閉じているときは白い箱を出さず、ほかの折りたたみ（details.fold）と同じ見た目の1行にする。開くと中身を箱で出す -->
+<!-- 11/27：入り口カード（給与・従業員などと同じ部品）にした。小さな1行では目に入らなかったため。押すと下に中身を開く -->
 <section class="dn">
-  <button type="button" class="toggle" [attr.aria-expanded]="open()" (click)="toggle()">
-    <!-- 開閉の印はほかの折りたたみと同じ（右向きの › が、開くと下を向く） -->
-    <span class="mark" aria-hidden="true"></span>{{ 'decisionNotice.title' | transloco }}
-  </button>
+  <app-entry-choice [items]="entryItems" labelKey="decisionNotice.title" (chosen)="toggle()" />
   @if (open()) {
   <div class="card dn-body">
     <!-- 根拠：健康保険法49条・厚生年金保険法29条（事業主は通知を受けたら速やかに被保険者へ知らせる。怠ると罰則） -->

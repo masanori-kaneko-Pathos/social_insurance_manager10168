@@ -402,6 +402,9 @@
       <h2 class="step-title">{{ 'premiumGuide.title.soft' | transloco }}</h2>
       <p class="hint">{{ 'premiumGuide.softLead' | transloco: { payMonth: monthParts(payMonth()).m } }}</p>
       @if (context.isAdmin()) {
+        <!-- 給与ソフトとの照合は任意（しなくても確認済みにできる）。小見出しで分けて「任意」と書く（11/27） -->
+        <h3 class="soft-optional">{{ 'premiumGuide.softOptional' | transloco }}</h3>
+        <p class="hint">{{ 'premiumGuide.softOptionalLead' | transloco }}</p>
         <!-- 2つの操作を入り口カードに（ほかの画面の入り口と同じ形。11/27）。読み込みは、カードを押すとファイルを選ぶ窓が開く。結果はこの段の中に開く -->
         <app-entry-choice [items]="softItems()" (chosen)="onSoftChoice($event)" />
         <input #deductionInput type="file" class="file-hidden" [accept]="importAccept" (change)="onDeductionFile($event)" />
@@ -514,19 +517,18 @@
             </button>
           }
         } @else {
-          <button type="button" class="btn btn-solid" [disabled]="closeBusy() || !!closeBlock()" (click)="closeMonth()">
+          <!-- 11/27：オレンジの塗りをやめ、ふつうのボタンに（目立ちすぎて驚くため） -->
+          <button type="button" class="btn" [disabled]="closeBusy() || !!closeBlock()" (click)="closeMonth()">
             {{ 'monthClose.close' | transloco: { month: monthParts(month()).m } }}
           </button>
           @if (closeBlock(); as b) {
             <span class="muted">{{ b | transloco }}</span>
           } @else {
             <span class="muted">
+              <!-- 照合したときだけ結果を出す（していないときの注意書きと、段の説明と同じ文は消した。11/27） -->
               @if (softCheckNow(); as sc) {
                 {{ 'monthClose.softReady' | transloco: sc }}
-              } @else {
-                <span class="soft-missing">{{ 'monthClose.softMissing' | transloco }}</span>
               }
-              {{ 'monthClose.lead' | transloco }}
               <!-- 照合の差・定時決定の未反映（止めないが、押す前に分かるように。ボタンの右に出すので、ボタンの位置は動かない。11/27） -->
               @for (t of closeNoteTexts(); track t) {
                 <span class="close-note">{{ t }}</span>

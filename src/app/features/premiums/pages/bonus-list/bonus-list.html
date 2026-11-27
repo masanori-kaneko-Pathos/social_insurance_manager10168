@@ -346,6 +346,7 @@
     </div>
   }
   <p class="hint">{{ 'bonus.hint.list' | transloco }}</p>
-  <!-- 標準賞与額の決定を本人に知らせる（健康保険法49条・厚生年金保険法29条。11/19） -->
+  <!-- 標準賞与額の決定を本人に知らせる（健康保険法49条・厚生年金保険法29条。11/19）。11/27：上と線で区切る -->
+  <hr class="section-sep" />
   <app-decision-notice-card [initialMonth]="noticeMonth()" initialKind="bonus" />
 }

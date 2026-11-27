@@ -150,6 +150,10 @@
 .part {
   color: var(--color-text-sub);
 }
+/* 項目名が2行に折り返しても、計算式の下の料率の行が下に押し出されない（項目名は2行ぶんの高さを使う。11/27） */
+.line > .part {
+  grid-row: span 2;
+}
 
 .formula {
   font-variant-numeric: tabular-nums;
@@ -170,6 +174,10 @@
   .line .rate-note,
   .line .split {
     grid-column: 1;
+  }
+
+  .line > .part {
+    grid-row: auto;
   }
 
   .group-sum {

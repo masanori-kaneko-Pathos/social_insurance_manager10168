@@ -1910,17 +1910,12 @@
     },
     "hint": {
       "list": "\"Not entered\" counts employees insured during the pay period whose pay has not been entered yet (only months whose pay day has passed).",
-      "cash": "Amount paid in money: the \"amount paid in money\" column of the notification of change in monthly remuneration and the base calculation notification. It includes the commuting allowance (even the tax-free part) and is after absence deductions. Do not include payments that are not remuneration, such as actual travel expenses or condolence money. Not the net pay.",
-      "fixed": "Fixed wages (used to detect SMR revisions): the amount before absence deductions. pay with a set rate or amount, such as base pay, position allowance and commuting allowance (including hourly rate × hours and daily rate × days). Non-fixed wages: pay that depends on the month, such as overtime, attendance allowance and commission. With a breakdown, these are calculated from the categories. A revision candidate appears when fixed wages (before absence deductions) change for monthly-paid people, or when the contract rate or scheduled hours change for hourly or daily-paid people.",
-      "inKind": "Remuneration provided in kind (現物給与): company housing, dormitories and meals are converted to yen with the value set by the government for each prefecture, minus what the employee pays (different from the tax valuation). Use \"Calculate\" for meals and housing. If you hand over a commuter pass or coupon tickets, enter their value here too.",
-      "days": "Base days for payroll: for monthly paid employees, the calendar days (30, 31, etc.) regardless of attendance. For daily-monthly paid employees whose pay is reduced for absences, the company's scheduled days minus absent days, only in months with absences. These two are filled in automatically (\"31 (auto)\"). Enter a number only when you need different days. For daily and hourly paid employees, enter the actual days worked (including paid leave).",
-      "blank": "Empty rows are not saved. Clearing a saved row and saving deletes that month's record.",
-      "hours": "Hours worked: scheduled hours plus overtime within the legal limits (up to 8 hours a day and 40 a week), as \"160:30\" (160 hours 30 minutes) or \"160.5\". Do not include overtime beyond the legal limits.",
+      "cash": "Amount paid in money is the gross pay (not the net pay).",
+      "days": "Payment basis days are filled in automatically for monthly and daily-monthly pay. For daily or hourly pay, enter the days worked (including paid leave).",
       "inKindMerged": "In months marked \"Not itemized\", in-kind remuneration is included in the amount paid in money (the imported file had no in-kind column). Totals and premiums are still correct, but changes in in-kind remuneration (such as moving into company housing) cannot be detected, so enter the in-kind amount with \"Enter separately\" when you know it.",
       "retro": "Of which: retroactive pay: a raise decided retroactively, with the difference for earlier months paid this month (the \"retroactive pay\" column). This month becomes the start month for a revision, and the amount is left out of the average (corrected average). Settle forgotten or miscalculated pay with \"Original month\" in the breakdown instead.",
-      "prorated": "Pro-rated month: a month in which a raise, new allowance or rate started in the middle of the pay period, so the new amount was not paid for a full month. Revisions are counted from the next month. The month of joining is excluded automatically from the acquisition date, so no mark is needed.",
-      "state": "State: \"Suspended\" is a month with leave-of-absence pay; \"Furlough\" is a month when the company had people stay off and paid a furlough allowance. Register maternity and childcare leave as leave on the employee, not here.",
-      "paidMonth": "Pay month: the month of the pay date, not the month the pay is for."
+      "paidMonth": "Pay month is the month of the pay date, not the month the pay is for.",
+      "more": "More: Help › Entering payroll"
     },
     "error": {
       "load": "Could not load payroll.",
@@ -3692,6 +3687,18 @@
           "bonus": {
             "title": "What to register as a bonus",
             "body": "One-off or up-to-three-times-a-year payments (e.g. a sign-on allowance or year-end allowance) do not go into payroll; register them as bonuses (bonus payment report). Monthly allowances go into payroll even if they share a payslip line with such payments."
+          },
+          "state": {
+            "title": "Status (suspended, furlough)",
+            "body": "\"Suspended\" is a month with leave-of-absence pay; \"Furlough\" is a month when the company had people stay off and paid a furlough allowance. Register maternity and childcare leave as leave on the employee, not here."
+          },
+          "hours": {
+            "title": "Hours worked",
+            "body": "scheduled hours plus overtime within the legal limits (up to 8 hours a day and 40 a week), as \"160:30\" (160 hours 30 minutes) or \"160.5\". Do not include overtime beyond the legal limits."
+          },
+          "blank": {
+            "title": "Empty rows",
+            "body": "Empty rows are not saved. Clearing a saved row and saving deletes that month's record."
           }
         }
       },
@@ -5079,7 +5086,8 @@
       "bonus": "Bonus paid {{date}}",
       "acquire": "Coverage started",
       "loss": "Coverage ended"
-    }
+    },
+    "cardNote": "Check decision notices from the pension office and let each employee know."
   },
   "rateImport": {
     "choose": "Load from file",
@@ -5516,7 +5524,6 @@
     "allSettled": "Differences after checking are settled ({{count}})",
     "cancel": "Undo checked",
     "close": "Mark month {{month}} employee share as checked",
-    "lead": "Recording the deducted amounts shows the differences if standard remuneration etc. is corrected retroactively later.",
     "block": {
       "future": "A future month cannot be marked checked.",
       "problems": "Some people cannot be calculated, so this month cannot be marked checked. Fix the people in the warning above first.",
@@ -5568,7 +5575,7 @@
       }
     },
     "softReady": "Matched with payroll software ({{matched}} match, {{diff}} differ).",
-    "softMissing": "Not matched with payroll software yet (you can still mark it checked).",
+    "softMissing": "Payroll software comparison: none (optional)",
     "softDone": "Matching: {{matched}} match, {{diff}} differ",
     "softNone": "No matching",
     "note": {
@@ -5722,7 +5729,7 @@
   "premiumGuide": {
     "step": {
       "employee": "Employee share",
-      "soft": "Check",
+      "soft": "Mark checked",
       "total": "Payment",
       "notice": "Notice amount"
     },
@@ -5731,7 +5738,7 @@
       "fix": "{{count}} to fix first",
       "softDiff": "{{count}} with differences",
       "softMatch": "All match ({{count}})",
-      "softNone": "Checked without matching",
+      "softNone": "Checked (not compared)",
       "noticeWait": "Enter when the notice arrives",
       "noticeReason": "Difference explained",
       "noticeDiff": "Difference not explained",
@@ -5742,17 +5749,19 @@
       "noticeWaiting": "Waiting for check (asked by {{name}})",
       "noticeAsk": "Not yet double-checked",
       "employeeTodo": "Check the calculation for errors",
-      "softTodo": "Check and mark as checked",
+      "softTodo": "Record the deducted amounts",
       "totalTodo": "Fixed when you mark it in ②"
     },
     "title": {
       "employee": "1. Employee share deducted from pay",
-      "soft": "2. Check against payroll software and mark as checked",
+      "soft": "2. Mark the employee share as checked",
       "total": "3. Amount the company pays",
       "notice": "4. Compare with the payment notice"
     },
-    "softLead": "Export data for your payroll software and calculate the deductions for pay in month {{payMonth}} there. Then load the file with the deducted amounts to list only the people whose amounts differ from this app.",
-    "totalLead": "Amount to pay = total withheld from employees + employer share. The employer share is set by rounding the office total (the per-person employer share in step 1 is an estimate). The child and child-rearing contribution is paid by the company alone and is included in the amount to pay."
+    "softLead": "Records the employee share deducted from pay this month. Step 3 amounts are set here, and later retroactive corrections show the differences.",
+    "totalLead": "Amount to pay = total withheld from employees + employer share. The employer share is set by rounding the office total (the per-person employer share in step 1 is an estimate). The child and child-rearing contribution is paid by the company alone and is included in the amount to pay.",
+    "softOptional": "Compare with payroll software deductions (optional)",
+    "softOptionalLead": "Checks, person by person, whether the payroll software deductions match the employee share in this app."
   },
   "settings": {
     "tabs": "Settings sections",
