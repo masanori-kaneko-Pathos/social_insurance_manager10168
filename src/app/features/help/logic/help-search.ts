@@ -29,6 +29,26 @@ export const HELP_TOPICS = [
 ] as const;
 export type HelpTopic = (typeof HELP_TOPICS)[number];
 
+/**
+ * 「業務の内容」の並び（11/27）：まとまりごとに、閉じた項目を並べる。名前は help.group.<key>
+ * 業務の流れ（flow）は別の箱でいつも開いているので、ここには入れない
+ */
+export const HELP_GROUPS: readonly { key: string; topics: readonly HelpTopic[] }[] = [
+  { key: 'monthly', topics: ['todo', 'payroll', 'inKind', 'premiumList', 'payrollSoft'] },
+  { key: 'joinLeave', topics: ['acquire', 'loss', 'myPage', 'myNumber'] },
+  { key: 'standard', topics: ['regular', 'irregular', 'annual'] },
+  { key: 'leave', topics: ['leave', 'childcareSpecial', 'care', 'agreement'] },
+  { key: 'app', topics: ['filings', 'csv', 'roles', 'display'] },
+];
+
+/**
+ * 長い項目の小見出し（11/27）：本文を help.topic.<topic>.sections.<key>.title・body に分けて持つ
+ * 小見出しのない項目は help.topic.<topic>.body の1段落
+ */
+export const HELP_SECTIONS: Partial<Record<HelpTopic, readonly string[]>> = {
+  payroll: ['intro', 'fixed', 'commute', 'retro', 'prorated', 'days', 'decrease', 'bonus'],
+};
+
 /** 比べやすい形にそろえる（カタカナ → ひらがな、全角英数 → 半角、小文字） */
 export function normalizeForSearch(s: string): string {
   return s

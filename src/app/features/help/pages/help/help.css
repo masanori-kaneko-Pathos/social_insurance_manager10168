@@ -8,16 +8,88 @@ h1 {
   margin-bottom: var(--space-lg);
 }
 
+/* 2つの箱（業務の流れ・業務の内容。11/27） */
+.box {
+  margin-bottom: var(--space-lg);
+}
+
+.box > h2 {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-lg);
+}
+
+.box-lead {
+  margin: 0 0 var(--space-md);
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+/* まとまりの名前（小さく。項目の名前より目立たせない） */
+.group {
+  margin: var(--space-lg) 0 var(--space-xs);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--color-text-sub);
+}
+
+.box > h3.group:first-of-type {
+  margin-top: 0;
+}
+
+/* 閉じた項目：押すと開く。右の印で開く・閉じるが分かる */
 .topic {
-  margin-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
 }
 
-.topic h2 {
-  margin: 0 0 var(--space-sm);
-  font-size: var(--font-md);
+.topic summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: 10px var(--space-xs);
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
 }
 
-.topic p {
+.topic summary::-webkit-details-marker {
+  display: none;
+}
+
+.topic summary::after {
+  content: '▾';
+  flex: none;
+  font-weight: 400;
+  color: var(--color-text-sub);
+}
+
+.topic[open] summary::after {
+  content: '▴';
+}
+
+.topic summary:hover {
+  background: var(--color-hover);
+}
+
+.topic summary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.topic-body {
+  padding: 0 var(--space-xs) var(--space-md);
+}
+
+.topic-body h4 {
+  margin: var(--space-md) 0 2px;
+  font-size: var(--font-sm);
+}
+
+.topic-body h4:first-child {
+  margin-top: 0;
+}
+
+.topic-body p {
   margin: 0;
   line-height: 1.8;
   white-space: pre-line;
@@ -29,7 +101,7 @@ h1 {
 
 /* 業務の流れの表（11/24） */
 .flow-wrap {
-  margin-top: var(--space-md);
+  margin-top: 0;
   overflow-x: auto;
 }
 

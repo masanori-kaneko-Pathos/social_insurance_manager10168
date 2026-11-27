@@ -11,38 +11,62 @@
   />
 </div>
 
-@for (t of topics(); track t) {
-  <section class="card topic">
-    <h2>{{ 'help.topic.' + t + '.title' | transloco }}</h2>
-    <p>{{ 'help.topic.' + t + '.body' | transloco }}</p>
-    @if (t === 'flow') {
-      <!-- 業務の流れ：場面 → すること → 使う画面（11/24） -->
-      <div class="flow-wrap">
-        <table class="flow">
-          <thead>
+<!-- 業務の流れ：いつも開いている表（場面 → すること → 使う画面。11/24。11/27 に箱を分けた） -->
+@if (showFlow()) {
+  <section class="card box" id="help-flow">
+    <h2>{{ 'help.flowTitle' | transloco }}</h2>
+    <p class="box-lead">{{ 'help.topic.flow.body' | transloco }}</p>
+    <div class="flow-wrap">
+      <table class="flow">
+        <thead>
+          <tr>
+            <th>{{ 'help.flow.col.scene' | transloco }}</th>
+            <th>{{ 'help.flow.col.todo' | transloco }}</th>
+            <th>{{ 'help.flow.col.screen' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of flow; track s.key) {
             <tr>
-              <th>{{ 'help.flow.col.scene' | transloco }}</th>
-              <th>{{ 'help.flow.col.todo' | transloco }}</th>
-              <th>{{ 'help.flow.col.screen' | transloco }}</th>
+              <th scope="row">{{ 'help.flow.' + s.key + '.scene' | transloco }}</th>
+              <td>{{ 'help.flow.' + s.key + '.todo' | transloco }}</td>
+              <td class="links">
+                @for (l of s.links; track l.label) {
+                  <a [routerLink]="linkOf(l.path)">{{ 'help.flow.link.' + l.label | transloco }}</a>
+                }
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            @for (s of flow; track s.key) {
-              <tr>
-                <th scope="row">{{ 'help.flow.' + s.key + '.scene' | transloco }}</th>
-                <td>{{ 'help.flow.' + s.key + '.todo' | transloco }}</td>
-                <td class="links">
-                  @for (l of s.links; track l.label) {
-                    <a [routerLink]="linkOf(l.path)">{{ 'help.flow.link.' + l.label | transloco }}</a>
-                  }
-                </td>
-              </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+<!-- 業務の内容：まとまりごとに閉じた項目。探したとき・?topic= のときは開いて出す（11/27） -->
+@if (shownGroups().length > 0) {
+  <section class="card box">
+    <h2>{{ 'help.topicsTitle' | transloco }}</h2>
+    <p class="box-lead">{{ 'help.topicsLead' | transloco }}</p>
+    @for (g of shownGroups(); track g.key) {
+      <h3 class="group">{{ 'help.group.' + g.key | transloco }}</h3>
+      @for (t of g.topics; track t) {
+        <details class="topic" [id]="'help-' + t" [open]="searching() || openTopic() === t">
+          <summary>{{ 'help.topic.' + t + '.title' | transloco }}</summary>
+          <div class="topic-body">
+            @for (s of sectionsOf(t); track s) {
+              <h4>{{ 'help.topic.' + t + '.sections.' + s + '.title' | transloco }}</h4>
+              <p>{{ 'help.topic.' + t + '.sections.' + s + '.body' | transloco }}</p>
+            } @empty {
+              <p>{{ 'help.topic.' + t + '.body' | transloco }}</p>
             }
-          </tbody>
-        </table>
-      </div>
+          </div>
+        </details>
+      }
     }
   </section>
-} @empty {
+}
+
+@if (topics().length === 0) {
   <p class="muted">{{ 'help.empty' | transloco: { q: query() } }}</p>
 }

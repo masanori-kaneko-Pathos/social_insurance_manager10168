@@ -55,7 +55,9 @@ import {
   samePersonUpdate,
 } from '../../logic/same-person-import';
 import type { FilingTaskInput } from '../../../../core/models/filing-task';
-import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
+import { UnsavedChanges, watchUnsaved } from '../../../../shared/services/unsaved-changes';
+import { EntryChoice, EntryChoiceItem } from '../../../../shared/components/entry-choice/entry-choice';
+import type { IconName } from '../../../../shared/components/icon/icon';
 import { EMPLOYEE_FIX_FIELDS } from '../../logic/import-fix-fields';
 import { IssueCol, IssueRow } from '../../../../shared/components/import-issues/issue-row';
 import { ImportSteps } from '../../../../shared/components/import-steps/import-steps';
@@ -89,6 +91,28 @@ export const IMPORT_MODES: readonly ImportMode[] = [
   'overseas',
 ];
 
+/**
+ * 区分を選ぶ画面のまとまり（11/27）：給与・賞与 → 従業員 → 履歴 の順（よく使うものが上）
+ * 名前は importPage.group.<key>、カードの説明は importPage.card.<区分>
+ */
+export const IMPORT_GROUPS: readonly { key: string; modes: readonly ImportMode[] }[] = [
+  { key: 'pay', modes: ['payrolls', 'bonuses'] },
+  { key: 'employees', modes: ['employees', 'dependents', 'myNumber'] },
+  { key: 'history', modes: ['contract', 'remuneration', 'certificate', 'overseas'] },
+];
+
+const MODE_ICON: Record<ImportMode, IconName> = {
+  payrolls: 'payroll',
+  bonuses: 'bonus',
+  employees: 'people',
+  dependents: 'userPlus',
+  myNumber: 'admin',
+  contract: 'pencil',
+  remuneration: 'revision',
+  certificate: 'filing',
+  overseas: 'filing',
+};
+
 /** どこから来たか（戻るの行き先と名前） */
 const FROM: Record<string, { path: string[]; label: string }> = {
   employees: { path: ['employees'], label: 'nav.employees' },
@@ -116,7 +140,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-employee-import',
-  imports: [YmPipe, BackLink, PersonName, IssueRow, ImportSteps, ImportPicker, PayrollImport, BonusImport, AbroadImport, ColumnMapper, DependentImport, HistoryImport, ImportIssues, PasswordGate, RouterLink, TranslocoPipe],
+  imports: [EntryChoice, YmPipe, BackLink, PersonName, IssueRow, ImportSteps, ImportPicker, PayrollImport, BonusImport, AbroadImport, ColumnMapper, DependentImport, HistoryImport, ImportIssues, PasswordGate, RouterLink, TranslocoPipe],
   templateUrl: './employee-import.html',
   styleUrl: './employee-import.css',
 })
@@ -128,14 +152,14 @@ export class EmployeeImport {
   readonly context = inject(OfficeContext);
   private readonly myNumbers = inject(MyNumberService);
 
-  readonly modes = IMPORT_MODES;
   /**
    * ファイルの取り込みのページ（11/17）：?kind=payrolls などで区分を選んだ状態で開く（古い ?mode= も読む）
    * 古い URL（employees/import・payrolls/import）は、ルートの data で区分と戻り先を決める
    */
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  readonly mode = signal<ImportMode>(this.firstMode());
+  /** 取り込む区分。null は区分を選ぶ画面（サイドバー・ホームから来たとき。11/27） */
+  readonly mode = signal<ImportMode | null>(this.firstMode());
   /** 戻る（来た画面があるときだけ） */
   readonly back = (() => {
     const q = this.route.snapshot.queryParamMap;
@@ -145,10 +169,45 @@ export class EmployeeImport {
   /** 区分ごとの説明 */
   readonly leadKey = computed(() => `importPage.lead.${this.mode()}`);
 
-  private firstMode(): ImportMode {
+  /** 区分を選ぶ画面のカード（押すと ?kind= を付けて同じページで開く。来た画面 ?from= は残す） */
+  readonly groups = computed(() => {
+    const id = this.context.current()?.id;
+    const from = this.route.snapshot.queryParamMap.get('from');
+    return IMPORT_GROUPS.map((g) => ({
+      key: g.key,
+      items: g.modes.map(
+        (m): EntryChoiceItem => ({
+          icon: MODE_ICON[m],
+          titleKey: `historyCsv.mode.${m}`,
+          noteKey: `importPage.card.${m}`,
+          link: ['/o', id, 'import'],
+          queryParams: from ? { kind: m, from } : { kind: m },
+        }),
+      ),
+    }));
+  });
+
+  /** ?kind= がなければ区分を選ぶ画面（11/27。前は従業員の区分で開いていた） */
+  private firstMode(): ImportMode | null {
     const q = this.route.snapshot.queryParamMap;
     const want = q.get('kind') ?? q.get('mode') ?? (this.route.snapshot.data['kind'] as string | undefined) ?? '';
-    return (IMPORT_MODES as readonly string[]).includes(want) ? (want as ImportMode) : 'employees';
+    return (IMPORT_MODES as readonly string[]).includes(want) ? (want as ImportMode) : null;
+  }
+
+  private readonly unsavedChanges = inject(UnsavedChanges);
+
+  /** 「ほかのファイル ›」：区分を選ぶ画面へ（読んだのに取り込んでいなければ確かめる。11/27） */
+  toPicker(): void {
+    if (!this.unsavedChanges.confirmLeave()) return;
+    this.reset();
+    this.numberRead.set(null);
+    this.numberDone.set(null);
+    this.mode.set(null);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { kind: null, mode: null },
+      queryParamsHandling: 'merge',
+    });
   }
 
   /** 区分を切り替える（URL にも残す。読み直しても同じ区分で開く） */
@@ -188,11 +247,13 @@ export class EmployeeImport {
   readonly doneCount = signal<number | null>(null);
   /** 同じページのまま ?kind= が変わったとき（扶養家族の「次は給与の実績」など）も区分を合わせる */
   private readonly kindFollow = this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((q) => {
-    const want = q.get('kind');
+    const want = q.get('kind') ?? q.get('mode');
     if (want && want !== this.mode() && (IMPORT_MODES as readonly string[]).includes(want)) {
       this.doneCount.set(null);
       this.mode.set(want as ImportMode);
     }
+    // ?kind= が消えたら（ブラウザの戻る・サイドバーから開き直し）区分を選ぶ画面へ（11/27）
+    if (!want && !this.route.snapshot.data['kind'] && this.mode() !== null) this.mode.set(null);
   });
 
   /** 読んだのにまだ取り込んでいなければ、画面を離れる前に確かめる（11/17） */

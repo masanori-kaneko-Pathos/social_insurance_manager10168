@@ -1,4 +1,4 @@
-import { matchesHelp, normalizeForSearch } from './help-search';
+import { HELP_GROUPS, HELP_TOPICS, matchesHelp, normalizeForSearch } from './help-search';
 
 describe('normalizeForSearch', () => {
   it('カタカナ → ひらがな、全角英数 → 半角、小文字', () => {
@@ -20,5 +20,14 @@ describe('matchesHelp', () => {
   });
   it('カタカナで打っても、ひらがなの本文に当たる', () => {
     expect(matchesHelp('けいさん', 'ケイサン')).toBeTrue();
+  });
+});
+
+describe('業務の内容の並び（11/27）', () => {
+  it('業務の流れ以外の項目が、どこかのまとまりにちょうど1回ずつ入っている', () => {
+    const inGroups = HELP_GROUPS.flatMap((g) => g.topics);
+    const others = HELP_TOPICS.filter((t) => t !== 'flow');
+    expect([...inGroups].sort()).toEqual([...others].sort());
+    expect(new Set(inGroups).size).toBe(inGroups.length);
   });
 });

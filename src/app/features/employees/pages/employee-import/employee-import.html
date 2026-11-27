@@ -1,19 +1,26 @@
 <!-- ファイルの取り込み（11/17）：区分を選ぶ → ファイルを選ぶ → 取り込む。保存したあともこのページに残る -->
 <app-back-link [fallback]="back ? ['/o', context.current()?.id].concat(back.path) : null" [fallbackName]="back ? back.label : ''" />
 
-<h1>{{ 'importPage.title' | transloco }}</h1>
+@if (mode() === null) {
+  <!-- 区分を選ぶ画面（サイドバー・ホームから来たとき）。まとまりごとに入り口カード（11/27） -->
+  <h1>{{ 'importPage.title' | transloco }}</h1>
+  <p class="lead">{{ 'importPage.pickLead' | transloco }}</p>
+} @else {
+  <!-- 区分を決めて開いた画面：見出しに区分の名前。切り替えのボタンは出さず、「ほかのファイル ›」で選ぶ画面へ（11/27） -->
+  <div class="title-group">
+    <h1>{{ 'importPage.titleOf.' + mode() | transloco }}</h1>
+    <button type="button" class="link-btn" [disabled]="saving()" (click)="toPicker()">{{ 'importPage.otherFiles' | transloco }} ›</button>
+  </div>
+}
 
 @if (!context.isAdmin()) {
   <div class="alert alert-warning">{{ 'employeeCsv.adminOnly' | transloco }}</div>
+} @else if (mode() === null) {
+  @for (g of groups(); track g.key) {
+    <h2 class="pick-group">{{ 'importPage.group.' + g.key | transloco }}</h2>
+    <app-entry-choice [items]="g.items" labelKey="importPage.pickLabel" />
+  }
 } @else {
-  <!-- 何を取り込むか -->
-  <div class="segmented mode" role="group" [attr.aria-label]="'historyCsv.modeLabel' | transloco">
-    @for (m of modes; track m) {
-      <button type="button" [class.active]="mode() === m" [attr.aria-pressed]="mode() === m" [disabled]="saving()" (click)="setMode(m)">
-        {{ 'historyCsv.mode.' + m | transloco }}
-      </button>
-    }
-  </div>
   <p class="lead">{{ leadKey() | transloco }}</p>
 
   @if (mode() === 'employees' && noStandard()) {

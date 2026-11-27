@@ -112,34 +112,6 @@ progress {
 }
 
 /* 何を取り込むか（従業員／契約の履歴／標準報酬の履歴） */
-.segmented.mode {
-  display: inline-flex;
-  flex-wrap: wrap; /* 区分が8つ。狭い画面では折り返す（11/17） */
-  margin: var(--space-md) 0 var(--space-xs);
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-
-.segmented.mode button {
-  padding: var(--space-xs) var(--space-md);
-  font: inherit;
-  font-size: var(--font-sm);
-  color: var(--color-text);
-  background: var(--color-surface);
-  border: 0;
-  cursor: pointer;
-}
-
-.segmented.mode button + button {
-  border-left: 1px solid var(--color-border-strong);
-}
-
-.segmented.mode button.active {
-  background: var(--color-highlight);
-  font-weight: 600;
-}
-
 /* ===== 確認の表：枠の中でスクロールし、見出しは上に貼り付く（11/13） ===== */
 .table-wrap.scroll {
   max-height: 60vh;
@@ -398,4 +370,15 @@ th.leaves-col {
   background: var(--color-warning-bg);
   border-left-color: var(--color-warning-border);
   border-radius: var(--radius-sm);
+}
+
+/* ===== 11/27：区分を選ぶ画面・区分の見出し ===== */
+.title-group {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-md);
+}
+.pick-group {
+  margin: var(--space-lg) 0 var(--space-sm);
+  font-size: var(--font-md);
 }

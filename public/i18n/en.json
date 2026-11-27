@@ -3660,7 +3660,40 @@
       },
       "payroll": {
         "title": "Entering payroll",
-        "body": "On the payroll screen, enter the amount paid in money, fixed wages and payment basis days from the payslip for each pay month. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). Fixed wages are pay with a set rate or amount (including hourly rate × hours); non-fixed wages depend on the month, such as overtime. Classify a commuting allowance in \"Payroll items and categories\" as fixed wages if it is a commuter pass or a fixed monthly amount, and as non-fixed wages if it is a per-day amount × days worked. A change in days worked does not start a revision, but a change in the per-day or per-km rate (fare, fuel) is a change in fixed wages: add a unit rate change on the revision candidates screen (audit case 4). When an hourly or daily rate or the scheduled hours change in the contract, a revision candidate appears. You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and retroactive pay columns. For one person and one month, you can also use \"Enter a month\" on the employee page. Enter in \"retroactive pay\" (retroactive pay on the forms) only differences from raises decided retroactively. Allowances paid late because of a late application or a mistake go back into the month they should have been paid (that month becomes the start month for a revision). Mark \"Pro-rated month\" for months where a mid-period hire, transfer or new allowance means a full month was not paid (that month is not used as a start month; counting begins the next month). Days for pay calculation (payment basis days) are calendar days for monthly pay regardless of days worked; for daily-monthly pay where absences are deducted, the company's set number of days minus absences, only in months with absences; and the days actually worked (including paid leave) for daily or hourly pay (filing guidebook). For months where a retroactive pay cut was deducted, enter the amount before the deduction. One-off or up-to-three-times-a-year payments (e.g. a sign-on allowance or year-end allowance) do not go into payroll; register them as bonuses (bonus payment report). Monthly allowances go into payroll even if they share a payslip line with such payments."
+        "sections": {
+          "intro": {
+            "title": "What to enter",
+            "body": "On the payroll screen, enter the amount paid in money, fixed wages and payment basis days from the payslip for each pay month. These are used for the annual SMR determination (定時決定) and SMR revisions (随時改定). You can also import them by CSV. \"Also enter in-kind pay and details\" shows the in-kind, total and retroactive pay columns. For one person and one month, you can also use \"Enter a month\" on the employee page."
+          },
+          "fixed": {
+            "title": "Fixed and non-fixed wages",
+            "body": "Fixed wages are pay with a set rate or amount (including hourly rate × hours); non-fixed wages depend on the month, such as overtime. When an hourly or daily rate or the scheduled hours change in the contract, a revision candidate appears."
+          },
+          "commute": {
+            "title": "Commuting allowance",
+            "body": "Classify a commuting allowance in \"Payroll items and categories\" as fixed wages if it is a commuter pass or a fixed monthly amount, and as non-fixed wages if it is a per-day amount × days worked. A change in days worked does not start a revision, but a change in the per-day or per-km rate (fare, fuel) is a change in fixed wages: add a unit rate change on the revision candidates screen (audit case 4)."
+          },
+          "retro": {
+            "title": "Retroactive pay and late allowances",
+            "body": "Enter in \"retroactive pay\" (retroactive pay on the forms) only differences from raises decided retroactively. Allowances paid late because of a late application or a mistake go back into the month they should have been paid (that month becomes the start month for a revision)."
+          },
+          "prorated": {
+            "title": "Pro-rated months",
+            "body": "Mark \"Pro-rated month\" for months where a mid-period hire, transfer or new allowance means a full month was not paid (that month is not used as a start month; counting begins the next month)."
+          },
+          "days": {
+            "title": "Payment basis days",
+            "body": "Days for pay calculation (payment basis days) are calendar days for monthly pay regardless of days worked; for daily-monthly pay where absences are deducted, the company's set number of days minus absences, only in months with absences; and the days actually worked (including paid leave) for daily or hourly pay (filing guidebook)."
+          },
+          "decrease": {
+            "title": "Months with a retroactive pay cut",
+            "body": "For months where a retroactive pay cut was deducted, enter the amount before the deduction."
+          },
+          "bonus": {
+            "title": "What to register as a bonus",
+            "body": "One-off or up-to-three-times-a-year payments (e.g. a sign-on allowance or year-end allowance) do not go into payroll; register them as bonuses (bonus payment report). Monthly allowances go into payroll even if they share a payslip line with such payments."
+          }
+        }
       },
       "inKind": {
         "title": "Remuneration provided in kind (housing, dormitories, meals)",
@@ -3788,7 +3821,17 @@
         "scene": "Year end and closing",
         "todo": "Use employer share by period to list the employer share by month and notice line, and pass the CSV to accounting."
       }
-    }
+    },
+    "group": {
+      "monthly": "Monthly work",
+      "joinLeave": "Joining and leaving",
+      "standard": "Standard monthly remuneration",
+      "leave": "Leave and special rules",
+      "app": "Forms and the app"
+    },
+    "flowTitle": "Workflow",
+    "topicsTitle": "What each task involves",
+    "topicsLead": "Click an item to open it. When you search, matching items open automatically."
   },
   "importMap": {
     "title": "Match columns",
@@ -5083,6 +5126,36 @@
       "myNumber": "Add My Numbers to registered employees in one go (employee number and My Number columns). Exporting asks for your password again. Both are logged.",
       "certificate": "Add social security agreement certificates (people sent to Japan from abroad) or overseas assignments (people sent abroad from Japan) to registered employees. People are matched by employee number. Rows identical to saved data are skipped.",
       "overseas": "Add social security agreement certificates (people sent to Japan from abroad) or overseas assignments (people sent abroad from Japan) to registered employees. People are matched by employee number. Rows identical to saved data are skipped."
+    },
+    "pickLead": "Choose what to import. CSV, Excel and PDF are supported.",
+    "pickLabel": "What to import",
+    "otherFiles": "Other files",
+    "group": {
+      "pay": "Pay and bonuses",
+      "employees": "Employees",
+      "history": "History"
+    },
+    "titleOf": {
+      "employees": "Import employees",
+      "dependents": "Import dependents",
+      "contract": "Import contract history",
+      "remuneration": "Import remuneration history",
+      "payrolls": "Import payroll",
+      "bonuses": "Import bonuses",
+      "myNumber": "Import My Numbers",
+      "certificate": "Import certificates of coverage",
+      "overseas": "Import overseas assignments"
+    },
+    "card": {
+      "payrolls": "One row per person per month. Payslip totals and more.",
+      "bonuses": "One row per person per payment. Pay date and amount.",
+      "employees": "One row per person. Basics and the first contract.",
+      "dependents": "One row per dependent, linked by employee number.",
+      "myNumber": "Two columns: employee number and My Number.",
+      "contract": "Contracts from the second one on.",
+      "remuneration": "Records of SMR decisions (annual, revisions).",
+      "certificate": "People coming to Japan from abroad.",
+      "overseas": "People sent abroad from Japan."
     }
   },
   "bonusCsv": {
