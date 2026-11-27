@@ -87,6 +87,32 @@
       <progress [value]="p.done" [max]="p.total"></progress>
     }
 
+    <!-- 分類が決まっていない数の列（給与の項目にない見出し）：分類を選ぶまで取り込まない（11/27） -->
+    @if (unknownCols().length > 0) {
+      <section class="card unknown-cols" role="alert">
+        <h3>{{ 'payrollCsv.unknown.title' | transloco: { n: unknownCols().length } }}</h3>
+        <p class="hint">{{ 'payrollCsv.unknown.lead' | transloco }}</p>
+        <div class="unknown-list">
+          @for (c of unknownCols(); track c) {
+            <label class="unknown-row">
+              <span class="unknown-name">{{ c }}</span>
+              <select class="input" [value]="pendingChoice()[c] ?? ''" (change)="setChoice(c, $any($event.target).value)">
+                <option value="" disabled>{{ 'payrollCsv.unknown.pick' | transloco }}</option>
+                @for (k of categories; track k) {
+                  <option [value]="k">{{ 'payrollItem.category.' + k | transloco }}</option>
+                }
+                <option value="skip">{{ 'payrollCsv.unknown.skip' | transloco }}</option>
+              </select>
+            </label>
+          }
+        </div>
+        <div class="unknown-actions">
+          <button type="button" class="btn btn-solid" [disabled]="!allChosen()" (click)="applyChoices()">{{ 'payrollCsv.unknown.apply' | transloco }}</button>
+          <span class="hint">{{ 'payrollCsv.unknown.saveNote' | transloco }}</span>
+        </div>
+      </section>
+    }
+
     <!-- 見出しがうちと違うファイル：列を合わせる（確認画面から戻ったときに選んだ値が残るよう、隠すだけにする） -->
     @if (loaded(); as f) {
       <app-column-mapper
@@ -218,9 +244,9 @@
                   @let pg = pageOf(fix.withIssues(allWrites()), page(), pageSize());
                   @for (x of pg.rows; track x.line) {
                     @if (x.item; as it) {
-                      <tr [class.has-issue]="!!x.issue">
-                        <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line }" /></td>
-                        <td class="num">{{ it.line }}</td>
+                      <tr [appOpenRow]="x.line" [openFix]="fix" [class.has-issue]="!!x.issue">
+                        <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line - 1 }" /></td>
+                        <td class="num">{{ it.line - 1 }}</td>
                         <td>
                           @if (employeeOf(it.employeeId); as e) {
                             @if (e.employeeNumber) { <span class="emp-no">{{ e.employeeNumber }}</span> }
@@ -238,7 +264,7 @@
                             <span class="badge badge-warn">{{ 'payrollCsv.overwrite' | transloco }}</span>
                           }
                         </td>
-                        <td class="act-col"><button type="button" class="btn btn-small" [disabled]="fix.busy()" (click)="fix.openLine(x.line)">{{ 'importFix.check' | transloco }}</button></td>
+                        <td class="act-col open-mark" aria-hidden="true">›</td>
                       </tr>
                     } @else if (x.issue; as is) {
                       <tr app-issue-row [issue]="is" [fix]="fix" [cols]="issueCols()"></tr>

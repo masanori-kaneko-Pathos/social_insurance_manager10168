@@ -42,13 +42,21 @@ describe('readDate', () => {
     expect(readDate('2026-02-30')).toBeUndefined();
     expect(readDate('')).toBe('');
   });
+  it('和暦・「年月日」・全角のスラッシュも読む（11/27。直す窓と同じ読み方）', () => {
+    expect(readDate('令和元年5月1日')).toBe('2019-05-01');
+    expect(readDate('R8.4.1')).toBe('2026-04-01');
+    expect(readDate('平成31年4月30日')).toBe('2019-04-30');
+    expect(readDate('２０１８／０４／０１')).toBe('2018-04-01');
+    expect(readDate('2026年4月1日')).toBe('2026-04-01');
+  });
 });
 
 describe('readEmployeeCsv', () => {
   it('ひな形の2行はそのまま読める', () => {
     const r = readEmployeeCsv(employeeCsvTemplate());
     expect(r.missingColumns).toEqual([]);
-    expect(r.rows.map((x) => x.errors)).toEqual([[], []]);
+    expect(r.rows.every((x) => x.errors.length === 0)).toBe(true);
+    expect(r.rows.length).toBeGreaterThanOrEqual(8);
     const part = r.rows[1].parsed!;
     expect(part.contract.payType).toBe('hourly');
     expect(part.contract.weeklyMinutes).toBe(1200);
@@ -69,7 +77,7 @@ describe('readEmployeeCsv', () => {
       table({ ...BASE, birthDate: '1990-13-01', employmentType: '社長', lastNameKana: 'やまだ', payType: '時給' }),
     );
     const codes = r.rows[0].errors.map((e) => `${e.column}:${e.code}`);
-    expect(codes).toContain('birthDate:date');
+    expect(codes).toContain('birthDate:noSuchDate');
     expect(codes).toContain('employmentType:choice');
     expect(codes).toContain('lastNameKana:kana');
     expect(codes).toContain('hourlyWage:contract.wage');
@@ -189,11 +197,10 @@ describe('planImport：契約から加入と標準報酬を出す', () => {
     expect(it0.employee.health.lostDate).toBe('2026-10-01');
     expect(it0.employee.retireReason).toBe('resign');
   });
-  it('報酬月額と開始月を上書きできる。等級表より前の月は、いちばん古い表で出して注意', () => {
+  it('等級表より前の月は、等級を計算しないで知らせる（11/27。いちばん古い表では出さない）', () => {
     const it0 = plan([{ ...BASE, hireDate: '2020-04-01', monthlyAmount: '320000', remunerationFrom: '2020-04' }]).items[0];
-    expect(it0.remuneration?.from).toBe('2020-04');
-    expect(it0.remuneration?.health.standard).toBe(320000);
-    expect(it0.warnings).toContain('oldTable');
+    expect(it0.remuneration).toBeNull();
+    expect(it0.warnings).toContain('noGradeTable');
   });
   it('社員番号の重複（ファイルの中・登録済み）は取り込まない', () => {
     const p = plan([BASE, BASE, { ...BASE, employeeNumber: 'E999' }], { ...CTX, existingNumbers: new Set(['E999']) });

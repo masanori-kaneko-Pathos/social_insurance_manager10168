@@ -219,7 +219,6 @@ export interface HistoryContext {
 
 export type HistoryWarning =
   | 'gradeDiffers' // 書いてある等級と、報酬月額から出した等級が違う（書いてある方を使う）
-  | 'oldTable' // その月の等級表がなく、いちばん古い表で出した
   | 'regularAfterIrregular'; // 7〜9月に随時改定がある年の、9月からの定時決定（11/24）
 
 export interface HistoryItem {
@@ -241,7 +240,8 @@ export type HistoryPlanErrorCode =
   | 'duplicateInFile' // 同じ人・同じ日がファイルの中に2回
   | 'beforeHire' // 入社より前
   | 'afterRetire' // 退職より後
-  | 'badGrade'; // 等級表にない等級
+  | 'badGrade'
+  | 'noGradeTable'; // その月の等級表が登録されていない（11/27） // 等級表にない等級
 
 export interface HistoryPlan {
   items: HistoryItem[];
@@ -318,8 +318,12 @@ export function planHistoryImport(rows: readonly HistoryCsvRow[], ctx: HistoryCo
       fail('badGrade');
       continue;
     }
+    // 11/27：その月の等級表がなければ、いちばん古い表で出さずに止める（間違った等級を正しそうに見せないため）
+    if (ht.old || pt.old) {
+      fail('noGradeTable');
+      continue;
+    }
     const warnings: HistoryWarning[] = [];
-    if (ht.old || pt.old) warnings.push('oldTable');
     const calcH = gradeOf(ht.table.grades, p.monthlyAmount);
     const calcP = gradeOf(pt.table.grades, p.monthlyAmount);
     const rowOf = (t: GradeTableDoc, g: number | null) => (g === null ? null : (t.grades.find((x) => x.grade === g) ?? undefined));
@@ -386,6 +390,15 @@ export function historyCsvTemplate(kind: HistoryKind): string[][] {
         employeeNumber: 'E002', from: '2028-04-01', employmentType: '正社員', payType: '月給',
         weeklyHours: '40:00', monthlyDays: '21', scheduledWage: '240000', expectedCash: '255000',
       }),
+      // 11/27：例を増やした（時給の変更・所定時間の変更）
+      row({
+        employeeNumber: 'E008', from: '2027-04-01', employmentType: 'アルバイト', payType: '時給',
+        weeklyHours: '25:00', monthlyDays: '16', hourlyWage: '1250', scheduledWage: '100000', student: '昼間',
+      }),
+      row({
+        employeeNumber: 'E003', from: '2027-10-01', employmentType: '正社員', payType: '日給月給',
+        weeklyHours: '40:00', monthlyDays: '21', scheduledWage: '340000', expectedCash: '355000',
+      }),
     ];
   }
   const header = REMUNERATION_HISTORY_COLUMNS.map((c) => REMUNERATION_HISTORY_HEADERS[c]);
@@ -395,6 +408,9 @@ export function historyCsvTemplate(kind: HistoryKind): string[][] {
     header,
     row({ employeeNumber: 'E001', from: '2026-09', reason: '定時決定', monthlyAmount: '305000' }),
     row({ employeeNumber: 'E001', from: '2027-02', reason: '随時改定', monthlyAmount: '342000', healthGrade: '24', pensionGrade: '21' }),
+    // 11/27：例を増やした（資格取得時・育休等終了時）
+    row({ employeeNumber: 'E004', from: '2026-04', reason: '資格取得時', monthlyAmount: '240000' }),
+    row({ employeeNumber: 'E007', from: '2027-01', reason: '育休等終了時改定', monthlyAmount: '260000' }),
   ];
 }
 

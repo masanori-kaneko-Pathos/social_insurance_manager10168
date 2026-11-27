@@ -6,6 +6,7 @@ import { CERTIFICATE_CSV_HEADERS, OVERSEAS_CSV_HEADERS } from './abroad-csv';
 import { DEPENDENT_CSV_HEADERS } from './dependent-csv';
 import { EMPLOYEE_CSV_HEADERS } from './employee-csv';
 import { CONTRACT_HISTORY_HEADERS, REMUNERATION_HISTORY_HEADERS } from './history-csv';
+import { LEAVE_CSV_HEADERS } from './leave-csv';
 
 const SEX = choices('employee.sex', [
   ['男', 'male'],
@@ -184,4 +185,13 @@ export const OVERSEAS_FIX_FIELDS = byHeader(OVERSEAS_CSV_HEADERS, {
   ]),
   certificateFrom: DATE,
   certificateTo: DATE,
+});
+
+/** 休業の履歴の取り込み（11/27） */
+export const LEAVE_FIX_FIELDS = byHeader(LEAVE_CSV_HEADERS, {
+  kind: LEAVE,
+  start: DATE,
+  end: DATE,
+  birth: DATE,
+  filed: DATE,
 });

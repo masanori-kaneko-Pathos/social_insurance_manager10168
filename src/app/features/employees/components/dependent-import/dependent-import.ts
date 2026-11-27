@@ -1,3 +1,4 @@
+import { OpenRow } from '../../../../shared/components/import-issues/open-row';
 import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -58,7 +59,7 @@ const PARALLEL = 8;
  */
 @Component({
   selector: 'app-dependent-import',
-  imports: [
+  imports: [OpenRow, 
     PersonName,
     IssueRow,
     ImportSteps,

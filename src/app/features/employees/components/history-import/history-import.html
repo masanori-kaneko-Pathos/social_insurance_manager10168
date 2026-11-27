@@ -86,7 +86,7 @@
         <summary>{{ 'historyCsv.skipped' | transloco: { n: pv.plan.skipped.length } }}</summary>
         <ul class="sub">
           @for (s of pv.plan.skipped; track s.line) {
-            <li>{{ 'historyCsv.skippedItem' | transloco: { line: s.line, number: s.employeeNumber, id: s.id } }}</li>
+            <li>{{ 'historyCsv.skippedItem' | transloco: { line: s.line - 1, number: s.employeeNumber, id: s.id } }}</li>
           }
         </ul>
       </details>
@@ -116,9 +116,9 @@
           <tbody>
             @for (x of fix.withIssues(pv.plan.items); track x.line) {
               @if (x.item; as it) {
-                <tr [class.has-issue]="!!x.issue" [class.warn]="it.warnings.length > 0">
-                  <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line }" /></td>
-                  <td class="num">{{ it.line }}</td>
+                <tr [appOpenRow]="x.line" [openFix]="fix" [class.has-issue]="!!x.issue" [class.warn]="it.warnings.length > 0">
+                  <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line - 1 }" /></td>
+                  <td class="num">{{ it.line - 1 }}</td>
                   <td class="emp-no">{{ it.employeeNumber }}</td>
                   <td>@if (employeeOf(it.employeeId); as e) { <app-person-name [person]="e" /> } @else { {{ it.name }} }</td>
                   <td class="mono">{{ it.id }}</td>
@@ -142,7 +142,7 @@
                       }
                     </td>
                   }
-                  <td class="act-col"><button type="button" class="btn btn-small" [disabled]="fix.busy()" (click)="fix.openLine(x.line)">{{ 'importFix.check' | transloco }}</button></td>
+                  <td class="act-col open-mark" aria-hidden="true">›</td>
                 </tr>
               } @else if (x.issue; as is) {
                 <tr app-issue-row [issue]="is" [fix]="fix" [cols]="issueCols()"></tr>

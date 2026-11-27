@@ -56,11 +56,16 @@ export interface EntryChoiceItem {
     </ng-template>
   `,
   styles: `
+    /* 11/27：入り口の並びを、薄い色の地と左のオレンジの線の箱で囲む（「画面だけで分かる」ように、することの場所を目立たせる） */
     .entry {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
       gap: var(--space-sm);
       margin-bottom: var(--space-md);
+      padding: var(--space-sm);
+      background: color-mix(in srgb, var(--color-primary) 9%, transparent);
+      border-left: 4px solid var(--color-primary);
+      border-radius: var(--radius-md);
     }
     /* カードが1枚だけ（依頼を作成）のときは、2枚並ぶ画面の1枚と同じ幅（横いっぱいの帯にしない。11/27） */
     .entry:has(> :only-child) {

@@ -264,6 +264,12 @@ function readYmd(raw: string): { y: number; m: number; d: number | null } | null
   return null;
 }
 
+/** 日付の形は読めるが、その日がない（2026/02/30 など）か（11/27。「形で入力」と出すと不自然なため分ける） */
+export function isImpossibleDate(raw: string): boolean {
+  const p = readYmd(raw.trim());
+  return !!p && p.d !== null && realDate(p.y, p.m, p.d) === null;
+}
+
 /** 日付を 'YYYY-MM-DD' に。読めなければ元の文字のまま */
 export function normalizeDate(raw: string): string {
   const t = raw.trim();

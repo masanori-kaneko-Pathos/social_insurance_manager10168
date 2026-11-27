@@ -224,3 +224,11 @@
   margin: 0 0 var(--space-xs);
   font-weight: 600;
 }
+
+/* 「ファイルでは n 行目」（11/27） */
+.file-line {
+  margin-left: var(--space-sm);
+  font-size: var(--font-xs);
+  font-weight: 400;
+  color: var(--color-text-sub);
+}

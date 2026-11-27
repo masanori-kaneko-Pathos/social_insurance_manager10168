@@ -13,6 +13,7 @@ import { emptyLeave } from '../../../core/models/employee';
 import type { GradeTableDoc } from '../../../core/models/rates';
 import type { RemunerationInput } from '../../../core/models/remuneration';
 import { isBlankRow } from '../../../shared/csv/csv';
+import { isImpossibleDate, normalizeDate, normalizeMonth } from '../../../shared/import/column-map';
 import { DATE_RE, toYearMonth, YEAR_MONTH_RE } from '../../../shared/utils/date';
 import { formatHours, parseNat } from '../../../shared/utils/number';
 import {
@@ -168,25 +169,30 @@ export function yesNo(s: string): boolean | null | undefined {
   return undefined;
 }
 
-/** 日付：'2026-04-01'・'2026/4/1' を読む（空は ''、読めなければ undefined） */
+/**
+ * 日付を読む（空は ''、読めなければ undefined）
+ * 11/27：取り込みの直す窓と同じ読み方にした（和暦・「2026年4月1日」・Excel の日付の数・全角も読む。column-map の normalizeDate）
+ */
 export function readDate(s: string): string | undefined {
   const t = toHalfWidth(s).trim();
   if (t === '') return '';
-  const m = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/.exec(t);
-  if (!m) return undefined;
-  const d = `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
-  if (!DATE_RE.test(d)) return undefined;
-  // 2/30 のような日はない
-  const dt = new Date(`${d}T00:00:00Z`);
-  return dt.toISOString().slice(0, 10) === d ? d : undefined;
+  if (isImpossibleDate(t)) return undefined;
+  const d = normalizeDate(t);
+  return DATE_RE.test(d) ? d : undefined;
 }
+
+/**
+ * 2つの欄を比べるエラーの、もう一方の欄（11/27）。直す窓で両方を出す（入社日だけ出ていて、生年月日を直せなかったため）
+ */
+export const RELATED_COLUMNS: Readonly<Record<string, readonly EmployeeColumn[]>> = {
+  hireBeforeBirth: ['birthDate', 'hireDate'],
+  retireBeforeHire: ['hireDate', 'retireDate'],
+};
 
 export function readMonth(s: string): string | undefined {
   const t = toHalfWidth(s).trim();
   if (t === '') return '';
-  const m = /^(\d{4})[-/.](\d{1,2})$/.exec(t);
-  if (!m) return undefined;
-  const v = `${m[1]}-${m[2].padStart(2, '0')}`;
+  const v = normalizeMonth(t);
   return YEAR_MONTH_RE.test(v) ? v : undefined;
 }
 
@@ -325,7 +331,7 @@ export function pick<T extends string>(dict: Dict<T>, s: string): T | null | und
 /** 申出日の列で「申出がまだ」を表す言葉（NFKC・小文字にして比べる） */
 const NOT_FILED_WORDS = ['未申出', 'まだ', '申出前', 'なし', 'no', 'not filed'];
 
-function readLeave(
+export function readLeave(
   v: Partial<Record<EmployeeColumn, string>>,
   n: 1 | 2,
   errors: CsvRowError[],
@@ -403,7 +409,8 @@ function readRow(line: number, v: Partial<Record<EmployeeColumn, string>>): Empl
     ['optInDate', optInDate],
     ['optOutDate', optOutDate],
   ];
-  for (const [c, d] of dates) if (d === undefined) err(c, 'date');
+  // 形は読めるがその日がない（2026/02/30）は、形の知らせと分ける（11/27）
+  for (const [c, d] of dates) if (d === undefined) err(c, isImpossibleDate(get(c)) ? 'noSuchDate' : 'date');
   if (hireDate && retireDate && retireDate < hireDate) err('retireDate', 'retireBeforeHire');
   if (birthDate && hireDate && hireDate <= birthDate) err('hireDate', 'hireBeforeBirth');
 
@@ -565,6 +572,34 @@ export interface ImportContext {
  * 資格取得時決定の標準報酬が、今日も使われているか（11/24）
  * 1〜5月の取得はその年の9月分、6〜12月の取得は翌年の9月分から定時決定に変わる
  */
+/**
+ * 入社の日は加入しない人が、今日までに加入に変わった日（なければ null。11/27）
+ * 見る日：加入の基準が変わった日（賃金要件の撤廃など）と、特定適用事業所になった日。契約は取り込む1件（入社の日から）
+ */
+function insuredSince(
+  e: EmployeeFormInput,
+  contract: ContractInput,
+  ctx: { office: ClassifyOffice; criteria: ClassifyCriteria[]; today?: string },
+): string | null {
+  const today = ctx.today!;
+  const points = [
+    ...ctx.criteria.map((c) => (c.from.length === 7 ? `${c.from}-01` : c.from)),
+    ...(ctx.office.specificApplication?.since ? [ctx.office.specificApplication.since.length === 7 ? `${ctx.office.specificApplication.since}-01` : ctx.office.specificApplication.since] : []),
+  ]
+    .filter((d) => d > e.hireDate && d <= today && (!e.retireDate || d <= e.retireDate))
+    .sort();
+  for (const d of [...new Set(points)]) {
+    const c = classify(
+      { birthDate: e.birthDate, optInDate: e.optInDate, optOutDate: e.optOutDate, contracts: [contract] },
+      ctx.office,
+      ctx.criteria,
+      d,
+    );
+    if (isInsured(c)) return d;
+  }
+  return null;
+}
+
 function acquisitionStillUsed(from: string, today: string | undefined): boolean {
   if (!today) return true;
   const year = Number(from.slice(0, 4));
@@ -574,9 +609,11 @@ function acquisitionStillUsed(from: string, today: string | undefined): boolean 
 
 export type ImportWarning =
   | 'notInsured' // 区分の判定で加入しない（理由は classification）
+  | 'insuredLater' // 入社の日は加入しないが、今日までに加入に変わった（その日から加入。11/27）
+  | 'noGradeTable' // 標準報酬の開始月の等級表がない（等級は計算しない。11/27）
+  | 'needsHistory' // 入社が昔で資格取得時の報酬月額がない（標準報酬は履歴の取り込みで。11/27）
   | 'unknownCategory' // 判定できない（所定が空など）→ 加入しないで登録する
   | 'override' // 加入を列で上書きした
-  | 'oldTable' // 標準報酬の開始月に等級表がなく、いちばん古い表で出した
   | 'unknownDepartment' // 部署の名前が事業所の部署にない（部署なしで登録する）
   | 'expectedCopied' // 見込みの報酬月額が空で、所定内賃金を写して標準報酬を出した（通勤手当などが入っていない。11/24）
   | 'sameNameBirth'; // 社員番号は違うが、氏名・生年月日が同じ人が登録済みかファイルの前の行にいる（二重登録かも。止めない。11/17）
@@ -707,12 +744,18 @@ export function planImport(rows: EmployeeCsvRow[], ctx: ImportContext): ImportPl
     if (classification.category === 'unknown') warnings.push('unknownCategory');
     else if (!auto) warnings.push('notInsured');
 
-    const health = p.healthOverride ?? auto;
-    const pension = p.pensionOverride ?? auto;
+    // 11/27：入社の日に加入しなくても、今日までに加入に変わっていれば（基準の改正・特定適用事業所になった日など）、
+    // その日から加入として取り込む。前は入社の日の判定だけで決めていたので、取り込んだ直後に期限切れの資格取得届が大量に出ていた
+    const becameInsured = !auto && p.healthOverride === null && p.pensionOverride === null && ctx.today
+      ? insuredSince(e, p.contract, ctx)
+      : null;
+    const health = p.healthOverride ?? (auto || becameInsured !== null);
+    const pension = p.pensionOverride ?? (auto || becameInsured !== null);
+    if (becameInsured) warnings.push('insuredLater');
     if ((p.healthOverride !== null && p.healthOverride !== auto) || (p.pensionOverride !== null && p.pensionOverride !== auto)) {
       warnings.push('override');
     }
-    const dates = defaultEnrollmentDates(e.hireDate, e.retireDate);
+    const dates = defaultEnrollmentDates(becameInsured ?? e.hireDate, e.retireDate);
     const enrollment = (on: boolean) => ({
       enrolled: on,
       acquiredDate: on ? dates.acquiredDate : null,
@@ -727,7 +770,7 @@ export function planImport(rows: EmployeeCsvRow[], ctx: ImportContext): ImportPl
     // 標準報酬（資格取得時決定）：加入する人だけ
     let remuneration: RemunerationInput | null = null;
     if (health || pension) {
-      const from = p.remunerationFrom ?? toYearMonth(e.hireDate);
+      const from = p.remunerationFrom ?? toYearMonth(becameInsured ?? e.hireDate);
       const amount = p.monthlyAmount ?? p.contract.expectedCash + p.contract.expectedInKind;
       // 所定内賃金は通勤手当・残業代を除いた額なので、写したままだと標準報酬が低く出ることがある
       // 定時決定に変わったあとの人は、今の保険料に効かないので知らせない
@@ -739,13 +782,14 @@ export function planImport(rows: EmployeeCsvRow[], ctx: ImportContext): ImportPl
       ) {
         warnings.push('expectedCopied');
       }
-      const oldest = (kind: 'health' | 'pension') =>
-        ctx.gradeTables.filter((t) => t.kind === kind).sort((a, b) => a.from.localeCompare(b.from))[0] ?? null;
-      const table = (kind: 'health' | 'pension') => pickGradeTable(ctx.gradeTables, kind, from) ?? oldest(kind);
-      const ht = table('health');
-      const pt = table('pension');
-      if (ht && pt) {
-        if (!pickGradeTable(ctx.gradeTables, 'health', from)) warnings.push('oldTable');
+      // 11/27：等級表より前の月は、等級を計算しない（一番古い表で計算すると、間違った等級を正しそうに見せるため）
+      // 入社が昔で、資格取得時の報酬月額の列もない人は、今の契約の見込みから昔の標準報酬を作らない（履歴の取り込みで入れてもらう）
+      const ht = pickGradeTable(ctx.gradeTables, 'health', from);
+      const pt = pickGradeTable(ctx.gradeTables, 'pension', from);
+      const guessedOld = p.monthlyAmount == null && !acquisitionStillUsed(from, ctx.today);
+      if (!ht || !pt) warnings.push('noGradeTable');
+      else if (guessedOld) warnings.push('needsHistory');
+      else {
         remuneration = {
           from,
           reason: 'acquisition',
@@ -788,6 +832,39 @@ export function employeeCsvTemplate(): string[][] {
       employeeNumber: 'E002', lastName: '佐藤', firstName: '花子', lastNameKana: 'サトウ', firstNameKana: 'ハナコ',
       birthDate: '1995-08-01', sex: '女', hireDate: '2026-10-01', employmentType: 'パート', payType: '時給',
       weeklyHours: '20:00', monthlyDays: '12', hourlyWage: '1200', scheduledWage: '104000', expectedCash: '110000', student: 'いいえ',
+    }),
+    // 11/27：例を増やした（日給月給・有期契約・外国籍・退職済み・休業中・昼間の学生）
+    row({
+      employeeNumber: 'E003', lastName: '鈴木', firstName: '一郎', lastNameKana: 'スズキ', firstNameKana: 'イチロウ',
+      birthDate: '1985-01-20', sex: '男', hireDate: '2018-04-01', employmentType: '正社員', payType: '日給月給',
+      weeklyHours: '40:00', monthlyDays: '21', scheduledWage: '320000', expectedCash: '335000', department: '営業部',
+    }),
+    row({
+      employeeNumber: 'E004', lastName: '高橋', firstName: '美咲', lastNameKana: 'タカハシ', firstNameKana: 'ミサキ',
+      birthDate: '1998-11-11', sex: '女', hireDate: '2026-04-01', employmentType: '契約社員', payType: '月給',
+      weeklyHours: '40:00', monthlyDays: '21', scheduledWage: '230000', expectedCash: '240000', periodEnd: '2027-03-31', renewal: '更新する場合がある',
+    }),
+    row({
+      employeeNumber: 'E005', lastName: 'スミス', firstName: 'ジョン', lastNameKana: 'スミス', firstNameKana: 'ジョン',
+      birthDate: '1983-07-04', sex: '男', hireDate: '2024-04-01', employmentType: '正社員', payType: '月給',
+      weeklyHours: '40:00', monthlyDays: '21', scheduledWage: '450000', expectedCash: '460000',
+      nationality: 'US', romanLastName: 'SMITH', romanFirstName: 'JOHN',
+    }),
+    row({
+      employeeNumber: 'E006', lastName: '田中', firstName: '健太', lastNameKana: 'タナカ', firstNameKana: 'ケンタ',
+      birthDate: '1979-03-15', sex: '男', hireDate: '2010-04-01', retireDate: '2026-03-31', retireReason: '自己都合',
+      employmentType: '正社員', payType: '月給', weeklyHours: '40:00', monthlyDays: '21', scheduledWage: '380000', expectedCash: '390000',
+    }),
+    row({
+      employeeNumber: 'E007', lastName: '伊藤', firstName: '恵', lastNameKana: 'イトウ', firstNameKana: 'メグミ',
+      birthDate: '1992-09-09', sex: '女', hireDate: '2016-04-01', employmentType: '正社員', payType: '月給',
+      weeklyHours: '40:00', monthlyDays: '21', scheduledWage: '300000', expectedCash: '310000',
+      leave1Kind: '産休', leave1Start: '2026-06-01', leave1End: '2026-09-07', leave1Birth: '2026-07-13', leave1Filed: '2026-05-20',
+    }),
+    row({
+      employeeNumber: 'E008', lastName: '渡辺', firstName: '陸', lastNameKana: 'ワタナベ', firstNameKana: 'リク',
+      birthDate: '2005-05-05', sex: '男', hireDate: '2026-04-01', employmentType: 'アルバイト', payType: '時給',
+      weeklyHours: '25:00', monthlyDays: '16', hourlyWage: '1150', scheduledWage: '92000', expectedCash: '92000', student: '昼間',
     }),
   ];
 }

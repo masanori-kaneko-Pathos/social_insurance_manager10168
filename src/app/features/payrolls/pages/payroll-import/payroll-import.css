@@ -325,8 +325,66 @@ td.mono {
 }
 
 .month-totals li {
-  display: flex;
-  flex-wrap: wrap;
+  /* 月・人数・合計を欄にそろえる（1桁と2桁の月で、右の文字がずれないように。11/27） */
+  display: grid;
+  grid-template-columns: 9em 4.5em max-content;
   align-items: baseline;
   gap: var(--space-xs) var(--space-md);
+  font-variant-numeric: tabular-nums;
+}
+.month-totals li > :first-child {
+  white-space: nowrap;
+}
+.month-totals li > .sub {
+  text-align: right;
+}
+
+/* ===== 11/27：行を押すと窓が開く（「詳細」ボタンをやめた）・エラーの行はピンク ===== */
+tr.open-row {
+  cursor: pointer;
+}
+tr.open-row:hover td {
+  background: var(--color-hover);
+}
+tr.open-row:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+td.open-mark {
+  width: 1.5em;
+  color: var(--color-text-sub);
+  text-align: center;
+}
+tr.err-row td,
+tr.err-row:hover td {
+  background: var(--color-danger-bg, #fdeceb);
+}
+
+/* ===== 分類が決まっていない列（11/27） ===== */
+.unknown-cols {
+  border: 1px solid var(--color-danger-text);
+  background: var(--color-danger-bg, #fdeceb);
+}
+.unknown-cols h3 {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-md);
+}
+.unknown-list {
+  display: grid;
+  gap: var(--space-xs);
+  margin: var(--space-sm) 0;
+}
+.unknown-row {
+  display: grid;
+  grid-template-columns: 14em 18em;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.unknown-name {
+  font-weight: 600;
+}
+.unknown-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
 }

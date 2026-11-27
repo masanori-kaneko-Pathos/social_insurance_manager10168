@@ -28,7 +28,11 @@
   @if (open(); as it) {
     <form class="dialog-body" (submit)="$event.preventDefault(); save()">
       <header class="dialog-head">
-        <h2 id="fix-dialog-title">{{ 'importFix.dialogTitle' | transloco: { line: it.line } }}</h2>
+        <h2 id="fix-dialog-title">
+          {{ 'importFix.dialogTitle' | transloco: { line: it.line - 1 } }}
+          <!-- 1件目 ＝ ファイルの2行目（見出しの行を数えない。11/27）。ファイルで探す人のために添える -->
+          <small class="file-line">{{ 'importFix.fileLine' | transloco: { line: it.line } }}</small>
+        </h2>
         <button type="button" class="close-btn" (click)="close()" [attr.aria-label]="'common.close' | transloco">×</button>
       </header>
 
@@ -80,7 +84,7 @@
               <tbody>
                 @for (n of neighbors(); track n.line) {
                   <tr>
-                    <td class="num">{{ n.line }}</td>
+                    <td class="num">{{ n.line - 1 }}</td>
                     @for (h of neighborHeaders(); track h) {
                       <td>{{ valueOf(n.rec, h) }}</td>
                     }

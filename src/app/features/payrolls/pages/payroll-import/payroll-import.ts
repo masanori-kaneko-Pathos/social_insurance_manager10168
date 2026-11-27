@@ -1,3 +1,4 @@
+import { OpenRow } from '../../../../shared/components/import-issues/open-row';
 import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -31,7 +32,7 @@ import {
   payrollLabels,
   PAYROLL_TABLE_SPEC,
   payrollFileName,
-  readPayrollCsv, PAYROLL_FIX_FIELDS, scheduleFor, monthTotalsOf } from '../../logic/payroll-csv';
+  readPayrollCsv, PAYROLL_FIX_FIELDS, PAYROLL_IMPORT_FIELDS, scheduleFor, monthTotalsOf } from '../../logic/payroll-csv';
 import { monthsBetween, shiftMonth, todayLocal } from '../../../../shared/utils/date';
 import { latestPaidMonth } from '../../logic/payroll-rows';
 import { payrollOf, premiumMonthOfPay } from '../../../office/office-settings';
@@ -42,7 +43,8 @@ import { PayrollItemService } from '../../payroll-item.service';
 import { ContractService } from '../../../employees/contract.service';
 import { contractAt } from '../../../employees/logic/contract-form-model';
 import { ContractDoc } from '../../../../core/models/contract';
-import { PayrollItem } from '../../../../core/models/payroll-item';
+import { PAYROLL_ITEM_CATEGORIES, PayrollItem, PayrollItemCategory, PayrollItemInput } from '../../../../core/models/payroll-item';
+import { guessMapping, normalizeNumber } from '../../../../shared/import/column-map';
 import { categoryOf } from '../../logic/payroll-lines';
 import { PaySchedule, periodOf } from '../../logic/payroll-rows';
 
@@ -87,7 +89,7 @@ interface Preview {
 
 @Component({
   selector: 'app-payroll-import',
-  imports: [YmPipe, PersonName, Pager, IssueRow, ImportSteps, ImportPicker, ColumnMapper, ExportDialog, HalfWidthDigits, ImportIssues, RouterLink, TranslocoPipe, FormsModule],
+  imports: [OpenRow, YmPipe, PersonName, Pager, IssueRow, ImportSteps, ImportPicker, ColumnMapper, ExportDialog, HalfWidthDigits, ImportIssues, RouterLink, TranslocoPipe, FormsModule],
   templateUrl: './payroll-import.html',
   styleUrl: './payroll-import.css',
 })
@@ -135,12 +137,71 @@ export class PayrollImport {
    */
   readonly tableSpec = computed(() => ({
     ...PAYROLL_TABLE_SPEC,
-    passThrough: (h: string) => categoryOf(h.trim(), this.payrollItems()) !== null,
+    passThrough: (h: string) => categoryOf(h.trim(), this.allItems()) !== null,
     // 明細の内訳の列があれば、通貨によるものの額・うち固定的賃金は選ばずに内訳から計算して見せる（11/25）
-    derived: (headers: readonly string[]) => payrollDerived(headers, this.payrollItems()),
+    derived: (headers: readonly string[]) => payrollDerived(headers, this.allItems()),
   }));
   /** 給与の項目と、内訳のひな形（内訳の列を見分ける・書き出す。11/24） */
   readonly payrollItems = signal<PayrollItem[]>([]);
+
+  // ----- 分類が決まっていない列（11/27） -----
+  // 給与の項目にない見出しの数の列（「通勤手当（日額）」「調整手当」など）は、前は黙って読み飛ばしていた。
+  // そのせいで内訳の合計が総支給額と合わず、的外れなエラーになっていた。取り込む前に分類を選んでもらう
+  readonly categories = PAYROLL_ITEM_CATEGORIES;
+  /** この取り込みで分類を選んだ列（取り込んだら事業所の給与の項目にも登録する） */
+  readonly extraItems = signal<PayrollItemInput[]>([]);
+  /** 「使わない」にした列 */
+  readonly skippedCols = signal<ReadonlySet<string>>(new Set());
+  /** 事業所の項目と、この取り込みで選んだ分類 */
+  readonly allItems = computed<PayrollItemInput[]>(() => [...this.payrollItems(), ...this.extraItems()]);
+  /** 選んでいる途中の分類（見出し → 分類。'skip' は使わない） */
+  readonly pendingChoice = signal<Record<string, PayrollItemCategory | 'skip'>>({});
+
+  /** 読んだファイルの、分類が決まっていない数の列の見出し */
+  readonly unknownCols = computed<string[]>(() => {
+    const file = this.loaded();
+    const header = file?.tables[0]?.rows[0];
+    if (!file || !header) return [];
+    const rows = file.tables[0].rows.slice(1);
+    const known = new Set<number>(Object.values(mapHeader(header).index) as number[]);
+    for (const m of Object.values(guessMapping(header, PAYROLL_IMPORT_FIELDS))) {
+      const col = (m as { col?: number } | undefined)?.col;
+      if (col !== undefined) known.add(col);
+    }
+    const items = this.allItems();
+    const skipped = this.skippedCols();
+    const out: string[] = [];
+    header.forEach((h, j) => {
+      const name = (h ?? '').trim();
+      if (!name || known.has(j) || skipped.has(name) || categoryOf(name, items) !== null) return;
+      const values = rows.map((r) => normalizeNumber(r[j] ?? '')).filter((v) => v !== '');
+      if (values.length > 0 && values.every((v) => /^-?\d+(\.\d+)?$/.test(v))) out.push(name);
+    });
+    return out;
+  });
+
+  setChoice(col: string, v: string): void {
+    this.pendingChoice.update((c) => ({ ...c, [col]: v as PayrollItemCategory | 'skip' }));
+  }
+
+  /** 選んだ分類で読み直す */
+  applyChoices(): void {
+    const c = this.pendingChoice();
+    const add: PayrollItemInput[] = [];
+    const skip = new Set(this.skippedCols());
+    for (const col of this.unknownCols()) {
+      const v = c[col];
+      if (!v) continue;
+      if (v === 'skip') skip.add(col);
+      else add.push({ name: col, labels: [], category: v });
+    }
+    this.extraItems.update((x) => [...x, ...add]);
+    this.skippedCols.set(skip);
+    this.pendingChoice.set({});
+    if (this.lastTable) void this.showPreview(this.lastTable);
+  }
+
+  readonly allChosen = computed(() => this.unknownCols().every((c) => !!this.pendingChoice()[c]));
   private template: string[] | null = null;
   /** 従業員ごとの契約（内訳の列があるファイルのときだけ読む。基本給を固定的賃金に数えるか） */
   private contracts: Map<string, ContractDoc[]> | null = null;
@@ -192,6 +253,7 @@ export class PayrollImport {
       this.context.isAdmin() &&
       p.read.missingColumns.length === 0 &&
       (p.read.errors.length === 0 || this.skipErrors()) &&
+      this.unknownCols().length === 0 &&
       this.writes().length > 0 &&
       !this.saving()
     );
@@ -330,7 +392,7 @@ export class PayrollImport {
       const [first] = tables;
       // うちの書き出しのままなら、今までどおり確認画面へ（見出しは日本語・英語のどちらでも）。PDF はいつも列を合わせる
       // 内訳の列（基本給・通勤手当など）があるファイルは、通貨によるものの額・うち固定的賃金の列がなくてもうちの形（11/25）
-      const ours = isOurPayrollFormat(first.rows[0], this.payrollItems());
+      const ours = isOurPayrollFormat(first.rows[0], this.allItems());
       if (tables.length === 1 && !first.pdf && ours) this.showPreview(first.rows);
       else this.mapping.set(true);
     } catch (err) {
@@ -365,6 +427,9 @@ export class PayrollImport {
     this.lastTable = null;
     this.table.set(null);
     this.skipErrors.set(true);
+    this.extraItems.set([]);
+    this.skippedCols.set(new Set());
+    this.pendingChoice.set({});
   }
 
   // ===== エラーの直し方（11/17。共通の部品 app-import-issues）：窓で1行ずつ直して、すぐ確かめ直す =====
@@ -443,7 +508,7 @@ export class PayrollImport {
       // 内訳の列があるファイル・給与計算の基礎日数を給与の形から出すファイル：給与の形を見るため、契約を読む（1回だけ。11/25）
       const needsContracts =
         table.length > 0 &&
-        (lineColumnsOf(table[0], new Set(), this.payrollItems()).length > 0 ||
+        (lineColumnsOf(table[0], new Set(), this.allItems()).length > 0 ||
           mapHeader(table[0]).index.days === undefined ||
           table.slice(1).some((r) => (r[mapHeader(table[0]).index.days!] ?? '').trim() === ''));
       if (needsContracts && !this.contracts) {
@@ -454,7 +519,7 @@ export class PayrollImport {
       const schedule = this.scheduleOf(office);
       const read = readPayrollCsv(table, this.employees, schedule, {
         inKindMissing: this.inKindMissing(),
-        items: this.payrollItems(),
+        items: this.allItems(),
         payTypeOf: (id, month) => contractAt(this.contracts?.get(id) ?? [], periodOf(month, scheduleFor(schedule, id, month)).end)?.payType ?? null,
         scheduledDaysOf: (id, month) =>
           contractAt(this.contracts?.get(id) ?? [], periodOf(month, scheduleFor(schedule, id, month)).end)?.monthlyDays ?? null,
@@ -496,9 +561,12 @@ export class PayrollImport {
     this.saving.set(true);
     this.progress.set({ done: 0, total: writes.length });
     try {
+      // この取り込みで分類を選んだ列は、事業所の給与の項目にも登録する（次の取り込み・入力で同じ分類になるように）
+      const extras = this.extraItems();
       await this.payrollApi.saveMany(office.id, writes, (done) =>
         this.progress.set({ done, total: writes.length }),
       );
+      for (const it of extras) await this.itemsApi.create(office.id, it).catch((err) => console.error(err));
       this.reset();
       this.doneCount.set(writes.length);
       this.doneMonth.set(writes.reduce<string | null>((m, w) => (m === null || w.paidMonth > m ? w.paidMonth : m), null));

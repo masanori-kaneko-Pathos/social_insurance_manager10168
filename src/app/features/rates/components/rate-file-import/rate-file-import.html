@@ -82,9 +82,9 @@
         <tbody>
           @for (x of fix.withIssues(rows()); track x.line) {
             @if (x.item; as r) {
-              <tr [class.has-issue]="!!x.issue" [class.row-error]="r.status === 'error'">
-                <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line }" /></td>
-                <td class="num">{{ fromTable() ? '—' : r.line }}</td>
+              <tr [appOpenRow]="x.line" [openFix]="fix" [class.has-issue]="!!x.issue" [class.row-error]="r.status === 'error'">
+                <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line - 1 }" /></td>
+                <td class="num">{{ fromTable() ? '—' : r.line - 1 }}</td>
                 <td class="mono">{{ r.from || '—' }}</td>
                 @for (kind of kinds; track kind) {
                   <td class="num">
@@ -111,7 +111,7 @@
                     {{ 'rateDialog.csv.status.' + r.status | transloco }}
                   }
                 </td>
-                <td class="act-col"><button type="button" class="btn btn-small" [disabled]="fix.busy()" (click)="fix.openLine(x.line)">{{ 'importFix.check' | transloco }}</button></td>
+                <td class="act-col open-mark" aria-hidden="true">›</td>
               </tr>
             } @else if (x.issue; as is) {
               <tr app-issue-row [issue]="is" [fix]="fix" [span]="5"></tr>

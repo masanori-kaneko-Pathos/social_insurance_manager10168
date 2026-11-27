@@ -64,6 +64,10 @@ export function bonusCsvTemplate(): string[][] {
     BONUS_CSV_COLUMNS.map((c) => BONUS_CSV_HEADERS[c]),
     row({ employeeNumber: 'E001', name: '山田 太郎', paidDate: '2026-07-10', title: '夏季賞与', amount: '500000' }),
     row({ employeeNumber: 'E002', name: '佐藤 花子', paidDate: '2026-07-10', title: '夏季賞与', amount: '420000', inKind: '10000' }),
+    // 11/27：例を増やした（冬の賞与・決算賞与・性質つきの支給）
+    row({ employeeNumber: 'E001', name: '山田 太郎', paidDate: '2026-12-10', title: '冬季賞与', amount: '550000' }),
+    row({ employeeNumber: 'E002', name: '佐藤 花子', paidDate: '2026-12-10', title: '冬季賞与', amount: '450000' }),
+    row({ employeeNumber: 'E001', name: '山田 太郎', paidDate: '2027-03-25', title: '決算賞与', amount: '200000', nature: '決算賞与' }),
   ];
 }
 

@@ -1,3 +1,5 @@
+import { LeaveImport } from '../../components/leave-import/leave-import';
+import { OpenRow } from '../../../../shared/components/import-issues/open-row';
 import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -29,6 +31,7 @@ import {
   nextEmployeeNumber,
   planImport,
   readEmployeeCsv,
+  RELATED_COLUMNS,
 } from '../../logic/employee-csv';
 import { reasonParams } from '../../logic/classify';
 import { DependentImport } from '../../components/dependent-import/dependent-import';
@@ -78,7 +81,8 @@ export type ImportMode =
   | 'bonuses'
   | 'myNumber'
   | 'certificate'
-  | 'overseas';
+  | 'overseas'
+  | 'leaves';
 export const IMPORT_MODES: readonly ImportMode[] = [
   'employees',
   'dependents',
@@ -89,6 +93,7 @@ export const IMPORT_MODES: readonly ImportMode[] = [
   'myNumber',
   'certificate',
   'overseas',
+  'leaves',
 ];
 
 /**
@@ -98,7 +103,7 @@ export const IMPORT_MODES: readonly ImportMode[] = [
 export const IMPORT_GROUPS: readonly { key: string; modes: readonly ImportMode[] }[] = [
   { key: 'pay', modes: ['payrolls', 'bonuses'] },
   { key: 'employees', modes: ['employees', 'dependents', 'myNumber'] },
-  { key: 'history', modes: ['contract', 'remuneration', 'certificate', 'overseas'] },
+  { key: 'history', modes: ['contract', 'remuneration', 'leaves', 'certificate', 'overseas'] },
 ];
 
 const MODE_ICON: Record<ImportMode, IconName> = {
@@ -111,6 +116,7 @@ const MODE_ICON: Record<ImportMode, IconName> = {
   remuneration: 'revision',
   certificate: 'filing',
   overseas: 'filing',
+  leaves: 'calendar',
 };
 
 /** どこから来たか（戻るの行き先と名前） */
@@ -140,7 +146,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-employee-import',
-  imports: [EntryChoice, YmPipe, BackLink, PersonName, IssueRow, ImportSteps, ImportPicker, PayrollImport, BonusImport, AbroadImport, ColumnMapper, DependentImport, HistoryImport, ImportIssues, PasswordGate, RouterLink, TranslocoPipe],
+  imports: [LeaveImport, OpenRow, EntryChoice, YmPipe, BackLink, PersonName, IssueRow, ImportSteps, ImportPicker, PayrollImport, BonusImport, AbroadImport, ColumnMapper, DependentImport, HistoryImport, ImportIssues, PasswordGate, RouterLink, TranslocoPipe],
   templateUrl: './employee-import.html',
   styleUrl: './employee-import.css',
 })
@@ -296,7 +302,10 @@ export class EmployeeImport {
     const t = (key: string, params?: Record<string, unknown>) => this.transloco.translate(key, params);
     const out: ImportIssue[] = this.rowErrors().map((r) => ({
       line: r.line,
-      headers: r.errors.filter((e) => e.column).map((e) => this.columnLabel(e.column)),
+      // 2つの欄を比べるエラーは、両方の欄を直せるように出す（11/27）
+      headers: [
+        ...new Set(r.errors.flatMap((e) => (RELATED_COLUMNS[e.code] ?? (e.column ? [e.column] : [])).map((c) => this.columnLabel(c)))),
+      ],
       messages: r.errors.map((e) => {
         const what = e.code.startsWith('contract.') ? t('contract.error.' + e.code.slice(9)) : t('employeeCsv.rowError.' + e.code);
         return e.column ? `${this.columnLabel(e.column)}：${what}` : what;
@@ -697,7 +706,15 @@ export class EmployeeImport {
   }
   /** 表に出す注意（「加入しない」は欄に書くので出さない。部署なしは部署の欄の「—」で分かるので出さない。11/18） */
   shownWarnings(it: ImportItem): ImportWarning[] {
-    return it.warnings.filter((w) => w !== 'notInsured' && w !== 'unknownDepartment');
+    return it.warnings.filter(
+      (w) => w !== 'notInsured' && w !== 'unknownDepartment' && !(w === 'sameNameBirth' && this.differentPeople().has(it.line)),
+    );
+  }
+
+  /** 「同じ人では？」に「別の人」と答えた行（11/27。気づいても何もできなかったため、その場で選べるようにした） */
+  readonly differentPeople = signal<ReadonlySet<number>>(new Set());
+  markDifferent(line: number): void {
+    this.differentPeople.update((s) => new Set(s).add(line));
   }
   kana(it: ImportItem): string {
     return `${it.employee.lastNameKana ?? ''} ${it.employee.firstNameKana ?? ''}`.trim() || '—';

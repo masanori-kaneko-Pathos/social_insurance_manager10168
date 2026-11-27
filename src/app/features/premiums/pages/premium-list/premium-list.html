@@ -114,7 +114,7 @@
 
   <!-- ① 給与から控除する本人負担（主役。11/26 にページの下から上へ移した） -->
   <section class="step" id="step-employee">
-    <h2 class="step-title">{{ 'premiumGuide.title.employee' | transloco }}</h2>
+    <h2 class="step-title"><span class="step-no" aria-hidden="true">1</span>{{ 'premiumGuide.title.employee' | transloco }}</h2>
     <div class="summary">
       <span class="muted">
         {{ 'premium.method.' + options().method | transloco }}・{{
@@ -399,7 +399,7 @@
     <hr class="section-sep" />
     <!-- ② 給与ソフトと照合（任意の脇道ではなく、確認済みにする前の段。11/26 に出力のメニューと上の帯から移した） -->
     <section class="step" id="step-soft">
-      <h2 class="step-title">{{ 'premiumGuide.title.soft' | transloco }}</h2>
+      <h2 class="step-title"><span class="step-no" aria-hidden="true">2</span>{{ 'premiumGuide.title.soft' | transloco }}</h2>
       <p class="hint">{{ 'premiumGuide.softLead' | transloco: { payMonth: monthParts(payMonth()).m } }}</p>
       @if (context.isAdmin()) {
         <!-- 給与ソフトとの照合は任意（しなくても確認済みにできる）。小見出しで分けて「任意」と書く（11/27） -->
@@ -639,7 +639,7 @@
     <hr class="section-sep" />
     <!-- ③ 会社が納める額（事業所全体で決まる額が主役。1人ごとの会社負担は目安。11/26） -->
     <section class="step" id="step-total">
-      <h2 class="step-title">{{ 'premiumGuide.title.total' | transloco }}</h2>
+      <h2 class="step-title"><span class="step-no" aria-hidden="true">3</span>{{ 'premiumGuide.title.total' | transloco }}</h2>
       <p class="hint">{{ 'premiumGuide.totalLead' | transloco }}</p>
       <!-- 事業所の合計（表の上。ふだんは1行の帯だけ。内訳は開いて見る。11/13） -->
       <!-- 事業所の合計：保険料一覧と賞与で同じ部品（11/17） -->
@@ -723,7 +723,7 @@
     <!-- ④ 告知額：①〜③と同じ見出しの段（11/26。前は開け閉めする欄で、ほかの段と形が違っていた） -->
     <section class="step notice" id="step-notice">
       <h2 class="step-title notice-head">
-        {{ 'premiumGuide.title.notice' | transloco }}
+        <span class="step-no" aria-hidden="true">4</span>{{ 'premiumGuide.title.notice' | transloco }}
         <span class="status s-{{ nc.status }}">{{ 'premiumNotice.status.' + nc.status | transloco }}</span>
       </h2>
       <p class="hint">

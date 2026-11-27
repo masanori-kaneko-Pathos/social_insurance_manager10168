@@ -144,7 +144,9 @@ describe('planHistoryImport：取り込みの計画', () => {
       existing: new Map(),
       gradeTables: TABLES,
     });
-    expect(plan.items[0].warnings).toContain('oldTable');
+    // 11/27：いちばん古い表では出さず、止める
+    expect(plan.items.length).toBe(0);
+    expect(plan.errors[0].code).toBe('noGradeTable');
   });
 
   it('同じ年の7〜9月に随時改定がある → 9月からの定時決定に注意。別の年・6月の随時には出さない', () => {

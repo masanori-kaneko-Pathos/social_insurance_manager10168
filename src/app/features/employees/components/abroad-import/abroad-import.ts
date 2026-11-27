@@ -1,3 +1,4 @@
+import { OpenRow } from '../../../../shared/components/import-issues/open-row';
 import { Component, computed, inject, input, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -43,7 +44,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-abroad-import',
-  imports: [PersonName, IssueRow, ImportSteps, ImportPicker, ImportIssues, RouterLink, TranslocoPipe],
+  imports: [OpenRow, PersonName, IssueRow, ImportSteps, ImportPicker, ImportIssues, RouterLink, TranslocoPipe],
   templateUrl: './abroad-import.html',
   styleUrl: '../../pages/employee-import/employee-import.css',
 })

@@ -134,6 +134,13 @@ export function dependentCsvTemplate(): string[][] {
       birthDate: '1991-02-03', from: '2026-04-01', sex: '女', livingTogether: 'はい', annualIncome: '0', occupation: '無職' }),
     row({ employeeNumber: 'E001', relationship: '長男', lastName: '山田', firstName: '一郎', lastNameKana: 'ヤマダ', firstNameKana: 'イチロウ',
       birthDate: '2020-06-10', from: '2026-04-01', sex: '男', startReason: '出生' }),
+    // 11/27：例を増やした（パートの配偶者・学生の子・別居の親）
+    row({ employeeNumber: 'E003', relationship: '夫', lastName: '鈴木', firstName: '誠', lastNameKana: 'スズキ', firstNameKana: 'マコト',
+      birthDate: '1984-04-04', from: '2026-04-01', sex: '男', livingTogether: 'はい', annualIncome: '900000', occupation: 'パート' }),
+    row({ employeeNumber: 'E003', relationship: '長女', lastName: '鈴木', firstName: '結衣', lastNameKana: 'スズキ', firstNameKana: 'ユイ',
+      birthDate: '2008-08-08', from: '2026-04-01', sex: '女', occupation: '高校生' }),
+    row({ employeeNumber: 'E007', relationship: '母', lastName: '伊藤', firstName: '紀子', lastNameKana: 'イトウ', firstNameKana: 'ノリコ',
+      birthDate: '1958-01-10', from: '2026-04-01', sex: '女', livingTogether: 'いいえ', annualIncome: '1200000', occupation: '年金受給者' }),
   ];
 }
 

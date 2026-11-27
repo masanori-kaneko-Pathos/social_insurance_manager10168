@@ -900,8 +900,24 @@ tr.clickable:focus-visible {
 }
 
 .step-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   margin: 0 0 var(--space-sm);
   font-size: var(--font-md);
+}
+/* 段の番号：オレンジの丸（11/27。「①」の文字では目に入らないため） */
+.step-no {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.6em;
+  height: 1.6em;
+  font-size: var(--font-sm);
+  font-weight: 700;
+  color: var(--color-on-primary, #fff);
+  background: var(--color-primary);
+  border-radius: 50%;
 }
 
 /* 出力（記録として見出しの行の右に。11/27） */

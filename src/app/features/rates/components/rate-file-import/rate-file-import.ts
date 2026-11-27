@@ -1,3 +1,4 @@
+import { OpenRow } from '../../../../shared/components/import-issues/open-row';
 import { Component, computed, effect, ElementRef, inject, input, output, signal, untracked, viewChild } from '@angular/core';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import type { KumiaiRateInput, MonthRange, RateMicro, RateSplit } from '../../../../core/models/rates';
@@ -31,7 +32,7 @@ type Kind = 'health' | 'care' | 'childSupport';
  */
 @Component({
   selector: 'app-rate-file-import',
-  imports: [IssueRow, ImportIssues, TranslocoPipe],
+  imports: [OpenRow, IssueRow, ImportIssues, TranslocoPipe],
   templateUrl: './rate-file-import.html',
   styleUrl: './rate-file-import.css',
 })

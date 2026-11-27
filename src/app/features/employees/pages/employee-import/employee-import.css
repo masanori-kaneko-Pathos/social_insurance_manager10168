@@ -377,3 +377,31 @@ th.leaves-col {
   margin: var(--space-lg) 0 var(--space-sm);
   font-size: var(--font-md);
 }
+
+/* ===== 11/27：行を押すと窓が開く（「詳細」ボタンをやめた）・エラーの行はピンク ===== */
+tr.open-row {
+  cursor: pointer;
+}
+tr.open-row:hover td {
+  background: var(--color-hover);
+}
+tr.open-row:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+td.open-mark {
+  width: 1.5em;
+  color: var(--color-text-sub);
+  text-align: center;
+}
+tr.err-row td,
+tr.err-row:hover td {
+  background: var(--color-danger-bg, #fdeceb);
+}
+
+/* 同じ人では？の選択（11/27） */
+.same-choice {
+  display: inline-flex;
+  gap: var(--space-sm);
+  margin-left: var(--space-xs);
+}

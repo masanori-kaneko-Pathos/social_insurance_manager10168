@@ -33,6 +33,8 @@
     <app-abroad-import [kind]="mode() === 'certificate' ? 'certificate' : 'overseas'" />
   } @else if (mode() === 'contract' || mode() === 'remuneration') {
     <app-history-import [kind]="mode() === 'contract' ? 'contract' : 'remuneration'" />
+  } @else if (mode() === 'leaves') {
+    <app-leave-import />
   } @else if (mode() === 'payrolls') {
     <app-payroll-import />
   } @else if (mode() === 'bonuses') {
@@ -176,7 +178,7 @@
                 @for (x of changedPeople(); track x.line) {
                   @for (d of x.diffs; track d.key; let first = $first) {
                     <tr>
-                      <td class="num">{{ first ? x.line : '' }}</td>
+                      <td class="num">{{ first ? x.line - 1 : '' }}</td>
                       <td class="emp-no">{{ first ? x.employeeNumber : '' }}</td>
                       <td>{{ first ? x.name : '' }}</td>
                       <td>{{ changeLabel(d.item) }}</td>
@@ -269,9 +271,9 @@
             <tbody>
               @for (x of fix.withIssues(pv.plan.items); track x.line) {
                 @if (x.item; as it) {
-                  <tr [class.has-issue]="!!x.issue" [class.warn]="it.warnings.length > 0">
-                    <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line }" /></td>
-                    <td class="num">{{ it.line }}</td>
+                  <tr [appOpenRow]="x.line" [openFix]="fix" [class.has-issue]="!!x.issue" [class.warn]="it.warnings.length > 0">
+                    <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line - 1 }" /></td>
+                    <td class="num">{{ it.line - 1 }}</td>
                     <td class="emp-no">{{ it.employee.employeeNumber }}</td>
                     <!-- 氏名とカナ（共通の部品。11/18）・部署・年齢 -->
                     <td><app-person-name [person]="it.employee" /></td>
@@ -303,6 +305,13 @@
                         }
                         @for (w of shownWarnings(it); track w) {
                           <br /><span class="badge">{{ 'employeeCsv.warning.' + w | transloco: { number: it.sameAs ?? '' } }}</span>
+                          <!-- 同じ人では？：その場で「別の人」か「取り込まない」を選ぶ（11/27） -->
+                          @if (w === 'sameNameBirth' && fix.kept(x.line)) {
+                            <span class="same-choice">
+                              <button type="button" class="link-btn" (click)="markDifferent(x.line)">{{ 'employeeCsv.same.different' | transloco }}</button>
+                              <button type="button" class="link-btn" (click)="fix.toggle(x.line)">{{ 'employeeCsv.same.skipRow' | transloco }}</button>
+                            </span>
+                          }
                         }
                       </div>
                     </td>
@@ -318,7 +327,7 @@
                       }
                     </td>
                     <td class="num">{{ it.leaves.length || '—' }}</td>
-                    <td class="act-col"><button type="button" class="btn btn-small" [disabled]="fix.busy()" (click)="fix.openLine(x.line)">{{ 'importFix.check' | transloco }}</button></td>
+                    <td class="act-col open-mark" aria-hidden="true">›</td>
                   </tr>
                 } @else if (x.issue; as is) {
                   <tr app-issue-row [issue]="is" [fix]="fix" [cols]="issueCols"></tr>
@@ -381,7 +390,7 @@
         @if (r.errors.length > 0) {
           <ul class="sub">
             @for (e of r.errors; track e.line) {
-              <li>{{ 'myNumber.import.error.' + e.code | transloco: { line: e.line, no: e.label } }}</li>
+              <li>{{ 'myNumber.import.error.' + e.code | transloco: { line: e.line - 1, no: e.label } }}</li>
             }
           </ul>
         }

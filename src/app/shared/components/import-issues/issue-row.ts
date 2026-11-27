@@ -22,7 +22,7 @@ function normLine(l: IssueLine): { hs: readonly string[]; sep: string; pre: stri
 }
 
 /**
- * 表の中の問題の行（11/17）：<tr app-issue-row [issue]="…" [fix]="fix" [cols]="表の列ごとの見出し">
+ * 表の中の問題の行（11/17。11/27：行を押すと窓が開く）：<tr app-issue-row [issue]="…" [fix]="fix" [cols]="表の列ごとの見出し">
  * 取り込んだときと同じ列に、ファイルに書いてあった値を並べる（問題の値は赤く太く）。説明は「詳細」の窓で読む
  * 表にない列の問題（ローマ字・マイナンバーなど）は札を出さない。赤い行で値の赤字がないことが「詳細」を開く合図になる（11/18）
  * cols を渡さない表では、行の中身と説明を1つの欄にまとめて出す（span は真ん中の欄の列の数）
@@ -32,7 +32,7 @@ function normLine(l: IssueLine): { hs: readonly string[]; sep: string; pre: stri
   imports: [TranslocoPipe],
   template: `
     <td class="pick-col"><input type="checkbox" disabled [attr.aria-label]="'importFix.notKept' | transloco" /></td>
-    <td class="num">{{ issue().line }}</td>
+    <td class="num">{{ issue().line - 1 }}</td>
     @if (cells().length > 0) {
       @for (c of cells(); track $index) {
         <td class="val">
@@ -45,11 +45,7 @@ function normLine(l: IssueLine): { hs: readonly string[]; sep: string; pre: stri
           }
         </td>
       }
-      <td class="act-col">
-        <button type="button" class="btn btn-small btn-primary" [disabled]="fix().busy()" (click)="fix().edit(issue())">
-          {{ 'importFix.check' | transloco }}
-        </button>
-      </td>
+      <td class="act-col open-mark" aria-hidden="true">›</td>
     } @else {
       <td [attr.colspan]="span()" class="issue-cell">
         <span class="issue-sum">{{ fix().summary(issue()) }}</span>
@@ -59,16 +55,25 @@ function normLine(l: IssueLine): { hs: readonly string[]; sep: string; pre: stri
           }
         </span>
       </td>
-      <td class="act-col">
-        <button type="button" class="btn btn-small btn-primary" [disabled]="fix().busy()" (click)="fix().edit(issue())">
-          {{ 'importFix.check' | transloco }}
-        </button>
-      </td>
+      <td class="act-col open-mark" aria-hidden="true">›</td>
     }
   `,
-  host: { class: 'issue-row' },
+  // 行を押すと窓が開く（11/27。「詳細」ボタンをやめた。キーボードは Enter・スペース）
+  host: { class: 'issue-row', tabindex: '0', '(click)': 'open()', '(keydown)': 'key($event)' },
   styles: `
     /* 表の欄の決まり（余白・線・折り返さない）は、取り込みのページの CSS からは届かないので、ここにも書く（11/18） */
+    :host {
+      cursor: pointer;
+    }
+    :host(:focus-visible) {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
+    }
+    td.open-mark {
+      width: 1.5em;
+      color: var(--color-text-sub);
+      text-align: center;
+    }
     :host td {
       padding: var(--space-xs) var(--space-sm);
       border-bottom: 1px solid var(--color-border);
@@ -124,6 +129,17 @@ function normLine(l: IssueLine): { hs: readonly string[]; sep: string; pre: stri
   `,
 })
 export class IssueRow {
+  open(): void {
+    if (window.getSelection()?.toString() || this.fix().busy()) return;
+    this.fix().edit(this.issue());
+  }
+
+  key(event: KeyboardEvent): void {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    this.open();
+  }
+
   readonly issue = input.required<ImportIssue>();
   readonly fix = input.required<ImportIssues>();
   /** 表の列（行の番号のあと）ごとに、ファイルのどの見出しの値を出すか */

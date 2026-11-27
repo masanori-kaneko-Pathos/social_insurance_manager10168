@@ -482,7 +482,7 @@ export class Dashboard {
     const o = ['/o', this.office()?.id ?? ''];
     return [
       { key: 'employees', icon: 'people', link: [...o, 'import'], params: { kind: 'employees', from: 'home' }, done: this.employees().length > 0 },
-      { key: 'payroll', icon: 'payroll', link: [...o, 'import'], params: { kind: 'payrolls', from: 'home' }, done: (this.payrollCount() ?? 0) > 0 },
+      { key: 'payroll', icon: 'payroll', link: [...o, 'payrolls'], done: (this.payrollCount() ?? 0) > 0 },
       { key: 'premiums', icon: 'premium', link: [...o, 'premiums'], done: false },
     ];
   });

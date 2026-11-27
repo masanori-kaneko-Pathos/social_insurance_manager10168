@@ -277,11 +277,13 @@ export function abroadCsvTemplate(kind: AbroadKind): string[][] {
     return [
       Object.values(CERTIFICATE_CSV_HEADERS),
       ['E007', '', 'DE', '年金と医療', '2026-04-01', '2031-03-31'],
+      ['E005', '', 'US', '年金と医療', '2024-04-01', '2029-03-31'],
     ];
   }
   return [
     Object.values(OVERSEAS_CSV_HEADERS),
     ['E030', '', 'US', '2026-10-01', '2029-09-30', '日本と海外の会社の両方', '2026-10-01', '2029-09-30', 'ロサンゼルス支店'],
+    ['E031', '', 'SG', '2027-04-01', '', '日本の会社だけ', '', '', 'シンガポール駐在員事務所'],
   ];
 }
 

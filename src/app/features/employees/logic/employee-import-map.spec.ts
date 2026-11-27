@@ -157,7 +157,7 @@ describe('従業員の取り込み：よそのファイル → 今の読み取�
     const bad = ['1', '', '山田', '', 'ヤマダ', '', '3', '1990/02/30', '2026/04/01', '', '', '', '480', '5'];
     const read = readEmployeeCsv(toOurTable([EXPORT_A, bad], m, EMPLOYEE_TABLE_SPEC));
     const errs = read.rows[0].errors.map((e) => `${e.column}:${e.code}`);
-    expect(errs).toContain('birthDate:date');
+    expect(errs).toContain('birthDate:noSuchDate');
     expect(errs).toContain('sex:choice');
     expect(read.rows[0].values.birthDate).toBe('1990/02/30');
   });

@@ -2244,6 +2244,14 @@
       "fixed": "Often basic pay only or without commuting allowance. Choose it if it is basic pay plus fixed allowances plus commuting allowance.",
       "retro": "May be a settlement of unpaid amounts. Choose it if it is back pay for a raise decided retroactively.",
       "hours": "Often includes statutory overtime. Choose it if it is scheduled hours plus non-statutory overtime only."
+    },
+    "unknown": {
+      "title": "Columns without a category: {{n}}",
+      "lead": "These columns are not in your payroll items. Choose how each is treated for social insurance. You cannot import until you choose.",
+      "pick": "Choose a category",
+      "skip": "Do not use this column",
+      "apply": "Read again with these categories",
+      "saveNote": "When you import, they are also added to your payroll items and categories."
     }
   },
   "contract": {
@@ -2791,14 +2799,16 @@
       "notInsured": "Not insured",
       "unknownCategory": "Cannot judge (registered as not insured)",
       "override": "Enrollment overridden",
-      "oldTable": "Before grade tables (oldest table used)",
       "unknownDepartment": "Department not found in office settings (registered without a department)",
       "sameNameBirth": "Same name and date of birth as {{number}}. Check for a duplicate",
-      "expectedCopied": "Expected monthly pay was blank, so the scheduled wage was copied (commuting allowance and expected overtime are not included)"
+      "expectedCopied": "Expected monthly pay was blank, so the scheduled wage was copied (commuting allowance and expected overtime are not included)",
+      "insuredLater": "Not covered on the hire date but covered later; imported as covered from that date",
+      "noGradeTable": "No grade table for the start month, so the grade was not calculated. Import the remuneration history or enter it on the employee page",
+      "needsHistory": "Hired in an earlier year, so a past standard amount is not made from the current contract. Import the remuneration history"
     },
     "planError": {
-      "duplicateInFile": "Line {{line}}: employee number {{number}} appears more than once.",
-      "alreadyExists": "Line {{line}}: employee number {{number}} already exists (only new employees can be imported)."
+      "duplicateInFile": "Row {{line}}: employee number {{number}} appears more than once.",
+      "alreadyExists": "Row {{line}}: employee number {{number}} already exists (only new employees can be imported)."
     },
     "rowError": {
       "required": "Required.",
@@ -2818,7 +2828,8 @@
       "myNumber": "Enter a 12-digit My Number whose last digit (check digit) matches.",
       "postalCode": "Enter a 7-digit postal code (with or without a hyphen).",
       "tooLong": "Too long.",
-      "historyTooMany": "Up to 30 history lines."
+      "historyTooMany": "Up to 30 history lines.",
+      "noSuchDate": "This date does not exist (such as February 30)."
     },
     "import": "Import {{n}}",
     "progress": "Importing… {{done}}/{{total}}",
@@ -2876,7 +2887,9 @@
       "button": "Change ({{n}})",
       "done": "Changed ({{n}} people).",
       "followUpsDone": "Related filings: ",
-      "toTodo": "See To-do"
+      "toTodo": "See To-do",
+      "different": "Import as a different person",
+      "skipRow": "Do not import this row"
     },
     "register": {
       "newGaps": "{{n}} people have empty items ({{text}}). Fill them in later by editing, or import a file with those columns again.",
@@ -2901,7 +2914,8 @@
       "overseas": "Overseas assignments",
       "payrolls": "Payroll",
       "myNumber": "My Number",
-      "bonuses": "Bonuses"
+      "bonuses": "Bonuses",
+      "leaves": "Leave history"
     },
     "pageLead": "Add records to registered employees: employment contracts from the second one onward, and standard monthly remuneration decisions (annual determination, occasional revision, etc.). Employees are matched by employee number. Records for a date (month) that already exists are skipped, never overwritten. Coverage (acquisition and loss dates) is not changed, so check the \"Review coverage\" items in the To-do list after importing.",
     "lead": {
@@ -2914,14 +2928,15 @@
     },
     "hasErrors": "{{n}} rows have errors. Fix them and choose the file again (nothing is imported while there are errors).",
     "planError": {
-      "unknownEmployee": "Line {{line}}: no employee is registered with number {{number}}. Register the employee first.",
-      "duplicateInFile": "Line {{line}}: {{id}} for employee number {{number}} appears more than once in the file.",
-      "beforeHire": "Line {{line}}: {{id}} for employee number {{number}} is before the hire date.",
-      "afterRetire": "Line {{line}}: {{id}} for employee number {{number}} is after the retirement date.",
-      "badGrade": "Line {{line}}: {{id}} for employee number {{number}}: the grade is not in the grade table, or there is no grade table for that month."
+      "unknownEmployee": "Row {{line}}: no employee is registered with number {{number}}. Register the employee first.",
+      "duplicateInFile": "Row {{line}}: {{id}} for employee number {{number}} appears more than once in the file.",
+      "beforeHire": "Row {{line}}: {{id}} for employee number {{number}} is before the hire date.",
+      "afterRetire": "Row {{line}}: {{id}} for employee number {{number}} is after the retirement date.",
+      "badGrade": "Row {{line}}: {{id}} for employee number {{number}}: the grade is not in the grade table, or there is no grade table for that month.",
+      "noGradeTable": "Row {{line}}: {{id}} for employee number {{number}}: no grade table is registered for that month."
     },
     "skipped": "Already registered, skipped: {{n}} (not overwritten)",
-    "skippedItem": "Line {{line}}: {{id}} for employee number {{number}}",
+    "skippedItem": "Row {{line}}: {{id}} for employee number {{number}}",
     "planTitle": {
       "contract": "Contracts to import: {{n}}",
       "remuneration": "Standard remuneration records to import: {{n}}"
@@ -4106,12 +4121,12 @@
         "body": "Register them at once from a CSV or Excel file. Coverage is determined automatically."
       },
       "payroll": {
-        "title": "Import payroll paid in month {{m}}",
-        "body": "Read the file exported from your payroll software."
+        "title": "Enter pay for month {{m}}",
+        "body": "Import a file from your payroll software, or enter one person at a time."
       },
       "premiums": {
         "title": "Check premiums",
-        "body": "See the employee and employer shares with grade, rate and formula."
+        "body": "Premiums are calculated once the standard monthly remuneration is set. Check employee and employer shares with grade, rate and formula."
       }
     },
     "import": {
@@ -4707,9 +4722,9 @@
       "done": "Registered My Numbers for {{n}} people.",
       "missing": "Could not find the employee number and My Number columns.",
       "error": {
-        "notFound": "Line {{line}}: no employee with number {{no}}",
-        "invalid": "Line {{line}}: the number for {{no}} is not valid",
-        "duplicate": "Line {{line}}: employee {{no}} appears twice"
+        "notFound": "Row {{line}}: no employee with number {{no}}",
+        "invalid": "Row {{line}}: the number for {{no}} is not valid",
+        "duplicate": "Row {{line}}: employee {{no}} appears twice"
       }
     },
     "export": {
@@ -4894,10 +4909,10 @@
   "importFix": {
     "fix": "Fix",
     "banner": "{{n}} rows have errors and are unchecked, so they will not be imported. Use \"Details\" on a red row to fix and include it.",
-    "line": "Line",
+    "line": "No.",
     "content": "Content",
     "problem": "Error",
-    "dialogTitle": "Line {{line}}",
+    "dialogTitle": "Row {{line}}",
     "otherColumns": "Other columns ({{n}})",
     "neighbors": "Other rows with the same employee number ({{n}})",
     "apply": "Fix",
@@ -4907,11 +4922,12 @@
     "blank": "(empty)",
     "fileValue": "Value in the file: {{v}}",
     "onlyIssues": "Show only rows with errors",
-    "keep": "Import line {{line}}",
+    "keep": "Import row {{line}}",
     "keepAll": "Import all rows",
     "notKept": "Has errors, so it will not be imported",
     "check": "Details",
-    "notImported": "{{n}} rows will not be imported (errors or unchecked)"
+    "notImported": "{{n}} rows will not be imported (errors or unchecked)",
+    "fileLine": "line {{line}} in the file"
   },
   "special": {
     "title": "Special revision (medical care, childcare or nursing care)",
@@ -5173,7 +5189,8 @@
       "bonuses": "One row per person per payment: paid date and bonus amount. Rows with the same paid date become one payment. Existing payments are merged: people not in the file keep their amounts.",
       "myNumber": "Add My Numbers to registered employees in one go (employee number and My Number columns). Exporting asks for your password again. Both are logged.",
       "certificate": "Add social security agreement certificates (people sent to Japan from abroad) or overseas assignments (people sent abroad from Japan) to registered employees. People are matched by employee number. Rows identical to saved data are skipped.",
-      "overseas": "Add social security agreement certificates (people sent to Japan from abroad) or overseas assignments (people sent abroad from Japan) to registered employees. People are matched by employee number. Rows identical to saved data are skipped."
+      "overseas": "Add social security agreement certificates (people sent to Japan from abroad) or overseas assignments (people sent abroad from Japan) to registered employees. People are matched by employee number. Rows identical to saved data are skipped.",
+      "leaves": "Adds leaves (maternity, childcare, suspension, etc.) to registered employees, one per row. The employee file holds only two leaves, so add the third and later here. Leaves with the same kind and start date are skipped."
     },
     "pickLead": "Choose what to import. CSV, Excel and PDF are supported.",
     "pickLabel": "What to import",
@@ -5191,7 +5208,8 @@
       "bonuses": "Import bonuses",
       "myNumber": "Import My Numbers",
       "certificate": "Import certificates of coverage",
-      "overseas": "Import overseas assignments"
+      "overseas": "Import overseas assignments",
+      "leaves": "Import leave history"
     },
     "card": {
       "payrolls": "One row per person per month. Payslip totals and more.",
@@ -5202,7 +5220,8 @@
       "contract": "Contracts from the second one on.",
       "remuneration": "Records of SMR decisions (annual, revisions).",
       "certificate": "People coming to Japan from abroad.",
-      "overseas": "People sent abroad from Japan."
+      "overseas": "People sent abroad from Japan.",
+      "leaves": "One leave per row, including the third and later."
     }
   },
   "bonusCsv": {
@@ -5793,10 +5812,10 @@
       "totalTodo": "Fixed when you mark it in ②"
     },
     "title": {
-      "employee": "1. Employee share deducted from pay",
-      "soft": "2. Mark the employee share as checked",
-      "total": "3. Amount the company pays",
-      "notice": "4. Compare with the payment notice"
+      "employee": "Employee share deducted from pay",
+      "soft": "Mark the employee share as checked",
+      "total": "Amount the company pays",
+      "notice": "Compare with the payment notice"
     },
     "softLead": "Records the employee share deducted from pay this month. Step 3 amounts are set here, and later retroactive corrections show the differences.",
     "totalLead": "Amount to pay = total withheld from employees + employer share. The employer share is set by rounding the office total (the per-person employer share in step 1 is an estimate). The child and child-rearing contribution is paid by the company alone and is included in the amount to pay.",
@@ -5882,5 +5901,20 @@
   },
   "format": {
     "yearMonth": "{{mon}} {{y}}"
+  },
+  "leaveCsv": {
+    "columns": "Columns: employee number, leave kind, start, end, birth date of the child, application date",
+    "done": "Imported {{n}} leaves.",
+    "import": "Import {{n}}",
+    "skip": "Already registered (skipped)",
+    "col": {
+      "what": "Leave"
+    },
+    "error": {
+      "unknownEmployee": "No employee is registered with this number",
+      "duplicateInFile": "The same leave (person, kind, start) appears more than once in the file",
+      "notEmployed": "The leave starts on a day the person is not employed",
+      "save": "Could not save. Please try again later."
+    }
   }
 }

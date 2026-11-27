@@ -1,3 +1,4 @@
+import { OpenRow } from '../../../../shared/components/import-issues/open-row';
 import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -60,7 +61,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-bonus-import',
-  imports: [
+  imports: [OpenRow, 
     PersonName,
     IssueRow,
     ImportSteps,

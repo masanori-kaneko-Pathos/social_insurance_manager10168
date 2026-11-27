@@ -1,0 +1,107 @@
+<section class="card">
+  <app-import-steps [hasMap]="false" [step]="doneCount() !== null ? 'done' : preview() ? 'check' : 'pick'" />
+  <app-import-picker accept=".csv,.tsv,.txt,.xlsx,.xls,text/csv" hintKey="abroadCsv.fileHint" [busy]="saving()" (picked)="onFile($event)" (template)="downloadTemplate()">
+    <div columns>
+      <p>{{ 'leaveCsv.columns' | transloco }}</p>
+    </div>
+  </app-import-picker>
+
+  @if (errorKey(); as key) {
+    <div class="alert alert-danger">{{ key | transloco }}</div>
+  }
+  @if (partial(); as p) {
+    <div class="alert alert-danger" role="alert">{{ 'importPartial.message' | transloco: { done: p.done, total: p.total } }}</div>
+  }
+  @if (doneCount() !== null) {
+    <div class="alert alert-success">
+      {{ 'leaveCsv.done' | transloco: { n: doneCount() } }}
+      <a [routerLink]="['/o', context.current()?.id, 'employees']">{{ 'employeeCsv.toList' | transloco }}</a>
+    </div>
+  }
+  @if (progress(); as p) {
+    <p class="muted">{{ 'historyCsv.progress' | transloco: { done: p.done, total: p.total } }}</p>
+    <progress [value]="p.done" [max]="p.total"></progress>
+  }
+
+  @if (preview(); as pv) {
+    <p class="file-name">
+      {{ pv.fileName }}
+      @if (pv.encoding) {
+        <span class="sub">（{{ 'payrollCsv.encoding.' + pv.encoding | transloco }}）</span>
+      }
+    </p>
+
+    @if (pv.missing.length > 0) {
+      <div class="alert alert-danger">{{ 'payrollCsv.import.missingColumns' | transloco }} {{ pv.missing.join('・') }}</div>
+    } @else {
+      <p>{{ 'abroadCsv.summary' | transloco: { add: addRows().length, skip: skipRows().length, error: errorRows().length } }}</p>
+
+      <app-import-issues
+        #fix
+        [table]="pv.table"
+        [issues]="issues()"
+        [summaryHeaders]="[header('employeeNumber')]"
+        [keyHeader]="header('employeeNumber')"
+        [upperHeaders]="[header('kind')]"
+        [fieldTypes]="fixFields"
+        fileStem="leaves"
+        [(skip)]="skipErrors"
+        [busy]="saving()"
+        (fixed)="onFix($event)"
+      />
+
+      <div class="actions top">
+        @if (fix.notImported(pv.rows); as n) {
+          <span class="skip-note">{{ 'importFix.notImported' | transloco: { n: n } }}</span>
+        }
+        <button type="button" class="btn" [disabled]="saving()" (click)="clear()">{{ 'common.cancel' | transloco }}</button>
+        <button type="button" class="btn btn-solid" [disabled]="!canImport()" (click)="importCsv()">
+          {{ 'leaveCsv.import' | transloco: { n: addRows().length } }}
+        </button>
+      </div>
+
+      <div class="table-wrap scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="pick-col"><input type="checkbox" [checked]="fix.allKept()" [disabled]="fix.busy()" (change)="fix.setAll($any($event.target).checked, pv.rows)" [attr.aria-label]="'importFix.keepAll' | transloco" /></th>
+              <th>{{ 'employeeCsv.col.line' | transloco }}</th>
+              <th>{{ 'employee.field.employeeNumber' | transloco }}</th>
+              <th>{{ 'abroadCsv.col.employee' | transloco }}</th>
+              <th>{{ 'leaveCsv.col.what' | transloco }}</th>
+              <th>{{ 'abroadCsv.col.result' | transloco }}</th>
+              <th class="act-col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (x of fix.withIssues(pv.rows); track x.line) {
+              @if (x.item; as r) {
+                <tr [appOpenRow]="x.line" [openFix]="fix" [class.has-issue]="!!x.issue" [class.err-row]="r.errors.length > 0">
+                  <td class="pick-col"><input type="checkbox" [checked]="fix.kept(x.line)" [disabled]="!!x.issue || fix.busy()" (change)="fix.toggle(x.line)" [attr.aria-label]="'importFix.keep' | transloco: { line: x.line - 1 }" /></td>
+                  <td class="num">{{ r.line - 1 }}</td>
+                  <td class="emp-no">{{ r.employee?.employeeNumber ?? '—' }}</td>
+                  <td>@if (r.employee; as e) { <app-person-name [person]="e" /> } @else { — }</td>
+                  <td class="mono">{{ what(r) }}</td>
+                  <td>
+                    @if (r.errors.length > 0) {
+                      @for (e of r.errors; track $index) {
+                        <span class="badge">{{ label(e.column) }}{{ e.column ? '：' : '' }}{{ e.code | transloco }}</span>
+                      }
+                    } @else if (r.skip) {
+                      <span class="sub">{{ 'leaveCsv.skip' | transloco }}</span>
+                    } @else {
+                      {{ 'abroadCsv.add' | transloco }}
+                    }
+                  </td>
+                  <td class="act-col open-mark" aria-hidden="true">›</td>
+                </tr>
+              } @else if (x.issue; as is) {
+                <tr app-issue-row [issue]="is" [fix]="fix" [span]="4"></tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+</section>

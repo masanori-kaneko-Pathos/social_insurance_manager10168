@@ -1,3 +1,4 @@
+import { OpenRow } from '../../../../shared/components/import-issues/open-row';
 import { Component, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -56,7 +57,7 @@ interface Preview {
  */
 @Component({
   selector: 'app-history-import',
-  imports: [PersonName, IssueRow, ImportSteps, ImportPicker, ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
+  imports: [OpenRow, PersonName, IssueRow, ImportSteps, ImportPicker, ColumnMapper, ImportIssues, RouterLink, TranslocoPipe],
   templateUrl: './history-import.html',
   styleUrl: '../../pages/employee-import/employee-import.css',
 })
@@ -253,7 +254,7 @@ export class HistoryImport {
     };
     for (const e of p.plan.errors) {
       const it = at(e.line);
-      it.messages.push(t('historyCsv.planError.' + e.code, { line: e.line, number: e.employeeNumber, id: e.id }));
+      it.messages.push(t('historyCsv.planError.' + e.code, { line: e.line - 1, number: e.employeeNumber, id: e.id }));
       if (e.code === 'unknownEmployee') it.messages.push(t('importFix.unknownEmployee'));
       for (const c of cols[e.code] ?? []) it.headers.push(this.columnLabel(c));
     }
