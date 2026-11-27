@@ -3744,8 +3744,8 @@
         "body": "\"Check advances\" reads the pay for the deduction month and marks employees whose pay (cash) is less than their share with \"Advance\" and an estimated amount. The company pays it in advance and collects it later (the app does not record collection). \"2+ offices\" marks employees working at two or more offices; their premiums are split by the pension office, so the amounts are estimates. Check the notice."
       },
       "display": {
-        "title": "Display (colors, menu, input)",
-        "body": "Choose Light, Dark or Auto (follow the computer) in Settings > Appearance at the top right. Press the orange square at the top left to collapse the left menu to icons and widen the content. Both are remembered by the browser. In the payroll month and bonus tables, Enter and arrow keys move between cells (Enter moves to the next field in the employee form)."
+        "title": "Display (colors, input)",
+        "body": "Choose Light, Dark or Auto (follow the computer) in Settings > Appearance at the top right. In the payroll month and bonus tables, Enter and arrow keys move between cells (Enter moves to the next field in the employee form)."
       },
       "payrollSoft": {
         "title": "Split with payroll software (export and cross-check)",
@@ -5129,7 +5129,6 @@
     },
     "pickLead": "Choose what to import. CSV, Excel and PDF are supported.",
     "pickLabel": "What to import",
-    "otherFiles": "Other files",
     "group": {
       "pay": "Pay and bonuses",
       "employees": "Employees",

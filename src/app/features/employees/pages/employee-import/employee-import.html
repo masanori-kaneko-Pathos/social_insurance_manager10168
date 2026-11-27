@@ -6,11 +6,8 @@
   <h1>{{ 'importPage.title' | transloco }}</h1>
   <p class="lead">{{ 'importPage.pickLead' | transloco }}</p>
 } @else {
-  <!-- 区分を決めて開いた画面：見出しに区分の名前。切り替えのボタンは出さず、「ほかのファイル ›」で選ぶ画面へ（11/27） -->
-  <div class="title-group">
-    <h1>{{ 'importPage.titleOf.' + mode() | transloco }}</h1>
-    <button type="button" class="link-btn" [disabled]="saving()" (click)="toPicker()">{{ 'importPage.otherFiles' | transloco }} ›</button>
-  </div>
+  <!-- 区分を決めて開いた画面：見出しに区分の名前。切り替えのボタンは出さない（ほかの区分はサイドバーの取り込みから。11/27） -->
+  <h1>{{ 'importPage.titleOf.' + mode() | transloco }}</h1>
 }
 
 @if (!context.isAdmin()) {

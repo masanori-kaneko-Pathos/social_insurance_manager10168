@@ -48,4 +48,17 @@ describe('アプリの中の前の画面（11/25）', () => {
     s = pushEntry(s, e('/o/1/employees/a', '?tab=pay'));
     expect(s[0].text).toBe('山田 太郎');
   });
+
+  it('年・月だけの切り替え（swap）は、いちばん上を置き換える。前の画面は変わらない（11/27）', () => {
+    let s = run(e('/o/1/employees'), e('/o/1/regular/2026'));
+    s = pushEntry(s, e('/o/1/regular/2025'), 'swap');
+    s = pushEntry(s, e('/o/1/regular/2024'), 'swap');
+    expect(s.map((x) => x.path)).toEqual(['/o/1/employees', '/o/1/regular/2024']);
+    expect(previousOf(s, '/o/1/regular/2024')?.path).toBe('/o/1/employees');
+  });
+  it('サイドバーから来て年を切り替えても、前の画面は出ない（11/27）', () => {
+    let s = pushEntry([], e('/o/1/regular/2026'), 'root');
+    s = pushEntry(s, e('/o/1/regular/2025'), 'swap');
+    expect(previousOf(s, '/o/1/regular/2025')).toBeNull();
+  });
 });

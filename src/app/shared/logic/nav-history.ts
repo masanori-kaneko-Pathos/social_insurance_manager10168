@@ -6,6 +6,8 @@
 //   back：「‹ 前の画面」で戻った。そこから後ろを捨てる（戻った先で、また今の画面に戻るリンクが出て輪にならない）
 //   root：サイドバー・ホームから来た。積んだものを全部捨てて、この画面から始める（「‹ 前の画面」は出ない）
 // - タブ・絞り込みの切り替え（同じパス）は上書き
+// - 11/27：年・月だけが違う同じ画面（定時決定の ‹ 2025年 ›、給与の ‹ 11月払い › など）への切り替えも上書き（swap）
+//   「‹ 2026年の定時決定」のように、同じ画面の別の年がパンくずに出ないように
 // - 編集・新規登録の画面は積まない（保存して詳細に移ったあとの「戻る」が、編集画面に戻らないように）
 
 export interface NavEntry {
@@ -21,8 +23,8 @@ export interface NavEntry {
 
 export const NAV_HISTORY_MAX = 30;
 
-/** どう来たか（11/27） */
-export type PushMode = 'push' | 'back' | 'root';
+/** どう来たか（11/27）。swap は同じ画面の年・月の切り替え（いちばん上を置き換える） */
+export type PushMode = 'push' | 'back' | 'root' | 'swap';
 
 /** 画面を開いたとき */
 export function pushEntry(stack: readonly NavEntry[], entry: NavEntry, mode: PushMode = 'push'): NavEntry[] {
@@ -30,6 +32,8 @@ export function pushEntry(stack: readonly NavEntry[], entry: NavEntry, mode: Pus
   // 後から決めた名前（氏名など）は、同じ画面なら残す
   const next = i >= 0 ? { ...stack[i], url: entry.url, name: entry.name } : entry;
   if (mode === 'root') return [next];
+  // 年・月の切り替え：いちばん上（切り替える前の年・月）を置き換える。前の画面はそのまま
+  if (mode === 'swap') return [...stack.slice(0, -1).filter((e) => e.path !== entry.path), next];
   if (i < 0) return [...stack, entry].slice(-NAV_HISTORY_MAX);
   // 戻った：そこから後ろを捨てる
   if (mode === 'back') return [...stack.slice(0, i), next];

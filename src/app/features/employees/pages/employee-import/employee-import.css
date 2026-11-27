@@ -372,12 +372,7 @@ th.leaves-col {
   border-radius: var(--radius-sm);
 }
 
-/* ===== 11/27：区分を選ぶ画面・区分の見出し ===== */
-.title-group {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-md);
-}
+/* ===== 11/27：区分を選ぶ画面 ===== */
 .pick-group {
   margin: var(--space-lg) 0 var(--space-sm);
   font-size: var(--font-md);

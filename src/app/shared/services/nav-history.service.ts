@@ -15,6 +15,8 @@ export class NavHistoryService {
   private readonly stack = signal<NavEntry[]>([]);
   /** 今の画面のパス */
   readonly currentPath = signal('');
+  /** 今の画面の種類（ルートの形。年・月の切り替えを見分ける。11/27） */
+  private currentPattern = '';
   /** 今の画面に、サイドバーかホームから来たか（そのときは「‹ 前の画面」を出さない。決まった行き先も出さない。11/27） */
   readonly arrivedFromRoot = signal(false);
 
@@ -25,10 +27,15 @@ export class NavHistoryService {
       // どう来たか：サイドバーのリンクは state.navRoot、「‹ 前の画面」は state.navBack。ホーム（/o/:id）からのリンクもサイドバーと同じ（11/27）
       const state = this.router.lastSuccessfulNavigation?.extras.state as { navRoot?: boolean; navBack?: boolean } | undefined;
       const fromHome = /^\/o\/[^/]+$/.test(this.currentPath()) && path !== this.currentPath();
-      const mode: PushMode = state?.navRoot || fromHome ? 'root' : state?.navBack ? 'back' : 'push';
-      // 同じ画面の中の切り替え（タブ・絞り込み）は、来た道を変えない
-      if (path !== this.currentPath()) this.arrivedFromRoot.set(mode === 'root');
+      // 年・月だけが違う同じ画面への切り替え（定時決定の ‹ 2025年 › など）は、画面の中の切り替えと同じに扱う（11/27）
+      const pattern = patternOf(leaf);
+      const hasPeriod = leaf.params['year'] !== undefined || leaf.params['month'] !== undefined;
+      const swap = hasPeriod && pattern === this.currentPattern && path !== this.currentPath() && !state?.navRoot && !state?.navBack;
+      const mode: PushMode = swap ? 'swap' : state?.navRoot || fromHome ? 'root' : state?.navBack ? 'back' : 'push';
+      // 同じ画面の中の切り替え（タブ・絞り込み・年月）は、来た道を変えない
+      if (path !== this.currentPath() && !swap) this.arrivedFromRoot.set(mode === 'root');
       this.currentPath.set(path);
+      this.currentPattern = pattern;
       const key = leaf.data['backName'] as string | undefined;
       if (!key || leaf.data['backSkip']) return;
       // 名前に差し込む値（年月の画面の「2026年7月払い」など）
@@ -61,6 +68,11 @@ function pathOf(url: string): string {
 /** 最後の段を外したパス（/o/x/settings/masters → /o/x/settings） */
 function parentOf(path: string): string {
   return path.replace(/\/[^/]+\/?$/, '');
+}
+
+/** ルートの形（/o/:officeId/regular/:year など。値は入れない） */
+function patternOf(leaf: ActivatedRouteSnapshot): string {
+  return leaf.pathFromRoot.map((r) => r.routeConfig?.path ?? '').filter((p) => p !== '').join('/');
 }
 
 function leafOf(r: ActivatedRouteSnapshot): ActivatedRouteSnapshot {

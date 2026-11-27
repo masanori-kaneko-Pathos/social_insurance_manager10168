@@ -55,7 +55,7 @@ import {
   samePersonUpdate,
 } from '../../logic/same-person-import';
 import type { FilingTaskInput } from '../../../../core/models/filing-task';
-import { UnsavedChanges, watchUnsaved } from '../../../../shared/services/unsaved-changes';
+import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { EntryChoice, EntryChoiceItem } from '../../../../shared/components/entry-choice/entry-choice';
 import type { IconName } from '../../../../shared/components/icon/icon';
 import { EMPLOYEE_FIX_FIELDS } from '../../logic/import-fix-fields';
@@ -192,22 +192,6 @@ export class EmployeeImport {
     const q = this.route.snapshot.queryParamMap;
     const want = q.get('kind') ?? q.get('mode') ?? (this.route.snapshot.data['kind'] as string | undefined) ?? '';
     return (IMPORT_MODES as readonly string[]).includes(want) ? (want as ImportMode) : null;
-  }
-
-  private readonly unsavedChanges = inject(UnsavedChanges);
-
-  /** 「ほかのファイル ›」：区分を選ぶ画面へ（読んだのに取り込んでいなければ確かめる。11/27） */
-  toPicker(): void {
-    if (!this.unsavedChanges.confirmLeave()) return;
-    this.reset();
-    this.numberRead.set(null);
-    this.numberDone.set(null);
-    this.mode.set(null);
-    void this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { kind: null, mode: null },
-      queryParamsHandling: 'merge',
-    });
   }
 
   /** 区分を切り替える（URL にも残す。読み直しても同じ区分で開く） */

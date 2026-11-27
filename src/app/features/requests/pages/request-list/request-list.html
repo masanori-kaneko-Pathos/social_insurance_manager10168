@@ -7,6 +7,8 @@
   @if (context.isAdmin()) {
     <a [routerLink]="[]" [queryParams]="{ view: null, status: null }" [class.active]="view() === 'invites'">
       {{ 'request.tab.invites' | transloco }}
+      <!-- 件数はないが、依頼・申請と同じ場所を取っておく（3つのタブの幅をそろえる。11/27） -->
+      <span class="tab-count zero" aria-hidden="true">0</span>
     </a>
   }
   <a [routerLink]="[]" [queryParams]="{ view: 'requests', status: null }" [class.active]="view() === 'requests'">
