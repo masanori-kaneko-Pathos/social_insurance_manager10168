@@ -47,6 +47,7 @@ import { PayGroupCard } from '../../components/pay-group-card/pay-group-card';
 import { ContractCard } from '../../components/contract-card/contract-card';
 import { DependentCard } from '../../components/dependent-card/dependent-card';
 import { HistoryCard } from '../../components/history-card/history-card';
+import { StatusChip, statusChips } from '../../logic/employee-status';
 import { LeaveCard } from '../../components/leave-card/leave-card';
 import { RemunerationCard } from '../../components/remuneration-card/remuneration-card';
 import { ContractService } from '../../contract.service';
@@ -401,6 +402,20 @@ export class EmployeeDetail {
 
   tabLink(t: EmployeeTab): Record<string, string | null> {
     return { tab: t === 'overview' ? null : t };
+  }
+
+  /** 概要の「状況」の札（休業・海外勤務・協定・役員・介護の適用除外。押すとそのタブ。11/28） */
+  chips(e: EmployeeFull): StatusChip[] {
+    return statusChips(
+      {
+        leaves: e.leaves,
+        overseas: e.overseas,
+        careExemptions: e.careExemptions,
+        certificate: e.foreign?.certificate ?? null,
+        officer: e.org?.officer ?? null,
+      },
+      todayLocal(),
+    );
   }
 
   /** 休業・介護保険料がかからない期間：中身があるか、「＋登録」で開いたときだけ出す */

@@ -482,7 +482,8 @@ export class Dashboard {
     const o = ['/o', this.office()?.id ?? ''];
     return [
       { key: 'employees', icon: 'people', link: [...o, 'import'], params: { kind: 'employees', from: 'home' }, done: this.employees().length > 0 },
-      { key: 'payroll', icon: 'payroll', link: [...o, 'payrolls'], done: (this.payrollCount() ?? 0) > 0 },
+      // 給与と標準報酬月額の取り込み（保険料は標準報酬月額で決まるため、給与だけの入力にしない。11/28）
+      { key: 'payroll', icon: 'payroll', link: [...o, 'import'], params: { from: 'home' } as Record<string, string>, done: (this.payrollCount() ?? 0) > 0 },
       { key: 'premiums', icon: 'premium', link: [...o, 'premiums'], done: false },
     ];
   });

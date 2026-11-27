@@ -7,8 +7,13 @@
   <div class="fix-bar">
     @if (issues().length > 0) {
       <label class="opt">
-        <input type="checkbox" [checked]="onlyIssues()" (change)="onlyIssues.set($any($event.target).checked)" />
+        <input type="checkbox" [checked]="onlyIssues()" (change)="setOnlyIssues($any($event.target).checked)" />
         {{ 'importFix.onlyIssues' | transloco }}
+      </label>
+      <!-- エラーの行（登録されていない人など）を表から消す（11/28。取り込まないのは同じ） -->
+      <label class="opt">
+        <input type="checkbox" [checked]="hideIssues()" (change)="setHideIssues($any($event.target).checked)" />
+        {{ 'importFix.hideIssues' | transloco }}
       </label>
     }
     <button type="button" class="btn btn-small" (click)="exportRows()">

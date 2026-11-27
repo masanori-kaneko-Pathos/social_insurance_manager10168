@@ -297,3 +297,29 @@
   margin: var(--space-lg) 0 var(--space-sm);
   font-size: var(--font-sm);
 }
+
+/* 給与のカードは部品の中の section なので、ページの .card の余白が届かない（11/28：標準報酬月額の下で、くっついていた） */
+app-payroll-card {
+  display: block;
+  margin-bottom: var(--space-lg);
+}
+
+/* 概要の「状況」の札（11/28） */
+.status-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+.status-chip {
+  padding: 2px var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-highlight-soft);
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.status-chip:hover {
+  border-color: var(--color-primary);
+}

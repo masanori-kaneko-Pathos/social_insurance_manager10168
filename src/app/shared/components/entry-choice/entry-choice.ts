@@ -71,6 +71,21 @@ export interface EntryChoiceItem {
     .entry:has(> :only-child) {
       grid-template-columns: minmax(18rem, calc((100% - var(--space-sm)) / 2));
     }
+    /* 4枚・5枚のとき、3列で並べると最後の段に穴があく（11/28 本人の指摘）。4枚は2列×2、5枚は上3枚・下2枚で幅いっぱいに */
+    @media (min-width: 900px) {
+      .entry:has(> :nth-child(4):last-child) {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .entry:has(> :nth-child(5):last-child) {
+        grid-template-columns: repeat(6, 1fr);
+      }
+      .entry:has(> :nth-child(5):last-child) > * {
+        grid-column: span 2;
+      }
+      .entry:has(> :nth-child(5):last-child) > :nth-child(n + 4) {
+        grid-column: span 3;
+      }
+    }
     .tile {
       display: flex;
       width: 100%;

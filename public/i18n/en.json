@@ -769,6 +769,16 @@
         "noBasicPensionNumber": "Basic pension number is not entered (Application to Enroll).",
         "noInsuredNumber": "Insured person number is not entered (enter it when the notice arrives).",
         "noAddress": "Address is not entered (Application to Enroll by basic pension number, My Page)."
+      },
+      "status": "Status",
+      "chip": {
+        "leaveNow": "On {{kind}} (until {{until}})",
+        "leaveSoon": "{{kind}} planned (from {{from}})",
+        "overseasNow": "Working abroad ({{country}}; paid by: {{payer}})",
+        "overseasSoon": "Assignment abroad planned ({{country}}, from {{from}})",
+        "certificate": "Agreement certificate ({{country}}, until {{until}})",
+        "officer": "Officer",
+        "careExempt": "Exempt from long-term care insurance"
       }
     },
     "residenceGroup": {
@@ -1001,7 +1011,7 @@
       "groupName": "Group label",
       "agreementRounding": "Rounding of the employee share (labor-management agreement)",
       "insurerNumber": "Insurer number (8 digits)",
-      "specialInsured": "Collect long-term care premiums from specified insured persons (set in the society's rules)"
+      "specialInsured": "Collect long-term care premiums from specified insured persons (set by the society's rules)"
     },
     "insurer": {
       "kyokai": "Japan Health Insurance Association (Kyokai Kenpo)",
@@ -2252,7 +2262,8 @@
       "pick": "Choose a category",
       "skip": "Do not use this column",
       "apply": "Read again with these categories",
-      "saveNote": "When you import, they are also added to your payroll items and categories."
+      "saveNote": "When you import, they are also added to your payroll items and categories.",
+      "guide": "How to choose a category (examples)"
     },
     "group": {
       "keep": "Import the pay records of {{name}}",
@@ -2814,7 +2825,7 @@
       "unknownDepartment": "Department not found in office settings (registered without a department)",
       "sameNameBirth": "Same name and date of birth as {{number}}. Check for a duplicate",
       "expectedCopied": "Expected monthly pay was blank, so the scheduled wage was copied (commuting allowance and expected overtime are not included)",
-      "insuredLater": "Not covered on the hire date but covered later; imported as covered from that date",
+      "insuredLater": "Insured from {{date}} (not insured on the hire date)",
       "noGradeTable": "No grade table for the start month, so the grade was not calculated. Import the remuneration history or enter it on the employee page",
       "needsHistory": "Hired in an earlier year, so a past standard amount is not made from the current contract. Import the remuneration history"
     },
@@ -2841,7 +2852,7 @@
       "postalCode": "Enter a 7-digit postal code (with or without a hyphen).",
       "tooLong": "Too long.",
       "historyTooMany": "Up to 30 history lines.",
-      "noSuchDate": "This date does not exist (such as February 30)."
+      "noSuchDate": "Enter a valid date."
     },
     "import": "Import {{n}}",
     "progress": "Importing… {{done}}/{{total}}",
@@ -2913,6 +2924,9 @@
       "standard": "This is the standard monthly remuneration (grade amount), not the remuneration at enrollment. Choose it if it is the amount written on the enrollment notification.",
       "healthInsured": "For health insurance societies, the health insurance number differs from the pension number. Choose it if it equals the pension insured number.",
       "dailyWage": "May be a daily commuting allowance. Choose it if it is daily pay."
+    },
+    "grade": {
+      "undecided": "Not determined"
     }
   },
   "historyCsv": {
@@ -4135,8 +4149,8 @@
         "body": "Register them at once from a CSV or Excel file. Coverage is determined automatically."
       },
       "payroll": {
-        "title": "Enter pay for month {{m}}",
-        "body": "Import a file from your payroll software, or enter one person at a time."
+        "title": "Enter pay and standard monthly remuneration",
+        "body": "Import or enter the current standard monthly remuneration (grades) and monthly pay. Premiums are set by the standard monthly remuneration; pay is used to judge revisions."
       },
       "premiums": {
         "title": "Check premiums",
@@ -4902,7 +4916,7 @@
       "sex": "The sex is not entered correctly",
       "yesNo": "Yes/no is not entered correctly",
       "date": "The date is not entered correctly",
-      "noSuchDate": "A date that does not exist is entered (e.g. February 30)",
+      "noSuchDate": "Enter a valid date",
       "save": "Saving stopped partway. Check the list for the people already imported.",
       "relationshipNote": "When the relationship is \"Other\", enter the detail (uncle, aunt, nephew, niece, etc.).",
       "ambiguousEmployee": "More than one employee matches this number (numbers that are the same without leading zeros)"
@@ -4946,7 +4960,8 @@
     "check": "Details",
     "notImported": "{{n}} rows will not be imported (errors or unchecked)",
     "fileLine": "line {{line}} in the file",
-    "zeroPadded": "The leading zeros of the employee number were missing, so they were added before matching"
+    "zeroPadded": "The leading zeros of the employee number were missing, so they were added before matching",
+    "hideIssues": "Hide error rows from the table"
   },
   "special": {
     "title": "Special revision (medical care, childcare or nursing care)",
@@ -5103,7 +5118,7 @@
       "notForeign": "This employee has no foreign information (set it in the employee form first)",
       "country": "Use a two-letter code for a country other than Japan",
       "date": "Cannot read the date. Enter it as 2026-04-01.",
-      "noSuchDate": "This date does not exist (e.g. February 30).",
+      "noSuchDate": "Enter a valid date.",
       "order": "The end is before the start",
       "covers": "Coverage must be \"pension only\" or \"pension and health\"",
       "coversUnknown": "This country is not in the agreement list; please enter the coverage",

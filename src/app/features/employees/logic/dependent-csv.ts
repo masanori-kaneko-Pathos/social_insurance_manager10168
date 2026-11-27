@@ -69,7 +69,7 @@ const WORDS: Partial<Record<DependentImportKey, readonly string[]>> = {
   birthDate: ['被扶養者の生年月日', '家族の生年月日'],
   from: ['被扶養者になった日', '扶養開始日', '認定日', '扶養認定日'],
   livingTogether: ['同居・別居', '同居区分', '同居の有無'],
-  annualIncome: ['年間収入', '年収', '収入（年額）', '年間収入の見込み'],
+  annualIncome: ['年間収入', '年収', '収入（年額）', '年間収入の見込み', '年間収入（見込み）', '年収（見込み）', '年収見込み', '年間収入見込額'],
   occupation: ['職業区分'],
   disabled: ['障害者区分', '障害'],
   to: ['被扶養者でなくなった日', '扶養終了日', '削除日'],

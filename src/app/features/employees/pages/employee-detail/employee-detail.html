@@ -73,6 +73,29 @@
               <dt>{{ 'employee.field.retireDate' | transloco }}</dt>
               <dd class="mono">{{ e.retireDate ?? '—' }}</dd>
             </div>
+            <!-- 状況の札（11/28）：休業・海外勤務・役員などを、どのタブで見るか迷わないように。押すとそのタブ -->
+            @let cs = chips(e);
+            @if (cs.length > 0) {
+              <div class="wide">
+                <dt>{{ 'employee.overview.status' | transloco }}</dt>
+                <dd class="status-chips">
+                  @for (c of cs; track c.kind) {
+                    <a class="status-chip" [routerLink]="[]" [queryParams]="tabLink(c.tab)" queryParamsHandling="merge">
+                      @switch (c.kind) {
+                        @case ('leaveNow') { {{ 'employee.overview.chip.leaveNow' | transloco: { kind: ('leave.kind.' + c.leave | transloco), until: c.until ?? '—' } }} }
+                        @case ('leaveSoon') { {{ 'employee.overview.chip.leaveSoon' | transloco: { kind: ('leave.kind.' + c.leave | transloco), from: c.from } }} }
+                        @case ('overseasNow') { {{ 'employee.overview.chip.overseasNow' | transloco: { country: c.country, payer: ('overseas.payer.' + c.payer | transloco) } }} }
+                        @case ('overseasSoon') { {{ 'employee.overview.chip.overseasSoon' | transloco: { country: c.country, from: c.from } }} }
+                        @case ('certificate') { {{ 'employee.overview.chip.certificate' | transloco: { country: c.country, until: c.until ?? '—' } }} }
+                        @case ('officer') { {{ 'employee.overview.chip.officer' | transloco }} }
+                        @case ('careExempt') { {{ 'employee.overview.chip.careExempt' | transloco }} }
+                      }
+                      ›
+                    </a>
+                  }
+                </dd>
+              </div>
+            }
             <div class="wide">
               <dt>{{ 'contract.category.today' | transloco }}</dt>
               <dd>
@@ -380,11 +403,11 @@
       }
 
       @case ('pay') {
-        <!-- ===== 給与と標準報酬 =====（タブの名前の順。よく入れる給与を上に。11/25） -->
-        <app-payroll-card [employee]="e" />
+        <!-- ===== 給与と標準報酬 =====（11/28：保険料を決める標準報酬月額を上に。給与はその下） -->
         <section class="card">
           <app-remuneration-card [employee]="e" (changed)="loadOverview()" />
         </section>
+        <app-payroll-card [employee]="e" />
       }
 
       @case ('person') {

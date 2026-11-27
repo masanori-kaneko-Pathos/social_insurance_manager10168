@@ -707,8 +707,23 @@ export class EmployeeImport {
   /** 表に出す注意（「加入しない」は欄に書くので出さない。部署なしは部署の欄の「—」で分かるので出さない。11/18） */
   shownWarnings(it: ImportItem): ImportWarning[] {
     return it.warnings.filter(
-      (w) => w !== 'notInsured' && w !== 'unknownDepartment' && !(w === 'sameNameBirth' && this.differentPeople().has(it.line)),
+      (w) =>
+        w !== 'notInsured' &&
+        w !== 'unknownDepartment' &&
+        // 標準報酬の欄に「判定できません」と書くので、札にはしない（11/28）
+        w !== 'needsHistory' &&
+        w !== 'noGradeTable' &&
+        !(w === 'sameNameBirth' && this.differentPeople().has(it.line)),
     );
+  }
+
+  /**
+   * 行を黄色にするか（11/28）：確かめて何かを決める注意だけ。ほとんどの人に当たる知らせ
+   * （加入しない・あとで加入に変わった・標準報酬は履歴で・部署なし）では黄色にしない
+   */
+  needsLook(it: ImportItem): boolean {
+    const quiet: readonly ImportWarning[] = ['notInsured', 'insuredLater', 'needsHistory', 'noGradeTable', 'unknownDepartment'];
+    return this.shownWarnings(it).some((w) => !quiet.includes(w));
   }
 
   /** 「同じ人では？」に「別の人」と答えた行（11/27。気づいても何もできなかったため、その場で選べるようにした） */

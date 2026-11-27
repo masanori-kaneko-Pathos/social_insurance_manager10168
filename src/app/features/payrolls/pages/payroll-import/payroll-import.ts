@@ -73,6 +73,7 @@ const CSV_ERRORS = new Set([
   'ambiguousName',
   'badMonth',
   'futureMonth',
+  'badForMonth',
   'notEmployed',
   'duplicate',
   'badProrated',
@@ -256,7 +257,7 @@ export class PayrollImport {
     const updated = new Set(p.updated);
     const noH = this.headerOf('employeeNumber');
     const nameH = this.headerOf('name');
-    return groupByPerson(
+    const groups = groupByPerson(
       fix.withIssues(this.allWrites()),
       (line) => {
         const e = errors.get(line);
@@ -267,7 +268,12 @@ export class PayrollImport {
       (it) => updated.has(it),
       (id) => this.employeeOf(id)?.employeeNumber ?? '',
     );
+    // エラーの行を隠すときは、エラーのある人ごと隠す（その人の月は取り込まないため。11/28）
+    const blocked = this.blocked();
+    return fix.hideIssues() ? groups.filter((g) => !g.lines.some((l) => blocked.has(l))) : groups;
   });
+  /** 分類の例（分類が決まっていない列の箱で、決め方の目安に出す。11/28） */
+  readonly categoryExamples = PAYROLL_ITEM_CATEGORIES;
 
   /** 人が決まらない行の、ファイルに書いてあった社員番号と氏名 */
   fileLabel(g: PersonGroup<ImportItem, ImportIssue>): string {

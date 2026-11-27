@@ -450,3 +450,25 @@ td.group-status .group-note {
 td.group-months .range {
   font-size: var(--font-sm);
 }
+
+/* 分類の決め方の目安（11/28） */
+.unknown-guide {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-sm);
+}
+.unknown-guide dl {
+  display: grid;
+  gap: 2px var(--space-md);
+  margin: var(--space-xs) 0 0;
+}
+.unknown-guide dl > div {
+  display: grid;
+  grid-template-columns: 9em 1fr;
+  gap: var(--space-sm);
+}
+.unknown-guide dt {
+  font-weight: 600;
+}
+.unknown-guide dd {
+  margin: 0;
+}

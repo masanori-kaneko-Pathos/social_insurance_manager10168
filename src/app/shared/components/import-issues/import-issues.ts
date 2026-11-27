@@ -79,6 +79,16 @@ export class ImportIssues {
   // ===== 表の中で直す（11/17）：親の表に問題の行を混ぜて出し、その行の「直す」で窓を開く =====
   /** 問題の行だけを表に出す */
   readonly onlyIssues = signal(false);
+  /** 問題の行を表から隠す（11/28。取り込まないことは変わらない。書き出しには入る） */
+  readonly hideIssues = signal(false);
+  setOnlyIssues(on: boolean): void {
+    this.onlyIssues.set(on);
+    if (on) this.hideIssues.set(false);
+  }
+  setHideIssues(on: boolean): void {
+    this.hideIssues.set(on);
+    if (on) this.onlyIssues.set(false);
+  }
 
   // ===== 行ごとのチェック（11/17。課題管理アプリと同じ）：外した行は取り込まない。問題の行はいつも外れている =====
   readonly excluded = signal<ReadonlySet<number>>(new Set());
@@ -132,14 +142,14 @@ export class ImportIssues {
    */
   withIssues<T extends { line: number }>(items: readonly T[], limit = Infinity): IssueRow<T>[] {
     // 同じ材料なら前の結果を使う（表を描くたびに作り直さない。給与は数千行あるため。11/17）
-    const key = [items, this.issues(), this.onlyIssues(), limit] as const;
+    const key = [items, this.issues(), this.onlyIssues(), this.hideIssues(), limit] as const;
     const memo = this.memo;
     if (memo && memo.key.every((k, i) => k === key[i])) return memo.out as IssueRow<T>[];
     const rows = new Map<number, IssueRow<T>>();
     for (const item of items.slice(0, limit)) rows.set(item.line, { line: item.line, item, issue: this.issueOf(item.line) });
     for (const issue of this.issues()) if (!rows.has(issue.line)) rows.set(issue.line, { line: issue.line, item: null, issue });
     const all = [...rows.values()].sort((a, b) => a.line - b.line);
-    const out = this.onlyIssues() ? all.filter((r) => r.issue) : all;
+    const out = this.onlyIssues() ? all.filter((r) => r.issue) : this.hideIssues() ? all.filter((r) => !r.issue) : all;
     this.memo = { key, out };
     return out;
   }
