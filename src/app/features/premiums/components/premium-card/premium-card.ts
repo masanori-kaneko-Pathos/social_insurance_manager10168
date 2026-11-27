@@ -138,6 +138,7 @@ export class PremiumCard implements OnInit {
           options,
           adjustment: this.adjustmentFor()(month),
           specialInsured: this.special()?.(month) ?? false,
+          tables,
         });
         return { month, result, error: false };
       } catch (err) {

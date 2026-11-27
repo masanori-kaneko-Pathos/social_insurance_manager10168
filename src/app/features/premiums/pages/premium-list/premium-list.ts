@@ -290,6 +290,7 @@ export class PremiumList {
         options,
         adjustmentFor: this.adjustmentOf(employee),
         specialInsuredFor: this.special().get(employee.id),
+        tables,
       }),
     }));
   }
@@ -322,6 +323,7 @@ export class PremiumList {
           options: this.options(),
           adjustment: f(m),
           specialInsured: this.special().get(employee.id)?.(m) ?? false,
+          tables,
         });
         for (const g of r.groups) {
           for (const l of g.lines) {

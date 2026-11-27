@@ -54,7 +54,7 @@ export function priorHealthOf(e: PriorBonusHolder, fiscalYear: number): number {
 }
 
 export interface BonusInput {
-  employee: CoverageInput & LeaveHolder & PriorBonusHolder;
+  employee: CoverageInput & LeaveHolder & PriorBonusHolder & { multipleOffices?: boolean };
   /** その従業員の賞与（年度の累計を出すため、同じ年度の分は全部渡す） */
   bonuses: EmployeeBonus[];
   /** 月 → その月の料率（pickRates を包んだ関数） */
@@ -201,6 +201,12 @@ export function calcBonuses(input: BonusInput): BonusPremiumResult[] {
       exempt,
       // 前の事業所の分（この賞与の保険者の累計に足したときだけ）
       priorHealth: (priorKeyOf.get(year) ?? key) === key ? priorHealthOf(employee, year) : 0,
+      // 二以上事業所勤務：この事業所の分だけで、健保の年度の上限・厚年の月の上限の半分を超えた（11/28）
+      ...(employee.multipleOffices &&
+      ((healthStatus !== 'none' && (healthCumByYear.get(key) ?? 0) > healthBonusCapOf(year) / 2) ||
+        (pensionStatus === 'charged' && (pensionSumByMonth.get(month) ?? 0) > PENSION_BONUS_CAP_PER_MONTH / 2))
+        ? { multiOfficeReview: true }
+        : {}),
     };
   });
 }

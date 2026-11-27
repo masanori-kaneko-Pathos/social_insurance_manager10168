@@ -90,6 +90,9 @@
           @if (l.reductionMilli) {
             ・{{ 'premium.slip.lineAdjustment' | transloco: { n: milli(l.reductionMilli) } }}
           }
+          @if (l.share) {
+            ・{{ 'premium.lineShare' | transloco: { own: yen(l.share.own), total: yen(l.share.total) } }}
+          }
         </span>
       </div>
     }

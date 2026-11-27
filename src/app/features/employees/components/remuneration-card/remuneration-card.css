@@ -158,3 +158,19 @@
   gap: var(--space-xs) var(--space-sm);
   margin: var(--space-sm) 0 0;
 }
+
+/* 二以上事業所勤務の按分（11/28） */
+fieldset.multi {
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: var(--radius, 6px);
+  padding: var(--space-3, 12px);
+  margin: var(--space-3, 12px) 0;
+}
+fieldset.multi legend {
+  font-weight: 600;
+  padding: 0 var(--space-1, 4px);
+}
+.multi-share {
+  font-size: var(--font-sm, 0.85em);
+  white-space: nowrap;
+}

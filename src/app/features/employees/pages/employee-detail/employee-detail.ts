@@ -243,7 +243,7 @@ export class EmployeeDetail {
           ? adjustmentForEmployee({ ...office, since, standardHours: office.standardHours ?? null }, e, contracts, criteria, rems)(month)
           : null;
       const specialInsured = this.special()?.(month) ?? false;
-      const r = calcMonthly({ month, employee: e, remunerations: rems, rates, options: premiumOf(office), adjustment, specialInsured });
+      const r = calcMonthly({ month, employee: e, remunerations: rems, rates, options: premiumOf(office), adjustment, specialInsured, tables });
       return r.exempt || r.missing.length === 0 ? r : null;
     } catch (err) {
       console.error(err);

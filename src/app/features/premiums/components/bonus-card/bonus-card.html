@@ -36,6 +36,9 @@
                     @if (r.capped) {
                       <span class="badge">{{ 'bonus.capped' | transloco }}</span>
                     }
+                    @if (r.result!.multiOfficeReview) {
+                      <span class="badge badge-warn" [title]="'bonus.multiOfficeReviewNote' | transloco">{{ 'bonus.multiOfficeReview' | transloco }}</span>
+                    }
                   </td>
                   <td class="num strong">{{ yen(r.result!.employeeYen) }}</td>
                 }

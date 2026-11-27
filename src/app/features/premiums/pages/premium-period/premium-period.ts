@@ -134,6 +134,7 @@ export class PremiumPeriod {
           ? adjustmentForEmployee(ao, e, this.contracts().get(e.id) ?? [], this.criteria(), this.remunerations().get(e.id) ?? [])
           : undefined,
         specialInsuredFor: this.special().get(e.id),
+        tables,
       }),
       payments: this.payments(),
       bonusCtx: { ratesFor, insurerOf: insurerKeyOf(office), options, specialInsuredOf: (id: string) => this.special().get(id) },

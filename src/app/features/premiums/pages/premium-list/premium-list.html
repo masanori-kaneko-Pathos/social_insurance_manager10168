@@ -283,7 +283,12 @@
                     <span class="badge badge-change" [title]="'premiumList.sameMonthNote' | transloco">{{ 'premiumList.sameMonth' | transloco }}</span>
                   }
                   @if (r.employee.multipleOffices) {
-                    <span class="badge badge-warn" [title]="'premiumList.multipleOfficesNote' | transloco">{{ 'premiumList.multipleOffices' | transloco }}</span>
+                    <!-- 按分の割合が入っていれば按分した額（11/28）。入っていなければ全額のまま（目安） -->
+                    @if (r.result?.multiOffice === 'shared') {
+                      <span class="badge badge-sub" [title]="'premiumList.multipleOfficesShared' | transloco">{{ 'premiumList.multipleOfficesSharedBadge' | transloco }}</span>
+                    } @else {
+                      <span class="badge badge-warn" [title]="'premiumList.multipleOfficesNote' | transloco">{{ 'premiumList.multipleOffices' | transloco }}</span>
+                    }
                   }
                   <!-- 給与の支払区分が違い、控除する給与の月が見出しと違う人（11/24） -->
                   @if (otherPayMonth(r.employee); as pm) {

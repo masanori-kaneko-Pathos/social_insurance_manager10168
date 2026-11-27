@@ -1342,7 +1342,29 @@
     },
     "pensionOff": "No employees' pension coverage in this month (age 70 or over, etc.), so no pension grade is chosen. Only health insurance premiums are calculated.",
     "acquireBonus": "This office pays bonuses four or more times a year ({{natures}}). At acquisition, add the average bonus-related remuneration of people in similar work receiving similar bonuses. The amount below is the average of everyone receiving it in this office ({{people}} people, {{n}} yen). To exclude people in different work, adjust the monthly amount by hand after adding (then write the filing remark yourself).",
-    "acquireBonusAdd": "Add to monthly amount"
+    "acquireBonusAdd": "Add to monthly amount",
+    "multi": {
+      "title": "Apportionment for multiple offices",
+      "lead": "Enter this office's remuneration and the total of all offices from the decision notice. Premiums are calculated as full amount × this office ÷ total. Leave blank to skip apportionment.",
+      "own": "This office's monthly remuneration",
+      "total": "Total monthly remuneration of all offices",
+      "insurer": "Health insurance selected by the employee",
+      "insurerOption": {
+        "office": "Same as this office",
+        "kyokai": "Kyokai Kenpo (choose prefecture)",
+        "other": "Another health insurance society"
+      },
+      "prefecture": "Kyokai Kenpo prefecture",
+      "selectPrefecture": "Select",
+      "otherNote": "Rates of other health insurance societies are not available, so health, long-term care and child support premiums are not calculated. Only the pension premium is apportioned.",
+      "share": "Share {{own}} ÷ {{total}}",
+      "error": {
+        "own": "Enter this office's remuneration.",
+        "total": "Enter the total of all offices.",
+        "totalLess": "The total must be at least this office's remuneration.",
+        "prefecture": "Select the Kyokai Kenpo prefecture."
+      }
+    }
   },
   "premium": {
     "title": "Premiums (monthly)",
@@ -1374,7 +1396,8 @@
     "groupSum": "Employee JPY {{before}} → rounded JPY {{after}} / Employer (est.) JPY {{employer}}",
     "missing": {
       "noRemuneration": "No standard remuneration",
-      "noRate": "No rate registered"
+      "noRate": "No rate registered",
+      "otherInsurer": "Not calculated (another health insurance society was selected)"
     },
     "error": {
       "load": "Could not load the data needed for premiums.",
@@ -1440,7 +1463,8 @@
         },
         "other": "Due to rounding or a difference in the reduction. Open the month to check the calculation."
       }
-    }
+    },
+    "lineShare": "Multiple offices: full amount × {{own}} ÷ {{total}}"
   },
   "premiumList": {
     "title": "Premiums",
@@ -1513,7 +1537,7 @@
     },
     "employerNote": "incl. fractions of ¥1",
     "multipleOffices": "2+ offices",
-    "multipleOfficesNote": "\"2+ offices\" employees work at two or more offices. Their premiums are split by each office's pay, so the amounts here are estimates. Check the notice from the pension office.",
+    "multipleOfficesNote": "\"Multi\" employees work at multiple offices. The apportionment (this office's remuneration and the total) is not entered, so the amount shown is before apportionment. Enter the amounts from the decision notice under the employee's pay tab.",
     "lastMonth": "Last month",
     "lastMonthNote": "This is the last month's premium because the employee is leaving (or has died). Premiums are deducted from the next month's pay. If there is no pay next month, deduct last month's and this month's premiums (two months) from the final pay.",
     "exemptPending": "Not applied yet",
@@ -1584,7 +1608,9 @@
       "titleOn": "Click to show everyone again",
       "rest": "only (the other {{count}} are the same as last month; totals cover everyone)"
     },
-    "purpose": "Check the employee share deducted from pay and the amount the company pays, calculated from the standard monthly remuneration. Go through steps 1 to 4 below each month."
+    "purpose": "Check the employee share deducted from pay and the amount the company pays, calculated from the standard monthly remuneration. Go through steps 1 to 4 below each month.",
+    "multipleOfficesSharedBadge": "Multi (apportioned)",
+    "multipleOfficesShared": "Works at multiple offices. The amount is apportioned as full amount × this office's remuneration ÷ total, using the decision notice."
   },
   "rateDialog": {
     "title": "Health insurance rates",
@@ -1821,7 +1847,9 @@
         "title": "Import from a file",
         "note": "Bonus list from payroll software or a spreadsheet (CSV, Excel, PDF). For several payments at once."
       }
-    }
+    },
+    "multiOfficeReview": "Multi: check",
+    "multiOfficeReviewNote": "This employee works at multiple offices, and this office's bonus alone exceeds half of the cap. Combined with other offices it may reach the cap; check against the decision notice."
   },
   "leave": {
     "title": "Leave",

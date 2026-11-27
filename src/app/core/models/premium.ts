@@ -45,6 +45,8 @@ export interface PremiumLine {
   employeeMilli: Milli; // 本人分（端数処理の前。保険料調整制度で軽減したあとの額）
   /** 保険料調整制度で本人分から引いた額（0.001円単位。会社が一時的に多く払う。なければ省く。11/16） */
   reductionMilli?: Milli;
+  /** 二以上事業所勤務の按分（全額 × own ÷ total にしたあと。なければ省く。11/28） */
+  share?: { own: number; total: number };
 }
 
 /** 端数処理をまとめて行う単位（合算なら 健保＋介護＋支援金 で1つ） */
@@ -62,7 +64,7 @@ export interface PremiumGroup {
 }
 
 /** 保険料がかかるはずなのに計算できなかった理由 */
-export type MissingReason = 'noRemuneration' | 'noRate';
+export type MissingReason = 'noRemuneration' | 'noRate' | 'otherInsurer';
 
 export interface PremiumResult {
   kind: 'monthly' | 'bonus';
@@ -79,6 +81,11 @@ export interface PremiumResult {
   exemptPending?: boolean;
   /** 特定被保険者として介護保険料をかけた（組合健保。本人は40〜64歳でない。11/26） */
   specialInsured?: boolean;
+  /**
+   * 二以上事業所勤務（11/28）：shared ＝ 按分した（全額 × この事業所の報酬 ÷ 合計）／noShare ＝ 按分の割合が入っていない（全額のまま。目安）
+   * 二以上でない人は省く
+   */
+  multiOffice?: 'shared' | 'noShare';
 }
 
 /** 賞与1回分の結果（月額の結果に、標準賞与額と上限の情報を足したもの） */
@@ -93,6 +100,11 @@ export interface BonusPremiumResult extends PremiumResult {
   pensionStatus: 'charged' | 'none';
   /** その年度の、前の事業所の健保の標準賞与額（累計に足した額。なければ 0。11/16） */
   priorHealth?: number;
+  /**
+   * 二以上事業所勤務で、この事業所の賞与だけで上限の半分を超えた（11/28）
+   * ほかの事業所の賞与と合わせると上限にかかるかもしれない。年金事務所の決定通知書の額で確かめる
+   */
+  multiOfficeReview?: boolean;
 }
 
 /** 事業所の合計（納付額・本人負担の合計・会社負担） */

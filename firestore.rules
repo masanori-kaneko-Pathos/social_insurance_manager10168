@@ -456,8 +456,17 @@ service cloud.firestore {
 
         // ----- 標準報酬月額の履歴（ID ＝ 何月分から） -----
         match /remunerations/{remMonth} {
+          // multi：二以上事業所勤務の按分（11/28。任意）
+          function validMulti(m) {
+            return m == null || (m is map && exactKeys(m, ['own', 'total', 'insurer', 'prefecture'])
+              && yen(m.own) && m.own > 0 && yen(m.total) && m.total >= m.own
+              && m.insurer in ['office', 'kyokai', 'other']
+              && (m.insurer == 'kyokai' ? (m.prefecture is string && m.prefecture.matches('^(0[1-9]|[1-3][0-9]|4[0-7])$')) : m.prefecture == null));
+          }
           function validRemuneration(d) {
-            return exactKeys(d, ['from', 'reason', 'monthlyAmount', 'health', 'pension', 'createdAt', 'updatedAt'])
+            return d.keys().hasAll(['from', 'reason', 'monthlyAmount', 'health', 'pension', 'createdAt', 'updatedAt'])
+              && d.keys().hasOnly(['from', 'reason', 'monthlyAmount', 'health', 'pension', 'createdAt', 'updatedAt', 'multi'])
+              && (!('multi' in d) || validMulti(d.multi))
               && d.from == remMonth && isMonth(remMonth)
               && d.reason in ['acquisition', 'regular', 'irregular', 'leaveEnd', 'special', 'other']
               && yen(d.monthlyAmount)

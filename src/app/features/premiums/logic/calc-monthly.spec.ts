@@ -438,3 +438,30 @@ describe('特定被保険者（組合健保。11/26）', () => {
     expect(r.specialInsured).toBeUndefined();
   });
 });
+
+describe('二以上事業所勤務の按分（11/28）', () => {
+  const R = (bp: number) => ({ employee: bp, employer: bp, from: '2026-03', source: 'kyokai' }) as any;
+  const rates = { month: '2026-10', health: R(4925), care: null, childSupport: null, pension: R(9150), childContribution: null } as any;
+  const E = { birthDate: '1991-05-10', health: { enrolled: true, acquiredDate: '2024-04-01', lostDate: null }, pension: { enrolled: true, acquiredDate: '2024-04-01', lostDate: null }, leaves: [], multipleOffices: true } as any;
+  const rem = (multi: any) => [{ from: '2024-04', health: { grade: 22, standard: 300000 }, pension: { grade: 19, standard: 300000 }, multi }];
+  it('全額 × この事業所 ÷ 合計（厚生年金 54,900円 × 20/30 ＝ 36,600円）', async () => {
+    const { calcMonthly } = await import('./calc-monthly');
+    const r = calcMonthly({ month: '2026-10', employee: E, remunerations: rem({ own: 200000, total: 300000, insurer: 'office', prefecture: null }), rates });
+    const pension = r.groups.flatMap((g) => g.lines).find((l) => l.part === 'pension')!;
+    expect(pension.totalMilli).toBe(3_660_000);
+    expect(pension.share).toEqual({ own: 200000, total: 300000 });
+    expect(r.multiOffice).toBe('shared');
+  });
+  it('割合がなければ全額のまま noShare。ほかの組合なら健保は計算しない', async () => {
+    const { calcMonthly } = await import('./calc-monthly');
+    expect(calcMonthly({ month: '2026-10', employee: E, remunerations: rem(null), rates }).multiOffice).toBe('noShare');
+    const o = calcMonthly({ month: '2026-10', employee: E, remunerations: rem({ own: 1, total: 2, insurer: 'other', prefecture: null }), rates });
+    expect(o.missing.filter((m) => m.reason === 'otherInsurer')).toEqual([{ part: 'health', reason: 'otherInsurer' }, { part: 'childSupport', reason: 'otherInsurer' }]);
+  });
+  it('二以上でない人は割合があっても按分しない', async () => {
+    const { calcMonthly } = await import('./calc-monthly');
+    const r = calcMonthly({ month: '2026-10', employee: { ...E, multipleOffices: false }, remunerations: rem({ own: 1, total: 2, insurer: 'office', prefecture: null }), rates });
+    expect(r.multiOffice).toBeUndefined();
+    expect(r.groups.flatMap((g) => g.lines).find((l) => l.part === 'pension')!.totalMilli).toBe(5_490_000);
+  });
+});

@@ -233,3 +233,16 @@ describe('calcBonuses：支払日による例外', () => {
     expect(jul.healthStatus).toBe('charged');
   });
 });
+
+describe('二以上事業所勤務の賞与（11/28）', () => {
+  it('この事業所の分だけで上限の半分を超えると要確認', async () => {
+    const { calcBonuses } = await import('./calc-bonus');
+    const R = { employee: 5, employer: 5, from: '2026-03', source: 'kyokai' } as any;
+    const rates = () => ({ month: '', health: R, care: R, childSupport: R, pension: R, childContribution: null }) as any;
+    const E = (multi: boolean) => ({ birthDate: '1991-05-10', health: { enrolled: true, acquiredDate: '2024-04-01', lostDate: null }, pension: { enrolled: true, acquiredDate: '2024-04-01', lostDate: null }, leaves: [], multipleOffices: multi }) as any;
+    const [small, big] = calcBonuses({ employee: E(true), bonuses: [{ paidDate: '2026-07-10', amount: 500000 }, { paidDate: '2026-12-10', amount: 800000 }], ratesFor: rates });
+    expect(small.multiOfficeReview).toBeUndefined();
+    expect(big.multiOfficeReview).toBeTrue();
+    expect(calcBonuses({ employee: E(false), bonuses: [{ paidDate: '2026-12-10', amount: 800000 }], ratesFor: rates })[0].multiOfficeReview).toBeUndefined();
+  });
+});

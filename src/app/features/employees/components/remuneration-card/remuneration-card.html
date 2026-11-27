@@ -96,6 +96,48 @@
       @if (formPensionOff()) {
         <p class="hint">{{ 'remuneration.pensionOff' | transloco }}</p>
       }
+      <!-- 二以上事業所勤務の按分（11/28）：決定通知書の額。空なら按分しない -->
+      @if (employee().multipleOffices) {
+        <fieldset class="multi">
+          <legend>{{ 'remuneration.multi.title' | transloco }}</legend>
+          <p class="hint">{{ 'remuneration.multi.lead' | transloco }}</p>
+          <div class="grid">
+            <div class="field">
+              <label for="rem-multi-own">{{ 'remuneration.multi.own' | transloco }}</label>
+              <input id="rem-multi-own" class="input num" inputmode="numeric" formControlName="multiOwn" />
+            </div>
+            <div class="field">
+              <label for="rem-multi-total">{{ 'remuneration.multi.total' | transloco }}</label>
+              <input id="rem-multi-total" class="input num" inputmode="numeric" formControlName="multiTotal" />
+            </div>
+            <div class="field">
+              <label for="rem-multi-insurer">{{ 'remuneration.multi.insurer' | transloco }}</label>
+              <select id="rem-multi-insurer" class="input" formControlName="multiInsurer">
+                @for (i of multiInsurers; track i) {
+                  <option [value]="i">{{ 'remuneration.multi.insurerOption.' + i | transloco }}</option>
+                }
+              </select>
+            </div>
+            @if (form.controls.multiInsurer.value === 'kyokai') {
+              <div class="field">
+                <label for="rem-multi-pref">{{ 'remuneration.multi.prefecture' | transloco }}</label>
+                <select id="rem-multi-pref" class="input" formControlName="multiPrefecture">
+                  <option value="">{{ 'remuneration.multi.selectPrefecture' | transloco }}</option>
+                  @for (p of prefectures; track p.code) {
+                    <option [value]="p.code">{{ p.ja }}</option>
+                  }
+                </select>
+              </div>
+            }
+          </div>
+          @if (form.controls.multiInsurer.value === 'other') {
+            <p class="hint warn">{{ 'remuneration.multi.otherNote' | transloco }}</p>
+          }
+          @for (k of multiErrors(); track k) {
+            <p class="field-error">{{ k | transloco }}</p>
+          }
+        </fieldset>
+      }
       @if (autoStatus(); as key) {
         <p class="hint warn">{{ key | transloco }}</p>
       } @else {
@@ -152,7 +194,12 @@
                   {{ 'remuneration.reason.' + r.reason | transloco }}
                 }
               </td>
-              <td class="num">{{ yen(r.monthlyAmount) }}</td>
+              <td class="num">
+                {{ yen(r.monthlyAmount) }}
+                @if (r.multi; as m) {
+                  <div class="sub multi-share">{{ 'remuneration.multi.share' | transloco: { own: yen(m.own), total: yen(m.total) } }}</div>
+                }
+              </td>
               <td class="num">
                 <span class="grade">{{
                   'remuneration.gradeShort' | transloco: { grade: r.health.grade }

@@ -13,7 +13,7 @@ import { StandardRemuneration } from '../../../core/models/remuneration';
 import { CoverageInput, coverageForMonth, pensionLostDate } from '../../employees/logic/coverage';
 import { shiftMonth, toYearMonth, YearMonth } from '../../../shared/utils/date';
 import { LeaveHolder } from '../../employees/logic/leave';
-import { latest } from '../../rates/logic/pick-rates';
+import { latest, RateTables } from '../../rates/logic/pick-rates';
 import { calcMonthly, RemunerationLike } from './calc-monthly';
 import { AdjustmentInput } from './premium-adjustment';
 import { PremiumSplit, splitContribution } from './premium-core';
@@ -64,6 +64,8 @@ export interface RowInput {
   adjustmentFor?: (month: YearMonth) => AdjustmentInput | null;
   /** 月 → 特定被保険者として介護保険料をかけるか（組合健保。省くとかけない。11/26） */
   specialInsuredFor?: (month: YearMonth) => boolean;
+  /** 料率の表（二以上事業所勤務で別の都道府県の協会けんぽを選んだ人。11/28） */
+  tables?: RateTables;
 }
 
 const HEALTH_PARTS: PremiumPart[] = ['health', 'care', 'childSupport'];
@@ -81,6 +83,7 @@ function calcSafe(
       options: input.options,
       adjustment: input.adjustmentFor?.(month) ?? null,
       specialInsured: input.specialInsuredFor?.(month) ?? false,
+      tables: input.tables,
     });
     if (result.exempt) return { state: 'exempt', result };
     if (result.missing.length > 0) return { state: 'missing', result };

@@ -27,6 +27,9 @@ import { HalfWidthDigits } from '../../../../shared/directives/half-width-digits
 import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 import { YmPipe } from '../../../../shared/pipes/ym.pipe';
+import { MULTI_OFFICE_INSURERS, MultiOfficeInsurer } from '../../../../core/models/remuneration';
+import { PREFECTURES } from '../../../../core/master/prefectures';
+import { multiOfficeForm, readMultiOffice } from '../../logic/multi-office';
 type Kind = 'health' | 'pension';
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -133,7 +136,25 @@ export class RemunerationCard implements OnInit {
     monthlyAmount: ['', [Validators.required, Validators.pattern(YEN)]],
     healthGrade: ['', [Validators.required]],
     pensionGrade: ['', [Validators.required]],
+    // 二以上事業所勤務の按分（その人だけ出す。11/28）
+    multiOwn: [''],
+    multiTotal: [''],
+    multiInsurer: ['office' as MultiOfficeInsurer],
+    multiPrefecture: [''],
   });
+
+  readonly multiInsurers = MULTI_OFFICE_INSURERS;
+  readonly prefectures = PREFECTURES;
+  /** 按分の窓の誤り（保存を押したあと） */
+  readonly multiErrors = signal<string[]>([]);
+  private officePrefecture(): string {
+    return this.context.current()?.prefecture ?? '';
+  }
+  private setMulti(m: RemunerationDoc['multi']): void {
+    const f = multiOfficeForm(m, this.officePrefecture());
+    this.form.patchValue({ multiOwn: f.own, multiTotal: f.total, multiInsurer: f.insurer, multiPrefecture: f.prefecture }, { emitEvent: false });
+    this.multiErrors.set([]);
+  }
 
   /** 直前に自動で選んだ等級（手で選び直したかの判定に使う） */
   private lastAuto: Record<Kind, string> = { health: '', pension: '' };
@@ -220,6 +241,8 @@ export class RemunerationCard implements OnInit {
       healthGrade: '',
       pensionGrade: '',
     });
+    // 按分は今の行から写す（二以上の人だけ。割合が変わったら直す）
+    this.setMulti(latest(this.rows(), this.thisMonth)?.multi ?? null);
     this.form.controls.from.enable();
     this.errorKey.set(null);
     this.editing.set('new');
@@ -233,7 +256,7 @@ export class RemunerationCard implements OnInit {
       health: d.health ? String(d.health.grade) : '',
       pension: d.pension ? String(d.pension.grade) : '',
     };
-    this.form.setValue(
+    this.form.patchValue(
       {
         from: row.from,
         reason: row.reason,
@@ -243,6 +266,7 @@ export class RemunerationCard implements OnInit {
       },
       { emitEvent: false },
     );
+    this.setMulti(row.multi ?? null);
     this.formMonth.set(row.from);
     this.form.controls.from.disable(); // 適用開始月はドキュメントIDなので変えられない
     this.errorKey.set(null);
@@ -283,6 +307,13 @@ export class RemunerationCard implements OnInit {
       health: { grade: health.grade, standard: health.standard },
       pension: { grade: pension.grade, standard: pension.standard },
     };
+    // 二以上事業所勤務の按分（11/28）。二以上でない人は項目を書かない
+    if (this.employee().multipleOffices) {
+      const m = readMultiOffice({ own: v.multiOwn, total: v.multiTotal, insurer: v.multiInsurer, prefecture: v.multiPrefecture });
+      this.multiErrors.set(m.errors.map((e) => `remuneration.multi.error.${e}`));
+      if (m.errors.length > 0) return;
+      input.multi = m.multi;
+    }
 
     this.saving.set(true);
     this.errorKey.set(null);

@@ -203,6 +203,23 @@ await ok('確認済み：管理者は取り消せる（消す）', deleteDoc(doc
 // ===== ほかの事業所 =====
 await ng('ほかの事業所：管理者でも、自分がメンバーでない事業所の従業員は読めない', read(admin, `${OTHER}/employees/X1`));
 
+// ===== 標準報酬の二以上事業所勤務の按分（11/28） =====
+{
+  const rem = (multi) => ({
+    from: '2026-05', reason: 'other', monthlyAmount: 300000,
+    health: { grade: 22, standard: 300000 }, pension: { grade: 19, standard: 300000 },
+    ...(multi === undefined ? {} : { multi }),
+    createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  });
+  const ref = (m) => doc(admin, `${O}/employees/E1/remunerations/${m}`);
+  await ok('按分：なしでも書ける', setDoc(ref('2026-05'), rem(undefined)));
+  await ok('按分：null で書ける', setDoc(ref('2026-05'), rem(null)));
+  await ok('按分：協会けんぽの都道府県つき', setDoc(ref('2026-05'), rem({ own: 200000, total: 300000, insurer: 'kyokai', prefecture: '27' })));
+  await ng('按分：合計がこの事業所より少ない', setDoc(ref('2026-05'), rem({ own: 400000, total: 300000, insurer: 'office', prefecture: null })));
+  await ng('按分：協会けんぽで都道府県がない', setDoc(ref('2026-05'), rem({ own: 1, total: 2, insurer: 'kyokai', prefecture: null })));
+  await ng('按分：知らない項目', setDoc(ref('2026-05'), { ...rem(null), extra: 1 }));
+}
+
 console.log(`\n${passed} OK / ${failed} NG`);
 if (failures.length > 0) console.log(`\n===== NG の一覧 =====\n${failures.join('\n')}`);
 await testEnv.cleanup();
