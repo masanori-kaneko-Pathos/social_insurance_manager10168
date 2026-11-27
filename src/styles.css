@@ -787,29 +787,8 @@ a:where(:link, :visited):hover {
   cursor: pointer;
 }
 
-/* ページの切り替え（View Transitions。11/27 に作り直し）
-   メニューとヘッダーは動かさない。前の本文はすぐ消し（重ねない）、新しい本文だけを 0.12 秒で薄い→はっきり＋4px 上がる形で出す */
-.shell-main,
-.me-main {
-  view-transition-name: page;
-}
-::view-transition-old(root),
-::view-transition-new(root),
-::view-transition-group(page) {
-  animation: none;
-}
-::view-transition-old(page) {
-  display: none;
-}
-::view-transition-new(page) {
-  animation: page-in 120ms var(--ease-out);
-}
-@keyframes page-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-}
+/* ページの切り替えのアニメーションはなし（11/27。画面が切り替わるたびのチカチカ・カクつきが負担だったため。app.config.ts の withViewTransitions も外した）
+   View Transitions はライト／ダークの切り替え（下の theme-switching）だけで使う */
 
 /* 動きを減らす設定の人には動かさない */
 @media (prefers-reduced-motion: reduce) {
@@ -848,25 +827,10 @@ a:where(:link, :visited):hover {
 }
 
 /* ライト／ダークの切り替え：画面全体を 0.15 秒で重ねて入れ替える（11/18。ThemeService が切り替えの間だけ付ける） */
-/* 本文（page）も画面全体と同じく重ねて入れ替える（ページの切り替えの「すぐ消す」をここでは使わない。11/27） */
 :root.theme-switching::view-transition-old(root),
-:root.theme-switching::view-transition-old(page) {
-  display: block;
-  animation: theme-fade-out 150ms ease-out both;
-}
-:root.theme-switching::view-transition-new(root),
-:root.theme-switching::view-transition-new(page) {
-  animation: theme-fade-in 150ms ease-out both;
-}
-@keyframes theme-fade-out {
-  to {
-    opacity: 0;
-  }
-}
-@keyframes theme-fade-in {
-  from {
-    opacity: 0;
-  }
+:root.theme-switching::view-transition-new(root) {
+  animation-duration: 150ms;
+  animation-timing-function: ease-out;
 }
 
 /* ===== 欄の幅を固定する表（11/18） =====
