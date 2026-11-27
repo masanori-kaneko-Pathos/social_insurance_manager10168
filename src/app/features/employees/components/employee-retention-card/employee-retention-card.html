@@ -1,0 +1,48 @@
+<!-- 保存期間を過ぎた退職者だけに出す（11/27）。出力 → 変わるもの → 社員番号を入力して削除 -->
+@if (due() && dates(); as d) {
+  <section class="card retention">
+    <h2>{{ 'employee.retention.title' | transloco }}</h2>
+    <p class="hint">{{ 'employee.retention.lead' | transloco: { base: d.base, from: d.from } }}</p>
+
+    <ol class="steps">
+      <li>
+        <span>{{ 'employee.retention.step.export' | transloco }}</span>
+        <button type="button" class="btn btn-small" (click)="exportOne()">{{ 'employee.retention.export' | transloco }}</button>
+      </li>
+      <li>
+        <span>{{ 'employee.retention.step.check' | transloco }}</span>
+        <ul class="hint list">
+          <li>{{ 'employee.retention.removes.own' | transloco }}</li>
+          <li>{{ 'employee.retention.removes.shared' | transloco: { bonus: bonusCount() } }}</li>
+          <li>{{ 'employee.retention.removes.account' | transloco }}</li>
+        </ul>
+      </li>
+      <li>
+        <span>{{ 'employee.retention.step.delete' | transloco }}</span>
+        @if (hasMyNumber()) {
+          <!-- マイナンバーは記録を残す廃棄の手順を先に通す -->
+          <p class="hint warn">
+            {{ 'employee.retention.myNumberFirst' | transloco }}
+            <a [routerLink]="[]" [queryParams]="{ tab: 'person' }">{{ 'employee.retention.toMyNumber' | transloco }} ›</a>
+          </p>
+        } @else if (!open()) {
+          <button type="button" class="btn btn-small danger" (click)="open.set(true)">{{ 'employee.retention.open' | transloco }}</button>
+        } @else {
+          <div class="field">
+            <label for="retentionTyped">{{ 'employee.delete.type' | transloco: { word: expected() } }}</label>
+            <input id="retentionTyped" class="input" autocomplete="off" [value]="typed()" (input)="typed.set($any($event.target).value)" />
+          </div>
+          <div class="actions">
+            <button type="button" class="btn" [disabled]="busy()" (click)="cancel()">{{ 'common.cancel' | transloco }}</button>
+            <button type="button" class="btn danger" [disabled]="!typedOk() || busy()" (click)="remove()">
+              {{ (busy() ? 'employee.delete.deleting' : 'employee.delete.confirm') | transloco }}
+            </button>
+          </div>
+        }
+      </li>
+    </ol>
+    @if (errorKey(); as e) {
+      <p class="field-error" role="alert">{{ e | transloco }}</p>
+    }
+  </section>
+}

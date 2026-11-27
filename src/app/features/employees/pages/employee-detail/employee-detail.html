@@ -55,6 +55,10 @@
     @switch (tab()) {
       @case ('overview') {
         <!-- ===== 概要 ===== -->
+        <!-- 保存期間（5年）を過ぎた退職者だけ：出力して削除（管理者だけ。11/27） -->
+        @if (context.isAdmin() && e.retireDate) {
+          <app-employee-retention-card [employee]="e" />
+        }
         <section class="card">
           <dl class="info">
             <div>

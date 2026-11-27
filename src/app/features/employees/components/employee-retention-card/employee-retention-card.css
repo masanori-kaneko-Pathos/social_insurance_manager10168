@@ -1,0 +1,50 @@
+/* 保存期間を過ぎた退職者の削除（11/27）。取り消しのカードと同じ赤い縁 */
+.retention {
+  border: 1px solid var(--color-danger-text);
+  margin-bottom: var(--space-md);
+}
+
+.retention h2 {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-md);
+  color: var(--color-danger-text);
+}
+
+.hint {
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.hint.warn {
+  color: var(--color-warning-text);
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: var(--space-sm) 0 0;
+  padding-left: 1.4em;
+}
+
+.steps > li > span {
+  display: block;
+  margin-bottom: var(--space-xs);
+  font-weight: 600;
+}
+
+.list {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.btn.danger {
+  color: var(--color-danger-text);
+  border-color: var(--color-danger-text);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}

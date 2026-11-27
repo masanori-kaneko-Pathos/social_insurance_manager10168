@@ -39,6 +39,8 @@
 //   マイページの申請から来た届出の宿題（dependentChange）が残っている人は、そちらに任せて出さない
 // - bonusCumulative：前の事業所の分と合わせて、健保の標準賞与額の年度の累計が上限（573万円）を超えた（11/19）
 //   → 本人が保険者に「健康保険標準賞与額累計申出書」を出す（同じ保険者で転職した人。出さないと上限が効かない）
+// - retention：退職から5年（保存期間）を過ぎた人（11/27。台帳 R110〜R113）。退職日だけで見るので少し早めに出ることがある
+//   正しい日は従業員の詳細で、最後の給与・賞与も読んで出す。そこで出力して削除する
 // - childcareSpecial：3歳未満の子を養育していて、厚生年金の標準報酬月額が子の生まれた月の前月より下がった（11/19）
 //   → 「厚生年金保険 養育期間標準報酬月額特例申出書」（事業主経由。厚生年金保険法26条）。保険料は下がった額のまま、
 //   年金の計算だけ前の額で数える。さかのぼれるのは申出の月の前月までの2年間。男女とも対象
@@ -57,6 +59,7 @@ import { bonusesOf, BonusPaymentLike } from '../../premiums/logic/bonus-rows';
 import { isNotCovered, recipientsOf } from '../../premiums/logic/bonus-nature';
 import { CoverageInput, healthLostDate } from '../../employees/logic/coverage';
 import { insuredDuring, Period, PayrollEmployee } from '../../payrolls/logic/payroll-rows';
+import { addYears, RETENTION_YEARS, retentionCandidate } from '../../employees/logic/retention';
 
 export type ExtraKind =
   | 'registerGaps'
@@ -83,7 +86,8 @@ export type ExtraKind =
   | 'actualHours'
   | 'acquireAmount'
   | 'childcareSpecial'
-  | 'dependentReport';
+  | 'dependentReport'
+  | 'retention';
 
 export interface ExtraTodo {
   kind: ExtraKind;
@@ -788,4 +792,11 @@ export function dependentReportTodos(
 export function registerGapsTodo(count: { people: number; by: Partial<Record<string, number>> }): ExtraTodo | null {
   if (count.people === 0) return null;
   return { kind: 'registerGaps', employeeId: null, date: null, params: { n: count.people, ...count.by } as Record<string, number> };
+}
+
+/** 退職から5年（保存期間）を過ぎた人（11/27）。日付は退職日だけで数えた消せる日の目安 */
+export function retentionTodo(p: { id: string; retireDate: DateStr | null }, today: DateStr): ExtraTodo | null {
+  if (!retentionCandidate(p.retireDate, today)) return null;
+  const date = addDays(addYears(p.retireDate!, RETENTION_YEARS), 1);
+  return { kind: 'retention', employeeId: p.id, date, params: { date, retire: p.retireDate! } };
 }

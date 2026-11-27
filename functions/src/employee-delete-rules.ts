@@ -64,3 +64,64 @@ export function withoutEmployee(
   delete out[employeeId];
   return out;
 }
+
+// ===== 保存期間を過ぎた退職者の削除（11/27。台帳 R110〜R113。画面の retention.ts と同じ決まり） =====
+// 5年（労働基準法109条の本則）。数え始めるのは、退職日・最後の給与の支払月の末日・最後の賞与の支払日のうち遅い日
+// （労働基準法施行規則56条）。5年たった次の日から消せる。サーバーでも数え直す（画面の判定だけを信じない）
+
+export const RETENTION_YEARS = 5;
+
+function daysIn(y: number, m: number): number {
+  return new Date(Date.UTC(y, m, 0)).getUTCDate();
+}
+
+/** 保存期間が終わって消せるようになる日（退職していなければ null） */
+export function retentionDeletableOn(retireDate: string | null, lastPaidMonth: string | null, lastBonusDate: string | null): string | null {
+  if (!retireDate) return null;
+  const monthEnd = lastPaidMonth
+    ? `${lastPaidMonth}-${String(daysIn(Number(lastPaidMonth.slice(0, 4)), Number(lastPaidMonth.slice(5, 7)))).padStart(2, '0')}`
+    : null;
+  const dates = [retireDate, monthEnd, lastBonusDate].filter((d): d is string => !!d).sort();
+  const base = dates[dates.length - 1];
+  const y = Number(base.slice(0, 4)) + RETENTION_YEARS;
+  const m = Number(base.slice(5, 7));
+  const d = Math.min(Number(base.slice(8, 10)), daysIn(y, m));
+  const next = new Date(Date.UTC(y, m - 1, d + 1));
+  return next.toISOString().slice(0, 10);
+}
+
+export type RetentionDeleteProblem =
+  | 'notAdmin'
+  | 'notFound'
+  | 'numberMismatch'
+  | 'notRetired' // 退職日がない
+  | 'notYet' // 保存期間が終わっていない
+  | 'hasMyNumber'; // マイナンバーが残っている（先に廃棄の手順を通す）
+
+export interface RetentionDeleteFacts {
+  isAdmin: boolean;
+  exists: boolean;
+  confirm: string;
+  expected: string;
+  retireDate: string | null;
+  deletableOn: string | null;
+  /** 今日（日本時間の YYYY-MM-DD） */
+  today: string;
+  hasMyNumber: boolean;
+}
+
+/** 保存期間を過ぎた退職者を消してよいか（届出の記録・マイページのアカウントは止めない。記録から外し、アカウントも消す） */
+export function retentionDeleteProblem(f: RetentionDeleteFacts): RetentionDeleteProblem | null {
+  if (!f.isAdmin) return 'notAdmin';
+  if (!f.exists) return 'notFound';
+  if (f.confirm.trim() === '' || f.confirm.trim() !== f.expected.trim()) return 'numberMismatch';
+  if (!f.retireDate || !f.deletableOn) return 'notRetired';
+  if (f.today < f.deletableOn) return 'notYet';
+  if (f.hasMyNumber) return 'hasMyNumber';
+  return null;
+}
+
+/** To-do の「確認した」の鍵のうち、その人のもの（鍵は「種類:従業員ID:日付」の形。todo-board.ts の todoKey・ageKey） */
+export function dismissalOf(key: string, employeeId: string): boolean {
+  return key.split(':')[1] === employeeId;
+}

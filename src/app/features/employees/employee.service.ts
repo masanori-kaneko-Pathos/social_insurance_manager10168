@@ -207,6 +207,12 @@ export class EmployeeService {
     forgetAll();
   }
 
+  /** 保存期間（5年）を過ぎた退職者の削除（11/27）。消せるかはサーバーで数え直す */
+  async deleteRetained(officeId: string, employeeId: string, confirm: string): Promise<void> {
+    await httpsCallable(functions, 'siDeleteEmployee', { timeout: 120_000 })({ officeId, employeeId, confirm, mode: 'retention' });
+    forgetAll();
+  }
+
   async create(officeId: string, input: EmployeeFormInput): Promise<string> {
     const { main, priv } = splitPrivate(input);
     const full: EmployeeInput = { ...employeeExtras(), ...main };

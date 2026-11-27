@@ -407,6 +407,9 @@
                           @case ('cardReturn') {
                             {{ 'dashboard.todo.text.cardReturn' | transloco: it.extra!.params }}
                           }
+                          @case ('retention') {
+                            {{ 'dashboard.todo.text.retention' | transloco: it.extra!.params }}
+                          }
                           @case ('overseasCertificate') {
                             {{
                               'dashboard.todo.text.overseasCertificate'
@@ -606,6 +609,9 @@
                               [queryParams]="{ tab: 'person' }"
                               >{{ 'dashboard.todo.toMyNumber' | transloco }} ›</a
                             >
+                          }
+                          @case ('retention') {
+                            <a [routerLink]="['/o', office()?.id, 'employees', it.employeeId]">{{ 'dashboard.todo.toRetention' | transloco }} ›</a>
                           }
                           @case ('noContract') {
                             <a

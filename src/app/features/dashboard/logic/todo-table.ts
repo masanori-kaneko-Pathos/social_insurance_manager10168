@@ -53,6 +53,9 @@ export function deadlineOf(it: BoardItem): { deadline: DateStr | null; note: Dea
     case 'myNumberDispose':
       // 保存期間が過ぎた日（ここから「できるだけ速やかに」廃棄）
       return { deadline: it.date, note: null };
+    case 'retention':
+      // 消せるようになる日の目安（期限ではない）
+      return { deadline: null, note: null };
     case 'bonusNone':
       // 賞与不支給報告書：支払予定月の翌月末日
     case 'adjustmentDeadline':

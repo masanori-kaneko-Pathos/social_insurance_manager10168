@@ -169,7 +169,8 @@
         "childcareSpecial": "Childcare period special rule (pension)",
         "dependentReport": "Dependent change notification",
         "registerGaps": "Employee data: empty items",
-        "payrollMissing": "Pay not entered"
+        "payrollMissing": "Pay not entered",
+        "retention": "Retention period over"
       },
       "text": {
         "acquire": "\"{{today}}\" since {{date}}, but not enrolled in social insurance. An Application to Enroll in EPI / EHI (資格取得届) is needed.",
@@ -238,7 +239,8 @@
         "childcareSpecial": "Raising a child under 3 since {{child}}; the pension standard monthly remuneration from {{month}} ({{now}} yen) is below the month before ({{base}}: {{pre}} yen). If the employee applies, premiums stay the same but the future pension uses the earlier amount. Tell the employee and mark as checked once the application is submitted.",
         "dependentReport": "Dependents changed on {{date}}. Submit the Dependent (Change) Notification within 5 days to the pension office (or to the health insurance society). For a spouse, the National Pension Category 3 notification uses the same form. Dependents added on the date of acquisition are submitted together with the acquisition notification. Mark as done once submitted.",
         "registerGaps": "Empty items in employee data: {{n}} people",
-        "payrollMissing": "Pay for month {{m}}: {{count}} not entered"
+        "payrollMissing": "Pay for month {{m}}: {{count}} not entered",
+        "retention": "Five years have passed since retirement on {{retire}} (from {{date}}). Export the data on the employee page, then delete it. If the last pay or bonus was paid after retirement, the deletion date is later."
       },
       "office": {
         "noStandard": "The full-time schedule is blank, so no one's category can be judged.",
@@ -312,7 +314,8 @@
       "memberCheck": "Mark this person as done",
       "withDependents": "{{count}} dependents",
       "dependentCounts": "{{start}} dependent(s) added, {{end}} removed.",
-      "toPayroll": "Enter pay"
+      "toPayroll": "Enter pay",
+      "toRetention": "Open employee"
     }
   },
   "nav": {
@@ -915,6 +918,37 @@
       "file": {
         "title": "Import from a file",
         "note": "Employee list from payroll software or a spreadsheet (CSV, Excel, PDF). For first setup or group hiring."
+      }
+    },
+    "retention": {
+      "title": "Retention period over",
+      "lead": "Five years have passed since the latest of the retirement date and the last pay and bonus dates ({{base}}). You can delete this data from {{from}}. Deletion cannot be undone.",
+      "step": {
+        "export": "Export this person's data",
+        "check": "What will be deleted",
+        "delete": "Delete"
+      },
+      "export": "Export employee data (CSV)",
+      "exportError": "Could not export. Please try again later.",
+      "removes": {
+        "own": "This person's contracts, standard remuneration, pay, dependents, leave and change history.",
+        "shared": "This person's lines in bonus payments ({{bonus}}), checked months and filing records. The records and their totals stay as they are.",
+        "account": "The My Page account, requests and filing tasks."
+      },
+      "myNumberFirst": "My Number records remain. Dispose of them under \"Personal info\" first.",
+      "toMyNumber": "Go to My Number",
+      "open": "Delete employee",
+      "done": "Deleted.",
+      "error": {
+        "notAdmin": "Only admins can delete.",
+        "notFound": "This employee was not found (it may already be deleted).",
+        "numberMismatch": "The text you entered does not match.",
+        "notRetired": "There is no retirement date, so this cannot be deleted.",
+        "notYet": "The retention period has not ended yet.",
+        "hasMyNumber": "My Number records remain. Dispose of them first.",
+        "badArgument": "Could not delete. Please reload the page.",
+        "signIn": "Please sign in again.",
+        "unknown": "Could not delete. Please try again later."
       }
     }
   },
