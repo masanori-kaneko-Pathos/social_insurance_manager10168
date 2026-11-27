@@ -7,6 +7,7 @@ import {
   latestPaidMonth,
   missingPayrolls,
   onLeaveDuring,
+  wholeLeaveDuring,
   PayrollEmployee,
   payrollRows,
   periodOf,
@@ -214,5 +215,16 @@ describe('hasExtra', () => {
     expect(hasExtra(emptyPayrollInput())).toBeFalse();
     expect(hasExtra({ ...emptyPayrollInput(), retro: 5000 })).toBeTrue();
     expect(hasExtra({ ...emptyPayrollInput(), state: 'suspended' })).toBeTrue();
+  });
+});
+
+describe('wholeLeaveDuring（期間のはじめから終わりまで休業。11/28）', () => {
+  const p = { start: '2026-10-01', end: '2026-10-31' };
+  it('期間を丸ごと含む休業だけ true', () => {
+    expect(wholeLeaveDuring({ leaves: [{ start: '2026-09-01', end: '2026-12-31' }] }, p)).toBe(true);
+    expect(wholeLeaveDuring({ leaves: [{ start: '2026-10-01', plannedEnd: null }] }, p)).toBe(true);
+    expect(wholeLeaveDuring({ leaves: [{ start: '2026-10-10', end: '2026-12-31' }] }, p)).toBe(false); // 月の途中から
+    expect(wholeLeaveDuring({ leaves: [{ start: '2026-09-01', end: '2026-10-20' }] }, p)).toBe(false); // 月の途中まで
+    expect(wholeLeaveDuring({}, p)).toBe(false);
   });
 });

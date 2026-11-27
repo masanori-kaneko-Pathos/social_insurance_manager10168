@@ -244,6 +244,7 @@
                   [canEdit]="context.isAdmin()"
                   [leaveLink]="context.isAdmin() ? ['/o', context.current()?.id, 'employees', v.employee.id] : null"
                   [onLeave]="onLeave(v)"
+                  [wholeLeave]="wholeLeave(v)"
                   [errors]="rowErrors().get(v.employee.id) ?? []"
                   [check]="checkOf(v)"
                   [hasNext]="!!nextOf(v)"

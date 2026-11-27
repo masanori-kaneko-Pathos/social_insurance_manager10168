@@ -10,7 +10,7 @@ import { toHalfWidth } from '../../../../shared/utils/text';
 import { categoryOf, FOR_MONTH_CATEGORIES, hasAmounts, itemKey, itemNames, LineDraft, readAmount, readLines, startDrafts, totalsOf } from '../../logic/payroll-lines';
 import { shiftMonth } from '../../../../shared/utils/date';
 import type { RowError } from '../../logic/payroll-input';
-import { belowContract, entryCheck, EntryCheckContext, EntryCheckKind, startsHere } from '../../logic/entry-check';
+import { aboveContract, belowContract, entryCheck, EntryCheckContext, EntryCheckKind, startsHere } from '../../logic/entry-check';
 import { incomingDelta, nthMonthOf, partsOf, SpreadPart, SPREAD_CATEGORIES, SPREAD_CHOICES } from '../../logic/spread';
 
 /** 「この入力で決まること」に出すもの */
@@ -33,6 +33,8 @@ export interface EntryCheckView {
   months: string;
   /** 固定的賃金が契約の所定内賃金より少ないとき、その所定内賃金（円の文字。少なくなければ null。11/26） */
   contractWage: string | null;
+  /** 固定的賃金が契約の所定内賃金より2割を超えて多いときの、比べた所定内賃金（11/28） */
+  contractWageAbove: string | null;
 }
 
 /** 1人分の入力の文字（月の表の行と同じ形。cash・fixed・retro は内訳があれば内訳から入る） */
@@ -82,6 +84,8 @@ export class PayrollEntry implements OnInit {
   readonly leaveLink = input<readonly unknown[] | null>(null);
   /** この給与の対象期間に、休業（産休・育休など）が登録されているか（「休職」を選んだときの知らせ。11/26） */
   readonly onLeave = input(false);
+  /** 対象期間のはじめから終わりまで休業の期間か（日数が多いときの知らせ。11/28） */
+  readonly wholeLeave = input(false);
   /** この給与の支払月（内訳の行の「本来の月」の選択肢を作る。11/24） */
   readonly paidMonth = input<string | null>(null);
   /** この人の給与の実績が入っている支払月（本来の月に実績がないと割り振れないので知らせる。null ＝ 分からない） */
@@ -336,11 +340,13 @@ export class PayrollEntry implements OnInit {
     const months = first ? [0, 1, 2].map((i) => `${Number(shiftMonth(first, i).slice(5))}`).join('・') : '';
     // 契約の所定内賃金より少ない（欠勤控除の前の額で比べる。内訳がないときは欠勤日数が空の月だけ）
     const absent = n(c.absentDays.value);
-    const below = belowContract({
+    const compare = {
       fixedBeforeDeduction: lines || !absent ? fixedNow : null,
       scheduledWage: ctx.scheduledWage,
       prorated: !!c.prorated.value,
-    });
+    };
+    const below = belowContract(compare);
+    const above = aboveContract(compare);
     const fixedLabel = !lines ? 'plain' : ctx.byUnit ? 'withoutBase' : t.fixedFull !== t.fixed ? 'beforeDeduction' : 'plain';
     return {
       kind: r.kind,
@@ -357,7 +363,26 @@ export class PayrollEntry implements OnInit {
         : null,
       months,
       contractWage: below === null ? null : this.yen(below),
+      contractWageAbove: above === null ? null : this.yen(above),
     };
+  }
+
+  /**
+   * 期間を丸ごと休業している月なのに、給与があって支払基礎日数が17日（短時間は11日）以上（11/28）
+   * 休業の期間の入れ間違いか、復帰日の更新し忘れのことが多い。知らせるだけ。知らせるときは日数を返す
+   */
+  leaveDaysNote(): number | null {
+    if (!this.wholeLeave()) return null;
+    const c = this.form().controls;
+    const n = (s: string): number | null => {
+      const t = toHalfWidth(s ?? '').replace(/[,，\s]/g, '');
+      return /^\d+$/.test(t) ? Number(t) : null;
+    };
+    const cash = n(c.cash.value);
+    if (!cash) return null;
+    const days = n(c.days.value) ?? this.candidate();
+    const min = this.check()?.minDays ?? 17;
+    return days !== null && days >= min ? days : null;
   }
 
   // ===== 行の編集 =====

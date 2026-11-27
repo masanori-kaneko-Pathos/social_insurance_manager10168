@@ -220,6 +220,8 @@ export class DependentImport {
         lastName: e.lastName,
         firstName: e.firstName,
         hireDate: e.hireDate,
+        birthDate: e.birthDate ?? null,
+        healthAcquired: e.health?.acquiredDate ?? null,
       }));
       const today = todayLocal();
       // 1回目：結ぶだけ（登録済みの扶養家族は、ファイルに出てくる人の分だけ読む）

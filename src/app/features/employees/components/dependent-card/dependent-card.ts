@@ -40,6 +40,7 @@ import {
   toDependentForm,
 } from '../../logic/dependent-form-model';
 import { errorKeyOf } from '../../../../shared/utils/error-key';
+import { childNotYounger, dependentBeforeAcquired } from '../../logic/cross-checks';
 import { watchUnsaved } from '../../../../shared/services/unsaved-changes';
 
 /**
@@ -128,6 +129,16 @@ export class DependentCard implements OnInit {
     const hire = this.employee().hireDate;
     return !!from && !!hire && from < hire;
   });
+
+  /** 扶養に入った日が健康保険の資格取得日より前（入社日より後のとき。保存はできる。11/28） */
+  readonly fromBeforeAcquired = computed(() =>
+    dependentBeforeAcquired(this.value().from, this.employee().hireDate, this.employee().health?.acquiredDate),
+  );
+
+  /** 続柄が子・孫なのに、被保険者と同じか年上（続柄か生年月日の打ち間違い。保存はできる。11/28） */
+  readonly childNotYounger = computed(() =>
+    childNotYounger(this.value().relationship, this.value().birthDate, this.employee().birthDate),
+  );
 
   /** 入力中の判定（扶養に入った日の時点） */
   readonly preview = computed<DependentCheck | null>(() => {

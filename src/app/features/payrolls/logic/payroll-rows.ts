@@ -109,6 +109,14 @@ export function onLeaveDuring(
   return (e.leaves ?? []).some((l) => l.start <= p.end && (l.end ?? l.plannedEnd ?? '9999-12-31') >= p.start);
 }
 
+/** 対象期間のはじめから終わりまで、休業の期間に入っている（11/28。免除の月に日数が多いときの知らせに使う） */
+export function wholeLeaveDuring(
+  e: { leaves?: readonly { start: string; end?: string | null; plannedEnd?: string | null }[] },
+  p: Period,
+): boolean {
+  return (e.leaves ?? []).some((l) => l.start <= p.start && (l.end ?? l.plannedEnd ?? '9999-12-31') >= p.end);
+}
+
 // ===== 支払基礎日数の候補 =====
 
 /**

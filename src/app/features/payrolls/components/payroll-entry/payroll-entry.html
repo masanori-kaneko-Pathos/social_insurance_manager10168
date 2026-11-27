@@ -302,6 +302,10 @@
         @if (onLeave() && form().controls.state.value === 'suspended') {
           <small class="field-note warn-note">{{ 'payrollEntry.note.suspendedOnLeave' | transloco }}</small>
         }
+        <!-- 期間を丸ごと休業している月なのに、日数が多い（11/28） -->
+        @if (leaveDaysNote(); as d) {
+          <small class="field-note warn-note">{{ 'payrollEntry.note.leaveDays' | transloco: { days: d } }}</small>
+        }
         <small class="field-note">
           @if (leaveLink(); as link) {
             <a [routerLink]="link" [queryParams]="{ tab: 'employment', add: 'leave' }">{{ 'payrollEntry.note.toLeave' | transloco }} ›</a>
@@ -385,6 +389,9 @@
         }
         @if (cv.contractWage; as w) {
           <p class="check-msg starts">{{ 'payrollEntry.check.belowContract' | transloco: { amount: w } }}</p>
+        }
+        @if (cv.contractWageAbove; as w) {
+          <p class="check-msg starts">{{ 'payrollEntry.check.aboveContract' | transloco: { amount: w } }}</p>
         }
         <p class="check-note">{{ 'payrollEntry.check.note' | transloco }}</p>
       </section>

@@ -30,6 +30,7 @@ import { YmPipe } from '../../../../shared/pipes/ym.pipe';
 import { MULTI_OFFICE_INSURERS, MultiOfficeInsurer } from '../../../../core/models/remuneration';
 import { PREFECTURES } from '../../../../core/master/prefectures';
 import { multiOfficeForm, readMultiOffice } from '../../logic/multi-office';
+import { remunerationBeforeAcquired } from '../../logic/cross-checks';
 type Kind = 'health' | 'pension';
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -79,6 +80,11 @@ export class RemunerationCard implements OnInit {
   }
 
   readonly employee = input.required<Employee>();
+
+  /** 開始月が健康保険の資格取得月より前（保存はできる。11/28） */
+  fromBeforeAcquired(): boolean {
+    return remunerationBeforeAcquired(this.form.controls.from.value, this.employee().health?.acquiredDate);
+  }
 
   /** 保存・削除したことを知らせる（保険料カードが計算し直すため） */
   readonly changed = output<void>();

@@ -11,6 +11,7 @@
 // - 加入（取得日・喪失日）は書き換えない（To-do の「加入の見直し」で人が確かめる）
 // - 標準報酬の等級：空なら報酬月額から等級表で出す。入っていればそれを使い、出した等級と違えば注意（決定通知書が正しい）
 
+import { remunerationBeforeAcquired } from './cross-checks';
 import type { ContractInput } from '../../../core/models/contract';
 import type { GradeTableDoc } from '../../../core/models/rates';
 import type { RemunerationInput, RemunerationReason } from '../../../core/models/remuneration';
@@ -210,6 +211,8 @@ export interface HistoryPerson {
   firstName: string;
   hireDate: string;
   retireDate: string | null;
+  /** 健康保険の資格取得日（標準報酬の開始月と比べる。なくてもよい。11/28） */
+  health?: { acquiredDate: string | null } | null;
 }
 
 export interface HistoryContext {
@@ -222,7 +225,8 @@ export interface HistoryContext {
 export type HistoryWarning =
   | 'gradeDiffers' // 書いてある等級と、報酬月額から出した等級が違う（書いてある方を使う）
   | 'regularAfterIrregular' // 7〜9月に随時改定がある年の、9月からの定時決定（11/24）
-  | 'zeroPadded'; // 社員番号の先頭の0を補って照合した（11/28）
+  | 'zeroPadded' // 社員番号の先頭の0を補って照合した（11/28）
+  | 'beforeAcquired'; // 標準報酬の開始月が、健康保険の資格取得月より前（11/28）
 
 export interface HistoryItem {
   line: number;
@@ -342,6 +346,7 @@ export function planHistoryImport(rows: readonly HistoryCsvRow[], ctx: HistoryCo
     const health = givenH ? { grade: givenH.grade, standard: givenH.standard } : calcH;
     const pension = givenP ? { grade: givenP.grade, standard: givenP.standard } : calcP;
     if (health.grade !== calcH.grade || pension.grade !== calcP.grade) warnings.push('gradeDiffers');
+    if (remunerationBeforeAcquired(p.from, e.health?.acquiredDate)) warnings.push('beforeAcquired');
     plan.items.push({
       ...base,
       contract: null,

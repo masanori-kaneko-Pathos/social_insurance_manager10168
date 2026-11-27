@@ -14,7 +14,7 @@ import { OfficeContext } from '../../../office/office-context.service';
 import { autoDaysText, candidateDays, PayrollRowText, readEntry, RowError, sameInput, sumPayrolls, textOf } from '../../logic/payroll-input';
 import { allocateOtherMonths, categoryOf, copyNames, hasAmounts, LineDraft, startDrafts, toDrafts } from '../../logic/payroll-lines';
 import { incomingParts, SpreadPart } from '../../logic/spread';
-import { latestPaidMonth, onLeaveDuring, Period, PayrollRow, payrollRowsFor, periodOf } from '../../logic/payroll-rows';
+import { latestPaidMonth, onLeaveDuring, wholeLeaveDuring, Period, PayrollRow, payrollRowsFor, periodOf } from '../../logic/payroll-rows';
 import { payrollOf, premiumMonthOfPay, premiumMonthsOfPay } from '../../../office/office-settings';
 import { MonthPicker } from '../../../../shared/components/month-picker/month-picker';
 import { BackLink } from '../../../../shared/components/back-link/back-link';
@@ -219,6 +219,11 @@ export class PayrollMonth {
   /** 対象期間に休業が重なる人（「休業」の札。11/20）。対象期間はその人の区分のもの */
   onLeave(v: ViewRow): boolean {
     return onLeaveDuring(v.employee, v.row.period);
+  }
+
+  /** 対象期間のはじめから終わりまで休業の人（日数が多いときの知らせ。11/28） */
+  wholeLeave(v: ViewRow): boolean {
+    return wholeLeaveDuring(v.employee, v.row.period);
   }
 
   /** その人の対象期間の日数（給与計算の基礎日数の上限） */

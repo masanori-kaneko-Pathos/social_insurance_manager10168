@@ -1,4 +1,4 @@
-import { belowContract, entryCheck, EntryCheckInput, startsHere } from './entry-check';
+import { aboveContract, belowContract, entryCheck, EntryCheckInput, startsHere } from './entry-check';
 
 const base = (x: Partial<EntryCheckInput> = {}): EntryCheckInput => ({
   byUnit: false,
@@ -85,5 +85,18 @@ describe('belowContract（固定的賃金と契約の所定内賃金）', () => 
     expect(belowContract({ fixedBeforeDeduction: null, scheduledWage: 300000, prorated: false })).toBeNull();
     expect(belowContract({ fixedBeforeDeduction: 150000, scheduledWage: null, prorated: false })).toBeNull();
     expect(belowContract({ fixedBeforeDeduction: 150000, scheduledWage: undefined, prorated: false })).toBeNull();
+  });
+});
+
+describe('aboveContract（固定的賃金が契約の所定内賃金より2割を超えて多い。11/28）', () => {
+  it('2割を超えたら比べた所定内賃金を返す', () => {
+    expect(aboveContract({ fixedBeforeDeduction: 360001, scheduledWage: 300000, prorated: false })).toBe(300000);
+    expect(aboveContract({ fixedBeforeDeduction: 360000, scheduledWage: 300000, prorated: false })).toBeNull(); // ちょうど2割は知らせない
+    expect(aboveContract({ fixedBeforeDeduction: 320000, scheduledWage: 300000, prorated: false })).toBeNull(); // 通勤手当くらいの差
+  });
+  it('日割りの月・契約がない・額がないときは比べない', () => {
+    expect(aboveContract({ fixedBeforeDeduction: 500000, scheduledWage: 300000, prorated: true })).toBeNull();
+    expect(aboveContract({ fixedBeforeDeduction: 500000, scheduledWage: null, prorated: false })).toBeNull();
+    expect(aboveContract({ fixedBeforeDeduction: null, scheduledWage: 300000, prorated: false })).toBeNull();
   });
 });

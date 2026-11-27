@@ -1366,6 +1366,9 @@
         "totalLess": "The total must be at least this office's remuneration.",
         "prefecture": "Select the Kyokai Kenpo prefecture."
       }
+    },
+    "warning": {
+      "beforeAcquired": "Earlier than the month of the health insurance acquisition date ({{date}}). It is not used for premiums (you can still save)."
     }
   },
   "premium": {
@@ -2779,7 +2782,9 @@
       "delete": "Could not delete."
     },
     "warning": {
-      "fromBeforeHire": "This is before the hire date ({{date}}). A dependent can be covered from the date the employee acquires health insurance at the earliest (you can still save)."
+      "fromBeforeHire": "This is before the hire date ({{date}}). A dependent can be covered from the date the employee acquires health insurance at the earliest (you can still save).",
+      "childNotYounger": "Same as or earlier than the insured person's birth date ({{date}}). Check the relationship or the birth date (you can still save).",
+      "fromBeforeAcquired": "Earlier than the health insurance acquisition date ({{date}}). A dependent can join no earlier than that date (you can still save)."
     }
   },
   "revision": {
@@ -3072,7 +3077,8 @@
       "gradeDiffers": "Differs from the grades calculated from the monthly remuneration (health grade {{health}}, pension grade {{pension}}). The written grades will be registered",
       "oldTable": "Before the earliest grade table (calculated with the oldest table)",
       "regularAfterIrregular": "There is an irregular revision from July to September of the same year. A regular determination is normally not made that year. Please check",
-      "zeroPadded": "The leading zeros of the employee number were missing, so they were added before matching"
+      "zeroPadded": "The leading zeros of the employee number were missing, so they were added before matching",
+      "beforeAcquired": "Starts before the month of health insurance acquisition. Standard remuneration before acquisition is not used for premiums. Please check"
     },
     "import": "Import {{n}} records",
     "progress": "Importing… {{done}} / {{total}}",
@@ -4428,7 +4434,8 @@
       "hours": "Used to check whether an uninsured employee actually works 20 hours or more a week. Scheduled hours plus overtime within legal limits. Do not include overtime beyond legal limits (over 8 hours a day or 40 hours a week).",
       "suspendedOnLeave": "This period is registered as leave (maternity, childcare, etc.). Maternity and childcare leave are handled by the leave record, so choose leave of absence only for months with leave-of-absence pay.",
       "noContract": "No contract: enter the days.",
-      "addContract": "Add a contract"
+      "addContract": "Add a contract",
+      "leaveDays": "This whole period is within a leave, but the base days are {{days}}. Check the leave period, the return date or the days (you can still save)."
     },
     "readback": {
       "total": "Total (money + in kind): ¥{{total}}",
@@ -4471,7 +4478,8 @@
         "beforeDeduction": "Fixed wages (before absence deductions)",
         "withoutBase": "Fixed wages (excluding hourly or daily pay × time)"
       },
-      "belowContract": "The fixed wages are lower than the scheduled wage in the employment contract ({{amount}} yen). Check whether the contract is out of date, or whether you entered an amount after absence deductions or only the base salary."
+      "belowContract": "The fixed wages are lower than the scheduled wage in the employment contract ({{amount}} yen). Check whether the contract is out of date, or whether you entered an amount after absence deductions or only the base salary.",
+      "aboveContract": "The fixed wage is more than 20% above the contract wage ({{amount}} yen). Check whether the contract is out of date after a raise, or whether the pay was entered wrongly."
     },
     "spread": {
       "row": "{{name}} (paid in month {{m}}, month {{nth}} of {{months}})",
@@ -4997,7 +5005,9 @@
       "beforeHire": "Became dependent before the hire date",
       "age75": "Age 75 or over (cannot be a dependent)",
       "spouseTwice": "Two spouses with overlapping dependent periods",
-      "zeroPadded": "The leading zeros of the employee number were missing, so they were added before matching"
+      "zeroPadded": "The leading zeros of the employee number were missing, so they were added before matching",
+      "beforeAcquired": "Dependent from before the health insurance acquisition date",
+      "childNotYounger": "Child or grandchild not younger than the insured (check relationship or birth date)"
     },
     "error": {
       "employeeNotFound": "The employee number is not correct",

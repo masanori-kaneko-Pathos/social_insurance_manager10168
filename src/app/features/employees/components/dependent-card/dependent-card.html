@@ -113,6 +113,9 @@
           <label for="dp-birth">{{ 'dependent.field.birthDate' | transloco }}<span class="req" aria-hidden="true">※</span></label>
           <input id="dp-birth" class="input" type="date" formControlName="birthDate" [class.is-invalid]="errorOf('birthDate')" />
           @if (errorOf('birthDate'); as e) { <span class="field-error">{{ e | transloco }}</span> }
+          @if (!errorOf('birthDate') && childNotYounger()) {
+            <p class="hint warn">{{ 'dependent.warning.childNotYounger' | transloco: { date: employee().birthDate } }}</p>
+          }
         </div>
         <div class="field">
           <label for="dp-sex">{{ 'dependent.field.sex' | transloco }}<span class="optional">{{ 'common.optional' | transloco }}</span></label>
@@ -353,6 +356,9 @@
           @if (errorOf('from'); as e) { <span class="field-error">{{ e | transloco }}</span> }
           @if (!errorOf('from') && fromBeforeHire()) {
             <p class="hint warn">{{ 'dependent.warning.fromBeforeHire' | transloco: { date: employee().hireDate } }}</p>
+          }
+          @if (!errorOf('from') && fromBeforeAcquired()) {
+            <p class="hint warn">{{ 'dependent.warning.fromBeforeAcquired' | transloco: { date: employee().health.acquiredDate } }}</p>
           }
           @for (c of fromCandidates(); track c.key) {
             <button type="button" class="candidate" (click)="useFrom(c.date)">

@@ -5,6 +5,7 @@
 // - 追加だけ：同じ従業員に同じ氏名＋生年月日の人がいれば、その行は飛ばして知らせる（上書きしない）
 // - 画面だけで入れる項目：海外特例・労働契約による年収の判定・続柄の確認・資格確認書・配偶者の電話
 
+import { childNotYounger, dependentBeforeAcquired } from './cross-checks';
 import type {
   DependentEndReason,
   DependentInput,
@@ -195,6 +196,9 @@ export interface DependentTarget {
   lastName: string;
   firstName: string;
   hireDate: string;
+  /** 被保険者の生年月日・健康保険の資格取得日（項目どうしの知らせに使う。なくてもよい。11/28） */
+  birthDate?: string | null;
+  healthAcquired?: string | null;
 }
 
 export type DependentRowError =
@@ -210,7 +214,7 @@ export type DependentRowError =
   | 'noSuchDate'
   | `field.${DependentField}.${string}`;
 
-export type DependentRowWarning = 'noIncome' | 'overLimit' | 'beforeHire' | 'age75' | 'spouseTwice' | 'zeroPadded';
+export type DependentRowWarning = 'noIncome' | 'overLimit' | 'beforeHire' | 'beforeAcquired' | 'childNotYounger' | 'age75' | 'spouseTwice' | 'zeroPadded';
 
 /** 配偶者の扶養の期間（重なりを見る。to は空なら今も続いている） */
 export interface SpousePeriod {
@@ -358,6 +362,9 @@ export function planDependentImport(
       const date = input.to && input.to < today ? input.to : today;
       if (input.annualIncome >= limitOf(input, date).limit) warnings.push('overLimit');
       if (employee && input.from < employee.hireDate) warnings.push('beforeHire');
+      // 11/28：資格取得日より前（入社日より後）・子や孫が被保険者と同じか年上
+      if (employee && dependentBeforeAcquired(input.from, employee.hireDate, employee.healthAcquired)) warnings.push('beforeAcquired');
+      if (employee && childNotYounger(input.relationship, input.birthDate, employee.birthDate)) warnings.push('childNotYounger');
       if (ageAt(input.birthDate, today) >= 75 && !input.to) warnings.push('age75');
     }
 

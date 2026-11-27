@@ -27,6 +27,9 @@
           />
           @if (errorOf('from'); as key) {
             <span class="field-error">{{ key | transloco }}</span>
+          } @else if (fromBeforeAcquired()) {
+            <!-- 11/28：資格取得月より前の標準報酬は保険料に使われない（保存はできる） -->
+            <span class="hint warn">{{ 'remuneration.warning.beforeAcquired' | transloco: { date: employee().health.acquiredDate } }}</span>
           }
         </div>
 

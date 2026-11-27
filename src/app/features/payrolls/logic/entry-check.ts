@@ -118,3 +118,19 @@ export function belowContract(x: {
   if (w === null || w <= 0 || x.prorated || x.fixedBeforeDeduction === null) return null;
   return x.fixedBeforeDeduction < w ? w : null;
 }
+
+/**
+ * 固定的賃金が、雇用契約の所定内賃金より2割を超えて多い（11/28。保存はできる）
+ * 固定的賃金には通勤手当なども入るのでふつうは少し多いが、2割を超えるときは、契約の更新し忘れ（昇給したのに契約が古い）か、
+ * 給与の入れ間違いのことが多い。随時改定の見落としの手がかりにもなる。比べる条件は belowContract と同じ
+ * 多いときは、比べた所定内賃金を返す（なければ null）
+ */
+export function aboveContract(x: {
+  fixedBeforeDeduction: number | null;
+  scheduledWage: number | null | undefined;
+  prorated: boolean;
+}): number | null {
+  const w = x.scheduledWage ?? null;
+  if (w === null || w <= 0 || x.prorated || x.fixedBeforeDeduction === null) return null;
+  return x.fixedBeforeDeduction * 10 > w * 12 ? w : null;
+}
