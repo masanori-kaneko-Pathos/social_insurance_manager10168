@@ -1,0 +1,58 @@
+<!-- 手続き（11/28）：手続き・発生日・提出状態 -->
+<section class="card procedures">
+  <h2>{{ 'employee.procedures.title' | transloco }}</h2>
+  <p class="hint">
+    {{ 'employee.procedures.lead' | transloco }}
+    <a [routerLink]="['/o', context.current()?.id]">{{ 'employee.procedures.toTodo' | transloco }} ›</a>
+  </p>
+
+  @if (loading()) {
+    <p class="muted">{{ 'common.loading' | transloco }}</p>
+  } @else if (failed()) {
+    <div class="alert alert-danger">{{ 'employee.procedures.loadFailed' | transloco }}</div>
+  } @else if (rows().length === 0) {
+    <p class="muted">{{ 'employee.procedures.empty' | transloco }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'employee.procedures.col.what' | transloco }}</th>
+            <th>{{ 'employee.procedures.col.date' | transloco }}</th>
+            <th>{{ 'employee.procedures.col.status' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.key) {
+            <tr>
+              <td>{{ r.label | transloco }}</td>
+              <td class="mono">{{ r.date ?? '—' }}</td>
+              <td>
+                @if (r.done) {
+                  <span class="badge badge-sub">{{ 'employee.procedures.done' | transloco: { date: r.doneOn ?? '—' } }}</span>
+                } @else {
+                  <span class="badge badge-warn">{{ 'employee.procedures.open' | transloco }}</span>
+                  @if (context.isAdmin()) {
+                    @if (editing() === r.key) {
+                      <span class="done-form">
+                        @if (r.source === 'filing') {
+                          <input type="date" class="input" [attr.aria-label]="'employee.procedures.submittedOn' | transloco" [value]="date()" (input)="date.set($any($event.target).value)" />
+                        } @else {
+                          <span class="sub">{{ 'employee.procedures.today' | transloco }}</span>
+                        }
+                        <button type="button" class="btn btn-small" [disabled]="busy()" (click)="markDone(r)">{{ 'employee.procedures.save' | transloco }}</button>
+                        <button type="button" class="link" (click)="editing.set(null)">{{ 'common.cancel' | transloco }}</button>
+                      </span>
+                    } @else {
+                      <button type="button" class="link" (click)="startDone(r)">{{ 'employee.procedures.markDone' | transloco }}</button>
+                    }
+                  }
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

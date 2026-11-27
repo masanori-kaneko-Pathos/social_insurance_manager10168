@@ -1,0 +1,17 @@
+/* 従業員の手続き（11/28） */
+.procedures td {
+  vertical-align: middle;
+}
+.procedures .link {
+  margin-left: var(--space-2, 8px);
+}
+.done-form {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin-left: var(--space-2, 8px);
+}
+.done-form .input {
+  width: auto;
+}

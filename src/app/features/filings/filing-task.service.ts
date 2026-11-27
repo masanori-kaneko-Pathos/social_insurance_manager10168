@@ -11,6 +11,7 @@ import {
 import { countedGetDoc, countedGetDocs } from '../../core/read-meter';
 import { db } from '../../core/firebase';
 import { FilingTask, FilingTaskDoc, FilingTaskInput } from '../../core/models/filing-task';
+import { Filing, FilingDoc } from '../../core/models/office-records';
 
 /** 届出の宿題（core/models/filing-task.ts）。読み書きは管理者だけ */
 @Injectable({ providedIn: 'root' })
@@ -23,6 +24,25 @@ export class FilingTaskService {
   async listOpen(officeId: string): Promise<FilingTask[]> {
     const snap = await countedGetDocs(query(this.ref(officeId), where('status', '==', 'open')));
     return snap.docs.map((d) => ({ id: d.id, ...(d.data() as FilingTaskDoc) }));
+  }
+
+  // ===== 従業員の「手続き」（11/28） =====
+
+  /** その人の届出の宿題（済んだものも） */
+  async listOf(officeId: string, employeeId: string): Promise<FilingTask[]> {
+    const snap = await countedGetDocs(query(this.ref(officeId), where('employeeId', '==', employeeId)));
+    return snap.docs.map((d) => ({ id: d.id, ...(d.data() as FilingTaskDoc) }));
+  }
+
+  /** その人が入っている届出の記録（offices/{o}/filings） */
+  async filingsOf(officeId: string, employeeId: string): Promise<Filing[]> {
+    const snap = await countedGetDocs(query(collection(db, 'offices', officeId, 'filings'), where('employeeIds', 'array-contains', employeeId)));
+    return snap.docs.map((d) => ({ id: d.id, ...(d.data() as FilingDoc) }));
+  }
+
+  /** 届出の記録に提出した日を入れる（未完了 → 完了） */
+  async markFilingSubmitted(officeId: string, id: string, submittedOn: string): Promise<void> {
+    await updateDoc(doc(db, 'offices', officeId, 'filings', id), { submittedOn, updatedAt: serverTimestamp() });
   }
 
   /** 宿題を batch に足す（変更の保存と同じ batch にして、片方だけ残らないようにする） */

@@ -58,7 +58,10 @@ describe('readLines：入力中の行を読む', () => {
       { name: '欠勤控除', category: 'deduction', amount: '−11,290' },
     ]);
     expect(r.lines).toEqual([L('基本給', 'base', 250000), L('欠勤控除', 'deduction', 11290)]);
-    expect(readAmount('-100', 'variable')).toBeNull(); // 控除でない行のマイナスは読まない
+    expect(readAmount('-100', 'variable')).toBe(-100); // 精算のマイナス（11/28）
+    expect(readAmount('▲45,000', 'commute')).toBe(-45000);
+    expect(readAmount('-100', 'retro')).toBeNull(); // 遡及・報酬にならないものはマイナスを読まない
+    expect(readAmount('-0', 'variable')).toBeNull();
   });
 
   it('分類が決まっていない行があれば保存しない（行ごとに誤りを返す）', () => {
@@ -116,5 +119,24 @@ describe('startDrafts：内訳を入れ始めるときの行', () => {
       { name: 'リーダー手当', category: null, amount: '' },
     ]);
     expect(startDrafts([], null, []).map((d) => d.name)).toEqual(['基本給', '固定残業手当', '通勤手当']);
+  });
+});
+
+describe('マイナスの行（精算・返金。11/28）', () => {
+  const L = (category: any, amount: number) => ({ name: 'x', category, amount });
+  it('払った月の報酬から引き、固定的賃金には入れない', () => {
+    const t = totalsOf([L('base', 270000), L('commute', 15000), L('commute', -45000)], 'monthly');
+    expect(t.cash).toBe(240000);
+    expect(t.fixed).toBe(285000);
+    expect(t.fixedFull).toBe(285000);
+    expect(t.settlement).toBe(-45000);
+  });
+  it('マイナスの行には本来の月・何か月分を付けない', () => {
+    const r = readLines([
+      { name: '基本給', category: 'base', amount: '270000' },
+      { name: '通勤手当', category: 'commute', amount: '-45000', forMonth: '2026-04', months: 6 },
+    ]);
+    expect(r.lines).toEqual([{ name: '基本給', category: 'base', amount: 270000 }, { name: '通勤手当', category: 'commute', amount: -45000 }] as any);
+    expect(readLines([{ name: '通勤手当', category: 'commute', amount: '-45000' }]).errors).toEqual(['negative']);
   });
 });

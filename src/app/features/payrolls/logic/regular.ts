@@ -102,6 +102,42 @@ export interface RegularResult {
    * 休業手当による随時改定を飛ばした、その前の標準報酬（事務取扱いの事例集 一時帰休（定時決定）問7）。ふだんは null
    */
   restoredFrom: string | null;
+  /**
+   * 遅配かもしれない（11/28。E052）：4〜6月のある月の給与がなく（または 0 円）、そのあとの月が多く払われている
+   * 本来の月へ自動では割り振らない。担当者が明細を見て、記録を直すか保険者算定にするかを決める。ふだんは null
+   */
+  latePay: LatePay | null;
+}
+
+export interface LatePay {
+  /** 給与がない（0 円の）月 */
+  missing: string;
+  /** 多く払われている月 */
+  big: string;
+}
+
+/** 遅配とみる多さ（ほかの月の何倍以上か） */
+export const LATE_PAY_RATIO = 1.8;
+
+/**
+ * 4〜6月の遅配らしさ（11/28）
+ * 給与がない（0 円の）月があり、それより後の4〜6月に、ほかの月（なければ3月）の LATE_PAY_RATIO 倍以上の月があるとき
+ */
+export function latePayOf(threeMonths: readonly string[], payrolls: ReadonlyMap<string, Payroll>): LatePay | null {
+  const cash = (m: string) => payrolls.get(m)?.cash ?? null;
+  for (const missing of threeMonths) {
+    const c = cash(missing);
+    if (c !== null && c !== 0) continue;
+    for (const big of threeMonths.filter((m) => m > missing)) {
+      const b = cash(big);
+      if (!b || b <= 0) continue;
+      const others = threeMonths.map(cash).filter((v, i) => threeMonths[i] !== big && threeMonths[i] !== missing && v !== null && v > 0) as number[];
+      const march = cash(`${threeMonths[0].slice(0, 4)}-03`);
+      const ref = others.length > 0 ? others.reduce((s, v) => s + v, 0) / others.length : march;
+      if (ref && ref > 0 && b >= ref * LATE_PAY_RATIO) return { missing, big };
+    }
+  }
+  return null;
 }
 
 // ===== 小さな道具 =====
@@ -320,6 +356,7 @@ export function decideRegular(x: RegularInput): RegularResult {
     bonusMonthly: x.bonusMonthly ?? 0,
     bonusAnnual: (x.bonusMonthly ?? 0) > 0 ? annualOf(x) : null,
     restoredFrom: null,
+    latePay: null,
   };
 
   // --- 対象者か ---
@@ -353,7 +390,7 @@ export function decideRegular(x: RegularInput): RegularResult {
     july1PayOf(x.payrolls, x.schedule, y),
   );
   const usedCount = months.filter((m) => m.used).length;
-  const withMonths = { ...base, excluded: null, months, usedCount, current };
+  const withMonths = { ...base, excluded: null, months, usedCount, current, latePay: latePayOf(threeMonths, x.payrolls) };
 
   if (months.some((m) => m.skip === 'noRecord')) {
     return { ...withMonths, status: 'incomplete' };

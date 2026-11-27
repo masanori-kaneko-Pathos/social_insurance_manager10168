@@ -1,4 +1,5 @@
 import { EmployeeRetentionCard } from '../../components/employee-retention-card/employee-retention-card';
+import { ProceduresCard } from '../../components/procedures-card/procedures-card';
 import { MyNumberCard } from '../../../my-number/components/my-number-card/my-number-card';
 import { FamilyMyNumbers } from '../../../my-number/components/family-my-numbers/family-my-numbers';
 import { Component, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
@@ -81,7 +82,7 @@ type AddKind = 'payroll' | 'leave' | 'care' | 'overseas' | 'dependent' | 'transf
  */
 @Component({
   selector: 'app-employee-detail',
-  imports: [EmployeeRetentionCard, BackLink, 
+  imports: [EmployeeRetentionCard, ProceduresCard, BackLink, 
     RouterLink,
     TranslocoPipe,
     RemunerationCard,

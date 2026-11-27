@@ -72,6 +72,9 @@
           <span>{{ 'payrollEntry.readback.deduction' | transloco: { amount: yen(totals().deduction) } }}</span>
         }
         <!-- 締め日の変更で増えた期間の分（定時決定・随時改定の平均では除く。11/26） -->
+        @if (hasAmounts() && totals().settlement !== 0) {
+          <span>{{ 'payrollEntry.readback.settlement' | transloco: { amount: yen(-totals().settlement) } }}</span>
+        }
         @if (hasAmounts() && totals().periodExtra !== 0) {
           <span>{{ 'payrollEntry.readback.periodExtra' | transloco: { amount: yen(totals().periodExtra) } }}</span>
         }

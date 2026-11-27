@@ -440,3 +440,15 @@ describe('decideRegular：一時帰休（休業手当。ガイドブック。11/
     expect(all.status).toBe('keep');
   });
 });
+
+describe('latePayOf（遅配かもしれない。11/28）', () => {
+  it('5月がなく6月が2倍なら知らせる。ふつうの増え方は知らせない', async () => {
+    const { latePayOf } = await import('./regular');
+    const P = (o: Record<string, number>) => new Map(Object.entries(o).map(([m, cash]) => [m, { cash } as any]));
+    const three = ['2026-04', '2026-05', '2026-06'];
+    expect(latePayOf(three, P({ '2026-04': 325000, '2026-06': 650000 }))).toEqual({ missing: '2026-05', big: '2026-06' });
+    expect(latePayOf(three, P({ '2026-03': 325000, '2026-04': 0, '2026-05': 650000, '2026-06': 325000 }))).toEqual({ missing: '2026-04', big: '2026-05' });
+    expect(latePayOf(three, P({ '2026-04': 325000, '2026-06': 400000 }))).toBeNull();
+    expect(latePayOf(three, P({ '2026-04': 325000, '2026-05': 325000, '2026-06': 650000 }))).toBeNull();
+  });
+});

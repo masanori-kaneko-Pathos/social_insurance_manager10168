@@ -214,6 +214,10 @@
             </ul>
           </section>
         }
+        <!-- 手続き：手続き・発生日・提出状態（11/28。届出の宿題が管理者だけなので、管理者に出す） -->
+        @if (context.isAdmin()) {
+          <app-procedures-card [employee]="e" />
+        }
       }
 
       @case ('employment') {

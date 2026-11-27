@@ -168,6 +168,9 @@
                     <span class="badge badge-warn">{{ 'regular.status.incomplete' | transloco }}</span>
                   }
                 }
+                @if (r.latePay) {
+                  <span class="badge badge-warn">{{ 'regular.latePay.badge' | transloco }}</span>
+                }
                 @if (r.annual?.candidate) {
                   <button type="button" class="link" (click)="toggleAnnual(v)">
                     <span class="badge badge-info">{{ 'regular.annual.badge' | transloco }}</span>
@@ -206,6 +209,15 @@
                 }
               </td>
             </tr>
+
+            <!-- 遅配かもしれない人：自動では割り振らず、担当者に確かめてもらう（11/28。E052） -->
+            @if (r.latePay; as lp) {
+              <tr class="late-row">
+                <td colspan="10">
+                  <p class="warn">{{ 'regular.latePay.note' | transloco: { missing: monthNum(lp.missing), big: monthNum(lp.big) } }}</p>
+                </td>
+              </tr>
+            }
 
             @if (openAnnual() === v.employee.id && r.annual; as a) {
               <tr class="annual-row">

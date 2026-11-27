@@ -343,3 +343,12 @@ app-decision-notice-card {
   color: var(--color-warning-text);
   cursor: help;
 }
+
+/* 遅配かもしれない人の注意（11/28） */
+.late-row td {
+  border-top: none;
+  padding-top: 0;
+}
+.late-row .warn {
+  margin: 0;
+}

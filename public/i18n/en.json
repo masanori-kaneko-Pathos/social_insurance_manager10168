@@ -964,6 +964,35 @@
         "signIn": "Please sign in again.",
         "unknown": "Could not delete. Please try again later."
       }
+    },
+    "procedures": {
+      "type": {
+        "acquisition": "Acquisition notice",
+        "loss": "Loss notice",
+        "regular": "Annual remuneration report",
+        "irregular": "Monthly change notice",
+        "bonus": "Bonus payment report",
+        "dependent": "Dependent change notice",
+        "leave": "Maternity/childcare leave application",
+        "category": "Insured category change notice"
+      },
+      "title": "Procedures",
+      "lead": "Filing records for this person: notices recorded from the to-do list and pending change notices. Notices not yet recorded appear in the to-do list.",
+      "toTodo": "Go to to-dos",
+      "empty": "No filing records yet.",
+      "loadFailed": "Could not load procedures.",
+      "saveFailed": "Could not save. Please try again.",
+      "col": {
+        "what": "Procedure",
+        "date": "Event date",
+        "status": "Status"
+      },
+      "open": "Not done",
+      "done": "Done ({{date}})",
+      "markDone": "Mark as done",
+      "submittedOn": "Submitted on",
+      "today": "Marks as done today",
+      "save": "Mark as done"
     }
   },
   "office": {
@@ -2162,7 +2191,11 @@
       "hint": "If the pay rules changed during the year, enter the amount the employee would have received under the new rules.",
       "estimated": "(estimate: average × scheduled count)"
     },
-    "yearOf": "{{year}}"
+    "yearOf": "{{year}}",
+    "latePay": {
+      "badge": "Possibly late pay",
+      "note": "There is no pay for month {{missing}} and month {{big}} is unusually large. If pay was late, it is not split automatically. Check the payslips, enter month {{missing}} with its original amount and subtract it from month {{big}} (use the original period's days as the base days). If unsure, consult the pension office."
+    }
   },
   "payrollCsv": {
     "lead": "Export a CSV, fix it in Excel, and import it back as is (the same format both ways).",
@@ -4354,7 +4387,8 @@
       "spreadIn": "Monthly share of a commuter pass paid earlier: ¥{{amount}}",
       "remuneration": "Used as this month's remuneration: ¥{{amount}} (a commuter pass paid for several months is divided by the months, starting from the month paid)",
       "periodExtra": "Of which, extra period from a closing-day change (excluded from the averages): ¥{{amount}}",
-      "deduction": "Absence deductions: ¥{{amount}} (fixed wages are shown before these deductions)"
+      "deduction": "Absence deductions: ¥{{amount}} (fixed wages are shown before these deductions)",
+      "settlement": "Negative lines (settlements, refunds) of {{amount}} yen are deducted from this month's remuneration. They are not treated as a change in fixed wages."
     },
     "add": "Enter pay",
     "check": {
