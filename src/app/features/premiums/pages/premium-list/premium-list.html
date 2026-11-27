@@ -407,6 +407,8 @@
       <h2 class="step-title"><span class="step-no" aria-hidden="true">2</span>{{ 'premiumGuide.title.soft' | transloco }}</h2>
       <p class="hint">{{ 'premiumGuide.softLead' | transloco: { payMonth: monthParts(payMonth()).m } }}</p>
       @if (context.isAdmin()) {
+        <!-- 段の中身は白い地のカードに入れる（何の段かがひと目で分かるように。11/28 本人のデモに合わせた） -->
+        <div class="card step-body">
         <!-- 給与ソフトとの照合は任意（しなくても確認済みにできる）。小見出しで分けて「任意」と書く（11/27） -->
         <h3 class="soft-optional">{{ 'premiumGuide.softOptional' | transloco }}</h3>
         <p class="hint">{{ 'premiumGuide.softOptionalLead' | transloco }}</p>
@@ -485,6 +487,7 @@
             }
           </div>
         }
+        </div>
       }
     </section>
 
@@ -648,7 +651,8 @@
       <p class="hint">{{ 'premiumGuide.totalLead' | transloco }}</p>
       <!-- 事業所の合計（表の上。ふだんは1行の帯だけ。内訳は開いて見る。11/13） -->
       <!-- 事業所の合計：保険料一覧と賞与で同じ部品（11/17） -->
-      <app-premium-totals [results]="okResults()" [excluded]="problems().length" [refund]="adjustmentRefund()">
+      <!-- 内訳は開いた状態で見せる（③が何の額かがひと目で分かるように。11/28 本人のデモに合わせた） -->
+      <app-premium-totals [results]="okResults()" [excluded]="problems().length" [refund]="adjustmentRefund()" [open]="true">
         @if (deptTotals().length > 0) {
           <!-- 部署ごとの小計（目安） -->
           <h3 class="dept-head">{{ 'premiumList.dept.title' | transloco }}</h3>
@@ -734,6 +738,8 @@
       <p class="hint">
         {{ (kumiaiMonth() ? 'premiumNotice.leadKumiai' : 'premiumNotice.lead') | transloco: { arrival: arrival(), due: dueDate() } }}
       </p>
+      <!-- 段の中身は白い地のカードに入れる（11/28 本人のデモに合わせた） -->
+      <div class="card step-body">
       <!-- 表は枠の中に入れる：画面が狭くても切れずに横へ送れる（11/20） -->
       <div class="notice-table">
       <table>
@@ -880,6 +886,7 @@
       @if (nc.status !== 'notEntered') {
         <app-review-box class="review" [target]="noticeReviewId(month())" (changed)="onNoticeReview($event)" />
       }
+      </div>
     </section>
   }
 }

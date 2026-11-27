@@ -932,7 +932,9 @@
       "file": {
         "title": "Import from a file",
         "note": "Employee list from payroll software or a spreadsheet (CSV, Excel, PDF). For first setup or group hiring."
-      }
+      },
+      "head": "Register employees",
+      "lead": "Choose how to register."
     },
     "retention": {
       "title": "Retention period over",
@@ -1846,10 +1848,14 @@
       "file": {
         "title": "Import from a file",
         "note": "Bonus list from payroll software or a spreadsheet (CSV, Excel, PDF). For several payments at once."
-      }
+      },
+      "head": "Register a paid bonus",
+      "lead": "Choose how to register."
     },
     "multiOfficeReview": "Multi: check",
-    "multiOfficeReviewNote": "This employee works at multiple offices, and this office's bonus alone exceeds half of the cap. Combined with other offices it may reach the cap; check against the decision notice."
+    "multiOfficeReviewNote": "This employee works at multiple offices, and this office's bonus alone exceeds half of the cap. Combined with other offices it may reach the cap; check against the decision notice.",
+    "purpose": "Record each person's bonus when you pay one. The app then calculates the standard bonus amount and the premiums deducted from the bonus.",
+    "records": "Past bonuses"
   },
   "leave": {
     "title": "Leave",
@@ -2096,7 +2102,25 @@
       "file": {
         "title": "Import from a file",
         "note": "Payroll list from payroll software or a spreadsheet (CSV, Excel, PDF). For everyone at once."
-      }
+      },
+      "head": "Enter payslips",
+      "lead": "Choose how to enter."
+    },
+    "monthHeading": "Enter pay for {{y}}/{{m}}",
+    "ideal": {
+      "purpose": "Record monthly payslips. They are used to set and review the standard monthly remuneration (the base of premiums). Entering pay does not change that month's premiums right away.",
+      "currentWork": "This month",
+      "monthAction": "Pay for {{y}}/{{m}}",
+      "enterMonth": "Enter pay for {{y}}/{{m}}",
+      "progress": "Entered {{saved}} / {{total}}",
+      "outcomes": "What the entered pay decides",
+      "revisionTitle": "Standard remuneration review (irregular revision)",
+      "revisionLead": "Check people whose fixed wages changed, using the three-month average.",
+      "regularTitle": "Annual determination",
+      "regularLead": "Set the standard remuneration from September using pay for April–June.",
+      "filingsTitle": "Filings",
+      "filingsLead": "Export data for the monthly change and annual determination filings.",
+      "records": "Monthly records"
     }
   },
   "regular": {

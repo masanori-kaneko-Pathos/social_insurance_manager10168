@@ -759,6 +759,11 @@ details.fold[open]::details-content {
   align-items: baseline;
   gap: var(--space-sm);
   margin: 0 0 var(--space-md);
+  /* 11/28：白い地の帯に（②の段の続きと分かるように） */
+  padding: var(--space-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-md);
   font-size: var(--font-sm);
 }
 
@@ -903,17 +908,30 @@ tr.clickable:focus-visible {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  margin: 0 0 var(--space-sm);
-  font-size: var(--font-md);
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-lg); /* 11/28：段の見出しを大きく（本人のデモと同じ大きさ） */
+}
+/* 見出しのすぐ下の説明は、見出しの文字の頭にそろえる（番号の丸の分だけ下げる。11/28） */
+.step-title + .hint {
+  margin: 0 0 var(--space-md);
+  padding-left: calc(30px + var(--space-sm));
+  font-size: var(--font-sm);
+}
+/* 段の中身の白い地（②④。①は表、③は合計のカードがすでに白い。11/28） */
+.step-body {
+  margin-bottom: var(--space-md);
+}
+.step-body > :first-child {
+  margin-top: 0;
 }
 /* 段の番号：オレンジの丸（11/27。「①」の文字では目に入らないため） */
 .step-no {
   display: inline-grid;
   place-items: center;
   flex: none;
-  width: 1.6em;
-  height: 1.6em;
-  font-size: var(--font-sm);
+  width: 30px; /* 11/28：見出しに合わせて大きく（本人のデモと同じ 30px） */
+  height: 30px;
+  font-size: var(--font-md);
   font-weight: 700;
   color: var(--color-on-primary, #fff);
   background: var(--color-primary);

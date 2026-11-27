@@ -40,7 +40,7 @@
   </div>
   <!-- 登録の入り口（1人ずつ／ファイルから）。人数に関係なく、いつもここに同じ形で置く（11/26） -->
   @if (context.isAdmin()) {
-    <app-entry-choice [items]="entryItems()" />
+    <app-entry-choice [items]="entryItems()" titleKey="employee.entry.head" leadKey="employee.entry.lead" />
   }
   <!-- 今の業務と一覧の切れ目（薄い線。給与・賞与・保険料・従業員で同じ場所。11/27） -->
   <hr class="section-sep" />

@@ -1,11 +1,11 @@
 
 <!-- 保険料一覧と同じ形：見出しの横に「‹ 年月 › 今月」、年月の下に小さく対象期間（11/13） -->
 <!-- 見出しの行（11/27）：見出しと「過去の一覧」、右にこの月の合計を1行で。月の切り替えは表の上の帯の左へ移した -->
+<!-- 11/28：左メニューの「給与」は入口のページになったので、そこへ戻るリンク。見出しは「○年○月払いの給与を入力」（本人のデモに合わせた） -->
+<app-back-link [fallback]="['/o', context.current()?.id, 'payrolls']" fallbackName="back.payrolls" />
 <div class="page-head">
   <div class="title-group">
-    <h1>{{ 'payroll.listTitle' | transloco }}</h1>
-    <!-- 支払月ごとの合計と未入力の人数（11/26 に「給与」から分けた） -->
-    <a class="sub-link" [routerLink]="['/o', context.current()?.id, 'payrolls', 'months']">{{ 'payroll.toMonths' | transloco }} ›</a>
+    <h1>{{ 'payroll.monthHeading' | transloco: monthParts(month()) }}</h1>
   </div>
   <!-- この月の全員の支払額の合計（絞り込みに関係なく。給与ソフトの支給総額と突き合わせる。11/20） -->
   @if (views().length > 0) {
@@ -69,7 +69,7 @@
 
   <!-- 入れ方は2つ（従業員・賞与と同じ入り口カード。11/27）：明細を見ながら1人ずつ（押すと最初の未入力の人が開く。カードの中に入力済みのメーター）／ファイルから取り込む -->
   @if (context.isAdmin()) {
-    <app-entry-choice [items]="entryItems()" (chosen)="onEntry($event)" />
+    <app-entry-choice [items]="entryItems()" titleKey="payroll.entry.head" leadKey="payroll.entry.lead" (chosen)="onEntry($event)" />
   }
   <!-- 今の業務と一覧の切れ目（薄い線。給与・賞与・保険料・従業員で同じ場所。11/27） -->
   <hr class="section-sep" />

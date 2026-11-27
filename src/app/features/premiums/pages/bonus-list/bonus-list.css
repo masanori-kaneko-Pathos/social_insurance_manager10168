@@ -234,3 +234,20 @@ td.sub-col {
   gap: var(--space-xs) var(--space-sm);
   margin: 0 0 var(--space-md);
 }
+
+/* 11/28：目的の1文と、一覧の見出し「これまでの賞与」（本人のデモに合わせた） */
+.page-head {
+  align-items: flex-start;
+}
+
+.purpose {
+  max-width: 760px;
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.records-title {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-lg);
+}

@@ -28,10 +28,9 @@ interface MonthRow {
 
 const MONTH_RE = /^[0-9]{4}-(0[1-9]|1[0-2])$/;
 
-import { BackLink } from '../../../../shared/components/back-link/back-link';
 @Component({
   selector: 'app-payroll-list',
-  imports: [BackLink, MonthPicker, RouterLink, TranslocoPipe],
+  imports: [MonthPicker, RouterLink, TranslocoPipe],
   templateUrl: './payroll-list.html',
   styleUrl: './payroll-list.css',
 })
@@ -109,6 +108,9 @@ export class PayrollList {
       };
     });
   });
+
+  /** 今月の業務の行（入口の大きなボタンの横のメーター。11/28） */
+  readonly latestRow = computed(() => this.rows().find((r) => r.month === this.latest()) ?? null);
 
   readonly prevTo = computed(() => this.clampTop(shiftMonth(this.top(), -12)));
   readonly canPrev = computed(() => this.prevTo() < this.top());

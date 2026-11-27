@@ -28,7 +28,17 @@ export interface EntryChoiceItem {
   selector: 'app-entry-choice',
   imports: [Icon, NgTemplateOutlet, RouterLink, TranslocoPipe],
   template: `
-    <nav class="entry" [attr.aria-label]="labelKey() | transloco">
+    <!-- 11/28：箱の上に「何をする所か」の見出しと説明（任意。本人のデモの「支給した賞与を登録 ／ 登録のしかたを選んでください。」） -->
+    <div class="box">
+    @if (titleKey(); as t) {
+      <div class="head">
+        <h2 class="head-title">{{ t | transloco }}</h2>
+        @if (leadKey(); as l) {
+          <p class="head-lead">{{ l | transloco }}</p>
+        }
+      </div>
+    }
+    <nav class="entry" [attr.aria-label]="(titleKey() || labelKey()) | transloco">
       @for (it of items(); track it.titleKey) {
         @if (it.link) {
           <a class="tile" [routerLink]="it.link" [queryParams]="it.queryParams ?? null">
@@ -41,6 +51,7 @@ export interface EntryChoiceItem {
         }
       }
     </nav>
+    </div>
     <ng-template #body let-it>
       <app-icon class="mark" [name]="it.icon" />
       <span class="text">
@@ -57,15 +68,30 @@ export interface EntryChoiceItem {
   `,
   styles: `
     /* 11/27：入り口の並びを、薄い色の地と左のオレンジの線の箱で囲む（「画面だけで分かる」ように、することの場所を目立たせる） */
-    .entry {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
-      gap: var(--space-sm);
+    /* 11/28：箱を外側に分けた（見出しを入れても、カードの枚数で決める並びの決まりが変わらないように） */
+    .box {
       margin-bottom: var(--space-md);
       padding: var(--space-sm);
       background: color-mix(in srgb, var(--color-primary) 9%, transparent);
       border-left: 4px solid var(--color-primary);
       border-radius: var(--radius-md);
+    }
+    .head {
+      padding: var(--space-sm) var(--space-sm) var(--space-md);
+    }
+    .head-title {
+      margin: 0;
+      font-size: var(--font-lg);
+    }
+    .head-lead {
+      margin: var(--space-xs) 0 0;
+      font-size: var(--font-sm);
+      color: var(--color-text-sub);
+    }
+    .entry {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+      gap: var(--space-sm);
     }
     /* カードが1枚だけ（依頼を作成）のときは、2枚並ぶ画面の1枚と同じ幅（横いっぱいの帯にしない。11/27） */
     .entry:has(> :only-child) {
@@ -161,6 +187,9 @@ export interface EntryChoiceItem {
 export class EntryChoice {
   readonly items = input.required<readonly EntryChoiceItem[]>();
   readonly labelKey = input('entryChoice.label');
+  /** 箱の見出し（例：支給した賞与を登録）と説明（例：登録のしかたを選んでください。）。11/28 */
+  readonly titleKey = input<string>('');
+  readonly leadKey = input<string>('');
   /** link のないカードを押した（item.key） */
   readonly chosen = output<string>();
 }

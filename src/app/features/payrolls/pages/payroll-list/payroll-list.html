@@ -1,17 +1,66 @@
-<!-- 月ごとの給与（11/26 に「給与」から分けた）：支払月ごとの合計と未入力の人数。今月の入力は月の画面（左メニューの「給与」）から -->
-<app-back-link [fallback]="['/o', context.current()?.id, 'payrolls']" fallbackName="back.payrolls" />
+<!-- 給与の入口（左メニューの「給与」。11/28 本人のデモに合わせた）：
+     今月の業務（大きなボタンで月の入力画面へ）→ 入力した給与から決まること → 月ごとの記録 -->
 <div class="page-head">
   <div>
-    <h1>{{ 'payroll.monthsTitle' | transloco }}</h1>
-    <p class="lead">{{ 'payroll.monthsLead' | transloco }}</p>
+    <h1>{{ 'payroll.listTitle' | transloco }}</h1>
+    <p class="lead">{{ 'payroll.ideal.purpose' | transloco }}</p>
   </div>
 </div>
+
+@if (context.isAdmin() && latest()) {
+  @let lr = latestRow();
+  <section class="card hero" aria-labelledby="payroll-current-title">
+    <div>
+      <span class="eyebrow">{{ 'payroll.ideal.currentWork' | transloco }}</span>
+      <h2 id="payroll-current-title">{{ 'payroll.ideal.monthAction' | transloco: monthLabel(latest()) }}</h2>
+      <!-- 件数を読む前もメーターの場所を取っておく（ボタンの位置が動かないように） -->
+      <div class="progress" aria-hidden="true"><span [style.width.%]="lr && lr.employed ? (lr.saved / lr.employed) * 100 : 0"></span></div>
+      <p class="progress-text">
+        @if (lr && !loading()) {
+          {{ 'payroll.ideal.progress' | transloco: { saved: lr.saved, total: lr.employed } }}
+        } @else {
+          &nbsp;
+        }
+      </p>
+    </div>
+    <a class="btn btn-solid hero-action" [routerLink]="['/o', context.current()?.id, 'payrolls', latest()]">
+      {{ 'payroll.ideal.enterMonth' | transloco: monthLabel(latest()) }}
+    </a>
+  </section>
+}
 
 @if (loading()) {
   <p class="muted">{{ 'common.loading' | transloco }}</p>
 } @else if (errorKey(); as key) {
   <div class="alert alert-danger">{{ key | transloco }}</div>
 } @else {
+  <section class="outcomes" aria-labelledby="payroll-outcomes-title">
+    <h2 id="payroll-outcomes-title">{{ 'payroll.ideal.outcomes' | transloco }}</h2>
+    <div class="outcome-grid">
+      <a class="card outcome" [routerLink]="['/o', context.current()?.id, 'revisions']">
+        <strong>{{ 'payroll.ideal.revisionTitle' | transloco }} ›</strong>
+        <span>{{ 'payroll.ideal.revisionLead' | transloco }}</span>
+      </a>
+      <a class="card outcome" [routerLink]="['/o', context.current()?.id, 'regular', regularYear()]">
+        <strong>{{ 'payroll.ideal.regularTitle' | transloco }} ›</strong>
+        <span>{{ 'payroll.ideal.regularLead' | transloco }}</span>
+      </a>
+      <a class="card outcome" [routerLink]="['/o', context.current()?.id, 'filings']">
+        <strong>{{ 'payroll.ideal.filingsTitle' | transloco }} ›</strong>
+        <span>{{ 'payroll.ideal.filingsLead' | transloco }}</span>
+      </a>
+    </div>
+  </section>
+
+  <div class="records-head">
+    <div>
+      <h2>{{ 'payroll.ideal.records' | transloco }}</h2>
+      <p class="lead">{{ 'payroll.monthsLead' | transloco }}</p>
+    </div>
+    @if (context.isAdmin()) {
+      <a class="settings-link" [routerLink]="['/o', context.current()?.id, 'payrolls', 'items']">{{ 'payrollItem.title' | transloco }} ›</a>
+    }
+  </div>
   <!-- 前の12か月・年と月を選ぶ・次の12か月（いちばん早い入社の月より前と、実績のない先の月へは進まない。11/16） -->
   <div class="pager">
     @if (canPrev()) {

@@ -17,6 +17,7 @@ import { incomingParts, SpreadPart } from '../../logic/spread';
 import { latestPaidMonth, onLeaveDuring, Period, PayrollRow, payrollRowsFor, periodOf } from '../../logic/payroll-rows';
 import { payrollOf, premiumMonthOfPay, premiumMonthsOfPay } from '../../../office/office-settings';
 import { MonthPicker } from '../../../../shared/components/month-picker/month-picker';
+import { BackLink } from '../../../../shared/components/back-link/back-link';
 import { EntryChoice, EntryChoiceItem } from '../../../../shared/components/entry-choice/entry-choice';
 import { NgTemplateOutlet } from '@angular/common';
 import { Icon } from '../../../../shared/components/icon/icon';
@@ -69,7 +70,8 @@ const NO_PARTS: readonly SpreadPart[] = [];
 
 @Component({
   selector: 'app-payroll-month',
-  imports: [PersonName, EntryChoice, HalfWidthDigits, Icon, InKindCalculator, MonthPicker, NgTemplateOutlet, Pager, PayrollEntry, PersonListBar, ReactiveFormsModule, RouterLink, SortHeader, TranslocoPipe],
+  imports: [
+    BackLink,PersonName, EntryChoice, HalfWidthDigits, Icon, InKindCalculator, MonthPicker, NgTemplateOutlet, Pager, PayrollEntry, PersonListBar, ReactiveFormsModule, RouterLink, SortHeader, TranslocoPipe],
   templateUrl: './payroll-month.html',
   styleUrl: './payroll-month.css',
   host: {
