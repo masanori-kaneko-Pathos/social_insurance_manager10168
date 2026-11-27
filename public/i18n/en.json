@@ -3428,7 +3428,16 @@
       "linked": "Has My Page",
       "none": "No My Page"
     },
-    "noMatch": "No one matches."
+    "noMatch": "No one matches.",
+    "tab": {
+      "requests": "Requests",
+      "applications": "Applications",
+      "pending": "{{count}} waiting for review"
+    },
+    "lead": {
+      "requests": "Requests from the company to employees (onboarding, change notices, etc.). Items waiting for review come first.",
+      "applications": "Change applications sent by employees. Items waiting for review come first."
+    }
   },
   "me": {
     "title": "My Page",

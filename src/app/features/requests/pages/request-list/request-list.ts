@@ -4,7 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { map } from 'rxjs';
 import { Employee } from '../../../../core/models/employee';
-import { EmployeeRequest, REQUEST_STATUSES, RequestStatus } from '../../../../core/models/office-records';
+import { EmployeeRequest, REQUEST_STATUSES, RequestDirection, RequestStatus } from '../../../../core/models/office-records';
 import { EmployeeService } from '../../../employees/employee.service';
 import { OfficeContext } from '../../../office/office-context.service';
 import { MyPageInvites } from '../../../invites/components/my-page-invites/my-page-invites';
@@ -14,8 +14,19 @@ import { errorKeyOf } from '../../../../shared/utils/error-key';
 import { PersonName } from '../../../../shared/components/person-name/person-name';
 
 type Filter = RequestStatus | 'all';
+/** 画面の中のタブ：会社からの依頼／従業員からの申請／マイページの発行（11/27） */
+export type RequestView = 'requests' | 'applications' | 'invites';
 
-/** 依頼と申請の一覧（確認待ちが上）。状態の絞り込みは URL（?status=）に持つ */
+/** タブごとの向き（依頼 ＝ 会社から従業員へ、申請 ＝ 従業員から） */
+const DIRECTION_OF: Record<Exclude<RequestView, 'invites'>, RequestDirection> = {
+  requests: 'toEmployee',
+  applications: 'fromEmployee',
+};
+
+/**
+ * 依頼・申請の一覧（確認待ちが上）。タブ（?view=）と状態の絞り込み（?status=）は URL に持つ
+ * 11/27：依頼と申請をタブで分けた（向きが逆の仕事が1つの一覧に混ざっていたため。データは direction で分かれている）
+ */
 @Component({
   selector: 'app-request-list',
   imports: [PersonName, MyPageInvites, RouterLink, TranslocoPipe],
@@ -28,16 +39,22 @@ export class RequestList {
   private readonly route = inject(ActivatedRoute);
   readonly context = inject(OfficeContext);
 
-  readonly statuses = REQUEST_STATUSES;
+  /** 申請には「回答待ち」がない（従業員が出した時点で確認待ち） */
+  readonly statuses = computed(() => (this.view() === 'applications' ? REQUEST_STATUSES.filter((s) => s !== 'open') : REQUEST_STATUSES));
   readonly filter = toSignal(
     this.route.queryParamMap.pipe(map((q) => (q.get('status') as Filter | null) ?? 'all')),
     { initialValue: 'all' as Filter },
   );
 
-  /** 依頼と申請／マイページの招待（?view=invites。招待は管理者だけ） */
+  /** 依頼／申請／マイページの発行（?view=。発行は管理者だけ。読めない値は依頼） */
   readonly view = toSignal(
-    this.route.queryParamMap.pipe(map((q) => (q.get('view') === 'invites' ? 'invites' : 'requests'))),
-    { initialValue: 'requests' as 'requests' | 'invites' },
+    this.route.queryParamMap.pipe(
+      map((q): RequestView => {
+        const v = q.get('view');
+        return v === 'applications' || v === 'invites' ? v : 'requests';
+      }),
+    ),
+    { initialValue: 'requests' as RequestView },
   );
 
   readonly requests = signal<EmployeeRequest[]>([]);
@@ -46,15 +63,28 @@ export class RequestList {
   readonly loading = signal(true);
   readonly errorKey = signal<string | null>(null);
 
+  /** 今のタブの向きのものだけ（マイページの発行のタブでは使わない） */
+  private readonly inView = computed(() => {
+    const v = this.view();
+    const dir = v === 'invites' ? null : DIRECTION_OF[v];
+    return this.requests().filter((r) => r.direction === dir);
+  });
+
+  /** タブに添える確認待ちの件数（依頼・申請） */
+  readonly pending = computed(() => {
+    const n = (dir: RequestDirection) => this.requests().filter((r) => r.direction === dir && r.status === 'submitted').length;
+    return { requests: n('toEmployee'), applications: n('fromEmployee') };
+  });
+
   readonly counts = computed(() => {
-    const c: Record<string, number> = { all: this.requests().length };
-    for (const r of this.requests()) c[r.status] = (c[r.status] ?? 0) + 1;
+    const c: Record<string, number> = { all: this.inView().length };
+    for (const r of this.inView()) c[r.status] = (c[r.status] ?? 0) + 1;
     return c;
   });
 
   readonly rows = computed(() => {
     const f = this.filter();
-    const list = this.requests().filter((r) => f === 'all' || r.status === f);
+    const list = this.inView().filter((r) => f === 'all' || r.status === f);
     return sortRequests(list.map((r) => ({ ...r, updatedMs: r.updatedAt?.toMillis() ?? 0 })));
   });
 

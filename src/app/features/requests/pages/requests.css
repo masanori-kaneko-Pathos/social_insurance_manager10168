@@ -299,3 +299,22 @@ textarea.input {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* タブに添える確認待ちの件数（従業員の一覧の絞り込みの件数と同じ形。11/27）
+   0件のときは見えなくするだけで場所は残す（タブの位置がずれないように） */
+.tab-count {
+  display: inline-block;
+  min-width: 2.2em;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-on-primary, var(--color-text));
+  font-size: var(--font-xs, 12px);
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.tab-count.zero {
+  visibility: hidden;
+}

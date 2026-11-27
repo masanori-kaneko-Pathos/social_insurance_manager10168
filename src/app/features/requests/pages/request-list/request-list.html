@@ -1,21 +1,29 @@
 <div class="page-head">
   <h1>{{ 'nav.requests' | transloco }}</h1>
-  @if (context.isAdmin() && view() === 'requests') {
+  <!-- 依頼を作成：どのタブでも同じ場所に出す（タブで出たり消えたりして位置がずれないように。11/27） -->
+  @if (context.isAdmin()) {
     <a class="btn btn-primary" [routerLink]="['/o', context.current()?.id, 'requests', 'new']">{{ 'request.new' | transloco }}</a>
   }
 </div>
 
-<!-- 依頼と申請／マイページの招待（招待の一覧を読めるのは管理者だけ） -->
-@if (context.isAdmin()) {
-  <nav class="page-tabs" [attr.aria-label]="'myPages.tabs' | transloco">
-    <a [routerLink]="[]" [queryParams]="{ view: null, status: null }" [class.active]="view() === 'requests'">
-      {{ 'request.listTitle' | transloco }}
-    </a>
+<!-- 依頼（会社から）｜申請（従業員から）｜マイページの発行（管理者だけ）。確認待ちの件数をタブに添える（11/27） -->
+<nav class="page-tabs" [attr.aria-label]="'myPages.tabs' | transloco">
+  <a [routerLink]="[]" [queryParams]="{ view: null, status: null }" [class.active]="view() === 'requests'">
+    {{ 'request.tab.requests' | transloco }}
+    <!-- 0件でも場所は取っておく（件数が出たり消えたりして、隣のタブの位置がずれないように） -->
+    <span class="tab-count" [class.zero]="pending().requests === 0" [attr.aria-label]="'request.tab.pending' | transloco: { count: pending().requests }">{{ pending().requests }}</span>
+  </a>
+  <a [routerLink]="[]" [queryParams]="{ view: 'applications', status: null }" [class.active]="view() === 'applications'">
+    {{ 'request.tab.applications' | transloco }}
+    <!-- 0件でも場所は取っておく（件数が出たり消えたりして、隣のタブの位置がずれないように） -->
+    <span class="tab-count" [class.zero]="pending().applications === 0" [attr.aria-label]="'request.tab.pending' | transloco: { count: pending().applications }">{{ pending().applications }}</span>
+  </a>
+  @if (context.isAdmin()) {
     <a [routerLink]="[]" [queryParams]="{ view: 'invites', status: null }" [class.active]="view() === 'invites'">
       {{ 'myPages.tab' | transloco }}
     </a>
-  </nav>
-}
+  }
+</nav>
 
 @if (view() === 'invites' && context.isAdmin()) {
   @if (loading()) {
@@ -24,14 +32,15 @@
     <app-my-page-invites [employees]="employeeList()" />
   }
 } @else {
-<p class="lead list-lead">{{ 'request.listLead' | transloco }}</p>
+<p class="lead list-lead">{{ (view() === 'applications' ? 'request.lead.applications' : 'request.lead.requests') | transloco }}</p>
 
 <nav class="tabs" [attr.aria-label]="'request.filter' | transloco">
-  <a [routerLink]="[]" [queryParams]="{ status: null }" [class.active]="filter() === 'all'">
+  <!-- タブ（?view=）は残したまま状態だけ変える -->
+  <a [routerLink]="[]" [queryParams]="{ status: null }" queryParamsHandling="merge" [class.active]="filter() === 'all'">
     {{ 'request.status.all' | transloco }}<span class="count">{{ counts()['all'] ?? 0 }}</span>
   </a>
-  @for (s of statuses; track s) {
-    <a [routerLink]="[]" [queryParams]="{ status: s }" [class.active]="filter() === s">
+  @for (s of statuses(); track s) {
+    <a [routerLink]="[]" [queryParams]="{ status: s }" queryParamsHandling="merge" [class.active]="filter() === s">
       {{ 'request.status.' + s | transloco }}<span class="count">{{ counts()[s] ?? 0 }}</span>
     </a>
   }
@@ -54,8 +63,9 @@
           <col class="cw-status" />
           <col />
           <col class="cw-person" />
-          <col class="cw-type" />
-          <col class="cw-date" />
+          @if (view() === 'requests') {
+            <col class="cw-date" />
+          }
           <col class="cw-date" />
         </colgroup>
         <thead>
@@ -63,8 +73,10 @@
             <th>{{ 'request.col.status' | transloco }}</th>
             <th>{{ 'request.col.title' | transloco }}</th>
             <th>{{ 'request.col.employee' | transloco }}</th>
-            <th>{{ 'request.col.direction' | transloco }}</th>
-            <th>{{ 'request.col.due' | transloco }}</th>
+            <!-- 向きの列はなくした（タブで分かれている）。期限は依頼だけ（申請には期限がない。11/27） -->
+            @if (view() === 'requests') {
+              <th>{{ 'request.col.due' | transloco }}</th>
+            }
             <th>{{ 'request.col.updated' | transloco }}</th>
           </tr>
         </thead>
@@ -84,8 +96,9 @@
                   —
                 }
               </td>
-              <td>{{ 'request.direction.' + r.direction | transloco }}</td>
-              <td>{{ r.dueDate ?? '' }}</td>
+              @if (view() === 'requests') {
+                <td>{{ r.dueDate ?? '' }}</td>
+              }
               <td>{{ updated(r) }}</td>
             </tr>
           }
